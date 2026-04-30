@@ -12,7 +12,7 @@
       "name" : "MIT",
       "url" : "https://opensource.org/license/mit-0"
     },
-    "version" : "2025-05-06.14525.84e6b4d"
+    "version" : "2026-04-29.360.0feedc0"
   },
   "servers" : [ {
     "url" : "/",
@@ -7742,12 +7742,12 @@
             "example" : "Kruger"
           },
           "reporter" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "optional reporter as per token, used when editing",
             "example" : "A_USER"
           },
           "username" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "username"
           }
         },
@@ -7778,8 +7778,11 @@
             "description" : "the outcome"
           },
           "referralOutcome" : {
-            "$ref" : "#/components/schemas/OutcomeDto",
-            "description" : "the optional referral outcome"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/OutcomeDto"
+            }, {
+              "type" : "null"
+            } ]
           }
         },
         "required" : [ "outcome" ]
@@ -7807,18 +7810,18 @@
         "description" : "Hearing",
         "properties" : {
           "id" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The id of the hearing"
           },
           "locationId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "deprecated" : true,
             "description" : "The id of the location of the hearing"
           },
           "locationName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "deprecated" : true,
             "description" : "The name of the location of the hearing"
           },
@@ -7839,12 +7842,15 @@
             "enum" : [ "GOV_ADULT", "GOV_YOI", "INAD_YOI", "GOV", "INAD_ADULT" ]
           },
           "oicHearingTypeDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "oic hearing type description"
           },
           "outcome" : {
-            "$ref" : "#/components/schemas/HearingOutcomeDto",
-            "description" : "hearing outcome"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/HearingOutcomeDto"
+            }, {
+              "type" : "null"
+            } ]
           },
           "agencyId" : {
             "type" : "string",
@@ -7859,7 +7865,7 @@
         "description" : "hearing outcome",
         "properties" : {
           "id" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The id of the hearing outcome"
           },
@@ -7873,25 +7879,25 @@
             "enum" : [ "COMPLETE", "REFER_POLICE", "REFER_INAD", "ADJOURN", "NOMIS", "REFER_GOV" ]
           },
           "codeDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "the hearing outcome code description"
           },
           "reason" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "reason for outcome",
             "enum" : [ "LEGAL_ADVICE", "LEGAL_REPRESENTATION", "RO_ATTEND", "HELP", "UNFIT", "WITNESS", "WITNESS_SUPPORT", "MCKENZIE", "EVIDENCE", "INVESTIGATION", "OTHER" ]
           },
           "details" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "details of outcome"
           },
           "plea" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "hearing outcome plea",
             "enum" : [ "UNFIT", "ABSTAIN", "GUILTY", "NOT_GUILTY", "NOT_ASKED" ]
           },
           "pleaDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "hearing outcome plea description"
           }
         },
@@ -7903,13 +7909,13 @@
         "description" : "Incident details",
         "properties" : {
           "locationId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "deprecated" : true,
             "description" : "The id of the location the incident took place"
           },
           "locationName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The name of the location the incident took place"
           },
           "locationUuid" : {
@@ -7944,21 +7950,24 @@
         "description" : "Incident Role",
         "properties" : {
           "roleCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The incident role code, If not set then it is assumed they committed the offence on their own",
             "example" : "25a"
           },
           "offenceRule" : {
-            "$ref" : "#/components/schemas/OffenceRuleDetailsDto",
-            "description" : "The offence rules related to the given incident role, Will not be set of there is no role code"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/OffenceRuleDetailsDto"
+            }, {
+              "type" : "null"
+            } ]
           },
           "associatedPrisonersNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The prison number of the other prisoner involved in the incident, This only applies to role codes 25b and 25c",
             "example" : "G2996UX"
           },
           "associatedPrisonersName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The name of the other prisoner involved in the incident, This only applies when the prisoner is from outside the establishment",
             "example" : "G2996UX"
           }
@@ -7974,7 +7983,7 @@
             "description" : "The statement regarding the incident"
           },
           "completed" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Indicates when the statement is complete"
           }
         },
@@ -7992,7 +8001,7 @@
             "example" : 3
           },
           "offenceCodeDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The offence code description",
             "example" : "Disobeys any lawful order"
           },
@@ -8001,17 +8010,17 @@
             "description" : "The offence rules they have broken"
           },
           "victimPrisonersNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The prison number of the victim involved in the incident, if relevant",
             "example" : "G2996UX"
           },
           "victimStaffUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username of the member of staff who is a victim of the incident, if relevant",
             "example" : "ABC12D"
           },
           "victimOtherPersonsName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The name of the victim (who is not a member of staff or a prisoner) involved in the incident, if relevant",
             "example" : "Bob Hope"
           },
@@ -8024,7 +8033,7 @@
             }
           },
           "protectedCharacteristicsDescriptions" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "list of protected characteristics for offence descriptions, empty if non involved in offence",
             "items" : {
               "type" : "string"
@@ -8067,11 +8076,11 @@
             "example" : "Committed an assault"
           },
           "nomisCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "nomis code - not set if migrated data"
           },
           "withOthersNomisCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "with others nomis code, not set if migrated data"
           }
         },
@@ -8082,7 +8091,7 @@
         "additionalProperties" : false,
         "properties" : {
           "id" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The id of the outcome"
           },
@@ -8092,21 +8101,21 @@
             "enum" : [ "REFER_POLICE", "REFER_INAD", "REFER_GOV", "NOT_PROCEED", "DISMISSED", "PROSECUTION", "SCHEDULE_HEARING", "CHARGE_PROVED", "QUASHED" ]
           },
           "details" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "optional details"
           },
           "reason" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "optional not proceeded with reason",
             "enum" : [ "ANOTHER_WAY", "RELEASED", "WITNESS_NOT_ATTEND", "UNFIT", "FLAWED", "EXPIRED_NOTICE", "EXPIRED_HEARING", "NOT_FAIR", "OTHER" ]
           },
           "quashedReason" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "optional quashed reason",
             "enum" : [ "FLAWED_CASE", "JUDICIAL_REVIEW", "APPEAL_UPHELD", "OTHER" ]
           },
           "referGovReason" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "optional refer to gov reason",
             "enum" : [ "REVIEW_FOR_REFER_POLICE", "GOV_INQUIRY", "OTHER" ]
           },
@@ -8122,12 +8131,18 @@
         "additionalProperties" : false,
         "properties" : {
           "hearing" : {
-            "$ref" : "#/components/schemas/HearingDto",
-            "description" : "hearing including hearing outcome"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/HearingDto"
+            }, {
+              "type" : "null"
+            } ]
           },
           "outcome" : {
-            "$ref" : "#/components/schemas/CombinedOutcomeDto",
-            "description" : "combined outcome"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CombinedOutcomeDto"
+            }, {
+              "type" : "null"
+            } ]
           }
         }
       },
@@ -8137,7 +8152,7 @@
         "description" : "punishment comment",
         "properties" : {
           "id" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "punishment comment id used for edit and delete"
           },
@@ -8146,20 +8161,20 @@
             "description" : "comment on punishment"
           },
           "reasonForChange" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "punishment reason for change",
             "enum" : [ "APPEAL", "CORRECTION", "OTHER", "GOV_OR_DIRECTOR" ]
           },
           "reasonForChangeDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "description of the punishment reason for change"
           },
           "createdByUserId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "username of the person created or updated the comment"
           },
           "dateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "date and time comment was created or updated"
           }
@@ -8172,7 +8187,7 @@
         "description" : "punishment",
         "properties" : {
           "id" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "punishment id used for edit and delete"
           },
@@ -8182,33 +8197,33 @@
             "enum" : [ "PRIVILEGE", "EARNINGS", "CONFINEMENT", "REMOVAL_ACTIVITY", "EXCLUSION_WORK", "EXTRA_WORK", "REMOVAL_WING", "ADDITIONAL_DAYS", "PROSPECTIVE_DAYS", "CAUTION", "DAMAGES_OWED", "PAYBACK" ]
           },
           "typeDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "punishment type description"
           },
           "privilegeType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "optional privilege type",
             "enum" : [ "CANTEEN", "FACILITIES", "MONEY", "TV", "ASSOCIATION", "GYM", "OTHER" ]
           },
           "privilegeTypeDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "optional privilege type description"
           },
           "otherPrivilege" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "optional other privilege type"
           },
           "stoppagePercentage" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "optional stoppage of earnings percentage"
           },
           "activatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "optional activated by report number"
           },
           "activatedFrom" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "optional activated from report number"
           },
           "schedule" : {
@@ -8216,15 +8231,15 @@
             "description" : "latest punishment schedule"
           },
           "consecutiveChargeNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "optional consecutive to charge number"
           },
           "consecutiveReportAvailable" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "optional consecutive report number is available to view in adjudications service"
           },
           "damagesOwedAmount" : {
-            "type" : "number",
+            "type" : [ "number", "null" ],
             "format" : "double",
             "description" : "optional amount - money being recovered for damages"
           },
@@ -8237,7 +8252,7 @@
             "description" : "flag to indicate if the punishment can be edited"
           },
           "paybackNotes" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "payback notes"
           },
           "rehabilitativeActivities" : {
@@ -8248,16 +8263,16 @@
             }
           },
           "rehabilitativeActivitiesCompleted" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "rehabilitative activity completed"
           },
           "rehabilitativeActivitiesNotCompletedOutcome" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "rehabilitative activity not completed outcome",
             "enum" : [ "FULL_ACTIVATE", "PARTIAL_ACTIVATE", "EXT_SUSPEND", "NO_ACTION" ]
           },
           "previousSuspendedUntilDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "previous suspended until date if subsequently extended"
           }
@@ -8276,7 +8291,7 @@
             "description" : "days punishment will last - use duration for new integrations"
           },
           "duration" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "duration of punishment"
           },
@@ -8286,17 +8301,17 @@
             "enum" : [ "DAYS", "HOURS" ]
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "optional start date of punishment"
           },
           "endDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "optional end date of punishment"
           },
           "suspendedUntil" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "optional punishment suspended until date"
           }
@@ -8309,30 +8324,30 @@
         "description" : "rehabilitative activity dto",
         "properties" : {
           "id" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "id"
           },
           "details" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "details"
           },
           "monitor" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "who is monitoring it"
           },
           "endDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "end date"
           },
           "totalSessions" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "optional number of sessions"
           },
           "completed" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "completed"
           }
         }
@@ -8352,7 +8367,7 @@
             "example" : "G2996UX"
           },
           "prisonerName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Name of a prisoner",
             "example" : "SAM GOMEZ"
           },
@@ -8397,19 +8412,19 @@
             "enum" : [ "ACCEPTED", "REJECTED", "AWAITING_REVIEW", "RETURNED", "UNSCHEDULED", "SCHEDULED", "REFER_POLICE", "REFER_INAD", "REFER_GOV", "PROSECUTION", "DISMISSED", "NOT_PROCEED", "ADJOURNED", "CHARGE_PROVED", "QUASHED", "INVALID_OUTCOME", "INVALID_SUSPENDED", "INVALID_ADA" ]
           },
           "statusDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The description of the status in the reported adjudication"
           },
           "reviewedByUserId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Reviewed by user id"
           },
           "statusReason" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The reason for the status of the reported adjudication"
           },
           "statusDetails" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The name for the status of the reported adjudication"
           },
           "damages" : {
@@ -8441,11 +8456,11 @@
             }
           },
           "issuingOfficer" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The last issuing officer"
           },
           "dateTimeOfIssue" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The last date time of form issued"
           },
@@ -8457,7 +8472,7 @@
             }
           },
           "dateTimeOfFirstHearing" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "date time of first hearing"
           },
@@ -8487,7 +8502,7 @@
             "description" : "flag to indicate a hearing outcome was entered in NOMIS"
           },
           "overrideAgencyId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "optional override agency id"
           },
           "originatingAgencyId" : {
@@ -8495,15 +8510,15 @@
             "description" : "agency id where report was created"
           },
           "transferableActionsAllowed" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "optional actions flag to indicate if an ALO can carry out actions against a transferable adjudication, null if not transferable"
           },
           "createdOnBehalfOfOfficer" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Name the officer the report was created on behalf of"
           },
           "createdOnBehalfOfReason" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Reason why the report was created on behalf of another officer"
           },
           "linkedChargeNumbers" : {
@@ -8544,7 +8559,7 @@
             "example" : "CLEANING"
           },
           "codeDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The damage code description based on an enum for defined damages",
             "example" : "Cleaning"
           },
@@ -8573,12 +8588,12 @@
             "example" : "PHOTO"
           },
           "codeDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The evidence code description based on an enum for defined evidence",
             "example" : "Photo"
           },
           "identifier" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Evidence identifier",
             "example" : "Tag number or Camera number"
           },
@@ -8607,7 +8622,7 @@
             "example" : "PRISON_OFFICER"
           },
           "codeDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The witness code description based on an enum for defined witness",
             "example" : "A prison officer"
           },
@@ -8640,13 +8655,13 @@
             "enum" : [ "ACCEPTED", "REJECTED", "AWAITING_REVIEW", "RETURNED", "UNSCHEDULED", "SCHEDULED", "REFER_POLICE", "REFER_INAD", "REFER_GOV", "PROSECUTION", "DISMISSED", "NOT_PROCEED", "ADJOURNED", "CHARGE_PROVED", "QUASHED", "INVALID_OUTCOME", "INVALID_SUSPENDED", "INVALID_ADA" ]
           },
           "statusReason" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The reason the status has been set",
             "maxLength" : 128,
             "minLength" : 0
           },
           "statusDetails" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Details of why the status has been set",
             "maxLength" : 4000,
             "minLength" : 0
@@ -8660,7 +8675,7 @@
         "description" : "punishment request",
         "properties" : {
           "id" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "id of punishment"
           },
@@ -8670,54 +8685,54 @@
             "enum" : [ "PRIVILEGE", "EARNINGS", "CONFINEMENT", "REMOVAL_ACTIVITY", "EXCLUSION_WORK", "EXTRA_WORK", "REMOVAL_WING", "ADDITIONAL_DAYS", "PROSPECTIVE_DAYS", "CAUTION", "DAMAGES_OWED", "PAYBACK" ]
           },
           "privilegeType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "privilege type - only use if punishment type is PRIVILEGE",
             "enum" : [ "CANTEEN", "FACILITIES", "MONEY", "TV", "ASSOCIATION", "GYM", "OTHER" ]
           },
           "otherPrivilege" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "other privilege type - only use if privilege type is OTHER"
           },
           "stoppagePercentage" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "stoppage percentage - use if punishment type is EARNINGS"
           },
           "duration" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "duration of punishment"
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "punishment start date, required if punishment is not suspended"
           },
           "endDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "punishment end date, required if punishment is not suspended"
           },
           "suspendedUntil" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "punishment suspended until date, required if punishment is suspended"
           },
           "activatedFrom" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "optional activated from report number"
           },
           "consecutiveChargeNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "optional consecutive charge number"
           },
           "damagesOwedAmount" : {
-            "type" : "number",
+            "type" : [ "number", "null" ],
             "format" : "double",
             "description" : "optional amount - money being recovered for damages - only use if type is DAMAGED_OWED"
           },
           "paybackNotes" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "payback punishment notes"
           },
           "rehabilitativeActivities" : {
@@ -8751,25 +8766,25 @@
         "description" : "rehabilitative activity",
         "properties" : {
           "id" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "id"
           },
           "details" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "details"
           },
           "monitor" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "who is monitoring it"
           },
           "endDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "end date"
           },
           "totalSessions" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "optional number of sessions"
           }
@@ -8784,16 +8799,16 @@
             "format" : "int32"
           },
           "errorCode" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "userMessage" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "developerMessage" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "moreInfo" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           }
         },
         "required" : [ "status" ]
@@ -8804,7 +8819,7 @@
         "description" : "punishment comment request",
         "properties" : {
           "id" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "id of punishment comment"
           },
@@ -8813,7 +8828,7 @@
             "description" : "punishment comment"
           },
           "reasonForChange" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "punishment reason for change",
             "enum" : [ "APPEAL", "CORRECTION", "OTHER", "GOV_OR_DIRECTOR" ]
           }
@@ -8830,17 +8845,17 @@
             "description" : "details"
           },
           "reason" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "not proceed reason",
             "enum" : [ "ANOTHER_WAY", "RELEASED", "WITNESS_NOT_ATTEND", "UNFIT", "FLAWED", "EXPIRED_NOTICE", "EXPIRED_HEARING", "NOT_FAIR", "OTHER" ]
           },
           "quashedReason" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "quashed reason",
             "enum" : [ "FLAWED_CASE", "JUDICIAL_REVIEW", "APPEAL_UPHELD", "OTHER" ]
           },
           "referGovReason" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "refer back to gov reason",
             "enum" : [ "REVIEW_FOR_REFER_POLICE", "GOV_INQUIRY", "OTHER" ]
           }
@@ -8867,7 +8882,7 @@
         "description" : "Request to add a hearing",
         "properties" : {
           "locationId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "deprecated" : true,
             "description" : "The id of the location of the hearing"
@@ -8897,30 +8912,30 @@
         "description" : "amend hearing outcome request",
         "properties" : {
           "adjudicator" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "the name of the adjudicator"
           },
           "adjournReason" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "the adjourn reason",
             "enum" : [ "LEGAL_ADVICE", "LEGAL_REPRESENTATION", "RO_ATTEND", "HELP", "UNFIT", "WITNESS", "WITNESS_SUPPORT", "MCKENZIE", "EVIDENCE", "INVESTIGATION", "OTHER" ]
           },
           "notProceedReason" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "not proceed reason",
             "enum" : [ "ANOTHER_WAY", "RELEASED", "WITNESS_NOT_ATTEND", "UNFIT", "FLAWED", "EXPIRED_NOTICE", "EXPIRED_HEARING", "NOT_FAIR", "OTHER" ]
           },
           "referGovReason" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "refer back to gov reason",
             "enum" : [ "REVIEW_FOR_REFER_POLICE", "GOV_INQUIRY", "OTHER" ]
           },
           "details" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "details"
           },
           "plea" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "plea",
             "enum" : [ "UNFIT", "ABSTAIN", "GUILTY", "NOT_GUILTY", "NOT_ASKED" ]
           }
@@ -8953,7 +8968,7 @@
             "example" : "PHOTO"
           },
           "identifier" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Evidence identifier",
             "example" : "Tag number or Camera number"
           },
@@ -8963,7 +8978,7 @@
             "example" : "ie description of photo"
           },
           "reporter" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "optional reporter as per token, used when editing",
             "example" : "A_USER"
           }
@@ -8987,7 +9002,7 @@
             "example" : "the kettle was broken"
           },
           "reporter" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "optional reporter as per token, used when editing",
             "example" : "A_USER"
           }
@@ -9082,9 +9097,9 @@
             "description" : "Draft adjudication id"
           },
           "chargeNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The charge number for the reported adjudication, Will only be present if this adjudication has been submitted to Prison-API",
-            "example" : 4567123
+            "example" : "4567123"
           },
           "prisonerNumber" : {
             "type" : "string",
@@ -9092,7 +9107,7 @@
             "example" : "G2996UX"
           },
           "prisonerName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Name of a prisoner",
             "example" : "SAM GOMEZ"
           },
@@ -9107,60 +9122,69 @@
             "description" : "Incident details"
           },
           "incidentRole" : {
-            "$ref" : "#/components/schemas/IncidentRoleDto",
-            "description" : "Information about the role of this prisoner in the incident"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/IncidentRoleDto"
+            }, {
+              "type" : "null"
+            } ]
           },
           "offenceDetails" : {
-            "$ref" : "#/components/schemas/OffenceDetailsDto",
-            "description" : "Details about the offence the prisoner is accused of"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/OffenceDetailsDto"
+            }, {
+              "type" : "null"
+            } ]
           },
           "incidentStatement" : {
-            "$ref" : "#/components/schemas/IncidentStatementDto",
-            "description" : "Incident statement"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/IncidentStatementDto"
+            }, {
+              "type" : "null"
+            } ]
           },
           "startedByUserId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The id of the user who started the adjudication"
           },
           "isYouthOffender" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Is classified as a youth offender"
           },
           "damages" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "Damages related to incident",
             "items" : {
               "$ref" : "#/components/schemas/DamageDto"
             }
           },
           "evidence" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "Evidence related to incident",
             "items" : {
               "$ref" : "#/components/schemas/EvidenceDto"
             }
           },
           "witnesses" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "Witnesses related to incident",
             "items" : {
               "$ref" : "#/components/schemas/WitnessDto"
             }
           },
           "damagesSaved" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "has the damages end point been called"
           },
           "evidenceSaved" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "has the evidence end point been called"
           },
           "witnessesSaved" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "has the witnesses end point been called"
           },
           "overrideAgencyId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "optional override agency id"
           },
           "originatingAgencyId" : {
@@ -9168,11 +9192,11 @@
             "description" : "agency id where report was created"
           },
           "createdOnBehalfOfOfficer" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Name the officer the report was created on behalf of"
           },
           "createdOnBehalfOfReason" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Reason why the report was created on behalf of another officer"
           }
         },
@@ -9202,7 +9226,7 @@
             "example" : "PHOTO"
           },
           "identifier" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Evidence identifier",
             "example" : "Tag number or Camera number"
           },
@@ -9235,17 +9259,17 @@
             "description" : "The offence rules they have broken"
           },
           "victimPrisonersNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The prison number of the victim involved in the incident, if relevant",
             "example" : "G2996UX"
           },
           "victimStaffUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username of the member of staff who is a victim of the incident, if relevant",
             "example" : "ABC12D"
           },
           "victimOtherPersonsName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The name of the victim (who is not a member of staff or a prisoner) involved in the incident, if relevant",
             "example" : "Bob Hope"
           },
@@ -9314,22 +9338,22 @@
             "title" : "This is the unique number relating to the type of offence they have been alleged to have committed"
           },
           "victimPrisonersNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The prison number of the victim involved in the incident, if relevant",
             "example" : "G2996UX"
           },
           "victimStaffUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username of the member of staff who is a victim of the incident, if relevant",
             "example" : "ABC12D"
           },
           "victimOtherPersonsName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The name of the victim (who is not a member of staff or a prisoner) involved in the incident, if relevant",
             "example" : "Bob Hope"
           },
           "protectedCharacteristics" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "optional list of protected characteristics involved in the offence",
             "items" : {
               "type" : "string",
@@ -9345,13 +9369,13 @@
         "description" : "Request to add or edit the incident statement for a draft adjudication",
         "properties" : {
           "statement" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The statement regarding the incident",
             "maxLength" : 4000,
             "minLength" : 0
           },
           "completed" : {
-            "type" : "boolean"
+            "type" : [ "boolean", "null" ]
           }
         }
       },
@@ -9377,7 +9401,7 @@
         "description" : "Request to update the incident role",
         "properties" : {
           "roleCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The incident role code",
             "example" : "25a",
             "title" : "If not set then it is assumed they committed the offence on their own"
@@ -9390,7 +9414,7 @@
         "description" : "Request to edit the incident details",
         "properties" : {
           "locationId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "deprecated" : true,
             "description" : "The id of the location the incident took place"
@@ -9407,7 +9431,7 @@
             "example" : "2010-10-12T10:00:00"
           },
           "dateTimeOfDiscovery" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Optional Date time if discovery date different to incident date",
             "example" : "2010-10-12T10:00:00"
@@ -9441,7 +9465,7 @@
             "example" : "G2996UX"
           },
           "associatedPrisonersName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The name of the other prisoner involved in the incident",
             "title" : "This only applies if the associated prisoner is from outside the establishment"
           }
@@ -9474,17 +9498,17 @@
             "description" : "did they complete it"
           },
           "outcome" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "outcome if they did not complete it",
             "enum" : [ "FULL_ACTIVATE", "PARTIAL_ACTIVATE", "EXT_SUSPEND", "NO_ACTION" ]
           },
           "daysToActivate" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "optional days to activate it for"
           },
           "suspendedUntil" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "optional new suspended until date"
           }
@@ -9569,7 +9593,7 @@
             "enum" : [ "COMPLETE", "REFER_POLICE", "REFER_INAD", "ADJOURN", "NOMIS", "REFER_GOV" ]
           },
           "referGovReason" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "optional refer back to gov reason",
             "enum" : [ "REVIEW_FOR_REFER_POLICE", "GOV_INQUIRY", "OTHER" ]
           },
@@ -9708,12 +9732,12 @@
             "example" : "MDI"
           },
           "overrideAgencyId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The optional agencyId where the prisoner now resides",
             "example" : "MDI"
           },
           "locationId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "deprecated" : true,
             "description" : "The id of the location the incident took place"
@@ -9730,26 +9754,65 @@
             "example" : "2010-10-12T10:00:00"
           },
           "dateTimeOfDiscovery" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Optional Date time if discovery date different to incident date",
             "example" : "2010-10-12T10:00:00"
           },
           "offenderBookingId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "offender book id used for api calls from dps"
           }
         },
         "required" : [ "agencyId", "dateTimeOfIncident", "gender", "locationUuid", "prisonerNumber" ]
       },
+      "Attachment" : {
+        "type" : "object",
+        "additionalProperties" : false,
+        "properties" : {
+          "attachmentNumber" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The number of the attachment which will match any corresponding reference in the content section"
+          },
+          "name" : {
+            "type" : "string",
+            "description" : "The name or description of the attachment which will be included in the report"
+          },
+          "contentType" : {
+            "type" : "string",
+            "description" : "The content type of the attachment"
+          },
+          "url" : {
+            "type" : "string",
+            "description" : "The url to be used to download the attachment file"
+          },
+          "filesize" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The size of the attachment file in bytes"
+          },
+          "filename" : {
+            "type" : "string",
+            "description" : "The filename of attachment file"
+          }
+        },
+        "required" : [ "attachmentNumber", "contentType", "filename", "filesize", "name", "url" ]
+      },
       "HmppsSubjectAccessRequestContent" : {
         "type" : "object",
         "additionalProperties" : false,
         "properties" : {
           "content" : {
-            "type" : "object",
             "description" : "The content of the subject access request response"
+          },
+          "attachments" : {
+            "type" : [ "array", "null" ],
+            "description" : "The details of any attachments for the subject access request response",
+            "items" : {
+              "$ref" : "#/components/schemas/Attachment"
+            }
           }
         },
         "required" : [ "content" ]
@@ -9822,8 +9885,11 @@
             "description" : "total number of charge proved for same offence"
           },
           "lastReportedOffence" : {
-            "$ref" : "#/components/schemas/LastReportedOffence",
-            "description" : "optional last reported same offence"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/LastReportedOffence"
+            }, {
+              "type" : "null"
+            } ]
           },
           "chargesWithSuspendedPunishments" : {
             "type" : "array",
@@ -9909,19 +9975,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
-          },
-          "numberOfElements" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -9939,6 +9992,19 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
+          "numberOfElements" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
+          },
           "empty" : {
             "type" : "boolean"
           }
@@ -9948,6 +10014,17 @@
         "type" : "object",
         "additionalProperties" : false,
         "properties" : {
+          "offset" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
+          "pageSize" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
           "unpaged" : {
             "type" : "boolean"
           },
@@ -9957,17 +10034,6 @@
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "pageSize" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "offset" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           }
         }
       },
@@ -9975,13 +10041,13 @@
         "type" : "object",
         "additionalProperties" : false,
         "properties" : {
-          "unsorted" : {
+          "empty" : {
             "type" : "boolean"
           },
           "sorted" : {
             "type" : "boolean"
           },
-          "empty" : {
+          "unsorted" : {
             "type" : "boolean"
           }
         }
@@ -10007,7 +10073,7 @@
             "description" : "total transferable reports to action"
           },
           "transferAllTotal" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "total transfer in and out to action"
           },
@@ -10075,46 +10141,46 @@
             "enum" : [ "PRIVILEGE", "EARNINGS", "CONFINEMENT", "REMOVAL_ACTIVITY", "EXCLUSION_WORK", "EXTRA_WORK", "REMOVAL_WING", "ADDITIONAL_DAYS", "PROSPECTIVE_DAYS", "CAUTION", "DAMAGES_OWED", "PAYBACK" ]
           },
           "privilegeType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "privilege type",
             "enum" : [ "CANTEEN", "FACILITIES", "MONEY", "TV", "ASSOCIATION", "GYM", "OTHER" ]
           },
           "otherPrivilege" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "other privilege description"
           },
           "duration" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "duration of punishment"
           },
           "measurement" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "measurement of duration",
             "enum" : [ "DAYS", "HOURS" ]
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "start date"
           },
           "lastDay" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "last day"
           },
           "amount" : {
-            "type" : "number",
+            "type" : [ "number", "null" ],
             "format" : "double",
             "description" : "amount"
           },
           "stoppagePercentage" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "stoppage percentage"
           },
           "activatedFrom" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "activated from report"
           }
         },
@@ -10126,7 +10192,7 @@
         "description" : "Hearing Summary",
         "properties" : {
           "id" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The id of the hearing"
           },
@@ -10162,7 +10228,7 @@
             "enum" : [ "ACCEPTED", "REJECTED", "AWAITING_REVIEW", "RETURNED", "UNSCHEDULED", "SCHEDULED", "REFER_POLICE", "REFER_INAD", "REFER_GOV", "PROSECUTION", "DISMISSED", "NOT_PROCEED", "ADJOURNED", "CHARGE_PROVED", "QUASHED", "INVALID_OUTCOME", "INVALID_SUSPENDED", "INVALID_ADA" ]
           },
           "locationId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "deprecated" : true,
             "description" : "internal location id"
@@ -10247,11 +10313,11 @@
             "example" : "2010-10-12T10:00:00"
           },
           "issuingOfficer" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The last issuing officer"
           },
           "dateTimeOfIssue" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The last date time of form issued"
           },
@@ -10263,7 +10329,7 @@
             }
           },
           "dateTimeOfFirstHearing" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "date time of first hearing"
           }
@@ -10276,9 +10342,7 @@
         "properties" : {
           "body" : {
             "type" : "object",
-            "additionalProperties" : {
-              "type" : "object"
-            }
+            "additionalProperties" : { }
           },
           "messageId" : {
             "type" : "string"
@@ -10319,19 +10383,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
-          },
-          "numberOfElements" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -10348,6 +10399,19 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
+          "numberOfElements" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
           },
           "empty" : {
             "type" : "boolean"
@@ -10390,51 +10454,51 @@
             "description" : "Id of booking"
           },
           "sanctionCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Type of award"
           },
           "sanctionCodeDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Award type description"
           },
           "months" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Number of months duration"
           },
           "days" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Number of days duration"
           },
           "limit" : {
-            "type" : "number",
+            "type" : [ "number", "null" ],
             "description" : "Compensation amount"
           },
           "comment" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Optional details"
           },
           "effectiveDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Start of sanction"
           },
           "status" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Award status (ref domain OIC_SANCT_ST)"
           },
           "statusDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Award status description"
           },
           "hearingId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "Id of hearing"
           },
           "hearingSequence" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "hearing record sequence number"
           }
