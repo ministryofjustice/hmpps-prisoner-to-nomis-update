@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-04-29.3237.9c49ca9"
+    "version" : "2026-04-29.3266.ec4dcfc"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -575,6 +575,43 @@
           },
           "301" : {
             "description" : "Permanent Redirect"
+          }
+        },
+        "security" : [ {
+          "api-role" : [ ]
+        } ]
+      }
+    },
+    "/person/probation/{crn}/address/{cprAddressId}" : {
+      "get" : {
+        "tags" : [ "Probation" ],
+        "description" : "Retrieve an address record by CPR Address Id. Role required is **ROLE_CORE_PERSON_RECORD_API__RO**.",
+        "operationId" : "getProbationAddress",
+        "parameters" : [ {
+          "name" : "crn",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "cprAddressId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CanonicalAddress"
+                }
+              }
+            }
           }
         },
         "security" : [ {
@@ -1793,6 +1830,11 @@
       "CanonicalAddress" : {
         "type" : "object",
         "properties" : {
+          "cprAddressId" : {
+            "type" : "string",
+            "description" : "CPR address Id",
+            "example" : "ec4c7479-218c-4f11-a02d-edd749820679"
+          },
           "noFixedAbode" : {
             "type" : [ "boolean", "null" ],
             "description" : "Person no fixed abode",
@@ -1840,7 +1882,7 @@
           },
           "postTown" : {
             "type" : [ "string", "null" ],
-            "description" : "Person address postTown",
+            "description" : "Person address post town",
             "example" : "London"
           },
           "county" : {
@@ -1851,14 +1893,72 @@
           "country" : {
             "type" : [ "string", "null" ],
             "description" : "Person address country",
-            "example" : "United Kingdom"
+            "example" : "United Kingdom of Great Britain and Northern Ireland (the)"
+          },
+          "countryCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "Person address country code",
+            "example" : "GBR"
           },
           "uprn" : {
             "type" : [ "string", "null" ],
             "description" : "Person address uprn",
             "example" : "100120991537"
+          },
+          "status" : {
+            "$ref" : "#/components/schemas/CanonicalAddressStatus",
+            "description" : "Person address status"
+          },
+          "comment" : {
+            "type" : [ "string", "null" ],
+            "description" : "Person address comment",
+            "example" : "Some comment"
+          },
+          "usages" : {
+            "type" : "array",
+            "description" : "List of person address usages",
+            "items" : {
+              "$ref" : "#/components/schemas/CanonicalAddressUsage"
+            }
+          }
+        },
+        "required" : [ "cprAddressId", "status", "usages" ]
+      },
+      "CanonicalAddressStatus" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : [ "string", "null" ],
+            "description" : "Address status code",
+            "example" : "M"
+          },
+          "description" : {
+            "type" : [ "string", "null" ],
+            "description" : "Address status description",
+            "example" : "Main"
           }
         }
+      },
+      "CanonicalAddressUsage" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : [ "string", "null" ],
+            "description" : "Address usage code",
+            "example" : "CURFEW"
+          },
+          "description" : {
+            "type" : [ "string", "null" ],
+            "description" : "Address usage description",
+            "example" : "Curfew Order"
+          },
+          "isActive" : {
+            "type" : "boolean",
+            "description" : "Address usage active flag",
+            "example" : true
+          }
+        },
+        "required" : [ "isActive" ]
       },
       "CanonicalAlias" : {
         "type" : "object",
