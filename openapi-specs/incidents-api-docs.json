@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-04-27.685.be7bdb1"
+    "version" : "2026-04-29.698.1848596"
   },
   "servers" : [ {
     "url" : "/",
@@ -5015,9 +5015,32 @@
           "filename" : {
             "type" : "string",
             "description" : "The filename of attachment file"
+          },
+          "headers" : {
+            "type" : "array",
+            "description" : "The additional headers to use when calling the url for fetching this attachment",
+            "nullable" : true,
+            "items" : {
+              "$ref" : "#/components/schemas/AttachmentHeader"
+            }
           }
         },
         "description" : "The details of any attachments for the subject access request response"
+      },
+      "AttachmentHeader" : {
+        "required" : [ "name", "value" ],
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "description" : "The name of the header"
+          },
+          "value" : {
+            "type" : "string",
+            "description" : "The value of the header"
+          }
+        },
+        "description" : "The additional headers to use when calling the url for fetching this attachment"
       },
       "HmppsSubjectAccessRequestContent" : {
         "required" : [ "content" ],
@@ -5112,17 +5135,17 @@
               "example" : "[\"property,ASC\"]"
             }
           },
-          "totalPages" : {
-            "type" : "integer",
-            "description" : "Total number of pages",
-            "format" : "int32",
-            "example" : 3
-          },
           "numberOfElements" : {
             "type" : "integer",
             "description" : "Number of elements in this page",
             "format" : "int32",
             "example" : 20
+          },
+          "totalPages" : {
+            "type" : "integer",
+            "description" : "Total number of pages",
+            "format" : "int32",
+            "example" : 3
           }
         },
         "description" : "Page of results",
