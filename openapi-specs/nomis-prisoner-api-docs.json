@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-04-29.1380.5fe988a"
+    "version" : "2026-04-30.1386.532919d"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -19272,6 +19272,178 @@
         }
       }
     },
+    "/movements/{offenderNo}/court/movement/out/{bookingId}/{movementSeq}" : {
+      "get" : {
+        "tags" : [ "court-movement-resource" ],
+        "summary" : "Get a specific court movement out for an offender",
+        "description" : "Get a specific court movement out for an offender by booking ID and movement sequence. Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getCourtMovementOut",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender number (NOMS ID)",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender number (NOMS ID)",
+            "example" : "A1234BC"
+          },
+          "example" : "A1234BC"
+        }, {
+          "name" : "bookingId",
+          "in" : "path",
+          "description" : "Booking ID",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Booking ID",
+            "example" : 123
+          },
+          "example" : 123
+        }, {
+          "name" : "movementSeq",
+          "in" : "path",
+          "description" : "Movement Sequence",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Movement Sequence",
+            "example" : 1
+          },
+          "example" : 1
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Court movement out returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CourtMovementOut"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Offender or court movement out not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/movements/{offenderNo}/court/movement/in/{bookingId}/{movementSeq}" : {
+      "get" : {
+        "tags" : [ "court-movement-resource" ],
+        "summary" : "Get a specific court movement in for an offender",
+        "description" : "Get a specific court movement in for an offender by booking ID and movement sequence. Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getCourtMovementIn",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender number (NOMS ID)",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender number (NOMS ID)",
+            "example" : "A1234BC"
+          },
+          "example" : "A1234BC"
+        }, {
+          "name" : "bookingId",
+          "in" : "path",
+          "description" : "Booking ID",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Booking ID",
+            "example" : 123
+          },
+          "example" : 123
+        }, {
+          "name" : "movementSeq",
+          "in" : "path",
+          "description" : "Movement Sequence",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Movement Sequence",
+            "example" : 1
+          },
+          "example" : 1
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Court movement in returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CourtMovementIn"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Offender or court movement in not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/movements/booking/{bookingId}/taps" : {
       "get" : {
         "tags" : [ "offender-taps-resource" ],
@@ -31422,14 +31594,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -32296,14 +32468,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -33815,14 +33987,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -33889,14 +34061,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -33953,14 +34125,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -34618,14 +34790,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -34801,14 +34973,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -35983,7 +36155,7 @@
           },
           "comment" : {
             "type" : "string",
-            "description" : "Event status"
+            "description" : "Comment"
           },
           "prison" : {
             "type" : "string",
@@ -35993,9 +36165,117 @@
             "type" : "integer",
             "format" : "int64",
             "description" : "Court case ID"
+          },
+          "audit" : {
+            "$ref" : "#/components/schemas/NomisAudit",
+            "description" : "Audit data associated with the records"
           }
         },
-        "required" : [ "bookingId", "comment", "eventDate", "eventId", "eventStatus", "eventType", "prison", "startTime" ]
+        "required" : [ "audit", "bookingId", "eventDate", "eventId", "eventStatus", "eventType", "prison", "startTime" ]
+      },
+      "CourtMovementOut" : {
+        "type" : "object",
+        "description" : "Court Movement Out",
+        "properties" : {
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Booking ID"
+          },
+          "sequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Movement sequence"
+          },
+          "courtScheduleOutId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Court schedule out event ID. Empty for unscheduled movements."
+          },
+          "movementDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Movement date"
+          },
+          "movementTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Movement time"
+          },
+          "movementReason" : {
+            "type" : "string",
+            "description" : "Movement reason"
+          },
+          "fromPrison" : {
+            "type" : "string",
+            "description" : "From prison"
+          },
+          "toAgency" : {
+            "type" : "string",
+            "description" : "To agency"
+          },
+          "commentText" : {
+            "type" : "string",
+            "description" : "Comment text"
+          },
+          "audit" : {
+            "$ref" : "#/components/schemas/NomisAudit",
+            "description" : "Audit data associated with the records"
+          }
+        },
+        "required" : [ "audit", "bookingId", "fromPrison", "movementDate", "movementReason", "movementTime", "sequence" ]
+      },
+      "CourtMovementIn" : {
+        "type" : "object",
+        "description" : "Court Movement In",
+        "properties" : {
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Booking ID"
+          },
+          "sequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Movement sequence"
+          },
+          "courtScheduleOutId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Court schedule out event ID. Empty for unscheduled movements."
+          },
+          "movementDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Movement date"
+          },
+          "movementTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Movement time"
+          },
+          "movementReason" : {
+            "type" : "string",
+            "description" : "Movement reason"
+          },
+          "fromAgency" : {
+            "type" : "string",
+            "description" : "From agency"
+          },
+          "toPrison" : {
+            "type" : "string",
+            "description" : "To prison"
+          },
+          "commentText" : {
+            "type" : "string",
+            "description" : "Comment text"
+          },
+          "audit" : {
+            "$ref" : "#/components/schemas/NomisAudit",
+            "description" : "Audit data associated with the records"
+          }
+        },
+        "required" : [ "audit", "bookingId", "fromAgency", "movementDate", "movementReason", "movementTime", "sequence" ]
       },
       "AmendmentResponse" : {
         "type" : "object",
@@ -36201,14 +36481,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -36743,14 +37023,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -36853,14 +37133,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -37166,14 +37446,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -37472,14 +37752,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -38234,14 +38514,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -38531,14 +38811,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -38615,14 +38895,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -38913,14 +39193,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
