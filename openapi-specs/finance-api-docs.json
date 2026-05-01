@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-04-23.747.fa309b7"
+    "version" : "2026-04-30.754.2d2e72a"
   },
   "servers" : [ {
     "url" : "https://prisoner-finance-sync-api-dev.hmpps.service.justice.gov.uk/",
@@ -129,7 +129,14 @@
         },
         "responses" : {
           "200" : {
-            "description" : "Prisoner balances validation request received successfully."
+            "description" : "Prisoner balances validation request received successfully. Will respond with true or false based on whether the validation has been successful along with a list of noted discrepancies. Any discrepancies will be logged and investigated.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MigrationValidationResponse"
+                }
+              }
+            }
           },
           "400" : {
             "description" : "Bad request - invalid input data.",
@@ -1211,6 +1218,107 @@
         },
         "required" : [ "accountBalances" ]
       },
+      "GeneralLedgerDiscrepancyDetails" : {
+        "type" : "object",
+        "properties" : {
+          "message" : {
+            "type" : "string"
+          },
+          "prisonerId" : {
+            "type" : "string"
+          },
+          "accountType" : {
+            "type" : "string"
+          },
+          "legacyAggregatedBalance" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "generalLedgerBalance" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "discrepancy" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "glBreakdown" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SubAccountBalanceResponse"
+            }
+          },
+          "legacyBreakdown" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonerEstablishmentBalanceDetails"
+            }
+          }
+        },
+        "required" : [ "accountType", "discrepancy", "generalLedgerBalance", "glBreakdown", "legacyAggregatedBalance", "legacyBreakdown", "message", "prisonerId" ]
+      },
+      "MigrationValidationResponse" : {
+        "type" : "object",
+        "properties" : {
+          "validated" : {
+            "type" : "boolean"
+          },
+          "discrepancyDetails" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/GeneralLedgerDiscrepancyDetails"
+            }
+          }
+        },
+        "required" : [ "discrepancyDetails", "validated" ]
+      },
+      "PrisonerEstablishmentBalanceDetails" : {
+        "type" : "object",
+        "description" : "Summary of a prisoner's sub account balance at a specific establishment.",
+        "properties" : {
+          "prisonId" : {
+            "type" : "string",
+            "description" : "The establishment code where the transactions for this balance occurred.",
+            "example" : "LEI"
+          },
+          "accountCode" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The unique numeric code identifying the sub account.",
+            "example" : 2101
+          },
+          "totalBalance" : {
+            "type" : "number",
+            "description" : "The current monetary balance of the sub account at this establishment. This value can be positive or negative.",
+            "example" : 32.0
+          },
+          "holdBalance" : {
+            "type" : "number",
+            "format" : "decimal",
+            "description" : "The total amount on hold for this sub account at this establishment.",
+            "example" : 8.0
+          }
+        },
+        "required" : [ "accountCode", "holdBalance", "prisonId", "totalBalance" ]
+      },
+      "SubAccountBalanceResponse" : {
+        "type" : "object",
+        "properties" : {
+          "subAccountId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "balanceDateTime" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "amount" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "amount", "balanceDateTime", "subAccountId" ]
+      },
       "ErrorResponse" : {
         "type" : "object",
         "properties" : {
@@ -1803,35 +1911,6 @@
           }
         },
         "required" : [ "last", "page", "totalElements", "totalPages", "transactions" ]
-      },
-      "PrisonerEstablishmentBalanceDetails" : {
-        "type" : "object",
-        "description" : "Summary of a prisoner's sub account balance at a specific establishment.",
-        "properties" : {
-          "prisonId" : {
-            "type" : "string",
-            "description" : "The establishment code where the transactions for this balance occurred.",
-            "example" : "LEI"
-          },
-          "accountCode" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "The unique numeric code identifying the sub account.",
-            "example" : 2101
-          },
-          "totalBalance" : {
-            "type" : "number",
-            "description" : "The current monetary balance of the sub account at this establishment. This value can be positive or negative.",
-            "example" : 32.0
-          },
-          "holdBalance" : {
-            "type" : "number",
-            "format" : "decimal",
-            "description" : "The total amount on hold for this sub account at this establishment.",
-            "example" : 8.0
-          }
-        },
-        "required" : [ "accountCode", "holdBalance", "prisonId", "totalBalance" ]
       },
       "PrisonerEstablishmentBalanceDetailsList" : {
         "type" : "object",
