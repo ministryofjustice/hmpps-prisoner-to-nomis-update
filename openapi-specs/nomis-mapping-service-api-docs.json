@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-04-27.516.a548bdd"
+    "version" : "2026-04-30.524.5877a58"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -3652,6 +3652,60 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/court/schedule" : {
+      "post" : {
+        "tags" : [ "court-schedule-resource" ],
+        "summary" : "Creates a mapping for a single court schedule",
+        "description" : "Creates a mapping for a single court schedule. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "createCourtScheduleMapping",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CourtScheduleMappingDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Court schedule mapping created",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "The mapping already exists.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -12087,6 +12141,65 @@
           },
           "403" : {
             "description" : "Forbidden to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/court/schedule/nomis-id/{nomisEventId}" : {
+      "get" : {
+        "tags" : [ "court-schedule-resource" ],
+        "summary" : "Gets a mapping for a single court schedule by NOMIS event ID",
+        "description" : "Gets a mapping for a single court schedule by NOMIS event ID. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "getCourtScheduleMappingByNomisId",
+        "parameters" : [ {
+          "name" : "nomisEventId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Court schedule mapping returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CourtScheduleMappingDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "The mapping does not exist.",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -22110,6 +22223,40 @@
         },
         "required" : [ "dpsCSIPId", "id", "isNew", "mappingType", "new", "nomisCSIPId" ]
       },
+      "CourtScheduleMappingDto" : {
+        "type" : "object",
+        "description" : "Mapping for a single court schedule",
+        "properties" : {
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The NOMIS offender number",
+            "example" : "A1234BC"
+          },
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS ID of the booking",
+            "example" : 12345
+          },
+          "nomisEventId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS event id"
+          },
+          "dpsCourtAppearanceId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS court appearance id"
+          },
+          "mappingType" : {
+            "type" : "string",
+            "description" : "The source of the mapping",
+            "enum" : [ "MIGRATED", "NOMIS_CREATED", "DPS_CREATED" ],
+            "example" : "NOMIS_CREATED"
+          }
+        },
+        "required" : [ "bookingId", "dpsCourtAppearanceId", "mappingType", "nomisEventId", "prisonerNumber" ]
+      },
       "NomisSentenceId" : {
         "type" : "object",
         "description" : "NOMIS Sentence ID",
@@ -23533,12 +23680,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "paged" : {
+            "type" : "boolean"
+          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "paged" : {
-            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
