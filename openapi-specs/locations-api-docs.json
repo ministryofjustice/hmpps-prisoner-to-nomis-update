@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-04-27.691.809559f"
+    "version" : "2026-05-06.714.f8ead5d"
   },
   "servers" : [ {
     "url" : "/",
@@ -7601,32 +7601,6 @@
         },
         "required" : [ "level", "locationCode", "locationType", "pathHierarchy" ]
       },
-      "Certification" : {
-        "type" : "object",
-        "description" : "Certification",
-        "properties" : {
-          "certified" : {
-            "type" : "boolean",
-            "description" : "Indicates that this location is certified for use as a residential location",
-            "example" : true
-          },
-          "capacityOfCertifiedCell" : {
-            "type" : "integer",
-            "format" : "int32",
-            "deprecated" : true,
-            "description" : "Old name for CNA (Certified normal accommodation)",
-            "example" : 1
-          },
-          "certifiedNormalAccommodation" : {
-            "type" : [ "integer", "null" ],
-            "format" : "int32",
-            "deprecated" : true,
-            "description" : "CNA (Certified normal accommodation)",
-            "example" : 1
-          }
-        },
-        "required" : [ "capacityOfCertifiedCell", "certified" ]
-      },
       "ChangeHistory" : {
         "type" : "object",
         "description" : "Change History",
@@ -7765,13 +7739,6 @@
             "type" : [ "boolean", "null" ],
             "description" : "Indicates that this location is certified for use as a cell",
             "example" : true
-          },
-          "certification" : {
-            "oneOf" : [ {
-              "$ref" : "#/components/schemas/Certification"
-            }, {
-              "type" : "null"
-            } ]
           },
           "usage" : {
             "type" : [ "array", "null" ],
@@ -9484,13 +9451,6 @@
             "type" : [ "boolean", "null" ],
             "description" : "Indicates that this location is certified for use as a residential location"
           },
-          "certification" : {
-            "oneOf" : [ {
-              "$ref" : "#/components/schemas/Certification"
-            }, {
-              "type" : "null"
-            } ]
-          },
           "attributes" : {
             "type" : [ "array", "null" ],
             "description" : "Location Attributes",
@@ -9595,13 +9555,6 @@
             "type" : [ "boolean", "null" ],
             "description" : "Indicates that this location is certified for use as a cell",
             "example" : true
-          },
-          "certification" : {
-            "oneOf" : [ {
-              "$ref" : "#/components/schemas/Certification"
-            }, {
-              "type" : "null"
-            } ]
           },
           "attributes" : {
             "type" : [ "array", "null" ],

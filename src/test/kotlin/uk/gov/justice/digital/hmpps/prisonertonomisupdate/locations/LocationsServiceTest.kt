@@ -212,11 +212,6 @@ internal class LocationsServiceTest {
       maxCapacity = 14,
       certifiedNormalAccommodation = 13,
     ),
-    certification = Certification(
-      certified = true,
-      certifiedNormalAccommodation = 13,
-      capacityOfCertifiedCell = 13,
-    ),
     certifiedCell = true,
     attributes = listOf(
       LegacyLocation.Attributes.GATED_CELL,
