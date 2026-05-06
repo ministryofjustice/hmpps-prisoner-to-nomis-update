@@ -13,7 +13,6 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.Capacity
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.Certification
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.LegacyLocation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.NonResidentialUsageDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.LocationMappingDto
@@ -211,11 +210,6 @@ internal class LocationsServiceTest {
       workingCapacity = 12,
       maxCapacity = 14,
       certifiedNormalAccommodation = 13,
-    ),
-    certification = Certification(
-      certified = true,
-      certifiedNormalAccommodation = 13,
-      capacityOfCertifiedCell = 13,
     ),
     certifiedCell = true,
     attributes = listOf(

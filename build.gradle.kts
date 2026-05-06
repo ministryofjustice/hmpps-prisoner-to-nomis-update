@@ -215,7 +215,7 @@ val models = listOf(
     packageName = "locations",
     testPackageName = "locations",
     url = "https://locations-inside-prison-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
-    models = "Capacity,CellCertificateLocationDto,Certification,ChangeHistory,LegacyLocation,Location,NonResidentialUsageDto,PatchNonResidentialLocationRequest,PendingChangeDto,ServiceUsingLocationDto,TransactionDetail,TransactionHistory",
+    models = "Capacity,CellCertificateLocationDto,ChangeHistory,LegacyLocation,Location,NonResidentialUsageDto,PatchNonResidentialLocationRequest,PendingChangeDto,ServiceUsingLocationDto,TransactionDetail,TransactionHistory",
   ),
   ModelConfiguration(
     name = "nomis-mapping-service",
