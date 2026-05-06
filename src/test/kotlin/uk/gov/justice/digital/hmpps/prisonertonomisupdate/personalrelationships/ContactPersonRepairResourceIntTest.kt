@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships
 
+import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
+import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
@@ -10,6 +12,7 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers
+import org.mockito.kotlin.any
 import org.mockito.kotlin.check
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
@@ -383,6 +386,132 @@ class ContactPersonRepairResourceIntTest(
             assertThat(it["dpsPrisonerContactId"]).isEqualTo(dpsPrisonerContactId.toString())
           },
           isNull(),
+        )
+      }
+    }
+  }
+
+  @DisplayName("POST /contacts/{contactId}/prisoner-contact/{prisonerContactId}/resynchronise")
+  @Nested
+  inner class CreatePrisonerContact {
+    val dpsPrisonerContactId = 786756L
+    private val nomisContactId = 974592L
+
+    @Nested
+    inner class Security {
+      @Test
+      fun `access forbidden when no role`() {
+        webTestClient.post().uri("/contacts/{contactId}/prisoner-contact/{prisonerContactId}/resynchronise", nomisPersonIdAndDpsContactId, dpsPrisonerContactId)
+          .headers(setAuthorisation(roles = listOf()))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access forbidden with wrong role`() {
+        webTestClient.post().uri("/contacts/{contactId}/prisoner-contact/{prisonerContactId}/resynchronise", nomisPersonIdAndDpsContactId, dpsPrisonerContactId)
+          .headers(setAuthorisation(roles = listOf("ROLE_BANANAS")))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access unauthorised with no auth token`() {
+        webTestClient.post().uri("/contacts/{contactId}/prisoner-contact/{prisonerContactId}/resynchronise", nomisPersonIdAndDpsContactId, dpsPrisonerContactId)
+          .exchange()
+          .expectStatus().isUnauthorized
+      }
+    }
+
+    @Nested
+    inner class HappyPath {
+
+      @BeforeEach
+      fun setUp() {
+        reset(telemetryClient)
+        mappingApi.stubGetByDpsPrisonerContactIdOrNull(dpsPrisonerContactId = dpsPrisonerContactId, null)
+        dpsApi.stubGetPrisonerContact(
+          prisonerContactId = dpsPrisonerContactId,
+          prisonerContact().copy(
+            id = dpsPrisonerContactId,
+            contactId = nomisPersonIdAndDpsContactId,
+            prisonerNumber = "A1234KT",
+            contactType = "S",
+            relationshipType = "BRO",
+            nextOfKin = true,
+            emergencyContact = true,
+            comments = "Big brother",
+            active = true,
+            approvedVisitor = true,
+            expiryDate = LocalDate.parse("2020-01-01"),
+          ),
+        )
+        nomisApi.stubCreatePersonContact(personId = nomisPersonIdAndDpsContactId, createPersonContactResponse().copy(personContactId = nomisContactId))
+        mappingApi.stubCreateContactMapping()
+
+        webTestClient.post().uri("/contacts/{contactId}/prisoner-contact/{prisonerContactId}/resynchronise", nomisPersonIdAndDpsContactId, dpsPrisonerContactId)
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__SYNCHRONISATION__RW")))
+          .exchange()
+          .expectStatus().isNoContent
+      }
+
+      @Test
+      fun `will send telemetry event showing the create`() {
+        verify(telemetryClient).trackEvent(
+          ArgumentMatchers.eq("contact-create-success"),
+          any(),
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `telemetry will contain key facts about the contact created`() {
+        verify(telemetryClient).trackEvent(
+          ArgumentMatchers.eq("contact-create-success"),
+          check {
+            assertThat(it).containsEntry("dpsPrisonerContactId", dpsPrisonerContactId.toString())
+            assertThat(it).containsEntry("nomisContactId", nomisContactId.toString())
+            assertThat(it).containsEntry("offenderNo", "A1234KT")
+            assertThat(it).containsEntry("dpsContactId", nomisPersonIdAndDpsContactId.toString())
+            assertThat(it).containsEntry("nomisPersonId", nomisPersonIdAndDpsContactId.toString())
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will call back to DPS to get prisoner contact details`() {
+        dpsApi.verify(getRequestedFor(urlEqualTo("/sync/prisoner-contact/$dpsPrisonerContactId")))
+      }
+
+      @Test
+      fun `will create the contact in NOMIS`() {
+        nomisApi.verify(postRequestedFor(urlEqualTo("/persons/$nomisPersonIdAndDpsContactId/contact")))
+      }
+
+      @Test
+      fun `the created contact will contain details of the DPS prisoner contact`() {
+        nomisApi.verify(
+          postRequestedFor(anyUrl())
+            .withRequestBodyJsonPath("offenderNo", "A1234KT")
+            .withRequestBodyJsonPath("contactTypeCode", "S")
+            .withRequestBodyJsonPath("relationshipTypeCode", "BRO")
+            .withRequestBodyJsonPath("active", true)
+            .withRequestBodyJsonPath("expiryDate", "2020-01-01")
+            .withRequestBodyJsonPath("approvedVisitor", true)
+            .withRequestBodyJsonPath("nextOfKin", true)
+            .withRequestBodyJsonPath("emergencyContact", true)
+            .withRequestBodyJsonPath("comment", "Big brother"),
+        )
+      }
+
+      @Test
+      fun `will create a mapping between the NOMIS and DPS ids`() {
+        mappingApi.verify(
+          postRequestedFor(urlEqualTo("/mapping/contact-person/contact"))
+            .withRequestBodyJsonPath("dpsId", "$dpsPrisonerContactId")
+            .withRequestBodyJsonPath("nomisId", nomisContactId)
+            .withRequestBodyJsonPath("mappingType", "DPS_CREATED"),
         )
       }
     }
