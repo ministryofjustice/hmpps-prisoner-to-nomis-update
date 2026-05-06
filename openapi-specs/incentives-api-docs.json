@@ -7,11 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "license" : {
-      "name" : "MIT",
-      "identifier" : "MIT"
-    },
-    "version" : "2026-04-27.332.d70c1cd"
+    "version" : "2026-05-05.361.13cdf75"
   },
   "servers" : [ {
     "url" : "/",
@@ -19,8 +15,6 @@
   } ],
   "security" : [ {
     "bearer-jwt" : [ "read", "write" ]
-  }, {
-    "hmpps-auth" : [ ]
   } ],
   "tags" : [ {
     "name" : "Incentive review summary",
@@ -34,6 +28,9 @@
   }, {
     "name" : "Prison incentive levels",
     "description" : "Incentive levels and their per-prison associated information"
+  }, {
+    "name" : "hmpps-queue-resource-async",
+    "description" : "Endpoints that are to be used by administrators only for managing SQS queues. All endpoints require the <b>QUEUE_ADMIN</b> role further information can be found in the <a href=\"https://github.com/ministryofjustice/hmpps-spring-boot-sqs\">hmpps-spring-boot-sqs</a> project"
   } ],
   "paths" : {
     "/queue-admin/retry-dlq/{dlqName}" : {
@@ -2004,12 +2001,6 @@
             "description" : "Prison ID",
             "example" : "MDI"
           },
-          "locationId" : {
-            "type" : [ "string", "null" ],
-            "deprecated" : true,
-            "description" : "DEPRECATED - Location of prisoner at the time when review was created in Incentives service (i.e. their cell)",
-            "example" : "1-2-003"
-          },
           "userId" : {
             "type" : [ "string", "null" ],
             "description" : "Username of the reviewer",
@@ -2139,9 +2130,30 @@
           "filename" : {
             "type" : "string",
             "description" : "The filename of attachment file"
+          },
+          "headers" : {
+            "type" : [ "array", "null" ],
+            "description" : "The additional headers to use when calling the url for fetching this attachment",
+            "items" : {
+              "$ref" : "#/components/schemas/AttachmentHeader"
+            }
           }
         },
         "required" : [ "attachmentNumber", "contentType", "filename", "filesize", "name", "url" ]
+      },
+      "AttachmentHeader" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "description" : "The name of the header"
+          },
+          "value" : {
+            "type" : "string",
+            "description" : "The value of the header"
+          }
+        },
+        "required" : [ "name", "value" ]
       },
       "HmppsSubjectAccessRequestContent" : {
         "type" : "object",
@@ -2357,12 +2369,6 @@
             "description" : "Date and time when last review took place",
             "example" : "2021-12-31T12:34:56.789012"
           },
-          "locationId" : {
-            "type" : [ "string", "null" ],
-            "deprecated" : true,
-            "description" : "DEPRECATED - Location of prisoner at the time when review was created in Incentives service (i.e. their cell)",
-            "example" : "1-2-003"
-          },
           "iepDetails" : {
             "type" : "array",
             "description" : "Incentive Review History (descending in time)",
@@ -2389,28 +2395,11 @@
     "securitySchemes" : {
       "bearer-jwt" : {
         "type" : "http",
+        "description" : "An HMPPS Auth access token.",
+        "name" : "Authorization",
+        "in" : "header",
         "scheme" : "bearer",
         "bearerFormat" : "JWT"
-      },
-      "hmpps-auth" : {
-        "type" : "oauth2",
-        "flows" : {
-          "clientCredentials" : {
-            "tokenUrl" : "https://sign-in-dev.hmpps.service.justice.gov.uk/auth/oauth/token",
-            "scopes" : {
-              "read" : "Allows read of data",
-              "write" : "Allows write of data"
-            }
-          },
-          "authorizationCode" : {
-            "authorizationUrl" : "https://sign-in-dev.hmpps.service.justice.gov.uk/auth/oauth/authorize",
-            "tokenUrl" : "https://sign-in-dev.hmpps.service.justice.gov.uk/auth/oauth/token",
-            "scopes" : {
-              "read" : "Allows read of data",
-              "write" : "Allows write of data"
-            }
-          }
-        }
       }
     }
   }
