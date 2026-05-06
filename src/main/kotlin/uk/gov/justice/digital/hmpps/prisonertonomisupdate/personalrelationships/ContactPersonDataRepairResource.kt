@@ -60,4 +60,28 @@ class ContactPersonDataRepairResource(
       null,
     )
   }
+
+  @PostMapping("/contacts/{contactId}/prisoner-contact/{prisonerContactId}/resynchronise")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  @Operation(
+    summary = "Creates prisoner contact aka contact data from DPS back to NOMIS. This will create the prisoner contact",
+    description = "Used when an unexpected event has happened in DPS, for instance no domain events published after a prisoner contact that has resulted in the NOMIS data drifting from DPS, so emergency use only. Requires ROLE_PRISONER_TO_NOMIS__SYNCHRONISATION__RW",
+  )
+  suspend fun createPrisonerContact(
+    @PathVariable contactId: Long,
+    @PathVariable prisonerContactId: Long,
+  ) {
+    contactPersonService.createPrisonerContact(
+      contactId = contactId,
+      prisonerContactId = prisonerContactId,
+    )
+    telemetryClient.trackEvent(
+      "to-nomis-synch-contactperson-prisoner-contact-create-repair",
+      mapOf(
+        "dpsContactId" to contactId.toString(),
+        "dpsPrisonerContactId" to prisonerContactId.toString(),
+      ),
+      null,
+    )
+  }
 }
