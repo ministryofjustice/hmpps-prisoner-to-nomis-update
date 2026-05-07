@@ -35,41 +35,62 @@ class CourtSentencingDomainEventListener(
     when (eventType) {
       "court-case.inserted" ->
         courtSentencingService.createCourtCase(message.fromJson())
+
+      "court-case.updated" ->
+        courtSentencingService.updateCourtCase(message.fromJson())
+
       "court-appearance.inserted" ->
         courtSentencingService.createCourtAppearance(message.fromJson())
+
       "court-case.deleted" ->
         courtSentencingService.deleteCourtCase(message.fromJson())
+
       "court-appearance.deleted" ->
         courtSentencingService.deleteCourtAppearance(message.fromJson())
+
       // includes removing or adding any charges that are associated with the appearance
       "court-appearance.updated" ->
         courtSentencingService.updateCourtAppearance(message.fromJson())
+
       "legacy.court-case-references.updated" ->
         courtSentencingService.refreshCaseReferences(message.fromJson())
+
       "charge.inserted" ->
         courtSentencingService.createCharge(message.fromJson())
+
       "charge.updated" ->
         courtSentencingService.updateCharge(message.fromJson())
+
       "sentence.inserted" ->
         courtSentencingService.createSentence(message.fromJson())
+
       "sentence.fix-single-charge.inserted" ->
         courtSentencingService.createSentence(message.fromJson())
+
       "sentence.updated" ->
         courtSentencingService.updateSentence(message.fromJson())
+
       "sentence.deleted" ->
         courtSentencingService.deleteSentence(message.fromJson())
+
       "sentence.period-length.inserted" ->
         courtSentencingService.createSentenceTerm(message.fromJson())
+
       "sentence.period-length.updated" ->
         courtSentencingService.updateSentenceTerm(message.fromJson())
+
       "sentence.period-length.deleted" ->
         courtSentencingService.deleteSentenceTerm(message.fromJson())
+
       "recall.inserted" ->
         courtSentencingService.createRecallSentences(message.fromJson())
+
       "recall.updated" ->
         courtSentencingService.updateRecallSentences(message.fromJson())
+
       "recall.deleted" ->
         courtSentencingService.deleteRecallSentences(message.fromJson())
+
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }
   }

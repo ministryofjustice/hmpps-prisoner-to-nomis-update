@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Of
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RevertRecallRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceTermRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateCourtAppearanceResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateCourtCaseRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateRecallRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 
@@ -40,6 +41,12 @@ class CourtSentencingNomisApiService(@Qualifier("nomisApiWebClient") private val
     .bodyValue(request)
     .retrieve()
     .awaitBody()
+
+  suspend fun updateCourtCase(courtCaseId: Long, offenderNo: String, request: UpdateCourtCaseRequest): ResponseEntity<Void> = webClient.put()
+    .uri("/prisoners/{offenderNo}/sentencing/court-cases/{courtCaseId}", offenderNo, courtCaseId)
+    .bodyValue(request)
+    .retrieve()
+    .awaitBodilessEntity()
 
   suspend fun deleteCourtCase(offenderNo: String, nomisCourtCaseId: Long): ResponseEntity<Void> = webClient.delete()
     .uri("/prisoners/{offenderNo}/sentencing/court-cases/{nomisCourtCaseId}", offenderNo, nomisCourtCaseId)
