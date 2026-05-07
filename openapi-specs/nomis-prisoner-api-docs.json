@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-05-05.1401.b7d6fd4"
+    "version" : "2026-05-06.1409.f07effc"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -1005,6 +1005,93 @@
           },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prisoners/{offenderNo}/sentencing/court-cases/{caseId}" : {
+      "put" : {
+        "tags" : [ "court-sentencing-resource" ],
+        "summary" : "Updates Court case",
+        "description" : "Required role NOMIS_PRISONER_API__SYNCHRONISATION__RW Updates a court case for the offender, currently only changes 1 field - status",
+        "operationId" : "updateCourtCase",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender no",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender no",
+            "example" : "AA668EC"
+          },
+          "example" : "AA668EC"
+        }, {
+          "name" : "caseId",
+          "in" : "path",
+          "description" : "Case Id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Case Id",
+            "example" : 4565456
+          },
+          "example" : 4565456
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateCourtCaseRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Case updated"
+          },
+          "400" : {
+            "description" : "Supplied data is invalid, for instance missing required fields or invalid values. See schema for details",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint when role NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Case does not exist",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -15156,6 +15243,121 @@
         }
       }
     },
+    "/roles" : {
+      "get" : {
+        "tags" : [ "roles-resource" ],
+        "summary" : "Get all roles",
+        "description" : "Retrieves all roles. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getAllRoles",
+        "parameters" : [ {
+          "name" : "all-roles",
+          "in" : "query",
+          "description" : "Get all roles, which includes both DPS and NOMIS roles",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false,
+            "description" : "Get all roles, which includes both DPS and NOMIS roles",
+            "example" : true
+          },
+          "example" : true
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Roles Returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RoleDetail"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/roles/{roleCode}" : {
+      "get" : {
+        "tags" : [ "roles-resource" ],
+        "summary" : "Get details for a role",
+        "description" : "Retrieves details for a Role by its code. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getRoleDetails",
+        "parameters" : [ {
+          "name" : "roleCode",
+          "in" : "path",
+          "description" : "Role Code",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Role Code",
+            "example" : "INCIDENT_REPORTS__RO"
+          },
+          "example" : "INCIDENT_REPORTS__RO"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Role returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RoleDetail"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Role does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/questionnaires/{questionnaireId}" : {
       "get" : {
         "tags" : [ "questionnaire-resource" ],
@@ -23926,6 +24128,16 @@
         },
         "required" : [ "outcome" ]
       },
+      "UpdateCourtCaseRequest" : {
+        "type" : "object",
+        "description" : "Court case update request",
+        "properties" : {
+          "status" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "status" ]
+      },
       "CourtAppearanceRequest" : {
         "type" : "object",
         "description" : "Court Event",
@@ -32257,6 +32469,34 @@
           }
         },
         "required" : [ "fromRootOffenderId", "toRootOffenderId" ]
+      },
+      "RoleDetail" : {
+        "type" : "object",
+        "description" : "The data held in NOMIS about a role",
+        "properties" : {
+          "code" : {
+            "type" : "string",
+            "description" : "Role Code",
+            "example" : "GLOBAL_SEARCH"
+          },
+          "name" : {
+            "type" : "string",
+            "description" : "Role Name",
+            "example" : "Global Search Role"
+          },
+          "type" : {
+            "type" : "string",
+            "description" : "Role Type ",
+            "example" : "APP"
+          },
+          "adminRoleOnly" : {
+            "type" : "boolean",
+            "default" : false,
+            "description" : "If the role is for admin users only",
+            "example" : true
+          }
+        },
+        "required" : [ "code", "name" ]
       },
       "AnswerResponse" : {
         "type" : "object",
