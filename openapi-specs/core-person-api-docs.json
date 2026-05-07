@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-04-29.3266.ec4dcfc"
+    "version" : "2026-05-06.3354.82b98e6"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -1369,6 +1369,10 @@
           },
           "telephoneNumber" : {
             "type" : [ "string", "null" ]
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
           }
         }
       },
@@ -1920,9 +1924,16 @@
             "items" : {
               "$ref" : "#/components/schemas/CanonicalAddressUsage"
             }
+          },
+          "contacts" : {
+            "type" : "array",
+            "description" : "List of person address contacts",
+            "items" : {
+              "$ref" : "#/components/schemas/CanonicalContact"
+            }
           }
         },
-        "required" : [ "cprAddressId", "status", "usages" ]
+        "required" : [ "contacts", "cprAddressId", "status", "usages" ]
       },
       "CanonicalAddressStatus" : {
         "type" : "object",
@@ -1988,6 +1999,41 @@
           }
         },
         "required" : [ "sex", "title" ]
+      },
+      "CanonicalContact" : {
+        "type" : "object",
+        "properties" : {
+          "type" : {
+            "$ref" : "#/components/schemas/CanonicalContactType",
+            "description" : "Contact type"
+          },
+          "value" : {
+            "type" : [ "string", "null" ],
+            "description" : "Contact value",
+            "example" : "+44 20 7946 0000"
+          },
+          "extension" : {
+            "type" : [ "string", "null" ],
+            "description" : "Contact extension",
+            "example" : "1234"
+          }
+        },
+        "required" : [ "type" ]
+      },
+      "CanonicalContactType" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : [ "string", "null" ],
+            "description" : "Address contact type code",
+            "example" : "HOME"
+          },
+          "description" : {
+            "type" : [ "string", "null" ],
+            "description" : "Address contact type description",
+            "example" : "Home"
+          }
+        }
       },
       "CanonicalEthnicity" : {
         "type" : "object",
