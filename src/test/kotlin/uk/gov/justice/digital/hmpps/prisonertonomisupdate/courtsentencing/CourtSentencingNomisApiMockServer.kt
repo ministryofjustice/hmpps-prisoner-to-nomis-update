@@ -72,6 +72,10 @@ class CourtSentencingNomisApiMockServer {
     stubPost("/prisoners/$offenderNo/sentencing/court-cases", response = response)
   }
 
+  fun stubCourtCaseUpdate(offenderNo: String, caseId: Long) {
+    stubPut("/prisoners/$offenderNo/sentencing/court-cases/$caseId")
+  }
+
   fun stubCourtCaseCreateWithError(offenderNo: String, status: Int = 500) {
     stubPostWithError("/prisoners/$offenderNo/sentencing/court-cases", status)
   }

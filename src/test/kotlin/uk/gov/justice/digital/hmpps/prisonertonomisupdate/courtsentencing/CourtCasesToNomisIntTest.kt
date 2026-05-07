@@ -366,6 +366,149 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
   }
 
   @Nested
+  inner class UpdateCourtCase {
+
+    @Nested
+    inner class WhenCourtCaseHasBeenUpdatedInNomis {
+      @BeforeEach
+      fun setUp() {
+        publishUpdateCourtCaseDomainEvent(source = "NOMIS")
+      }
+
+      @Test
+      fun `will create ignore telemetry`() {
+        waitForAnyProcessingToComplete()
+
+        verify(telemetryClient).trackEvent(
+          eq("court-case-updated-ignored"),
+          check {
+            assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenCourtCaseHasBeenUpdatedInDPS {
+      @BeforeEach
+      fun setUp() {
+        courtSentencingApi.stubCourtCaseGet(
+          COURT_CASE_ID_FOR_CREATION,
+          legacyCourtCaseResponse(),
+        )
+        courtSentencingNomisApi.stubCourtCaseUpdate(
+          OFFENDER_NO,
+          NOMIS_COURT_CASE_ID_FOR_CREATION,
+        )
+        courtSentencingMappingApi.stubGetCourtCaseMappingGivenDpsId(
+          id = COURT_CASE_ID_FOR_CREATION,
+          nomisCourtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
+        )
+        publishUpdateCourtCaseDomainEvent()
+      }
+
+      @Test
+      fun `will callback back to court sentencing service to get more details`() {
+        waitForAnyProcessingToComplete()
+        courtSentencingApi.verify(getRequestedFor(urlEqualTo("/legacy/court-case/${COURT_CASE_ID_FOR_CREATION}")))
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        waitForAnyProcessingToComplete()
+
+        verify(telemetryClient).trackEvent(
+          eq("court-case-updated-success"),
+          check {
+            assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will call nomis api to update the Court case`() {
+        waitForAnyProcessingToComplete()
+        courtSentencingNomisApi.verify(
+          putRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/${NOMIS_COURT_CASE_ID_FOR_CREATION}"))
+            .withRequestBody(matchingJsonPath("status", equalTo("A"))),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenCaseDoesNotExist {
+
+      @BeforeEach
+      fun setUp() {
+        courtSentencingApi.stubCourtCaseGetError(COURT_CASE_ID_FOR_CREATION)
+        publishUpdateCourtCaseDomainEvent()
+      }
+
+      @Test
+      fun `will not update an court case in NOMIS`() {
+        await untilAsserted {
+          verify(telemetryClient, times(1)).trackEvent(
+            eq("court-case-updated-ignored"),
+            check {
+              assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+              assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+              assertThat(it["reason"]).isEqualTo("DPS case $COURT_CASE_ID_FOR_CREATION does not exist in RaS")
+            },
+            isNull(),
+          )
+        }
+
+        courtSentencingNomisApi.verify(
+          0,
+          putRequestedFor(WireMock.anyUrl()),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenMappingDoesNotExistButRaSCaseExists {
+
+      @BeforeEach
+      fun setUp() {
+        courtSentencingMappingApi.stubGetCaseMappingGivenDpsIdWithError(
+          COURT_CASE_ID_FOR_CREATION,
+          404,
+        )
+        courtSentencingApi.stubCourtCaseGet(
+          COURT_CASE_ID_FOR_CREATION,
+          legacyCourtCaseResponse(),
+        )
+        publishUpdateCourtCaseDomainEvent()
+      }
+
+      @Test
+      fun `will not update a court case in NOMIS`() {
+        await untilAsserted {
+          verify(telemetryClient, times(3)).trackEvent(
+            eq("court-case-updated-awaiting-parent"),
+            check {
+              assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+              assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+              assertThat(it["reason"]).isEqualTo("Missing Dps case id: $COURT_CASE_ID_FOR_CREATION")
+            },
+            isNull(),
+          )
+        }
+
+        courtSentencingNomisApi.verify(
+          0,
+          putRequestedFor(WireMock.anyUrl()),
+        )
+      }
+    }
+  }
+
+  @Nested
   inner class DeleteCourtCase {
     @Nested
     inner class WhenCourtCaseHasBeenDeletedInDPS {
@@ -5058,6 +5201,27 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
   private fun publishCreateCourtCaseDomainEvent(source: String = "DPS") {
     val eventType = "court-case.inserted"
+    awsSnsClient.publish(
+      PublishRequest.builder().topicArn(topicArn)
+        .message(
+          courtCaseMessagePayload(
+            courtCaseId = COURT_CASE_ID_FOR_CREATION,
+            offenderNo = OFFENDER_NO,
+            eventType = eventType,
+            source = source,
+          ),
+        )
+        .messageAttributes(
+          mapOf(
+            "eventType" to MessageAttributeValue.builder().dataType("String")
+              .stringValue(eventType).build(),
+          ),
+        ).build(),
+    ).get()
+  }
+
+  private fun publishUpdateCourtCaseDomainEvent(source: String = "DPS") {
+    val eventType = "court-case.updated"
     awsSnsClient.publish(
       PublishRequest.builder().topicArn(topicArn)
         .message(
