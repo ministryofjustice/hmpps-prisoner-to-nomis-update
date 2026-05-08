@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-06-26.109.1150694"
+    "version" : "2026-05-07.252.f042755"
   },
   "servers" : [ {
     "url" : "/",
@@ -2318,28 +2318,28 @@
             "minLength" : 0
           },
           "programmeNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The programme number for the organisation, stored as FEI_NUMBER in NOMIS",
-            "example" : 1,
+            "example" : "1",
             "maxLength" : 40,
             "minLength" : 0
           },
           "vatNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The VAT number for the organisation, if known",
-            "example" : 123456,
+            "example" : "123456",
             "maxLength" : 12,
             "minLength" : 0
           },
           "caseloadId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The id of the caseload for this organisation, this is an agency id in NOMIS",
             "example" : "BXI",
             "maxLength" : 6,
             "minLength" : 0
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Any comments on the organisation",
             "example" : "Some additional info",
             "maxLength" : 240,
@@ -2351,7 +2351,7 @@
             "example" : true
           },
           "deactivatedDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date the organisation was deactivated, EXPIRY_DATE in NOMIS",
             "example" : "2010-12-30"
@@ -2380,27 +2380,27 @@
             "example" : 123456
           },
           "organisationName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Organisation name",
             "example" : "Supplier Services plc"
           },
           "programmeNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Programme number",
-            "example" : 8765
+            "example" : "8765"
           },
           "vatNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "VAT number",
             "example" : "GB 55 55 55 55"
           },
           "caseloadId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Caseload ID (a specific prison)",
             "example" : "HEI"
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Comments related to this organisation",
             "example" : "Notes"
           },
@@ -2410,7 +2410,7 @@
             "example" : true
           },
           "deactivatedDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date this organisation was deactivated",
             "example" : "2019-01-01"
@@ -2427,12 +2427,12 @@
             "example" : "2023-09-23T10:15:30"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "User who updated the organisation",
             "example" : "admin2"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Timestamp when the organisation was last updated",
             "example" : "2023-09-24T12:00:00"
@@ -2448,16 +2448,16 @@
             "format" : "int32"
           },
           "errorCode" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "userMessage" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "developerMessage" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "moreInfo" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           }
         },
         "required" : [ "status" ]
@@ -2524,12 +2524,12 @@
             "example" : "2024-01-01T00:00:00Z"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Username who last updated",
             "example" : "admin2"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Timestamp last updated",
             "example" : "2023-09-24T12:00:00"
@@ -2558,12 +2558,12 @@
             "example" : "2024-01-01T00:00:00Z"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "User who updated the entry",
             "example" : "admin"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The updated timestamp",
             "example" : "2024-01-01T00:00:00Z"
@@ -2632,9 +2632,9 @@
             "example" : "+1234567890"
           },
           "extNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Extension number",
-            "example" : 123
+            "example" : "123"
           },
           "updatedBy" : {
             "type" : "string",
@@ -2677,9 +2677,9 @@
             "example" : "+1234567890"
           },
           "extNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Extension number",
-            "example" : 123
+            "example" : "123"
           },
           "createdBy" : {
             "type" : "string",
@@ -2693,12 +2693,12 @@
             "example" : "2024-01-01T00:00:00Z"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "User who last updated this phone number",
             "example" : "admin2"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Timestamp last updated",
             "example" : "2023-09-24T12:00:00"
@@ -2768,12 +2768,12 @@
             "example" : "2024-01-01T00:00:00Z"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Username who last updated",
             "example" : "admin2"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Timestamp last updated",
             "example" : "2023-09-24T12:00:00"
@@ -2792,7 +2792,7 @@
             "example" : 1233323
           },
           "addressType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Type of address",
             "example" : "HOME"
           },
@@ -2817,73 +2817,73 @@
             "example" : false
           },
           "flat" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Flat number",
             "example" : "4A"
           },
           "property" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Property",
             "example" : "Claremont House"
           },
           "street" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Street or road",
             "example" : "Clarendon Road"
           },
           "area" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Area",
             "example" : "West Mosely"
           },
           "cityCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "City code",
-            "example" : 123456
+            "example" : "123456"
           },
           "countyCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "County code",
             "example" : "YORKS"
           },
           "postcode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Postcode",
             "example" : "B25 1JH"
           },
           "countryCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Country code",
             "example" : "GB"
           },
           "specialNeedsCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Special needs code",
             "example" : "NEEDS"
           },
           "contactPersonName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Contact name",
             "example" : "Mr Jones"
           },
           "businessHours" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Business hours description",
             "example" : "9am - 5pm"
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Notes on this address",
             "example" : "A comment"
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The start date for occupation",
             "example" : "2024-01-01"
           },
           "endDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The end date for occupation",
             "example" : "2024-01-01"
@@ -2919,7 +2919,7 @@
             "example" : 1234
           },
           "addressType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Type of address",
             "example" : "HOME"
           },
@@ -2944,73 +2944,73 @@
             "example" : false
           },
           "flat" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Flat number",
             "example" : "4A"
           },
           "property" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Property",
             "example" : "Claremont House"
           },
           "street" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Street or road",
             "example" : "Clarendon Road"
           },
           "area" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Area",
             "example" : "West Mosely"
           },
           "cityCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "City code",
-            "example" : 123456
+            "example" : "123456"
           },
           "countyCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "County code",
             "example" : "YORKS"
           },
           "postcode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Postcode",
             "example" : "B25 1JH"
           },
           "countryCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Country code",
             "example" : "GB"
           },
           "specialNeedsCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Special needs code",
             "example" : "NEEDS"
           },
           "contactPersonName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Contact name",
             "example" : "Mr Jones"
           },
           "businessHours" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Business hours description",
             "example" : "9am - 5pm"
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Notes on this address",
             "example" : "A comment"
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The start date for occupation",
             "example" : "2024-01-01"
           },
           "endDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The end date for occupation",
             "example" : "2024-01-01"
@@ -3027,12 +3027,12 @@
             "example" : "2024-01-01T00:00:00Z"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Username who last updated",
             "example" : "admin2"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Timestamp last updated",
             "example" : "2023-09-24T12:00:00"
@@ -3055,9 +3055,9 @@
             "example" : "+1234567890"
           },
           "extNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Extension number",
-            "example" : 123
+            "example" : "123"
           },
           "updatedBy" : {
             "type" : "string",
@@ -3112,9 +3112,9 @@
             "example" : "+1234567890"
           },
           "extNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Extension number",
-            "example" : 123
+            "example" : "123"
           },
           "createdBy" : {
             "type" : "string",
@@ -3128,12 +3128,12 @@
             "example" : "2023-09-23T10:15:30"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "User who updated the entry",
             "example" : "admin2"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Timestamp when the entry was updated",
             "example" : "2023-09-24T12:00:00"
@@ -3159,28 +3159,28 @@
             "minLength" : 0
           },
           "programmeNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The programme number for the organisation, stored as FEI_NUMBER in NOMIS",
-            "example" : 1,
+            "example" : "1",
             "maxLength" : 40,
             "minLength" : 0
           },
           "vatNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The VAT number for the organisation, if known",
-            "example" : 123456,
+            "example" : "123456",
             "maxLength" : 12,
             "minLength" : 0
           },
           "caseloadId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The id of the caseload for this organisation, this is an agency id in NOMIS",
             "example" : "BXI",
             "maxLength" : 6,
             "minLength" : 0
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Any comments on the organisation",
             "example" : "Some additional info",
             "maxLength" : 240,
@@ -3192,7 +3192,7 @@
             "example" : true
           },
           "deactivatedDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date the organisation was deactivated, EXPIRY_DATE in NOMIS",
             "example" : "2010-12-30"
@@ -3209,12 +3209,12 @@
             "example" : "2023-09-23T10:15:30"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "User who updated the entry",
             "example" : "admin2"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Timestamp when the entry was updated",
             "example" : "2023-09-24T12:00:00"
@@ -3272,9 +3272,9 @@
             "example" : "+1234567890"
           },
           "extNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Extension number",
-            "example" : 123
+            "example" : "123"
           },
           "createdBy" : {
             "type" : "string",
@@ -3330,7 +3330,7 @@
             "example" : 1233323
           },
           "addressType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Type of address",
             "example" : "HOME"
           },
@@ -3355,73 +3355,73 @@
             "example" : false
           },
           "flat" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Flat number",
             "example" : "4A"
           },
           "property" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Property",
             "example" : "Claremont House"
           },
           "street" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Street or road",
             "example" : "Clarendon Road"
           },
           "area" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Area",
             "example" : "West Mosely"
           },
           "cityCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "City code",
-            "example" : 123456
+            "example" : "123456"
           },
           "countyCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "County code",
             "example" : "YORKS"
           },
           "postcode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Postcode",
             "example" : "B25 1JH"
           },
           "countryCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Country code",
             "example" : "GB"
           },
           "specialNeedsCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Special needs code",
             "example" : "NEEDS"
           },
           "contactPersonName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Contact name",
             "example" : "Mr Jones"
           },
           "businessHours" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Business hours description",
             "example" : "9am - 5pm"
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Notes on this address",
             "example" : "A comment"
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The start date for occupation",
             "example" : "2024-01-01"
           },
           "endDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The end date for occupation",
             "example" : "2024-01-01"
@@ -3461,9 +3461,9 @@
             "example" : "+1234567890"
           },
           "extNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Extension number",
-            "example" : 123
+            "example" : "123"
           },
           "createdBy" : {
             "type" : "string",
@@ -3491,28 +3491,28 @@
             "minLength" : 0
           },
           "programmeNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The programme number for the organisation, stored as FEI_NUMBER in NOMIS",
-            "example" : 1,
+            "example" : "1",
             "maxLength" : 40,
             "minLength" : 0
           },
           "vatNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The VAT number for the organisation, if known",
-            "example" : 123456,
+            "example" : "123456",
             "maxLength" : 12,
             "minLength" : 0
           },
           "caseloadId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The id of the caseload for this organisation, this is an agency id in NOMIS",
             "example" : "BXI",
             "maxLength" : 6,
             "minLength" : 0
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Any comments on the organisation",
             "example" : "Some additional info",
             "maxLength" : 240,
@@ -3524,7 +3524,7 @@
             "example" : true
           },
           "deactivatedDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date the organisation was deactivated, EXPIRY_DATE in NOMIS",
             "example" : "2010-12-30"
@@ -3541,12 +3541,12 @@
             "example" : "2023-09-23T10:15:30"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "User who updated the entry",
             "example" : "admin2"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Timestamp when the entry was updated",
             "example" : "2023-09-24T12:00:00"
@@ -3571,12 +3571,12 @@
             "example" : 123456
           },
           "addressType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n      The type of address (optional).\n      This is a coded value (from the group code ADDRESS_TYPE in reference data).\n      The known values are HOME, WORK or BUS (business address).\n    ",
             "example" : "HOME"
           },
           "addressTypeDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The description of the address type",
             "example" : "HOME"
           },
@@ -3586,57 +3586,57 @@
             "example" : true
           },
           "flat" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Flat number or name",
             "example" : "Flat 2B"
           },
           "property" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Building or house number or name",
             "example" : "Mansion House"
           },
           "street" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Street or road name",
             "example" : "Acacia Avenue"
           },
           "area" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Area",
             "example" : "Morton Heights"
           },
           "cityCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "City code",
-            "example" : 25343
+            "example" : "25343"
           },
           "cityDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The description of city code",
             "example" : "Sheffield"
           },
           "countyCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "County code",
             "example" : "S.YORKSHIRE"
           },
           "countyDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The description of county code",
             "example" : "South Yorkshire"
           },
           "postcode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Postcode",
             "example" : "S13 4FH"
           },
           "countryCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Country code",
             "example" : "ENG"
           },
           "countryDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The description of country code",
             "example" : "England"
           },
@@ -3651,13 +3651,13 @@
             "example" : false
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The start date when this address is to be considered active from",
             "example" : "2024-01-01"
           },
           "endDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The end date when this address is to be considered no longer active",
             "example" : "2024-01-01"
@@ -3668,27 +3668,27 @@
             "example" : false
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Any additional information or comments about the address",
             "example" : "Some additional information"
           },
           "specialNeedsCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Special needs code for this address from reference data ORG_ADDRESS_SPECIAL_NEEDS.",
             "example" : "DEAF"
           },
           "specialNeedsCodeDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The description of the special needs code",
             "example" : "Hearing Impaired Translation"
           },
           "contactPersonName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The name of the contact person at this address",
             "example" : "Joe Bloggs"
           },
           "businessHours" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The business hours of the address",
             "example" : "9-5"
           },
@@ -3711,12 +3711,12 @@
             "example" : "2024-01-01T00:00:00Z"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The id of the user who last updated the entry",
             "example" : "JD000001"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The timestamp of when the entry was last updated",
             "example" : "2024-01-01T00:00:00Z"
@@ -3768,9 +3768,9 @@
             "example" : "+1234567890"
           },
           "extNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Extension number",
-            "example" : 123
+            "example" : "123"
           },
           "createdBy" : {
             "type" : "string",
@@ -3784,12 +3784,12 @@
             "example" : "2023-09-23T10:15:30"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "User who updated the entry",
             "example" : "admin2"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Timestamp when the entry was updated",
             "example" : "2023-09-24T12:00:00"
@@ -3813,27 +3813,27 @@
             "example" : "Example Limited"
           },
           "programmeNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The programme number for the organisation, stored as FEI_NUMBER in NOMIS",
-            "example" : 1
+            "example" : "1"
           },
           "vatNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The VAT number for the organisation, if known",
-            "example" : 123456
+            "example" : "123456"
           },
           "caseloadId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The id of the caseload for this organisation, this is an agency id in NOMIS",
             "example" : "BXI"
           },
           "caseloadPrisonName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The name of the prison that the caseloadId references",
             "example" : "Brixton (HMP)"
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Any comments on the organisation",
             "example" : "Some additional info"
           },
@@ -3843,7 +3843,7 @@
             "example" : true
           },
           "deactivatedDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date the organisation was deactivated, EXPIRY_DATE in NOMIS"
           },
@@ -3892,11 +3892,11 @@
             "description" : "Timestamp when the entry was created"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "User who updated the entry"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Timestamp when the entry was updated"
           }
@@ -3936,12 +3936,12 @@
             "example" : "2023-09-23T10:15:30"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "User who updated the entry",
             "example" : "admin2"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Timestamp when the entry was updated",
             "example" : "2023-09-24T12:00:00"
@@ -3981,9 +3981,9 @@
             "example" : "+1234567890"
           },
           "extNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Extension number",
-            "example" : 123
+            "example" : "123"
           },
           "createdBy" : {
             "type" : "string",
@@ -3997,12 +3997,12 @@
             "example" : "2023-09-23T10:15:30"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "User who updated the entry",
             "example" : "admin2"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Timestamp when the entry was updated",
             "example" : "2023-09-24T12:00:00"
@@ -4042,12 +4042,12 @@
             "example" : "2023-09-23T10:15:30"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "User who updated the entry",
             "example" : "admin2"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Timestamp when the entry was updated",
             "example" : "2023-09-24T12:00:00"
@@ -4088,12 +4088,12 @@
             "example" : "2023-09-23T10:15:30"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "User who updated the entry",
             "example" : "admin2"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Timestamp when the entry was updated",
             "example" : "2023-09-24T12:00:00"
@@ -4111,94 +4111,94 @@
             "example" : 123
           },
           "type" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Address type from reference data"
           },
           "flat" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Flat number or identifier",
             "example" : "1B"
           },
           "premise" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "House name or number",
-            "example" : 43
+            "example" : "43"
           },
           "street" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Street or road",
             "example" : "Main Street"
           },
           "locality" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Locality",
             "example" : "Keighley"
           },
           "postCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Postcode",
             "example" : "BD12 8RD"
           },
           "city" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "City - code from reference data"
           },
           "county" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "County - code from reference data"
           },
           "country" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Country - code from reference data"
           },
           "noFixedAddress" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "If true this address should be considered as no fixed address",
             "example" : false
           },
           "primaryAddress" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "If true this address should be considered as the primary residential address",
             "example" : true
           },
           "mailAddress" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "If true this address should be considered for sending mail to",
             "example" : true
           },
           "serviceAddress" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "If this is the service address for the organisation",
             "example" : true
           },
           "comment" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Comments relating to this address",
             "example" : "A comment"
           },
           "specialNeedsCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Special needs code for this address from SPECIAL_NEEDS in NOMIS.",
             "example" : "DEAF"
           },
           "contactPersonName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The name of the contact person at this address",
             "example" : "Joe Bloggs"
           },
           "businessHours" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The business hours for this address",
             "example" : "9-5"
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date this address should be considered valid from",
             "example" : "2018-10-01"
           },
           "endDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date this address should be considered valid to",
             "example" : "2022-04-04"
@@ -4211,24 +4211,24 @@
             }
           },
           "createDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The data and time the record was created",
             "example" : "2022-10-01T16:45:45"
           },
           "createUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username who created the row",
             "example" : "X999X"
           },
           "modifyDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time the record was last amended",
             "example" : "2022-10-01T16:45:45"
           },
           "modifyUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username who last modified the row",
             "example" : "X999X"
           }
@@ -4250,24 +4250,24 @@
             "example" : "test@example.com"
           },
           "createDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The data and time the record was created",
             "example" : "2022-10-01T16:45:45"
           },
           "createUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username who created the row",
             "example" : "X999X"
           },
           "modifyDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time the record was last amended",
             "example" : "2022-10-01T16:45:45"
           },
           "modifyUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username who last modified the row",
             "example" : "X999X"
           }
@@ -4289,33 +4289,33 @@
             "example" : "098989 98989893"
           },
           "extension" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Extension number (optional)",
-            "example" : 100
+            "example" : "100"
           },
           "type" : {
             "type" : "string",
             "description" : "Type of phone number (from reference data)"
           },
           "createDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The data and time the record was created",
             "example" : "2022-10-01T16:45:45"
           },
           "createUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username who created the row",
             "example" : "X999X"
           },
           "modifyDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time the record was last amended",
             "example" : "2022-10-01T16:45:45"
           },
           "modifyUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username who last modified the row",
             "example" : "X999X"
           }
@@ -4340,28 +4340,28 @@
             "minLength" : 0
           },
           "programmeNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The programme number for the organisation, stored as FEI_NUMBER in NOMIS",
-            "example" : 1,
+            "example" : "1",
             "maxLength" : 40,
             "minLength" : 0
           },
           "vatNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The VAT number for the organisation, if known",
-            "example" : 123456,
+            "example" : "123456",
             "maxLength" : 12,
             "minLength" : 0
           },
           "caseloadId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The id of the caseload for this organisation, this is an agency id in NOMIS",
             "example" : "BXI",
             "maxLength" : 6,
             "minLength" : 0
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Any comments on the organisation",
             "example" : "Some additional info",
             "maxLength" : 240,
@@ -4373,7 +4373,7 @@
             "example" : true
           },
           "deactivatedDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date the organisation was deactivated, EXPIRY_DATE in NOMIS",
             "example" : "2010-12-30"
@@ -4414,24 +4414,24 @@
             }
           },
           "createDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The data and time the record was created",
             "example" : "2022-10-01T16:45:45"
           },
           "createUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username who created the row",
             "example" : "X999X"
           },
           "modifyDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time the record was last amended",
             "example" : "2022-10-01T16:45:45"
           },
           "modifyUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username who last modified the row",
             "example" : "X999X"
           }
@@ -4447,24 +4447,24 @@
             "example" : "TRUST"
           },
           "createDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The data and time the record was created",
             "example" : "2022-10-01T16:45:45"
           },
           "createUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username who created the row",
             "example" : "X999X"
           },
           "modifyDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time the record was last amended",
             "example" : "2022-10-01T16:45:45"
           },
           "modifyUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username who last modified the row",
             "example" : "X999X"
           }
@@ -4486,24 +4486,24 @@
             "example" : "www.example.com"
           },
           "createDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The data and time the record was created",
             "example" : "2022-10-01T16:45:45"
           },
           "createUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username who created the row",
             "example" : "X999X"
           },
           "modifyDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time the record was last amended",
             "example" : "2022-10-01T16:45:45"
           },
           "modifyUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username who last modified the row",
             "example" : "X999X"
           }
@@ -4719,69 +4719,69 @@
             "example" : true
           },
           "flat" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Flat number in the address, if any",
             "example" : "Flat 1"
           },
           "property" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Property name or number, if any",
-            "example" : 123
+            "example" : "123"
           },
           "street" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Street name, if any",
             "example" : "Baker Street"
           },
           "area" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Area or locality, if any",
             "example" : "Marylebone"
           },
           "cityCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "City code, if any",
-            "example" : 25343
+            "example" : "25343"
           },
           "cityDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The description of the city code, if any",
             "example" : "Sheffield"
           },
           "countyCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "County code, if any",
             "example" : "S.YORKSHIRE"
           },
           "countyDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The description of county code, if any",
             "example" : "South Yorkshire"
           },
           "postcode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Postal code, if any",
             "example" : "NW1 6XE"
           },
           "countryCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Country code, if any",
             "example" : "ENG"
           },
           "countryDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The description of country code, if any",
             "example" : "England"
           },
           "businessPhoneNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The business phone number for the primary address, if any",
             "example" : "01234 56789"
           },
           "businessPhoneNumberExtension" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The extension for the business phone number for the primary address, if any",
-            "example" : 123
+            "example" : "123"
           }
         },
         "required" : [ "organisationActive", "organisationId", "organisationName" ]

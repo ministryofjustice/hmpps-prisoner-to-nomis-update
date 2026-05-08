@@ -49,6 +49,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Re
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RevertRecallRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceTermRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateCourtCaseRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateRecallRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.AwaitParentEntityRetry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
@@ -147,6 +148,35 @@ class CourtSentencingService(
         telemetryMap,
         null,
       )
+    }
+  }
+
+  suspend fun updateCourtCase(createEvent: CourtCaseCreatedEvent) {
+    val source = createEvent.additionalInformation.source
+    val courtCaseId = createEvent.additionalInformation.courtCaseId
+    val offenderNo: String = eventOffenderNo(createEvent.personReference)
+    val telemetryMap = createEvent.asTelemetry()
+    if (isDpsCreated(source)) {
+      track("court-case-updated", telemetryMap) {
+        courtSentencingApiService.getCourtCaseOrNull(id = courtCaseId)
+          ?.also { dpsCourtCase ->
+
+            val courtCaseMapping = retrieveParentCaseMapping(courtCaseId)
+            telemetryMap["nomisCourtCaseId"] = courtCaseMapping.nomisCourtCaseId.toString()
+
+            nomisApiService.updateCourtCase(
+              offenderNo = offenderNo,
+              courtCaseId = courtCaseMapping.nomisCourtCaseId,
+              request = dpsCourtCase.toNomisUpdateCourtCase(),
+            )
+          } ?: run {
+          telemetryMap["reason"] = "DPS case $courtCaseId does not exist in RaS"
+          telemetryClient.trackEvent("court-case-updated-ignored", telemetryMap, null)
+        }
+      }
+    } else {
+      telemetryMap["reason"] = "Court case updated in NOMIS"
+      telemetryClient.trackEvent("court-case-updated-ignored", telemetryMap, null)
     }
   }
 
@@ -1674,6 +1704,14 @@ fun LegacyCourtCase.toNomisCourtCase(): CreateCourtCaseRequest = CreateCourtCase
   caseReference = this.caseReference,
   // new LEG_CASE_TYP on NOMIS - "Not Entered"
   legalCaseType = "NE",
+  status = if (this.active) {
+    "A"
+  } else {
+    "I"
+  },
+)
+
+fun LegacyCourtCase.toNomisUpdateCourtCase(): UpdateCourtCaseRequest = UpdateCourtCaseRequest(
   status = if (this.active) {
     "A"
   } else {
