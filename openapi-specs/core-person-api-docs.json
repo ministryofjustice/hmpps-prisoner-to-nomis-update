@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-04-29.3266.ec4dcfc"
+    "version" : "2026-05-08.3397.2936560"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -913,7 +913,7 @@
           "addressUsageCode" : {
             "type" : "string",
             "description" : "The address usage code",
-            "enum" : [ "CARE", "CURFEW", "DAP", "DBA", "DBH", "DNF", "DOH", "DPH", "DSH", "DST", "DUT", "HDC", "HDC2", "HOME", "HOSP", "HOST", "OTHER", "RECEP", "RELEASE", "RES", "ROTL" ],
+            "enum" : [ "CARE", "CURFEW", "DAP", "DBA", "DBH", "DNF", "DOH", "DPH", "DSH", "DST", "DUT", "HDC", "HDC2", "HOME", "HOSP", "HOST", "OTHER", "RECEP", "RELEASE", "RES", "ROTL", "A02", "A16", "A10", "A11", "A17", "A07B", "A07A", "A14", "A13", "A08A", "A08C", "A08", "A01A", "A15", "A12", "A01C", "A01D", "A04", "A03", "UNKNOWN" ],
             "example" : "DSH"
           },
           "isActive" : {
@@ -1369,8 +1369,49 @@
           },
           "telephoneNumber" : {
             "type" : [ "string", "null" ]
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "typeVerified" : {
+            "type" : "boolean"
+          },
+          "type" : {
+            "$ref" : "#/components/schemas/ProbationAddressUsage"
+          },
+          "status" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/ProbationAddressStatus"
+            }, {
+              "type" : "null"
+            } ]
           }
         }
+      },
+      "ProbationAddressStatus" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "code", "description" ]
+      },
+      "ProbationAddressUsage" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "code", "description" ]
       },
       "ProbationCase" : {
         "type" : "object",
@@ -1920,9 +1961,16 @@
             "items" : {
               "$ref" : "#/components/schemas/CanonicalAddressUsage"
             }
+          },
+          "contacts" : {
+            "type" : "array",
+            "description" : "List of person address contacts",
+            "items" : {
+              "$ref" : "#/components/schemas/CanonicalContact"
+            }
           }
         },
-        "required" : [ "cprAddressId", "status", "usages" ]
+        "required" : [ "contacts", "cprAddressId", "status", "usages" ]
       },
       "CanonicalAddressStatus" : {
         "type" : "object",
@@ -1988,6 +2036,41 @@
           }
         },
         "required" : [ "sex", "title" ]
+      },
+      "CanonicalContact" : {
+        "type" : "object",
+        "properties" : {
+          "type" : {
+            "$ref" : "#/components/schemas/CanonicalContactType",
+            "description" : "Contact type"
+          },
+          "value" : {
+            "type" : [ "string", "null" ],
+            "description" : "Contact value",
+            "example" : "+44 20 7946 0000"
+          },
+          "extension" : {
+            "type" : [ "string", "null" ],
+            "description" : "Contact extension",
+            "example" : "1234"
+          }
+        },
+        "required" : [ "type" ]
+      },
+      "CanonicalContactType" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : [ "string", "null" ],
+            "description" : "Address contact type code",
+            "example" : "HOME"
+          },
+          "description" : {
+            "type" : [ "string", "null" ],
+            "description" : "Address contact type description",
+            "example" : "Home"
+          }
+        }
       },
       "CanonicalEthnicity" : {
         "type" : "object",
