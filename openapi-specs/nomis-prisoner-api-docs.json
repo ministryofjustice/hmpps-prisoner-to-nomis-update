@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-05-06.1409.f07effc"
+    "version" : "2026-05-08.1416.3dc8b79"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -31841,12 +31841,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "paged" : {
+            "type" : "boolean"
+          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "paged" : {
-            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -36410,6 +36410,10 @@
             "format" : "int64",
             "description" : "Court case ID"
           },
+          "userActiveCaseloadId" : {
+            "type" : "string",
+            "description" : "Audit user's active caseload ID (modified user else create user)"
+          },
           "audit" : {
             "$ref" : "#/components/schemas/NomisAudit",
             "description" : "Audit data associated with the records"
@@ -36430,6 +36434,11 @@
             "type" : "integer",
             "format" : "int32",
             "description" : "Movement sequence"
+          },
+          "eventId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Schedule out ID"
           },
           "courtScheduleOutId" : {
             "type" : "integer",
@@ -36462,6 +36471,10 @@
             "type" : "string",
             "description" : "Comment text"
           },
+          "userActiveCaseloadId" : {
+            "type" : "string",
+            "description" : "Audit user's active caseload ID (modified user else create user)"
+          },
           "audit" : {
             "$ref" : "#/components/schemas/NomisAudit",
             "description" : "Audit data associated with the records"
@@ -36482,6 +36495,11 @@
             "type" : "integer",
             "format" : "int32",
             "description" : "Movement sequence"
+          },
+          "eventId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Schedule out ID"
           },
           "courtScheduleOutId" : {
             "type" : "integer",
@@ -36513,6 +36531,10 @@
           "commentText" : {
             "type" : "string",
             "description" : "Comment text"
+          },
+          "userActiveCaseloadId" : {
+            "type" : "string",
+            "description" : "Audit user's active caseload ID (modified user else create user)"
           },
           "audit" : {
             "$ref" : "#/components/schemas/NomisAudit",
