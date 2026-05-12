@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-05-08.1416.3dc8b79"
+    "version" : "2026-05-12.1430.cda9c0f"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -19400,6 +19400,68 @@
         }
       }
     },
+    "/movements/{offenderNo}/court" : {
+      "get" : {
+        "tags" : [ "offender-court-movements-resource" ],
+        "summary" : "Get court schedules and movements for an offender",
+        "description" : "Get court schedules and movements for an offender. This is used to migrate court movements to DPS and for reconciliation. Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getOffenderCourtMovements",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender number (NOMS ID)",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender number (NOMS ID)",
+            "example" : "A1234BC"
+          },
+          "example" : "A1234BC"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Offender court movements returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OffenderCourtMovementsResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Offender not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/movements/{offenderNo}/court/schedule/out/{eventId}" : {
       "get" : {
         "tags" : [ "court-schedule-resource" ],
@@ -31841,12 +31903,12 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paged" : {
+            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -36361,6 +36423,201 @@
         },
         "required" : [ "activeBooking", "applicationDate", "applicationStatus", "applicationType", "audit", "bookingId", "eventSubType", "fromDate", "latestBooking", "prisonId", "releaseTime", "returnTime", "tapApplicationId", "toDate" ]
       },
+      "BookingCourtMovementIn" : {
+        "type" : "object",
+        "properties" : {
+          "sequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Movement sequence"
+          },
+          "movementDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Movement date"
+          },
+          "movementTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Movement time"
+          },
+          "movementReason" : {
+            "type" : "string",
+            "description" : "Movement reason"
+          },
+          "fromCourt" : {
+            "type" : "string",
+            "description" : "From court"
+          },
+          "toPrison" : {
+            "type" : "string",
+            "description" : "To prison"
+          },
+          "commentText" : {
+            "type" : "string",
+            "description" : "Comment text"
+          },
+          "audit" : {
+            "$ref" : "#/components/schemas/NomisAudit",
+            "description" : "Audit data associated with the records"
+          }
+        },
+        "required" : [ "audit", "movementDate", "movementReason", "movementTime", "sequence", "toPrison" ]
+      },
+      "BookingCourtMovementOut" : {
+        "type" : "object",
+        "properties" : {
+          "sequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Movement sequence"
+          },
+          "movementDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Movement date"
+          },
+          "movementTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Movement time"
+          },
+          "movementReason" : {
+            "type" : "string",
+            "description" : "Movement reason"
+          },
+          "fromPrison" : {
+            "type" : "string",
+            "description" : "From prison"
+          },
+          "toCourt" : {
+            "type" : "string",
+            "description" : "To court"
+          },
+          "commentText" : {
+            "type" : "string",
+            "description" : "Comment text"
+          },
+          "audit" : {
+            "$ref" : "#/components/schemas/NomisAudit",
+            "description" : "Audit data associated with the records"
+          }
+        },
+        "required" : [ "audit", "fromPrison", "movementDate", "movementReason", "movementTime", "sequence" ]
+      },
+      "BookingCourtMovements" : {
+        "type" : "object",
+        "description" : "Booking court movements",
+        "properties" : {
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Booking ID"
+          },
+          "activeBooking" : {
+            "type" : "boolean",
+            "description" : "Whether this is an active booking"
+          },
+          "latestBooking" : {
+            "type" : "boolean",
+            "description" : "Whether this is the latest booking"
+          },
+          "courtSchedules" : {
+            "type" : "array",
+            "description" : "List of court scheduels",
+            "items" : {
+              "$ref" : "#/components/schemas/BookingCourtScheduleOut"
+            }
+          },
+          "unscheduledCourtMovementOuts" : {
+            "type" : "array",
+            "description" : "Unscheduled court movements OUT - those without a schedule",
+            "items" : {
+              "$ref" : "#/components/schemas/BookingCourtMovementOut"
+            }
+          },
+          "unscheduledCourtMovementIns" : {
+            "type" : "array",
+            "description" : "Unscheduled court movements IN - those without a schedule",
+            "items" : {
+              "$ref" : "#/components/schemas/BookingCourtMovementIn"
+            }
+          }
+        },
+        "required" : [ "activeBooking", "bookingId", "courtSchedules", "latestBooking", "unscheduledCourtMovementIns", "unscheduledCourtMovementOuts" ]
+      },
+      "BookingCourtScheduleOut" : {
+        "type" : "object",
+        "properties" : {
+          "eventId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Event ID"
+          },
+          "courtMovementOut" : {
+            "$ref" : "#/components/schemas/BookingCourtMovementOut",
+            "description" : "Court movement out"
+          },
+          "courtMovementIn" : {
+            "$ref" : "#/components/schemas/BookingCourtMovementIn",
+            "description" : "Court movement in"
+          },
+          "eventDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Event date"
+          },
+          "startTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Start time"
+          },
+          "eventType" : {
+            "type" : "string",
+            "description" : "Event type"
+          },
+          "eventStatus" : {
+            "type" : "string",
+            "description" : "Event status"
+          },
+          "comment" : {
+            "type" : "string",
+            "description" : "Comment"
+          },
+          "prison" : {
+            "type" : "string",
+            "description" : "Prison code at time of scheduling"
+          },
+          "court" : {
+            "type" : "string",
+            "description" : "Court code"
+          },
+          "courtCaseId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Court case ID"
+          },
+          "audit" : {
+            "$ref" : "#/components/schemas/NomisAudit",
+            "description" : "Audit data associated with the records"
+          }
+        },
+        "required" : [ "audit", "court", "eventDate", "eventId", "eventStatus", "eventType", "prison", "startTime" ]
+      },
+      "OffenderCourtMovementsResponse" : {
+        "type" : "object",
+        "description" : "Offender court movements by booking, including schedules",
+        "properties" : {
+          "bookings" : {
+            "type" : "array",
+            "description" : "List of bookings with their court movements",
+            "items" : {
+              "$ref" : "#/components/schemas/BookingCourtMovements"
+            }
+          }
+        },
+        "required" : [ "bookings" ]
+      },
       "CourtScheduleOut" : {
         "type" : "object",
         "description" : "Court schedule out response",
@@ -36496,11 +36753,6 @@
             "format" : "int32",
             "description" : "Movement sequence"
           },
-          "eventId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Schedule out ID"
-          },
           "courtScheduleOutId" : {
             "type" : "integer",
             "format" : "int64",
@@ -36541,7 +36793,7 @@
             "description" : "Audit data associated with the records"
           }
         },
-        "required" : [ "audit", "bookingId", "fromCourt", "movementDate", "movementReason", "movementTime", "sequence" ]
+        "required" : [ "audit", "bookingId", "movementDate", "movementReason", "movementTime", "sequence", "toPrison" ]
       },
       "AmendmentResponse" : {
         "type" : "object",
