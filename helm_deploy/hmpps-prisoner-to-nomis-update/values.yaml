@@ -1,6 +1,8 @@
 generic-service:
   nameOverride: hmpps-prisoner-to-nomis-update
   productId: DPS060
+  cronPrefixName: to-nomis
+  cronPrefixName: hptonu
 
   replicaCount: 4
 
