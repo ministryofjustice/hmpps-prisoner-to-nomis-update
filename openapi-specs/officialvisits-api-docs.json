@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-04-24.711.8e9efde"
+    "version" : "2026-05-12.796.d71a48a"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -279,6 +279,16 @@
               }
             }
           },
+          "408" : {
+            "description" : "Downstream service problem retrieving user details (temporary)",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "401" : {
             "description" : "Unauthorised, requires a valid Oauth2 token",
             "content" : {
@@ -348,6 +358,16 @@
           },
           "404" : {
             "description" : "The the official visit or visitor was not found using the IDs presented",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "408" : {
+            "description" : "Downstream service problem retrieving user details (temporary)",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -1187,6 +1207,16 @@
               }
             }
           },
+          "408" : {
+            "description" : "Downstream service problem retrieving user details (temporary)",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "409" : {
             "description" : "Another visit exists with the same offender visit ID",
             "content" : {
@@ -1258,6 +1288,16 @@
           },
           "404" : {
             "description" : "The the official visit was not found using the ID presented",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "408" : {
+            "description" : "Downstream service problem retrieving user details (temporary)",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -1405,7 +1445,7 @@
             }
           },
           "409" : {
-            "description" : "Conflict, requires users active caseload to match that of the prison",
+            "description" : "Conflict, requires caseload access to the prison",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -1714,6 +1754,77 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/PagedModelOfficialVisitSummarySearchResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notification/{officialVisitId}" : {
+      "post" : {
+        "tags" : [ "Notifications" ],
+        "summary" : "Endpoint to support the sending of notifications for official visits.",
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISITS_ADMIN\n* ROLE_OFFICIAL_VISITS__RW",
+        "operationId" : "sendNotification",
+        "parameters" : [ {
+          "name" : "officialVisitId",
+          "in" : "path",
+          "description" : "The identifier of the official visit to send the notification for.",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "example" : 1
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/NotificationRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "The response containing the details of all notifications sent",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/NotificationResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "No official visit found to send the notification for.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -5233,6 +5344,65 @@
           }
         },
         "required" : [ "prisonCode", "prisonerNumber" ]
+      },
+      "NotificationRequest" : {
+        "type" : "object",
+        "description" : "The request containing the details of the notification",
+        "properties" : {
+          "notificationType" : {
+            "type" : "string",
+            "description" : "The type of notification to send",
+            "enum" : [ "CREATE", "AMEND", "CANCEL" ],
+            "example" : "CREATE"
+          },
+          "emailAddresses" : {
+            "type" : "array",
+            "description" : "The recipient email address to send the notification to",
+            "items" : {
+              "type" : "string"
+            },
+            "minItems" : 1
+          }
+        },
+        "required" : [ "emailAddresses", "notificationType" ]
+      },
+      "NotificationRecipient" : {
+        "type" : "object",
+        "properties" : {
+          "emailAddress" : {
+            "type" : "string"
+          },
+          "notificationId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "emailAddress", "notificationId" ]
+      },
+      "NotificationResponse" : {
+        "type" : "object",
+        "properties" : {
+          "officialVisitId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The official visit id",
+            "example" : 1
+          },
+          "notificationType" : {
+            "type" : "string",
+            "description" : "The type of notification that was sent",
+            "enum" : [ "CREATE", "AMEND", "CANCEL" ],
+            "example" : "CREATE"
+          },
+          "recipients" : {
+            "type" : "array",
+            "description" : "The recipients the notification was sent to",
+            "items" : {
+              "$ref" : "#/components/schemas/NotificationRecipient"
+            }
+          }
+        },
+        "required" : [ "notificationType", "officialVisitId", "recipients" ]
       },
       "MigrateVisitConfigRequest" : {
         "type" : "object",
