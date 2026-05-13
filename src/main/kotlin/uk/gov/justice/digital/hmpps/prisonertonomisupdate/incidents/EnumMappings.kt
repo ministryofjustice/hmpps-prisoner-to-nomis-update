@@ -64,6 +64,7 @@ internal fun Type.mapDps(): String = when (this) {
   Type.TEMPORARY_RELEASE_FAILURE_3 -> "TRF2"
   Type.TEMPORARY_RELEASE_FAILURE_4 -> "TRF3"
   Type.TOOL_LOSS_1 -> "TOOL_LOSS"
+  Type.UNLAWFUL_DETENTION_1 -> "UNLAW_DET"
 }
 
 // This is a duplicate mapping of above. In incident reporting it is one enum, but gets converted into two different
@@ -125,6 +126,7 @@ internal fun HistoryType.mapDps(): String = when (this) {
   HistoryType.TEMPORARY_RELEASE_FAILURE_3 -> "TRF2"
   HistoryType.TEMPORARY_RELEASE_FAILURE_4 -> "TRF3"
   HistoryType.TOOL_LOSS_1 -> "TOOL_LOSS"
+  HistoryType.UNLAWFUL_DETENTION_1 -> "UNLAW_DET"
 }
 
 internal fun Status.mapDps(): String = when (this) {
@@ -156,6 +158,7 @@ internal fun PrisonerRole.mapDps(): String = when (this) {
   PrisonerRole.SUSPECTED_ASSAILANT -> "SUSASS"
   PrisonerRole.SUSPECTED_INVOLVED -> "SUSINV"
   PrisonerRole.TEMPORARY_RELEASE_FAILURE -> "TRF"
+  PrisonerRole.UNLAWFULLY_DETAINED -> "UNLAWF"
   PrisonerRole.VICTIM -> "VICT"
 }
 
