@@ -44,14 +44,14 @@ jobs:
 
       - name: Upload differences report
         if: steps.check-api.outputs.differences == 'true'
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           path: build/api.diff
           name: ${{ matrix.project }}-api.diff
 
       - name: Create Pull Request
         if: steps.check-api.outputs.differences == 'true'
-        uses: peter-evans/create-pull-request@c0f553fe549906ede9cf27b5156039d195d2ece0 # v8.1.0
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
           commit-message: Update api docs for ${{ matrix.project }} to ${{ steps.check-api.outputs.new_version }}
           title: Update api docs for ${{ matrix.project }} to ${{ steps.check-api.outputs.new_version }}
