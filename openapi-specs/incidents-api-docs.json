@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-04-29.698.1848596"
+    "version" : "2026-05-13.713.6636c8f"
   },
   "servers" : [ {
     "url" : "/",
@@ -28,9 +28,6 @@
   }, {
     "name" : "Objects related to incident reports",
     "description" : "Create, retrieve, update and delete objects that are related to incident reports"
-  }, {
-    "name" : "Migrate/Upsert NOMIS Incident Report",
-    "description" : "Migrate or synchronise NOMIS incident report to Incident Report Service"
   }, {
     "name" : "hmpps-queue-resource-async",
     "description" : "Endpoints that are to be used by administrators only for managing SQS queues. All endpoints require the <b>QUEUE_ADMIN</b> role further information can be found in the <a href=\"https://github.com/ministryofjustice/hmpps-spring-boot-sqs\">hmpps-spring-boot-sqs</a> project"
@@ -355,94 +352,6 @@
         }
       }
     },
-    "/sync/upsert" : {
-      "post" : {
-        "tags" : [ "Migrate/Upsert NOMIS Incident Report" ],
-        "summary" : "Migrate a report",
-        "description" : "Requires role MIGRATE_INCIDENT_REPORTS and write scope",
-        "operationId" : "upsertIncidentReport",
-        "requestBody" : {
-          "description" : "Incident report created or updated in NOMIS",
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "writeOnly" : true,
-                "oneOf" : [ {
-                  "$ref" : "#/components/schemas/NomisSyncRequest"
-                }, {
-                  "$ref" : "#/components/schemas/NomisSyncCreateRequest"
-                }, {
-                  "$ref" : "#/components/schemas/NomisSyncUpdateRequest"
-                } ]
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "201" : {
-            "description" : "Migrated NOMIS incident report id",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/NomisSyncReportId"
-                }
-              }
-            }
-          },
-          "200" : {
-            "description" : "Updated NOMIS incident report id",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/NomisSyncReportId"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Invalid request",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Missing required role. Requires the MIGRATE_INCIDENT_REPORTS role with write scope.",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Data not found, when id is provided",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/incident-reports" : {
       "get" : {
         "tags" : [ "Incident reports" ],
@@ -513,7 +422,7 @@
             "type" : "array",
             "items" : {
               "type" : "string",
-              "enum" : [ "ABSCOND_1", "ASSAULT_1", "ASSAULT_2", "ASSAULT_3", "ASSAULT_4", "ASSAULT_5", "ATTEMPTED_ESCAPE_FROM_ESCORT_1", "ATTEMPTED_ESCAPE_FROM_PRISON_1", "BARRICADE_1", "BOMB_1", "BREACH_OF_SECURITY_1", "BC_DISRUPT_3RD_PTY_1", "BC_FUEL_SHORTAGE_1", "BC_LOSS_ACCESS_EGRESS_1", "BC_LOSS_COMMS_1", "BC_LOSS_UTILS_1", "BC_SERV_WEATHER_1", "BC_STAFF_SHORTAGES_1", "BC_WIDESPREAD_ILLNESS_1", "CLOSE_DOWN_SEARCH_1", "DEATH_OTHER_1", "DEATH_PRISONER_1", "DAMAGE_1", "DIRTY_PROTEST_1", "DISORDER_1", "DISORDER_2", "DRONE_SIGHTING_1", "DRONE_SIGHTING_2", "DRONE_SIGHTING_3", "DRUGS_1", "ESCAPE_FROM_ESCORT_1", "ESCAPE_FROM_PRISON_1", "FIND_1", "FIND_2", "FIND_3", "FIND_4", "FIND_5", "FIND_6", "FIRE_1", "FIREARM_1", "FOOD_REFUSAL_1", "HOSTAGE_1", "INCIDENT_AT_HEIGHT_1", "CONCERTED_INDISCIPLINE_1", "KEY_OR_LOCK_1", "KEY_OR_LOCK_2", "MISCELLANEOUS_1", "MOBILE_PHONE_1", "RADIO_COMPROMISE_1", "RELEASE_IN_ERROR_1", "SELF_HARM_1", "TEMPORARY_RELEASE_FAILURE_1", "TEMPORARY_RELEASE_FAILURE_2", "TEMPORARY_RELEASE_FAILURE_3", "TEMPORARY_RELEASE_FAILURE_4", "TOOL_LOSS_1" ]
+              "enum" : [ "ABSCOND_1", "ASSAULT_1", "ASSAULT_2", "ASSAULT_3", "ASSAULT_4", "ASSAULT_5", "ATTEMPTED_ESCAPE_FROM_ESCORT_1", "ATTEMPTED_ESCAPE_FROM_PRISON_1", "BARRICADE_1", "BOMB_1", "BREACH_OF_SECURITY_1", "BC_DISRUPT_3RD_PTY_1", "BC_FUEL_SHORTAGE_1", "BC_LOSS_ACCESS_EGRESS_1", "BC_LOSS_COMMS_1", "BC_LOSS_UTILS_1", "BC_SERV_WEATHER_1", "BC_STAFF_SHORTAGES_1", "BC_WIDESPREAD_ILLNESS_1", "CLOSE_DOWN_SEARCH_1", "DEATH_OTHER_1", "DEATH_PRISONER_1", "DAMAGE_1", "DIRTY_PROTEST_1", "DISORDER_1", "DISORDER_2", "DRONE_SIGHTING_1", "DRONE_SIGHTING_2", "DRONE_SIGHTING_3", "DRUGS_1", "ESCAPE_FROM_ESCORT_1", "ESCAPE_FROM_PRISON_1", "FIND_1", "FIND_2", "FIND_3", "FIND_4", "FIND_5", "FIND_6", "FIRE_1", "FIREARM_1", "FOOD_REFUSAL_1", "HOSTAGE_1", "INCIDENT_AT_HEIGHT_1", "CONCERTED_INDISCIPLINE_1", "KEY_OR_LOCK_1", "KEY_OR_LOCK_2", "MISCELLANEOUS_1", "MOBILE_PHONE_1", "RADIO_COMPROMISE_1", "RELEASE_IN_ERROR_1", "SELF_HARM_1", "TEMPORARY_RELEASE_FAILURE_1", "TEMPORARY_RELEASE_FAILURE_2", "TEMPORARY_RELEASE_FAILURE_3", "TEMPORARY_RELEASE_FAILURE_4", "TOOL_LOSS_1", "UNLAWFUL_DETENTION_1" ]
             },
             "default" : null
           },
@@ -3015,72 +2924,6 @@
           }
         }
       }
-    },
-    "/sync/{id}" : {
-      "delete" : {
-        "tags" : [ "Migrate/Upsert NOMIS Incident Report" ],
-        "summary" : "Delete a report",
-        "description" : "Requires role MIGRATE_INCIDENT_REPORTS and write scope",
-        "operationId" : "deleteIncidentReport",
-        "parameters" : [ {
-          "name" : "id",
-          "in" : "path",
-          "description" : "The internal ID of the report to delete",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "description" : "The internal ID of the report to delete",
-            "format" : "uuid",
-            "example" : "11111111-2222-3333-4444-555555555555"
-          },
-          "example" : "11111111-2222-3333-4444-555555555555"
-        } ],
-        "responses" : {
-          "204" : {
-            "description" : "Incident report deleted"
-          },
-          "400" : {
-            "description" : "Invalid request",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Missing required role. Requires the MIGRATE_INCIDENT_REPORTS role with write scope.",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Data not found, when id is provided",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
     }
   },
   "components" : {
@@ -3314,672 +3157,6 @@
         "description" : "Response to a question making up an incident report",
         "readOnly" : true
       },
-      "DescriptionAddendum" : {
-        "required" : [ "createdAt", "createdBy", "firstName", "lastName", "sequence", "text" ],
-        "type" : "object",
-        "properties" : {
-          "sequence" : {
-            "type" : "integer",
-            "description" : "Sequence of the addendums for this report",
-            "format" : "int32",
-            "deprecated" : true
-          },
-          "createdBy" : {
-            "type" : "string",
-            "description" : "Username of user who added this addendum",
-            "example" : "USER_1"
-          },
-          "createdAt" : {
-            "type" : "string",
-            "description" : "When addendum was added",
-            "format" : "date-time"
-          },
-          "firstName" : {
-            "type" : "string",
-            "description" : "First name of person that added this addendum",
-            "example" : "John"
-          },
-          "lastName" : {
-            "type" : "string",
-            "description" : "Last name of person that added this addendum",
-            "example" : "Doe"
-          },
-          "text" : {
-            "type" : "string",
-            "description" : "Addendum text"
-          }
-        },
-        "description" : "Addendum to the description of an incident",
-        "readOnly" : true
-      },
-      "NomisCode" : {
-        "required" : [ "code", "description" ],
-        "type" : "object",
-        "properties" : {
-          "code" : {
-            "type" : "string",
-            "description" : "Code"
-          },
-          "description" : {
-            "type" : "string",
-            "description" : "Description"
-          }
-        },
-        "description" : "The outcome of the incident"
-      },
-      "NomisHistory" : {
-        "required" : [ "createDateTime", "createdBy", "incidentChangeStaff", "questionnaireId", "questions", "type" ],
-        "type" : "object",
-        "properties" : {
-          "questionnaireId" : {
-            "type" : "integer",
-            "description" : "The history questionnaire id for the incident",
-            "format" : "int64"
-          },
-          "type" : {
-            "type" : "string",
-            "description" : "The questionnaire type"
-          },
-          "description" : {
-            "type" : "string",
-            "description" : "The questionnaire description",
-            "nullable" : true
-          },
-          "questions" : {
-            "type" : "array",
-            "description" : "Questions asked for the questionnaire",
-            "items" : {
-              "$ref" : "#/components/schemas/NomisHistoryQuestion"
-            }
-          },
-          "incidentChangeDateTime" : {
-            "type" : "string",
-            "description" : "When the questionnaire was changed with time",
-            "format" : "date-time",
-            "nullable" : true
-          },
-          "incidentChangeStaff" : {
-            "$ref" : "#/components/schemas/NomisStaff"
-          },
-          "createDateTime" : {
-            "type" : "string",
-            "description" : "The date and time the historical incident questionnaire was created",
-            "format" : "date-time"
-          },
-          "createdBy" : {
-            "type" : "string",
-            "description" : "The username of the person who created the historical incident questionnaire"
-          }
-        },
-        "description" : "Historical questionnaire details for the incident"
-      },
-      "NomisHistoryQuestion" : {
-        "required" : [ "answers", "question", "questionId", "sequence" ],
-        "type" : "object",
-        "properties" : {
-          "questionId" : {
-            "type" : "integer",
-            "description" : "The sequence number of the response question for this incident",
-            "format" : "int64"
-          },
-          "sequence" : {
-            "type" : "integer",
-            "description" : "The sequence number of the question for this incident",
-            "format" : "int32"
-          },
-          "question" : {
-            "type" : "string",
-            "description" : "The Question being asked"
-          },
-          "answers" : {
-            "type" : "array",
-            "description" : "Historical list of Responses to this question",
-            "items" : {
-              "$ref" : "#/components/schemas/NomisHistoryResponse"
-            }
-          }
-        },
-        "description" : "Questions asked for the questionnaire"
-      },
-      "NomisHistoryResponse" : {
-        "required" : [ "recordingStaff", "responseSequence" ],
-        "type" : "object",
-        "properties" : {
-          "questionResponseId" : {
-            "type" : "integer",
-            "description" : "The id of the questionnaire question answer",
-            "format" : "int64",
-            "nullable" : true
-          },
-          "responseSequence" : {
-            "type" : "integer",
-            "description" : "The sequence number of the response for this incident",
-            "format" : "int32"
-          },
-          "answer" : {
-            "type" : "string",
-            "description" : "The answer text",
-            "nullable" : true
-          },
-          "responseDate" : {
-            "type" : "string",
-            "description" : "Response date added to the response by recording staff",
-            "format" : "date",
-            "nullable" : true
-          },
-          "comment" : {
-            "type" : "string",
-            "description" : "Comment added to the response by recording staff",
-            "nullable" : true
-          },
-          "recordingStaff" : {
-            "$ref" : "#/components/schemas/NomisStaff"
-          }
-        },
-        "description" : "Historical list of Responses to this question"
-      },
-      "NomisOffender" : {
-        "required" : [ "firstName", "lastName", "offenderNo" ],
-        "type" : "object",
-        "properties" : {
-          "offenderNo" : {
-            "type" : "string",
-            "description" : "NOMIS id"
-          },
-          "firstName" : {
-            "type" : "string",
-            "description" : "First name of offender"
-          },
-          "lastName" : {
-            "type" : "string",
-            "description" : "Last name of offender"
-          }
-        },
-        "description" : "Offender involved in the incident"
-      },
-      "NomisOffenderParty" : {
-        "required" : [ "createDateTime", "createdBy", "offender", "role", "sequence" ],
-        "type" : "object",
-        "properties" : {
-          "offender" : {
-            "$ref" : "#/components/schemas/NomisOffender"
-          },
-          "sequence" : {
-            "type" : "integer",
-            "description" : "The sequence number providing an order for a list of offender parties",
-            "format" : "int32"
-          },
-          "role" : {
-            "$ref" : "#/components/schemas/NomisCode"
-          },
-          "outcome" : {
-            "nullable" : true,
-            "allOf" : [ {
-              "$ref" : "#/components/schemas/NomisCode"
-            } ]
-          },
-          "comment" : {
-            "type" : "string",
-            "description" : "General information about the incident",
-            "nullable" : true
-          },
-          "createDateTime" : {
-            "type" : "string",
-            "description" : "The date and time the offender party was created",
-            "format" : "date-time"
-          },
-          "createdBy" : {
-            "type" : "string",
-            "description" : "The username of the person who created the offender party"
-          },
-          "lastModifiedDateTime" : {
-            "type" : "string",
-            "description" : "The date and time the offender party was last updated",
-            "format" : "date-time",
-            "nullable" : true
-          },
-          "lastModifiedBy" : {
-            "type" : "string",
-            "description" : "The username of the person who last updated the offender party",
-            "nullable" : true
-          }
-        },
-        "description" : "Offenders involved in the incident"
-      },
-      "NomisQuestion" : {
-        "required" : [ "answers", "createDateTime", "createdBy", "question", "questionId", "sequence" ],
-        "type" : "object",
-        "properties" : {
-          "questionId" : {
-            "type" : "integer",
-            "description" : "The questionnaire question id",
-            "format" : "int64"
-          },
-          "sequence" : {
-            "type" : "integer",
-            "description" : "The sequence number of the question for this incident",
-            "format" : "int32"
-          },
-          "createDateTime" : {
-            "type" : "string",
-            "description" : "The date and time the question was created",
-            "format" : "date-time"
-          },
-          "createdBy" : {
-            "type" : "string",
-            "description" : "The username of the person who created the question"
-          },
-          "question" : {
-            "type" : "string",
-            "description" : "The Question being asked"
-          },
-          "answers" : {
-            "type" : "array",
-            "description" : "List of Responses to this question",
-            "items" : {
-              "$ref" : "#/components/schemas/NomisResponse"
-            }
-          }
-        },
-        "description" : "Questions asked for the incident"
-      },
-      "NomisReport" : {
-        "required" : [ "createDateTime", "createdBy", "descriptionParts", "history", "incidentDateTime", "incidentId", "lockedResponse", "offenderParties", "prison", "questionnaireId", "questions", "reportedDateTime", "reportingStaff", "requirements", "staffParties", "status", "type" ],
-        "type" : "object",
-        "properties" : {
-          "incidentId" : {
-            "type" : "integer",
-            "description" : "The Incident id",
-            "format" : "int64"
-          },
-          "questionnaireId" : {
-            "type" : "integer",
-            "description" : "The id of the questionnaire associated with this incident",
-            "format" : "int64"
-          },
-          "title" : {
-            "type" : "string",
-            "description" : "A summary of the incident",
-            "nullable" : true
-          },
-          "description" : {
-            "type" : "string",
-            "description" : "The incident details",
-            "nullable" : true
-          },
-          "prison" : {
-            "$ref" : "#/components/schemas/NomisCode"
-          },
-          "status" : {
-            "$ref" : "#/components/schemas/NomisStatus"
-          },
-          "type" : {
-            "type" : "string",
-            "description" : "The incident questionnaire type"
-          },
-          "lockedResponse" : {
-            "type" : "boolean",
-            "description" : "If the response is locked ie if the response is completed"
-          },
-          "incidentDateTime" : {
-            "type" : "string",
-            "description" : "The date and time of the incident",
-            "format" : "date-time"
-          },
-          "reportingStaff" : {
-            "$ref" : "#/components/schemas/NomisStaff"
-          },
-          "reportedDateTime" : {
-            "type" : "string",
-            "description" : "The date and time the incident was reported",
-            "format" : "date-time"
-          },
-          "createDateTime" : {
-            "type" : "string",
-            "description" : "The date and time the incident was created",
-            "format" : "date-time"
-          },
-          "createdBy" : {
-            "type" : "string",
-            "description" : "The username of the person who created the incident"
-          },
-          "lastModifiedDateTime" : {
-            "type" : "string",
-            "description" : "The date and time the incident was last updated",
-            "format" : "date-time",
-            "nullable" : true
-          },
-          "lastModifiedBy" : {
-            "type" : "string",
-            "description" : "The username of the person who last updated the incident",
-            "nullable" : true
-          },
-          "followUpDate" : {
-            "type" : "string",
-            "description" : "The follow up date for the incident",
-            "format" : "date",
-            "nullable" : true
-          },
-          "staffParties" : {
-            "type" : "array",
-            "description" : "Staff involved in the incident",
-            "items" : {
-              "$ref" : "#/components/schemas/NomisStaffParty"
-            }
-          },
-          "offenderParties" : {
-            "type" : "array",
-            "description" : "Offenders involved in the incident",
-            "items" : {
-              "$ref" : "#/components/schemas/NomisOffenderParty"
-            }
-          },
-          "requirements" : {
-            "type" : "array",
-            "description" : "Requirements for completing the incident report",
-            "items" : {
-              "$ref" : "#/components/schemas/NomisRequirement"
-            }
-          },
-          "questions" : {
-            "type" : "array",
-            "description" : "Questions asked for the incident",
-            "items" : {
-              "$ref" : "#/components/schemas/NomisQuestion"
-            }
-          },
-          "history" : {
-            "type" : "array",
-            "description" : "Historical questionnaire details for the incident",
-            "items" : {
-              "$ref" : "#/components/schemas/NomisHistory"
-            }
-          },
-          "descriptionParts" : {
-            "$ref" : "#/components/schemas/PairStringListDescriptionAddendum"
-          }
-        },
-        "description" : "NOMIS Incident Report Details"
-      },
-      "NomisRequirement" : {
-        "required" : [ "createDateTime", "createdBy", "prisonId", "recordedDate", "sequence", "staff" ],
-        "type" : "object",
-        "properties" : {
-          "sequence" : {
-            "type" : "integer",
-            "description" : "The sequence number providing an order for a list of requirements",
-            "format" : "int32"
-          },
-          "comment" : {
-            "type" : "string",
-            "description" : "The update required to the incident report",
-            "nullable" : true
-          },
-          "recordedDate" : {
-            "type" : "string",
-            "description" : "Date and time the requirement was recorded",
-            "format" : "date-time"
-          },
-          "staff" : {
-            "$ref" : "#/components/schemas/NomisStaff"
-          },
-          "prisonId" : {
-            "type" : "string",
-            "description" : "The reporting location of the staff"
-          },
-          "createDateTime" : {
-            "type" : "string",
-            "description" : "The date and time the requirement was created",
-            "format" : "date-time"
-          },
-          "createdBy" : {
-            "type" : "string",
-            "description" : "The username of the person who created the requirement"
-          },
-          "lastModifiedDateTime" : {
-            "type" : "string",
-            "description" : "The date and time the requirement was last updated",
-            "format" : "date-time",
-            "nullable" : true
-          },
-          "lastModifiedBy" : {
-            "type" : "string",
-            "description" : "The username of the person who last updated the requirement",
-            "nullable" : true
-          }
-        },
-        "description" : "Requirements for completing the incident report"
-      },
-      "NomisResponse" : {
-        "required" : [ "createDateTime", "createdBy", "recordingStaff", "sequence" ],
-        "type" : "object",
-        "properties" : {
-          "questionResponseId" : {
-            "type" : "integer",
-            "description" : "The id of the questionnaire question answer",
-            "format" : "int64",
-            "nullable" : true
-          },
-          "sequence" : {
-            "type" : "integer",
-            "description" : "The sequence number of the response for this incident",
-            "format" : "int32"
-          },
-          "answer" : {
-            "type" : "string",
-            "description" : "The answer text",
-            "nullable" : true
-          },
-          "responseDate" : {
-            "type" : "string",
-            "description" : "Response date added to the response by recording staff",
-            "format" : "date",
-            "nullable" : true
-          },
-          "comment" : {
-            "type" : "string",
-            "description" : "Comment added to the response by recording staff",
-            "nullable" : true
-          },
-          "recordingStaff" : {
-            "$ref" : "#/components/schemas/NomisStaff"
-          },
-          "createDateTime" : {
-            "type" : "string",
-            "description" : "The date and time the response was created",
-            "format" : "date-time"
-          },
-          "createdBy" : {
-            "type" : "string",
-            "description" : "The username of the person who created the response"
-          },
-          "lastModifiedDateTime" : {
-            "type" : "string",
-            "description" : "The date and time the response was last updated",
-            "format" : "date-time",
-            "nullable" : true
-          },
-          "lastModifiedBy" : {
-            "type" : "string",
-            "description" : "The username of the person who last updated the response",
-            "nullable" : true
-          }
-        },
-        "description" : "List of Responses to this question"
-      },
-      "NomisStaff" : {
-        "required" : [ "firstName", "lastName", "staffId", "username" ],
-        "type" : "object",
-        "properties" : {
-          "username" : {
-            "type" : "string",
-            "description" : "Username of first account related to staff"
-          },
-          "staffId" : {
-            "type" : "integer",
-            "description" : "NOMIS staff id",
-            "format" : "int64"
-          },
-          "firstName" : {
-            "type" : "string",
-            "description" : "First name of staff member"
-          },
-          "lastName" : {
-            "type" : "string",
-            "description" : "Last name of staff member"
-          }
-        },
-        "description" : "Who changed the questionnaire"
-      },
-      "NomisStaffParty" : {
-        "required" : [ "createDateTime", "createdBy", "role", "sequence", "staff" ],
-        "type" : "object",
-        "properties" : {
-          "staff" : {
-            "$ref" : "#/components/schemas/NomisStaff"
-          },
-          "sequence" : {
-            "type" : "integer",
-            "description" : "The sequence number providing an order for a list of staff parties",
-            "format" : "int32"
-          },
-          "role" : {
-            "$ref" : "#/components/schemas/NomisCode"
-          },
-          "comment" : {
-            "type" : "string",
-            "description" : "General information about the incident",
-            "nullable" : true
-          },
-          "createDateTime" : {
-            "type" : "string",
-            "description" : "The date and time the staff party was created",
-            "format" : "date-time"
-          },
-          "createdBy" : {
-            "type" : "string",
-            "description" : "The username of the person who created the staff party"
-          },
-          "lastModifiedDateTime" : {
-            "type" : "string",
-            "description" : "The date and time the staff party was last updated",
-            "format" : "date-time",
-            "nullable" : true
-          },
-          "lastModifiedBy" : {
-            "type" : "string",
-            "description" : "The username of the person who last updated the staff party",
-            "nullable" : true
-          }
-        },
-        "description" : "Staff involved in the incident"
-      },
-      "NomisStatus" : {
-        "required" : [ "code", "description" ],
-        "type" : "object",
-        "properties" : {
-          "code" : {
-            "type" : "string",
-            "description" : "Status Code"
-          },
-          "description" : {
-            "type" : "string",
-            "description" : "Status Description"
-          }
-        },
-        "description" : "Status details"
-      },
-      "NomisSyncRequest" : {
-        "required" : [ "incidentReport" ],
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string",
-            "description" : "Incident report ID, required for updates and must be omitted for initial migration",
-            "format" : "uuid",
-            "nullable" : true,
-            "example" : "123e4567-e89b-12d3-a456-426614174000"
-          },
-          "initialMigration" : {
-            "type" : "boolean",
-            "description" : "Set to true for initial migration, omit or set to false for updates",
-            "example" : true,
-            "default" : false
-          },
-          "incidentReport" : {
-            "$ref" : "#/components/schemas/NomisReport"
-          }
-        },
-        "description" : "Incident report created or updated in NOMIS",
-        "writeOnly" : true
-      },
-      "PairStringListDescriptionAddendum" : {
-        "required" : [ "first", "second" ],
-        "type" : "object",
-        "properties" : {
-          "first" : {
-            "type" : "string"
-          },
-          "second" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/DescriptionAddendum"
-            }
-          }
-        }
-      },
-      "NomisSyncCreateRequest" : {
-        "required" : [ "incidentReport" ],
-        "type" : "object",
-        "properties" : {
-          "incidentReport" : {
-            "$ref" : "#/components/schemas/NomisReport"
-          },
-          "initialMigration" : {
-            "type" : "boolean",
-            "description" : "Set to true for initial migration",
-            "example" : true,
-            "default" : false
-          }
-        },
-        "description" : "Incident report created in NOMIS",
-        "writeOnly" : true
-      },
-      "NomisSyncUpdateRequest" : {
-        "required" : [ "id", "incidentReport" ],
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string",
-            "description" : "Incident report ID",
-            "format" : "uuid",
-            "example" : "123e4567-e89b-12d3-a456-426614174000"
-          },
-          "incidentReport" : {
-            "$ref" : "#/components/schemas/NomisReport"
-          },
-          "initialMigration" : {
-            "type" : "boolean",
-            "description" : "Omit or set to false for updates",
-            "default" : false
-          }
-        },
-        "description" : "Incident report updated in NOMIS",
-        "writeOnly" : true
-      },
-      "NomisSyncReportId" : {
-        "required" : [ "id" ],
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string",
-            "description" : "The internal ID of this report",
-            "format" : "uuid"
-          }
-        },
-        "description" : "Incident report ID",
-        "readOnly" : true
-      },
       "CreateReportRequest" : {
         "required" : [ "description", "incidentDateAndTime", "location", "title", "type" ],
         "type" : "object",
@@ -3987,7 +3164,7 @@
           "type" : {
             "type" : "string",
             "description" : "Incident report type",
-            "enum" : [ "ABSCOND_1", "ASSAULT_1", "ASSAULT_2", "ASSAULT_3", "ASSAULT_4", "ASSAULT_5", "ATTEMPTED_ESCAPE_FROM_ESCORT_1", "ATTEMPTED_ESCAPE_FROM_PRISON_1", "BARRICADE_1", "BOMB_1", "BREACH_OF_SECURITY_1", "BC_DISRUPT_3RD_PTY_1", "BC_FUEL_SHORTAGE_1", "BC_LOSS_ACCESS_EGRESS_1", "BC_LOSS_COMMS_1", "BC_LOSS_UTILS_1", "BC_SERV_WEATHER_1", "BC_STAFF_SHORTAGES_1", "BC_WIDESPREAD_ILLNESS_1", "CLOSE_DOWN_SEARCH_1", "DEATH_OTHER_1", "DEATH_PRISONER_1", "DAMAGE_1", "DIRTY_PROTEST_1", "DISORDER_1", "DISORDER_2", "DRONE_SIGHTING_1", "DRONE_SIGHTING_2", "DRONE_SIGHTING_3", "DRUGS_1", "ESCAPE_FROM_ESCORT_1", "ESCAPE_FROM_PRISON_1", "FIND_1", "FIND_2", "FIND_3", "FIND_4", "FIND_5", "FIND_6", "FIRE_1", "FIREARM_1", "FOOD_REFUSAL_1", "HOSTAGE_1", "INCIDENT_AT_HEIGHT_1", "CONCERTED_INDISCIPLINE_1", "KEY_OR_LOCK_1", "KEY_OR_LOCK_2", "MISCELLANEOUS_1", "MOBILE_PHONE_1", "RADIO_COMPROMISE_1", "RELEASE_IN_ERROR_1", "SELF_HARM_1", "TEMPORARY_RELEASE_FAILURE_1", "TEMPORARY_RELEASE_FAILURE_2", "TEMPORARY_RELEASE_FAILURE_3", "TEMPORARY_RELEASE_FAILURE_4", "TOOL_LOSS_1" ]
+            "enum" : [ "ABSCOND_1", "ASSAULT_1", "ASSAULT_2", "ASSAULT_3", "ASSAULT_4", "ASSAULT_5", "ATTEMPTED_ESCAPE_FROM_ESCORT_1", "ATTEMPTED_ESCAPE_FROM_PRISON_1", "BARRICADE_1", "BOMB_1", "BREACH_OF_SECURITY_1", "BC_DISRUPT_3RD_PTY_1", "BC_FUEL_SHORTAGE_1", "BC_LOSS_ACCESS_EGRESS_1", "BC_LOSS_COMMS_1", "BC_LOSS_UTILS_1", "BC_SERV_WEATHER_1", "BC_STAFF_SHORTAGES_1", "BC_WIDESPREAD_ILLNESS_1", "CLOSE_DOWN_SEARCH_1", "DEATH_OTHER_1", "DEATH_PRISONER_1", "DAMAGE_1", "DIRTY_PROTEST_1", "DISORDER_1", "DISORDER_2", "DRONE_SIGHTING_1", "DRONE_SIGHTING_2", "DRONE_SIGHTING_3", "DRUGS_1", "ESCAPE_FROM_ESCORT_1", "ESCAPE_FROM_PRISON_1", "FIND_1", "FIND_2", "FIND_3", "FIND_4", "FIND_5", "FIND_6", "FIRE_1", "FIREARM_1", "FOOD_REFUSAL_1", "HOSTAGE_1", "INCIDENT_AT_HEIGHT_1", "CONCERTED_INDISCIPLINE_1", "KEY_OR_LOCK_1", "KEY_OR_LOCK_2", "MISCELLANEOUS_1", "MOBILE_PHONE_1", "RADIO_COMPROMISE_1", "RELEASE_IN_ERROR_1", "SELF_HARM_1", "TEMPORARY_RELEASE_FAILURE_1", "TEMPORARY_RELEASE_FAILURE_2", "TEMPORARY_RELEASE_FAILURE_3", "TEMPORARY_RELEASE_FAILURE_4", "TOOL_LOSS_1", "UNLAWFUL_DETENTION_1" ]
           },
           "incidentDateAndTime" : {
             "type" : "string",
@@ -4064,6 +3241,44 @@
           }
         },
         "description" : "Request to make a correction to incident report",
+        "readOnly" : true
+      },
+      "DescriptionAddendum" : {
+        "required" : [ "createdAt", "createdBy", "firstName", "lastName", "sequence", "text" ],
+        "type" : "object",
+        "properties" : {
+          "sequence" : {
+            "type" : "integer",
+            "description" : "Sequence of the addendums for this report",
+            "format" : "int32",
+            "deprecated" : true
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "Username of user who added this addendum",
+            "example" : "USER_1"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "description" : "When addendum was added",
+            "format" : "date-time"
+          },
+          "firstName" : {
+            "type" : "string",
+            "description" : "First name of person that added this addendum",
+            "example" : "John"
+          },
+          "lastName" : {
+            "type" : "string",
+            "description" : "Last name of person that added this addendum",
+            "example" : "Doe"
+          },
+          "text" : {
+            "type" : "string",
+            "description" : "Addendum text"
+          }
+        },
+        "description" : "Addendum to the description of an incident",
         "readOnly" : true
       },
       "HistoricalQuestion" : {
@@ -4159,7 +3374,7 @@
           "type" : {
             "type" : "string",
             "description" : "Previous incident report type",
-            "enum" : [ "ABSCOND_1", "ASSAULT_1", "ASSAULT_2", "ASSAULT_3", "ASSAULT_4", "ASSAULT_5", "ATTEMPTED_ESCAPE_FROM_ESCORT_1", "ATTEMPTED_ESCAPE_FROM_PRISON_1", "BARRICADE_1", "BOMB_1", "BREACH_OF_SECURITY_1", "BC_DISRUPT_3RD_PTY_1", "BC_FUEL_SHORTAGE_1", "BC_LOSS_ACCESS_EGRESS_1", "BC_LOSS_COMMS_1", "BC_LOSS_UTILS_1", "BC_SERV_WEATHER_1", "BC_STAFF_SHORTAGES_1", "BC_WIDESPREAD_ILLNESS_1", "CLOSE_DOWN_SEARCH_1", "DEATH_OTHER_1", "DEATH_PRISONER_1", "DAMAGE_1", "DIRTY_PROTEST_1", "DISORDER_1", "DISORDER_2", "DRONE_SIGHTING_1", "DRONE_SIGHTING_2", "DRONE_SIGHTING_3", "DRUGS_1", "ESCAPE_FROM_ESCORT_1", "ESCAPE_FROM_PRISON_1", "FIND_1", "FIND_2", "FIND_3", "FIND_4", "FIND_5", "FIND_6", "FIRE_1", "FIREARM_1", "FOOD_REFUSAL_1", "HOSTAGE_1", "INCIDENT_AT_HEIGHT_1", "CONCERTED_INDISCIPLINE_1", "KEY_OR_LOCK_1", "KEY_OR_LOCK_2", "MISCELLANEOUS_1", "MOBILE_PHONE_1", "RADIO_COMPROMISE_1", "RELEASE_IN_ERROR_1", "SELF_HARM_1", "TEMPORARY_RELEASE_FAILURE_1", "TEMPORARY_RELEASE_FAILURE_2", "TEMPORARY_RELEASE_FAILURE_3", "TEMPORARY_RELEASE_FAILURE_4", "TOOL_LOSS_1" ]
+            "enum" : [ "ABSCOND_1", "ASSAULT_1", "ASSAULT_2", "ASSAULT_3", "ASSAULT_4", "ASSAULT_5", "ATTEMPTED_ESCAPE_FROM_ESCORT_1", "ATTEMPTED_ESCAPE_FROM_PRISON_1", "BARRICADE_1", "BOMB_1", "BREACH_OF_SECURITY_1", "BC_DISRUPT_3RD_PTY_1", "BC_FUEL_SHORTAGE_1", "BC_LOSS_ACCESS_EGRESS_1", "BC_LOSS_COMMS_1", "BC_LOSS_UTILS_1", "BC_SERV_WEATHER_1", "BC_STAFF_SHORTAGES_1", "BC_WIDESPREAD_ILLNESS_1", "CLOSE_DOWN_SEARCH_1", "DEATH_OTHER_1", "DEATH_PRISONER_1", "DAMAGE_1", "DIRTY_PROTEST_1", "DISORDER_1", "DISORDER_2", "DRONE_SIGHTING_1", "DRONE_SIGHTING_2", "DRONE_SIGHTING_3", "DRUGS_1", "ESCAPE_FROM_ESCORT_1", "ESCAPE_FROM_PRISON_1", "FIND_1", "FIND_2", "FIND_3", "FIND_4", "FIND_5", "FIND_6", "FIRE_1", "FIREARM_1", "FOOD_REFUSAL_1", "HOSTAGE_1", "INCIDENT_AT_HEIGHT_1", "CONCERTED_INDISCIPLINE_1", "KEY_OR_LOCK_1", "KEY_OR_LOCK_2", "MISCELLANEOUS_1", "MOBILE_PHONE_1", "RADIO_COMPROMISE_1", "RELEASE_IN_ERROR_1", "SELF_HARM_1", "TEMPORARY_RELEASE_FAILURE_1", "TEMPORARY_RELEASE_FAILURE_2", "TEMPORARY_RELEASE_FAILURE_3", "TEMPORARY_RELEASE_FAILURE_4", "TOOL_LOSS_1", "UNLAWFUL_DETENTION_1" ]
           },
           "changedAt" : {
             "type" : "string",
@@ -4194,7 +3409,7 @@
           "type" : {
             "type" : "string",
             "description" : "Previous incident report type",
-            "enum" : [ "ABSCOND_1", "ASSAULT_1", "ASSAULT_2", "ASSAULT_3", "ASSAULT_4", "ASSAULT_5", "ATTEMPTED_ESCAPE_FROM_ESCORT_1", "ATTEMPTED_ESCAPE_FROM_PRISON_1", "BARRICADE_1", "BOMB_1", "BREACH_OF_SECURITY_1", "BC_DISRUPT_3RD_PTY_1", "BC_FUEL_SHORTAGE_1", "BC_LOSS_ACCESS_EGRESS_1", "BC_LOSS_COMMS_1", "BC_LOSS_UTILS_1", "BC_SERV_WEATHER_1", "BC_STAFF_SHORTAGES_1", "BC_WIDESPREAD_ILLNESS_1", "CLOSE_DOWN_SEARCH_1", "DEATH_OTHER_1", "DEATH_PRISONER_1", "DAMAGE_1", "DIRTY_PROTEST_1", "DISORDER_1", "DISORDER_2", "DRONE_SIGHTING_1", "DRONE_SIGHTING_2", "DRONE_SIGHTING_3", "DRUGS_1", "ESCAPE_FROM_ESCORT_1", "ESCAPE_FROM_PRISON_1", "FIND_1", "FIND_2", "FIND_3", "FIND_4", "FIND_5", "FIND_6", "FIRE_1", "FIREARM_1", "FOOD_REFUSAL_1", "HOSTAGE_1", "INCIDENT_AT_HEIGHT_1", "CONCERTED_INDISCIPLINE_1", "KEY_OR_LOCK_1", "KEY_OR_LOCK_2", "MISCELLANEOUS_1", "MOBILE_PHONE_1", "RADIO_COMPROMISE_1", "RELEASE_IN_ERROR_1", "SELF_HARM_1", "TEMPORARY_RELEASE_FAILURE_1", "TEMPORARY_RELEASE_FAILURE_2", "TEMPORARY_RELEASE_FAILURE_3", "TEMPORARY_RELEASE_FAILURE_4", "TOOL_LOSS_1" ]
+            "enum" : [ "ABSCOND_1", "ASSAULT_1", "ASSAULT_2", "ASSAULT_3", "ASSAULT_4", "ASSAULT_5", "ATTEMPTED_ESCAPE_FROM_ESCORT_1", "ATTEMPTED_ESCAPE_FROM_PRISON_1", "BARRICADE_1", "BOMB_1", "BREACH_OF_SECURITY_1", "BC_DISRUPT_3RD_PTY_1", "BC_FUEL_SHORTAGE_1", "BC_LOSS_ACCESS_EGRESS_1", "BC_LOSS_COMMS_1", "BC_LOSS_UTILS_1", "BC_SERV_WEATHER_1", "BC_STAFF_SHORTAGES_1", "BC_WIDESPREAD_ILLNESS_1", "CLOSE_DOWN_SEARCH_1", "DEATH_OTHER_1", "DEATH_PRISONER_1", "DAMAGE_1", "DIRTY_PROTEST_1", "DISORDER_1", "DISORDER_2", "DRONE_SIGHTING_1", "DRONE_SIGHTING_2", "DRONE_SIGHTING_3", "DRUGS_1", "ESCAPE_FROM_ESCORT_1", "ESCAPE_FROM_PRISON_1", "FIND_1", "FIND_2", "FIND_3", "FIND_4", "FIND_5", "FIND_6", "FIRE_1", "FIREARM_1", "FOOD_REFUSAL_1", "HOSTAGE_1", "INCIDENT_AT_HEIGHT_1", "CONCERTED_INDISCIPLINE_1", "KEY_OR_LOCK_1", "KEY_OR_LOCK_2", "MISCELLANEOUS_1", "MOBILE_PHONE_1", "RADIO_COMPROMISE_1", "RELEASE_IN_ERROR_1", "SELF_HARM_1", "TEMPORARY_RELEASE_FAILURE_1", "TEMPORARY_RELEASE_FAILURE_2", "TEMPORARY_RELEASE_FAILURE_3", "TEMPORARY_RELEASE_FAILURE_4", "TOOL_LOSS_1", "UNLAWFUL_DETENTION_1" ]
           },
           "changedAt" : {
             "type" : "string",
@@ -4234,7 +3449,7 @@
           "prisonerRole" : {
             "type" : "string",
             "description" : "Their role",
-            "enum" : [ "ABSCONDER", "ACTIVE_INVOLVEMENT", "ASSAILANT", "ASSISTED_STAFF", "DECEASED", "ESCAPE", "FIGHTER", "HOSTAGE", "IMPEDED_STAFF", "IN_POSSESSION", "INTENDED_RECIPIENT", "LICENSE_FAILURE", "PERPETRATOR", "PRESENT_AT_SCENE", "SUSPECTED_ASSAILANT", "SUSPECTED_INVOLVED", "TEMPORARY_RELEASE_FAILURE", "VICTIM" ]
+            "enum" : [ "ABSCONDER", "ACTIVE_INVOLVEMENT", "ASSAILANT", "ASSISTED_STAFF", "DECEASED", "ESCAPE", "FIGHTER", "HOSTAGE", "IMPEDED_STAFF", "IN_POSSESSION", "INTENDED_RECIPIENT", "LICENSE_FAILURE", "PERPETRATOR", "PRESENT_AT_SCENE", "SUSPECTED_ASSAILANT", "SUSPECTED_INVOLVED", "TEMPORARY_RELEASE_FAILURE", "VICTIM", "UNLAWFULLY_DETAINED" ]
           },
           "outcome" : {
             "type" : "string",
@@ -4264,7 +3479,7 @@
           },
           "type" : {
             "type" : "string",
-            "enum" : [ "ABSCOND_1", "ASSAULT_1", "ASSAULT_2", "ASSAULT_3", "ASSAULT_4", "ASSAULT_5", "ATTEMPTED_ESCAPE_FROM_ESCORT_1", "ATTEMPTED_ESCAPE_FROM_PRISON_1", "BARRICADE_1", "BOMB_1", "BREACH_OF_SECURITY_1", "BC_DISRUPT_3RD_PTY_1", "BC_FUEL_SHORTAGE_1", "BC_LOSS_ACCESS_EGRESS_1", "BC_LOSS_COMMS_1", "BC_LOSS_UTILS_1", "BC_SERV_WEATHER_1", "BC_STAFF_SHORTAGES_1", "BC_WIDESPREAD_ILLNESS_1", "CLOSE_DOWN_SEARCH_1", "DEATH_OTHER_1", "DEATH_PRISONER_1", "DAMAGE_1", "DIRTY_PROTEST_1", "DISORDER_1", "DISORDER_2", "DRONE_SIGHTING_1", "DRONE_SIGHTING_2", "DRONE_SIGHTING_3", "DRUGS_1", "ESCAPE_FROM_ESCORT_1", "ESCAPE_FROM_PRISON_1", "FIND_1", "FIND_2", "FIND_3", "FIND_4", "FIND_5", "FIND_6", "FIRE_1", "FIREARM_1", "FOOD_REFUSAL_1", "HOSTAGE_1", "INCIDENT_AT_HEIGHT_1", "CONCERTED_INDISCIPLINE_1", "KEY_OR_LOCK_1", "KEY_OR_LOCK_2", "MISCELLANEOUS_1", "MOBILE_PHONE_1", "RADIO_COMPROMISE_1", "RELEASE_IN_ERROR_1", "SELF_HARM_1", "TEMPORARY_RELEASE_FAILURE_1", "TEMPORARY_RELEASE_FAILURE_2", "TEMPORARY_RELEASE_FAILURE_3", "TEMPORARY_RELEASE_FAILURE_4", "TOOL_LOSS_1" ]
+            "enum" : [ "ABSCOND_1", "ASSAULT_1", "ASSAULT_2", "ASSAULT_3", "ASSAULT_4", "ASSAULT_5", "ATTEMPTED_ESCAPE_FROM_ESCORT_1", "ATTEMPTED_ESCAPE_FROM_PRISON_1", "BARRICADE_1", "BOMB_1", "BREACH_OF_SECURITY_1", "BC_DISRUPT_3RD_PTY_1", "BC_FUEL_SHORTAGE_1", "BC_LOSS_ACCESS_EGRESS_1", "BC_LOSS_COMMS_1", "BC_LOSS_UTILS_1", "BC_SERV_WEATHER_1", "BC_STAFF_SHORTAGES_1", "BC_WIDESPREAD_ILLNESS_1", "CLOSE_DOWN_SEARCH_1", "DEATH_OTHER_1", "DEATH_PRISONER_1", "DAMAGE_1", "DIRTY_PROTEST_1", "DISORDER_1", "DISORDER_2", "DRONE_SIGHTING_1", "DRONE_SIGHTING_2", "DRONE_SIGHTING_3", "DRUGS_1", "ESCAPE_FROM_ESCORT_1", "ESCAPE_FROM_PRISON_1", "FIND_1", "FIND_2", "FIND_3", "FIND_4", "FIND_5", "FIND_6", "FIRE_1", "FIREARM_1", "FOOD_REFUSAL_1", "HOSTAGE_1", "INCIDENT_AT_HEIGHT_1", "CONCERTED_INDISCIPLINE_1", "KEY_OR_LOCK_1", "KEY_OR_LOCK_2", "MISCELLANEOUS_1", "MOBILE_PHONE_1", "RADIO_COMPROMISE_1", "RELEASE_IN_ERROR_1", "SELF_HARM_1", "TEMPORARY_RELEASE_FAILURE_1", "TEMPORARY_RELEASE_FAILURE_2", "TEMPORARY_RELEASE_FAILURE_3", "TEMPORARY_RELEASE_FAILURE_4", "TOOL_LOSS_1", "UNLAWFUL_DETENTION_1" ]
           },
           "incidentDateAndTime" : {
             "type" : "string",
@@ -4525,7 +3740,7 @@
           "prisonerRole" : {
             "type" : "string",
             "description" : "Their role",
-            "enum" : [ "ABSCONDER", "ACTIVE_INVOLVEMENT", "ASSAILANT", "ASSISTED_STAFF", "DECEASED", "ESCAPE", "FIGHTER", "HOSTAGE", "IMPEDED_STAFF", "IN_POSSESSION", "INTENDED_RECIPIENT", "LICENSE_FAILURE", "PERPETRATOR", "PRESENT_AT_SCENE", "SUSPECTED_ASSAILANT", "SUSPECTED_INVOLVED", "TEMPORARY_RELEASE_FAILURE", "VICTIM" ]
+            "enum" : [ "ABSCONDER", "ACTIVE_INVOLVEMENT", "ASSAILANT", "ASSISTED_STAFF", "DECEASED", "ESCAPE", "FIGHTER", "HOSTAGE", "IMPEDED_STAFF", "IN_POSSESSION", "INTENDED_RECIPIENT", "LICENSE_FAILURE", "PERPETRATOR", "PRESENT_AT_SCENE", "SUSPECTED_ASSAILANT", "SUSPECTED_INVOLVED", "TEMPORARY_RELEASE_FAILURE", "VICTIM", "UNLAWFULLY_DETAINED" ]
           },
           "outcome" : {
             "type" : "string",
@@ -4702,7 +3917,7 @@
             "type" : "string",
             "description" : "Their role",
             "nullable" : true,
-            "enum" : [ "ABSCONDER", "ACTIVE_INVOLVEMENT", "ASSAILANT", "ASSISTED_STAFF", "DECEASED", "ESCAPE", "FIGHTER", "HOSTAGE", "IMPEDED_STAFF", "IN_POSSESSION", "INTENDED_RECIPIENT", "LICENSE_FAILURE", "PERPETRATOR", "PRESENT_AT_SCENE", "SUSPECTED_ASSAILANT", "SUSPECTED_INVOLVED", "TEMPORARY_RELEASE_FAILURE", "VICTIM" ],
+            "enum" : [ "ABSCONDER", "ACTIVE_INVOLVEMENT", "ASSAILANT", "ASSISTED_STAFF", "DECEASED", "ESCAPE", "FIGHTER", "HOSTAGE", "IMPEDED_STAFF", "IN_POSSESSION", "INTENDED_RECIPIENT", "LICENSE_FAILURE", "PERPETRATOR", "PRESENT_AT_SCENE", "SUSPECTED_ASSAILANT", "SUSPECTED_INVOLVED", "TEMPORARY_RELEASE_FAILURE", "VICTIM", "UNLAWFULLY_DETAINED" ],
             "default" : null
           },
           "outcome" : {
@@ -4881,7 +4096,7 @@
           "type" : {
             "type" : "string",
             "description" : "Incident report type",
-            "enum" : [ "ABSCOND_1", "ASSAULT_1", "ASSAULT_2", "ASSAULT_3", "ASSAULT_4", "ASSAULT_5", "ATTEMPTED_ESCAPE_FROM_ESCORT_1", "ATTEMPTED_ESCAPE_FROM_PRISON_1", "BARRICADE_1", "BOMB_1", "BREACH_OF_SECURITY_1", "BC_DISRUPT_3RD_PTY_1", "BC_FUEL_SHORTAGE_1", "BC_LOSS_ACCESS_EGRESS_1", "BC_LOSS_COMMS_1", "BC_LOSS_UTILS_1", "BC_SERV_WEATHER_1", "BC_STAFF_SHORTAGES_1", "BC_WIDESPREAD_ILLNESS_1", "CLOSE_DOWN_SEARCH_1", "DEATH_OTHER_1", "DEATH_PRISONER_1", "DAMAGE_1", "DIRTY_PROTEST_1", "DISORDER_1", "DISORDER_2", "DRONE_SIGHTING_1", "DRONE_SIGHTING_2", "DRONE_SIGHTING_3", "DRUGS_1", "ESCAPE_FROM_ESCORT_1", "ESCAPE_FROM_PRISON_1", "FIND_1", "FIND_2", "FIND_3", "FIND_4", "FIND_5", "FIND_6", "FIRE_1", "FIREARM_1", "FOOD_REFUSAL_1", "HOSTAGE_1", "INCIDENT_AT_HEIGHT_1", "CONCERTED_INDISCIPLINE_1", "KEY_OR_LOCK_1", "KEY_OR_LOCK_2", "MISCELLANEOUS_1", "MOBILE_PHONE_1", "RADIO_COMPROMISE_1", "RELEASE_IN_ERROR_1", "SELF_HARM_1", "TEMPORARY_RELEASE_FAILURE_1", "TEMPORARY_RELEASE_FAILURE_2", "TEMPORARY_RELEASE_FAILURE_3", "TEMPORARY_RELEASE_FAILURE_4", "TOOL_LOSS_1" ]
+            "enum" : [ "ABSCOND_1", "ASSAULT_1", "ASSAULT_2", "ASSAULT_3", "ASSAULT_4", "ASSAULT_5", "ATTEMPTED_ESCAPE_FROM_ESCORT_1", "ATTEMPTED_ESCAPE_FROM_PRISON_1", "BARRICADE_1", "BOMB_1", "BREACH_OF_SECURITY_1", "BC_DISRUPT_3RD_PTY_1", "BC_FUEL_SHORTAGE_1", "BC_LOSS_ACCESS_EGRESS_1", "BC_LOSS_COMMS_1", "BC_LOSS_UTILS_1", "BC_SERV_WEATHER_1", "BC_STAFF_SHORTAGES_1", "BC_WIDESPREAD_ILLNESS_1", "CLOSE_DOWN_SEARCH_1", "DEATH_OTHER_1", "DEATH_PRISONER_1", "DAMAGE_1", "DIRTY_PROTEST_1", "DISORDER_1", "DISORDER_2", "DRONE_SIGHTING_1", "DRONE_SIGHTING_2", "DRONE_SIGHTING_3", "DRUGS_1", "ESCAPE_FROM_ESCORT_1", "ESCAPE_FROM_PRISON_1", "FIND_1", "FIND_2", "FIND_3", "FIND_4", "FIND_5", "FIND_6", "FIRE_1", "FIREARM_1", "FOOD_REFUSAL_1", "HOSTAGE_1", "INCIDENT_AT_HEIGHT_1", "CONCERTED_INDISCIPLINE_1", "KEY_OR_LOCK_1", "KEY_OR_LOCK_2", "MISCELLANEOUS_1", "MOBILE_PHONE_1", "RADIO_COMPROMISE_1", "RELEASE_IN_ERROR_1", "SELF_HARM_1", "TEMPORARY_RELEASE_FAILURE_1", "TEMPORARY_RELEASE_FAILURE_2", "TEMPORARY_RELEASE_FAILURE_3", "TEMPORARY_RELEASE_FAILURE_4", "TOOL_LOSS_1", "UNLAWFUL_DETENTION_1" ]
           },
           "incidentDateAndTime" : {
             "type" : "string",
@@ -4960,7 +4175,7 @@
             "type" : "string",
             "description" : "The new type",
             "example" : "DAMAGE",
-            "enum" : [ "ABSCOND_1", "ASSAULT_1", "ASSAULT_2", "ASSAULT_3", "ASSAULT_4", "ASSAULT_5", "ATTEMPTED_ESCAPE_FROM_ESCORT_1", "ATTEMPTED_ESCAPE_FROM_PRISON_1", "BARRICADE_1", "BOMB_1", "BREACH_OF_SECURITY_1", "BC_DISRUPT_3RD_PTY_1", "BC_FUEL_SHORTAGE_1", "BC_LOSS_ACCESS_EGRESS_1", "BC_LOSS_COMMS_1", "BC_LOSS_UTILS_1", "BC_SERV_WEATHER_1", "BC_STAFF_SHORTAGES_1", "BC_WIDESPREAD_ILLNESS_1", "CLOSE_DOWN_SEARCH_1", "DEATH_OTHER_1", "DEATH_PRISONER_1", "DAMAGE_1", "DIRTY_PROTEST_1", "DISORDER_1", "DISORDER_2", "DRONE_SIGHTING_1", "DRONE_SIGHTING_2", "DRONE_SIGHTING_3", "DRUGS_1", "ESCAPE_FROM_ESCORT_1", "ESCAPE_FROM_PRISON_1", "FIND_1", "FIND_2", "FIND_3", "FIND_4", "FIND_5", "FIND_6", "FIRE_1", "FIREARM_1", "FOOD_REFUSAL_1", "HOSTAGE_1", "INCIDENT_AT_HEIGHT_1", "CONCERTED_INDISCIPLINE_1", "KEY_OR_LOCK_1", "KEY_OR_LOCK_2", "MISCELLANEOUS_1", "MOBILE_PHONE_1", "RADIO_COMPROMISE_1", "RELEASE_IN_ERROR_1", "SELF_HARM_1", "TEMPORARY_RELEASE_FAILURE_1", "TEMPORARY_RELEASE_FAILURE_2", "TEMPORARY_RELEASE_FAILURE_3", "TEMPORARY_RELEASE_FAILURE_4", "TOOL_LOSS_1" ]
+            "enum" : [ "ABSCOND_1", "ASSAULT_1", "ASSAULT_2", "ASSAULT_3", "ASSAULT_4", "ASSAULT_5", "ATTEMPTED_ESCAPE_FROM_ESCORT_1", "ATTEMPTED_ESCAPE_FROM_PRISON_1", "BARRICADE_1", "BOMB_1", "BREACH_OF_SECURITY_1", "BC_DISRUPT_3RD_PTY_1", "BC_FUEL_SHORTAGE_1", "BC_LOSS_ACCESS_EGRESS_1", "BC_LOSS_COMMS_1", "BC_LOSS_UTILS_1", "BC_SERV_WEATHER_1", "BC_STAFF_SHORTAGES_1", "BC_WIDESPREAD_ILLNESS_1", "CLOSE_DOWN_SEARCH_1", "DEATH_OTHER_1", "DEATH_PRISONER_1", "DAMAGE_1", "DIRTY_PROTEST_1", "DISORDER_1", "DISORDER_2", "DRONE_SIGHTING_1", "DRONE_SIGHTING_2", "DRONE_SIGHTING_3", "DRUGS_1", "ESCAPE_FROM_ESCORT_1", "ESCAPE_FROM_PRISON_1", "FIND_1", "FIND_2", "FIND_3", "FIND_4", "FIND_5", "FIND_6", "FIRE_1", "FIREARM_1", "FOOD_REFUSAL_1", "HOSTAGE_1", "INCIDENT_AT_HEIGHT_1", "CONCERTED_INDISCIPLINE_1", "KEY_OR_LOCK_1", "KEY_OR_LOCK_2", "MISCELLANEOUS_1", "MOBILE_PHONE_1", "RADIO_COMPROMISE_1", "RELEASE_IN_ERROR_1", "SELF_HARM_1", "TEMPORARY_RELEASE_FAILURE_1", "TEMPORARY_RELEASE_FAILURE_2", "TEMPORARY_RELEASE_FAILURE_3", "TEMPORARY_RELEASE_FAILURE_4", "TOOL_LOSS_1", "UNLAWFUL_DETENTION_1" ]
           }
         },
         "description" : "Changes an incident report’s type",
@@ -5135,17 +4350,17 @@
               "example" : "[\"property,ASC\"]"
             }
           },
-          "numberOfElements" : {
-            "type" : "integer",
-            "description" : "Number of elements in this page",
-            "format" : "int32",
-            "example" : 20
-          },
           "totalPages" : {
             "type" : "integer",
             "description" : "Total number of pages",
             "format" : "int32",
             "example" : 3
+          },
+          "numberOfElements" : {
+            "type" : "integer",
+            "description" : "Number of elements in this page",
+            "format" : "int32",
+            "example" : 20
           }
         },
         "description" : "Page of results",
