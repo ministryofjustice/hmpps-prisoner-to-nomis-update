@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-04-15.149.2f32a3f"
+    "version" : "2026-05-13.191.dfa412e"
   },
   "servers" : [ {
     "url" : "/",
@@ -7978,7 +7978,7 @@
       "get" : {
         "tags" : [ "Contacts" ],
         "summary" : "Search contacts",
-        "description" : "Search contacts by name, date of birth or contact ID",
+        "description" : "Search contacts by name, date of birth, contact ID or list of contactIds",
         "operationId" : "searchContacts",
         "parameters" : [ {
           "name" : "lastName",
@@ -8019,6 +8019,19 @@
             "type" : "string"
           },
           "example" : 123456
+        }, {
+          "name" : "contactIds",
+          "in" : "query",
+          "description" : "Contact IDs. Comma-separated list of contact IDs, e.g. contactIds=123,456,789",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          },
+          "example" : "123,456,789"
         }, {
           "name" : "dateOfBirth",
           "in" : "query",
@@ -16093,9 +16106,28 @@
             "type" : "boolean",
             "description" : "Is this prisoner's contact relationship active?",
             "example" : true
+          },
+          "isApprovedVisitor" : {
+            "type" : "boolean",
+            "description" : "Is this prisoner's contact relationship approved?",
+            "example" : true
+          },
+          "isEmergencyContact" : {
+            "type" : "boolean",
+            "description" : "Is this prisoner's contact relationship the emergency contact?",
+            "example" : true
+          },
+          "isNextOfKin" : {
+            "type" : "boolean",
+            "description" : "Is this prisoner's contact relationship the next of kin?",
+            "example" : true
+          },
+          "comments" : {
+            "type" : [ "string", "null" ],
+            "description" : "comments of the relationship"
           }
         },
-        "required" : [ "isRelationshipActive", "prisonerContactId", "relationshipToPrisonerCode", "relationshipTypeCode", "relationshipTypeDescription" ]
+        "required" : [ "isApprovedVisitor", "isEmergencyContact", "isNextOfKin", "isRelationshipActive", "prisonerContactId", "relationshipToPrisonerCode", "relationshipTypeCode", "relationshipTypeDescription" ]
       },
       "PagedModelContactSearchResultItem" : {
         "type" : "object",
