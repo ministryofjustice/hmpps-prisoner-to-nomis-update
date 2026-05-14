@@ -31,10 +31,11 @@ internal fun OfficialVisitResponse.toVisit() = OfficialVisitSummary(
   offenderNo = this.offenderNo,
   visitStatus = this.visitStatus.code.toDpsVisitStatusType(),
   visitOutcome = this.cancellationReason?.code.toDpsVisitCompletionType(this.visitStatus.code),
-  visitors = this.visitors.map {
+  visitors = this.visitors.map { visitor ->
     VisitorSummary(
-      nomisPersonAndDpsContactId = it.personId,
-      attendance = it.visitorAttendanceOutcome?.code?.toDpsAttendanceType(),
+      nomisPersonAndDpsContactId = visitor.personId,
+      // Only care about completed visits
+      attendance = this.takeIf { visitStatus.code.toDpsVisitStatusType() == VisitStatusType.COMPLETED }?.let { visitor.visitorAttendanceOutcome?.code?.toDpsAttendanceType() },
     )
   }.sortedBy { it.nomisPersonAndDpsContactId },
   currentTerm = this.currentTerm,
@@ -47,11 +48,11 @@ internal fun SyncOfficialVisit.toVisit() = OfficialVisitSummary(
   offenderNo = this.prisonerNumber,
   visitStatus = this.statusCode,
   visitOutcome = this.completionCode,
-  visitors = this.visitors.filter { it.contactId != null }.map {
+  visitors = this.visitors.filter { it.contactId != null }.map { visitor ->
     VisitorSummary(
-      nomisPersonAndDpsContactId = it.contactId!!,
-      // treat attended and null as the same since DPS defaults to null and NOMIS to ATTENDED
-      attendance = it.attendanceCode?.takeIf { attendanceCode -> attendanceCode != AttendanceType.ATTENDED },
+      nomisPersonAndDpsContactId = visitor.contactId!!,
+      // Only care about completed visits also treat attended and null as the same since DPS defaults to null and NOMIS to ATTENDED
+      attendance = this.takeIf { statusCode == VisitStatusType.COMPLETED }?.let { visitor.attendanceCode?.takeIf { attendanceCode -> attendanceCode != AttendanceType.ATTENDED } },
     )
   }.sortedBy { it.nomisPersonAndDpsContactId },
   currentTerm = this.currentTerm == true,

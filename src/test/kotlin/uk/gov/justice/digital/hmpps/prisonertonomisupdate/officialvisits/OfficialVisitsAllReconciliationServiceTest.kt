@@ -424,6 +424,32 @@ class OfficialVisitsAllReconciliationServiceTest {
     }
 
     @Nested
+    inner class WhenVisitorAttendanceDoNotMatchOnAScheduledVisit {
+      @BeforeEach
+      fun setUp() {
+        stubVisits(
+          nomisVisit = officialVisitResponse().copy(
+            visitStatus = CodeDescription("SCH", "Scheduled"),
+            visitOutcome = null,
+            offenderNo = offenderNo,
+            visitors = listOf(officialVisitor().copy(visitorAttendanceOutcome = CodeDescription("ABS", "Absent"))),
+          ),
+          dpsVisit = syncOfficialVisit().copy(
+            statusCode = VisitStatusType.SCHEDULED,
+            completionCode = null,
+            prisonerNumber = offenderNo,
+            visitors = listOf(syncOfficialVisitor().copy(attendanceCode = AttendanceType.ATTENDED)),
+          ),
+        )
+      }
+
+      @Test
+      fun `will not report a mismatch`() = runTest {
+        assertThat(service.checkVisitsMatch(nomisVisitId)).isNull()
+      }
+    }
+
+    @Nested
     inner class WhenVisitorAttendanceMarkedAsAttendedInNOMISWhileDSPSIsStillNull {
       @BeforeEach
       fun setUp() {
