@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-05-13.191.dfa412e"
+    "version" : "2026-05-14.195.48ac91f"
   },
   "servers" : [ {
     "url" : "/",
@@ -5497,6 +5497,56 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/contacts/restrictions" : {
+      "post" : {
+        "tags" : [ "Restrictions" ],
+        "summary" : "Get global restrictions for one or more contacts where matches are found",
+        "description" : "\n      Get the global restrictions that apply to the specified contacts.\n\n      Global restrictions apply to all of a contact's relationships and are known as estate-wide restrictions in NOMIS.\n\n      Prisoner-contact restrictions for specific prisoner relationships will not be returned.\n    ",
+        "operationId" : "getContactGlobalRestrictionsByContactIds",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ContactIdsRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "The global restrictions for the specified contact(s)",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ContactsRestrictionsResponse"
                 }
               }
             }
@@ -13372,6 +13422,53 @@
           }
         },
         "required" : [ "addresses", "contact", "emailAddresses", "identities", "lastName", "phoneNumbers", "relationships", "restrictions" ]
+      },
+      "ContactIdsRequest" : {
+        "type" : "object",
+        "description" : "The ids of the contacts to search for",
+        "properties" : {
+          "contactIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        },
+        "required" : [ "contactIds" ]
+      },
+      "ContactRestrictions" : {
+        "type" : "object",
+        "properties" : {
+          "contactId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The unique identifier for the contact",
+            "example" : 123456
+          },
+          "globalContactRestrictions" : {
+            "type" : "array",
+            "description" : "Global (estate-wide) restrictions for the contact",
+            "items" : {
+              "$ref" : "#/components/schemas/ContactRestrictionDetails"
+            }
+          }
+        },
+        "required" : [ "contactId", "globalContactRestrictions" ]
+      },
+      "ContactsRestrictionsResponse" : {
+        "type" : "object",
+        "description" : "Restrictions related to specific contacts",
+        "properties" : {
+          "contactRestrictions" : {
+            "type" : "array",
+            "description" : "The list of contact global restrictions for each contact where found",
+            "items" : {
+              "$ref" : "#/components/schemas/ContactRestrictions"
+            }
+          }
+        },
+        "required" : [ "contactRestrictions" ]
       },
       "Address" : {
         "type" : "object",
