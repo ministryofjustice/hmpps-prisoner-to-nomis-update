@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-05-12.796.d71a48a"
+    "version" : "2026-05-15.824.7d930dd"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -4029,11 +4029,6 @@
             "type" : "integer",
             "format" : "int32",
             "description" : "Maximum video sessions allowed in the visit slot"
-          },
-          "dpsLocationId" : {
-            "type" : "string",
-            "format" : "uuid",
-            "description" : "The Official visit Location Id"
           }
         }
       },
