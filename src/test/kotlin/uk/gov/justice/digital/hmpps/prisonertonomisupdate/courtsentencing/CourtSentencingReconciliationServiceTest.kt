@@ -9,8 +9,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.mockito.kotlin.description
-import org.mockito.kotlin.isNull
 import org.mockito.kotlin.reset
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
@@ -65,7 +63,7 @@ private const val BOOKING_ID = 123456L
 private const val PRISON_MDI = "MDI"
 private const val PRISON_LEI = "LEI"
 private const val CASE_REFERENCE = "ABC4999"
-private const val OFFENCE_CODE_1 = "TR11017"
+private const val OFFENCE_CODE_1 = "AA11017"
 private const val OFFENCE_CODE_2 = "PR52028A"
 private const val OFFENCE_CODE_3 = "VV52028A"
 private const val OFFENCE_CODE_4 = "AA52028A"
@@ -85,6 +83,9 @@ private const val DPS_SENTENCE_4_ID = "9a591b18-642a-484a-a967-2d17b5c9c5a1"
 private const val SENTENCE_CATEGORY = "2020"
 private const val SENTENCE_CALC_TYPE = "ADIMP_ORA"
 private const val NOMIS_SENTENCE_SEQ = 3L
+private const val NOMIS_SENTENCE_SEQ_2 = 6L
+private const val NOMIS_SENTENCE_SEQ_3 = 7L
+private const val NOMIS_SENTENCE_SEQ_4 = 8L
 private const val NOMIS_TERM_SEQ = 4L
 private const val SENTENCE_TERM_TYPE = "IMP"
 
@@ -95,6 +96,7 @@ private const val SENTENCE_TERM_TYPE = "IMP"
   CourtSentencingApiService::class,
   NomisApiService::class,
   CourtSentencingNomisApiMockServer::class,
+  CourtSentencingMappingApiMockServer::class,
   CourtSentencingApiMockServer::class,
   RetryApiService::class,
   CourtSentencingConfiguration::class,
@@ -106,6 +108,9 @@ internal class CourtSentencingReconciliationServiceTest {
 
   @Autowired
   private lateinit var nomisApi: CourtSentencingNomisApiMockServer
+
+  @Autowired
+  private lateinit var mappingApi: CourtSentencingMappingApiMockServer
 
   private val dpsApi = CourtSentencingApiExtension.courtSentencingApi
 
@@ -699,13 +704,146 @@ internal class CourtSentencingReconciliationServiceTest {
       ).isEqualTo(
         listOf(
           Difference(
-            property = "case.sentences[0].sentenceCategory",
+            property = "case.sentences[1].sentenceCategory",
             dps = "New Category",
             nomis = "2020",
             id = DPS_SENTENCE_4_ID,
           ),
         ),
       )
+    }
+
+    @Test
+    fun `will include mapping information`() = runTest {
+      stubCase(
+        nomisCase = nomisCaseResponse().copy(
+          courtEvents = listOf(
+            nomisAppearanceResponse().copy(
+              courtEventCharges = listOf(
+                nomisChargeResponse(offenceCode = OFFENCE_CODE_1),
+                nomisChargeResponse(offenderChargeId = NOMIS_COURT_CHARGE_2_ID, offenceCode = OFFENCE_CODE_2),
+                nomisChargeResponse(offenderChargeId = NOMIS_COURT_CHARGE_3_ID, offenceCode = OFFENCE_CODE_3),
+                nomisChargeResponse(offenderChargeId = NOMIS_COURT_CHARGE_4_ID, offenceCode = OFFENCE_CODE_4),
+              ),
+            ),
+          ),
+          sentences = listOf(
+            nomisSentenceResponse().copy(
+              createdDateTime = LocalDateTime.of(2020, 1, 1, 10, 0, 0),
+              sentenceTerms = listOf(nomisSentenceTermResponse().copy(termSequence = NOMIS_TERM_SEQ)),
+            ),
+            nomisSentenceResponse(
+              charges = listOf(
+                nomisOffenderChargeResponse(
+                  offenceCode = OFFENCE_CODE_2,
+                  offenderChargeId = NOMIS_COURT_CHARGE_2_ID,
+                ),
+              ),
+              sentenceSeq = NOMIS_SENTENCE_SEQ_2,
+            ),
+            // will reorder on offence code when comparing
+            nomisSentenceResponse(
+              charges = listOf(
+                nomisOffenderChargeResponse(
+                  offenceCode = OFFENCE_CODE_4,
+                  offenderChargeId = NOMIS_COURT_CHARGE_3_ID,
+                ),
+              ),
+              sentenceSeq = NOMIS_SENTENCE_SEQ_3,
+            ),
+            nomisSentenceResponse(
+              charges = listOf(
+                nomisOffenderChargeResponse(
+                  offenceCode = OFFENCE_CODE_3,
+                  offenderChargeId = NOMIS_COURT_CHARGE_4_ID,
+                ),
+              ),
+              sentenceSeq = NOMIS_SENTENCE_SEQ_4,
+            ),
+          ),
+        ),
+        dpsCase = dpsCourtCaseResponse().copy(
+          appearances = listOf(
+            dpsAppearanceResponse().copy(
+              charges = listOf(
+                dpsChargeResponse().copy(
+                  sentence = dpsSentenceResponse().copy(
+                    sentenceStartDate = LocalDate.of(2020, 1, 1),
+                    sentenceUuid = UUID.fromString(DPS_SENTENCE_ID),
+                    periodLengths = listOf(
+                      dpsPeriodLengthResponse().copy(
+                        periodLengthUuid = UUID.fromString(DPS_PERIOD_LENGTH_ID),
+                      ),
+                    ),
+                  ),
+                ),
+                dpsChargeResponse(offenceCode = OFFENCE_CODE_2).copy(
+                  chargeUuid = UUID.fromString(DPS_COURT_CHARGE_2_ID),
+                  sentence = dpsSentenceResponse().copy(
+                    sentenceUuid = UUID.fromString(DPS_SENTENCE_2_ID),
+                  ),
+                ),
+                dpsChargeResponse(offenceCode = OFFENCE_CODE_3).copy(
+                  chargeUuid = UUID.fromString(DPS_COURT_CHARGE_3_ID),
+                  sentence = dpsSentenceResponse().copy(
+                    sentenceUuid = UUID.fromString(DPS_SENTENCE_3_ID),
+                  ),
+                ),
+                dpsChargeResponse(offenceCode = OFFENCE_CODE_4).copy(
+                  chargeUuid = UUID.fromString(DPS_COURT_CHARGE_4_ID),
+                  sentence = dpsSentenceResponse().copy(
+                    sentenceUuid = UUID.fromString(DPS_SENTENCE_4_ID),
+                    sentenceCategory = "New Category",
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      )
+      mappingApi.stubGetCourtAppearanceMappingGivenNomisId(NOMIS_COURT_APPEARANCE_ID, DPS_COURT_APPEARANCE_ID)
+      mappingApi.stubGetCourtAppearanceMappingGivenDpsId(DPS_COURT_APPEARANCE_ID, NOMIS_COURT_APPEARANCE_ID)
+      mappingApi.stubGetCourtChargeMappingGivenNomisId(NOMIS_COURT_CHARGE_ID, DPS_COURT_CHARGE_ID)
+      mappingApi.stubGetCourtChargeMappingGivenDpsId(DPS_COURT_CHARGE_ID, NOMIS_COURT_CHARGE_ID)
+      mappingApi.stubGetSentenceMappingGivenNomisId(NOMIS_SENTENCE_SEQ.toInt(), NOMIS_BOOKING_ID, DPS_SENTENCE_ID)
+      mappingApi.stubGetSentenceMappingGivenDpsId(DPS_SENTENCE_ID, NOMIS_SENTENCE_SEQ, NOMIS_BOOKING_ID)
+      mappingApi.stubGetSentenceTermByGivenNomisId(nomisSentenceSequence = NOMIS_SENTENCE_SEQ.toInt(), nomisBookingId = NOMIS_BOOKING_ID, nomisTermSequence = NOMIS_TERM_SEQ.toInt(), dpsTermId = DPS_PERIOD_LENGTH_ID)
+      mappingApi.stubGetSentenceTermMappingGivenDpsId(nomisTermSequence = NOMIS_TERM_SEQ, id = DPS_PERIOD_LENGTH_ID, nomisSentenceSequence = NOMIS_SENTENCE_SEQ, nomisBookingId = NOMIS_BOOKING_ID)
+
+      val result = service.checkCase(
+        nomisCaseId = NOMIS_COURT_CASE_ID,
+        dpsCaseId = DPS_COURT_CASE_ID,
+        offenderNo = OFFENDER_NO,
+        extraInfo = true,
+      )
+      // appearance
+      assertThat(result?.nomisCase?.appearances[0]?.id).isEqualTo(NOMIS_COURT_APPEARANCE_ID.toString())
+      assertThat(result?.nomisCase?.appearances[0]?.mappedId).isEqualTo(DPS_COURT_APPEARANCE_ID)
+      assertThat(result?.dpsCase?.appearances[0]?.id).isEqualTo(DPS_COURT_APPEARANCE_ID)
+      assertThat(result?.dpsCase?.appearances[0]?.mappedId).isEqualTo(NOMIS_COURT_APPEARANCE_ID.toString())
+      // charges
+      assertThat(result?.nomisCase?.appearances[0]?.charges[0]?.id).isEqualTo(NOMIS_COURT_CHARGE_ID.toString())
+      assertThat(result?.nomisCase?.appearances[0]?.charges[0]?.mappedId).isEqualTo(DPS_COURT_CHARGE_ID)
+      assertThat(result?.dpsCase?.appearances[0]?.charges[0]?.id).isEqualTo(DPS_COURT_CHARGE_ID)
+      assertThat(result?.dpsCase?.appearances[0]?.charges[0]?.mappedId).isEqualTo(NOMIS_COURT_CHARGE_ID.toString())
+      assertThat(result?.nomisCase?.appearances[0]?.charges[1]?.id).isEqualTo(NOMIS_COURT_CHARGE_4_ID.toString())
+      assertThat(result?.nomisCase?.appearances[0]?.charges[1]?.mappedId).isEqualTo("missing dps mapping")
+      assertThat(result?.dpsCase?.appearances[0]?.charges[1]?.id).isEqualTo(DPS_COURT_CHARGE_4_ID)
+      assertThat(result?.dpsCase?.appearances[0]?.charges[1]?.mappedId).isEqualTo("missing nomis mapping")
+      // sentence
+      assertThat(result?.nomisCase?.sentences[0]?.id).isEqualTo(NOMIS_SENTENCE_SEQ.toString())
+      assertThat(result?.nomisCase?.sentences[0]?.mappedId).isEqualTo(DPS_SENTENCE_ID)
+      assertThat(result?.dpsCase?.sentences[0]?.id).isEqualTo(DPS_SENTENCE_ID)
+      assertThat(result?.dpsCase?.sentences[0]?.mappedId).isEqualTo(NOMIS_SENTENCE_SEQ.toString())
+      assertThat(result?.nomisCase?.sentences[1]?.mappedId).isEqualTo("missing dps mapping")
+      assertThat(result?.dpsCase?.sentences[1]?.mappedId).isEqualTo("missing nomis mapping")
+      // sentence term
+      assertThat(result?.nomisCase?.sentences[0]?.terms[0]?.id).isEqualTo(NOMIS_TERM_SEQ.toString())
+      assertThat(result?.nomisCase?.sentences[0]?.terms[0]?.mappedId).isEqualTo(DPS_PERIOD_LENGTH_ID)
+      assertThat(result?.dpsCase?.sentences[0]?.terms[0]?.id).isEqualTo(DPS_PERIOD_LENGTH_ID)
+      assertThat(result?.dpsCase?.sentences[0]?.terms[0]?.mappedId).isEqualTo(NOMIS_TERM_SEQ.toString())
+      assertThat(result?.nomisCase?.sentences[1]?.terms[0]?.mappedId).isEqualTo("missing dps mapping")
+      assertThat(result?.dpsCase?.sentences[1]?.terms[0]?.mappedId).isEqualTo("missing nomis mapping")
     }
 
     @Test
@@ -1273,10 +1411,12 @@ fun nomisSentenceTermResponse(
 )
 
 fun dpsChargeResponse(
+  id: String = DPS_COURT_CHARGE_ID,
   offenceCode: String = OFFENCE_CODE_1,
   offenceStartDate: LocalDate = LocalDate.of(2023, 1, 1),
   sentenceResponse: ReconciliationSentence? = dpsSentenceResponse(),
 ) = reconciliationCharge(
+  chargeUuid = DPS_COURT_CHARGE_ID,
   offenceCode = offenceCode,
   offenceStartDate = offenceStartDate,
   sentenceResponse = sentenceResponse,
@@ -1284,8 +1424,8 @@ fun dpsChargeResponse(
 
 fun dpsChargeResponseWithoutSentence() = dpsChargeResponse(sentenceResponse = null)
 
-fun dpsSentenceResponse(periodLengths: List<ReconciliationPeriodLength> = listOf(dpsPeriodLengthResponse())) = reconciliationSentence(
+fun dpsSentenceResponse(sentenceUuid: String = UUID.randomUUID().toString(), periodLengths: List<ReconciliationPeriodLength> = listOf(dpsPeriodLengthResponse())) = reconciliationSentence(
   periodLengths = periodLengths,
-)
+).copy(sentenceUuid = UUID.fromString(sentenceUuid))
 
-fun dpsPeriodLengthResponse() = reconciliationPeriodLength()
+fun dpsPeriodLengthResponse(periodLengthUuid: String = UUID.randomUUID().toString()) = reconciliationPeriodLength().copy(periodLengthUuid = UUID.fromString(periodLengthUuid))
