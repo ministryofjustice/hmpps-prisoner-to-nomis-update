@@ -317,10 +317,10 @@ class CourtSentencingReconciliationResourceIntTest(
             .jsonPath("$[0].mismatch.differences[0].nomis").isEqualTo(2)
             .jsonPath("$[0].mismatch.nomisCase.id").isEqualTo(NOMIS_CASE_ID.toString())
             .jsonPath("$[0].mismatch.dpsCase.id").isEqualTo(DPS_CASE_ID)
-            .jsonPath("$[0].mismatch.dpsCase.appearances[0].mappedId").isEqualTo(NOMIS_CASE_ID.toString())
-            .jsonPath("$[0].mismatch.dpsCase.appearances[0].id").isEqualTo(NOMIS_CASE_ID.toString())
-            .jsonPath("$[0].mismatch.nomisCase.appearances[0].mappedId").isEqualTo(DPS_CASE_ID)
-            .jsonPath("$[0].mismatch.nomisCase.appearances[0].id").isEqualTo(DPS_CASE_ID)
+            .jsonPath("$[0].mismatch.dpsCase.appearances[0].mappedId").isEqualTo(NOMIS_COURT_APPEARANCE_ID.toString())
+            .jsonPath("$[0].mismatch.dpsCase.appearances[0].id").isEqualTo(DPS_COURT_APPEARANCE_ID.toString())
+            .jsonPath("$[0].mismatch.nomisCase.appearances[0].mappedId").isEqualTo(DPS_COURT_APPEARANCE_ID)
+            .jsonPath("$[0].mismatch.nomisCase.appearances[0].id").isEqualTo(NOMIS_COURT_APPEARANCE_ID)
         }
       }
     }
