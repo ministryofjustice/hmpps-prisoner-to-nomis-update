@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.generateOffenderNo
+import java.util.UUID
 
 private const val DPS_CASE_ID = "11111111-1111-1111-1111-111111111111"
 
@@ -33,6 +34,11 @@ private const val OFFENDER_NO = "A0001TZ"
 private const val OFFENDER_NO_2 = "A7701TZ"
 private const val BOOKING_ID = 123456L
 private const val BOOKING_ID_2 = 888888L
+
+private const val DPS_COURT_APPEARANCE_ID = "9c591b18-642a-484a-a967-2d17b5c9c5a1"
+private const val DPS_COURT_APPEARANCE_2_ID = "45591b18-642a-484a-a967-2d17b5c9c5a1"
+private const val NOMIS_COURT_APPEARANCE_ID = 3L
+private const val NOMIS_COURT_APPEARANCE_2_ID = 4L
 
 private const val DPS_CASE_2_ID = "21111111-1111-1111-1111-111111111111"
 private const val DPS_CASE_3_ID = "31111111-1111-1111-1111-222222222222"
@@ -280,20 +286,22 @@ class CourtSentencingReconciliationResourceIntTest(
         stubCases(
           OFFENDER_NO,
           listOf(
-            nomisCaseResponse().copy(id = NOMIS_CASE_ID, courtEvents = listOf(nomisAppearanceResponse(), nomisAppearanceResponse())),
+            nomisCaseResponse().copy(id = NOMIS_CASE_ID, courtEvents = listOf(nomisAppearanceResponse(), nomisAppearanceResponse(id = NOMIS_COURT_APPEARANCE_2_ID))),
             nomisCaseResponse().copy(id = NOMIS_CASE_2_ID),
           ),
           listOf(
             dpsCourtCaseResponse().copy(courtCaseUuid = DPS_CASE_ID),
-            dpsCourtCaseResponse().copy(courtCaseUuid = DPS_CASE_2_ID),
+            dpsCourtCaseResponse().copy(courtCaseUuid = DPS_CASE_2_ID, appearances = listOf(dpsAppearanceResponse(appearanceUuid = UUID.fromString(DPS_COURT_APPEARANCE_2_ID)))),
           ),
         )
+        courtSentencingMappingApi.stubGetCourtAppearanceMappingGivenDpsId(DPS_COURT_APPEARANCE_ID, NOMIS_COURT_APPEARANCE_ID)
+        courtSentencingMappingApi.stubGetCourtAppearanceMappingGivenNomisId(NOMIS_COURT_APPEARANCE_ID, DPS_COURT_APPEARANCE_ID)
       }
 
       @Nested
       inner class MismatchFound {
         @Test
-        fun `will return a mismatch when sentence number is different`() {
+        fun `will return a mismatch when appearance count is different`() {
           webTestClient.get().uri("prisoners/$OFFENDER_NO/court-sentencing/court-cases/reconciliation")
             .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
             .exchange()
@@ -308,6 +316,10 @@ class CourtSentencingReconciliationResourceIntTest(
             .jsonPath("$[0].mismatch.differences[0].nomis").isEqualTo(2)
             .jsonPath("$[0].mismatch.nomisCase.id").isEqualTo(NOMIS_CASE_ID.toString())
             .jsonPath("$[0].mismatch.dpsCase.id").isEqualTo(DPS_CASE_ID)
+            .jsonPath("$[0].mismatch.dpsCase.appearances[0].mappedId").isEqualTo(NOMIS_CASE_ID.toString())
+            .jsonPath("$[0].mismatch.dpsCase.appearances[0].id").isEqualTo(NOMIS_CASE_ID.toString())
+            .jsonPath("$[0].mismatch.nomisCase.appearances[0].mappedId").isEqualTo(DPS_CASE_ID)
+            .jsonPath("$[0].mismatch.nomisCase.appearances[0].id").isEqualTo(DPS_CASE_ID)
         }
       }
     }

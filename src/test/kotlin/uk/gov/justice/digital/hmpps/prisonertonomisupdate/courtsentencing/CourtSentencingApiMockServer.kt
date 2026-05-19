@@ -115,11 +115,12 @@ class CourtSentencingApiExtension :
     )
 
     fun reconciliationCharge(
+      chargeUuid: String = UUID.randomUUID().toString(),
       offenceCode: String = "TR11017",
       offenceStartDate: LocalDate = LocalDate.parse("2021-01-01"),
       sentenceResponse: ReconciliationSentence? = reconciliationSentence(),
     ) = ReconciliationCharge(
-      chargeUuid = UUID.randomUUID(),
+      chargeUuid = UUID.fromString(chargeUuid),
       offenceCode = offenceCode,
       offenceStartDate = offenceStartDate,
       offenceEndDate = offenceStartDate.plusDays(1),
