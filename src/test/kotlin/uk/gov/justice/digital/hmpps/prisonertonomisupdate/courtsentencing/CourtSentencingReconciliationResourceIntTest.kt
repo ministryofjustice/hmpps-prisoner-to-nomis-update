@@ -308,7 +308,8 @@ class CourtSentencingReconciliationResourceIntTest(
             .expectStatus().isOk
             .expectBody()
             // for the purposes of DPS - status of case is either active or inactive. Other values exist in nomis
-            .jsonPath("$[0].mismatch.differences.size()").isEqualTo("1")
+            // other 8 mismatches are detailing the missing mappings
+            .jsonPath("$[0].mismatch.differences.size()").isEqualTo("9")
             .jsonPath("$[0].offenderNo").isEqualTo(OFFENDER_NO)
             // outcome on first appearance is different
             .jsonPath("$[0]mismatch.differences[0].property").isEqualTo("case.appearances")
