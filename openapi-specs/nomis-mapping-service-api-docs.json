@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-05-14.564.80f3194"
+    "version" : "2026-05-19.579.c5af83e"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -813,50 +813,6 @@
         }
       }
     },
-    "/mapping/court/migrate" : {
-      "put" : {
-        "tags" : [ "court-scheduler-migration-resource" ],
-        "summary" : "Creates all mappings for prisoner court movements which are all migrated at the same time",
-        "description" : "Creates mappings for prisoner court movements. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "createPrisonerCourtSchedulerMappings",
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/CourtSchedulerPrisonerMappingsDto"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "201" : {
-            "description" : "Mappings created",
-            "content" : { }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Access forbidden for this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/mapping/court-sentencing/court-charges" : {
       "put" : {
         "tags" : [ "court-sentencing-mapping-resource" ],
@@ -1016,6 +972,50 @@
         "responses" : {
           "200" : {
             "description" : "Mapping created or replaced",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/court-scheduler/migrate" : {
+      "put" : {
+        "tags" : [ "court-scheduler-migration-resource" ],
+        "summary" : "Creates all mappings for prisoner court movements which are all migrated at the same time",
+        "description" : "Creates mappings for prisoner court movements. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "createPrisonerCourtSchedulerMappings",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CourtSchedulerPrisonerMappingsDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Mappings created",
             "content" : { }
           },
           "401" : {
@@ -3703,114 +3703,6 @@
         }
       }
     },
-    "/mapping/court/schedule" : {
-      "post" : {
-        "tags" : [ "court-schedule-resource" ],
-        "summary" : "Creates a mapping for a single court schedule",
-        "description" : "Creates a mapping for a single court schedule. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "createCourtScheduleMapping",
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/CourtScheduleMappingDto"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "201" : {
-            "description" : "Court schedule mapping created",
-            "content" : { }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Access forbidden for this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "409" : {
-            "description" : "The mapping already exists.",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/mapping/court/movement" : {
-      "post" : {
-        "tags" : [ "court-movement-resource" ],
-        "summary" : "Creates a mapping for a single court movement",
-        "description" : "Creates a mapping for a single court movement. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "createCourtMovementMapping",
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/CourtMovementMappingDto"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "201" : {
-            "description" : "Court movement mapping created",
-            "content" : { }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Access forbidden for this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "409" : {
-            "description" : "The mapping already exists.",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/mapping/court-sentencing/sentences/nomis-sentence-ids/get-list" : {
       "post" : {
         "tags" : [ "court-sentencing-mapping-resource" ],
@@ -4436,6 +4328,114 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/court-scheduler/schedule" : {
+      "post" : {
+        "tags" : [ "court-schedule-resource" ],
+        "summary" : "Creates a mapping for a single court schedule",
+        "description" : "Creates a mapping for a single court schedule. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "createCourtScheduleMapping",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CourtScheduleMappingDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Court schedule mapping created",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "The mapping already exists.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/court-scheduler/movement" : {
+      "post" : {
+        "tags" : [ "court-movement-resource" ],
+        "summary" : "Creates a mapping for a single court movement",
+        "description" : "Creates a mapping for a single court movement. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "createCourtMovementMapping",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CourtMovementMappingDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Court movement mapping created",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "The mapping already exists.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -12308,280 +12308,6 @@
         }
       }
     },
-    "/mapping/court/{prisonerNumber}/ids" : {
-      "get" : {
-        "tags" : [ "court-scheduler-prisoner-resource" ],
-        "summary" : "Gets all court scheduler mappings for a prisoner",
-        "description" : "Gets all court scheduler mappings for a prisoner including schedules and movements. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getAllCourtSchedulerPrisonerMappingIds",
-        "parameters" : [ {
-          "name" : "prisonerNumber",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Prisoner mapping IDs returned",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/CourtSchedulerPrisonerMappingIdsDto"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Access forbidden for this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/mapping/court/schedule/nomis-id/{nomisEventId}" : {
-      "get" : {
-        "tags" : [ "court-schedule-resource" ],
-        "summary" : "Gets a mapping for a single court schedule by NOMIS event ID",
-        "description" : "Gets a mapping for a single court schedule by NOMIS event ID. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getCourtScheduleMappingByNomisId",
-        "parameters" : [ {
-          "name" : "nomisEventId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Court schedule mapping returned",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/CourtScheduleMappingDto"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Access forbidden for this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "The mapping does not exist.",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete" : {
-        "tags" : [ "court-schedule-resource" ],
-        "summary" : "Deletes a mapping for a single court schedule by NOMIS event ID",
-        "description" : "Deletes a mapping for a single court schedule by NOMIS event ID. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteCourtScheduleMappingByNomisId",
-        "parameters" : [ {
-          "name" : "nomisEventId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64"
-          }
-        } ],
-        "responses" : {
-          "204" : {
-            "description" : "Court schedule mapping deleted",
-            "content" : { }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Access forbidden for this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/mapping/court/movement/nomis-id/{nomisBookingId}/{nomisMovementSeq}" : {
-      "get" : {
-        "tags" : [ "court-movement-resource" ],
-        "summary" : "Gets a mapping for a single court movement by NOMIS booking ID / movement seq.",
-        "description" : "Gets a mapping for a single court movement by NOMIS booking ID / movement seq. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getCourtMovementMappingByNomisId",
-        "parameters" : [ {
-          "name" : "nomisBookingId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64"
-          }
-        }, {
-          "name" : "nomisMovementSeq",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int32"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Court movement mapping returned",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/CourtMovementMappingDto"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Access forbidden for this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "The mapping does not exist.",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/mapping/court/migration-id/{migrationId}" : {
-      "get" : {
-        "tags" : [ "court-scheduler-migration-resource" ],
-        "summary" : "Get a page of court schduler migration mappings, which is just the prisoner numbers that have been migrated.",
-        "description" : "Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getCourtSchedulerMappingsCount",
-        "parameters" : [ {
-          "name" : "pageRequest",
-          "in" : "query",
-          "required" : true,
-          "schema" : {
-            "$ref" : "#/components/schemas/Pageable"
-          }
-        }, {
-          "name" : "migrationId",
-          "in" : "path",
-          "description" : "Migration Id",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "description" : "Migration Id",
-            "example" : "2020-03-24T12:00:00"
-          },
-          "example" : "2020-03-24T12:00:00"
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Court scheduler mapping page returned",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/PageCourtSchedulerMigrationDto"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/mapping/court-sentencing/sentences/nomis-booking-id/{bookingId}/nomis-sentence-sequence/{sentenceSequence}" : {
       "get" : {
         "tags" : [ "court-sentencing-mapping-resource" ],
@@ -13522,6 +13248,280 @@
           },
           "404" : {
             "description" : "Id does not exist in mapping table",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/court-scheduler/{prisonerNumber}/ids" : {
+      "get" : {
+        "tags" : [ "court-scheduler-prisoner-resource" ],
+        "summary" : "Gets all court scheduler mappings for a prisoner",
+        "description" : "Gets all court scheduler mappings for a prisoner including schedules and movements. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "getAllCourtSchedulerPrisonerMappingIds",
+        "parameters" : [ {
+          "name" : "prisonerNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Prisoner mapping IDs returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CourtSchedulerPrisonerMappingIdsDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/court-scheduler/schedule/nomis-id/{nomisEventId}" : {
+      "get" : {
+        "tags" : [ "court-schedule-resource" ],
+        "summary" : "Gets a mapping for a single court schedule by NOMIS event ID",
+        "description" : "Gets a mapping for a single court schedule by NOMIS event ID. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "getCourtScheduleMappingByNomisId",
+        "parameters" : [ {
+          "name" : "nomisEventId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Court schedule mapping returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CourtScheduleMappingDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "The mapping does not exist.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "court-schedule-resource" ],
+        "summary" : "Deletes a mapping for a single court schedule by NOMIS event ID",
+        "description" : "Deletes a mapping for a single court schedule by NOMIS event ID. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "deleteCourtScheduleMappingByNomisId",
+        "parameters" : [ {
+          "name" : "nomisEventId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Court schedule mapping deleted",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/court-scheduler/movement/nomis-id/{nomisBookingId}/{nomisMovementSeq}" : {
+      "get" : {
+        "tags" : [ "court-movement-resource" ],
+        "summary" : "Gets a mapping for a single court movement by NOMIS booking ID / movement seq.",
+        "description" : "Gets a mapping for a single court movement by NOMIS booking ID / movement seq. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "getCourtMovementMappingByNomisId",
+        "parameters" : [ {
+          "name" : "nomisBookingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "name" : "nomisMovementSeq",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Court movement mapping returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CourtMovementMappingDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "The mapping does not exist.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/court-scheduler/migration-id/{migrationId}" : {
+      "get" : {
+        "tags" : [ "court-scheduler-migration-resource" ],
+        "summary" : "Get a page of court schduler migration mappings, which is just the prisoner numbers that have been migrated.",
+        "description" : "Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "getCourtSchedulerMappingsCount",
+        "parameters" : [ {
+          "name" : "pageRequest",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/components/schemas/Pageable"
+          }
+        }, {
+          "name" : "migrationId",
+          "in" : "path",
+          "description" : "Migration Id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Migration Id",
+            "example" : "2020-03-24T12:00:00"
+          },
+          "example" : "2020-03-24T12:00:00"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Court scheduler mapping page returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PageCourtSchedulerMigrationDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -19678,57 +19678,6 @@
         }
       }
     },
-    "/mapping/court/movement/nomis-id/{bookingId}/{movementSeq}" : {
-      "delete" : {
-        "tags" : [ "court-movement-resource" ],
-        "summary" : "Deletes a mapping for a single court movement by NOMIS booking ID and movement sequence",
-        "description" : "Deletes a mapping for a single court movement by NOMIS booking ID and movement sequence. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteCourtMovementMappingByNomisId",
-        "parameters" : [ {
-          "name" : "bookingId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64"
-          }
-        }, {
-          "name" : "movementSeq",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int32"
-          }
-        } ],
-        "responses" : {
-          "204" : {
-            "description" : "Court movement mapping deleted",
-            "content" : { }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Access forbidden for this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/mapping/court-sentencing/sentences/dps-sentence-id/{dpsSentenceId}" : {
       "delete" : {
         "tags" : [ "court-sentencing-mapping-resource" ],
@@ -20123,6 +20072,57 @@
           },
           "403" : {
             "description" : "Access this endpoint is forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/court-scheduler/movement/nomis-id/{bookingId}/{movementSeq}" : {
+      "delete" : {
+        "tags" : [ "court-movement-resource" ],
+        "summary" : "Deletes a mapping for a single court movement by NOMIS booking ID and movement sequence",
+        "description" : "Deletes a mapping for a single court movement by NOMIS booking ID and movement sequence. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "deleteCourtMovementMappingByNomisId",
+        "parameters" : [ {
+          "name" : "bookingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "name" : "movementSeq",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Court movement mapping deleted",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -20865,103 +20865,6 @@
         },
         "required" : [ "dpsCsraId", "mappingType", "nomisBookingId", "nomisSequence", "offenderNo" ]
       },
-      "BookingCourtMovementMappingsDto" : {
-        "type" : "object",
-        "description" : "Mappings for a single court movement",
-        "properties" : {
-          "nomisMovementSeq" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "The NOMIS movement sequence"
-          },
-          "dpsCourtMovementId" : {
-            "type" : "string",
-            "format" : "uuid",
-            "description" : "The DPS court movement ID"
-          }
-        },
-        "required" : [ "dpsCourtMovementId", "nomisMovementSeq" ]
-      },
-      "BookingCourtScheduleMappingsDto" : {
-        "type" : "object",
-        "description" : "Mappings for a single court schedule",
-        "properties" : {
-          "nomisEventId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The NOMIS court schedule ID"
-          },
-          "dpsCourtAppearanceId" : {
-            "type" : "string",
-            "format" : "uuid",
-            "description" : "The DPS court appearance ID"
-          },
-          "movements" : {
-            "type" : "array",
-            "description" : "Mappings for court movements belonging to this court schedule",
-            "items" : {
-              "$ref" : "#/components/schemas/BookingCourtMovementMappingsDto"
-            }
-          }
-        },
-        "required" : [ "dpsCourtAppearanceId", "movements", "nomisEventId" ]
-      },
-      "CourtSchedulerBookingMappingsDto" : {
-        "type" : "object",
-        "description" : "Mappings for a prisoner booking's entire court movement history",
-        "properties" : {
-          "bookingId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The NOMIS ID of the booking",
-            "example" : 12345
-          },
-          "courtSchedules" : {
-            "type" : "array",
-            "description" : "Mappings for a single court schedule",
-            "items" : {
-              "$ref" : "#/components/schemas/BookingCourtScheduleMappingsDto"
-            }
-          },
-          "unscheduledMovements" : {
-            "type" : "array",
-            "description" : "Mappings for unscheduled court movements",
-            "items" : {
-              "$ref" : "#/components/schemas/BookingCourtMovementMappingsDto"
-            }
-          }
-        },
-        "required" : [ "bookingId", "courtSchedules", "unscheduledMovements" ]
-      },
-      "CourtSchedulerPrisonerMappingsDto" : {
-        "type" : "object",
-        "description" : "Mappings for a prisoner's entire court movement history",
-        "properties" : {
-          "offenderNo" : {
-            "type" : "string",
-            "description" : "The NOMIS offender number",
-            "example" : "A1234BC"
-          },
-          "bookings" : {
-            "type" : "array",
-            "description" : "The mappings for each booking",
-            "items" : {
-              "$ref" : "#/components/schemas/CourtSchedulerBookingMappingsDto"
-            }
-          },
-          "migrationId" : {
-            "type" : "string",
-            "description" : "The migration unique identifier",
-            "example" : "2025-08-11T15:34:43"
-          },
-          "whenCreated" : {
-            "type" : [ "string", "null" ],
-            "description" : "The created time of the mappings",
-            "example" : "2025-08-11T15:34:43"
-          }
-        },
-        "required" : [ "bookings", "migrationId", "offenderNo" ]
-      },
       "CourtChargeBatchUpdateMappingDto" : {
         "type" : "object",
         "description" : "Batch of Court Charge mappings to create and delete",
@@ -21377,6 +21280,103 @@
           }
         },
         "required" : [ "fromNomisId", "toNomisId" ]
+      },
+      "BookingCourtMovementMappingsDto" : {
+        "type" : "object",
+        "description" : "Mappings for a single court movement",
+        "properties" : {
+          "nomisMovementSeq" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The NOMIS movement sequence"
+          },
+          "dpsCourtMovementId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS court movement ID"
+          }
+        },
+        "required" : [ "dpsCourtMovementId", "nomisMovementSeq" ]
+      },
+      "BookingCourtScheduleMappingsDto" : {
+        "type" : "object",
+        "description" : "Mappings for a single court schedule",
+        "properties" : {
+          "nomisEventId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS court schedule ID"
+          },
+          "dpsCourtAppearanceId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS court appearance ID"
+          },
+          "movements" : {
+            "type" : "array",
+            "description" : "Mappings for court movements belonging to this court schedule",
+            "items" : {
+              "$ref" : "#/components/schemas/BookingCourtMovementMappingsDto"
+            }
+          }
+        },
+        "required" : [ "dpsCourtAppearanceId", "movements", "nomisEventId" ]
+      },
+      "CourtSchedulerBookingMappingsDto" : {
+        "type" : "object",
+        "description" : "Mappings for a prisoner booking's entire court movement history",
+        "properties" : {
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS ID of the booking",
+            "example" : 12345
+          },
+          "courtSchedules" : {
+            "type" : "array",
+            "description" : "Mappings for a single court schedule",
+            "items" : {
+              "$ref" : "#/components/schemas/BookingCourtScheduleMappingsDto"
+            }
+          },
+          "unscheduledMovements" : {
+            "type" : "array",
+            "description" : "Mappings for unscheduled court movements",
+            "items" : {
+              "$ref" : "#/components/schemas/BookingCourtMovementMappingsDto"
+            }
+          }
+        },
+        "required" : [ "bookingId", "courtSchedules", "unscheduledMovements" ]
+      },
+      "CourtSchedulerPrisonerMappingsDto" : {
+        "type" : "object",
+        "description" : "Mappings for a prisoner's entire court movement history",
+        "properties" : {
+          "offenderNo" : {
+            "type" : "string",
+            "description" : "The NOMIS offender number",
+            "example" : "A1234BC"
+          },
+          "bookings" : {
+            "type" : "array",
+            "description" : "The mappings for each booking",
+            "items" : {
+              "$ref" : "#/components/schemas/CourtSchedulerBookingMappingsDto"
+            }
+          },
+          "migrationId" : {
+            "type" : "string",
+            "description" : "The migration unique identifier",
+            "example" : "2025-08-11T15:34:43"
+          },
+          "whenCreated" : {
+            "type" : [ "string", "null" ],
+            "description" : "The created time of the mappings",
+            "example" : "2025-08-11T15:34:43"
+          }
+        },
+        "required" : [ "bookings", "migrationId", "offenderNo" ]
       },
       "CaseNoteMappingDto" : {
         "type" : "object",
@@ -22742,75 +22742,6 @@
         },
         "required" : [ "dpsCSIPId", "id", "isNew", "mappingType", "new", "nomisCSIPId" ]
       },
-      "CourtScheduleMappingDto" : {
-        "type" : "object",
-        "description" : "Mapping for a single court schedule",
-        "properties" : {
-          "prisonerNumber" : {
-            "type" : "string",
-            "description" : "The NOMIS offender number",
-            "example" : "A1234BC"
-          },
-          "bookingId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The NOMIS ID of the booking",
-            "example" : 12345
-          },
-          "nomisEventId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The NOMIS event id"
-          },
-          "dpsCourtAppearanceId" : {
-            "type" : "string",
-            "format" : "uuid",
-            "description" : "The DPS court appearance id"
-          },
-          "mappingType" : {
-            "type" : "string",
-            "description" : "The source of the mapping",
-            "enum" : [ "MIGRATED", "NOMIS_CREATED", "DPS_CREATED" ],
-            "example" : "NOMIS_CREATED"
-          }
-        },
-        "required" : [ "bookingId", "dpsCourtAppearanceId", "mappingType", "nomisEventId", "prisonerNumber" ]
-      },
-      "CourtMovementMappingDto" : {
-        "type" : "object",
-        "description" : "Mapping for a single court movement",
-        "properties" : {
-          "prisonerNumber" : {
-            "type" : "string",
-            "description" : "The NOMIS offender number",
-            "example" : "A1234BC"
-          },
-          "nomisBookingId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The NOMIS ID of the booking",
-            "example" : 12345
-          },
-          "nomisMovementSeq" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "The NOMIS movement sequence number",
-            "example" : 3
-          },
-          "dpsCourtMovementId" : {
-            "type" : "string",
-            "format" : "uuid",
-            "description" : "The DPS court movement id"
-          },
-          "mappingType" : {
-            "type" : "string",
-            "description" : "The source of the mapping",
-            "enum" : [ "MIGRATED", "NOMIS_CREATED", "DPS_CREATED" ],
-            "example" : "NOMIS_CREATED"
-          }
-        },
-        "required" : [ "dpsCourtMovementId", "mappingType", "nomisBookingId", "nomisMovementSeq", "prisonerNumber" ]
-      },
       "NomisSentenceId" : {
         "type" : "object",
         "description" : "NOMIS Sentence ID",
@@ -23115,6 +23046,75 @@
           }
         },
         "required" : [ "dpsCourtAppearanceId", "id", "isNew", "mappingType", "new", "nomisCourtAppearanceId" ]
+      },
+      "CourtScheduleMappingDto" : {
+        "type" : "object",
+        "description" : "Mapping for a single court schedule",
+        "properties" : {
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The NOMIS offender number",
+            "example" : "A1234BC"
+          },
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS ID of the booking",
+            "example" : 12345
+          },
+          "nomisEventId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS event id"
+          },
+          "dpsCourtAppearanceId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS court appearance id"
+          },
+          "mappingType" : {
+            "type" : "string",
+            "description" : "The source of the mapping",
+            "enum" : [ "MIGRATED", "NOMIS_CREATED", "DPS_CREATED" ],
+            "example" : "NOMIS_CREATED"
+          }
+        },
+        "required" : [ "bookingId", "dpsCourtAppearanceId", "mappingType", "nomisEventId", "prisonerNumber" ]
+      },
+      "CourtMovementMappingDto" : {
+        "type" : "object",
+        "description" : "Mapping for a single court movement",
+        "properties" : {
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The NOMIS offender number",
+            "example" : "A1234BC"
+          },
+          "nomisBookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS ID of the booking",
+            "example" : 12345
+          },
+          "nomisMovementSeq" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The NOMIS movement sequence number",
+            "example" : 3
+          },
+          "dpsCourtMovementId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS court movement id"
+          },
+          "mappingType" : {
+            "type" : "string",
+            "description" : "The source of the mapping",
+            "enum" : [ "MIGRATED", "NOMIS_CREATED", "DPS_CREATED" ],
+            "example" : "NOMIS_CREATED"
+          }
+        },
+        "required" : [ "dpsCourtMovementId", "mappingType", "nomisBookingId", "nomisMovementSeq", "prisonerNumber" ]
       },
       "OrganisationsMappingDto" : {
         "type" : "object",
@@ -24234,12 +24234,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "paged" : {
+            "type" : "boolean"
+          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "paged" : {
-            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -24657,6 +24657,114 @@
         },
         "required" : [ "mappings" ]
       },
+      "CourtSentencingMigrationSummary" : {
+        "type" : "object",
+        "description" : "Record of Offender Court case migration",
+        "properties" : {
+          "offenderNo" : {
+            "type" : "string",
+            "description" : "The prisoner number for the set of mappings"
+          },
+          "mappingsCount" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Count of the number of court case mappings migrated"
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "description" : "Date time the mapping was created",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          },
+          "migrationId" : {
+            "type" : [ "string", "null" ],
+            "description" : "the migration the offender was migrated in"
+          }
+        },
+        "required" : [ "mappingsCount", "offenderNo" ]
+      },
+      "PageCourtSentencingMigrationSummary" : {
+        "type" : "object",
+        "properties" : {
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "totalPages" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "content" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CourtSentencingMigrationSummary"
+            }
+          },
+          "number" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
+          "numberOfElements" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
+          },
+          "empty" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "CourtAppearanceRecallMappingDto" : {
+        "type" : "object",
+        "description" : "Court appearance recall mapping",
+        "properties" : {
+          "nomisCourtAppearanceId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS court appearance id",
+            "example" : 123456
+          },
+          "dpsRecallId" : {
+            "type" : "string",
+            "description" : "DPS recall id",
+            "example" : "89442cf5-a22d-4113-b9d8-63daa757c962"
+          },
+          "label" : {
+            "type" : [ "string", "null" ],
+            "description" : "Label (a timestamp for migrated ids)",
+            "maxLength" : 20,
+            "minLength" : 0
+          },
+          "mappingType" : {
+            "type" : [ "string", "null" ],
+            "default" : "DPS_CREATED",
+            "description" : "Mapping type",
+            "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "description" : "Date-time the mapping was created",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          }
+        },
+        "required" : [ "dpsRecallId", "nomisCourtAppearanceId" ]
+      },
       "CourtMovementMappingIdsDto" : {
         "type" : "object",
         "description" : "Mapping for a single court movement",
@@ -24790,114 +24898,6 @@
             "type" : "boolean"
           }
         }
-      },
-      "CourtSentencingMigrationSummary" : {
-        "type" : "object",
-        "description" : "Record of Offender Court case migration",
-        "properties" : {
-          "offenderNo" : {
-            "type" : "string",
-            "description" : "The prisoner number for the set of mappings"
-          },
-          "mappingsCount" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "Count of the number of court case mappings migrated"
-          },
-          "whenCreated" : {
-            "type" : "string",
-            "description" : "Date time the mapping was created",
-            "example" : "2021-07-05T10:35:17",
-            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
-          },
-          "migrationId" : {
-            "type" : [ "string", "null" ],
-            "description" : "the migration the offender was migrated in"
-          }
-        },
-        "required" : [ "mappingsCount", "offenderNo" ]
-      },
-      "PageCourtSentencingMigrationSummary" : {
-        "type" : "object",
-        "properties" : {
-          "totalElements" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "totalPages" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "size" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "content" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/CourtSentencingMigrationSummary"
-            }
-          },
-          "number" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
-          },
-          "numberOfElements" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
-          },
-          "empty" : {
-            "type" : "boolean"
-          }
-        }
-      },
-      "CourtAppearanceRecallMappingDto" : {
-        "type" : "object",
-        "description" : "Court appearance recall mapping",
-        "properties" : {
-          "nomisCourtAppearanceId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "NOMIS court appearance id",
-            "example" : 123456
-          },
-          "dpsRecallId" : {
-            "type" : "string",
-            "description" : "DPS recall id",
-            "example" : "89442cf5-a22d-4113-b9d8-63daa757c962"
-          },
-          "label" : {
-            "type" : [ "string", "null" ],
-            "description" : "Label (a timestamp for migrated ids)",
-            "maxLength" : 20,
-            "minLength" : 0
-          },
-          "mappingType" : {
-            "type" : [ "string", "null" ],
-            "default" : "DPS_CREATED",
-            "description" : "Mapping type",
-            "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
-          },
-          "whenCreated" : {
-            "type" : "string",
-            "description" : "Date-time the mapping was created",
-            "example" : "2021-07-05T10:35:17",
-            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
-          }
-        },
-        "required" : [ "dpsRecallId", "nomisCourtAppearanceId" ]
       },
       "PageOrganisationsMappingDto" : {
         "type" : "object",
