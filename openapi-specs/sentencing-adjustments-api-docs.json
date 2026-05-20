@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-04-15.264.0fc4905"
+    "version" : "2026-05-19.310.0772265"
   },
   "servers" : [ {
     "url" : "https://adjustments-api-dev.hmpps.service.justice.gov.uk",
@@ -727,6 +727,32 @@
           },
           "404" : {
             "description" : "Adjustment not found"
+          }
+        }
+      }
+    },
+    "/adjustments/recall/{recallId}/unlink" : {
+      "post" : {
+        "tags" : [ "adjustment-controller" ],
+        "summary" : "Unlink recall-generated UAL from a recall",
+        "description" : "Sets recallId to null on active UAL adjustments linked to the given recall. UAL dates and values are unchanged.",
+        "operationId" : "unlinkFromRecall",
+        "parameters" : [ {
+          "name" : "recallId",
+          "in" : "path",
+          "description" : "The recall UUID",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Adjustments unlinked from recall"
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token"
           }
         }
       }
