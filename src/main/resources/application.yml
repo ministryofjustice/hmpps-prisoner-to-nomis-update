@@ -117,6 +117,11 @@ spring:
             client-id: ${core.person.client.id}
             client-secret: ${core.person.client.secret}
             authorization-grant-type: client_credentials
+          movements-court-api:
+            provider: hmpps-auth
+            client-id: ${movements.court.client.id}
+            client-secret: ${movements.court.client.secret}
+            authorization-grant-type: client_credentials
           movements-taps-api:
             provider: hmpps-auth
             client-id: ${ext.movements.client.id}

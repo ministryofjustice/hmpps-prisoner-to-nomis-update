@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.CSIPDpsApiExtensi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.IncidentsDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.CourtSchedulerDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension
@@ -37,6 +38,7 @@ class HealthCheckTest : IntegrationTestBase() {
       .exchange()
       .expectStatus().isOk
       .expectBody()
+      .consumeWith { System.out.println(it.responseBody) }
       .jsonPath("status").isEqualTo("UP")
       .jsonPath("components.visitsApi.status").isEqualTo("UP")
       .jsonPath("components.activitiesApi.status").isEqualTo("UP")
@@ -60,6 +62,7 @@ class HealthCheckTest : IntegrationTestBase() {
       .jsonPath("components.corePersonApi.status").isEqualTo("UP")
       .jsonPath("components.officialVisitsApi.status").isEqualTo("UP")
       .jsonPath("components.tapsApi.status").isEqualTo("UP")
+      .jsonPath("components.courtSchedulerApi.status").isEqualTo("UP")
   }
 
   @Test
@@ -128,5 +131,6 @@ class HealthCheckTest : IntegrationTestBase() {
     CorePersonCprApiExtension.corePersonCprApi.stubHealthPing(status)
     OfficialVisitsDpsApiExtension.dpsOfficialVisitsServer.stubHealthPing(status)
     TapDpsApiExtension.tapDpsApiServer.stubHealthPing(status)
+    CourtSchedulerDpsApiExtension.courtSchedulerDpsApiServer.stubHealthPing(status)
   }
 }

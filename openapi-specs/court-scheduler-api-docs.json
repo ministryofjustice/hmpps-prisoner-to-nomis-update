@@ -1,0 +1,1904 @@
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "title" : "HMPPS Court Appearance Scheduler Api",
+    "contact" : {
+      "name" : "HMPPS Digital Studio",
+      "email" : "feedback@digital.justice.gov.uk"
+    },
+    "version" : "2026-05-20.157.ae211f5"
+  },
+  "servers" : [ {
+    "url" : "https://court-appearance-scheduler-api-dev.hmpps.service.justice.gov.uk",
+    "description" : "Development"
+  }, {
+    "url" : "https://court-appearance-scheduler-api-preprod.hmpps.service.justice.gov.uk",
+    "description" : "Pre-Production"
+  }, {
+    "url" : "https://court-appearance-scheduler-api.hmpps.service.justice.gov.uk",
+    "description" : "Production"
+  }, {
+    "url" : "http://localhost:8080",
+    "description" : "Local"
+  } ],
+  "security" : [ {
+    "bearer-jwt" : [ "read", "write" ]
+  } ],
+  "tags" : [ {
+    "name" : "Integrations",
+    "description" : "DPS integration endpoints"
+  }, {
+    "name" : "UI",
+    "description" : "UI endpoints - not to be use by any other client"
+  }, {
+    "name" : "Sync",
+    "description" : "Legacy sync endpoints - not to be use by any other client"
+  } ],
+  "paths" : {
+    "/sync/court-appearances/{personIdentifier}" : {
+      "put" : {
+        "tags" : [ "Sync" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_COURT_APPEARANCES__SYNC__RW",
+        "operationId" : "syncCourtAppearance",
+        "parameters" : [ {
+          "name" : "personIdentifier",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SyncCourtEvent"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ReferenceId"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sync/court-appearance-movements/{personIdentifier}" : {
+      "put" : {
+        "tags" : [ "Sync" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_COURT_APPEARANCES__SYNC__RW",
+        "operationId" : "syncCourtAppearanceMovement",
+        "parameters" : [ {
+          "name" : "personIdentifier",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SyncCourtEventMovement"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ReferenceId"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/resync/court-appearances/{personIdentifier}" : {
+      "put" : {
+        "tags" : [ "Sync" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_COURT_APPEARANCES__SYNC__RW",
+        "operationId" : "resyncCourtAppearances",
+        "parameters" : [ {
+          "name" : "personIdentifier",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ResyncCourtEvents"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResyncResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/move/court-appearances" : {
+      "put" : {
+        "tags" : [ "Sync" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_COURT_APPEARANCES__SYNC__RW",
+        "operationId" : "moveCourtAppearances",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/MoveCourtEventRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        }
+      }
+    },
+    "/court-appearances/{id}" : {
+      "get" : {
+        "tags" : [ "UI" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_COURT_APPEARANCES__COURT_APPEARANCE_SCHEDULER_UI",
+        "operationId" : "getCourtAppearance",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Appearance"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put" : {
+        "tags" : [ "UI" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_COURT_APPEARANCES__COURT_APPEARANCE_SCHEDULER_UI",
+        "operationId" : "applyAction",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "CaseloadId",
+          "in" : "header",
+          "description" : "\n    Relevant caseload id for the client identity in context e.g. the active caseload id of the logged in user.\n    ",
+          "content" : {
+            "*/*" : {
+              "schema" : {
+                "type" : "string"
+              }
+            }
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "oneOf" : [ {
+                  "$ref" : "#/components/schemas/CancelAppearance"
+                }, {
+                  "$ref" : "#/components/schemas/ChangeAppearanceComments"
+                }, {
+                  "$ref" : "#/components/schemas/CompleteAppearance"
+                }, {
+                  "$ref" : "#/components/schemas/ExpireAppearance"
+                }, {
+                  "$ref" : "#/components/schemas/RecategoriseAppearance"
+                }, {
+                  "$ref" : "#/components/schemas/RelocateAppearance"
+                }, {
+                  "$ref" : "#/components/schemas/RequestAppearanceByVideoLink"
+                }, {
+                  "$ref" : "#/components/schemas/RequestAppearanceInPerson"
+                }, {
+                  "$ref" : "#/components/schemas/RescheduleAppearance"
+                }, {
+                  "$ref" : "#/components/schemas/StartAppearance"
+                } ]
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AuditHistory"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/search/prisons/{prisonCode}/court-appearances" : {
+      "post" : {
+        "tags" : [ "UI" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_COURT_APPEARANCES__COURT_APPEARANCE_SCHEDULER_UI",
+        "operationId" : "findAppearancesForPrison",
+        "parameters" : [ {
+          "name" : "prisonCode",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CourtAppearanceSearchRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CourtAppearanceSearchResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/search/prisons/{prisonCode}/court-appearances/schedules" : {
+      "post" : {
+        "tags" : [ "UI" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_COURT_APPEARANCES__COURT_APPEARANCE_SCHEDULER__RO\n* ROLE_COURT_APPEARANCES__COURT_APPEARANCE_SCHEDULER__RW",
+        "operationId" : "findAppearanceSchedules",
+        "parameters" : [ {
+          "name" : "prisonCode",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AppearanceScheduleSearchRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CourtAppearanceSchedules"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/search/people/{personIdentifier}/court-appearances" : {
+      "post" : {
+        "tags" : [ "UI" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_COURT_APPEARANCES__COURT_APPEARANCE_SCHEDULER_UI",
+        "operationId" : "findAppearancesForPerson",
+        "parameters" : [ {
+          "name" : "personIdentifier",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PersonAppearanceSearchRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CourtAppearanceSearchResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/court-appearances/{personIdentifier}" : {
+      "post" : {
+        "tags" : [ "UI" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_COURT_APPEARANCES__COURT_APPEARANCE_SCHEDULER_UI",
+        "operationId" : "scheduleCourtAppearance",
+        "parameters" : [ {
+          "name" : "personIdentifier",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "CaseloadId",
+          "in" : "header",
+          "description" : "\n    Relevant caseload id for the client identity in context e.g. the active caseload id of the logged in user.\n    ",
+          "content" : {
+            "*/*" : {
+              "schema" : {
+                "type" : "string"
+              }
+            }
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ScheduleCourtAppearance"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ReferenceId"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sync/court-appearances/{id}" : {
+      "get" : {
+        "tags" : [ "Sync" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_COURT_APPEARANCES__SYNC__RW",
+        "operationId" : "getCourtAppearance_1",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CourtEvent"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "Sync" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_COURT_APPEARANCES__SYNC__RW",
+        "operationId" : "deleteCourtAppearance",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        }
+      }
+    },
+    "/sync/court-appearance-movements/{id}" : {
+      "get" : {
+        "tags" : [ "Sync" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_COURT_APPEARANCES__SYNC__RW",
+        "operationId" : "getCourtAppearanceMovement",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CourtEventMovement"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "Sync" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_COURT_APPEARANCES__SYNC__RW",
+        "operationId" : "deleteCourtAppearanceMovement",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        }
+      }
+    },
+    "/reconciliation/court-appearances/{personIdentifier}" : {
+      "get" : {
+        "tags" : [ "Sync" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_COURT_APPEARANCES__SYNC__RW",
+        "operationId" : "getCourtAppearances",
+        "parameters" : [ {
+          "name" : "personIdentifier",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ReconciliationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/integrations/court-appearances/{id}" : {
+      "get" : {
+        "tags" : [ "Integrations" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_COURT_APPEARANCES__COURT_APPEARANCE_SCHEDULER__RO\n* ROLE_COURT_APPEARANCES__COURT_APPEARANCE_SCHEDULER__RW",
+        "operationId" : "appearance",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/IntegrationResponseIntegrationAppearance"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/integrations/court-appearances/{id}/movements" : {
+      "get" : {
+        "tags" : [ "Integrations" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_COURT_APPEARANCES__COURT_APPEARANCE_SCHEDULER__RO\n* ROLE_COURT_APPEARANCES__COURT_APPEARANCE_SCHEDULER__RW",
+        "operationId" : "appearanceMovements",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/IntegrationResponsesIntegrationMovement"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/integrations/court-appearance-movements/{id}" : {
+      "get" : {
+        "tags" : [ "Integrations" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_COURT_APPEARANCES__COURT_APPEARANCE_SCHEDULER__RO\n* ROLE_COURT_APPEARANCES__COURT_APPEARANCE_SCHEDULER__RW",
+        "operationId" : "movement",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/IntegrationResponseIntegrationMovement"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/court-appearances/{id}/history" : {
+      "get" : {
+        "tags" : [ "UI" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_COURT_APPEARANCES__COURT_APPEARANCE_SCHEDULER_UI",
+        "operationId" : "getAppearanceHistory",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AuditHistory"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/court-appearance-reasons" : {
+      "get" : {
+        "tags" : [ "UI" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_COURT_APPEARANCES__COURT_APPEARANCE_SCHEDULER_UI",
+        "operationId" : "getCourtAppearanceReasons",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CourtAppearanceReasons"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "CourtEvent" : {
+        "required" : [ "agyLocId", "courtEventType", "eventDate", "eventStatus", "prisonCodeAtTimeOfScheduling", "startTime" ],
+        "type" : "object",
+        "properties" : {
+          "dpsId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "nullable" : true
+          },
+          "prisonCodeAtTimeOfScheduling" : {
+            "type" : "string"
+          },
+          "agyLocId" : {
+            "type" : "string"
+          },
+          "eventId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "nullable" : true
+          },
+          "eventDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "startTime" : {
+            "type" : "string"
+          },
+          "courtEventType" : {
+            "type" : "string"
+          },
+          "eventStatus" : {
+            "type" : "string"
+          },
+          "commentText" : {
+            "type" : "string",
+            "nullable" : true
+          },
+          "externalReferenceUrn" : {
+            "type" : "string",
+            "nullable" : true
+          }
+        }
+      },
+      "SyncCourtEvent" : {
+        "required" : [ "courtEvent", "occurredAt", "user" ],
+        "type" : "object",
+        "properties" : {
+          "occurredAt" : {
+            "type" : "string",
+            "format" : "date-time",
+            "example" : "2026-05-20T13:52:38"
+          },
+          "user" : {
+            "$ref" : "#/components/schemas/SyncUser"
+          },
+          "courtEvent" : {
+            "$ref" : "#/components/schemas/CourtEvent"
+          }
+        }
+      },
+      "SyncUser" : {
+        "required" : [ "username" ],
+        "type" : "object",
+        "properties" : {
+          "username" : {
+            "type" : "string"
+          },
+          "activeCaseloadId" : {
+            "type" : "string",
+            "nullable" : true
+          }
+        }
+      },
+      "ReferenceId" : {
+        "required" : [ "id" ],
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }
+      },
+      "CourtEventMovement" : {
+        "required" : [ "directionCode", "fromAgencyId", "movementDate", "movementReasonCode", "movementTime", "toAgencyId" ],
+        "type" : "object",
+        "properties" : {
+          "dpsId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "nullable" : true
+          },
+          "dpsCourtAppearanceScheduleId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "offenderBookId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "movementSeq" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "movementDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "movementTime" : {
+            "type" : "string"
+          },
+          "movementReasonCode" : {
+            "type" : "string"
+          },
+          "directionCode" : {
+            "type" : "string"
+          },
+          "fromAgencyId" : {
+            "type" : "string"
+          },
+          "toAgencyId" : {
+            "type" : "string"
+          },
+          "commentText" : {
+            "type" : "string",
+            "nullable" : true
+          }
+        }
+      },
+      "SyncCourtEventMovement" : {
+        "required" : [ "movement", "occurredAt", "user" ],
+        "type" : "object",
+        "properties" : {
+          "occurredAt" : {
+            "type" : "string",
+            "format" : "date-time",
+            "example" : "2026-05-20T13:52:38"
+          },
+          "user" : {
+            "$ref" : "#/components/schemas/SyncUser"
+          },
+          "movement" : {
+            "$ref" : "#/components/schemas/CourtEventMovement"
+          }
+        }
+      },
+      "AtAndBy" : {
+        "required" : [ "at", "by" ],
+        "type" : "object",
+        "properties" : {
+          "at" : {
+            "type" : "string",
+            "format" : "date-time",
+            "example" : "2026-05-20T13:52:38"
+          },
+          "by" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ResyncCourtEvent" : {
+        "required" : [ "courtEvent", "created", "movements" ],
+        "type" : "object",
+        "properties" : {
+          "courtEvent" : {
+            "$ref" : "#/components/schemas/CourtEvent"
+          },
+          "created" : {
+            "$ref" : "#/components/schemas/AtAndBy"
+          },
+          "modified" : {
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/AtAndBy"
+            } ]
+          },
+          "movements" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ResyncCourtEventMovement"
+            }
+          }
+        }
+      },
+      "ResyncCourtEventMovement" : {
+        "required" : [ "created", "movement" ],
+        "type" : "object",
+        "properties" : {
+          "movement" : {
+            "$ref" : "#/components/schemas/CourtEventMovement"
+          },
+          "created" : {
+            "$ref" : "#/components/schemas/AtAndBy"
+          },
+          "modified" : {
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/AtAndBy"
+            } ]
+          }
+        }
+      },
+      "ResyncCourtEvents" : {
+        "required" : [ "courtEvents", "unscheduledMovements" ],
+        "type" : "object",
+        "properties" : {
+          "courtEvents" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ResyncCourtEvent"
+            }
+          },
+          "unscheduledMovements" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ResyncCourtEventMovement"
+            }
+          }
+        }
+      },
+      "CourtEventMapping" : {
+        "required" : [ "dpsId", "eventId", "movements" ],
+        "type" : "object",
+        "properties" : {
+          "dpsId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "eventId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "movements" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CourtMovementMapping"
+            }
+          }
+        }
+      },
+      "CourtMovementMapping" : {
+        "required" : [ "dpsId", "movementSeq", "offenderBookId" ],
+        "type" : "object",
+        "properties" : {
+          "dpsId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "offenderBookId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "movementSeq" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
+      "ResyncResponse" : {
+        "required" : [ "courtEvents", "unscheduledMovements" ],
+        "type" : "object",
+        "properties" : {
+          "courtEvents" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CourtEventMapping"
+            }
+          },
+          "unscheduledMovements" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CourtMovementMapping"
+            }
+          }
+        }
+      },
+      "MoveCourtEventRequest" : {
+        "required" : [ "fromPersonIdentifier", "scheduleIds", "toPersonIdentifier", "unscheduledMovementIds" ],
+        "type" : "object",
+        "properties" : {
+          "fromPersonIdentifier" : {
+            "type" : "string"
+          },
+          "toPersonIdentifier" : {
+            "type" : "string"
+          },
+          "scheduleIds" : {
+            "uniqueItems" : true,
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          "unscheduledMovementIds" : {
+            "uniqueItems" : true,
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        }
+      },
+      "CancelAppearance" : {
+        "type" : "object",
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/CourtAppearanceAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "reason" : {
+              "type" : "string",
+              "nullable" : true
+            }
+          }
+        } ]
+      },
+      "ChangeAppearanceComments" : {
+        "type" : "object",
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/CourtAppearanceAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "comments" : {
+              "type" : "string",
+              "nullable" : true
+            },
+            "reason" : {
+              "type" : "string",
+              "nullable" : true
+            }
+          }
+        } ]
+      },
+      "CompleteAppearance" : {
+        "type" : "object",
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/CourtAppearanceAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "reason" : {
+              "type" : "string",
+              "nullable" : true
+            }
+          }
+        } ]
+      },
+      "CourtAppearanceAction" : {
+        "required" : [ "type" ],
+        "type" : "object",
+        "properties" : {
+          "reason" : {
+            "type" : "string"
+          },
+          "type" : {
+            "type" : "string"
+          }
+        },
+        "discriminator" : {
+          "propertyName" : "type"
+        }
+      },
+      "ExpireAppearance" : {
+        "type" : "object",
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/CourtAppearanceAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "reason" : {
+              "type" : "string",
+              "nullable" : true
+            }
+          }
+        } ]
+      },
+      "RecategoriseAppearance" : {
+        "required" : [ "reasonCode" ],
+        "type" : "object",
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/CourtAppearanceAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "reasonCode" : {
+              "type" : "string"
+            },
+            "reason" : {
+              "type" : "string",
+              "nullable" : true
+            }
+          }
+        } ]
+      },
+      "RelocateAppearance" : {
+        "required" : [ "courtCode" ],
+        "type" : "object",
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/CourtAppearanceAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "courtCode" : {
+              "type" : "string"
+            },
+            "reason" : {
+              "type" : "string",
+              "nullable" : true
+            }
+          }
+        } ]
+      },
+      "RequestAppearanceByVideoLink" : {
+        "type" : "object",
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/CourtAppearanceAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "reason" : {
+              "type" : "string",
+              "nullable" : true
+            }
+          }
+        } ]
+      },
+      "RequestAppearanceInPerson" : {
+        "type" : "object",
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/CourtAppearanceAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "reason" : {
+              "type" : "string",
+              "nullable" : true
+            }
+          }
+        } ]
+      },
+      "RescheduleAppearance" : {
+        "type" : "object",
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/CourtAppearanceAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "start" : {
+              "type" : "string",
+              "format" : "date-time",
+              "nullable" : true
+            },
+            "end" : {
+              "type" : "string",
+              "format" : "date-time",
+              "nullable" : true
+            },
+            "reason" : {
+              "type" : "string",
+              "nullable" : true
+            }
+          }
+        } ]
+      },
+      "StartAppearance" : {
+        "type" : "object",
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/CourtAppearanceAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "reason" : {
+              "type" : "string",
+              "nullable" : true
+            }
+          }
+        } ]
+      },
+      "AuditHistory" : {
+        "required" : [ "content" ],
+        "type" : "object",
+        "properties" : {
+          "content" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AuditedAction"
+            }
+          }
+        }
+      },
+      "AuditedAction" : {
+        "required" : [ "changes", "domainEvents", "occurredAt", "user" ],
+        "type" : "object",
+        "properties" : {
+          "user" : {
+            "$ref" : "#/components/schemas/User"
+          },
+          "occurredAt" : {
+            "type" : "string",
+            "format" : "date-time",
+            "example" : "2026-05-20T13:52:38"
+          },
+          "domainEvents" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "reason" : {
+            "type" : "string",
+            "nullable" : true
+          },
+          "changes" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Change"
+            }
+          }
+        }
+      },
+      "Change" : {
+        "required" : [ "propertyName" ],
+        "type" : "object",
+        "properties" : {
+          "propertyName" : {
+            "type" : "string"
+          },
+          "previous" : {
+            "type" : "object",
+            "nullable" : true,
+            "oneOf" : [ {
+              "type" : "string"
+            }, {
+              "type" : "integer",
+              "format" : "int64"
+            }, {
+              "type" : "number",
+              "format" : "double"
+            }, {
+              "type" : "boolean"
+            } ]
+          },
+          "change" : {
+            "type" : "object",
+            "nullable" : true,
+            "oneOf" : [ {
+              "type" : "string"
+            }, {
+              "type" : "integer",
+              "format" : "int64"
+            }, {
+              "type" : "number",
+              "format" : "double"
+            }, {
+              "type" : "boolean"
+            } ]
+          }
+        }
+      },
+      "User" : {
+        "required" : [ "name", "username" ],
+        "type" : "object",
+        "properties" : {
+          "username" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        }
+      },
+      "CourtAppearanceSearchRequest" : {
+        "required" : [ "courtCodes", "end", "page", "reason", "size", "sort", "start", "status" ],
+        "type" : "object",
+        "properties" : {
+          "start" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "end" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "status" : {
+            "uniqueItems" : true,
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "SCHEDULED", "IN_PROGRESS", "COMPLETED", "EXPIRED" ]
+            }
+          },
+          "reason" : {
+            "uniqueItems" : true,
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "courtCodes" : {
+            "uniqueItems" : true,
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "external" : {
+            "type" : "boolean",
+            "nullable" : true
+          },
+          "query" : {
+            "type" : "string",
+            "nullable" : true
+          },
+          "page" : {
+            "minimum" : 1,
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "size" : {
+            "minimum" : 1,
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "sort" : {
+            "type" : "string"
+          }
+        }
+      },
+      "AppearanceReason" : {
+        "required" : [ "code", "description", "external" ],
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "external" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "AppearanceStatus" : {
+        "required" : [ "code", "description" ],
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string",
+            "enum" : [ "SCHEDULED", "IN_PROGRESS", "COMPLETED", "EXPIRED" ]
+          },
+          "description" : {
+            "type" : "string"
+          }
+        }
+      },
+      "Court" : {
+        "required" : [ "code", "name" ],
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        }
+      },
+      "CourtAppearanceResult" : {
+        "required" : [ "court", "external", "id", "person", "prison", "reason", "start", "status" ],
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "person" : {
+            "$ref" : "#/components/schemas/Person"
+          },
+          "prison" : {
+            "$ref" : "#/components/schemas/Prison"
+          },
+          "court" : {
+            "$ref" : "#/components/schemas/Court"
+          },
+          "reason" : {
+            "$ref" : "#/components/schemas/AppearanceReason"
+          },
+          "external" : {
+            "type" : "boolean"
+          },
+          "start" : {
+            "type" : "string",
+            "format" : "date-time",
+            "example" : "2026-05-20T13:52:38"
+          },
+          "end" : {
+            "type" : "string",
+            "format" : "date-time",
+            "nullable" : true,
+            "example" : "2026-05-20T13:52:38"
+          },
+          "comments" : {
+            "type" : "string",
+            "nullable" : true
+          },
+          "status" : {
+            "$ref" : "#/components/schemas/AppearanceStatus"
+          }
+        }
+      },
+      "CourtAppearanceSearchResponse" : {
+        "required" : [ "content", "metadata" ],
+        "type" : "object",
+        "properties" : {
+          "content" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CourtAppearanceResult"
+            }
+          },
+          "metadata" : {
+            "$ref" : "#/components/schemas/PageMetadata"
+          }
+        }
+      },
+      "PageMetadata" : {
+        "required" : [ "totalElements" ],
+        "type" : "object",
+        "properties" : {
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "Person" : {
+        "required" : [ "firstName", "lastName", "personIdentifier" ],
+        "type" : "object",
+        "properties" : {
+          "personIdentifier" : {
+            "type" : "string"
+          },
+          "firstName" : {
+            "type" : "string"
+          },
+          "lastName" : {
+            "type" : "string"
+          },
+          "prisonCode" : {
+            "type" : "string",
+            "nullable" : true
+          },
+          "cellLocation" : {
+            "type" : "string",
+            "nullable" : true
+          }
+        }
+      },
+      "Prison" : {
+        "required" : [ "code", "name" ],
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        }
+      },
+      "AppearanceScheduleSearchRequest" : {
+        "required" : [ "courtCodes", "end", "page", "personIdentifiers", "reason", "size", "sort", "start", "status" ],
+        "type" : "object",
+        "properties" : {
+          "personIdentifiers" : {
+            "uniqueItems" : true,
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "start" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "end" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "status" : {
+            "uniqueItems" : true,
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "SCHEDULED", "IN_PROGRESS", "COMPLETED", "EXPIRED" ]
+            }
+          },
+          "reason" : {
+            "uniqueItems" : true,
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "courtCodes" : {
+            "uniqueItems" : true,
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "external" : {
+            "type" : "boolean",
+            "nullable" : true
+          },
+          "page" : {
+            "minimum" : 1,
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "size" : {
+            "minimum" : 1,
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "sort" : {
+            "type" : "string"
+          }
+        }
+      },
+      "CourtAppearanceSchedule" : {
+        "required" : [ "court", "detail", "external", "id", "personIdentifier", "reason", "start", "status" ],
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "personIdentifier" : {
+            "type" : "string"
+          },
+          "court" : {
+            "$ref" : "#/components/schemas/Court"
+          },
+          "reason" : {
+            "$ref" : "#/components/schemas/AppearanceReason"
+          },
+          "external" : {
+            "type" : "boolean"
+          },
+          "start" : {
+            "type" : "string",
+            "format" : "date-time",
+            "example" : "2026-05-20T13:52:38"
+          },
+          "end" : {
+            "type" : "string",
+            "format" : "date-time",
+            "nullable" : true,
+            "example" : "2026-05-20T13:52:38"
+          },
+          "status" : {
+            "$ref" : "#/components/schemas/AppearanceStatus"
+          },
+          "detail" : {
+            "$ref" : "#/components/schemas/Detail"
+          }
+        }
+      },
+      "CourtAppearanceSchedules" : {
+        "required" : [ "content", "metadata" ],
+        "type" : "object",
+        "properties" : {
+          "content" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CourtAppearanceSchedule"
+            }
+          },
+          "metadata" : {
+            "$ref" : "#/components/schemas/PageMetadata"
+          }
+        }
+      },
+      "Detail" : {
+        "required" : [ "requiredRoles", "uiUrl" ],
+        "type" : "object",
+        "properties" : {
+          "uiUrl" : {
+            "type" : "string"
+          },
+          "requiredRoles" : {
+            "uniqueItems" : true,
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        }
+      },
+      "PersonAppearanceSearchRequest" : {
+        "required" : [ "courtCodes", "page", "reason", "size", "sort", "status" ],
+        "type" : "object",
+        "properties" : {
+          "start" : {
+            "type" : "string",
+            "format" : "date",
+            "nullable" : true
+          },
+          "end" : {
+            "type" : "string",
+            "format" : "date",
+            "nullable" : true
+          },
+          "status" : {
+            "uniqueItems" : true,
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "SCHEDULED", "IN_PROGRESS", "COMPLETED", "EXPIRED" ]
+            }
+          },
+          "reason" : {
+            "uniqueItems" : true,
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "courtCodes" : {
+            "uniqueItems" : true,
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "external" : {
+            "type" : "boolean",
+            "nullable" : true
+          },
+          "page" : {
+            "minimum" : 1,
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "size" : {
+            "minimum" : 1,
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "sort" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ScheduleCourtAppearance" : {
+        "required" : [ "courtCode", "reasonCode", "start" ],
+        "type" : "object",
+        "properties" : {
+          "courtCode" : {
+            "type" : "string"
+          },
+          "reasonCode" : {
+            "type" : "string"
+          },
+          "start" : {
+            "type" : "string",
+            "format" : "date-time",
+            "example" : "2026-05-20T13:52:38"
+          },
+          "end" : {
+            "type" : "string",
+            "format" : "date-time",
+            "nullable" : true,
+            "example" : "2026-05-20T13:52:38"
+          },
+          "comments" : {
+            "type" : "string",
+            "nullable" : true
+          }
+        }
+      },
+      "ReconciliationCourtEvent" : {
+        "required" : [ "courtEvent", "movements" ],
+        "type" : "object",
+        "properties" : {
+          "courtEvent" : {
+            "$ref" : "#/components/schemas/CourtEvent"
+          },
+          "movements" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CourtEventMovement"
+            }
+          }
+        }
+      },
+      "ReconciliationResponse" : {
+        "required" : [ "courtEvents", "unscheduledMovements" ],
+        "type" : "object",
+        "properties" : {
+          "courtEvents" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ReconciliationCourtEvent"
+            }
+          },
+          "unscheduledMovements" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CourtEventMovement"
+            }
+          }
+        }
+      },
+      "IntegrationAppearance" : {
+        "required" : [ "courtCode", "id", "personIdentifier", "prisonCode", "reason", "start" ],
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "personIdentifier" : {
+            "type" : "string"
+          },
+          "prisonCode" : {
+            "type" : "string"
+          },
+          "courtCode" : {
+            "type" : "string"
+          },
+          "reason" : {
+            "$ref" : "#/components/schemas/IntegrationReason"
+          },
+          "start" : {
+            "type" : "string",
+            "format" : "date-time",
+            "example" : "2026-05-20T13:52:38"
+          },
+          "end" : {
+            "type" : "string",
+            "format" : "date-time",
+            "nullable" : true,
+            "example" : "2026-05-20T13:52:38"
+          },
+          "comments" : {
+            "type" : "string",
+            "nullable" : true
+          }
+        }
+      },
+      "IntegrationReason" : {
+        "required" : [ "code", "description" ],
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          }
+        }
+      },
+      "IntegrationResponseIntegrationAppearance" : {
+        "required" : [ "data" ],
+        "type" : "object",
+        "properties" : {
+          "data" : {
+            "$ref" : "#/components/schemas/IntegrationAppearance"
+          },
+          "previousUrl" : {
+            "type" : "string",
+            "nullable" : true
+          },
+          "nextUrl" : {
+            "type" : "string",
+            "nullable" : true
+          }
+        }
+      },
+      "IntegrationMovement" : {
+        "required" : [ "courtCode", "direction", "id", "occurredAt", "personIdentifier", "prisonCode", "reason" ],
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "scheduleId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "nullable" : true
+          },
+          "personIdentifier" : {
+            "type" : "string"
+          },
+          "prisonCode" : {
+            "type" : "string"
+          },
+          "courtCode" : {
+            "type" : "string"
+          },
+          "direction" : {
+            "type" : "string",
+            "enum" : [ "IN", "OUT" ]
+          },
+          "reason" : {
+            "$ref" : "#/components/schemas/IntegrationReason"
+          },
+          "occurredAt" : {
+            "type" : "string",
+            "format" : "date-time",
+            "example" : "2026-05-20T13:52:38"
+          },
+          "comments" : {
+            "type" : "string",
+            "nullable" : true
+          }
+        }
+      },
+      "IntegrationResponseIntegrationMovement" : {
+        "required" : [ "data" ],
+        "type" : "object",
+        "properties" : {
+          "data" : {
+            "$ref" : "#/components/schemas/IntegrationMovement"
+          },
+          "previousUrl" : {
+            "type" : "string",
+            "nullable" : true
+          },
+          "nextUrl" : {
+            "type" : "string",
+            "nullable" : true
+          }
+        }
+      },
+      "IntegrationResponsesIntegrationMovement" : {
+        "required" : [ "data" ],
+        "type" : "object",
+        "properties" : {
+          "data" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/IntegrationResponseIntegrationMovement"
+            }
+          },
+          "previousUrl" : {
+            "type" : "string",
+            "nullable" : true
+          }
+        }
+      },
+      "Appearance" : {
+        "required" : [ "court", "external", "id", "person", "prison", "reason", "start", "status" ],
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "person" : {
+            "$ref" : "#/components/schemas/Person"
+          },
+          "prison" : {
+            "$ref" : "#/components/schemas/Prison"
+          },
+          "court" : {
+            "$ref" : "#/components/schemas/Court"
+          },
+          "reason" : {
+            "$ref" : "#/components/schemas/AppearanceReason"
+          },
+          "external" : {
+            "type" : "boolean"
+          },
+          "start" : {
+            "type" : "string",
+            "format" : "date-time",
+            "example" : "2026-05-20T13:52:38"
+          },
+          "end" : {
+            "type" : "string",
+            "format" : "date-time",
+            "nullable" : true,
+            "example" : "2026-05-20T13:52:38"
+          },
+          "comments" : {
+            "type" : "string",
+            "nullable" : true
+          },
+          "status" : {
+            "$ref" : "#/components/schemas/AppearanceStatus"
+          }
+        }
+      },
+      "CourtAppearanceReasons" : {
+        "required" : [ "items" ],
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AppearanceReason"
+            }
+          }
+        }
+      }
+    },
+    "securitySchemes" : {
+      "bearer-jwt" : {
+        "type" : "http",
+        "name" : "Authorization",
+        "in" : "header",
+        "scheme" : "bearer",
+        "bearerFormat" : "JWT"
+      }
+    }
+  }
+}
