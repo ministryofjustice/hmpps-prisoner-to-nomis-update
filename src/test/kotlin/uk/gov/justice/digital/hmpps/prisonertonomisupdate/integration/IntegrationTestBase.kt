@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtS
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.CSIPDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.IncidentsDpsApiExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.CourtSchedulerDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension
@@ -59,6 +60,7 @@ import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
   OrganisationsDpsApiExtension::class,
   VisitBalanceDpsApiExtension::class,
   TapDpsApiExtension::class,
+  CourtSchedulerDpsApiExtension::class,
   CorePersonCprApiExtension::class,
   OfficialVisitsDpsApiExtension::class,
 )

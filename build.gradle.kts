@@ -174,6 +174,11 @@ val models = listOf(
     url = "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk/v3/api-docs",
   ),
   ModelConfiguration(
+    name = "court-scheduler",
+    packageName = "courtscheduler",
+    url = "https://court-appearance-scheduler-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
+  ),
+  ModelConfiguration(
     name = "court-sentencing",
     packageName = "court.sentencing",
     testPackageName = "courtsentencing",
