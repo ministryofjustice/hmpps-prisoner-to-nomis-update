@@ -53,7 +53,7 @@ class CourtSentencingResource(
   @GetMapping("/prisoners/{offenderNo}/court-sentencing/court-cases/reconciliation")
   suspend fun getCaseReconciliationByOffenderNo(
     @PathVariable offenderNo: String,
-  ): List<MismatchCaseResponse> = courtSentencingReconciliationService.manualCheckCaseOffenderNo(offenderNo = offenderNo)
+  ): List<MismatchCaseResponse> = courtSentencingReconciliationService.manualCheckCaseOffenderNo(offenderNo = offenderNo, extraInfo = true)
 
   @PostMapping("/prisoners/court-sentencing/court-cases/reconciliation")
   suspend fun getCaseReconciliationByOffenderNoList(

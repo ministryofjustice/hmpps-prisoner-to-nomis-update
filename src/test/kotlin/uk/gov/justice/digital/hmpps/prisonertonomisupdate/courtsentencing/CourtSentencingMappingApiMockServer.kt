@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtens
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.getRequestBody
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.withRequestBodyJsonPath
+import java.util.UUID
 
 @Component
 class CourtSentencingMappingApiMockServer(private val jsonMapper: JsonMapper) {
@@ -137,6 +138,17 @@ class CourtSentencingMappingApiMockServer(private val jsonMapper: JsonMapper) {
     )
   }
 
+  fun stubGetCourtAppearanceMappingGivenNomisId(id: Long, dpsCourtAppearanceId: String = "123") {
+    stubGet(
+      "/mapping/court-sentencing/court-appearances/nomis-court-appearance-id/$id",
+      response = CourtAppearanceMappingDto(
+        nomisCourtAppearanceId = id,
+        dpsCourtAppearanceId = dpsCourtAppearanceId,
+        mappingType = CourtAppearanceMappingDto.MappingType.DPS_CREATED,
+      ),
+    )
+  }
+
   fun stubGetCourtChargeMappingGivenDpsIdWithError(id: String, status: Int = 500) {
     stubGetWithError("/mapping/court-sentencing/court-charges/dps-court-charge-id/$id", status)
   }
@@ -191,6 +203,17 @@ class CourtSentencingMappingApiMockServer(private val jsonMapper: JsonMapper) {
     )
   }
 
+  fun stubGetCourtChargeMappingGivenNomisId(id: Long, dpsCourtChargeId: String) {
+    stubGet(
+      "/mapping/court-sentencing/court-charges/nomis-court-charge-id/$id",
+      response = CourtChargeMappingDto(
+        nomisCourtChargeId = id,
+        dpsCourtChargeId = dpsCourtChargeId,
+        mappingType = CourtChargeMappingDto.MappingType.DPS_CREATED,
+      ),
+    )
+  }
+
   fun stubCreateCourtCharge() {
     stubCreate("/mapping/court-sentencing/court-charges")
   }
@@ -202,6 +225,22 @@ class CourtSentencingMappingApiMockServer(private val jsonMapper: JsonMapper) {
         nomisSentenceSequence = nomisSentenceSequence.toInt(),
         nomisBookingId = nomisBookingId,
         dpsSentenceId = id,
+        mappingType = SentenceMappingDto.MappingType.DPS_CREATED,
+      ),
+    )
+  }
+
+  fun stubGetSentenceMappingGivenNomisId(
+    nomisSentenceSequence: Int = 1,
+    nomisBookingId: Long = 12345,
+    dpsSentenceId: String = UUID.randomUUID().toString(),
+  ) {
+    stubGet(
+      "/mapping/court-sentencing/sentences/nomis-booking-id/$nomisBookingId/nomis-sentence-sequence/$nomisSentenceSequence",
+      response = SentenceMappingDto(
+        nomisSentenceSequence = nomisSentenceSequence,
+        nomisBookingId = nomisBookingId,
+        dpsSentenceId = dpsSentenceId,
         mappingType = SentenceMappingDto.MappingType.DPS_CREATED,
       ),
     )
@@ -249,6 +288,24 @@ class CourtSentencingMappingApiMockServer(private val jsonMapper: JsonMapper) {
         nomisSentenceSequence = nomisSentenceSequence.toInt(),
         nomisBookingId = nomisBookingId,
         dpsTermId = id,
+        mappingType = SentenceTermMappingDto.MappingType.DPS_CREATED,
+      ),
+    )
+  }
+
+  fun stubGetSentenceTermByGivenNomisId(
+    nomisSentenceSequence: Int = 1,
+    nomisTermSequence: Int = 1,
+    nomisBookingId: Long = 12345,
+    dpsTermId: String = UUID.randomUUID().toString(),
+  ) {
+    stubGet(
+      ("/mapping/court-sentencing/sentence-terms/nomis-booking-id/$nomisBookingId/nomis-sentence-sequence/$nomisSentenceSequence/nomis-term-sequence/$nomisTermSequence"),
+      response = SentenceTermMappingDto(
+        nomisTermSequence = nomisTermSequence,
+        nomisSentenceSequence = nomisSentenceSequence,
+        nomisBookingId = nomisBookingId,
+        dpsTermId = dpsTermId,
         mappingType = SentenceTermMappingDto.MappingType.DPS_CREATED,
       ),
     )

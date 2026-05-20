@@ -134,6 +134,11 @@ class CourtSentencingMappingService(
     .retrieve()
     .awaitBodyOrNullForNotFound()
 
+  suspend fun getMappingGivenNomisCourtAppearanceIdOrNull(nomisCourtAppearanceId: Long): CourtAppearanceMappingDto? = webClient.get()
+    .uri("/mapping/court-sentencing/court-appearances/nomis-court-appearance-id/{nomisCourtAppearanceId}", nomisCourtAppearanceId)
+    .retrieve()
+    .awaitBodyOrNullForNotFound()
+
   suspend fun getMappingGivenCourtAppearanceId(dpsCourtAppearanceId: String): CourtAppearanceMappingDto = webClient.get()
     .uri("/mapping/court-sentencing/court-appearances/dps-court-appearance-id/{dpsCourtAppearanceId}", dpsCourtAppearanceId)
     .retrieve()
@@ -144,6 +149,11 @@ class CourtSentencingMappingService(
     .retrieve()
     .awaitBodyOrNullForNotFound()
 
+  suspend fun getMappingGivenNomisCourtChargeIdOrNull(nomisCourtChargeId: Long): CourtChargeMappingDto? = webClient.get()
+    .uri("/mapping/court-sentencing/court-charges/nomis-court-charge-id/{nomisCourtChargeId}", nomisCourtChargeId)
+    .retrieve()
+    .awaitBodyOrNullForNotFound()
+
   suspend fun getMappingGivenCourtChargeId(dpsCourtChargeId: String): CourtChargeMappingDto = webClient.get()
     .uri("/mapping/court-sentencing/court-charges/dps-court-charge-id/{dpsCourtChargeId}", dpsCourtChargeId)
     .retrieve()
@@ -151,6 +161,15 @@ class CourtSentencingMappingService(
 
   suspend fun getMappingGivenSentenceIdOrNull(dpsSentenceId: String): SentenceMappingDto? = webClient.get()
     .uri("/mapping/court-sentencing/sentences/dps-sentence-id/{dpsSentenceId}", dpsSentenceId)
+    .retrieve()
+    .awaitBodyOrNullForNotFound()
+
+  suspend fun getSentenceOrNullByNomisId(bookingId: Long, sentenceSequence: Int): SentenceMappingDto? = webClient.get()
+    .uri(
+      "/mapping/court-sentencing/sentences/nomis-booking-id/{bookingId}/nomis-sentence-sequence/{sentenceSequence}",
+      bookingId,
+      sentenceSequence,
+    )
     .retrieve()
     .awaitBodyOrNullForNotFound()
 
@@ -177,6 +196,16 @@ class CourtSentencingMappingService(
 
   suspend fun getMappingGivenSentenceTermIdOrNull(dpsTermId: String): SentenceTermMappingDto? = webClient.get()
     .uri("/mapping/court-sentencing/sentence-terms/dps-term-id/{dpsTermId}", dpsTermId)
+    .retrieve()
+    .awaitBodyOrNullForNotFound()
+
+  suspend fun getSentenceTermByNomisIdOrNull(bookingId: Long, sentenceSequence: Int, termSequence: Int): SentenceTermMappingDto? = webClient.get()
+    .uri(
+      "/mapping/court-sentencing/sentence-terms/nomis-booking-id/{bookingId}/nomis-sentence-sequence/{sentenceSequence}/nomis-term-sequence/{termSequence}",
+      bookingId,
+      sentenceSequence,
+      termSequence,
+    )
     .retrieve()
     .awaitBodyOrNullForNotFound()
 

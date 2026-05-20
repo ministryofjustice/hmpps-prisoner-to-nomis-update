@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiServi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
 import java.math.BigDecimal
 import java.time.LocalDate
+import kotlin.collections.addAll
 
 @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
 @Service
@@ -135,12 +136,14 @@ class CourtSentencingReconciliationService(
     offenderNo: String,
     nomisCaseIds: List<Long>,
     telemetryPrefix: String? = TELEMETRY_COURT_CASE_PRISONER_PREFIX,
+    extraInfo: Boolean? = false,
   ): List<MismatchCaseResponse> = mappingService.getMappingsGivenNomisCourtCaseIds(nomisCourtCaseIds = nomisCaseIds).map {
     val caseResult = checkCase(
       dpsCaseId = it.dpsCourtCaseId,
       nomisCaseId = it.nomisCourtCaseId,
       offenderNo = offenderNo,
       telemetryPrefix = telemetryPrefix,
+      extraInfo = extraInfo,
     )
     MismatchCaseResponse(
       offenderNo = offenderNo,
@@ -220,7 +223,7 @@ class CourtSentencingReconciliationService(
     )
   }.getOrNull()
 
-  suspend fun manualCheckCaseOffenderNo(offenderNo: String, telemetryPrefix: String? = TELEMETRY_COURT_CASE_PRISONER_PREFIX): List<MismatchCaseResponse> {
+  suspend fun manualCheckCaseOffenderNo(offenderNo: String, telemetryPrefix: String? = TELEMETRY_COURT_CASE_PRISONER_PREFIX, extraInfo: Boolean? = false): List<MismatchCaseResponse> {
     val caseIds = nomisApiService.getCourtCaseIdsByOffender(offenderNo)
     val dpsCaseIds = dpsApiService.getCourtCaseIdsForOffender(offenderNo).courtCaseUuids
     val checkCaseCount =
@@ -233,6 +236,7 @@ class CourtSentencingReconciliationService(
           offenderNo = offenderNo,
           nomisCaseIds = caseIds,
           telemetryPrefix = telemetryPrefix,
+          extraInfo = extraInfo,
         )
       } else {
         emptyList()
@@ -296,7 +300,7 @@ class CourtSentencingReconciliationService(
     mismatch = checkCase(dpsCaseId = dpsCaseId, nomisCaseId = nomisCaseId, offenderNo = offenderNo),
   )
 
-  suspend fun checkCase(dpsCaseId: String, nomisCaseId: Long, offenderNo: String, telemetryPrefix: String? = TELEMETRY_COURT_CASE_PRISONER_PREFIX): MismatchCase? = runCatching {
+  suspend fun checkCase(dpsCaseId: String, nomisCaseId: Long, offenderNo: String, telemetryPrefix: String? = TELEMETRY_COURT_CASE_PRISONER_PREFIX, extraInfo: Boolean? = false): MismatchCase? = runCatching {
     val (nomisResponse, dpsResponse) = withContext(Dispatchers.Unconfined) {
       async { nomisApiService.getCourtCaseForReconciliation(nomisCaseId) } to
         async { dpsApiService.getCourtCaseForReconciliation(dpsCaseId) }
@@ -309,17 +313,26 @@ class CourtSentencingReconciliationService(
         appearanceCharges.filter { charge -> charge.sentence?.sentenceUuid == it.sentenceUuid }.map { charge ->
           charge.offenceCode
         }.sorted().joinToString(",")
-      val terms = it.periodLengths.map { term ->
-        SentenceTermFields(
-          sentenceTermCode = term.sentenceTermCode,
-          lifeSentenceFlag = term.lifeSentence,
-          years = term.periodYears.takeIf { term.lifeSentence != true },
-          months = term.periodMonths.takeIf { term.lifeSentence != true },
-          weeks = term.periodWeeks.takeIf { term.lifeSentence != true },
-          days = term.periodDays.takeIf { term.lifeSentence != true },
-          id = term.periodLengthUuid.toString(),
-        )
-      }
+      val terms = sortTerms(
+        it.periodLengths.map { term ->
+          SentenceTermFields(
+            sentenceTermCode = term.sentenceTermCode,
+            lifeSentenceFlag = term.lifeSentence,
+            years = term.periodYears.takeIf { term.lifeSentence != true },
+            months = term.periodMonths.takeIf { term.lifeSentence != true },
+            weeks = term.periodWeeks.takeIf { term.lifeSentence != true },
+            days = term.periodDays.takeIf { term.lifeSentence != true },
+            id = term.periodLengthUuid.toString(),
+            mappedId = if (extraInfo == true) {
+              mappingService.getMappingGivenSentenceTermIdOrNull(term.periodLengthUuid.toString())?.nomisTermSequence
+                ?.toString()
+                ?: "missing nomis mapping"
+            } else {
+              null
+            },
+          )
+        },
+      )
       SentenceFields(
         // sentence start date is actually the sentence appearance date which can be different to the start date eg consecutive sentences
         sentencingAppearanceDate = it.sentenceStartDate.takeIf { it.validDate() },
@@ -333,12 +346,26 @@ class CourtSentencingReconciliationService(
           "I"
         },
         id = it.sentenceUuid.toString(),
+        mappedId = if (extraInfo == true) {
+          mappingService.getMappingGivenSentenceIdOrNull(it.sentenceUuid.toString())?.nomisSentenceSequence?.toString()
+            ?: "missing nomis mapping"
+        } else {
+          null
+        },
         offenceCodes = offenceCodeString,
         terms = terms,
         // this can't have the id in it for sorting
-        termsAsString = sortTerms(terms).map { term -> term.toSortString() }.toString(),
+        termsAsString = terms.map { term -> term.toSortString() }.toString(),
       )
-    }.distinctBy { it.id }
+    }.distinctBy { it.id }.sortedWith(
+      compareBy<SentenceFields> { it.sentencingAppearanceDate }
+        .thenBy { it.offenceCodes }
+        .thenBy { it.sentenceCategory }
+        .thenBy { it.sentenceCalcType }
+        .thenBy { it.status }
+        .thenBy { it.termsAsString }
+        .thenBy { it.fine },
+    )
 
     // when duplicate - do not compare status since DPS does not show case and can be inactive when active in NOMIS
     val isClonedDuplicate = dpsResponse.status == ReconciliationCourtCase.Status.DUPLICATE
@@ -346,24 +373,46 @@ class CourtSentencingReconciliationService(
       active = dpsResponse.active.takeUnless { isClonedDuplicate },
       id = dpsCaseId,
       appearances = dpsResponse.appearances.map { appearanceResponse ->
-        val charges = appearanceResponse.charges.map { appearanceChargeResponse ->
-          ChargeFields(
-            offenceCode = appearanceChargeResponse.offenceCode,
-            offenceDate = appearanceChargeResponse.offenceStartDate,
-            offenceEndDate = appearanceChargeResponse.offenceEndDate,
-            outcome = appearanceChargeResponse.nomisOutcomeCode,
-            id = appearanceChargeResponse.chargeUuid.toString(),
-          )
-        }
+        val charges = sortCharges(
+          appearanceResponse.charges.map { appearanceChargeResponse ->
+            ChargeFields(
+              offenceCode = appearanceChargeResponse.offenceCode,
+              offenceDate = appearanceChargeResponse.offenceStartDate,
+              offenceEndDate = appearanceChargeResponse.offenceEndDate,
+              outcome = appearanceChargeResponse.nomisOutcomeCode,
+              id = appearanceChargeResponse.chargeUuid.toString(),
+              mappedId = if (extraInfo == true) {
+                mappingService.getMappingGivenCourtChargeIdOrNull(appearanceChargeResponse.chargeUuid.toString())?.nomisCourtChargeId
+                  ?.toString()
+                  ?: "missing nomis mapping"
+              } else {
+                null
+              },
+            )
+          },
+        )
         AppearanceFields(
           date = appearanceResponse.appearanceDate.takeIf { it.validDate() },
           court = appearanceResponse.courtCode,
           outcome = appearanceResponse.nomisOutcomeCode,
           id = appearanceResponse.appearanceUuid.toString(),
+          mappedId = if (extraInfo == true) {
+            mappingService.getMappingGivenCourtAppearanceIdOrNull(appearanceResponse.appearanceUuid.toString())?.nomisCourtAppearanceId
+              ?.toString()
+              ?: "missing nomis mapping"
+          } else {
+            null
+          },
           charges = charges,
           chargeAsString = sortCharges(charges).map { it.toSortString() }.toString(),
         )
-      },
+      }.sortedWith(
+        compareBy<AppearanceFields> { it.date }
+          .thenBy { it.court }
+          .thenBy { it.outcome }
+          .thenBy { it.charges.size }
+          .thenBy { it.chargeAsString },
+      ),
       sentences = sentences,
       caseReferences = dpsResponse.courtCaseLegacyData?.caseReferences?.map { it.offenderCaseReference } ?: emptyList(),
     )
@@ -371,39 +420,71 @@ class CourtSentencingReconciliationService(
       active = (nomisResponse.caseStatus.code == "A").takeUnless { isClonedDuplicate },
       id = nomisResponse.id.toString(),
       appearances = nomisResponse.courtEvents.map { eventResponse ->
-        val charges = eventResponse.courtEventCharges.map { chargeResponse ->
-          ChargeFields(
-            offenceCode = chargeResponse.offenderCharge.offence.offenceCode,
-            offenceDate = chargeResponse.offenceDate,
-            offenceEndDate = chargeResponse.offenceEndDate,
-            outcome = chargeResponse.resultCode1?.code,
-            id = chargeResponse.offenderCharge.id.toString(),
-          )
-        }
+        val charges = sortCharges(
+          eventResponse.courtEventCharges.map { chargeResponse ->
+            ChargeFields(
+              offenceCode = chargeResponse.offenderCharge.offence.offenceCode,
+              offenceDate = chargeResponse.offenceDate,
+              offenceEndDate = chargeResponse.offenceEndDate,
+              outcome = chargeResponse.resultCode1?.code,
+              id = chargeResponse.offenderCharge.id.toString(),
+              mappedId = if (extraInfo == true) {
+                mappingService.getMappingGivenNomisCourtChargeIdOrNull(chargeResponse.offenderCharge.id)?.dpsCourtChargeId
+                  ?: "missing dps mapping"
+              } else {
+                null
+              },
+            )
+          },
+        )
         AppearanceFields(
           date = eventResponse.eventDateTime.toLocalDate().takeIf { it.validDate() },
           court = eventResponse.courtId,
           outcome = eventResponse.outcomeReasonCode?.code,
           id = eventResponse.id.toString(),
+          mappedId = if (extraInfo == true) {
+            mappingService.getMappingGivenNomisCourtAppearanceIdOrNull(eventResponse.id)?.dpsCourtAppearanceId
+              ?: "missing dps mapping"
+          } else {
+            null
+          },
           charges = charges,
           chargeAsString = sortCharges(charges).map { it.toSortString() }.toString(),
         )
-      },
+      }.sortedWith(
+        compareBy<AppearanceFields> { it.date }
+          .thenBy { it.court }
+          .thenBy { it.outcome }
+          .thenBy { it.charges.size }
+          .thenBy { it.chargeAsString },
+      ),
       sentences = nomisResponse.sentences.map { sentenceResponse ->
         val offenderCodeString =
           sentenceResponse.offenderCharges.map { chargeResponse -> chargeResponse.offence.offenceCode }.sorted()
             .joinToString(",")
-        val terms = sentenceResponse.sentenceTerms.map { term ->
-          SentenceTermFields(
-            years = term.years.takeIf { !term.lifeSentenceFlag },
-            months = term.months.takeIf { !term.lifeSentenceFlag },
-            weeks = term.weeks.takeIf { !term.lifeSentenceFlag },
-            days = term.days.takeIf { !term.lifeSentenceFlag },
-            sentenceTermCode = term.sentenceTermType?.code,
-            lifeSentenceFlag = term.lifeSentenceFlag,
-            id = term.termSequence.toString(),
-          )
-        }
+        val terms = sortTerms(
+          sentenceResponse.sentenceTerms.map { term ->
+            SentenceTermFields(
+              years = term.years.takeIf { !term.lifeSentenceFlag },
+              months = term.months.takeIf { !term.lifeSentenceFlag },
+              weeks = term.weeks.takeIf { !term.lifeSentenceFlag },
+              days = term.days.takeIf { !term.lifeSentenceFlag },
+              sentenceTermCode = term.sentenceTermType?.code,
+              lifeSentenceFlag = term.lifeSentenceFlag,
+              id = term.termSequence.toString(),
+              mappedId = if (extraInfo == true) {
+                mappingService.getSentenceTermByNomisIdOrNull(
+                  bookingId = sentenceResponse.bookingId,
+                  sentenceSequence = sentenceResponse.sentenceSeq.toInt(),
+                  termSequence = term.termSequence.toInt(),
+                )?.dpsTermId
+                  ?: "missing dps mapping"
+              } else {
+                null
+              },
+            )
+          },
+        )
         // All sentences in prod with a case_id have a court order, all orders have an event id, all appearances have an event date
         val appearanceDate = nomisResponse.courtEvents.find { appearance -> appearance.id == sentenceResponse.courtOrder?.eventId }?.eventDateTime?.toLocalDate()
           ?: LocalDate.MIN
@@ -414,15 +495,36 @@ class CourtSentencingReconciliationService(
           fine = sentenceResponse.fineAmount?.stripTrailingZeros(),
           status = sentenceResponse.status,
           id = sentenceResponse.sentenceSeq.toString(),
+          mappedId = if (extraInfo == true) {
+            mappingService.getSentenceOrNullByNomisId(
+              sentenceResponse.bookingId,
+              sentenceSequence = sentenceResponse.sentenceSeq.toInt(),
+            )?.dpsSentenceId
+              ?: "missing dps mapping"
+          } else {
+            null
+          },
           offenceCodes = offenderCodeString,
           terms = terms,
-          termsAsString = sortTerms(terms).map { it.toSortString() }.toString(),
+          termsAsString = terms.map { it.toSortString() }.toString(),
         )
-      },
+      }.sortedWith(
+        compareBy<SentenceFields> { it.sentencingAppearanceDate }
+          .thenBy { it.offenceCodes }
+          .thenBy { it.sentenceCategory }
+          .thenBy { it.sentenceCalcType }
+          .thenBy { it.status }
+          .thenBy { it.termsAsString }
+          .thenBy { it.fine },
+      ),
       caseReferences = nomisResponse.caseInfoNumbers.map { it.reference },
     )
 
-    val differenceList = compareObjects(dpsFields, nomisFields)
+    var differenceList = compareObjects(dpsFields, nomisFields)
+
+    if (extraInfo == true) {
+      differenceList = differenceList.plus(findMissingMappings(dpsFields, nomisFields))
+    }
 
     val excludedCase = excludedCaseIds.contains(nomisCaseId)
     return if (differenceList.isNotEmpty()) {
@@ -487,21 +589,6 @@ class CourtSentencingReconciliationService(
         if (dpsObj.active != (nomisObj as CaseFields).active) {
           differences.add(Difference("$parentProperty.active", dpsObj.active, nomisObj.active, id = dpsObj.id))
         }
-        val sortedDpsAppearances = dpsObj.appearances.sortedWith(
-          compareBy<AppearanceFields> { it.date }
-            .thenBy { it.court }
-            .thenBy { it.outcome }
-            .thenBy { it.charges.size }
-            .thenBy { it.chargeAsString },
-        )
-
-        val sortedNomisAppearances = nomisObj.appearances.sortedWith(
-          compareBy<AppearanceFields> { it.date }
-            .thenBy { it.court }
-            .thenBy { it.outcome }
-            .thenBy { it.charges.size }
-            .thenBy { it.chargeAsString },
-        )
 
         if (!dpsObj.caseReferences.containsAll(nomisObj.caseReferences)) {
           differences.add(
@@ -514,30 +601,8 @@ class CourtSentencingReconciliationService(
           )
         }
 
-        differences.addAll(compareLists(sortedDpsAppearances, sortedNomisAppearances, "$parentProperty.appearances"))
-
-        val sortedDpsSentences = dpsObj.sentences.sortedWith(
-          compareBy<SentenceFields> { it.sentencingAppearanceDate }
-            .thenBy { it.offenceCodes }
-            .thenBy { it.sentenceCategory }
-            .thenBy { it.sentenceCalcType }
-            .thenBy { it.status }
-            .thenBy { it.termsAsString }
-            .thenBy { it.fine },
-        )
-
-        val sortedNomisSentences = nomisObj.sentences.sortedWith(
-          compareBy<SentenceFields> { it.sentencingAppearanceDate }
-            .thenBy { it.offenceCodes }
-            .thenBy { it.sentenceCategory }
-            .thenBy { it.sentenceCalcType }
-            .thenBy { it.status }
-            .thenBy { it.termsAsString }
-            .thenBy { it.fine },
-
-        )
-
-        differences.addAll(compareLists(sortedDpsSentences, sortedNomisSentences, "$parentProperty.sentences"))
+        differences.addAll(compareLists(dpsObj.appearances, nomisObj.appearances, "$parentProperty.appearances"))
+        differences.addAll(compareLists(dpsObj.sentences, nomisObj.sentences, "$parentProperty.sentences"))
       }
 
       is AppearanceFields -> {
@@ -552,8 +617,8 @@ class CourtSentencingReconciliationService(
         }
         differences.addAll(
           compareLists(
-            sortCharges(dpsObj.charges),
-            sortCharges(nomisObj.charges),
+            dpsObj.charges,
+            nomisObj.charges,
             "$parentProperty.charges",
           ),
         )
@@ -646,8 +711,8 @@ class CourtSentencingReconciliationService(
 
         differences.addAll(
           compareLists(
-            sortTerms(dpsObj.terms),
-            sortTerms(nomisObj.terms),
+            dpsObj.terms,
+            nomisObj.terms,
             "$parentProperty.terms",
           ),
         )
@@ -724,6 +789,120 @@ class CourtSentencingReconciliationService(
     return differences
   }
 
+  private fun findMissingMappings(dpsFields: CaseFields, nomisFields: CaseFields): List<Difference> {
+    val missingMappings = mutableListOf<Difference>()
+
+    // Check DPS appearances for missing nomis mappings
+    dpsFields.appearances.forEach { appearance ->
+      if (appearance.mappedId?.contains("missing nomis mapping") == true) {
+        missingMappings.add(
+          Difference(
+            property = "case.appearances[].mappedId",
+            dps = appearance.id,
+            nomis = "missing nomis mapping",
+            id = appearance.id,
+          ),
+        )
+      }
+      // Check charges within appearances
+      appearance.charges.forEach { charge ->
+        if (charge.mappedId?.contains("missing nomis mapping") == true) {
+          missingMappings.add(
+            Difference(
+              property = "case.appearances[].charges[].mappedId",
+              dps = charge.id,
+              nomis = "missing nomis mapping",
+              id = charge.id,
+            ),
+          )
+        }
+      }
+    }
+
+    // Check DPS sentences for missing nomis mappings
+    dpsFields.sentences.forEach { sentence ->
+      if (sentence.mappedId?.contains("missing nomis mapping") == true) {
+        missingMappings.add(
+          Difference(
+            property = "case.sentences[].mappedId",
+            dps = sentence.id,
+            nomis = "missing nomis mapping",
+            id = sentence.id,
+          ),
+        )
+      }
+      // Check terms within sentences
+      sentence.terms.forEach { term ->
+        if (term.mappedId?.contains("missing nomis mapping") == true) {
+          missingMappings.add(
+            Difference(
+              property = "case.sentences[].terms[].mappedId",
+              dps = term.id,
+              nomis = "missing nomis mapping",
+              id = term.id,
+            ),
+          )
+        }
+      }
+    }
+
+    // Check NOMIS appearances for missing dps mappings
+    nomisFields.appearances.forEach { appearance ->
+      if (appearance.mappedId?.contains("missing dps mapping") == true) {
+        missingMappings.add(
+          Difference(
+            property = "case.appearances[].mappedId",
+            dps = "missing dps mapping",
+            nomis = appearance.id,
+            id = appearance.id,
+          ),
+        )
+      }
+      // Check charges within appearances
+      appearance.charges.forEach { charge ->
+        if (charge.mappedId?.contains("missing dps mapping") == true) {
+          missingMappings.add(
+            Difference(
+              property = "case.appearances[].charges[].mappedId",
+              dps = "missing dps mapping",
+              nomis = charge.id,
+              id = charge.id,
+            ),
+          )
+        }
+      }
+    }
+
+    // Check NOMIS sentences for missing dps mappings
+    nomisFields.sentences.forEach { sentence ->
+      if (sentence.mappedId?.contains("missing dps mapping") == true) {
+        missingMappings.add(
+          Difference(
+            property = "case.sentences[].mappedId",
+            dps = "missing dps mapping",
+            nomis = sentence.id,
+            id = sentence.id,
+          ),
+        )
+      }
+      // Check terms within sentences
+      sentence.terms.forEach { term ->
+        if (term.mappedId?.contains("missing dps mapping") == true) {
+          missingMappings.add(
+            Difference(
+              property = "case.sentences[].terms[].mappedId",
+              dps = "missing dps mapping",
+              nomis = term.id,
+              id = term.id,
+            ),
+          )
+        }
+      }
+    }
+
+    return missingMappings
+  }
+
   private fun LocalDate.asValidDate(): LocalDate? = if (this.isAfter(LocalDate.parse("1920-01-01")).and(this.isBefore(LocalDate.now().plusDays(1)))) {
     this
   } else {
@@ -769,6 +948,7 @@ data class AppearanceFields(
   val court: String,
   val outcome: String?,
   val id: String,
+  val mappedId: String? = null,
   val charges: List<ChargeFields> = emptyList(),
   // for sorting purposes, sometimes charge outcome is required to differentiate between appearances on the same day with the same charge
   val chargeAsString: String? = null,
@@ -788,6 +968,7 @@ data class ChargeFields(
   val offenceEndDate: LocalDate?,
   val outcome: String?,
   val id: String,
+  val mappedId: String? = null,
 ) {
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
@@ -808,6 +989,7 @@ data class SentenceFields(
   val fine: BigDecimal?,
   val status: String,
   val id: String,
+  val mappedId: String? = null,
   val offenceCodes: String? = null,
   // for sorting purposes, multiple sentences can be very similar
   val termsAsString: String? = null,
@@ -832,6 +1014,7 @@ data class SentenceTermFields(
   val days: Int?,
   val lifeSentenceFlag: Boolean?,
   val id: String,
+  val mappedId: String? = null,
 ) {
   override fun equals(other: Any?): Boolean {
     if (this === other) return true

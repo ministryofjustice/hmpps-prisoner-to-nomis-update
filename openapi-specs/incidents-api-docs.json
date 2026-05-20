@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-05-13.713.6636c8f"
+    "version" : "2026-05-19.721.29ecc12"
   },
   "servers" : [ {
     "url" : "/",
@@ -511,6 +511,20 @@
             "example" : "abc12a"
           },
           "example" : "abc12a"
+        }, {
+          "name" : "involvingPrisonerRole",
+          "in" : "query",
+          "description" : "Filter by given prisoner role",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "ABSCONDER", "ACTIVE_INVOLVEMENT", "ASSAILANT", "ASSISTED_STAFF", "DECEASED", "ESCAPE", "FIGHTER", "HOSTAGE", "IMPEDED_STAFF", "IN_POSSESSION", "INTENDED_RECIPIENT", "LICENSE_FAILURE", "PERPETRATOR", "PRESENT_AT_SCENE", "SUSPECTED_ASSAILANT", "SUSPECTED_INVOLVED", "TEMPORARY_RELEASE_FAILURE", "VICTIM", "UNLAWFULLY_DETAINED" ]
+            },
+            "default" : null
+          },
+          "example" : "[PERPETRATOR]"
         }, {
           "name" : "involvingPrisonerNumber",
           "in" : "query",
