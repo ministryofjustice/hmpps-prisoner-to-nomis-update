@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-04-14.1152.188da8e"
+    "version" : "2026-05-20.1369.2026dec"
   },
   "servers" : [ {
     "url" : "https://activities-api-dev.prison.service.justice.gov.uk",
@@ -1844,6 +1844,15 @@
           "schema" : {
             "type" : "string",
             "enum" : [ "AM", "PM", "ED" ]
+          }
+        }, {
+          "name" : "includeExternalMovements",
+          "in" : "query",
+          "description" : "Determines whether to include external activities (TAPs) in the response.",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
           }
         } ],
         "requestBody" : {
@@ -6972,17 +6981,10 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "oneOf" : [ {
-                    "type" : "array",
-                    "items" : {
-                      "$ref" : "#/components/schemas/ActivityScheduleLite"
-                    }
-                  }, {
-                    "type" : "array",
-                    "items" : {
-                      "$ref" : "#/components/schemas/ActivityScheduleLite"
-                    }
-                  } ]
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ActivityScheduleLite"
+                  }
                 }
               }
             }
@@ -7042,10 +7044,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/ActivitySuitabilityCriteria"
-                  }
+                  "$ref" : "#/components/schemas/ActivitySuitabilityCriteria"
                 }
               }
             }
@@ -8199,17 +8198,10 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "oneOf" : [ {
-                    "type" : "array",
-                    "items" : {
-                      "$ref" : "#/components/schemas/ActivityScheduleLite"
-                    }
-                  }, {
-                    "type" : "array",
-                    "items" : {
-                      "$ref" : "#/components/schemas/ActivityScheduleLite"
-                    }
-                  } ]
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ActivityScheduleLite"
+                  }
                 }
               }
             }
@@ -8516,7 +8508,7 @@
   "components" : {
     "schemas" : {
       "AddCaseNoteRequest" : {
-        "type" : "null",
+        "type" : "object",
         "description" : "Describes a case note to be added to a prisoner's profile",
         "properties" : {
           "type" : {
@@ -10675,7 +10667,7 @@
           },
           "eventSource" : {
             "type" : [ "string", "null" ],
-            "description" : "The source of this event - valid values are NOMIS or SAA (scheduling activities and appointments)",
+            "description" : "The source of this event - valid values are NOMIS, EXTERNAL_MOVEMENTS_API, or SAA (scheduling activities and appointments)",
             "example" : "NOMIS"
           },
           "eventType" : {
@@ -12172,6 +12164,11 @@
             "description" : "\n    The username of the user authenticated via HMPPS auth that cancelled this appointment.\n    Will be null if this appointment has not been cancelled\n    ",
             "example" : "AAA01U"
           },
+          "extraInformation" : {
+            "type" : [ "string", "null" ],
+            "description" : "\n    This could include details about who will be attending, or other relevant appointment information. This won't \n    appear on movement slips or the printed unlock list. Unlock lists will just show 'Extra information'.\n    ",
+            "example" : "An interpreter will be attending this appointment"
+          },
           "prisonerExtraInformation" : {
             "type" : [ "string", "null" ],
             "description" : "\n    Prisoner extra information for the prisoner or prisoners attending the appointment or appointments.\n    Shown only on the appointments details page and on printed movement slips. Wing staff will be notified there is\n    prisoner extra information via the unlock list.\n    ",
@@ -12656,8 +12653,8 @@
           },
           "extraInformation" : {
             "type" : [ "string", "null" ],
-            "description" : "\n    Extra information for the prisoner or prisoners attending the appointment. Shown only on the appointments details\n    page and on printed movement slips. Wing staff will be notified there is extra information via the unlock list.\n    ",
-            "example" : "This appointment will help adjusting to life outside of prison",
+            "description" : "\n    This could include details about who will be attending, or other relevant appointment information. This won't \n    appear on movement slips or the printed unlock list. Unlock lists will just show 'Extra information'.\n    ",
+            "example" : "An interpreter will be attending this appointment",
             "maxLength" : 4000,
             "minLength" : 0
           },
@@ -12915,8 +12912,8 @@
           },
           "extraInformation" : {
             "type" : [ "string", "null" ],
-            "description" : "\n    Extra information for the prisoner or prisoners attending the appointment or appointments in the series.\n    Shown only on the appointments details page and on printed movement slips. Wing staff will be notified there is\n    extra information via the unlock list.\n    ",
-            "example" : "This appointment will help adjusting to life outside of prison",
+            "description" : "\n    This could include details about who will be attending, or other relevant appointment information. This won't \n    appear on movement slips or the printed unlock list. Unlock lists will just show 'Extra information'.\n    ",
+            "example" : "An interpreter will be attending this appointment",
             "maxLength" : 4000,
             "minLength" : 0
           },
@@ -13987,8 +13984,8 @@
           },
           "extraInformation" : {
             "type" : [ "string", "null" ],
-            "description" : "\n    Updated extra information for the prisoner or prisoners attending the appointment or appointments.\n    Shown only on the appointments details page and on printed movement slips. Wing staff will be notified there is\n    extra information via the unlock list.\n    ",
-            "example" : "This appointment will help adjusting to life outside of prison",
+            "description" : "\n    This could include details about who will be attending, or other relevant appointment information. This won't \n    appear on movement slips or the printed unlock list. Unlock lists will just show 'Extra information'.\n    ",
+            "example" : "An interpreter will be attending this appointment",
             "maxLength" : 4000,
             "minLength" : 0
           },
@@ -14069,7 +14066,13 @@
           "scheduleInstanceId" : {
             "type" : [ "integer", "null" ],
             "format" : "int64",
+            "deprecated" : true,
             "description" : "The scheduled instance id required when allocation starts today"
+          },
+          "firstTimeSlotForToday" : {
+            "type" : [ "string", "null" ],
+            "description" : "The scheduled instances time slot for any allocations or exclusions changes that should apply today",
+            "enum" : [ "AM", "PM", "ED" ]
           }
         }
       },
@@ -14433,9 +14436,30 @@
           "filename" : {
             "type" : "string",
             "description" : "The filename of attachment file"
+          },
+          "headers" : {
+            "type" : [ "array", "null" ],
+            "description" : "The additional headers to use when calling the url for fetching this attachment",
+            "items" : {
+              "$ref" : "#/components/schemas/AttachmentHeader"
+            }
           }
         },
         "required" : [ "attachmentNumber", "contentType", "filename", "filesize", "name", "url" ]
+      },
+      "AttachmentHeader" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "description" : "The name of the header"
+          },
+          "value" : {
+            "type" : "string",
+            "description" : "The value of the header"
+          }
+        },
+        "required" : [ "name", "value" ]
       },
       "HmppsSubjectAccessRequestContent" : {
         "type" : "object",
@@ -15164,9 +15188,14 @@
             "type" : "boolean",
             "description" : "Flag to indicate if attendance is required",
             "example" : false
+          },
+          "outsideWork" : {
+            "type" : "boolean",
+            "description" : "Flag to indicate if the activity carried out outside of the prison",
+            "example" : false
           }
         },
-        "required" : [ "activityId", "activityScheduleId", "attendanceRequired", "attendanceSummary", "cancelled", "categoryId", "endTime", "inCell", "offWing", "onWing", "scheduledInstanceId", "sessionDate", "startTime", "summary", "timeSlot" ]
+        "required" : [ "activityId", "activityScheduleId", "attendanceRequired", "attendanceSummary", "cancelled", "categoryId", "endTime", "inCell", "offWing", "onWing", "outsideWork", "scheduledInstanceId", "sessionDate", "startTime", "summary", "timeSlot" ]
       },
       "RolloutPrisonPlan" : {
         "type" : "object",
@@ -15278,6 +15307,11 @@
             "description" : "The date and time when this activity was created",
             "example" : "2022-09-01T09:01:02"
           },
+          "outsideWork" : {
+            "type" : "boolean",
+            "description" : "Determines whether the activity takes place outside of the prison",
+            "example" : true
+          },
           "activityState" : {
             "type" : "string",
             "description" : "Whether the activity is live or archived",
@@ -15285,7 +15319,7 @@
             "example" : "LIVE"
           }
         },
-        "required" : [ "activityState", "allocated", "capacity", "category", "createdTime", "id", "waitlisted" ]
+        "required" : [ "activityState", "allocated", "capacity", "category", "createdTime", "id", "outsideWork", "waitlisted" ]
       },
       "AppointmentCountSummary" : {
         "type" : "object",
