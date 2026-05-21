@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-05-20.1463.020a21c"
+    "version" : "2026-05-20.1469.f1b251c"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -31974,12 +31974,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "paged" : {
+            "type" : "boolean"
+          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "paged" : {
-            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -32210,17 +32210,19 @@
         "type" : "object",
         "properties" : {
           "username" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "The username associated with the account",
+            "example" : "JOHNSMITH_GEN"
           },
           "typeCode" : {
             "type" : "string",
             "description" : "The type of account",
             "example" : "GENERAL"
           },
-          "statusCode" : {
+          "status" : {
             "type" : "string",
             "description" : "Status of the user account",
-            "example" : "ACTIVE"
+            "example" : "OPEN"
           },
           "sourceCode" : {
             "type" : "string",
@@ -32235,11 +32237,13 @@
           },
           "activeCaseloadId" : {
             "type" : "string",
-            "description" : "The current active caseload on the account"
+            "description" : "The current active caseload on the account",
+            "example" : "MDI"
           },
           "caseloads" : {
             "type" : "array",
             "description" : "Caseloads associated with the user",
+            "example" : "['MDI','LEI']",
             "items" : {
               "type" : "string"
             }
@@ -32247,6 +32251,7 @@
           "roles" : {
             "type" : "array",
             "description" : "Roles associated with the user",
+            "example" : "['USER_MANAGER','VIEW_INCIDENTS']",
             "items" : {
               "type" : "string"
             }
@@ -32256,7 +32261,7 @@
             "description" : "Audit data associated with the account"
           }
         },
-        "required" : [ "audit", "caseloads", "roles", "sourceCode", "statusCode", "typeCode", "username" ]
+        "required" : [ "audit", "caseloads", "roles", "sourceCode", "status", "typeCode", "username" ]
       },
       "UserDetails" : {
         "type" : "object",
@@ -32264,23 +32269,28 @@
           "id" : {
             "type" : "integer",
             "format" : "int64",
-            "description" : "The staff user id"
+            "description" : "The unique staff user id",
+            "example" : 12345
           },
           "email" : {
             "type" : "string",
-            "description" : "Primary email address of the user"
+            "description" : "Primary email address of the user",
+            "example" : "john.smith@internet.co.uk"
           },
           "firstName" : {
             "type" : "string",
-            "description" : "User's first name"
+            "description" : "User's first name",
+            "example" : "John"
           },
           "lastName" : {
             "type" : "string",
-            "description" : "User's last name"
+            "description" : "User's last name",
+            "example" : "Smith"
           },
-          "statusCode" : {
+          "status" : {
             "type" : "string",
-            "description" : "Status of the user"
+            "description" : "Status of the user",
+            "example" : "ACTIVE"
           },
           "accounts" : {
             "type" : "array",
@@ -32294,7 +32304,7 @@
             "description" : "Audit data associated with the staff user"
           }
         },
-        "required" : [ "accounts", "audit", "firstName", "id", "lastName", "statusCode" ]
+        "required" : [ "accounts", "audit", "firstName", "id", "lastName", "status" ]
       },
       "GeneralLedgerTransactionDto" : {
         "type" : "object",
