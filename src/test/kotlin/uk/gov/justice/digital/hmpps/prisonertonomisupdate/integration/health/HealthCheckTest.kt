@@ -38,7 +38,6 @@ class HealthCheckTest : IntegrationTestBase() {
       .exchange()
       .expectStatus().isOk
       .expectBody()
-      .consumeWith { System.out.println(it.responseBody) }
       .jsonPath("status").isEqualTo("UP")
       .jsonPath("components.visitsApi.status").isEqualTo("UP")
       .jsonPath("components.activitiesApi.status").isEqualTo("UP")
