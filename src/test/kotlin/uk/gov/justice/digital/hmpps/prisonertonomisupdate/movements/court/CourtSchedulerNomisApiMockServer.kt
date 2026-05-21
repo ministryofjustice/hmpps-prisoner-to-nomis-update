@@ -1,0 +1,127 @@
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court
+
+import com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import com.github.tomakehurst.wiremock.client.WireMock.get
+import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
+import com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching
+import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
+import org.springframework.http.HttpStatus
+import org.springframework.stereotype.Component
+import tools.jackson.databind.json.JsonMapper
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingCourtMovementIn
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingCourtMovementOut
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingCourtMovements
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingCourtScheduleOut
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.NomisAudit
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderCourtMovementsResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
+import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
+import java.time.LocalDateTime
+
+@Component
+class CourtSchedulerNomisApiMockServer(private val jsonMapper: JsonMapper) {
+
+  fun stubGetOffenderCourtMovements(
+    offenderNo: String = "A1234BC",
+    response: OffenderCourtMovementsResponse = offenderCourtMovementsResponse(),
+  ) {
+    nomisApi.stubFor(
+      get(urlPathEqualTo("/movements/$offenderNo/court")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(jsonMapper.writeValueAsString(response)),
+      ),
+    )
+  }
+
+  fun stubGetOffenderCourtMovements(
+    status: HttpStatus,
+    error: ErrorResponse = ErrorResponse(status = status.value()),
+  ) {
+    nomisApi.stubFor(
+      get(urlPathMatching("/movements/.*/court")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(status.value())
+          .withBody(jsonMapper.writeValueAsString(error)),
+      ),
+    )
+  }
+
+  fun verify(pattern: RequestPatternBuilder) = nomisApi.verify(pattern)
+  fun verify(count: Int, pattern: RequestPatternBuilder) = nomisApi.verify(count, pattern)
+
+  companion object {
+    private val now = LocalDateTime.now()
+    private val yesterday = now.minusDays(1)
+
+    fun offenderCourtMovementsResponse(
+      bookingId: Long = 12345L,
+      activeBooking: Boolean = true,
+      latestBooking: Boolean = true,
+      courtSchedules: List<
+        BookingCourtScheduleOut,
+        > = listOf(bookingCourtSchedule()),
+      unscheduledCourtMovementOuts: List<BookingCourtMovementOut> = listOf(bookingCourtMovementOut(seq = 1)),
+      unscheduledCourtMovementIns: List<BookingCourtMovementIn> = listOf(bookingCourtMovementIn(seq = 2)),
+    ): OffenderCourtMovementsResponse = OffenderCourtMovementsResponse(
+      bookings = listOf(
+        BookingCourtMovements(
+          bookingId = bookingId,
+          activeBooking = activeBooking,
+          latestBooking = latestBooking,
+          courtSchedules = courtSchedules,
+          unscheduledCourtMovementOuts = unscheduledCourtMovementOuts,
+          unscheduledCourtMovementIns = unscheduledCourtMovementIns,
+        ),
+      ),
+    )
+
+    fun bookingCourtSchedule() = BookingCourtScheduleOut(
+      eventId = 1,
+      eventDate = yesterday.toLocalDate(),
+      startTime = yesterday,
+      eventType = "CRT",
+      eventStatus = "COMP",
+      prison = "BXI",
+      court = "LEEDMC",
+      audit = NomisAudit(
+        createDatetime = yesterday,
+        createUsername = "USER",
+      ),
+      courtMovementOut = bookingCourtMovementOut(seq = 3),
+      courtMovementIn = bookingCourtMovementIn(seq = 4),
+      comment = "Some schedule comment",
+      courtCaseId = 87878L,
+    )
+
+    fun bookingCourtMovementOut(seq: Int) = BookingCourtMovementOut(
+      sequence = seq,
+      movementDate = yesterday.toLocalDate(),
+      movementTime = yesterday,
+      movementReason = "CRT",
+      fromPrison = "BXI",
+      toCourt = "LEEDMC",
+      audit = NomisAudit(
+        createDatetime = yesterday,
+        createUsername = "USER",
+      ),
+      commentText = "Some movement out comment",
+    )
+
+    fun bookingCourtMovementIn(seq: Int) = BookingCourtMovementIn(
+      sequence = seq,
+      movementDate = yesterday.toLocalDate(),
+      movementTime = yesterday,
+      movementReason = "CRT",
+      fromCourt = "LEEDMC",
+      toPrison = "BXI",
+      audit = NomisAudit(
+        createDatetime = yesterday,
+        createUsername = "USER",
+      ),
+      commentText = "Some movement in comment",
+    )
+  }
+}
