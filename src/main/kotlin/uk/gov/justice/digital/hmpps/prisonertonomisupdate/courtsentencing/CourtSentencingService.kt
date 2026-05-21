@@ -71,8 +71,6 @@ import kotlin.collections.plus
 
 typealias MappingSentenceId = uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceId
 
-private const val DPS_VIDEO_LINK = "1da09b6e-55cb-4838-a157-ee6944f2094c"
-
 @Service
 class CourtSentencingService(
   private val courtSentencingApiService: CourtSentencingApiService,
@@ -686,6 +684,18 @@ class CourtSentencingService(
                 adjustmentIds = listOf(adjustmentId),
               ),
             ),
+          ),
+        )
+      }
+
+      val courtAppearancesRequiringSync = mappingsWrapper.mappings.nomisCourtAppearanceIds
+      courtAppearancesRequiringSync.forEach { courtAppearanceId ->
+        queueService.sendMessageTrackOnFailure(
+          queueId = "fromnomiscourtsentencing",
+          eventType = "courtsentencing.resync.breach-court-appearance.inserted",
+          message = SyncRecallBreachCourtAppearanceEvent(
+            offenderNo = offenderNo,
+            courtAppearanceId = courtAppearanceId,
           ),
         )
       }
@@ -1857,6 +1867,11 @@ data class ClonedCourtCaseDetails(
 data class SentenceIdAndAdjustmentType(
   val sentenceId: SentenceId,
   val adjustmentIds: List<Long>,
+)
+
+data class SyncRecallBreachCourtAppearanceEvent(
+  val offenderNo: String,
+  val courtAppearanceId: Long,
 )
 
 fun BookingCourtCaseCloneResponse.toClonedCourtCaseDetails() = ClonedCourtCaseDetails(
