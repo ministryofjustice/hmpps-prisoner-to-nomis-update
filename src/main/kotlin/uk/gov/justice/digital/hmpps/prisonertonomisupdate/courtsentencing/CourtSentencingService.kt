@@ -687,18 +687,17 @@ class CourtSentencingService(
           ),
         )
       }
-
-      val courtAppearancesRequiringSync = mappingsWrapper.mappings.nomisCourtAppearanceIds
-      courtAppearancesRequiringSync.forEach { courtAppearanceId ->
-        queueService.sendMessageTrackOnFailure(
-          queueId = "fromnomiscourtsentencing",
-          eventType = "courtsentencing.resync.breach-court-appearance.inserted",
-          message = SyncRecallBreachCourtAppearanceEvent(
-            offenderNo = offenderNo,
-            courtAppearanceId = courtAppearanceId,
-          ),
-        )
-      }
+    }
+    val courtAppearancesRequiringSync = mappingsWrapper.mappings.nomisCourtAppearanceIds
+    courtAppearancesRequiringSync.forEach { courtAppearanceId ->
+      queueService.sendMessageTrackOnFailure(
+        queueId = "fromnomiscourtsentencing",
+        eventType = "courtsentencing.resync.breach-court-appearance.inserted",
+        message = SyncRecallBreachCourtAppearanceEvent(
+          offenderNo = offenderNo,
+          courtAppearanceId = courtAppearanceId,
+        ),
+      )
     }
 
     mappingsWrapper.clonedClonedCourtCaseDetails?.also { details ->
