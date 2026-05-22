@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-05-20.725.85493c0"
+    "version" : "2026-05-21.732.b526358"
   },
   "servers" : [ {
     "url" : "/",
@@ -3610,15 +3610,15 @@
             "type" : "boolean",
             "description" : "Internal flag which, if false, is used to indicate that addition of prisoner involvements is unfinished"
           },
-          "nomisType" : {
-            "type" : "string",
-            "description" : "NOMIS incident report type code, which may be null for newer incident types",
-            "nullable" : true,
-            "deprecated" : true
-          },
           "nomisStatus" : {
             "type" : "string",
             "description" : "Previous NOMIS incident report status code, which may be null for statuses that cannot be mapped",
+            "nullable" : true,
+            "deprecated" : true
+          },
+          "nomisType" : {
+            "type" : "string",
+            "description" : "NOMIS incident report type code, which may be null for newer incident types",
             "nullable" : true,
             "deprecated" : true
           }
