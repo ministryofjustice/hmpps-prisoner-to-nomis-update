@@ -51,8 +51,8 @@ class CourtSchedulerDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     private val yesterday = now.minusDays(1)
     private val tomorrow = now.plusDays(1)
 
-    fun reconciliation() = ReconciliationResponse(
-      courtEvents = listOf(
+    fun reconciliation(
+      courtEvents: List<ReconciliationCourtEvent> = listOf(
         ReconciliationCourtEvent(
           courtEvent = courtEvent(),
           movements = listOf(
@@ -61,10 +61,13 @@ class CourtSchedulerDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
           ),
         ),
       ),
-      unscheduledMovements = listOf(
+      unscheduledMovements: List<CourtEventMovement> = listOf(
         courtEventMovement(),
         courtEventMovement().copy(fromAgencyId = "LEEDMC", toAgencyId = "BXI", directionCode = "IN"),
       ),
+    ) = ReconciliationResponse(
+      courtEvents = courtEvents,
+      unscheduledMovements = unscheduledMovements,
     )
 
     fun courtEvent(

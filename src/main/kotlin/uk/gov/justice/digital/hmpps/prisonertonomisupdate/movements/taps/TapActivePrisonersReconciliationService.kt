@@ -14,6 +14,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.Reconciliation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationSuccessPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.generateReconciliationReport
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.findMatches
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.findMissing
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.PersonTapDetail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationMovement
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationOccurrence
@@ -310,16 +312,6 @@ class TapActivePrisonersReconciliationService(
 
   private fun List<OffenderTapMovementId>.formatNomisMovementId() = joinToString(prefix = "[", postfix = "]") { "${it.bookingId}_${it.sequence}" }
 
-  // This checks each element of `sources` exists in `targets` after transformation by `findTarget`
-  private fun <SOURCE, TARGET> findMissing(
-    sources: List<SOURCE>,
-    targets: List<TARGET>,
-    findTarget: (SOURCE) -> TARGET?,
-  ) = sources.map { src -> src to findTarget(src) }
-    .map { (src, trg) -> src to targets.contains(trg) }
-    .filter { (_, found) -> !found }
-    .map { (src, _) -> src }
-
   private fun TapPrisonerMappingIdsDto.unexpectedApplications(
     nomisApplicationIds: List<Long>,
     dpsAuthorisationIds: List<UUID>,
@@ -402,16 +394,6 @@ class TapActivePrisonersReconciliationService(
 
     return mismatches
   }
-
-  // This finds each element of `sources` that exists in `targets` after transformation by `findTarget`
-  private fun <SOURCE, TARGET> findMatches(
-    sources: List<SOURCE>,
-    targets: List<TARGET>,
-    findTarget: (SOURCE) -> TARGET?,
-  ): List<Pair<SOURCE, TARGET>> = sources.map { src -> src to findTarget(src) }
-    .filter { (_, trg) -> trg in targets }
-    .filter { (_, trg) -> trg != null }
-    .map { (src, trg) -> src to trg!! }
 
   private fun TapPrisonerMappingIdsDto.matchingSchedulesOut(
     nomisScheduledOutIds: List<Long>,
