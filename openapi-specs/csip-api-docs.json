@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-01-22.346.21c60b8"
+    "version" : "2026-05-22.459.1ca0c13"
   },
   "servers" : [ {
     "url" : "https://csip-api-dev.hmpps.service.justice.gov.uk",
@@ -2204,16 +2204,16 @@
             "type" : "string"
           },
           "restrictedPatient" : {
-            "type" : "boolean"
+            "type" : [ "boolean", "null" ]
           },
           "prisonCode" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "cellLocation" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "supportingPrisonCode" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           }
         },
         "required" : [ "firstName", "lastName", "status" ]
@@ -2222,23 +2222,23 @@
         "type" : "object",
         "properties" : {
           "name" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Name of review attendee/contributor.",
             "maxLength" : 100,
             "minLength" : 0
           },
           "role" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Role of review attendee/contributor.",
             "maxLength" : 50,
             "minLength" : 0
           },
           "isAttended" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "If the person attended the review."
           },
           "contribution" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Description of attendee contribution.",
             "maxLength" : 4000,
             "minLength" : 0
@@ -2248,7 +2248,7 @@
             "format" : "int64"
           },
           "id" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid"
           }
         },
@@ -2264,7 +2264,7 @@
             "minLength" : 1
           },
           "comment" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Additional information about the contributory factor to the incident or motivation for CSIP referral.",
             "maxLength" : 4000,
             "minLength" : 0
@@ -2274,7 +2274,7 @@
             "format" : "int64"
           },
           "id" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid"
           }
         },
@@ -2289,20 +2289,27 @@
             "minLength" : 0
           },
           "logCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "User entered identifier for the CSIP record. Defaults to the prison code.",
             "maxLength" : 10,
             "minLength" : 0
           },
           "referral" : {
-            "$ref" : "#/components/schemas/SyncReferralRequest",
-            "description" : "The referral that results in the creation of this CSIP record."
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/SyncReferralRequest"
+            }, {
+              "type" : "null"
+            } ]
           },
           "plan" : {
-            "$ref" : "#/components/schemas/SyncPlanRequest"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/SyncPlanRequest"
+            }, {
+              "type" : "null"
+            } ]
           },
           "prisonCodeWhenRecorded" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "actionedAt" : {
             "type" : "string",
@@ -2312,18 +2319,22 @@
             "type" : "string"
           },
           "activeCaseloadId" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "legacyId" : {
             "type" : "integer",
             "format" : "int64"
           },
           "id" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid"
           },
           "personSummary" : {
-            "$ref" : "#/components/schemas/PersonSummaryRequest"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PersonSummaryRequest"
+            }, {
+              "type" : "null"
+            } ]
           }
         },
         "required" : [ "actionedAt", "actionedBy", "legacyId", "prisonNumber" ]
@@ -2332,49 +2343,49 @@
         "type" : "object",
         "properties" : {
           "conclusion" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The conclusion of the referral and reasons for the outcome decision.",
             "maxLength" : 4000,
             "minLength" : 0
           },
           "outcomeTypeCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The outcome decision for the referral.",
             "maxLength" : 12,
             "minLength" : 1
           },
           "signedOffByRoleCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The role of the person making the outcome decision.",
             "maxLength" : 12,
             "minLength" : 0
           },
           "date" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date the outcome decision was made.",
             "example" : "2021-09-27"
           },
           "recordedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username of the user who recorded the outcome decision.",
             "maxLength" : 64,
             "minLength" : 0
           },
           "recordedByDisplayName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The displayable name of the user who recorded the outcome decision.",
             "maxLength" : 255,
             "minLength" : 0
           },
           "nextSteps" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The next steps that should be taken following the outcome decision.",
             "maxLength" : 4000,
             "minLength" : 0
           },
           "actionOther" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Any other actions that are recommended to be considered.",
             "maxLength" : 4000,
             "minLength" : 0
@@ -2413,7 +2424,7 @@
             "minLength" : 1
           },
           "interviewText" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Information provided in interview.",
             "maxLength" : 4000,
             "minLength" : 0
@@ -2423,7 +2434,7 @@
             "format" : "int64"
           },
           "id" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid"
           }
         },
@@ -2433,37 +2444,37 @@
         "type" : "object",
         "properties" : {
           "staffInvolved" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The names of the staff involved in the investigation.",
             "maxLength" : 4000,
             "minLength" : 0
           },
           "evidenceSecured" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Any evidence that was secured as part of the investigation.",
             "maxLength" : 4000,
             "minLength" : 0
           },
           "occurrenceReason" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The reasons why the incident occurred.",
             "maxLength" : 4000,
             "minLength" : 0
           },
           "personsUsualBehaviour" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The normal behaviour of the person in prison.",
             "maxLength" : 4000,
             "minLength" : 0
           },
           "personsTrigger" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "What triggers the person in prison has that could have motivated the incident.",
             "maxLength" : 4000,
             "minLength" : 0
           },
           "protectiveFactors" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Any protective factors to reduce the person's risk factors and prevent triggers for instance of violence",
             "maxLength" : 4000,
             "minLength" : 0
@@ -2506,7 +2517,7 @@
             "example" : "2021-09-27"
           },
           "closedDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date the identified need was resolved or closed.",
             "example" : "2021-09-27"
@@ -2518,7 +2529,7 @@
             "minLength" : 0
           },
           "progression" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "How the plan to address the identified need is progressing.",
             "maxLength" : 4000,
             "minLength" : 0
@@ -2528,7 +2539,7 @@
             "format" : "int64"
           },
           "id" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid"
           }
         },
@@ -2538,19 +2549,19 @@
         "type" : "object",
         "properties" : {
           "caseManager" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The case manager assigned to the CSIP plan.",
             "maxLength" : 100,
             "minLength" : 0
           },
           "reasonForPlan" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The reasons motivating the creation of a CSIP plan.",
             "maxLength" : 240,
             "minLength" : 0
           },
           "firstCaseReviewDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "identifiedNeeds" : {
@@ -2584,7 +2595,7 @@
             "example" : "2021-09-27"
           },
           "incidentTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The time the incident that motivated the CSIP referral occurred",
             "example" : "14:19:25"
           },
@@ -2613,39 +2624,39 @@
             "minLength" : 1
           },
           "isProactiveReferral" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Was this referral proactive or preventative."
           },
           "isStaffAssaulted" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Were any members of staff assaulted in the incident."
           },
           "assaultedStaffName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Name or names of assaulted members of staff if any.",
             "maxLength" : 1000,
             "minLength" : 0
           },
           "incidentInvolvementCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The type of involvement the person had in the incident",
             "maxLength" : 12,
             "minLength" : 1
           },
           "descriptionOfConcern" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The reasons why there is cause for concern.",
             "maxLength" : 4000,
             "minLength" : 0
           },
           "knownReasons" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The reasons already known about the causes of the incident or motivation for CSIP referral.",
             "maxLength" : 4000,
             "minLength" : 0
           },
           "otherInformation" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Any other information about the incident or reasons for CSIP referral.",
             "maxLength" : 4000,
             "minLength" : 0
@@ -2656,20 +2667,20 @@
             "enum" : [ "YES", "NO", "DO_NOT_KNOW" ]
           },
           "isReferralComplete" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Is the referral complete."
           },
           "completedDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "completedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "maxLength" : 64,
             "minLength" : 0
           },
           "completedByDisplayName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "maxLength" : 255,
             "minLength" : 0
           },
@@ -2681,13 +2692,25 @@
             }
           },
           "saferCustodyScreeningOutcome" : {
-            "$ref" : "#/components/schemas/SyncScreeningOutcomeRequest"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/SyncScreeningOutcomeRequest"
+            }, {
+              "type" : "null"
+            } ]
           },
           "investigation" : {
-            "$ref" : "#/components/schemas/SyncInvestigationRequest"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/SyncInvestigationRequest"
+            }, {
+              "type" : "null"
+            } ]
           },
           "decisionAndActions" : {
-            "$ref" : "#/components/schemas/SyncDecisionAndActionsRequest"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/SyncDecisionAndActionsRequest"
+            }, {
+              "type" : "null"
+            } ]
           }
         },
         "required" : [ "contributoryFactors", "incidentDate", "incidentLocationCode", "incidentTypeCode", "isSaferCustodyTeamInformed", "refererAreaCode", "referralDate", "referredBy" ]
@@ -2714,18 +2737,18 @@
             "minLength" : 0
           },
           "nextReviewDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date of the next review.",
             "example" : "2021-09-27"
           },
           "csipClosedDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date the CSIP plan was closed following a review outcome decision to close it."
           },
           "summary" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Additional information about the review.",
             "maxLength" : 4000,
             "minLength" : 0
@@ -2751,7 +2774,7 @@
             "format" : "int64"
           },
           "id" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid"
           }
         },
@@ -2767,7 +2790,7 @@
             "minLength" : 1
           },
           "reasonForDecision" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The reasons for the safer custody screening outcome decision.",
             "maxLength" : 4000,
             "minLength" : 0
@@ -2801,16 +2824,16 @@
             "format" : "int32"
           },
           "errorCode" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "userMessage" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "developerMessage" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "moreInfo" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           }
         },
         "required" : [ "status" ]
@@ -2877,13 +2900,13 @@
             "minLength" : 1
           },
           "comment" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Additional information about the contributory factor to the incident or motivation for CSIP referral.",
             "maxLength" : 4000,
             "minLength" : 0
           },
           "factorUuid" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid"
           }
         },
@@ -2900,7 +2923,7 @@
             "example" : "2021-09-27"
           },
           "incidentTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The time the incident that motivated the CSIP referral occurred",
             "example" : "14:19:25"
           },
@@ -2929,39 +2952,39 @@
             "minLength" : 1
           },
           "isProactiveReferral" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Was this referral proactive or preventative."
           },
           "isStaffAssaulted" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Were any members of staff assaulted in the incident."
           },
           "assaultedStaffName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Name or names of assaulted members of staff if any.",
             "maxLength" : 1000,
             "minLength" : 0
           },
           "incidentInvolvementCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The type of involvement the person had in the incident",
             "maxLength" : 12,
             "minLength" : 1
           },
           "descriptionOfConcern" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The reasons why there is cause for concern.",
             "maxLength" : 4000,
             "minLength" : 0
           },
           "knownReasons" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The reasons already known about the causes of the incident or motivation for CSIP referral.",
             "maxLength" : 4000,
             "minLength" : 0
           },
           "otherInformation" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Any other information about the incident or reasons for CSIP referral.",
             "maxLength" : 4000,
             "minLength" : 0
@@ -2972,7 +2995,7 @@
             "enum" : [ "YES", "NO", "DO_NOT_KNOW" ]
           },
           "isReferralComplete" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Is the referral complete."
           },
           "contributoryFactors" : {
@@ -2996,19 +3019,19 @@
             "example" : "8cdadcf3-b003-4116-9956-c99bd8df6a00"
           },
           "name" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Name of review attendee/contributor."
           },
           "role" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Role of review attendee/contributor."
           },
           "isAttended" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "If the person attended the review."
           },
           "contribution" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Description of attendee contribution."
           }
         },
@@ -3029,7 +3052,7 @@
             "description" : "The type of contributory factor to the incident or motivation for CSIP referral."
           },
           "comment" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Additional information about the contributory factor to the incident or motivation for CSIP referral."
           }
         },
@@ -3050,11 +3073,11 @@
             "description" : "The prison number of the person the CSIP record is for."
           },
           "prisonCodeWhenRecorded" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The prison code where the person was resident at the time the CSIP record was created."
           },
           "logCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "User entered identifier for the CSIP record. Defaults to the prison code."
           },
           "referral" : {
@@ -3062,8 +3085,11 @@
             "description" : "The referral that results in the creation of this CSIP record."
           },
           "plan" : {
-            "$ref" : "#/components/schemas/Plan",
-            "description" : "The CSIP Plan of this CSIP record."
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/Plan"
+            }, {
+              "type" : "null"
+            } ]
           },
           "status" : {
             "$ref" : "#/components/schemas/ReferenceData",
@@ -3077,33 +3103,39 @@
         "description" : "The Decision and Actions for the CSIP referral",
         "properties" : {
           "conclusion" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The conclusion of the referral and reasons for the outcome decision."
           },
           "outcome" : {
-            "$ref" : "#/components/schemas/ReferenceData",
-            "description" : "The outcome decision for the referral."
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/ReferenceData"
+            }, {
+              "type" : "null"
+            } ]
           },
           "signedOffByRole" : {
-            "$ref" : "#/components/schemas/ReferenceData",
-            "description" : "The role of the person making the outcome decision."
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/ReferenceData"
+            }, {
+              "type" : "null"
+            } ]
           },
           "recordedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username of the user who recorded the outcome decision."
           },
           "recordedByDisplayName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The displayable name of the user who recorded the outcome decision."
           },
           "date" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date the outcome decision was made.",
             "example" : "2021-09-27"
           },
           "nextSteps" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The next steps that should be taken following the outcome decision."
           },
           "actions" : {
@@ -3116,7 +3148,7 @@
             "uniqueItems" : true
           },
           "actionOther" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Any other actions that are recommended to be considered."
           },
           "history" : {
@@ -3159,7 +3191,7 @@
             "example" : "2021-09-27"
           },
           "closedDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date the identified need was resolved or closed.",
             "example" : "2021-09-27"
@@ -3169,7 +3201,7 @@
             "description" : "The planned intervention for the identified need."
           },
           "progression" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "How the plan to address the identified need is progressing."
           }
         },
@@ -3200,7 +3232,7 @@
             "description" : "What role the interviewee played in the incident or referral."
           },
           "interviewText" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Information provided in interview."
           }
         },
@@ -3211,35 +3243,35 @@
         "description" : "The investigation on the incident that motivated the CSIP referral",
         "properties" : {
           "staffInvolved" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The names of the staff involved in the investigation."
           },
           "evidenceSecured" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Any evidence that was secured as part of the investigation."
           },
           "occurrenceReason" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The reasons why the incident occurred."
           },
           "personsUsualBehaviour" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The normal behaviour of the person in prison."
           },
           "personsTrigger" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "What triggers the person in prison has that could have motivated the incident."
           },
           "protectiveFactors" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Any protective factors to reduce the person's risk factors and prevent triggers for instance of violence"
           },
           "recordedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Username of the user that created the investigation"
           },
           "recordedByDisplayName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Display name of the user that created the investigation"
           },
           "interviews" : {
@@ -3257,21 +3289,21 @@
         "description" : "The CSIP Plan of a CSIP record",
         "properties" : {
           "caseManager" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The case manager assigned to the CSIP plan."
           },
           "reasonForPlan" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The reasons motivating the creation of a CSIP plan."
           },
           "firstCaseReviewDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The first date the CSIP plan should be reviewed.",
             "example" : "2021-09-27"
           },
           "nextCaseReviewDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The next date the CSIP plan should be reviewed.",
             "example" : "2021-09-27"
@@ -3291,7 +3323,7 @@
             }
           },
           "createdAt" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time"
           }
         },
@@ -3306,17 +3338,17 @@
             "description" : "The short code of a reference data"
           },
           "description" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The description of the reference data code"
           },
           "listSequence" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "The sequence number of the code. Used for ordering codes correctly in lists and drop downs. ",
             "example" : 3
           },
           "deactivatedAt" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time the code was deactivated",
             "example" : "2023-11-08T09:53:34"
@@ -3341,7 +3373,7 @@
             "example" : "2021-09-27"
           },
           "incidentTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The time the incident that motivated the CSIP referral occurred",
             "example" : "14:19:25"
           },
@@ -3362,31 +3394,34 @@
             "description" : "The area of work of the person reporting the incident or creating the CSIP referral."
           },
           "isProactiveReferral" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Was this referral proactive or preventative."
           },
           "isStaffAssaulted" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Were any members of staff assaulted in the incident."
           },
           "assaultedStaffName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Name or names of assaulted members of staff if any."
           },
           "incidentInvolvement" : {
-            "$ref" : "#/components/schemas/ReferenceData",
-            "description" : "The type of involvement the person had in the incident"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/ReferenceData"
+            }, {
+              "type" : "null"
+            } ]
           },
           "descriptionOfConcern" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The reasons why there is cause for concern."
           },
           "knownReasons" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The reasons already known about the causes of the incident or motivation for CSIP referral."
           },
           "otherInformation" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Any other information about the incident or reasons for CSIP referral."
           },
           "isSaferCustodyTeamInformed" : {
@@ -3395,20 +3430,20 @@
             "enum" : [ "YES", "NO", "DO_NOT_KNOW" ]
           },
           "isReferralComplete" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Is the referral complete."
           },
           "referralCompletedDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date the referral was completed."
           },
           "referralCompletedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username of the person completing the referral"
           },
           "referralCompletedByDisplayName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The name of the person completing the referral"
           },
           "contributoryFactors" : {
@@ -3419,16 +3454,25 @@
             }
           },
           "investigation" : {
-            "$ref" : "#/components/schemas/Investigation",
-            "description" : "The investigation on the incident that motivated the CSIP referral."
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/Investigation"
+            }, {
+              "type" : "null"
+            } ]
           },
           "saferCustodyScreeningOutcome" : {
-            "$ref" : "#/components/schemas/SaferCustodyScreeningOutcome",
-            "description" : "The Safer Custody Screening Outcome for the CSIP referral."
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/SaferCustodyScreeningOutcome"
+            }, {
+              "type" : "null"
+            } ]
           },
           "decisionAndActions" : {
-            "$ref" : "#/components/schemas/DecisionAndActions",
-            "description" : "The Decision and Actions for the CSIP referral."
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/DecisionAndActions"
+            }, {
+              "type" : "null"
+            } ]
           }
         },
         "required" : [ "contributoryFactors", "incidentDate", "incidentLocation", "incidentType", "isSaferCustodyTeamInformed", "refererArea", "referralDate", "referredBy" ]
@@ -3464,18 +3508,18 @@
             "description" : "The displayable name of the person who recorded the review."
           },
           "nextReviewDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date of the next review.",
             "example" : "2021-09-27"
           },
           "csipClosedDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date the CSIP plan was closed following a review outcome decision to close it."
           },
           "summary" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Additional information about the review."
           },
           "actions" : {
@@ -3520,7 +3564,7 @@
             "example" : "2021-09-27"
           },
           "reasonForDecision" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The reasons for the safer custody screening outcome decision."
           },
           "history" : {
@@ -3574,7 +3618,7 @@
         "description" : "The request body to create a Decision and Actions for a CSIP referral",
         "properties" : {
           "conclusion" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The conclusion of the referral and reasons for the outcome decision.",
             "maxLength" : 4000,
             "minLength" : 0
@@ -3586,37 +3630,37 @@
             "minLength" : 1
           },
           "signedOffByRoleCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The role of the person making the outcome decision.",
             "maxLength" : 12,
             "minLength" : 0
           },
           "recordedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username of the user who recorded the outcome decision.",
             "maxLength" : 64,
             "minLength" : 0
           },
           "recordedByDisplayName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The displayable name of the user who recorded the outcome decision.",
             "maxLength" : 255,
             "minLength" : 0
           },
           "date" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date the outcome decision was made.",
             "example" : "2021-09-27"
           },
           "nextSteps" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The next steps that should be taken following the outcome decision.",
             "maxLength" : 4000,
             "minLength" : 0
           },
           "actionOther" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Any other actions that are recommended to be considered.",
             "maxLength" : 4000,
             "minLength" : 0
@@ -3644,7 +3688,7 @@
             "minLength" : 1
           },
           "comment" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Additional information about the contributory factor to the incident or motivation for CSIP referral.",
             "maxLength" : 4000,
             "minLength" : 0
@@ -3657,7 +3701,7 @@
         "description" : "The request body for creating a new CSIP Record for a person",
         "properties" : {
           "logCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "User entered identifier for the CSIP record. Defaults to the prison code.",
             "maxLength" : 10,
             "minLength" : 0
@@ -3680,7 +3724,7 @@
             "example" : "2021-09-27"
           },
           "incidentTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The time the incident that motivated the CSIP referral occurred",
             "example" : "14:19:25"
           },
@@ -3709,39 +3753,39 @@
             "minLength" : 1
           },
           "isProactiveReferral" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Was this referral proactive or preventative."
           },
           "isStaffAssaulted" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Were any members of staff assaulted in the incident."
           },
           "assaultedStaffName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Name or names of assaulted members of staff if any.",
             "maxLength" : 1000,
             "minLength" : 0
           },
           "incidentInvolvementCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The type of involvement the person had in the incident",
             "maxLength" : 12,
             "minLength" : 1
           },
           "descriptionOfConcern" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The reasons why there is cause for concern.",
             "maxLength" : 4000,
             "minLength" : 0
           },
           "knownReasons" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The reasons already known about the causes of the incident or motivation for CSIP referral.",
             "maxLength" : 4000,
             "minLength" : 0
           },
           "otherInformation" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Any other information about the incident or reasons for CSIP referral.",
             "maxLength" : 4000,
             "minLength" : 0
@@ -3752,7 +3796,7 @@
             "enum" : [ "YES", "NO", "DO_NOT_KNOW" ]
           },
           "isReferralComplete" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Is the referral complete."
           },
           "contributoryFactors" : {
@@ -3789,7 +3833,7 @@
             "minLength" : 1
           },
           "interviewText" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Information provided in interview.",
             "maxLength" : 4000,
             "minLength" : 0
@@ -3802,46 +3846,46 @@
         "description" : "The request body to create an investigation on the incident that motivated the CSIP referral.",
         "properties" : {
           "staffInvolved" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The names of the staff involved in the investigation.",
             "maxLength" : 4000,
             "minLength" : 0
           },
           "evidenceSecured" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Any evidence that was secured as part of the investigation.",
             "maxLength" : 4000,
             "minLength" : 0
           },
           "occurrenceReason" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The reasons why the incident occurred.",
             "maxLength" : 4000,
             "minLength" : 0
           },
           "personsUsualBehaviour" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The normal behaviour of the person in prison.",
             "maxLength" : 4000,
             "minLength" : 0
           },
           "personsTrigger" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "What triggers the person in prison has that could have motivated the incident.",
             "maxLength" : 4000,
             "minLength" : 0
           },
           "protectiveFactors" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Any protective factors to reduce the person's risk factors and prevent triggers for instance of violence",
             "maxLength" : 4000,
             "minLength" : 0
           },
           "recordedBy" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "recordedByDisplayName" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "interviews" : {
             "type" : "array",
@@ -3882,7 +3926,7 @@
             "example" : "2021-09-27"
           },
           "closedDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date the identified need was resolved or closed.",
             "example" : "2021-09-27"
@@ -3894,7 +3938,7 @@
             "minLength" : 0
           },
           "progression" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "How the plan to address the identified need is progressing.",
             "maxLength" : 4000,
             "minLength" : 0
@@ -3939,23 +3983,23 @@
         "description" : "The request body to create a Attendee/Contributor to the review of a CSIP Plan",
         "properties" : {
           "name" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Name of review attendee/contributor.",
             "maxLength" : 100,
             "minLength" : 0
           },
           "role" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Role of review attendee/contributor.",
             "maxLength" : 50,
             "minLength" : 0
           },
           "isAttended" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "If the person attended the review."
           },
           "contribution" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Description of attendee contribution.",
             "maxLength" : 4000,
             "minLength" : 0
@@ -3985,18 +4029,18 @@
             "minLength" : 0
           },
           "nextReviewDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date of the next review.",
             "example" : "2021-09-27"
           },
           "csipClosedDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date the CSIP plan was closed following a review outcome decision to close it."
           },
           "summary" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Additional information about the review.",
             "maxLength" : 4000,
             "minLength" : 0
@@ -4025,14 +4069,17 @@
         "description" : "The request body for updating a CSIP Record",
         "properties" : {
           "logCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "User entered identifier for the CSIP record. Defaults to the prison code.",
             "maxLength" : 10,
             "minLength" : 0
           },
           "referral" : {
-            "$ref" : "#/components/schemas/UpdateReferralRequest",
-            "description" : "The referral that results in the creation of this CSIP record."
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/UpdateReferralRequest"
+            }, {
+              "type" : "null"
+            } ]
           }
         }
       },
@@ -4047,7 +4094,7 @@
             "example" : "2021-09-27"
           },
           "incidentTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The time the incident that motivated the CSIP referral occurred",
             "example" : "14:19:25"
           },
@@ -4076,39 +4123,39 @@
             "minLength" : 1
           },
           "isProactiveReferral" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Was this referral proactive or preventative."
           },
           "isStaffAssaulted" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Were any members of staff assaulted in the incident."
           },
           "assaultedStaffName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Name or names of assaulted members of staff if any.",
             "maxLength" : 1000,
             "minLength" : 0
           },
           "incidentInvolvementCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The type of involvement the person had in the incident",
             "maxLength" : 12,
             "minLength" : 1
           },
           "descriptionOfConcern" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The reasons why there is cause for concern.",
             "maxLength" : 4000,
             "minLength" : 0
           },
           "knownReasons" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The reasons already known about the causes of the incident or motivation for CSIP referral.",
             "maxLength" : 4000,
             "minLength" : 0
           },
           "otherInformation" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Any other information about the incident or reasons for CSIP referral.",
             "maxLength" : 4000,
             "minLength" : 0
@@ -4119,7 +4166,7 @@
             "enum" : [ "YES", "NO", "DO_NOT_KNOW" ]
           },
           "isReferralComplete" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Is the referral complete."
           }
         },
@@ -4130,37 +4177,37 @@
         "description" : "The request body to update an investigation on the incident that motivated the CSIP referral.",
         "properties" : {
           "staffInvolved" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The names of the staff involved in the investigation.",
             "maxLength" : 4000,
             "minLength" : 0
           },
           "evidenceSecured" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Any evidence that was secured as part of the investigation.",
             "maxLength" : 4000,
             "minLength" : 0
           },
           "occurrenceReason" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The reasons why the incident occurred.",
             "maxLength" : 4000,
             "minLength" : 0
           },
           "personsUsualBehaviour" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The normal behaviour of the person in prison.",
             "maxLength" : 4000,
             "minLength" : 0
           },
           "personsTrigger" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "What triggers the person in prison has that could have motivated the incident.",
             "maxLength" : 4000,
             "minLength" : 0
           },
           "protectiveFactors" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Any protective factors to reduce the person's risk factors and prevent triggers for instance of violence",
             "maxLength" : 4000,
             "minLength" : 0
@@ -4172,19 +4219,19 @@
         "description" : "The request for updating a CSIP Plan for a CSIP record",
         "properties" : {
           "caseManager" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The case manager assigned to the CSIP plan.",
             "maxLength" : 100,
             "minLength" : 0
           },
           "reasonForPlan" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The reasons motivating the creation of a CSIP plan.",
             "maxLength" : 240,
             "minLength" : 0
           },
           "nextCaseReviewDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The next date the CSIP plan should be reviewed.",
             "example" : "2021-09-27"
@@ -4214,7 +4261,7 @@
             "minLength" : 1
           },
           "interviewText" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Information provided in interview.",
             "maxLength" : 4000,
             "minLength" : 0
@@ -4233,7 +4280,7 @@
             "minLength" : 1
           },
           "comment" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Additional information about the contributory factor to the incident or motivation for CSIP referral.",
             "maxLength" : 4000,
             "minLength" : 0
@@ -4264,18 +4311,18 @@
             "minLength" : 0
           },
           "nextReviewDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date of the next review.",
             "example" : "2021-09-27"
           },
           "csipClosedDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date the CSIP plan was closed following a review outcome decision to close it."
           },
           "summary" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Additional information about the review.",
             "maxLength" : 4000,
             "minLength" : 0
@@ -4297,23 +4344,23 @@
         "description" : "The request body to update a Attendee/Contributor to the review of a CSIP Plan",
         "properties" : {
           "name" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Name of review attendee/contributor.",
             "maxLength" : 100,
             "minLength" : 0
           },
           "role" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Role of review attendee/contributor.",
             "maxLength" : 50,
             "minLength" : 0
           },
           "isAttended" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "If the person attended the review."
           },
           "contribution" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Description of attendee contribution.",
             "maxLength" : 4000,
             "minLength" : 0
@@ -4349,7 +4396,7 @@
             "example" : "2021-09-27"
           },
           "closedDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date the identified need was resolved or closed.",
             "example" : "2021-09-27"
@@ -4361,7 +4408,7 @@
             "minLength" : 0
           },
           "progression" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "How the plan to address the identified need is progressing.",
             "maxLength" : 4000,
             "minLength" : 0
@@ -4380,7 +4427,7 @@
             "uniqueItems" : true
           },
           "query" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "status" : {
             "type" : "array",
@@ -4418,7 +4465,7 @@
             "format" : "uuid"
           },
           "logCode" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "prisoner" : {
             "$ref" : "#/components/schemas/Prisoner"
@@ -4431,11 +4478,11 @@
             "type" : "string"
           },
           "nextReviewDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "caseManager" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "status" : {
             "$ref" : "#/components/schemas/ReferenceData"
@@ -4481,7 +4528,7 @@
             "type" : "string"
           },
           "location" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           }
         },
         "required" : [ "firstName", "lastName", "prisonNumber" ]
@@ -4532,19 +4579,19 @@
             "$ref" : "#/components/schemas/ReferenceData"
           },
           "referralDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "nextReviewDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "closedDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "reviewOverdueDays" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64"
           }
         },
@@ -4554,7 +4601,11 @@
         "type" : "object",
         "properties" : {
           "currentCsip" : {
-            "$ref" : "#/components/schemas/CurrentCsip"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CurrentCsip"
+            }, {
+              "type" : "null"
+            } ]
           },
           "totalOpenedCsipCount" : {
             "type" : "integer",
@@ -4578,7 +4629,7 @@
             "type" : "string"
           },
           "activeCaseloadId" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           }
         },
         "required" : [ "actionedAt" ]
