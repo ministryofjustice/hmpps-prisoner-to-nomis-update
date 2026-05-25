@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-05-21.1768.064490c"
+    "version" : "2026-05-22.1792.af29e5a"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -4253,6 +4253,71 @@
               }
             }
           }
+        },
+        "deprecated" : true
+      }
+    },
+    "/recall/person/{prisonerId}/search" : {
+      "get" : {
+        "tags" : [ "recall-controller" ],
+        "summary" : "Search recalls for a person by period of custody",
+        "description" : "Filter by bookingId (current period of custody) unless includeAllPeriods is true, when all recalls are returned with the current period listed first.",
+        "operationId" : "searchRecallsByPrisonerId",
+        "parameters" : [ {
+          "name" : "prisonerId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "bookingId",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : ""
+          }
+        }, {
+          "name" : "includeAllPeriods",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns recalls for person with total count",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonerRecallsResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonerRecallsResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonerRecallsResponse"
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -6705,7 +6770,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:43:02.852061405"
+            "example" : "07:44:07.522737643"
           },
           "outcomeDispositionCode" : {
             "type" : [ "string", "null" ]
@@ -7081,7 +7146,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:43:02.852061405"
+            "example" : "07:44:07.522737643"
           },
           "courtCode" : {
             "type" : "string"
@@ -9279,6 +9344,11 @@
             "type" : [ "string", "null" ],
             "format" : "date"
           },
+          "bookingId" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int64",
+            "description" : "NOMIS booking id from court_case.legacy_data, used to determine period of custody"
+          },
           "sentences" : {
             "type" : "array",
             "items" : {
@@ -9347,6 +9417,22 @@
           }
         },
         "required" : [ "offenceCode", "periodLengths", "sentenceServeType", "sentenceUuid" ]
+      },
+      "PrisonerRecallsResponse" : {
+        "type" : "object",
+        "properties" : {
+          "recalls" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Recall"
+            }
+          },
+          "prisonerRecallTotal" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "prisonerRecallTotal", "recalls" ]
       },
       "DlqMessage" : {
         "type" : "object",
@@ -9742,7 +9828,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:43:02.852061405"
+            "example" : "07:44:07.522737643"
           },
           "courtCode" : {
             "type" : "string"
@@ -10430,7 +10516,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:43:02.852061405"
+            "example" : "07:44:07.522737643"
           },
           "nomisOutcomeCode" : {
             "type" : [ "string", "null" ]
@@ -10509,7 +10595,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:43:02.852061405"
+            "example" : "07:44:07.522737643"
           },
           "courtId" : {
             "type" : "string"
@@ -10661,7 +10747,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:43:02.852061405"
+            "example" : "07:44:07.522737643"
           },
           "charges" : {
             "type" : "array",
@@ -10695,7 +10781,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:43:02.852061405"
+            "example" : "07:44:07.522737643"
           },
           "courtId" : {
             "type" : "string"
@@ -11277,7 +11363,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:43:02.852061405"
+            "example" : "07:44:07.522737643"
           },
           "courtCode" : {
             "type" : [ "string", "null" ]
