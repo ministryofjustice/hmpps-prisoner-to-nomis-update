@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceRecallMappingsUpdateDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseBatchMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DpsCourtCaseBatchMappingDto
 
@@ -65,6 +66,25 @@ class CourtSentencingMappingServiceTest {
 
       courtCaseMappingApiMockServer.verify(
         postRequestedFor(urlPathEqualTo("/mapping/court-sentencing/court-cases/delete-by-dps-ids")).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+  }
+
+  @Nested
+  inner class UpdateAppearanceRecallMappings {
+    @Test
+    internal fun `will pass oath2 token to service`() = runTest {
+      courtCaseMappingApiMockServer.stubUpdateAppearanceRecallMapping("123")
+
+      apiService.updateAppearanceRecallMappings(
+        recallId = "123",
+        CourtAppearanceRecallMappingsUpdateDto(
+          nomisCourtAppearanceIds = emptyList(),
+        ),
+      )
+
+      courtCaseMappingApiMockServer.verify(
+        putRequestedFor(urlPathEqualTo("/mapping/court-sentencing/court-appearances/recall/123")).withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
   }

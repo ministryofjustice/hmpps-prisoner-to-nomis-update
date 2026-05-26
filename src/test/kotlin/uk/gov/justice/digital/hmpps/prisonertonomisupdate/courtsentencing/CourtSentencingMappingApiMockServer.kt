@@ -331,6 +331,10 @@ class CourtSentencingMappingApiMockServer(private val jsonMapper: JsonMapper) {
     stubCreate("/mapping/court-sentencing/court-appearances/recall")
   }
 
+  fun stubUpdateAppearanceRecallMapping(recallId: String) {
+    stubPut("/mapping/court-sentencing/court-appearances/recall/$recallId")
+  }
+
   fun stubGetAppearanceRecallMappings(recallId: String, mappings: List<CourtAppearanceRecallMappingDto> = emptyList()) {
     stubGet(
       "/mapping/court-sentencing/court-appearances/dps-recall-id/$recallId",

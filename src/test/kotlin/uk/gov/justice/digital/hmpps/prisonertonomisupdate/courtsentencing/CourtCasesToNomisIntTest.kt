@@ -64,6 +64,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Se
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceIdAndAdjustmentIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceIdAndAdjustmentsCreated
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateCourtAppearanceResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateRecallResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing.BOOKING_ID
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -4586,12 +4587,14 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
     @Nested
     inner class WhenRecallHasBeenUpdatedInDPS {
+      val dpsRecallId = "dc71f3c5-70d4-4faf-a4a5-ff9662d5f714"
+
       @BeforeEach
       fun setUp() {
         courtSentencingApi.stubGetRecall(
-          "dc71f3c5-70d4-4faf-a4a5-ff9662d5f714",
+          dpsRecallId,
           LegacyRecall(
-            recallUuid = UUID.fromString("dc71f3c5-70d4-4faf-a4a5-ff9662d5f714"),
+            recallUuid = UUID.fromString(dpsRecallId),
             recallType = LegacyRecall.RecallType.FTR_14,
             recallBy = "T.SMITH",
             returnToCustodyDate = null,
@@ -4631,15 +4634,15 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         )
 
         courtSentencingMappingApi.stubGetAppearanceRecallMappings(
-          "dc71f3c5-70d4-4faf-a4a5-ff9662d5f714",
+          dpsRecallId,
           mappings = listOf(
             CourtAppearanceRecallMappingDto(
               nomisCourtAppearanceId = 101,
-              dpsRecallId = "dc71f3c5-70d4-4faf-a4a5-ff9662d5f714",
+              dpsRecallId = dpsRecallId,
             ),
             CourtAppearanceRecallMappingDto(
               nomisCourtAppearanceId = 102,
-              dpsRecallId = "dc71f3c5-70d4-4faf-a4a5-ff9662d5f714",
+              dpsRecallId = dpsRecallId,
             ),
           ),
         )
@@ -4663,14 +4666,24 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           ),
         )
 
-        courtSentencingNomisApi.stubUpdateRecallSentences(OFFENDER_NO)
+        courtSentencingNomisApi.stubUpdateRecallSentences(
+          OFFENDER_NO,
+          UpdateRecallResponse(
+            updatedCourtEventIds = listOf(101),
+            deletedCourtEventIds = listOf(102),
+            createdCourtEventIds = listOf(103),
+          ),
+        )
+
+        courtSentencingMappingApi.stubUpdateAppearanceRecallMapping(recallId = dpsRecallId)
+
         publishRecallUpdatedDomainEvent(
           source = "DPS",
-          recallId = "dc71f3c5-70d4-4faf-a4a5-ff9662d5f714",
+          recallId = dpsRecallId,
           sentenceIds = listOf("9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc", "7ed5c261-9644-4516-9ab5-1b2cd48e6ca1"),
           previousSentenceIds = listOf("9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc", "654212d8-4b58-4499-b465-73f9936999d9"),
         ).also {
-          waitForAnyProcessingToComplete()
+          waitForAnyProcessingToComplete("recall-updated-success")
         }
       }
 
@@ -4694,13 +4707,13 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will get breach appearanceIds related to recall`() {
         courtSentencingMappingApi.verify(
-          getRequestedFor(urlEqualTo("/mapping/court-sentencing/court-appearances/dps-recall-id/dc71f3c5-70d4-4faf-a4a5-ff9662d5f714")),
+          getRequestedFor(urlEqualTo("/mapping/court-sentencing/court-appearances/dps-recall-id/$dpsRecallId")),
         )
       }
 
       @Test
       fun `will retrieve DPS recall information`() {
-        courtSentencingApi.verify(getRequestedFor(urlEqualTo("/legacy/recall/dc71f3c5-70d4-4faf-a4a5-ff9662d5f714")))
+        courtSentencingApi.verify(getRequestedFor(urlEqualTo("/legacy/recall/$dpsRecallId")))
       }
 
       @Test
@@ -4747,6 +4760,30 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             .withRequestBody(matchingJsonPath("beachCourtEventIds[0]", equalTo("101")))
             .withRequestBody(matchingJsonPath("beachCourtEventIds[1]", equalTo("102"))),
         )
+      }
+
+      @Test
+      fun `will update mapping for each breach appearance created and update for recall`() {
+        courtSentencingMappingApi.verify(
+          putRequestedFor(urlEqualTo("/mapping/court-sentencing/court-appearances/recall/$dpsRecallId"))
+            .withRequestBody(matchingJsonPath("nomisCourtAppearanceIds[0]", equalTo("101")))
+            .withRequestBody(matchingJsonPath("nomisCourtAppearanceIds[1]", equalTo("103"))),
+        )
+      }
+
+      @Test
+      fun `will send message to nomis migration to sync each breach hearing created`() {
+        await untilAsserted {
+          assertThat(fromNomisCourtSentencingQueue.countAllMessagesOnQueue()).isEqualTo(1)
+        }
+        val rawMessages = fromNomisCourtSentencingQueue.readAtMost10RawMessages()
+        val breachCreatedMessages = rawMessages.map { it.fromJson<SQSMessage>() }.filter { it.Type == "courtsentencing.resync.breach-court-appearance.inserted" }
+
+        with(breachCreatedMessages.first()) {
+          val request: SyncRecallBreachCourtAppearanceEvent = Message.fromJson()
+          assertThat(request.offenderNo).isEqualTo(OFFENDER_NO)
+          assertThat(request.courtAppearanceId).isEqualTo(103L)
+        }
       }
 
       @Test
