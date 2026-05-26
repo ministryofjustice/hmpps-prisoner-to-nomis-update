@@ -147,6 +147,39 @@ class CourtSentencingRepairService(
     )
   }
 
+  suspend fun resynchroniseTermInsertToNomis(offenderNo: String, courtCaseId: String, courtAppearanceId: String, sentenceId: String, periodLengthId: String) {
+    courtSentencingService.createSentenceTerm(
+      createEvent = CourtSentencingService.PeriodLengthCreatedEvent(
+        personReference = PersonReferenceList(
+          identifiers = listOf(
+            PersonReference(
+              type = "NOMS",
+              value = offenderNo,
+            ),
+          ),
+        ),
+        additionalInformation = CourtSentencingService.PeriodLengthAdditionalInformation(
+          courtCaseId = courtCaseId,
+          courtAppearanceId = courtAppearanceId,
+          sentenceId = sentenceId,
+          periodLengthId = periodLengthId,
+          source = "DPS",
+        ),
+      ),
+    )
+    // will need to use operation id in appinsights to see created nomis ids
+    telemetryClient.trackEvent(
+      "court-sentencing-repair-sentence-term-inserted",
+      mapOf(
+        "offenderNo" to offenderNo,
+        "dpsCourtCaseId" to courtCaseId,
+        "dpsCourtAppearanceId" to courtAppearanceId,
+        "dpsSentenceId" to sentenceId,
+      ),
+      null,
+    )
+  }
+
   suspend fun resynchroniseSentenceUpdateToNomis(offenderNo: String, courtCaseId: String, courtAppearanceId: String, sentenceId: String) {
     courtSentencingService.updateSentence(
       createEvent = CourtSentencingService.SentenceCreatedEvent(
