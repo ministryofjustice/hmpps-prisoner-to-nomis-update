@@ -716,6 +716,151 @@ class CourtSchedulerReconciliationIntTest(
       }
     }
 
+    @Nested
+    inner class ScheduledMovementsOut {
+      private val dpsScheduledMovementOutId: UUID = UUID.randomUUID()
+
+      @BeforeEach
+      fun setUp() = runTest {
+        reset(telemetryClient)
+        nomisApi.stubGetAllPrisoners(
+          offenderId = 0,
+          pageSize = 100,
+          prisoners = listOf(generateOffenderNo(sequence = 1)),
+        )
+      }
+
+      @Test
+      fun `should report different prison`() = runTest {
+        stubDpsCourtEvent(movementOut = courtEventMovement(fromAgency = "MDI", id = dpsScheduledMovementOutId, directionCode = "OUT"))
+        stubNomisCourtEvent(movementOut = bookingCourtMovementOut(seq = 456))
+        stubMappings(MovementId(12345, 456), dpsScheduledMovementOutId)
+
+        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+        awaitReportFinished()
+
+        verify(telemetryClient).trackEvent(
+          eq("court-scheduler-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "offenderNo" to "A0001TZ",
+              "nomisMovementId" to "12345_456",
+              "dpsMovementId" to "$dpsScheduledMovementOutId",
+              "type" to "PRISON",
+            ),
+          ),
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `should report different start time`() = runTest {
+        stubDpsCourtEvent(movementOut = courtEventMovement(movementTime = today, id = dpsScheduledMovementOutId, directionCode = "OUT"))
+        stubNomisCourtEvent(movementOut = bookingCourtMovementOut(seq = 456))
+        stubMappings(MovementId(12345, 456), dpsScheduledMovementOutId)
+
+        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+        awaitReportFinished()
+
+        verify(telemetryClient).trackEvent(
+          eq("court-scheduler-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "offenderNo" to "A0001TZ",
+              "nomisMovementId" to "12345_456",
+              "dpsMovementId" to "$dpsScheduledMovementOutId",
+              "type" to "MOVEMENT_TIME",
+            ),
+          ),
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `should report different reason`() = runTest {
+        stubDpsCourtEvent(movementOut = courtEventMovement(movementReasonCode = "CA", id = dpsScheduledMovementOutId, directionCode = "OUT"))
+        stubNomisCourtEvent(movementOut = bookingCourtMovementOut(seq = 456))
+        stubMappings(MovementId(12345, 456), dpsScheduledMovementOutId)
+
+        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+        awaitReportFinished()
+
+        verify(telemetryClient).trackEvent(
+          eq("court-scheduler-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "offenderNo" to "A0001TZ",
+              "nomisMovementId" to "12345_456",
+              "dpsMovementId" to "$dpsScheduledMovementOutId",
+              "type" to "REASON",
+            ),
+          ),
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `should report different court`() = runTest {
+        stubDpsCourtEvent(movementOut = courtEventMovement(toAgency = "YORKMC", id = dpsScheduledMovementOutId, directionCode = "OUT"))
+        stubNomisCourtEvent(movementOut = bookingCourtMovementOut(seq = 456))
+        stubMappings(MovementId(12345, 456), dpsScheduledMovementOutId)
+
+        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+        awaitReportFinished()
+
+        verify(telemetryClient).trackEvent(
+          eq("court-scheduler-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "offenderNo" to "A0001TZ",
+              "nomisMovementId" to "12345_456",
+              "dpsMovementId" to "$dpsScheduledMovementOutId",
+              "type" to "COURT",
+            ),
+          ),
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class ScheduledMovementsIn {
+      private val dpsScheduledMovementInId: UUID = UUID.randomUUID()
+
+      @BeforeEach
+      fun setUp() = runTest {
+        reset(telemetryClient)
+        nomisApi.stubGetAllPrisoners(
+          offenderId = 0,
+          pageSize = 100,
+          prisoners = listOf(generateOffenderNo(sequence = 1)),
+        )
+      }
+
+      @Test
+      fun `should report different prison`() = runTest {
+        stubDpsCourtEvent(movementIn = courtEventMovement(toAgency = "MDI", fromAgency = "LEEDMC", id = dpsScheduledMovementInId, directionCode = "IN"))
+        stubNomisCourtEvent(movementIn = bookingCourtMovementIn(seq = 789))
+        stubMappings(nomisMovementInId = MovementId(12345, 789), dpsMovementInId = dpsScheduledMovementInId)
+
+        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+        awaitReportFinished()
+
+        verify(telemetryClient).trackEvent(
+          eq("court-scheduler-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "offenderNo" to "A0001TZ",
+              "nomisMovementId" to "12345_789",
+              "dpsMovementId" to "$dpsScheduledMovementInId",
+              "type" to "PRISON",
+            ),
+          ),
+          isNull(),
+        )
+      }
+    }
+
     private fun stubNomisCourtEvent(
       prison: String = "BXI",
       court: String = "LEEDMC",

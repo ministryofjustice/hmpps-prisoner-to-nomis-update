@@ -86,14 +86,19 @@ class CourtSchedulerDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
     fun courtEventMovement(
       id: UUID = UUID.randomUUID(),
+      fromAgency: String = "BXI",
+      directionCode: String = "OUT",
+      movementTime: LocalDateTime = yesterday,
+      movementReasonCode: String = "CRT",
+      toAgency: String = "LEEDMC",
     ) = CourtEventMovement(
       dpsId = id,
-      movementDate = yesterday.toLocalDate(),
-      movementTime = "$yesterday",
-      movementReasonCode = "CRT",
-      directionCode = "OUT",
-      fromAgencyId = "BXI",
-      toAgencyId = "LEEDMC",
+      movementDate = movementTime.toLocalDate(),
+      movementTime = "$movementTime",
+      directionCode = directionCode,
+      movementReasonCode = movementReasonCode,
+      fromAgencyId = fromAgency,
+      toAgencyId = toAgency,
       commentText = "court movement comment",
     )
   }
