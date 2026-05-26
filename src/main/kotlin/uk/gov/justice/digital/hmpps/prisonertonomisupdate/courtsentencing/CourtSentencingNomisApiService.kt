@@ -31,6 +31,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Se
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateCourtAppearanceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateCourtCaseRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateRecallRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateRecallResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 
 @Service
@@ -177,11 +178,11 @@ class CourtSentencingNomisApiService(@Qualifier("nomisApiWebClient") private val
   suspend fun updateRecallSentences(
     offenderNo: String,
     request: UpdateRecallRequest,
-  ): ResponseEntity<Void> = webClient.put()
+  ): UpdateRecallResponse = webClient.put()
     .uri("/prisoners/{offenderNo}/sentences/recall", offenderNo)
     .bodyValue(request)
     .retrieve()
-    .awaitBodilessEntity()
+    .awaitBody()
 
   suspend fun deleteRecallSentences(
     offenderNo: String,

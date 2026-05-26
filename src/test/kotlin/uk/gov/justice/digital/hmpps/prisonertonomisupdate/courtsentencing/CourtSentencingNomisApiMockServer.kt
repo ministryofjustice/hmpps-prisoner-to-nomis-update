@@ -28,6 +28,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Of
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderChargeRepairRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateCourtAppearanceResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateRecallResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -239,12 +240,20 @@ class CourtSentencingNomisApiMockServer {
       ),
     )
   }
-  fun stubUpdateRecallSentences(offenderNo: String) {
+  fun stubUpdateRecallSentences(
+    offenderNo: String,
+    response: UpdateRecallResponse = UpdateRecallResponse(
+      createdCourtEventIds = emptyList(),
+      updatedCourtEventIds = emptyList(),
+      deletedCourtEventIds = emptyList(),
+    ),
+  ) {
     nomisApi.stubFor(
       put("/prisoners/$offenderNo/sentences/recall").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          .withStatus(204),
+          .withStatus(200)
+          .withBody(jsonMapper.writeValueAsString(response)),
       ),
     )
   }

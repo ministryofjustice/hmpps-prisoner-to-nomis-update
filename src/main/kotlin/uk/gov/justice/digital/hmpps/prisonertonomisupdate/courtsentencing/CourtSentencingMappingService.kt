@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing
 
+import kotlinx.coroutines.reactor.awaitSingle
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
@@ -7,9 +8,11 @@ import org.springframework.web.reactive.function.client.awaitBodilessEntity
 import org.springframework.web.reactive.function.client.awaitBody
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodilessEntityOrThrowOnConflict
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.api.CourtSentencingMappingResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceRecallMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceRecallMappingsDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceRecallMappingsUpdateDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseAllMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseBatchMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseBatchUpdateAndCreateMappingDto
@@ -24,6 +27,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Se
 class CourtSentencingMappingService(
   @Qualifier("mappingWebClient") private val webClient: WebClient,
 ) {
+  private val api = CourtSentencingMappingResourceApi(webClient)
 
   suspend fun createMapping(request: CourtCaseAllMappingDto) {
     webClient.post()
@@ -60,6 +64,14 @@ class CourtSentencingMappingService(
       .retrieve()
       .awaitBodilessEntityOrThrowOnConflict()
   }
+
+  suspend fun updateAppearanceRecallMappings(recallId: String, request: CourtAppearanceRecallMappingsUpdateDto) {
+    api.updateCourtAppearanceRecallMapping(
+      recallId = recallId,
+      courtAppearanceRecallMappingsUpdateDto = request,
+    ).awaitSingle()
+  }
+
   suspend fun deleteAppearanceRecallMappings(recallId: String) {
     webClient.delete()
       .uri("/mapping/court-sentencing/court-appearances/dps-recall-id/{recallId}", recallId)
