@@ -258,4 +258,12 @@ class CourtSentencingMappingService(
       .retrieve()
       .awaitBodilessEntity()
   }
+
+  suspend fun getAllCourtAppearancesByNomisIds(courtAppearanceIds: List<Long>): List<CourtAppearanceMappingDto> = webClient.post()
+    .uri(
+      "/mapping/court-sentencing/court-appearances/nomis-court-appearance-ids/get-list",
+    )
+    .bodyValue(courtAppearanceIds)
+    .retrieve()
+    .awaitBody()
 }

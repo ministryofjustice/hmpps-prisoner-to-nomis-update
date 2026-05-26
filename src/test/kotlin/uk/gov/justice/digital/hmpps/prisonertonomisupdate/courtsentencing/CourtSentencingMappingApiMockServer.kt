@@ -8,6 +8,8 @@ import com.github.tomakehurst.wiremock.client.WireMock.equalToJson
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.put
+import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import com.github.tomakehurst.wiremock.stubbing.Scenario
 import org.springframework.http.HttpStatus
@@ -24,6 +26,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtens
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.getRequestBody
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.withRequestBodyJsonPath
+import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.util.UUID
 
 @Component
@@ -484,6 +487,46 @@ class CourtSentencingMappingApiMockServer(private val jsonMapper: JsonMapper) {
             .withStatus(200),
 
         ).willSetStateTo(Scenario.STARTED),
+    )
+  }
+
+  fun stubGetAllCourtAppearanceByNomisIds(
+    nomisCourtAppearanceIds: List<Long> = listOf(123, 456),
+    dpsCourtAppearanceIds: List<String> = listOf(UUID.randomUUID().toString(), UUID.randomUUID().toString()),
+    mappings: List<CourtAppearanceMappingDto> = listOf(
+      CourtAppearanceMappingDto(
+        nomisCourtAppearanceId = nomisCourtAppearanceIds[0],
+        dpsCourtAppearanceId = dpsCourtAppearanceIds[0],
+        mappingType = CourtAppearanceMappingDto.MappingType.MIGRATED,
+      ),
+      CourtAppearanceMappingDto(
+        nomisCourtAppearanceId = nomisCourtAppearanceIds[1],
+        dpsCourtAppearanceId = dpsCourtAppearanceIds[1],
+        mappingType = CourtAppearanceMappingDto.MappingType.MIGRATED,
+      ),
+    ),
+  ) {
+    mappingServer.stubFor(
+      post(urlEqualTo("/mapping/court-sentencing/court-appearances/nomis-court-appearance-ids/get-list")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(jsonMapper.writeValueAsString(mappings)),
+      ),
+    )
+  }
+
+  fun stubGetAllCourtAppearanceByNomisIds(
+    status: HttpStatus,
+    error: ErrorResponse = ErrorResponse(status = status.value()),
+  ) {
+    mappingServer.stubFor(
+      post(urlPathMatching("/mapping/court-sentencing/court-appearances/nomis-court-appearance-ids/get-list")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(status.value())
+          .withBody(jsonMapper.writeValueAsString(error)),
+      ),
     )
   }
 

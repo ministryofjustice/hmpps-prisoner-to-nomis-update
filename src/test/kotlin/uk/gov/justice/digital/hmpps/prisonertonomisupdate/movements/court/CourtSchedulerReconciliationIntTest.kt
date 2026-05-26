@@ -16,7 +16,10 @@ import org.mockito.kotlin.reset
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtscheduler.model.CourtEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtscheduler.model.CourtEventMovement
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtscheduler.model.ReconciliationCourtEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingMappingApiMockServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.CourtSchedulerDpsApiExtension.Companion.courtSchedulerDpsApiServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.CourtSchedulerDpsApiMockServer.Companion.courtEvent
@@ -26,15 +29,24 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.CourtS
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.CourtSchedulerNomisApiMockServer.Companion.bookingCourtMovementOut
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.CourtSchedulerNomisApiMockServer.Companion.bookingCourtSchedule
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.CourtSchedulerNomisApiMockServer.Companion.offenderCourtMovementsResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtMovementMappingIdsDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtScheduleMappingIdsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtSchedulerPrisonerMappingIdsDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingCourtMovementIn
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingCourtMovementOut
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingCourtScheduleOut
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.NomisAudit
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.generateOffenderNo
-import java.util.UUID
+import java.time.LocalDateTime
+import java.util.*
 
 class CourtSchedulerReconciliationIntTest(
   @Autowired private val reconciliationService: CourtSchedulerReconciliationService,
   @Autowired private val courtScheduleNomisApi: CourtSchedulerNomisApiMockServer,
   @Autowired private val mappingApi: CourtSchedulerMappingApiMockServer,
+  @Autowired private val courtSentencingMappingApi: CourtSentencingMappingApiMockServer,
 ) : IntegrationTestBase() {
 
   private val dpsApi = courtSchedulerDpsApiServer
@@ -540,6 +552,255 @@ class CourtSchedulerReconciliationIntTest(
         isNull(),
       )
     }
+  }
+
+  @Nested
+  inner class EntityDifferences {
+    private val offender = "A0001TZ"
+    private val courtEventId: UUID = UUID.randomUUID()
+    private val courtSentencingAppearanceId: UUID = UUID.randomUUID()
+
+    private val today = LocalDateTime.now()
+    private val yesterday = today.minusDays(1)
+
+    @Nested
+    inner class CourtEvents {
+
+      @BeforeEach
+      fun setUp() = runTest {
+        reset(telemetryClient)
+        nomisApi.stubGetAllPrisoners(
+          offenderId = 0,
+          pageSize = 100,
+          prisoners = listOf(generateOffenderNo(sequence = 1)),
+        )
+      }
+
+      @Test
+      fun `should report different prison`() = runTest {
+        stubDpsCourtEvent()
+        stubNomisCourtEvent(prison = "MDI")
+        stubMappings()
+
+        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+        awaitReportFinished()
+
+        verify(telemetryClient).trackEvent(
+          eq("court-scheduler-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "offenderNo" to "A0001TZ",
+              "nomisEventId" to "123",
+              "dpsCourtEventId" to "$courtEventId",
+              "type" to "PRISON",
+            ),
+          ),
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `should report different court`() = runTest {
+        stubDpsCourtEvent()
+        stubNomisCourtEvent(court = "YORKMC")
+        stubMappings()
+
+        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+        awaitReportFinished()
+
+        verify(telemetryClient).trackEvent(
+          eq("court-scheduler-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "offenderNo" to "A0001TZ",
+              "nomisEventId" to "123",
+              "dpsCourtEventId" to "$courtEventId",
+              "type" to "COURT",
+            ),
+          ),
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `should report different start time`() = runTest {
+        stubDpsCourtEvent()
+        stubNomisCourtEvent(startTime = today)
+        stubMappings()
+
+        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+        awaitReportFinished()
+
+        verify(telemetryClient).trackEvent(
+          eq("court-scheduler-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "offenderNo" to "A0001TZ",
+              "nomisEventId" to "123",
+              "dpsCourtEventId" to "$courtEventId",
+              "type" to "START_TIME",
+            ),
+          ),
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `should report different event type`() = runTest {
+        stubDpsCourtEvent()
+        stubNomisCourtEvent(eventType = "CA")
+        stubMappings()
+
+        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+        awaitReportFinished()
+
+        verify(telemetryClient).trackEvent(
+          eq("court-scheduler-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "offenderNo" to "A0001TZ",
+              "nomisEventId" to "123",
+              "dpsCourtEventId" to "$courtEventId",
+              "type" to "EVENT_TYPE",
+            ),
+          ),
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `should report different status`() = runTest {
+        stubDpsCourtEvent()
+        stubNomisCourtEvent(eventStatus = "SCH")
+        stubMappings()
+
+        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+        awaitReportFinished()
+
+        verify(telemetryClient).trackEvent(
+          eq("court-scheduler-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "offenderNo" to "A0001TZ",
+              "nomisEventId" to "123",
+              "dpsCourtEventId" to "$courtEventId",
+              "type" to "EVENT_STATUS",
+            ),
+          ),
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `should report different court sentencing URN`() = runTest {
+        stubDpsCourtEvent()
+        stubNomisCourtEvent(courtCaseId = 87878L)
+        stubCourtSentencingMappings(123, courtSentencingAppearanceId)
+        stubMappings()
+
+        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+        awaitReportFinished()
+
+        verify(telemetryClient).trackEvent(
+          eq("court-scheduler-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "offenderNo" to "A0001TZ",
+              "nomisEventId" to "123",
+              "dpsCourtEventId" to "$courtEventId",
+              "type" to "EXTERNAL_REFERENCE_URN",
+            ),
+          ),
+          isNull(),
+        )
+      }
+    }
+
+    private fun stubNomisCourtEvent(
+      prison: String = "BXI",
+      court: String = "LEEDMC",
+      startTime: LocalDateTime = yesterday,
+      eventType: String = "CRT",
+      eventStatus: String = "COMP",
+      movementOut: BookingCourtMovementOut? = null,
+      movementIn: BookingCourtMovementIn? = null,
+      courtCaseId: Long? = null,
+    ) = courtScheduleNomisApi.stubGetOffenderCourtMovements(
+      offenderNo = offender,
+      response = offenderCourtMovementsResponse(
+        courtSchedules = listOf(
+          BookingCourtScheduleOut(
+            eventId = 123,
+            eventDate = startTime.toLocalDate(),
+            startTime = startTime,
+            eventType = eventType,
+            eventStatus = eventStatus,
+            prison = prison,
+            court = court,
+            audit = NomisAudit(
+              createDatetime = yesterday,
+              createUsername = "USER",
+            ),
+            courtMovementOut = movementOut,
+            courtMovementIn = movementIn,
+            comment = "Some schedule comment",
+            courtCaseId = courtCaseId,
+          ),
+        ),
+        unscheduledCourtMovementOuts = listOf(),
+        unscheduledCourtMovementIns = listOf(),
+      ),
+    )
+
+    private fun stubDpsCourtEvent(
+      movementOut: CourtEventMovement? = null,
+      movementIn: CourtEventMovement? = null,
+    ) = dpsApi.stubGetCourtSchedulerReconciliation(
+      personIdentifier = offender,
+      response = reconciliation(
+        courtEvents = listOf(
+          ReconciliationCourtEvent(
+            courtEvent = CourtEvent(
+              dpsId = courtEventId,
+              prisonCodeAtTimeOfScheduling = "BXI",
+              agyLocId = "LEEDMC",
+              eventDate = yesterday.toLocalDate(),
+              startTime = "$yesterday",
+              courtEventType = "CRT",
+              eventStatus = "COMP",
+              commentText = "Some schedule comment",
+              externalReferenceUrn = "some-ext-ref-urn",
+            ),
+            movements = listOfNotNull(movementOut, movementIn),
+          ),
+        ),
+        unscheduledMovements = listOf(),
+      ),
+    )
+
+    private fun stubMappings(
+      nomisMovementOutId: MovementId? = null,
+      dpsMovementOutId: UUID? = null,
+      nomisMovementInId: MovementId? = null,
+      dpsMovementInId: UUID? = null,
+    ) = mappingApi.stubGetCourtSchedulerPrisonerMappingIds(
+      prisonerNumber = offender,
+      idMappings = CourtSchedulerPrisonerMappingIdsDto(
+        prisonerNumber = offender,
+        schedules = listOf(CourtScheduleMappingIdsDto(123, courtEventId)),
+        movements = listOfNotNull(
+          nomisMovementOutId?.let { CourtMovementMappingIdsDto(nomisMovementOutId.bookingId, nomisMovementOutId.sequence, dpsMovementOutId!!) },
+          nomisMovementInId?.let { CourtMovementMappingIdsDto(nomisMovementInId.bookingId, nomisMovementInId.sequence, dpsMovementInId!!) },
+        ),
+      ),
+    )
+
+    private fun stubCourtSentencingMappings(
+      nomisEventId: Long,
+      courtSentencingId: UUID,
+    ) = courtSentencingMappingApi.stubGetAllCourtAppearanceByNomisIds(
+      mappings = listOf(CourtAppearanceMappingDto(nomisEventId, courtSentencingId.toString())),
+    )
   }
 
   private fun awaitReportFinished() {

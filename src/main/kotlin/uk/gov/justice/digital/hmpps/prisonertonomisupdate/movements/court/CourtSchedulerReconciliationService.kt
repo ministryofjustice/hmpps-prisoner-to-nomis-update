@@ -10,11 +10,17 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtscheduler.model.ReconciliationResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingMappingService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationErrorPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationSuccessPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.generateReconciliationReport
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.MismatchPrisonerCourtScheduleDetails.Type.COURT
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.MismatchPrisonerCourtScheduleDetails.Type.EVENT_STATUS
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.MismatchPrisonerCourtScheduleDetails.Type.EVENT_TYPE
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.MismatchPrisonerCourtScheduleDetails.Type.PRISON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.MismatchPrisonerCourtScheduleDetails.Type.START_TIME
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.MismatchedPrisonerCourtMovementIds.Type.MISSING_MAPPING_SCHEDULE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.findMatches
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.findMissing
@@ -22,10 +28,12 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapActi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapActivePrisonersReconciliationService.Companion.TELEMETRY_ACTIVE_TAPS
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapAllPrisonersReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtSchedulerPrisonerMappingIdsDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingCourtMovements
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderCourtMovementsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
-import java.util.UUID
+import java.time.LocalDateTime
+import java.util.*
 
 @Service
 class CourtSchedulerReconciliationService(
@@ -34,6 +42,7 @@ class CourtSchedulerReconciliationService(
   private val dpsApiService: CourtSchedulerDpsApiService,
   private val nomisPrisonerApiService: NomisApiService,
   private val mappingService: CourtSchedulerMappingApiService,
+  private val courtSentencingMappingService: CourtSentencingMappingService,
   @param:Value($$"${reports.temporary-absences.active-prisoners.reconciliation.page-size}") private val pageSize: Int = 100,
   @param:Value($$"${reports.temporary-absences.active-prisoners.reconciliation.thread-count}") private val threadCount: Int = 15,
 ) {
@@ -119,7 +128,7 @@ class CourtSchedulerReconciliationService(
     checkPrisonersMatch(offenderNo, nomisMovements.await(), dpsMovements.await(), movementMappings.await())
   }
 
-  private fun checkPrisonersMatch(
+  private suspend fun checkPrisonersMatch(
     offenderNo: String,
     nomisMovements: OffenderCourtMovementsResponse?,
     dpsMovements: ReconciliationResponse,
@@ -144,7 +153,20 @@ class CourtSchedulerReconciliationService(
       )
     }
 
-    return mismatchedEntities
+    val mismatchedScheduleDetails = findMismatchedCourtScheduleDetails(offenderNo, nomisMovements, dpsMovements, movementMappings)
+    mismatchedScheduleDetails.forEach {
+      telemetryClient.trackEvent(
+        "$TELEMETRY_COURT_SCHEDULER-mismatch",
+        mapOf(
+          "offenderNo" to offenderNo,
+          "type" to it.type,
+          "nomisEventId" to it.nomisEventId,
+          "dpsCourtEventId" to it.dpsCourtEventId,
+        ),
+      )
+    }
+
+    return mismatchedEntities + mismatchedScheduleDetails
   }
 
   private fun findMismatchedEntities(
@@ -323,6 +345,61 @@ class CourtSchedulerReconciliationService(
     return mismatches.toList()
   }
 
+  private suspend fun findMismatchedCourtScheduleDetails(
+    offenderNo: String,
+    nomis: OffenderCourtMovementsResponse,
+    dps: ReconciliationResponse,
+    mappings: CourtSchedulerPrisonerMappingIdsDto,
+  ): List<MismatchPrisonerCourtScheduleDetails> {
+    val nomisCourtEventIds = nomis.bookings.flatMap { it.courtSchedules.map { it.eventId } }
+    val dpsCourtAppearanceIds = dps.courtEvents.map { it.courtEvent.dpsId!! }
+    val dpsCourtSentencingAppearanceIds = nomis.bookings.findCourtSentencingIds()
+
+    val mismatches = mutableListOf<MismatchPrisonerCourtScheduleDetails>()
+    mappings.matchingSchedules(nomisCourtEventIds, dpsCourtAppearanceIds).forEach { (nomisId, dpsId) ->
+      val nomisCourtEvent = nomis.findNomisCourtSchedule(nomisId)
+      val dpsCourtEvent = dps.findDpsCourtSchedule(dpsId)
+      fun mismatch(type: MismatchPrisonerCourtScheduleDetails.Type, nomisValue: String, dpsValue: String) = MismatchPrisonerCourtScheduleDetails(offenderNo, type, nomisId, dpsId, nomisValue, dpsValue)
+
+      // prison must match
+      if (nomisCourtEvent.prison != dpsCourtEvent.courtEvent.prisonCodeAtTimeOfScheduling) {
+        mismatches.add(mismatch(PRISON, nomisCourtEvent.prison, dpsCourtEvent.courtEvent.prisonCodeAtTimeOfScheduling))
+      }
+
+      // court must match
+      if (nomisCourtEvent.court != dpsCourtEvent.courtEvent.agyLocId) {
+        mismatches.add(mismatch(COURT, nomisCourtEvent.court, dpsCourtEvent.courtEvent.agyLocId))
+      }
+
+      // start time must match
+      if (nomisCourtEvent.startTime != LocalDateTime.parse(dpsCourtEvent.courtEvent.startTime)) {
+        mismatches.add(mismatch(START_TIME, "${nomisCourtEvent.startTime}", dpsCourtEvent.courtEvent.startTime))
+      }
+
+      // event type must match
+      if (nomisCourtEvent.eventType != dpsCourtEvent.courtEvent.courtEventType) {
+        mismatches.add(mismatch(EVENT_TYPE, nomisCourtEvent.eventType, dpsCourtEvent.courtEvent.courtEventType))
+      }
+
+      // event status must match
+      if (nomisCourtEvent.eventStatus != dpsCourtEvent.courtEvent.eventStatus) {
+        mismatches.add(mismatch(EVENT_STATUS, nomisCourtEvent.eventStatus, dpsCourtEvent.courtEvent.eventStatus))
+      }
+
+      // external reference must match
+      if (nomisCourtEvent.courtCaseId != null) {
+        val expectedDpsCourtAppearanceId = dpsCourtSentencingAppearanceIds[nomisCourtEvent.courtCaseId]
+        val actualDpsCourtAppearanceId = dpsCourtEvent.courtEvent.externalReferenceUrn
+        // The external reference is not the exact court sentencing UUID, but it does contain the UUID
+        if (expectedDpsCourtAppearanceId == null || actualDpsCourtAppearanceId == null || !actualDpsCourtAppearanceId.contains(expectedDpsCourtAppearanceId)) {
+          mismatches.add(mismatch(MismatchPrisonerCourtScheduleDetails.Type.EXTERNAL_REFERENCE_URN, expectedDpsCourtAppearanceId ?: "null", dpsCourtEvent.courtEvent.externalReferenceUrn ?: "null"))
+        }
+      }
+    }
+
+    return mismatches.toList()
+  }
+
   private fun CourtSchedulerPrisonerMappingIdsDto.unexpectedNomisCourtEvents(
     nomisCourtEventIds: List<Long>,
     dpsCourtEventIds: List<UUID>,
@@ -364,6 +441,21 @@ class CourtSchedulerReconciliationService(
   ) = findMatches(nomisMovementIds, dpsMovementIds) { nomisId ->
     movements.find { it.nomisBookingId == nomisId.bookingId && it.nomisMovementSeq == nomisId.sequence }?.dpsCourtMovementId
   }
+
+  private suspend fun List<BookingCourtMovements>.findCourtSentencingIds() = flatMap { it.courtSchedules }
+    .filter { it.courtCaseId != null }
+    .takeIf { it.isNotEmpty() }
+    ?.map { it.eventId }
+    ?.let { courtSentencingMappingService.getAllCourtAppearancesByNomisIds(it) }
+    ?.associate { it.nomisCourtAppearanceId to it.dpsCourtAppearanceId }
+    ?: emptyMap()
+
+  private fun OffenderCourtMovementsResponse.findNomisCourtSchedule(eventId: Long) = bookings.flatMap { it.courtSchedules }
+    .find { it.eventId == eventId }
+    ?: throw IllegalStateException("Unable to find schedule for eventId=$eventId despite having matched it earlier. Has there been a merge or move booking mid reconciliation?")
+
+  private fun ReconciliationResponse.findDpsCourtSchedule(dpsId: UUID) = courtEvents.find { it.courtEvent.dpsId == dpsId }
+    ?: throw IllegalStateException("Unable to find schedule for dpsId=$dpsId despite having matched it earlier. Has there been a merge or move court event mid reconciliation?")
 }
 
 abstract class MismatchedPrisonerCourtMovements(
@@ -393,6 +485,24 @@ class MismatchedPrisonerCourtMovementIds(
   }
 }
 
-private class MovementId(val bookingId: Long, val sequence: Int) {
+class MismatchPrisonerCourtScheduleDetails(
+  offenderNo: String,
+  type: Type,
+  val nomisEventId: Long,
+  val dpsCourtEventId: UUID,
+  val nomisValue: String,
+  val dpsValue: String,
+) : MismatchedPrisonerCourtMovements(offenderNo, type.name) {
+  enum class Type {
+    COURT,
+    EVENT_STATUS,
+    EVENT_TYPE,
+    EXTERNAL_REFERENCE_URN,
+    PRISON,
+    START_TIME,
+  }
+}
+
+internal class MovementId(val bookingId: Long, val sequence: Int) {
   override fun toString(): String = "${bookingId}_$sequence"
 }
