@@ -60,9 +60,7 @@ class CourtSchedulerNomisApiMockServer(private val jsonMapper: JsonMapper) {
       bookingId: Long = 12345L,
       activeBooking: Boolean = true,
       latestBooking: Boolean = true,
-      courtSchedules: List<
-        BookingCourtScheduleOut,
-        > = listOf(bookingCourtSchedule()),
+      courtSchedules: List<BookingCourtScheduleOut> = listOf(bookingCourtSchedule()),
       unscheduledCourtMovementOuts: List<BookingCourtMovementOut> = listOf(bookingCourtMovementOut(seq = 1)),
       unscheduledCourtMovementIns: List<BookingCourtMovementIn> = listOf(bookingCourtMovementIn(seq = 2)),
     ): OffenderCourtMovementsResponse = OffenderCourtMovementsResponse(

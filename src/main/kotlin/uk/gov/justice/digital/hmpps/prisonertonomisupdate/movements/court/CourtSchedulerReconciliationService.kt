@@ -15,6 +15,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.Reconciliation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationSuccessPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.generateReconciliationReport
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.MismatchedPrisonerCourtMovementIds.Type.MISSING_MAPPING_SCHEDULE
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.findMatches
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.findMissing
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapActivePrisonersReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapActivePrisonersReconciliationService.Companion.TELEMETRY_ACTIVE_TAPS
@@ -233,6 +235,91 @@ class CourtSchedulerReconciliationService(
       )
     }
 
+    // check for missing schedule mappings
+    val matchedScheduleIds = movementMappings.matchingSchedules(nomisCourtEventIds, dpsCourtEventIds)
+    if (matchedScheduleIds.size != nomisCourtEventIds.size || matchedScheduleIds.size != dpsCourtEventIds.size) {
+      val missingNomisIds = nomisCourtEventIds - matchedScheduleIds.map { it.first }.toSet()
+      val missingDpsIds = dpsCourtEventIds - matchedScheduleIds.map { it.second }.toSet()
+      mismatches.add(
+        MismatchedPrisonerCourtMovementIds(
+          offenderNo = offenderNo,
+          type = MISSING_MAPPING_SCHEDULE,
+          nomisCount = missingNomisIds.size,
+          dpsCount = missingDpsIds.size,
+          unexpectedNomisIds = "$missingNomisIds",
+          unexpectedDpsIds = "$missingDpsIds",
+        ),
+      )
+    }
+
+    // check for missing scheduled movement out mappings
+    val matchedScheduledMovementOutIds = movementMappings.matchingMovements(nomisScheduledMovementOutIds, dpsScheduledMovementOutIds)
+    if (matchedScheduledMovementOutIds.size != nomisScheduledMovementOutIds.size || matchedScheduledMovementOutIds.size != dpsScheduledMovementOutIds.size) {
+      val missingNomisIds = nomisScheduledMovementOutIds - matchedScheduledMovementOutIds.map { it.first }.toSet()
+      val missingDpsIds = dpsScheduledMovementOutIds - matchedScheduledMovementOutIds.map { it.second }.toSet()
+      mismatches.add(
+        MismatchedPrisonerCourtMovementIds(
+          offenderNo = offenderNo,
+          type = MismatchedPrisonerCourtMovementIds.Type.MISSING_MAPPING_SCHEDULED_MOVEMENT_OUT,
+          nomisCount = missingNomisIds.size,
+          dpsCount = missingDpsIds.size,
+          unexpectedNomisIds = "$missingNomisIds",
+          unexpectedDpsIds = "$missingDpsIds",
+        ),
+      )
+    }
+
+    // check for missing scheduled movement in mappings
+    val matchedScheduledMovementInIds = movementMappings.matchingMovements(nomisScheduledMovementInIds, dpsScheduledMovementInIds)
+    if (matchedScheduledMovementInIds.size != nomisScheduledMovementInIds.size || matchedScheduledMovementInIds.size != dpsScheduledMovementInIds.size) {
+      val missingNomisIds = nomisScheduledMovementInIds - matchedScheduledMovementInIds.map { it.first }.toSet()
+      val missingDpsIds = dpsScheduledMovementInIds - matchedScheduledMovementInIds.map { it.second }.toSet()
+      mismatches.add(
+        MismatchedPrisonerCourtMovementIds(
+          offenderNo = offenderNo,
+          type = MismatchedPrisonerCourtMovementIds.Type.MISSING_MAPPING_SCHEDULED_MOVEMENT_IN,
+          nomisCount = missingNomisIds.size,
+          dpsCount = missingDpsIds.size,
+          unexpectedNomisIds = "$missingNomisIds",
+          unexpectedDpsIds = "$missingDpsIds",
+        ),
+      )
+    }
+
+    // check for missing unscheduled movement out mappings
+    val matchedUnscheduledMovementOutIds = movementMappings.matchingMovements(nomisUnscheduledMovementOutIds, dpsUnscheduledMovementOutIds)
+    if (matchedUnscheduledMovementOutIds.size != nomisUnscheduledMovementOutIds.size || matchedUnscheduledMovementOutIds.size != dpsUnscheduledMovementOutIds.size) {
+      val missingNomisIds = nomisUnscheduledMovementOutIds - matchedUnscheduledMovementOutIds.map { it.first }.toSet()
+      val missingDpsIds = dpsUnscheduledMovementOutIds - matchedUnscheduledMovementOutIds.map { it.second }.toSet()
+      mismatches.add(
+        MismatchedPrisonerCourtMovementIds(
+          offenderNo = offenderNo,
+          type = MismatchedPrisonerCourtMovementIds.Type.MISSING_MAPPING_UNSCHEDULED_MOVEMENT_OUT,
+          nomisCount = missingNomisIds.size,
+          dpsCount = missingDpsIds.size,
+          unexpectedNomisIds = "$missingNomisIds",
+          unexpectedDpsIds = "$missingDpsIds",
+        ),
+      )
+    }
+
+    // check for missing unscheduled movement in mappings
+    val matchedUnscheduledMovementInIds = movementMappings.matchingMovements(nomisUnscheduledMovementInIds, dpsUnscheduledMovementInIds)
+    if (matchedUnscheduledMovementInIds.size != nomisUnscheduledMovementInIds.size || matchedUnscheduledMovementInIds.size != dpsUnscheduledMovementInIds.size) {
+      val missingNomisIds = nomisUnscheduledMovementInIds - matchedUnscheduledMovementInIds.map { it.first }.toSet()
+      val missingDpsIds = dpsUnscheduledMovementInIds - matchedUnscheduledMovementInIds.map { it.second }.toSet()
+      mismatches.add(
+        MismatchedPrisonerCourtMovementIds(
+          offenderNo = offenderNo,
+          type = MismatchedPrisonerCourtMovementIds.Type.MISSING_MAPPING_UNSCHEDULED_MOVEMENT_IN,
+          nomisCount = missingNomisIds.size,
+          dpsCount = missingDpsIds.size,
+          unexpectedNomisIds = "$missingNomisIds",
+          unexpectedDpsIds = "$missingDpsIds",
+        ),
+      )
+    }
+
     return mismatches.toList()
   }
 
@@ -263,6 +350,20 @@ class CourtSchedulerReconciliationService(
   ) = findMissing(dpsMovementIds, nomisMovementIds) { dpsMovementId ->
     movements.find { it.dpsCourtMovementId == dpsMovementId }?.let { MovementId(it.nomisBookingId, it.nomisMovementSeq) }
   }
+
+  private fun CourtSchedulerPrisonerMappingIdsDto.matchingSchedules(
+    nomisCourtEventIds: List<Long>,
+    dpsCourtEventIds: List<UUID>,
+  ) = findMatches(nomisCourtEventIds, dpsCourtEventIds) { nomisId ->
+    schedules.find { it.nomisEventId == nomisId }?.dpsCourtAppearanceId
+  }
+
+  private fun CourtSchedulerPrisonerMappingIdsDto.matchingMovements(
+    nomisMovementIds: List<MovementId>,
+    dpsMovementIds: List<UUID>,
+  ) = findMatches(nomisMovementIds, dpsMovementIds) { nomisId ->
+    movements.find { it.nomisBookingId == nomisId.bookingId && it.nomisMovementSeq == nomisId.sequence }?.dpsCourtMovementId
+  }
 }
 
 abstract class MismatchedPrisonerCourtMovements(
@@ -284,6 +385,11 @@ class MismatchedPrisonerCourtMovementIds(
     UNSCHEDULED_MOVEMENT_OUT,
     SCHEDULED_MOVEMENT_IN,
     UNSCHEDULED_MOVEMENT_IN,
+    MISSING_MAPPING_SCHEDULE,
+    MISSING_MAPPING_SCHEDULED_MOVEMENT_OUT,
+    MISSING_MAPPING_UNSCHEDULED_MOVEMENT_OUT,
+    MISSING_MAPPING_SCHEDULED_MOVEMENT_IN,
+    MISSING_MAPPING_UNSCHEDULED_MOVEMENT_IN,
   }
 }
 
