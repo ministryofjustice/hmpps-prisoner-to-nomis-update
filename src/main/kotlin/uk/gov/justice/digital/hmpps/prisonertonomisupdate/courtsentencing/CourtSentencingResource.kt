@@ -207,7 +207,7 @@ class CourtSentencingResource(
       ),
       ApiResponse(
         responseCode = "404",
-        description = "Either mapping found for case/appearance or case/appearance/sentence not found in DPS",
+        description = "Either mapping found for case or sentence, or term not found in DPS",
       ),
     ],
   )
