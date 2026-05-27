@@ -861,6 +861,82 @@ class CourtSchedulerReconciliationIntTest(
       }
     }
 
+    @Nested
+    inner class UnscheduledMovementsOut {
+      private val dpsUnscheduledMovementOutId: UUID = UUID.randomUUID()
+
+      @BeforeEach
+      fun setUp() = runTest {
+        reset(telemetryClient)
+        nomisApi.stubGetAllPrisoners(
+          offenderId = 0,
+          pageSize = 100,
+          prisoners = listOf(generateOffenderNo(sequence = 1)),
+        )
+      }
+
+      @Test
+      fun `should report different prison`() = runTest {
+        stubDpsUnscheduledCourtMovement(courtEventMovement(fromAgency = "MDI", id = dpsUnscheduledMovementOutId, directionCode = "OUT"))
+        stubNomisUnscheduledCourtMovementOut(bookingCourtMovementOut(seq = 654))
+        stubMappings(nomisMovementOutId = MovementId(12345, 654), dpsMovementOutId = dpsUnscheduledMovementOutId)
+
+        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+        awaitReportFinished()
+
+        verify(telemetryClient).trackEvent(
+          eq("court-scheduler-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "offenderNo" to "A0001TZ",
+              "nomisMovementId" to "12345_654",
+              "dpsMovementId" to "$dpsUnscheduledMovementOutId",
+              "type" to "PRISON",
+            ),
+          ),
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class UnscheduledMovementsIn {
+      private val dpsUnscheduledMovementInId: UUID = UUID.randomUUID()
+
+      @BeforeEach
+      fun setUp() = runTest {
+        reset(telemetryClient)
+        nomisApi.stubGetAllPrisoners(
+          offenderId = 0,
+          pageSize = 100,
+          prisoners = listOf(generateOffenderNo(sequence = 1)),
+        )
+      }
+
+      @Test
+      fun `should report different court`() = runTest {
+        stubDpsUnscheduledCourtMovement(courtEventMovement(toAgency = "BXI", fromAgency = "YORKMC", id = dpsUnscheduledMovementInId, directionCode = "IN"))
+        stubNomisUnscheduledCourtMovementIn(bookingCourtMovementIn(seq = 987))
+        stubMappings(nomisMovementInId = MovementId(12345, 987), dpsMovementInId = dpsUnscheduledMovementInId)
+
+        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+        awaitReportFinished()
+
+        verify(telemetryClient).trackEvent(
+          eq("court-scheduler-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "offenderNo" to "A0001TZ",
+              "nomisMovementId" to "12345_987",
+              "dpsMovementId" to "$dpsUnscheduledMovementInId",
+              "type" to "COURT",
+            ),
+          ),
+          isNull(),
+        )
+      }
+    }
+
     private fun stubNomisCourtEvent(
       prison: String = "BXI",
       court: String = "LEEDMC",
@@ -897,6 +973,28 @@ class CourtSchedulerReconciliationIntTest(
       ),
     )
 
+    private fun stubNomisUnscheduledCourtMovementOut(
+      movementOut: BookingCourtMovementOut,
+    ) = courtScheduleNomisApi.stubGetOffenderCourtMovements(
+      offenderNo = offender,
+      response = offenderCourtMovementsResponse(
+        courtSchedules = listOf(),
+        unscheduledCourtMovementOuts = listOf(movementOut),
+        unscheduledCourtMovementIns = listOf(),
+      ),
+    )
+
+    private fun stubNomisUnscheduledCourtMovementIn(
+      movementIn: BookingCourtMovementIn,
+    ) = courtScheduleNomisApi.stubGetOffenderCourtMovements(
+      offenderNo = offender,
+      response = offenderCourtMovementsResponse(
+        courtSchedules = listOf(),
+        unscheduledCourtMovementOuts = listOf(),
+        unscheduledCourtMovementIns = listOf(movementIn),
+      ),
+    )
+
     private fun stubDpsCourtEvent(
       movementOut: CourtEventMovement? = null,
       movementIn: CourtEventMovement? = null,
@@ -920,6 +1018,16 @@ class CourtSchedulerReconciliationIntTest(
           ),
         ),
         unscheduledMovements = listOf(),
+      ),
+    )
+
+    private fun stubDpsUnscheduledCourtMovement(
+      movement: CourtEventMovement,
+    ) = dpsApi.stubGetCourtSchedulerReconciliation(
+      personIdentifier = offender,
+      response = reconciliation(
+        courtEvents = listOf(),
+        unscheduledMovements = listOf(movement),
       ),
     )
 
