@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-05-26.1480.30cf22d"
+    "version" : "2026-05-26.1484.f0b72d8"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -14331,6 +14331,17 @@
             "format" : "int64",
             "description" : "user Id"
           }
+        }, {
+          "name" : "dpsRolesOnly",
+          "in" : "query",
+          "description" : "Only return dps roles for the user",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "description" : "Only return dps roles for the user",
+            "example" : true
+          },
+          "example" : true
         } ],
         "responses" : {
           "200" : {
@@ -14375,6 +14386,71 @@
           },
           "404" : {
             "description" : "Not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/ids/all-from-id" : {
+      "get" : {
+        "tags" : [ "user-resource" ],
+        "summary" : "Get all staff user Ids",
+        "description" : "\n      Retrieves staff user ids to be iterated over with optional starting from specific staff user Id.\n      Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getUserIdsFromId",
+        "parameters" : [ {
+          "name" : "userId",
+          "in" : "query",
+          "description" : "If supplied get user ids starting after this id",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "default" : 0,
+            "description" : "If supplied get user ids starting after this id",
+            "example" : 1555999
+          },
+          "example" : 1555999
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "description" : "Number of ids to get",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 20,
+            "description" : "Number of ids to get"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Page of staff user Ids",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UserIdsPage"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -32303,6 +32379,7 @@
       },
       "UserDetails" : {
         "type" : "object",
+        "description" : "Staff User details",
         "properties" : {
           "id" : {
             "type" : "integer",
@@ -32343,6 +32420,31 @@
           }
         },
         "required" : [ "accounts", "audit", "firstName", "id", "lastName", "status" ]
+      },
+      "UserIdResponse" : {
+        "type" : "object",
+        "description" : "Staff user id",
+        "properties" : {
+          "userId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The user id"
+          }
+        },
+        "required" : [ "userId" ]
+      },
+      "UserIdsPage" : {
+        "type" : "object",
+        "properties" : {
+          "ids" : {
+            "type" : "array",
+            "description" : "Page of user IDs",
+            "items" : {
+              "$ref" : "#/components/schemas/UserIdResponse"
+            }
+          }
+        },
+        "required" : [ "ids" ]
       },
       "GeneralLedgerTransactionDto" : {
         "type" : "object",
