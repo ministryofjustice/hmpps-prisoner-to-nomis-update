@@ -4756,6 +4756,17 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         }
 
         @Test
+        fun `will send message to nomis migration to sync each breach hearing updated`() {
+          val breachCreatedMessages = fromNomisCourtSentencingQueue.waitForMessageOfType("courtsentencing.resync.breach-court-appearance.updated")
+
+          with(breachCreatedMessages.first()) {
+            val request: SyncRecallBreachCourtAppearanceEvent = Message.fromJson()
+            assertThat(request.offenderNo).isEqualTo(OFFENDER_NO)
+            assertThat(request.courtAppearanceId).isEqualTo(101L)
+          }
+        }
+
+        @Test
         fun `will create success telemetry`() {
           verify(telemetryClient).trackEvent(
             eq("recall-updated-success"),
