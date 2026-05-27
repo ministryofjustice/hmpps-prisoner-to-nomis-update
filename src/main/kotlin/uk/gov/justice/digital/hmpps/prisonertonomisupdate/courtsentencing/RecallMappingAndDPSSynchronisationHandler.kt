@@ -167,6 +167,16 @@ class RecallMappingAndDPSSynchronisationHandler(
         ),
       )
     }
+    mappingsWrapper.updatedCourtEventIds.forEach { courtAppearanceId ->
+      queueService.sendMessageTrackOnFailure(
+        queueId = "fromnomiscourtsentencing",
+        eventType = "courtsentencing.resync.breach-court-appearance.updated",
+        message = SyncRecallBreachCourtAppearanceEvent(
+          offenderNo = mappingsWrapper.offenderNo,
+          courtAppearanceId = courtAppearanceId,
+        ),
+      )
+    }
   }
   suspend fun updateMappingsAndNotifyDPSRetry(message: CreateMappingRetryMessage<RecallAppearanceUpdateMappingsWrapper>) = with(message) {
     updateMappingsAndNotifyDPS(
