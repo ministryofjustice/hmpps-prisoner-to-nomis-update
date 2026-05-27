@@ -182,6 +182,58 @@ class CourtSentencingResource(
     sentenceId = sentenceId,
   )
 
+  @PostMapping("/prisoners/{offenderNo}/court-sentencing/dps-court-case/{courtCaseId}/dps-appearance/{appearanceId}/dps-sentence/{sentenceId}/dps-period-length/{periodLengthId}/repair")
+  @Operation(
+    summary = "Resynchronises a sentence term insert from DPS to NOMIS",
+    description = "Used when a sentence term insert needs resynchronising to NOMIS which failed previously, so emergency use only. Requires ROLE_PRISONER_TO_NOMIS__UPDATE__RW",
+    responses = [
+      ApiResponse(
+        responseCode = "200",
+        description = "repair successful",
+        content = [
+          Content(
+            mediaType = "application/json",
+            schema = Schema(implementation = CourtCaseRepairResponse::class),
+          ),
+        ],
+      ),
+      ApiResponse(
+        responseCode = "401",
+        description = "Unauthorized to access this endpoint",
+      ),
+      ApiResponse(
+        responseCode = "403",
+        description = "Incorrect permissions to call endpoint",
+      ),
+      ApiResponse(
+        responseCode = "404",
+        description = "Either mapping found for case or sentence, or term not found in DPS",
+      ),
+    ],
+  )
+  suspend fun repairTermInsertInNomis(
+    @PathVariable
+    offenderNo: String,
+    @Schema(description = "The DPS ID of the related court case")
+    @PathVariable
+    courtCaseId: String,
+    @Schema(description = "The DPS ID of the related appearance")
+    @PathVariable
+    appearanceId: String,
+    @Schema(description = "The DPS ID of the related sentence")
+    @PathVariable
+    sentenceId: String,
+    @Schema(description = "The DPS ID of the term to be re-synced to NOMIS")
+    @PathVariable
+    periodLengthId: String,
+  ) = courtSentencingRepairService.resynchroniseTermInsertToNomis(
+    offenderNo = offenderNo,
+    courtCaseId = courtCaseId,
+    courtAppearanceId = appearanceId,
+    sentenceId = sentenceId,
+    periodLengthId = periodLengthId,
+  )
+
   @PutMapping("/prisoners/{offenderNo}/court-sentencing/dps-court-case/{courtCaseId}/dps-appearance/{appearanceId}/dps-sentence/{sentenceId}/repair")
   @Operation(
     summary = "Resynchronises a sentence from DPS to NOMIS",
