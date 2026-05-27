@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-05-06.714.f8ead5d"
+    "version" : "2026-05-26.791.ec22f2e"
   },
   "servers" : [ {
     "url" : "/",
@@ -5917,12 +5917,14 @@
           "description" : "Filter by service family",
           "required" : false,
           "schema" : {
-            "type" : "string",
-            "description" : "Service Type",
-            "enum" : [ "ACTIVITIES_APPOINTMENTS", "VIDEO_LINK_APPOINTMENTS", "ADJUDICATIONS", "INTERNAL_MOVEMENTS", "OFFICIAL_VISITS", "USE_OF_FORCE" ],
-            "example" : "ACTIVITIES_APPOINTMENTS"
+            "type" : "array",
+            "default" : null,
+            "items" : {
+              "type" : "string",
+              "enum" : [ "ACTIVITIES_APPOINTMENTS", "VIDEO_LINK_APPOINTMENTS", "ADJUDICATIONS", "INTERNAL_MOVEMENTS", "OFFICIAL_VISITS", "USE_OF_FORCE" ]
+            }
           },
-          "example" : "ACTIVITIES_APPOINTMENTS"
+          "example" : "[ACTIVITIES_APPOINTMENTS,ADJUDICATIONS]"
         }, {
           "name" : "page",
           "in" : "query",
@@ -7837,7 +7839,7 @@
           "deactivatedReason" : {
             "type" : [ "string", "null" ],
             "description" : "Reason for deactivation",
-            "enum" : [ "DAMAGED", "DAMP", "MAINTENANCE", "MOTHBALLED", "PEST", "REFURBISHMENT", "SECURITY_SEALED", "STAFF_SHORTAGE", "OTHER" ],
+            "enum" : [ "DAMAGED", "DAMP", "MAINTENANCE", "MOTHBALLED", "PEST", "REFURBISHMENT", "SECURITY_SEALED", "STAFF_SHORTAGE", "NEW_BUILD", "OTHER" ],
             "example" : "DAMAGED"
           },
           "deactivationReasonDescription" : {
@@ -8149,7 +8151,7 @@
           "deactivationReason" : {
             "type" : "string",
             "description" : "Reason for temporary deactivation",
-            "enum" : [ "DAMAGED", "DAMP", "MAINTENANCE", "MOTHBALLED", "PEST", "REFURBISHMENT", "SECURITY_SEALED", "STAFF_SHORTAGE", "OTHER" ],
+            "enum" : [ "DAMAGED", "DAMP", "MAINTENANCE", "MOTHBALLED", "PEST", "REFURBISHMENT", "SECURITY_SEALED", "STAFF_SHORTAGE", "NEW_BUILD", "OTHER" ],
             "example" : "MOTHBALLED"
           },
           "deactivationReasonDescription" : {
@@ -8483,7 +8485,7 @@
           "deactivatedReason" : {
             "type" : [ "string", "null" ],
             "description" : "Reason for deactivation",
-            "enum" : [ "DAMAGED", "DAMP", "MAINTENANCE", "MOTHBALLED", "PEST", "REFURBISHMENT", "SECURITY_SEALED", "STAFF_SHORTAGE", "OTHER" ],
+            "enum" : [ "DAMAGED", "DAMP", "MAINTENANCE", "MOTHBALLED", "PEST", "REFURBISHMENT", "SECURITY_SEALED", "STAFF_SHORTAGE", "NEW_BUILD", "OTHER" ],
             "example" : "DAMAGED"
           },
           "deactivationReasonDescription" : {
@@ -8691,7 +8693,7 @@
           "deactivationReason" : {
             "type" : "string",
             "description" : "Reason for temporary deactivation",
-            "enum" : [ "DAMAGED", "DAMP", "MAINTENANCE", "MOTHBALLED", "PEST", "REFURBISHMENT", "SECURITY_SEALED", "STAFF_SHORTAGE", "OTHER" ],
+            "enum" : [ "DAMAGED", "DAMP", "MAINTENANCE", "MOTHBALLED", "PEST", "REFURBISHMENT", "SECURITY_SEALED", "STAFF_SHORTAGE", "NEW_BUILD", "OTHER" ],
             "example" : "MOTHBALLED"
           },
           "deactivationReasonDescription" : {
@@ -9048,7 +9050,7 @@
           "deactivatedReason" : {
             "type" : [ "string", "null" ],
             "description" : "Reason for deactivation",
-            "enum" : [ "DAMAGED", "DAMP", "MAINTENANCE", "MOTHBALLED", "PEST", "REFURBISHMENT", "SECURITY_SEALED", "STAFF_SHORTAGE", "OTHER" ],
+            "enum" : [ "DAMAGED", "DAMP", "MAINTENANCE", "MOTHBALLED", "PEST", "REFURBISHMENT", "SECURITY_SEALED", "STAFF_SHORTAGE", "NEW_BUILD", "OTHER" ],
             "example" : "DAMAGED"
           },
           "maxCapacity" : {
@@ -9595,7 +9597,7 @@
           "deactivatedReason" : {
             "type" : [ "string", "null" ],
             "description" : "Reason for deactivation",
-            "enum" : [ "DAMAGED", "DAMP", "MAINTENANCE", "MOTHBALLED", "PEST", "REFURBISHMENT", "SECURITY_SEALED", "STAFF_SHORTAGE", "OTHER" ],
+            "enum" : [ "DAMAGED", "DAMP", "MAINTENANCE", "MOTHBALLED", "PEST", "REFURBISHMENT", "SECURITY_SEALED", "STAFF_SHORTAGE", "NEW_BUILD", "OTHER" ],
             "example" : "DAMAGED"
           },
           "proposedReactivationDate" : {
@@ -9783,14 +9785,6 @@
               "enum" : [ "ACCESSIBLE_CELL", "BIOHAZARD_DIRTY_PROTEST", "CSU", "CAT_A", "CONSTANT_SUPERVISION", "DRY", "ESCAPE_LIST", "ISOLATION_DISEASES", "LISTENER_CRISIS", "LOCATE_FLAT_CELL", "MEDICAL", "MOTHER_AND_BABY", "SAFE_CELL", "UNFURNISHED" ]
             },
             "uniqueItems" : true
-          },
-          "certifiedNormalAccommodation" : {
-            "type" : "integer",
-            "format" : "int32",
-            "default" : 0,
-            "deprecated" : true,
-            "description" : "CNA value",
-            "maximum" : 99
           },
           "inCellSanitation" : {
             "type" : "boolean",
@@ -10394,7 +10388,7 @@
           "deactivatedReason" : {
             "type" : [ "string", "null" ],
             "description" : "Reason for deactivation",
-            "enum" : [ "DAMAGED", "DAMP", "MAINTENANCE", "MOTHBALLED", "PEST", "REFURBISHMENT", "SECURITY_SEALED", "STAFF_SHORTAGE", "OTHER" ],
+            "enum" : [ "DAMAGED", "DAMP", "MAINTENANCE", "MOTHBALLED", "PEST", "REFURBISHMENT", "SECURITY_SEALED", "STAFF_SHORTAGE", "NEW_BUILD", "OTHER" ],
             "example" : "DAMAGED"
           },
           "rollCount" : {
