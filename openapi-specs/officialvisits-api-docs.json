@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-05-15.824.7d930dd"
+    "version" : "2026-05-26.841.14722b7"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -2759,7 +2759,7 @@
         } ],
         "responses" : {
           "200" : {
-            "description" : "Official visit found",
+            "description" : "Visit details",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -2769,7 +2769,68 @@
             }
           },
           "404" : {
-            "description" : "No official visit found",
+            "description" : "Official visit not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/official-visit/id/{officialVisitId}" : {
+      "get" : {
+        "tags" : [ "Official visits" ],
+        "summary" : "Get an official visit by official visit ID",
+        "description" : "Get the full details of an official visit, its visitors and prisoner details\n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISITS_ADMIN\n* ROLE_OFFICIAL_VISITS__R\n* ROLE_OFFICIAL_VISITS_RW",
+        "operationId" : "getOfficialVisitById_2",
+        "parameters" : [ {
+          "name" : "officialVisitId",
+          "in" : "path",
+          "description" : "The official visit ID",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "example" : 123456
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Visit details",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OfficialVisitDetails"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Official visit not found",
             "content" : {
               "application/json" : {
                 "schema" : {
