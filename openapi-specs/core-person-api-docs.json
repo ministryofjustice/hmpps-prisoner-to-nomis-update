@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-05-19.3519.216d0bb"
+    "version" : "2026-05-27.3606.1c5e863"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -1957,6 +1957,11 @@
             "enum" : [ "B", "M", "MA", "P", "PR", "PR1", "RJ", "RT", "S", "PM", "UNKNOWN" ],
             "example" : "M"
           },
+          "typeVerified" : {
+            "type" : "boolean",
+            "description" : "Is the address type verified",
+            "examples" : [ "false", "true" ]
+          },
           "usages" : {
             "type" : "array",
             "description" : "List of address usages",
@@ -1972,7 +1977,7 @@
             }
           }
         },
-        "required" : [ "contacts", "noFixedAbode", "startDate", "statusCode", "usages" ]
+        "required" : [ "contacts", "noFixedAbode", "startDate", "statusCode", "typeVerified", "usages" ]
       },
       "ProbationCreateAddressContact" : {
         "type" : "object",
