@@ -122,12 +122,12 @@ class CourtSchedulerReconciliationService(
     )
   }.getOrNull()
 
-  suspend fun checkPrisonersMatch(offenderNo: String): List<MismatchedPrisonerCourtMovements> = withContext(Dispatchers.Unconfined) {
+  suspend fun checkPrisonersMatch(offenderNo: String, suppressTelemetry: Boolean = false): List<MismatchedPrisonerCourtMovements> = withContext(Dispatchers.Unconfined) {
     val nomisMovements = async { nomisApiService.getOffenderCourtMovementsOrNull(offenderNo) }
     val dpsMovements = async { dpsApiService.getCourtSchedulerReconciliation(offenderNo) }
     val movementMappings = async { mappingService.getCourtSchedulerPrisonMappingIds(offenderNo) }
 
-    checkPrisonersMatch(offenderNo, nomisMovements.await(), dpsMovements.await(), movementMappings.await())
+    checkPrisonersMatch(offenderNo, nomisMovements.await(), dpsMovements.await(), movementMappings.await(), suppressTelemetry)
   }
 
   private suspend fun checkPrisonersMatch(
@@ -135,37 +135,42 @@ class CourtSchedulerReconciliationService(
     nomisMovements: OffenderCourtMovementsResponse?,
     dpsMovements: ReconciliationResponse,
     movementMappings: CourtSchedulerPrisonerMappingIdsDto,
+    suppressTelemetry: Boolean,
   ): List<MismatchedPrisonerCourtMovements> {
     if (nomisMovements == null) {
       throw IllegalStateException("Cannot perform reconciliation for a prisoner that doesn't exist in NOMIS - has the prisoner been merged or deleted recently?")
     }
 
     val mismatchedEntities = findMismatchedEntities(offenderNo, nomisMovements, dpsMovements, movementMappings)
-    mismatchedEntities.forEach {
-      telemetryClient.trackEvent(
-        "$TELEMETRY_COURT_SCHEDULER-mismatch",
-        mapOf(
-          "offenderNo" to offenderNo,
-          "type" to it.type,
-          "nomisCount" to it.nomisCount.toString(),
-          "dpsCount" to it.dpsCount.toString(),
-          "unexpected-nomis-ids" to it.unexpectedNomisIds,
-          "unexpected-dps-ids" to it.unexpectedDpsIds,
-        ),
-      )
+    if (!suppressTelemetry) {
+      mismatchedEntities.forEach {
+        telemetryClient.trackEvent(
+          "$TELEMETRY_COURT_SCHEDULER-mismatch",
+          mapOf(
+            "offenderNo" to offenderNo,
+            "type" to it.type,
+            "nomisCount" to it.nomisCount.toString(),
+            "dpsCount" to it.dpsCount.toString(),
+            "unexpected-nomis-ids" to it.unexpectedNomisIds,
+            "unexpected-dps-ids" to it.unexpectedDpsIds,
+          ),
+        )
+      }
     }
 
     val mismatchedScheduleDetails = findMismatchedCourtScheduleDetails(offenderNo, nomisMovements, dpsMovements, movementMappings)
-    mismatchedScheduleDetails.forEach {
-      telemetryClient.trackEvent(
-        "$TELEMETRY_COURT_SCHEDULER-mismatch",
-        mapOf(
-          "offenderNo" to offenderNo,
-          "type" to it.type,
-          "nomisEventId" to it.nomisEventId,
-          "dpsCourtEventId" to it.dpsCourtEventId,
-        ),
-      )
+    if (!suppressTelemetry) {
+      mismatchedScheduleDetails.forEach {
+        telemetryClient.trackEvent(
+          "$TELEMETRY_COURT_SCHEDULER-mismatch",
+          mapOf(
+            "offenderNo" to offenderNo,
+            "type" to it.type,
+            "nomisEventId" to it.nomisEventId,
+            "dpsCourtEventId" to it.dpsCourtEventId,
+          ),
+        )
+      }
     }
 
     val mismatchedMovementDetails = findMismatchedScheduledMovementOutDetails(offenderNo, nomisMovements, dpsMovements, movementMappings) +
@@ -173,16 +178,18 @@ class CourtSchedulerReconciliationService(
       findMismatchedUnscheduledMovementOutDetails(offenderNo, nomisMovements, dpsMovements, movementMappings) +
       findMismatchedUnscheduledMovementInDetails(offenderNo, nomisMovements, dpsMovements, movementMappings)
 
-    mismatchedMovementDetails.forEach {
-      telemetryClient.trackEvent(
-        "$TELEMETRY_COURT_SCHEDULER-mismatch",
-        mapOf(
-          "offenderNo" to offenderNo,
-          "type" to it.type,
-          "nomisMovementId" to it.nomisMovementId,
-          "dpsMovementId" to it.dpsCourtMovementId,
-        ),
-      )
+    if (!suppressTelemetry) {
+      mismatchedMovementDetails.forEach {
+        telemetryClient.trackEvent(
+          "$TELEMETRY_COURT_SCHEDULER-mismatch",
+          mapOf(
+            "offenderNo" to offenderNo,
+            "type" to it.type,
+            "nomisMovementId" to it.nomisMovementId,
+            "dpsMovementId" to it.dpsCourtMovementId,
+          ),
+        )
+      }
     }
 
     return mismatchedEntities + mismatchedScheduleDetails + mismatchedMovementDetails

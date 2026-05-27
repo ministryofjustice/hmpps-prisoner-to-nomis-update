@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration
 
+import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
 import org.junit.jupiter.api.BeforeEach
@@ -14,6 +15,9 @@ import org.springframework.boot.test.autoconfigure.json.AutoConfigureJson
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.model.PurgeQueueRequest
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest
+import tools.jackson.databind.json.JsonMapper
+import tools.jackson.module.kotlin.readValue
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.SQSMessage
 import uk.gov.justice.hmpps.sqs.HmppsQueue
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.HmppsTopic
@@ -24,6 +28,11 @@ abstract class SqsIntegrationTestBase : IntegrationTestBase() {
 
   @Autowired
   private lateinit var hmppsQueueService: HmppsQueueService
+
+  @Autowired
+  private lateinit var jsonMapper: JsonMapper
+
+  private inline fun <reified T> String.fromJson(): T = jsonMapper.readValue(this)
 
   internal val topic by lazy { hmppsQueueService.findByTopicId("domainevents") as HmppsTopic }
 
@@ -200,13 +209,21 @@ abstract class SqsIntegrationTestBase : IntegrationTestBase() {
   internal fun waitForAnyProcessingToComplete(name: String) {
     await untilAsserted { verify(telemetryClient).trackEvent(eq(name), any(), isNull()) }
   }
+  fun HmppsQueue.waitForMessageOfType(type: String, count: Int = 1): List<SQSMessage> {
+    var messages: List<SQSMessage> = emptyList()
+    await untilAsserted {
+      val rawMessages = readAtMost10RawMessages()
+      messages = rawMessages.map { it.fromJson<SQSMessage>() }.filter { it.Type == type }
+      assertThat(messages.size).withFailMessage { "Expected $count messages of type $type, but found ${messages.size}" }.isEqualTo(count)
+    }
+    return messages
+  }
 }
 private fun HmppsQueue.purgeQueue() = this.sqsClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(this.queueUrl).build())
 
 private fun SqsAsyncClient.purgeQueue(queueUrl: String?) = purgeQueue(PurgeQueueRequest.builder().queueUrl(queueUrl!!).build())
 fun HmppsQueue.countAllMessagesOnDLQQueue(): Int = this.sqsDlqClient!!.countAllMessagesOnQueue(dlqUrl!!).get()
 fun HmppsQueue.countAllMessagesOnQueue(): Int = this.sqsClient.countAllMessagesOnQueue(queueUrl).get()
-
 fun HmppsQueue.readRawMessages(): List<String> {
   val messageResult = this.sqsClient.receiveMessage(
     ReceiveMessageRequest.builder().queueUrl(this.queueUrl).build(),

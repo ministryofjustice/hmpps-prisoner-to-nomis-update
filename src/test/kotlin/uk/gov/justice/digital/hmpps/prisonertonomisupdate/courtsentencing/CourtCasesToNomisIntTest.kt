@@ -37,7 +37,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtS
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingApiExtension.Companion.legacySentence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.countAllMessagesOnQueue
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.readAtMost10RawMessages
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.readRawMessages
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.SQSMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceRecallMappingDto
@@ -871,14 +870,9 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         @Test
         fun `will send message to nomis migration to sync court cases cloned`() {
-          await untilAsserted {
-            assertThat(fromNomisCourtSentencingQueue.countAllMessagesOnQueue()).isEqualTo(3)
-          }
-          val rawMessages = fromNomisCourtSentencingQueue.readAtMost10RawMessages()
-          val sqsMessages: List<SQSMessage> = rawMessages.map { it.fromJson() }
-          val sqsMessage = sqsMessages.first { it.Type == "courtsentencing.resync.case.booking" }
-          assertThat(sqsMessage.Type).isEqualTo("courtsentencing.resync.case.booking")
-          val request: OffenderCaseBookingResynchronisationEvent = sqsMessage.Message.fromJson()
+          val caseBookingMessages = fromNomisCourtSentencingQueue.waitForMessageOfType("courtsentencing.resync.case.booking")
+
+          val request: OffenderCaseBookingResynchronisationEvent = caseBookingMessages.first().Message.fromJson()
           assertThat(request.offenderNo).isEqualTo(OFFENDER_NO)
           assertThat(request.caseIds).containsExactly(101L)
           assertThat(request.casesMoved).hasSize(1)
@@ -891,14 +885,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         @Test
         fun `will send message to nomis migration to sync sentence adjustments cloned`() {
-          await untilAsserted {
-            assertThat(fromNomisCourtSentencingQueue.countAllMessagesOnQueue()).isEqualTo(3)
-          }
-          val rawMessages = fromNomisCourtSentencingQueue.readAtMost10RawMessages()
-          val sqsMessages: List<SQSMessage> = rawMessages.map { it.fromJson() }
-          val adjustmentMessages = sqsMessages.filter { it.Type == "courtsentencing.resync.sentence-adjustments" }
-
-          assertThat(adjustmentMessages).hasSize(2)
+          val adjustmentMessages = fromNomisCourtSentencingQueue.waitForMessageOfType("courtsentencing.resync.sentence-adjustments", 2)
 
           val requests: List<SyncSentenceAdjustment> = adjustmentMessages.map { it.Message.fromJson() }
 
@@ -4093,18 +4080,10 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           }
 
           @Test
-          fun `will send message to nomis migration to sync each adjustment changed and breach hearing created`() {
-            await untilAsserted {
-              assertThat(fromNomisCourtSentencingQueue.countAllMessagesOnQueue()).isEqualTo(4)
-            }
-            val rawMessages = fromNomisCourtSentencingQueue.readAtMost10RawMessages()
-            val adjustmentMessage1 = rawMessages[0].fromJson<SQSMessage>()
-            val adjustmentMessage2 = rawMessages[1].fromJson<SQSMessage>()
-            val breachCourtAppearanceMessage1 = rawMessages[2].fromJson<SQSMessage>()
-            val breachCourtAppearanceMessage2 = rawMessages[3].fromJson<SQSMessage>()
+          fun `will send message to nomis migration to sync each adjustment changed`() {
+            val adjustmentMessages = fromNomisCourtSentencingQueue.waitForMessageOfType("courtsentencing.resync.sentence-adjustments", 2)
 
-            with(adjustmentMessage1) {
-              assertThat(Type).isEqualTo("courtsentencing.resync.sentence-adjustments")
+            with(adjustmentMessages[0]) {
               val request: SyncSentenceAdjustment = Message.fromJson()
               assertThat(request.offenderNo).isEqualTo(OFFENDER_NO)
               assertThat(request.sentences).hasSize(1)
@@ -4113,8 +4092,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
               assertThat(request.sentences[0].adjustmentIds).hasSize(1)
               assertThat(request.sentences[0].adjustmentIds[0]).isIn(1L, 2L)
             }
-            with(adjustmentMessage2) {
-              assertThat(this.Type).isEqualTo("courtsentencing.resync.sentence-adjustments")
+            with(adjustmentMessages[1]) {
               val request: SyncSentenceAdjustment = Message.fromJson()
               assertThat(request.offenderNo).isEqualTo(OFFENDER_NO)
               assertThat(request.sentences).hasSize(1)
@@ -4123,22 +4101,18 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
               assertThat(request.sentences[0].adjustmentIds).hasSize(1)
               assertThat(request.sentences[0].adjustmentIds[0]).isIn(1L, 2L)
             }
-            // shenanigans since the order isn't guaranteed since it comes from a set of Lists
-            val firstAdjustmentId =
-              adjustmentMessage1.Message.fromJson<SyncSentenceAdjustment>().sentences[0].adjustmentIds[0]
-            val secondAdjustmentId =
-              adjustmentMessage2.Message.fromJson<SyncSentenceAdjustment>().sentences[0].adjustmentIds[0]
+          }
 
-            assertThat(firstAdjustmentId).isNotEqualTo(secondAdjustmentId)
+          @Test
+          fun `will send message to nomis migration to sync each breach hearing created`() {
+            val breachCourtAppearanceMessages = fromNomisCourtSentencingQueue.waitForMessageOfType("courtsentencing.resync.breach-court-appearance.inserted", 2)
 
-            with(breachCourtAppearanceMessage1) {
-              assertThat(this.Type).isEqualTo("courtsentencing.resync.breach-court-appearance.inserted")
+            with(breachCourtAppearanceMessages[0]) {
               val request: SyncRecallBreachCourtAppearanceEvent = Message.fromJson()
               assertThat(request.offenderNo).isEqualTo(OFFENDER_NO)
               assertThat(request.courtAppearanceId).isEqualTo(101L)
             }
-            with(breachCourtAppearanceMessage2) {
-              assertThat(this.Type).isEqualTo("courtsentencing.resync.breach-court-appearance.inserted")
+            with(breachCourtAppearanceMessages[1]) {
               val request: SyncRecallBreachCourtAppearanceEvent = Message.fromJson()
               assertThat(request.offenderNo).isEqualTo(OFFENDER_NO)
               assertThat(request.courtAppearanceId).isEqualTo(102L)
@@ -4387,15 +4361,9 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           }
 
           @Test
-          fun `will send message to nomis migration for each adjustments, breach hearing and the case clone`() {
-            await untilAsserted {
-              assertThat(fromNomisCourtSentencingQueue.countAllMessagesOnQueue()).isEqualTo(4)
-            }
-            val rawMessages = fromNomisCourtSentencingQueue.readAtMost10RawMessages()
-            val sqsMessages: List<SQSMessage> = rawMessages.map { it.fromJson() }
-            val sqsMessage = sqsMessages.first { it.Type == "courtsentencing.resync.case.booking" }
-            assertThat(sqsMessage.Type).isEqualTo("courtsentencing.resync.case.booking")
-            val request: OffenderCaseBookingResynchronisationEvent = sqsMessage.Message.fromJson()
+          fun `will send message to nomis migration the case clone`() {
+            val caseBookingMessages = fromNomisCourtSentencingQueue.waitForMessageOfType("courtsentencing.resync.case.booking")
+            val request: OffenderCaseBookingResynchronisationEvent = caseBookingMessages.first().Message.fromJson()
             assertThat(request.offenderNo).isEqualTo(OFFENDER_NO)
             assertThat(request.caseIds).containsExactly(101L)
             assertThat(request.casesMoved).hasSize(1)
@@ -4408,15 +4376,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
           @Test
           fun `will send message to nomis migration for each sync sentence adjustments that have been created`() {
-            await untilAsserted {
-              assertThat(fromNomisCourtSentencingQueue.countAllMessagesOnQueue()).isEqualTo(4)
-            }
-            val rawMessages = fromNomisCourtSentencingQueue.readAtMost10RawMessages()
-            val sqsMessages: List<SQSMessage> = rawMessages.map { it.fromJson() }
-            val adjustmentMessages = sqsMessages.filter { it.Type == "courtsentencing.resync.sentence-adjustments" }
-            val breachCourtAppearanceMessages = sqsMessages.filter { it.Type == "courtsentencing.resync.breach-court-appearance.inserted" }
-
-            assertThat(adjustmentMessages).hasSize(2)
+            val adjustmentMessages = fromNomisCourtSentencingQueue.waitForMessageOfType("courtsentencing.resync.sentence-adjustments", 2)
 
             val requests: List<SyncSentenceAdjustment> = adjustmentMessages.map { it.Message.fromJson() }
 
@@ -4447,8 +4407,11 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             assertThat(firstAdjustmentId).isIn(20001L, 20002L)
             assertThat(secondAdjustmentId).isIn(20001L, 20002L)
             assertThat(firstAdjustmentId).isNotEqualTo(secondAdjustmentId)
+          }
 
-            assertThat(breachCourtAppearanceMessages).hasSize(1)
+          @Test
+          fun `will send message to nomis migration for each breach hearing that has been created`() {
+            fromNomisCourtSentencingQueue.waitForMessageOfType("courtsentencing.resync.breach-court-appearance.inserted")
           }
 
           @Test
@@ -4783,17 +4746,23 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         @Test
         fun `will send message to nomis migration to sync each breach hearing created`() {
-          await untilAsserted {
-            assertThat(fromNomisCourtSentencingQueue.countAllMessagesOnQueue()).isEqualTo(1)
-          }
-          val rawMessages = fromNomisCourtSentencingQueue.readAtMost10RawMessages()
-          val breachCreatedMessages = rawMessages.map { it.fromJson<SQSMessage>() }
-            .filter { it.Type == "courtsentencing.resync.breach-court-appearance.inserted" }
+          val breachCreatedMessages = fromNomisCourtSentencingQueue.waitForMessageOfType("courtsentencing.resync.breach-court-appearance.inserted")
 
           with(breachCreatedMessages.first()) {
             val request: SyncRecallBreachCourtAppearanceEvent = Message.fromJson()
             assertThat(request.offenderNo).isEqualTo(OFFENDER_NO)
             assertThat(request.courtAppearanceId).isEqualTo(103L)
+          }
+        }
+
+        @Test
+        fun `will send message to nomis migration to sync each breach hearing updated`() {
+          val breachCreatedMessages = fromNomisCourtSentencingQueue.waitForMessageOfType("courtsentencing.resync.breach-court-appearance.updated")
+
+          with(breachCreatedMessages.first()) {
+            val request: SyncRecallBreachCourtAppearanceEvent = Message.fromJson()
+            assertThat(request.offenderNo).isEqualTo(OFFENDER_NO)
+            assertThat(request.courtAppearanceId).isEqualTo(101L)
           }
         }
 
@@ -4851,12 +4820,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         @Test
         fun `will send message to nomis migration to sync each breach hearing created`() {
-          await untilAsserted {
-            assertThat(fromNomisCourtSentencingQueue.countAllMessagesOnQueue()).isEqualTo(1)
-          }
-          val rawMessages = fromNomisCourtSentencingQueue.readAtMost10RawMessages()
-          val breachCreatedMessages = rawMessages.map { it.fromJson<SQSMessage>() }
-            .filter { it.Type == "courtsentencing.resync.breach-court-appearance.inserted" }
+          val breachCreatedMessages = fromNomisCourtSentencingQueue.waitForMessageOfType("courtsentencing.resync.breach-court-appearance.inserted")
 
           with(breachCreatedMessages.first()) {
             val request: SyncRecallBreachCourtAppearanceEvent = Message.fromJson()

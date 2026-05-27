@@ -72,12 +72,14 @@ class CourtSchedulerDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
     fun courtEvent(
       id: UUID = UUID.randomUUID(),
+      startTime: LocalDateTime = yesterday,
+      prison: String = "BXI",
     ) = CourtEvent(
       dpsId = id,
-      prisonCodeAtTimeOfScheduling = "BXI",
+      prisonCodeAtTimeOfScheduling = prison,
       agyLocId = "LEEDMC",
-      eventDate = yesterday.toLocalDate(),
-      startTime = "$yesterday",
+      eventDate = startTime.toLocalDate(),
+      startTime = "$startTime",
       courtEventType = "CRT",
       eventStatus = "COMP",
       commentText = "court event comment",

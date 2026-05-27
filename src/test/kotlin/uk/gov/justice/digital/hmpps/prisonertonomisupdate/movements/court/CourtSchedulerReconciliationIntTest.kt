@@ -12,6 +12,7 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.check
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
+import org.mockito.kotlin.never
 import org.mockito.kotlin.reset
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
@@ -366,34 +367,6 @@ class CourtSchedulerReconciliationIntTest(
           isNull(),
         )
       }
-    }
-
-    private fun stubEmptyResponses(offender: String = "A0001TZ") {
-      courtScheduleNomisApi.stubGetOffenderCourtMovements(
-        offenderNo = offender,
-        response = offenderCourtMovementsResponse(
-          courtSchedules = listOf(),
-          unscheduledCourtMovementOuts = listOf(),
-          unscheduledCourtMovementIns = listOf(),
-        ),
-      )
-
-      dpsApi.stubGetCourtSchedulerReconciliation(
-        personIdentifier = offender,
-        response = reconciliation(
-          courtEvents = listOf(),
-          unscheduledMovements = listOf(),
-        ),
-      )
-
-      mappingApi.stubGetCourtSchedulerPrisonerMappingIds(
-        prisonerNumber = offender,
-        idMappings = CourtSchedulerPrisonerMappingIdsDto(
-          prisonerNumber = offender,
-          schedules = listOf(),
-          movements = listOf(),
-        ),
-      )
     }
   }
 
@@ -1053,6 +1026,216 @@ class CourtSchedulerReconciliationIntTest(
       courtSentencingId: UUID,
     ) = courtSentencingMappingApi.stubGetAllCourtAppearanceByNomisIds(
       mappings = listOf(CourtAppearanceMappingDto(nomisEventId, courtSentencingId.toString())),
+    )
+  }
+
+  @Nested
+  inner class PrisonerReconciliationEndpoint {
+
+    @Nested
+    inner class ReconcileSinglePrisoner {
+
+      @BeforeEach
+      fun setUp() = runTest {
+        stubEmptyResponses("A0001TZ")
+      }
+
+      @Test
+      fun `should return nothing if no mismatches`() = runTest {
+        webTestClient.get().uri("/external-movements/court/A0001TZ/reconciliation")
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
+          .exchange()
+          .expectStatus().isOk()
+          .expectBody()
+          .jsonPath("$.size()").isEqualTo(0)
+
+        verify(
+          telemetryClient,
+          never(),
+        ).trackEvent(
+          eq("court-scheduler-reconciliation-mismatch"),
+          any(),
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `should return ID mismatches and suppress telemetry`() = runTest {
+        courtScheduleNomisApi.stubGetOffenderCourtMovements(
+          offenderNo = "A0001TZ",
+          response = offenderCourtMovementsResponse(
+            courtSchedules = listOf(
+              bookingCourtSchedule(
+                eventId = 123,
+                courtMovementOut = null,
+                courtMovementIn = null,
+              ),
+            ),
+            unscheduledCourtMovementOuts = listOf(),
+            unscheduledCourtMovementIns = listOf(),
+          ),
+        )
+
+        // returns full mismatch details
+        webTestClient.get().uri("/external-movements/court/A0001TZ/reconciliation")
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
+          .exchange()
+          .expectStatus().isOk()
+          .expectBody()
+          .jsonPath("$[0].offenderNo").isEqualTo("A0001TZ")
+          .jsonPath("$[0].type").isEqualTo("SCHEDULE")
+          .jsonPath("$[0].nomisCount").isEqualTo("1")
+          .jsonPath("$[0].dpsCount").isEqualTo("0")
+          .jsonPath("$[0].unexpectedNomisIds").isEqualTo("[123]")
+          .jsonPath("$[0].unexpectedDpsIds").isEqualTo("[]")
+
+        // does not publish telemetry
+        verify(
+          telemetryClient,
+          never(),
+        ).trackEvent(
+          eq("court-scheduler-reconciliation-mismatch"),
+          any(),
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `should return detail mismatches and suppress telemetry`() = runTest {
+        val dpsCourtEventId = UUID.randomUUID()
+        val today = LocalDateTime.now()
+
+        courtScheduleNomisApi.stubGetOffenderCourtMovements(
+          offenderNo = "A0001TZ",
+          response = offenderCourtMovementsResponse(
+            courtSchedules = listOf(
+              bookingCourtSchedule(
+                eventId = 123,
+                startTime = today,
+                // The prison is different to DPS
+                prison = "MDI",
+                courtMovementOut = null,
+                courtMovementIn = null,
+              ),
+            ),
+            unscheduledCourtMovementOuts = listOf(),
+            unscheduledCourtMovementIns = listOf(),
+          ),
+        )
+        dpsApi.stubGetCourtSchedulerReconciliation(
+          personIdentifier = "A0001TZ",
+          response = reconciliation(
+            courtEvents = listOf(
+              ReconciliationCourtEvent(
+                courtEvent = courtEvent(
+                  id = dpsCourtEventId,
+                  startTime = today,
+                  // The prison is different to NOMIS
+                  prison = "BXI",
+                ),
+                movements = listOf(),
+              ),
+            ),
+            unscheduledMovements = listOf(),
+          ),
+        )
+        mappingApi.stubGetCourtSchedulerPrisonerMappingIds(
+          prisonerNumber = "A0001TZ",
+          idMappings = CourtSchedulerPrisonerMappingIdsDto(
+            prisonerNumber = "A0001TZ",
+            schedules = listOf(CourtScheduleMappingIdsDto(123, dpsCourtEventId)),
+            movements = listOf(),
+          ),
+        )
+
+        // returns full mismatch details
+        webTestClient.get().uri("/external-movements/court/A0001TZ/reconciliation")
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
+          .exchange()
+          .expectStatus().isOk()
+          .expectBody()
+          .jsonPath("$[0].offenderNo").isEqualTo("A0001TZ")
+          .jsonPath("$[0].type").isEqualTo("PRISON")
+          .jsonPath("$[0].nomisEventId").isEqualTo("123")
+          .jsonPath("$[0].dpsCourtEventId").isEqualTo("$dpsCourtEventId")
+          .jsonPath("$[0].nomisValue").isEqualTo("MDI")
+          .jsonPath("$[0].dpsValue").isEqualTo("BXI")
+
+        // does not publish telemetry
+        verify(
+          telemetryClient,
+          never(),
+        ).trackEvent(
+          eq("court-scheduler-reconciliation-mismatch"),
+          any(),
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class Validation {
+      @Test
+      fun `should return error for unknown offender`() {
+        webTestClient.get().uri("/external-movements/court/UNKNOWN/reconciliation")
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
+          .exchange()
+          .expectStatus().is5xxServerError
+      }
+    }
+
+    @Nested
+    inner class Security {
+      @Test
+      fun `access forbidden when no role`() {
+        webTestClient.get().uri("/external-movements/court/A0001TZ/reconciliation")
+          .headers(setAuthorisation(roles = listOf()))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access forbidden with wrong role`() {
+        webTestClient.get().uri("/external-movements/court/A0001TZ/reconciliation")
+          .headers(setAuthorisation(roles = listOf("ROLE_BANANAS")))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access unauthorised with no auth token`() {
+        webTestClient.get().uri("/external-movements/court/A0001TZ/reconciliation")
+          .exchange()
+          .expectStatus().isUnauthorized
+      }
+    }
+  }
+
+  private fun stubEmptyResponses(offender: String = "A0001TZ") {
+    courtScheduleNomisApi.stubGetOffenderCourtMovements(
+      offenderNo = offender,
+      response = offenderCourtMovementsResponse(
+        courtSchedules = listOf(),
+        unscheduledCourtMovementOuts = listOf(),
+        unscheduledCourtMovementIns = listOf(),
+      ),
+    )
+
+    dpsApi.stubGetCourtSchedulerReconciliation(
+      personIdentifier = offender,
+      response = reconciliation(
+        courtEvents = listOf(),
+        unscheduledMovements = listOf(),
+      ),
+    )
+
+    mappingApi.stubGetCourtSchedulerPrisonerMappingIds(
+      prisonerNumber = offender,
+      idMappings = CourtSchedulerPrisonerMappingIdsDto(
+        prisonerNumber = offender,
+        schedules = listOf(),
+        movements = listOf(),
+      ),
     )
   }
 
