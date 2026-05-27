@@ -85,6 +85,10 @@ generic-service:
       type: COREPERSON_ACTIVE_RECON
       schedule: "30 14 * * *"
       suspend: true
+    - name: court-scheduler-recon
+      type: COURT_SCHEDULER_RECON
+      schedule: "00 4 * * *"
+      suspend: true
     - name: visit-slots-recon
       type: VISIT_SLOTS_RECON
       schedule: "45 2 * * *"

@@ -77,6 +77,10 @@ generic-service:
       type: COURT_CASE_ACTIVE_PRISONER_RECON
       schedule: "0 18 * * 1-5"
       suspend: true
+    - name: court-scheduler-recon
+      type: COURT_SCHEDULER_RECON
+      schedule: "00 4 * * *"
+      suspend: true
     - name: official-visits-all-recon
       type: OFFICIAL_VISIT_ALL_RECON
       schedule: "30 5 * * SAT"

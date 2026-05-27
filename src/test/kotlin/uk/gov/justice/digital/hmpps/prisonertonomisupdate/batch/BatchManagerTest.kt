@@ -54,6 +54,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.PrisonerTransa
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives.IncentivesReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.IncidentsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.LocationsReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.CourtSchedulerReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapActivePrisonersReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapAllPrisonersReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nonassociations.NonAssociationsReconciliationService
@@ -80,6 +81,7 @@ class BatchManagerTest {
   private val contactPersonProfileDetailsReconService = mock<ContactPersonProfileDetailsReconciliationService>()
   private val contactPersonReconService = mock<ContactPersonReconciliationService>()
   private val corePersonReconciliationService = mock<CorePersonReconciliationService>()
+  private val courtSchedulerReconciliationService = mock<CourtSchedulerReconciliationService>()
   private val courtSentencingReconciliationService = mock<CourtSentencingReconciliationService>()
   private val csipReconciliationService = mock<CSIPReconciliationService>()
   private val hmppsQueueService = mock<HmppsQueueService>()
@@ -464,6 +466,16 @@ class BatchManagerTest {
     verify(context).close()
   }
 
+  @Test
+  fun `should call the court scheduler reconciliation service`() = runTest {
+    val batchManager = batchManager(BatchType.COURT_SCHEDULER_RECON)
+
+    batchManager.onApplicationEvent(event)
+
+    verify(courtSchedulerReconciliationService).generateCourtSchedulerReconciliationReportBatch()
+    verify(context).close()
+  }
+
   private fun batchManager(batchType: BatchType) = BatchManager(
     batchType = batchType,
     activitiesDlqName = activityDlqName,
@@ -475,6 +487,7 @@ class BatchManagerTest {
     contactPersonProfileDetailsReconService = contactPersonProfileDetailsReconService,
     contactPersonReconciliationService = contactPersonReconService,
     corePersonReconciliationService = corePersonReconciliationService,
+    courtSchedulerReconciliationService = courtSchedulerReconciliationService,
     courtSentencingReconciliationService = courtSentencingReconciliationService,
     csipReconciliationService = csipReconciliationService,
     hmppsQueueService = hmppsQueueService,
