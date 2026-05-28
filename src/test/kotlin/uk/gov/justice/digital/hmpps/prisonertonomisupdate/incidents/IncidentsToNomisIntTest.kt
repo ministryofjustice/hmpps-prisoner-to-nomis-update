@@ -48,7 +48,6 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
 
         @BeforeEach
         fun setUp() {
-          nomisApi.stubCheckAgencySwitchForAgency("INCIDENTS", "ASI")
           publishCreateIncidentDomainEvent(dpsId = "12345", nomisId = 1234L, source = "NOMIS")
           waitForAnyProcessingToComplete()
         }
@@ -136,7 +135,6 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
               ),
 
             )
-            nomisApi.stubCheckAgencySwitchForAgency("INCIDENTS", "ASI")
           }
 
           @Nested
@@ -144,7 +142,6 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
             @BeforeEach
             fun setUp() {
               incidentsNomisApi.stubUpsertIncident(nomisId)
-              nomisApi.stubCheckAgencySwitchForAgency("INCIDENTS", "ASI")
               publishCreateIncidentDomainEvent(dpsId = dpsId.toString(), nomisId = nomisId)
               waitForAnyProcessingToComplete()
             }
@@ -384,7 +381,6 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
               status = Status.DRAFT,
             ),
           )
-          nomisApi.stubCheckAgencySwitchForAgency("INCIDENTS", "ASI")
           publishUpdateIncidentDomainEvent(dpsId = dpsId.toString(), nomisId = nomisId)
           waitForAnyProcessingToComplete()
         }
@@ -400,44 +396,6 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
             },
             isNull(),
           )
-        }
-      }
-
-      @Nested
-      @DisplayName("when the incident location from DPS is to be ignored")
-      inner class WhenAgencyLocationNotEnabled {
-        private val dpsId = UUID.randomUUID()
-        private val nomisId = 12345L
-
-        @BeforeEach
-        fun setUp() {
-          dpsApi.stubGetIncident(
-            dpsIncident().copy(
-              id = dpsId,
-              status = Status.AWAITING_REVIEW,
-            ),
-          )
-          nomisApi.stubCheckAgencySwitchForAgencyNotFound("INCIDENTS", "ASI")
-          publishUpdateIncidentDomainEvent(dpsId = dpsId.toString(), nomisId = nomisId)
-          waitForAnyProcessingToComplete()
-        }
-
-        @Test
-        fun `will send telemetry event showing the ignore`() {
-          verify(telemetryClient).trackEvent(
-            eq("incident-upsert-location-ignored"),
-            check {
-              assertThat(it).containsEntry("dpsIncidentId", dpsId.toString())
-              assertThat(it).containsEntry("nomisIncidentId", nomisId.toString())
-              assertThat(it).containsEntry("location", "ASI")
-            },
-            isNull(),
-          )
-        }
-
-        @Test
-        fun `will call back to DPS to get incident details`() {
-          dpsApi.verify(getRequestedFor(urlEqualTo("/incident-reports/$dpsId/with-details")))
         }
       }
 
@@ -458,7 +416,6 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
               ),
             )
             incidentsNomisApi.stubUpsertIncident(incidentId = nomisId)
-            nomisApi.stubCheckAgencySwitchForAgency("INCIDENTS", "ASI")
             publishUpdateIncidentDomainEvent(dpsId = dpsId.toString(), nomisId = nomisId)
             waitForAnyProcessingToComplete()
           }

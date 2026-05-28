@@ -51,15 +51,11 @@ class IncidentsService(
     if (event.didOriginateInDPS()) {
       try {
         val dps = dpsApiService.getIncident(dpsId)
-        if (nomisApiService.isAgencySwitchOnForAgency("INCIDENTS", dps.location)) {
-          incidentsNomisApiService.upsertIncident(
-            nomisId = nomisId,
-            dps.toNomisUpsertRequest(),
-          )
-          telemetryClient.trackEvent("incident-upsert-success", telemetryMap + mapOf("changeReason" to event.additionalInformation.whatChanged))
-        } else {
-          telemetryClient.trackEvent("incident-upsert-location-ignored", telemetryMap + ("location" to dps.location))
-        }
+        incidentsNomisApiService.upsertIncident(
+          nomisId = nomisId,
+          dps.toNomisUpsertRequest(),
+        )
+        telemetryClient.trackEvent("incident-upsert-success", telemetryMap + mapOf("changeReason" to event.additionalInformation.whatChanged))
       } catch (e: IncidentStatusIgnoredException) {
         telemetryClient.trackEvent("incident-upsert-status-ignored", telemetryMap + ("status" to e.status.value))
       }
@@ -88,9 +84,6 @@ class IncidentsService(
     val dps = dpsApiService.getIncidentDetailsByNomisId(incidentId)
       ?: throw BadRequestException("Incident $incidentId not found in DPS")
 
-    if (!nomisApiService.isAgencySwitchOnForAgency("INCIDENTS", dps.location)) {
-      throw BadRequestException("Incidents not switched on for ${dps.location}")
-    }
     incidentsNomisApiService.upsertIncident(
       nomisId = incidentId,
       dps.toNomisUpsertRequest(),
