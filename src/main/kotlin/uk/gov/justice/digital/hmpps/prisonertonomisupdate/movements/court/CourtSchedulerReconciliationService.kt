@@ -398,8 +398,15 @@ class CourtSchedulerReconciliationService(
       }
 
       // start time must match
-      if (nomisCourtEvent.startTime != dpsCourtEvent.courtEvent.startDateTime) {
-        mismatches.add(mismatch(START_TIME, "${nomisCourtEvent.startTime}", "${dpsCourtEvent.courtEvent.startDateTime}"))
+      if (nomisCourtEvent.startTime != dpsCourtEvent.courtEvent.start) {
+        mismatches.add(
+          mismatch(
+            START_TIME,
+            "${nomisCourtEvent.startTime}",
+            "${dpsCourtEvent.courtEvent.start
+            }",
+          ),
+        )
       }
 
       // event type must match

@@ -980,7 +980,7 @@ class CourtSchedulerReconciliationIntTest(
               dpsId = courtEventId,
               prisonCodeAtTimeOfScheduling = "BXI",
               agyLocId = "LEEDMC",
-              startDateTime = yesterday,
+              start = yesterday,
               courtEventType = "CRT",
               eventStatus = "COMP",
               commentText = "Some schedule comment",
