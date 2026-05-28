@@ -19,7 +19,6 @@ import org.springframework.http.MediaType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.IncidentsDpsApiExtension.Companion.incidentsDpsApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.ReportWithDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 
 @ExtendWith(MockitoExtension::class)
 class IncidentsDataRepairResourceIntTest : IntegrationTestBase() {
@@ -74,18 +73,7 @@ class IncidentsDataRepairResourceIntTest : IntegrationTestBase() {
     @Nested
     inner class FailurePaths {
       @Test
-      fun `repair incident NOMIS in charge of incident`() {
-        nomisApi.stubCheckAgencySwitchForAgencyNotFound("INCIDENTS", "ASI")
-        webTestClient.post().uri("/incidents/{incidentId}/repair", INCIDENT_ID)
-          .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_TO_NOMIS__UPDATE__RW")))
-          .contentType(MediaType.APPLICATION_JSON)
-          .exchange()
-          .expectStatus().isBadRequest
-      }
-
-      @Test
       fun `draft incident doesn't get synced`() {
-        nomisApi.stubCheckAgencySwitchForAgency("INCIDENTS", "ASI")
         incidentsDpsApi.stubGetIncidentByNomisId(INCIDENT_ID, response = dpsIncident().copy(status = ReportWithDetails.Status.DRAFT))
         webTestClient.post().uri("/incidents/{incidentId}/repair", INCIDENT_ID)
           .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_TO_NOMIS__UPDATE__RW")))
@@ -101,7 +89,6 @@ class IncidentsDataRepairResourceIntTest : IntegrationTestBase() {
     inner class HappyPath {
       @Test
       fun `repair incident`() {
-        nomisApi.stubCheckAgencySwitchForAgency("INCIDENTS", "ASI")
         incidentsNomisApi.stubUpsertIncident(INCIDENT_ID)
 
         webTestClient.post().uri("/incidents/{incidentId}/repair", INCIDENT_ID)
