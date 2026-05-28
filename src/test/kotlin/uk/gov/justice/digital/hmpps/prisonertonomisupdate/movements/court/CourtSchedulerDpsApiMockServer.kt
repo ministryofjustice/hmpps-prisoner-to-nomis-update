@@ -78,7 +78,7 @@ class CourtSchedulerDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       dpsId = id,
       prisonCodeAtTimeOfScheduling = prison,
       agyLocId = "LEEDMC",
-      startDateTime = startTime,
+      start = startTime,
       courtEventType = "CRT",
       eventStatus = "COMP",
       commentText = "court event comment",
