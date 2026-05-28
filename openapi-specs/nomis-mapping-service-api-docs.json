@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-05-26.586.31fa57a"
+    "version" : "2026-05-27.591.f4a6777"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -2326,6 +2326,92 @@
           },
           "409" : {
             "description" : "The mapping already exists.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/staff" : {
+      "post" : {
+        "tags" : [ "staff-mapping-resource" ],
+        "summary" : "Creates a staff user mapping",
+        "description" : "Creates a staff user mapping. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "createStaffMapping",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/StaffMappingDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Mappings created",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Indicates a duplicate mapping has been rejected. If Error code = 1409 the body will return a DuplicateErrorResponse",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "staff-mapping-resource" ],
+        "summary" : "Deletes all staff user mappings",
+        "description" : "Deletes all staff user mappings regardless of source.\n      This is expected to only ever been used in a non-production environment. \n      Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "deleteAllStaffMappings",
+        "responses" : {
+          "204" : {
+            "description" : "All mappings deleted",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -8734,6 +8820,175 @@
           },
           "404" : {
             "description" : "The mapping does not exist.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/staff/nomis-id/{nomisId}" : {
+      "get" : {
+        "tags" : [ "staff-mapping-resource" ],
+        "summary" : "Gets user mapping by nomis staff user id",
+        "description" : "Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "getStaffMappingByNomisId",
+        "parameters" : [ {
+          "name" : "nomisId",
+          "in" : "path",
+          "description" : "NOMIS staff user id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS staff user id",
+            "example" : 123
+          },
+          "example" : 123
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Mapping data",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/StaffMappingDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access this endpoint is forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Id does not exist in mapping table",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/staff/dps-id/{dpsId}" : {
+      "get" : {
+        "tags" : [ "staff-mapping-resource" ],
+        "summary" : "Gets user mapping by dps staff user id",
+        "description" : "Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "getStaffMappingByDpsId",
+        "parameters" : [ {
+          "name" : "dpsId",
+          "in" : "path",
+          "description" : "DPS staff user id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "DPS staff user id",
+            "example" : 123
+          },
+          "example" : 123
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Mapping data",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/StaffMappingDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access this endpoint is forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Id does not exist in mapping table",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "staff-mapping-resource" ],
+        "summary" : "Delete a staff user mapping by Dps ID",
+        "description" : "Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "deleteMapping",
+        "parameters" : [ {
+          "name" : "dpsId",
+          "in" : "path",
+          "description" : "Dps user id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Dps user id",
+            "example" : 123
+          },
+          "example" : 123
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Staff mapping deleted",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -21947,6 +22202,39 @@
         },
         "required" : [ "bookingId", "dpsAuthorisationId", "mappingType", "nomisApplicationId", "prisonerNumber" ]
       },
+      "StaffMappingDto" : {
+        "type" : "object",
+        "description" : "Staff mapping",
+        "properties" : {
+          "nomisId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS Staff ID"
+          },
+          "dpsId" : {
+            "type" : "string",
+            "description" : "DPS representation of the staff"
+          },
+          "label" : {
+            "type" : [ "string", "null" ],
+            "description" : "Label (a timestamp for migrated ids)",
+            "maxLength" : 20,
+            "minLength" : 0
+          },
+          "mappingType" : {
+            "type" : "string",
+            "description" : "Mapping type",
+            "enum" : [ "NOMIS_CREATED", "DPS_CREATED" ]
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "description" : "Date-time the mapping was created",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          }
+        },
+        "required" : [ "dpsId", "mappingType", "nomisId" ]
+      },
       "SentencingAdjustmentMappingDto" : {
         "type" : "object",
         "description" : "NOMIS to Sentencing mapping",
@@ -24313,12 +24601,12 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paged" : {
+            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
