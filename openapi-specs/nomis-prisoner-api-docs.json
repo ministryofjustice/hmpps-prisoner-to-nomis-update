@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-05-26.1484.f0b72d8"
+    "version" : "2026-05-27.1498.23e37da"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -4975,6 +4975,88 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/UpsertTapApplicationResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "One or more fields in the request contains invalid data",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Prisoner does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/movements/{offenderNo}/court/schedule/out" : {
+      "put" : {
+        "tags" : [ "court-schedule-resource" ],
+        "summary" : "Inserts or updates a court schedule out for an offender, and potentially its return",
+        "description" : "Creates or updates a court schedule out on the prisoner's latest booking, and potentially its return. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "upsertCourtScheduleOut",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender no (aka prisoner number)",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender no (aka prisoner number)",
+            "example" : "A1234AK"
+          },
+          "example" : "A1234AK"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpsertCourtScheduleOut"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Court schedule out created or updated",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UpsertCourtScheduleOutResponse"
                 }
               }
             }
@@ -14315,153 +14397,6 @@
         }
       }
     },
-    "/users/{userId}" : {
-      "get" : {
-        "tags" : [ "user-resource" ],
-        "summary" : "Get staff user details",
-        "description" : "Gets staff user details. Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-        "operationId" : "getUser",
-        "parameters" : [ {
-          "name" : "userId",
-          "in" : "path",
-          "description" : "user Id",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "user Id"
-          }
-        }, {
-          "name" : "dpsRolesOnly",
-          "in" : "query",
-          "description" : "Only return dps roles for the user",
-          "required" : false,
-          "schema" : {
-            "type" : "boolean",
-            "description" : "Only return dps roles for the user",
-            "example" : true
-          },
-          "example" : true
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/UserDetails"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Invalid request",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden, requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Not found",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/users/ids/all-from-id" : {
-      "get" : {
-        "tags" : [ "user-resource" ],
-        "summary" : "Get all staff user Ids",
-        "description" : "\n      Retrieves staff user ids to be iterated over with optional starting from specific staff user Id.\n      Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-        "operationId" : "getUserIdsFromId",
-        "parameters" : [ {
-          "name" : "userId",
-          "in" : "query",
-          "description" : "If supplied get user ids starting after this id",
-          "required" : false,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64",
-            "default" : 0,
-            "description" : "If supplied get user ids starting after this id",
-            "example" : 1555999
-          },
-          "example" : 1555999
-        }, {
-          "name" : "size",
-          "in" : "query",
-          "description" : "Number of ids to get",
-          "required" : false,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int32",
-            "default" : 20,
-            "description" : "Number of ids to get"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Page of staff user Ids",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/UserIdsPage"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/transactions/{transactionId}" : {
       "get" : {
         "tags" : [ "prisoner-transactions-resource" ],
@@ -15002,6 +14937,153 @@
           },
           "404" : {
             "description" : "Transaction does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/staff/{staffId}" : {
+      "get" : {
+        "tags" : [ "staff-resource" ],
+        "summary" : "Get staff details",
+        "description" : "Gets staff details. Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getUser",
+        "parameters" : [ {
+          "name" : "staffId",
+          "in" : "path",
+          "description" : "staff Id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "staff Id"
+          }
+        }, {
+          "name" : "dpsRolesOnly",
+          "in" : "query",
+          "description" : "Only return dps roles for the user",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "description" : "Only return dps roles for the user",
+            "example" : true
+          },
+          "example" : true
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/StaffDetails"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/staff/ids/all-from-id" : {
+      "get" : {
+        "tags" : [ "staff-resource" ],
+        "summary" : "Get all staff Ids",
+        "description" : "\n      Retrieves staff ids to be iterated over with optional starting from specific staff Id.\n      Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getStaffIdsFromId",
+        "parameters" : [ {
+          "name" : "staffId",
+          "in" : "query",
+          "description" : "If supplied get staff ids starting after this id",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "default" : 0,
+            "description" : "If supplied get staff ids starting after this id",
+            "example" : 1555999
+          },
+          "example" : 1555999
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "description" : "Number of ids to get",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 20,
+            "description" : "Number of ids to get"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Page of staff user Ids",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/StaffIdsPage"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -25581,6 +25663,64 @@
         },
         "required" : [ "bookingId", "tapApplicationId" ]
       },
+      "UpsertCourtScheduleOut" : {
+        "type" : "object",
+        "description" : "Upsert court schedule request",
+        "properties" : {
+          "eventId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Event ID"
+          },
+          "startTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Start time"
+          },
+          "eventType" : {
+            "type" : "string",
+            "description" : "Event type"
+          },
+          "eventStatus" : {
+            "type" : "string",
+            "description" : "Event status"
+          },
+          "returnStatus" : {
+            "type" : "string",
+            "description" : "Status of the inbound schedule"
+          },
+          "comment" : {
+            "type" : "string",
+            "description" : "Comment"
+          },
+          "prison" : {
+            "type" : "string",
+            "description" : "Prison code"
+          },
+          "court" : {
+            "type" : "string",
+            "description" : "Court code"
+          }
+        },
+        "required" : [ "court", "eventStatus", "eventType", "prison", "startTime" ]
+      },
+      "UpsertCourtScheduleOutResponse" : {
+        "type" : "object",
+        "description" : "Upsert court schedule response",
+        "properties" : {
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Booking ID"
+          },
+          "eventId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Event ID"
+          }
+        },
+        "required" : [ "bookingId", "eventId" ]
+      },
       "ProfileRequest" : {
         "type" : "object",
         "description" : "Location profile or attribute",
@@ -32084,6 +32224,9 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
+          "unpaged" : {
+            "type" : "boolean"
+          },
           "pageSize" : {
             "type" : "integer",
             "format" : "int32"
@@ -32093,9 +32236,6 @@
             "format" : "int32"
           },
           "paged" : {
-            "type" : "boolean"
-          },
-          "unpaged" : {
             "type" : "boolean"
           }
         }
@@ -32320,132 +32460,6 @@
         },
         "required" : [ "adjustmentDate", "adjustmentReason", "createUsername", "latestBooking" ]
       },
-      "UserAccount" : {
-        "type" : "object",
-        "properties" : {
-          "username" : {
-            "type" : "string",
-            "description" : "The username associated with the account",
-            "example" : "JOHNSMITH_GEN"
-          },
-          "typeCode" : {
-            "type" : "string",
-            "description" : "The type of account",
-            "example" : "GENERAL"
-          },
-          "status" : {
-            "type" : "string",
-            "description" : "Status of the user account",
-            "example" : "OPEN"
-          },
-          "sourceCode" : {
-            "type" : "string",
-            "description" : "How the account was created",
-            "example" : "USER"
-          },
-          "lastLoggedIn" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "Date and time when the user last logged in",
-            "example" : "2023-12-23T11:17:00"
-          },
-          "activeCaseloadId" : {
-            "type" : "string",
-            "description" : "The current active caseload on the account",
-            "example" : "MDI"
-          },
-          "caseloads" : {
-            "type" : "array",
-            "description" : "Caseloads associated with the user",
-            "example" : "['MDI','LEI']",
-            "items" : {
-              "type" : "string"
-            }
-          },
-          "roles" : {
-            "type" : "array",
-            "description" : "Roles associated with the user",
-            "example" : "['USER_MANAGER','VIEW_INCIDENTS']",
-            "items" : {
-              "type" : "string"
-            }
-          },
-          "audit" : {
-            "$ref" : "#/components/schemas/NomisAudit",
-            "description" : "Audit data associated with the account"
-          }
-        },
-        "required" : [ "audit", "caseloads", "roles", "sourceCode", "status", "typeCode", "username" ]
-      },
-      "UserDetails" : {
-        "type" : "object",
-        "description" : "Staff User details",
-        "properties" : {
-          "id" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The unique staff user id",
-            "example" : 12345
-          },
-          "email" : {
-            "type" : "string",
-            "description" : "Primary email address of the user",
-            "example" : "john.smith@internet.co.uk"
-          },
-          "firstName" : {
-            "type" : "string",
-            "description" : "User's first name",
-            "example" : "John"
-          },
-          "lastName" : {
-            "type" : "string",
-            "description" : "User's last name",
-            "example" : "Smith"
-          },
-          "status" : {
-            "type" : "string",
-            "description" : "Status of the user",
-            "example" : "ACTIVE"
-          },
-          "accounts" : {
-            "type" : "array",
-            "description" : "Accounts for the user",
-            "items" : {
-              "$ref" : "#/components/schemas/UserAccount"
-            }
-          },
-          "audit" : {
-            "$ref" : "#/components/schemas/NomisAudit",
-            "description" : "Audit data associated with the staff user"
-          }
-        },
-        "required" : [ "accounts", "audit", "firstName", "id", "lastName", "status" ]
-      },
-      "UserIdResponse" : {
-        "type" : "object",
-        "description" : "Staff user id",
-        "properties" : {
-          "userId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The user id"
-          }
-        },
-        "required" : [ "userId" ]
-      },
-      "UserIdsPage" : {
-        "type" : "object",
-        "properties" : {
-          "ids" : {
-            "type" : "array",
-            "description" : "Page of user IDs",
-            "items" : {
-              "$ref" : "#/components/schemas/UserIdResponse"
-            }
-          }
-        },
-        "required" : [ "ids" ]
-      },
       "GeneralLedgerTransactionDto" : {
         "type" : "object",
         "description" : "The data held in NOMIS about a general ledger transaction",
@@ -32662,6 +32676,166 @@
             "description" : "Page of prisoner Transaction Ids",
             "items" : {
               "$ref" : "#/components/schemas/PrisonerTransactionIdResponse"
+            }
+          }
+        },
+        "required" : [ "ids" ]
+      },
+      "CaseloadResponse" : {
+        "type" : "object",
+        "properties" : {
+          "caseload" : {
+            "type" : "string",
+            "description" : "Caseload id",
+            "example" : "MDI"
+          },
+          "roles" : {
+            "type" : "array",
+            "description" : "Roles associated with the user caseload",
+            "items" : {
+              "$ref" : "#/components/schemas/RoleResponse"
+            }
+          },
+          "audit" : {
+            "$ref" : "#/components/schemas/NomisAudit",
+            "description" : "Audit data associated with the user caseload"
+          }
+        },
+        "required" : [ "audit", "caseload", "roles" ]
+      },
+      "RoleResponse" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string",
+            "description" : "Role code",
+            "example" : "ROLE_1"
+          },
+          "name" : {
+            "type" : "string",
+            "description" : "Role Description",
+            "example" : "Ability to access user details"
+          },
+          "audit" : {
+            "$ref" : "#/components/schemas/NomisAudit",
+            "description" : "Audit data associated with the user role"
+          }
+        },
+        "required" : [ "audit", "code", "name" ]
+      },
+      "StaffAccount" : {
+        "type" : "object",
+        "properties" : {
+          "username" : {
+            "type" : "string",
+            "description" : "The username associated with the account",
+            "example" : "JOHNSMITH_GEN"
+          },
+          "typeCode" : {
+            "type" : "string",
+            "description" : "The type of account",
+            "example" : "GENERAL"
+          },
+          "status" : {
+            "type" : "string",
+            "description" : "Status of the account",
+            "example" : "OPEN"
+          },
+          "sourceCode" : {
+            "type" : "string",
+            "description" : "How the account was created",
+            "example" : "USER"
+          },
+          "lastLoggedIn" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Date and time when the user last logged in",
+            "example" : "2023-12-23T11:17:00"
+          },
+          "activeCaseloadId" : {
+            "type" : "string",
+            "description" : "The current active caseload on the account",
+            "example" : "MDI"
+          },
+          "caseloads" : {
+            "type" : "array",
+            "description" : "Caseloads associated with the user",
+            "example" : "['MDI','LEI']",
+            "items" : {
+              "$ref" : "#/components/schemas/CaseloadResponse"
+            }
+          },
+          "audit" : {
+            "$ref" : "#/components/schemas/NomisAudit",
+            "description" : "Audit data associated with the account"
+          }
+        },
+        "required" : [ "audit", "caseloads", "sourceCode", "status", "typeCode", "username" ]
+      },
+      "StaffDetails" : {
+        "type" : "object",
+        "description" : "Staff details",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The unique staff id",
+            "example" : 12345
+          },
+          "email" : {
+            "type" : "string",
+            "description" : "Primary email address of the staff user",
+            "example" : "john.smith@internet.co.uk"
+          },
+          "firstName" : {
+            "type" : "string",
+            "description" : "Staff user's first name",
+            "example" : "John"
+          },
+          "lastName" : {
+            "type" : "string",
+            "description" : "Staff user's last name",
+            "example" : "Smith"
+          },
+          "status" : {
+            "type" : "string",
+            "description" : "Status of the staff user",
+            "example" : "ACTIVE"
+          },
+          "accounts" : {
+            "type" : "array",
+            "description" : "Accounts for the staff user",
+            "items" : {
+              "$ref" : "#/components/schemas/StaffAccount"
+            }
+          },
+          "audit" : {
+            "$ref" : "#/components/schemas/NomisAudit",
+            "description" : "Audit data associated with the staff user"
+          }
+        },
+        "required" : [ "accounts", "audit", "firstName", "id", "lastName", "status" ]
+      },
+      "StaffIdResponse" : {
+        "type" : "object",
+        "description" : "Staff id",
+        "properties" : {
+          "staffId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The staff id"
+          }
+        },
+        "required" : [ "staffId" ]
+      },
+      "StaffIdsPage" : {
+        "type" : "object",
+        "properties" : {
+          "ids" : {
+            "type" : "array",
+            "description" : "Page of staff IDs",
+            "items" : {
+              "$ref" : "#/components/schemas/StaffIdResponse"
             }
           }
         },
