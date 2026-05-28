@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-05-27.3606.1c5e863"
+    "version" : "2026-05-27.3624.f66f0f0"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -2081,10 +2081,22 @@
             "description" : "Person address start date",
             "example" : "2020-02-26"
           },
+          "startDateTime" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "Person address start date time",
+            "example" : "2026-02-26T11:08:46.347Z"
+          },
           "endDate" : {
             "type" : [ "string", "null" ],
             "description" : "Person address end date",
             "example" : "2023-07-15"
+          },
+          "endDateTime" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "Person address end date time",
+            "example" : "2026-07-15T11:08:46.347Z"
           },
           "postcode" : {
             "type" : [ "string", "null" ],
@@ -2149,6 +2161,11 @@
             "type" : [ "string", "null" ],
             "description" : "Person address comment",
             "example" : "Some comment"
+          },
+          "typeVerified" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Person address comment",
+            "examples" : [ "false", "true", "null" ]
           },
           "usages" : {
             "type" : "array",
