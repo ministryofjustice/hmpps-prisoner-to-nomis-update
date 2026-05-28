@@ -455,7 +455,7 @@ class CourtSchedulerReconciliationService(
         compareMovements(
           offenderNo, nomisId, dpsId,
           nomisMovement.fromPrison, dpsMovement.fromAgencyId,
-          nomisMovement.movementTime, dpsMovement.movementTime,
+          nomisMovement.movementTime, dpsMovement.occurredAt,
           nomisMovement.movementReason, dpsMovement.movementReasonCode,
           nomisMovement.toCourt, dpsMovement.toAgencyId,
         ),
@@ -487,7 +487,7 @@ class CourtSchedulerReconciliationService(
         compareMovements(
           offenderNo, nomisId, dpsId,
           nomisMovement.toPrison, dpsMovement.toAgencyId,
-          nomisMovement.movementTime, dpsMovement.movementTime,
+          nomisMovement.movementTime, dpsMovement.occurredAt,
           nomisMovement.movementReason, dpsMovement.movementReasonCode,
           nomisMovement.fromCourt, dpsMovement.fromAgencyId,
         ),
@@ -517,7 +517,7 @@ class CourtSchedulerReconciliationService(
         compareMovements(
           offenderNo, nomisId, dpsId,
           nomisMovement.fromPrison, dpsMovement.fromAgencyId,
-          nomisMovement.movementTime, dpsMovement.movementTime,
+          nomisMovement.movementTime, dpsMovement.occurredAt,
           nomisMovement.movementReason, dpsMovement.movementReasonCode,
           nomisMovement.toCourt, dpsMovement.toAgencyId,
         ),
@@ -547,7 +547,7 @@ class CourtSchedulerReconciliationService(
         compareMovements(
           offenderNo, nomisId, dpsId,
           nomisMovement.toPrison, dpsMovement.toAgencyId,
-          nomisMovement.movementTime, dpsMovement.movementTime,
+          nomisMovement.movementTime, dpsMovement.occurredAt,
           nomisMovement.movementReason, dpsMovement.movementReasonCode,
           nomisMovement.fromCourt, dpsMovement.fromAgencyId,
         ),
@@ -564,7 +564,7 @@ class CourtSchedulerReconciliationService(
     nomisPrison: String,
     dpsPrison: String,
     nomisTime: LocalDateTime,
-    dpsTime: String,
+    dpsTime: LocalDateTime,
     nomisReason: String,
     dpsReason: String,
     nomisCourt: String?,
@@ -579,8 +579,8 @@ class CourtSchedulerReconciliationService(
     }
 
     // movement time must match
-    if (nomisTime != LocalDateTime.parse(dpsTime)) {
-      mismatches.add(mismatch(MOVEMENT_TIME, "$nomisTime", dpsTime))
+    if (nomisTime != dpsTime) {
+      mismatches.add(mismatch(MOVEMENT_TIME, "$nomisTime", "$dpsTime"))
     }
 
     // movement reason must match
