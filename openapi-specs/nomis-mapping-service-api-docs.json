@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-05-27.591.f4a6777"
+    "version" : "2026-05-28.595.9bd0d0d"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -13724,6 +13724,65 @@
         }
       }
     },
+    "/mapping/court-scheduler/schedule/dps-id/{dpsId}" : {
+      "get" : {
+        "tags" : [ "court-schedule-resource" ],
+        "summary" : "Gets a mapping for a single court schedule by DPS event ID",
+        "description" : "Gets a mapping for a single court schedule by DPS event ID. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "getCourtScheduleMappingByDpsId",
+        "parameters" : [ {
+          "name" : "dpsId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Court schedule mapping returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CourtScheduleMappingDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "The mapping does not exist.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mapping/court-scheduler/movement/nomis-id/{nomisBookingId}/{nomisMovementSeq}" : {
       "get" : {
         "tags" : [ "court-movement-resource" ],
@@ -22224,7 +22283,7 @@
           "mappingType" : {
             "type" : "string",
             "description" : "Mapping type",
-            "enum" : [ "NOMIS_CREATED", "DPS_CREATED" ]
+            "enum" : [ "MIGRATED", "NOMIS_CREATED", "DPS_CREATED" ]
           },
           "whenCreated" : {
             "type" : "string",
