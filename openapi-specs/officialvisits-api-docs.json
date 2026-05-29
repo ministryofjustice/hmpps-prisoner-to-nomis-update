@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-05-26.841.14722b7"
+    "version" : "2026-05-28.848.2552a28"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -1825,6 +1825,84 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notification/prison/{prisonCode}/sent-emails" : {
+      "post" : {
+        "tags" : [ "Notifications" ],
+        "summary" : "Endpoint to retrieve a list of sent email notifications with search and pagination support.",
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISITS_ADMIN\n* ROLE_OFFICIAL_VISITS__R\n* ROLE_OFFICIAL_VISITS_RW",
+        "operationId" : "searchSentEmails",
+        "parameters" : [ {
+          "name" : "prisonCode",
+          "in" : "path",
+          "description" : "The prison code",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "MDI"
+        }, {
+          "name" : "page",
+          "in" : "query",
+          "description" : "Zero-based page index (0..N)",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "default" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "description" : "The size of the page to be returned",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "default" : 10
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SentEmailSearchCriteria"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PagedModelSentEmailRecord"
                 }
               }
             }
@@ -5459,6 +5537,105 @@
           }
         },
         "required" : [ "notificationType", "officialVisitId", "recipients" ]
+      },
+      "SentEmailSearchCriteria" : {
+        "type" : "object",
+        "description" : "The request containing sent-email search criteria",
+        "properties" : {
+          "fromDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The start date filter (optional)",
+            "example" : "2026-05-01"
+          },
+          "toDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The end date filter (optional)",
+            "example" : "2026-05-31"
+          }
+        }
+      },
+      "PagedModelSentEmailRecord" : {
+        "type" : "object",
+        "properties" : {
+          "content" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SentEmailRecord"
+            }
+          },
+          "page" : {
+            "$ref" : "#/components/schemas/PageMetadata"
+          }
+        }
+      },
+      "SentEmailRecord" : {
+        "type" : "object",
+        "properties" : {
+          "officialVisitId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The official visit ID",
+            "example" : 123
+          },
+          "sentDate" : {
+            "type" : "string",
+            "description" : "The date the email was sent (YYYY-MM-DD format)",
+            "example" : "2026-05-22"
+          },
+          "sentDateTime" : {
+            "type" : "string",
+            "description" : "The full date and time the email was sent (ISO 8601 format)",
+            "example" : "2026-05-22T10:30:00"
+          },
+          "visitDate" : {
+            "type" : "string",
+            "description" : "The visit date (YYYY-MM-DD format)",
+            "example" : "2026-06-01"
+          },
+          "visitStartTime" : {
+            "type" : "string",
+            "description" : "The visit start time (HH:MM format)",
+            "example" : "09:00"
+          },
+          "visitEndTime" : {
+            "type" : "string",
+            "description" : "The visit end time (HH:MM format)",
+            "example" : "10:00"
+          },
+          "prisonerName" : {
+            "type" : "string",
+            "description" : "The prisoner's full name",
+            "example" : "John Smith"
+          },
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The prisoner's number",
+            "example" : "G1234AB"
+          },
+          "emailAddress" : {
+            "type" : "string",
+            "description" : "The email address the notification was sent to",
+            "example" : "user@example.com"
+          },
+          "emailStatus" : {
+            "type" : "string",
+            "description" : "The status of the email delivery",
+            "example" : "SENT"
+          },
+          "notificationType" : {
+            "type" : "string",
+            "description" : "The type of notification that was sent",
+            "example" : "CREATE"
+          },
+          "notificationTypeDescription" : {
+            "type" : "string",
+            "description" : "The description of the notification type",
+            "example" : "Visit Created"
+          }
+        },
+        "required" : [ "emailAddress", "emailStatus", "notificationType", "notificationTypeDescription", "officialVisitId", "prisonerName", "prisonerNumber", "sentDate", "sentDateTime", "visitDate", "visitEndTime", "visitStartTime" ]
       },
       "MigrateVisitConfigRequest" : {
         "type" : "object",
