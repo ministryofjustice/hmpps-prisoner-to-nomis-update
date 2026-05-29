@@ -19,7 +19,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.generateReconc
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.MismatchPrisonerCourtMovementDetails.Type.MOVEMENT_TIME
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.MismatchPrisonerCourtMovementDetails.Type.REASON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.MismatchPrisonerCourtScheduleDetails.Type.COURT
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.MismatchPrisonerCourtScheduleDetails.Type.EVENT_STATUS
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.MismatchPrisonerCourtScheduleDetails.Type.EVENT_TYPE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.MismatchPrisonerCourtScheduleDetails.Type.PRISON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.MismatchPrisonerCourtScheduleDetails.Type.START_TIME
@@ -36,6 +35,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Pr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import java.time.LocalDateTime
 import java.util.*
+
+const val EXTERNAL_REF_PREFIX = "urn:remand-and-sentencing:court-appearance:"
 
 @Service
 class CourtSchedulerReconciliationService(
@@ -414,14 +415,9 @@ class CourtSchedulerReconciliationService(
         mismatches.add(mismatch(EVENT_TYPE, nomisCourtEvent.eventType, dpsCourtEvent.courtEvent.courtEventType))
       }
 
-      // event status must match
-      if (nomisCourtEvent.eventStatus != dpsCourtEvent.courtEvent.eventStatus) {
-        mismatches.add(mismatch(EVENT_STATUS, nomisCourtEvent.eventStatus, dpsCourtEvent.courtEvent.eventStatus))
-      }
-
       // external reference must match
       if (nomisCourtEvent.courtCaseId != null) {
-        val expectedDpsCourtAppearanceId = dpsCourtSentencingAppearanceIds[nomisCourtEvent.courtCaseId]
+        val expectedDpsCourtAppearanceId = dpsCourtSentencingAppearanceIds[nomisCourtEvent.eventId]
         val actualDpsCourtAppearanceId = dpsCourtEvent.courtEvent.externalReferenceUrn
         // The external reference is not the exact court sentencing UUID, but it does contain the UUID
         if (expectedDpsCourtAppearanceId == null || actualDpsCourtAppearanceId == null || !actualDpsCourtAppearanceId.contains(expectedDpsCourtAppearanceId)) {
@@ -729,7 +725,6 @@ internal class MismatchPrisonerCourtScheduleDetails(
 ) : MismatchedPrisonerCourtMovements(offenderNo, type.name) {
   enum class Type {
     COURT,
-    EVENT_STATUS,
     EVENT_TYPE,
     EXTERNAL_REFERENCE_URN,
     PRISON,
