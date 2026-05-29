@@ -642,9 +642,11 @@ class CourtSchedulerReconciliationIntTest(
       }
 
       @Test
-      fun `should report different status`() = runTest {
+      fun `should report different court sentencing URN`() = runTest {
         stubDpsCourtEvent()
-        stubNomisCourtEvent(eventStatus = "SCH")
+        stubNomisCourtEvent(courtCaseId = 87878L)
+        // The court sentencing mapping does not have a RaS UUID, so mismatch expected
+        stubCourtSentencingMappings(mappings = listOf())
         stubMappings()
 
         reconciliationService.generateCourtSchedulerReconciliationReportBatch()
@@ -657,7 +659,7 @@ class CourtSchedulerReconciliationIntTest(
               "offenderNo" to "A0001TZ",
               "nomisEventId" to "123",
               "dpsCourtEventId" to "$courtEventId",
-              "type" to "EVENT_STATUS",
+              "type" to "EXTERNAL_REFERENCE_URN",
             ),
           ),
           isNull(),
@@ -665,16 +667,20 @@ class CourtSchedulerReconciliationIntTest(
       }
 
       @Test
-      fun `should report different court sentencing URN`() = runTest {
+      fun `should NOT report different court sentencing URN`() = runTest {
         stubDpsCourtEvent()
         stubNomisCourtEvent(courtCaseId = 87878L)
-        stubCourtSentencingMappings(123, courtSentencingAppearanceId)
+        // The court sentencing UUID is mapped to the NOMIS event ID as expected, so no mismatch
+        stubCourtSentencingMappings(listOf(CourtAppearanceMappingDto(123, "$courtSentencingAppearanceId")))
         stubMappings()
 
         reconciliationService.generateCourtSchedulerReconciliationReportBatch()
         awaitReportFinished()
 
-        verify(telemetryClient).trackEvent(
+        verify(
+          telemetryClient,
+          never(),
+        ).trackEvent(
           eq("court-scheduler-reconciliation-mismatch"),
           eq(
             mapOf(
@@ -984,7 +990,7 @@ class CourtSchedulerReconciliationIntTest(
               courtEventType = "CRT",
               eventStatus = "COMP",
               commentText = "Some schedule comment",
-              externalReferenceUrn = "some-ext-ref-urn",
+              externalReferenceUrn = EXTERNAL_REF_PREFIX + courtSentencingAppearanceId,
             ),
             movements = listOfNotNull(movementOut, movementIn),
           ),
@@ -1021,10 +1027,9 @@ class CourtSchedulerReconciliationIntTest(
     )
 
     private fun stubCourtSentencingMappings(
-      nomisEventId: Long,
-      courtSentencingId: UUID,
+      mappings: List<CourtAppearanceMappingDto> = listOf(),
     ) = courtSentencingMappingApi.stubGetAllCourtAppearanceByNomisIds(
-      mappings = listOf(CourtAppearanceMappingDto(nomisEventId, courtSentencingId.toString())),
+      mappings = mappings,
     )
   }
 
