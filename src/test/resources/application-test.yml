@@ -343,6 +343,24 @@ hmpps.sqs:
       dlqMaxReceiveCount: 1
       visibilityTimeout: 120
       errorVisibilityTimeout: 0
+    courtmovements:
+      queueName: "court-movements-${random.uuid}"
+      dlqName: "court-movements-dlq-${random.uuid}"
+      subscribeTopicId: domainevents
+      subscribeFilter: >-
+        { "eventType":[
+            "person.court-appearance.scheduled",
+            "person.court-appearance.expired",
+            "person.court-appearance.recorded",
+            "person.court-appearance.relocated",
+            "person.court-appearance.recategorised",
+            "person.court-appearance.rescheduled",
+            "person.court-appearance.comments-changed",
+            "person.court-appearance.cancelled"
+        ]}
+      dlqMaxReceiveCount: 1
+      visibilityTimeout: 120
+      errorVisibilityTimeout: 0
     officialvisits:
       queueName: "officialvisits-${random.uuid}"
       dlqName: "officialvisits-dlq-${random.uuid}"

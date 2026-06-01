@@ -215,6 +215,21 @@ hmpps.sqs:
         { "eventType":[
             "external-movements-api.temporary-absence-application.created"          
         ]}
+    courtmovements:
+      queueName: hmpps_prisoner_to_nomis_courtmovements_queue
+      dlqName: hmpps_prisoner_to_nomis_courtmovements_dlq
+      subscribeTopicId: domainevents
+      subscribeFilter: >-
+        { "eventType":[
+            "person.court-appearance.scheduled",
+            "person.court-appearance.expired",
+            "person.court-appearance.recorded",
+            "person.court-appearance.relocated",
+            "person.court-appearance.recategorised",
+            "person.court-appearance.rescheduled",
+            "person.court-appearance.comments-changed",
+            "person.court-appearance.cancelled"
+        ]}
     officialvisits:
       queueName: hmpps_prisoner_to_nomis_officialvisits_queue
       dlqName: hmpps_prisoner_to_nomis_officialvisits_dlq
