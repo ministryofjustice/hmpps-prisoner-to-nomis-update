@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-05-26.791.ec22f2e"
+    "version" : "2026-06-01.801.4fdcc81"
   },
   "servers" : [ {
     "url" : "/",
@@ -2281,6 +2281,76 @@
           },
           "404" : {
             "description" : "Approval request not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/certification/location/specialist-cell-type-change" : {
+      "put" : {
+        "tags" : [ "Certification" ],
+        "summary" : "Requests approval for a specialist cell type change on a cell, including associated capacity changes",
+        "description" : "Requires role LOCATION_CERTIFICATION. Use this endpoint when adding or removing specialist cell types that affect capacity (affectsCapacity=true). Changes to non-capacity-affecting types or swaps between capacity-affecting types do not require approval and should use the direct specialist-cell-types endpoint.",
+        "operationId" : "requestSpecialistCellTypeChangeApproval",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SpecialistCellTypeApprovalRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Returns the approval request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CertificationApprovalRequestDto"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the LOCATION_CERTIFICATION role.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Location not found",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -7839,7 +7909,7 @@
           "deactivatedReason" : {
             "type" : [ "string", "null" ],
             "description" : "Reason for deactivation",
-            "enum" : [ "DAMAGED", "DAMP", "MAINTENANCE", "MOTHBALLED", "PEST", "REFURBISHMENT", "SECURITY_SEALED", "STAFF_SHORTAGE", "NEW_BUILD", "OTHER" ],
+            "enum" : [ "DAMAGED", "DAMP", "MAINTENANCE", "MOTHBALLED", "PEST", "REFURBISHMENT", "SECURITY_SEALED", "STAFF_SHORTAGE", "NEW_BUILD", "CONVERT_CELL_TO_ROOM", "OTHER" ],
             "example" : "DAMAGED"
           },
           "deactivationReasonDescription" : {
@@ -8151,7 +8221,7 @@
           "deactivationReason" : {
             "type" : "string",
             "description" : "Reason for temporary deactivation",
-            "enum" : [ "DAMAGED", "DAMP", "MAINTENANCE", "MOTHBALLED", "PEST", "REFURBISHMENT", "SECURITY_SEALED", "STAFF_SHORTAGE", "NEW_BUILD", "OTHER" ],
+            "enum" : [ "DAMAGED", "DAMP", "MAINTENANCE", "MOTHBALLED", "PEST", "REFURBISHMENT", "SECURITY_SEALED", "STAFF_SHORTAGE", "NEW_BUILD", "CONVERT_CELL_TO_ROOM", "OTHER" ],
             "example" : "MOTHBALLED"
           },
           "deactivationReasonDescription" : {
@@ -8485,7 +8555,7 @@
           "deactivatedReason" : {
             "type" : [ "string", "null" ],
             "description" : "Reason for deactivation",
-            "enum" : [ "DAMAGED", "DAMP", "MAINTENANCE", "MOTHBALLED", "PEST", "REFURBISHMENT", "SECURITY_SEALED", "STAFF_SHORTAGE", "NEW_BUILD", "OTHER" ],
+            "enum" : [ "DAMAGED", "DAMP", "MAINTENANCE", "MOTHBALLED", "PEST", "REFURBISHMENT", "SECURITY_SEALED", "STAFF_SHORTAGE", "NEW_BUILD", "CONVERT_CELL_TO_ROOM", "OTHER" ],
             "example" : "DAMAGED"
           },
           "deactivationReasonDescription" : {
@@ -8693,7 +8763,7 @@
           "deactivationReason" : {
             "type" : "string",
             "description" : "Reason for temporary deactivation",
-            "enum" : [ "DAMAGED", "DAMP", "MAINTENANCE", "MOTHBALLED", "PEST", "REFURBISHMENT", "SECURITY_SEALED", "STAFF_SHORTAGE", "NEW_BUILD", "OTHER" ],
+            "enum" : [ "DAMAGED", "DAMP", "MAINTENANCE", "MOTHBALLED", "PEST", "REFURBISHMENT", "SECURITY_SEALED", "STAFF_SHORTAGE", "NEW_BUILD", "CONVERT_CELL_TO_ROOM", "OTHER" ],
             "example" : "MOTHBALLED"
           },
           "deactivationReasonDescription" : {
@@ -8930,7 +9000,7 @@
           "approvalType" : {
             "type" : "string",
             "description" : "Type of approval",
-            "enum" : [ "SIGNED_OP_CAP", "DRAFT", "DEACTIVATION", "CELL_MARK", "CELL_SANITATION", "REACTIVATION", "CAPACITY_CHANGE", "PRISON_BASELINE" ],
+            "enum" : [ "SIGNED_OP_CAP", "DRAFT", "DEACTIVATION", "CELL_MARK", "CELL_SANITATION", "REACTIVATION", "CAPACITY_CHANGE", "SPECIALIST_CELL_TYPE", "CONVERT_CELL_TO_ROOM", "PRISON_BASELINE" ],
             "example" : "SIGNED_OP_CAP"
           },
           "prisonId" : {
@@ -9050,7 +9120,7 @@
           "deactivatedReason" : {
             "type" : [ "string", "null" ],
             "description" : "Reason for deactivation",
-            "enum" : [ "DAMAGED", "DAMP", "MAINTENANCE", "MOTHBALLED", "PEST", "REFURBISHMENT", "SECURITY_SEALED", "STAFF_SHORTAGE", "NEW_BUILD", "OTHER" ],
+            "enum" : [ "DAMAGED", "DAMP", "MAINTENANCE", "MOTHBALLED", "PEST", "REFURBISHMENT", "SECURITY_SEALED", "STAFF_SHORTAGE", "NEW_BUILD", "CONVERT_CELL_TO_ROOM", "OTHER" ],
             "example" : "DAMAGED"
           },
           "maxCapacity" : {
@@ -9086,6 +9156,37 @@
             "type" : [ "string", "null" ],
             "description" : "Planet FM reference number",
             "example" : "2323/45M"
+          },
+          "specialistCellTypes" : {
+            "type" : [ "array", "null" ],
+            "description" : "Proposed new specialist cell types for this approval",
+            "items" : {
+              "type" : "string",
+              "description" : "Specialist Cell Types",
+              "enum" : [ "ACCESSIBLE_CELL", "BIOHAZARD_DIRTY_PROTEST", "CSU", "CAT_A", "CONSTANT_SUPERVISION", "DRY", "ESCAPE_LIST", "ISOLATION_DISEASES", "LISTENER_CRISIS", "LOCATE_FLAT_CELL", "MEDICAL", "MOTHER_AND_BABY", "SAFE_CELL", "UNFURNISHED" ]
+            },
+            "uniqueItems" : true
+          },
+          "currentSpecialistCellTypes" : {
+            "type" : [ "array", "null" ],
+            "description" : "Current specialist cell types before this approval",
+            "items" : {
+              "type" : "string",
+              "description" : "Specialist Cell Types",
+              "enum" : [ "ACCESSIBLE_CELL", "BIOHAZARD_DIRTY_PROTEST", "CSU", "CAT_A", "CONSTANT_SUPERVISION", "DRY", "ESCAPE_LIST", "ISOLATION_DISEASES", "LISTENER_CRISIS", "LOCATE_FLAT_CELL", "MEDICAL", "MOTHER_AND_BABY", "SAFE_CELL", "UNFURNISHED" ]
+            },
+            "uniqueItems" : true
+          },
+          "convertedCellType" : {
+            "type" : [ "string", "null" ],
+            "description" : "Proposed converted (non-residential) cell type for a convert-to-room approval",
+            "enum" : [ "HOLDING_ROOM", "INTERVIEW_ROOM", "KITCHEN_SERVERY", "LISTENERS_ROOM", "OFFICE", "SHOWER", "STAFF_ROOM", "STORE", "TREATMENT_ROOM", "UTILITY_ROOM", "OTHER" ],
+            "example" : "OFFICE"
+          },
+          "otherConvertedCellType" : {
+            "type" : [ "string", "null" ],
+            "description" : "Free-text description when the converted cell type is OTHER",
+            "example" : "Swimming pool"
           }
         },
         "required" : [ "approvalType", "certifiedNormalAccommodationChange", "currentCellMark", "currentSignedOperationCapacity", "id", "maxCapacityChange", "prisonId", "requestedBy", "requestedDate", "signedOperationCapacityChange", "status", "workingCapacityChange" ]
@@ -9246,6 +9347,52 @@
           }
         },
         "required" : [ "approvalRequestReference", "comments" ]
+      },
+      "SpecialistCellTypeApprovalRequest" : {
+        "type" : "object",
+        "description" : "Request to approve a specialist cell type change for a cell, including associated capacity changes",
+        "properties" : {
+          "locationId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The cell location Id requiring approval for specialist cell type change",
+            "example" : "2475f250-434a-4257-afe7-b911f1773a4d"
+          },
+          "specialistCellTypes" : {
+            "type" : "array",
+            "description" : "The new set of specialist cell types for the cell",
+            "example" : [ "BIOHAZARD_DIRTY_PROTEST" ],
+            "items" : {
+              "type" : "string",
+              "description" : "Specialist Cell Types",
+              "enum" : [ "ACCESSIBLE_CELL", "BIOHAZARD_DIRTY_PROTEST", "CSU", "CAT_A", "CONSTANT_SUPERVISION", "DRY", "ESCAPE_LIST", "ISOLATION_DISEASES", "LISTENER_CRISIS", "LOCATE_FLAT_CELL", "MEDICAL", "MOTHER_AND_BABY", "SAFE_CELL", "UNFURNISHED" ]
+            },
+            "uniqueItems" : true
+          },
+          "workingCapacity" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "New working capacity for the cell (0 is valid for specialist cells)",
+            "example" : 0
+          },
+          "maxCapacity" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "New maximum capacity for the cell",
+            "example" : 1
+          },
+          "certifiedNormalAccommodation" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "New certified normal accommodation value",
+            "example" : 0
+          },
+          "reasonForChange" : {
+            "type" : [ "string", "null" ],
+            "description" : "Explanation of why the specialist cell type is changing"
+          }
+        },
+        "required" : [ "certifiedNormalAccommodation", "locationId", "maxCapacity", "specialistCellTypes", "workingCapacity" ]
       },
       "LocationApprovalRequest" : {
         "type" : "object",
@@ -9597,7 +9744,7 @@
           "deactivatedReason" : {
             "type" : [ "string", "null" ],
             "description" : "Reason for deactivation",
-            "enum" : [ "DAMAGED", "DAMP", "MAINTENANCE", "MOTHBALLED", "PEST", "REFURBISHMENT", "SECURITY_SEALED", "STAFF_SHORTAGE", "NEW_BUILD", "OTHER" ],
+            "enum" : [ "DAMAGED", "DAMP", "MAINTENANCE", "MOTHBALLED", "PEST", "REFURBISHMENT", "SECURITY_SEALED", "STAFF_SHORTAGE", "NEW_BUILD", "CONVERT_CELL_TO_ROOM", "OTHER" ],
             "example" : "DAMAGED"
           },
           "proposedReactivationDate" : {
@@ -10388,7 +10535,7 @@
           "deactivatedReason" : {
             "type" : [ "string", "null" ],
             "description" : "Reason for deactivation",
-            "enum" : [ "DAMAGED", "DAMP", "MAINTENANCE", "MOTHBALLED", "PEST", "REFURBISHMENT", "SECURITY_SEALED", "STAFF_SHORTAGE", "NEW_BUILD", "OTHER" ],
+            "enum" : [ "DAMAGED", "DAMP", "MAINTENANCE", "MOTHBALLED", "PEST", "REFURBISHMENT", "SECURITY_SEALED", "STAFF_SHORTAGE", "NEW_BUILD", "CONVERT_CELL_TO_ROOM", "OTHER" ],
             "example" : "DAMAGED"
           },
           "rollCount" : {

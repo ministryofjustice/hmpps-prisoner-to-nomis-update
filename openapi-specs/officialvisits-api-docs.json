@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-05-28.848.2552a28"
+    "version" : "2026-05-29.855.830bc3c"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -3345,17 +3345,17 @@
             "example" : "aaa-ddd-bbb-123455632323"
           },
           "maxAdults" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Maximum adults allowed in the visit slot"
           },
           "maxGroups" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Maximum groups allowed in the visit slot"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "User who Updated the entry",
             "example" : "admin"
           },
@@ -3393,12 +3393,12 @@
             "example" : "aaa-ddd-bbb-123455632323"
           },
           "maxAdults" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Maximum adults allowed in the visit slot"
           },
           "maxGroups" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Maximum groups allowed in the visit slot"
           },
@@ -3414,12 +3414,12 @@
             "example" : "2024-01-01T00:00:00Z"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Username who last updated the visit slot",
             "example" : "admin"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The timestamp of when this visit slot was last updated",
             "example" : "2024-01-01T00:00:00Z"
@@ -3462,7 +3462,7 @@
             "example" : "2026-01-21"
           },
           "expiryDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Expiry date. The date from which this time slot will no longer be considered active",
             "example" : "2027-01-21"
@@ -3518,7 +3518,7 @@
             "example" : "2026-01-21"
           },
           "expiryDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Expiry date. The date from which this time is no longer be considered active",
             "example" : "2027-01-21"
@@ -3535,12 +3535,12 @@
             "example" : "2024-01-01T00:00:00Z"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "User who last updated the entry",
             "example" : "admin"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The timestamp of when this slot was last updated",
             "example" : "2024-01-01T00:00:00Z"
@@ -3611,7 +3611,7 @@
             "example" : "SCHEDULED"
           },
           "commentText" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The visit comment text",
             "example" : "This is a comment"
           },
@@ -3621,27 +3621,31 @@
             "example" : true
           },
           "searchTypeCode" : {
-            "$ref" : "#/components/schemas/SearchLevelType",
-            "description" : "The prisoner search type code. Maps to the same reference code values in both NOMIS and DPS.",
-            "example" : "RUB_A"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/SearchLevelType"
+            }, {
+              "type" : "null"
+            } ]
           },
           "visitCompletionCode" : {
-            "$ref" : "#/components/schemas/VisitCompletionType",
-            "description" : "The DPS visit completion code. Default is null/not set if not provided.",
-            "example" : "NORMAL"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/VisitCompletionType"
+            }, {
+              "type" : "null"
+            } ]
           },
           "visitorConcernText" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Visit concern text from NOMIS",
             "example" : "I am concerned"
           },
           "overrideBanStaffUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The staff username who authorised an override for a ban for this visit",
             "example" : "X3243H"
           },
           "visitOrderNumber" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The visit order number (if present) for the official visit",
             "example" : 12344
@@ -3729,18 +3733,20 @@
             "example" : "SCHEDULED"
           },
           "completionCode" : {
-            "$ref" : "#/components/schemas/VisitCompletionType",
-            "description" : "The visit completion code",
-            "example" : "NORMAL"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/VisitCompletionType"
+            }, {
+              "type" : "null"
+            } ]
           },
           "offenderBookId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The offender booking ID in NOMIS",
             "example" : 12345
           },
           "offenderVisitId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The offender visit ID in NOMIS (only present for migrated bookings)",
             "example" : 12345
@@ -3751,17 +3757,21 @@
             "example" : "IN_PERSON"
           },
           "prisonerAttendance" : {
-            "$ref" : "#/components/schemas/AttendanceType",
-            "description" : "Whether the prisoner attended or not",
-            "example" : "ATTENDED"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/AttendanceType"
+            }, {
+              "type" : "null"
+            } ]
           },
           "searchType" : {
-            "$ref" : "#/components/schemas/SearchLevelType",
-            "description" : "The prisoner search type",
-            "example" : "FULL"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/SearchLevelType"
+            }, {
+              "type" : "null"
+            } ]
           },
           "visitComments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Comments provided for the prisoner",
             "example" : "These are notes for the prisoner"
           },
@@ -3777,12 +3787,12 @@
             "example" : "2024-12-01T03:05:00"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username of the person who last updated the visit",
             "example" : "X8393"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time the visit was last updated",
             "example" : "2024-12-01T03:05:00"
@@ -3795,20 +3805,20 @@
             }
           },
           "visitorConcernNotes" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The visitor concern notes if present"
           },
           "visitOrderNumber" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The visitor oder number if present"
           },
           "overrideBanStaffUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The staff username who authorised an override for a ban for this visit"
           },
           "currentTerm" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "The current term marker. True if the visit is associated with the prisoner's latest term in prison, otherwise false"
           }
         },
@@ -3824,48 +3834,52 @@
             "example" : 1
           },
           "contactId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The contact ID of the person visiting",
             "example" : 123
           },
           "firstName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The visitor first Name",
             "example" : "John"
           },
           "lastName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The visitor last Name",
             "example" : "Smith"
           },
           "relationshipType" : {
-            "$ref" : "#/components/schemas/RelationshipType",
-            "description" : "The relationship type for this visitor (OFFICIAL or SOCIAL)",
-            "example" : "OFFICIAL"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/RelationshipType"
+            }, {
+              "type" : "null"
+            } ]
           },
           "relationshipCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The visitor relationship code",
             "example" : "POM"
           },
           "attendanceCode" : {
-            "$ref" : "#/components/schemas/AttendanceType",
-            "description" : "The visitor attendance code, either ABSENT, ATTENDED or null if not recorded.",
-            "example" : "ABSENT"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/AttendanceType"
+            }, {
+              "type" : "null"
+            } ]
           },
           "leadVisitor" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Set to true if this is the lead visitor",
             "example" : false
           },
           "assistedVisit" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Set to true if this visitor requires an assisted visit. The equivalent of the AVPU flag in NOMIS",
             "example" : false
           },
           "visitorNotes" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Visitor specific notes",
             "example" : "Wheelchair access required"
           },
@@ -3881,12 +3895,12 @@
             "example" : "2024-12-01T03:05:00"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username of the person who last updated the visitor",
             "example" : "X8393"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time the visitor was last updated",
             "example" : "2024-12-01T03:05:00"
@@ -3906,16 +3920,16 @@
             "format" : "int32"
           },
           "errorCode" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "userMessage" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "developerMessage" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "moreInfo" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           }
         },
         "required" : [ "status" ]
@@ -3924,65 +3938,69 @@
         "type" : "object",
         "properties" : {
           "offenderVisitVisitorId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The NOMIS offender visit visitor ID",
             "example" : 133232
           },
           "personId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The NOMIS person ID (same as contactId) for this visitor",
             "example" : 13989898
           },
           "firstName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The first name of the visitor",
             "example" : "Bob"
           },
           "lastName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The last name of the visitor",
             "example" : "Harris"
           },
           "relationshipTypeCode" : {
-            "$ref" : "#/components/schemas/RelationshipType",
-            "description" : "The relationship type OFFICIAL or SOCIAL. Default is null if not known.",
-            "example" : "OFFICIAL"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/RelationshipType"
+            }, {
+              "type" : "null"
+            } ]
           },
           "relationshipToPrisoner" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The relationship code between visitor and prisoner, from NOMIS reference data. A null value will indicate no relationship.",
             "example" : "POL"
           },
           "groupLeaderFlag" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Set to true if this person is the lead visitor. Defaults to false if not supplied.",
             "example" : true
           },
           "assistedVisitFlag" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Set to true if this person requires assistance at the visit. Defaults to false if not supplied.",
             "example" : true
           },
           "commentText" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The visitor comment text from NOMIS. Propagates into visitor assistance notes on DPS",
             "example" : "Some comments"
           },
           "attendanceCode" : {
-            "$ref" : "#/components/schemas/AttendanceType",
-            "description" : "The visitor attendance code (ATTENDED or ABSENT). A null indicates no attendance was added.",
-            "example" : "ATTENDED"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/AttendanceType"
+            }, {
+              "type" : "null"
+            } ]
           },
           "updateDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time the visitor was updated",
             "example" : "2022-10-01T16:45:45"
           },
           "updateUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username who updated the visitor",
             "example" : "X999X"
           }
@@ -4031,48 +4049,53 @@
             "description" : "Official Visitor ID - only required for updates and should be 0 when creating official visitors"
           },
           "visitorTypeCode" : {
-            "$ref" : "#/components/schemas/VisitorType",
-            "description" : "The visitor type code (CONTACT, OPV, PRISONER)",
-            "example" : "CONTACT"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/VisitorType"
+            }, {
+              "type" : "null"
+            } ]
           },
           "contactId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The contact ID for the visitor",
             "example" : 123456
           },
           "prisonerContactId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The prisoner contact ID for the visitor",
             "example" : 123456
           },
           "relationshipCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The relationship code",
             "example" : "POM",
             "minLength" : 1
           },
           "leadVisitor" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Set to true if this is the lead visitor",
             "example" : false
           },
           "assistedVisit" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Set to true if this visitor requires an assisted visit",
             "example" : false
           },
           "assistedNotes" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Any required assistance notes to keep about this visitor.  Will be ignored if assisted visit is not true",
             "example" : "Wheelchair access required",
             "maxLength" : 240,
             "minLength" : 0
           },
           "visitorEquipment" : {
-            "$ref" : "#/components/schemas/VisitorEquipment",
-            "description" : "Details of any equipment the visitor will bring to the visit."
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/VisitorEquipment"
+            }, {
+              "type" : "null"
+            } ]
           }
         },
         "required" : [ "officialVisitorId", "relationshipCode", "visitorTypeCode" ]
@@ -4097,35 +4120,37 @@
         "description" : "The request body for updating  visit type and slot details for an official visit",
         "properties" : {
           "prisonVisitSlotId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64"
           },
           "visitDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date the official visit will take place",
             "example" : "2022-12-23"
           },
           "startTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The start time of the official visit",
             "example" : "10:00"
           },
           "endTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The end time of the official visit",
             "example" : "11:00"
           },
           "dpsLocationId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid",
             "description" : "The DPS location ID where the official visit is to take place",
             "example" : "aaaa-bbbb-9f9f9f9f-9f9f9f9f"
           },
           "visitTypeCode" : {
-            "$ref" : "#/components/schemas/VisitType",
-            "description" : "The visit type code",
-            "example" : "IN_PERSON"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/VisitType"
+            }, {
+              "type" : "null"
+            } ]
           }
         },
         "required" : [ "dpsLocationId", "endTime", "prisonVisitSlotId", "startTime", "visitDate", "visitTypeCode" ]
@@ -4135,14 +4160,14 @@
         "description" : "The request body for updating prisoner and staff notes details for an official visit",
         "properties" : {
           "staffNotes" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Notes for staff that will not be shared on movement slips",
             "example" : "Staff notes",
             "maxLength" : 240,
             "minLength" : 0
           },
           "prisonerNotes" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Notes for prisoners that may be shared on movement slips",
             "example" : "Prisoner notes",
             "maxLength" : 240,
@@ -4155,17 +4180,17 @@
         "description" : "Request to update capacities for a prison visit slot",
         "properties" : {
           "maxAdults" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Maximum adults allowed in the visit slot"
           },
           "maxGroups" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Maximum groups allowed in the visit slot"
           },
           "maxVideo" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Maximum video sessions allowed in the visit slot"
           }
@@ -4196,33 +4221,33 @@
             "example" : "aaa-ddd-bbb-123455632323"
           },
           "locationDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The description of the prison location this visit slot is in",
             "example" : "Legal visits room 8"
           },
           "locationType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The type of the prison location this visit slot is in, e.g. 'VISITS', 'VIDEO_LINK', 'INTERVIEW'",
             "example" : "VISITS"
           },
           "locationMaxCapacity" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "The max capacity of the prison location this visit slot is in, if known",
             "example" : 12
           },
           "maxVideo" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Maximum video link allowed in the visit slot"
           },
           "maxAdults" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Maximum adults allowed in the visit slot"
           },
           "maxGroups" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Maximum groups allowed in the visit slot"
           },
@@ -4242,12 +4267,12 @@
             "example" : "2024-01-01T00:00:00Z"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Username who last updated the visit slot",
             "example" : "admin"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The timestamp of when this visit slot was last updated",
             "example" : "2024-01-01T00:00:00Z"
@@ -4286,7 +4311,7 @@
             "example" : "2026-01-21"
           },
           "expiryDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Expiry date. The date from which this time slot will no longer be considered active",
             "example" : "2027-01-21"
@@ -4331,7 +4356,7 @@
             "example" : "2026-01-21"
           },
           "expiryDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Expiry date. The date from which this time is no longer be considered active",
             "example" : "2027-01-21"
@@ -4348,12 +4373,12 @@
             "example" : "2024-01-01T00:00:00Z"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "User who last updated the entry",
             "example" : "admin"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The timestamp of when this slot was last updated",
             "example" : "2024-01-01T00:00:00Z"
@@ -4377,12 +4402,12 @@
             "example" : "aaa-ddd-bbb-123455632323"
           },
           "maxAdults" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Maximum adults allowed in the visit slot"
           },
           "maxGroups" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Maximum groups allowed in the visit slot"
           },
@@ -4431,7 +4456,7 @@
             "example" : "2026-01-21"
           },
           "expiryDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Expiry date. The date from which this time slot will no longer be considered active",
             "example" : "2027-01-21"
@@ -4454,112 +4479,120 @@
         "type" : "object",
         "properties" : {
           "offenderVisitId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The NOMIS offender visit ID",
             "example" : 133232
           },
           "prisonVisitSlotId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The DPS visit slot ID - this provides the location, start time and end time via configuration data",
             "example" : 123132
           },
           "prisonCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The prison code where the visit takes place",
             "example" : "PVI",
             "minLength" : 1
           },
           "offenderBookId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The offender book ID to echo back. It will be stored in DPS against the visit.",
             "example" : 74748
           },
           "prisonerNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The prisoner number (NOMS ID)",
             "example" : "A1234AA",
             "maxLength" : 7,
             "minLength" : 0
           },
           "currentTerm" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "If this visit relates to the current or latest term (booking) in prison true, else false.",
             "example" : true
           },
           "visitDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date the official visit will take place",
             "example" : "2022-12-23"
           },
           "startTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The start time for this official visit",
             "example" : "09:15"
           },
           "endTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The end time for this official visit",
             "example" : "10:15"
           },
           "dpsLocationId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid",
             "description" : "The DPS location where the visit takes place.",
             "example" : "aaaa-bbbb-xxxxxxxx-yyyyyyyy"
           },
           "visitStatusCode" : {
-            "$ref" : "#/components/schemas/VisitStatusType",
-            "description" : "The DPS visit status code. The Syscon sync service will map the NOMIS state to a value in this enumerated type.",
-            "example" : "SCHEDULED"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/VisitStatusType"
+            }, {
+              "type" : "null"
+            } ]
           },
           "visitTypeCode" : {
-            "$ref" : "#/components/schemas/VisitType",
-            "description" : "The DPS visit type code. For sync'd NOMIS visits this will default to type UNKNOWN. Other values are IN_PERSON, VIDEO, or TELEPHONE.",
-            "example" : "UNKNOWN"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/VisitType"
+            }, {
+              "type" : "null"
+            } ]
           },
           "commentText" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The visit comment text",
             "example" : "This is a comment"
           },
           "searchTypeCode" : {
-            "$ref" : "#/components/schemas/SearchLevelType",
-            "description" : "The prisoner search type code. Maps to the same reference code values in both NOMIS and DPS.",
-            "example" : "RUB_A"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/SearchLevelType"
+            }, {
+              "type" : "null"
+            } ]
           },
           "visitCompletionCode" : {
-            "$ref" : "#/components/schemas/VisitCompletionType",
-            "description" : "The DPS visit completion code. Default is null/not set if not provided.",
-            "example" : "NORMAL"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/VisitCompletionType"
+            }, {
+              "type" : "null"
+            } ]
           },
           "visitorConcernText" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Visit concern text from NOMIS",
             "example" : "I am concerned"
           },
           "overrideBanStaffUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The staff username who authorised an override for a ban for this visit",
             "example" : "X3243H"
           },
           "visitOrderNumber" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The visit order number (if present) for the official visit",
             "example" : 12344
           },
           "createDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The data and time the record was created",
             "example" : "2022-10-01T16:45:45"
           },
           "createUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username who created the visit in NOMIS",
             "example" : "X999X"
           }
@@ -4587,65 +4620,69 @@
         "type" : "object",
         "properties" : {
           "offenderVisitVisitorId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The NOMIS offender visit visitor ID",
             "example" : 133232
           },
           "personId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The NOMIS person ID (same as contactId) for this visitor",
             "example" : 13989898
           },
           "firstName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The first name of the visitor",
             "example" : "Bob"
           },
           "lastName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The last name of the visitor",
             "example" : "Harris"
           },
           "relationshipTypeCode" : {
-            "$ref" : "#/components/schemas/RelationshipType",
-            "description" : "The relationship type OFFICIAL or SOCIAL. Default is null if not known.",
-            "example" : "OFFICIAL"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/RelationshipType"
+            }, {
+              "type" : "null"
+            } ]
           },
           "relationshipToPrisoner" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The relationship code between visitor and prisoner, from NOMIS reference data. A null value will indicate no relationship.",
             "example" : "POL"
           },
           "groupLeaderFlag" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Set to true if this person is the lead visitor. Defaults to false if not supplied.",
             "example" : true
           },
           "assistedVisitFlag" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Set to true if this person requires assistance at the visit. Defaults to false if not supplied.",
             "example" : true
           },
           "commentText" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The visitor comment text from NOMIS",
             "example" : "Some comments"
           },
           "attendanceCode" : {
-            "$ref" : "#/components/schemas/AttendanceType",
-            "description" : "The visitor attendance code (ATTENDED or ABSENT). A null indicates no attendance was added.",
-            "example" : "ATTENDED"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/AttendanceType"
+            }, {
+              "type" : "null"
+            } ]
           },
           "createDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The data and time the record was created",
             "example" : "2022-10-01T16:45:45"
           },
           "createUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username who created the row",
             "example" : "X999X"
           }
@@ -4656,123 +4693,131 @@
         "type" : "object",
         "properties" : {
           "offenderVisitId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The NOMIS offender visit ID",
             "example" : 133232
           },
           "prisonVisitSlotId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The DPS visit slot ID - this provides the location, start time and end time via configuration data",
             "example" : 123132
           },
           "prisonCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The prison code where the visit takes place",
             "example" : "PVI",
             "minLength" : 1
           },
           "offenderBookId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The offender book ID to echo back. It will be stored in DPS against the visit.",
             "example" : 74748
           },
           "prisonerNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The prisoner number (NOMS ID)",
             "example" : "A1234AA",
             "maxLength" : 7,
             "minLength" : 0
           },
           "currentTerm" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "If this visits relates to the current or latest term (booking) in prison true, else false.",
             "example" : true
           },
           "visitDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date the official visit will take place",
             "example" : "2022-12-23"
           },
           "startTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The start time for this official visit",
             "example" : "09:15"
           },
           "endTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The end time for this official visit",
             "example" : "10:15"
           },
           "dpsLocationId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid",
             "description" : "The DPS location where the visit takes place.",
             "example" : "aaaa-bbbb-xxxxxxxx-yyyyyyyy"
           },
           "visitStatusCode" : {
-            "$ref" : "#/components/schemas/VisitStatusType",
-            "description" : "The DPS visit status code. The Syscon migration service will map the NOMIS state to a value in this enumerated type.",
-            "example" : "SCHEDULED"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/VisitStatusType"
+            }, {
+              "type" : "null"
+            } ]
           },
           "visitTypeCode" : {
-            "$ref" : "#/components/schemas/VisitType",
-            "description" : "The DPS visit type code. For migrated NOMIS visits this will default to type UNKNOWN. Other values are IN_PERSON, VIDEO, or TELEPHONE.",
-            "example" : "UNKNOWN"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/VisitType"
+            }, {
+              "type" : "null"
+            } ]
           },
           "commentText" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The visit comment text",
             "example" : "This is a comment"
           },
           "searchTypeCode" : {
-            "$ref" : "#/components/schemas/SearchLevelType",
-            "description" : "The prisoner search type code. Maps to the same reference code values in both NOMIS and DPS.",
-            "example" : "RUB_A"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/SearchLevelType"
+            }, {
+              "type" : "null"
+            } ]
           },
           "visitCompletionCode" : {
-            "$ref" : "#/components/schemas/VisitCompletionType",
-            "description" : "The DPS visit completion code. Default is NORMAL if not supplied.",
-            "example" : "NORMAL"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/VisitCompletionType"
+            }, {
+              "type" : "null"
+            } ]
           },
           "visitorConcernText" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Visit concern text from NOMIS",
             "example" : "I am concerned"
           },
           "overrideBanStaffUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The staff username who authorised an override for a ban for this visit",
             "example" : "X3243H"
           },
           "visitOrderNumber" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The visit order number (if present) for the official visit",
             "example" : 12344
           },
           "createDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The data and time the record was created",
             "example" : "2022-10-01T16:45:45"
           },
           "createUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username who created the row",
             "example" : "X999X"
           },
           "modifyDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time the record was last amended",
             "example" : "2022-10-01T16:45:45"
           },
           "modifyUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username who last modified the row",
             "example" : "X999X"
           },
@@ -4790,76 +4835,80 @@
         "description" : "The details of an official visitor",
         "properties" : {
           "offenderVisitVisitorId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The NOMIS offender visit visitor ID",
             "example" : 133232
           },
           "personId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The NOMIS person ID (same as contactId) for this visitor",
             "example" : 13989898
           },
           "firstName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The first name of the visitor",
             "example" : "Bob"
           },
           "lastName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The last name of the visitor",
             "example" : "Harris"
           },
           "relationshipTypeCode" : {
-            "$ref" : "#/components/schemas/RelationshipType",
-            "description" : "The relationship type OFFICIAL or SOCIAL. Default is null if not known.",
-            "example" : "OFFICIAL"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/RelationshipType"
+            }, {
+              "type" : "null"
+            } ]
           },
           "relationshipToPrisoner" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The relationship code between visitor and prisoner, from NOMIS reference data. A null value will indicate no relationship.",
             "example" : "POL"
           },
           "groupLeaderFlag" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Set to true if this person is the lead visitor. Defaults to false if not supplied.",
             "example" : true
           },
           "assistedVisitFlag" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Set to true if this person requires assistance at the visit. Defaults to false if not supplied.",
             "example" : true
           },
           "commentText" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The visitor comment text from NOMIS",
             "example" : "Some comments"
           },
           "attendanceCode" : {
-            "$ref" : "#/components/schemas/AttendanceType",
-            "description" : "The visitor attendance code (ATTENDED or ABSENT). A null indicates no attendance was added.",
-            "example" : "ATTENDED"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/AttendanceType"
+            }, {
+              "type" : "null"
+            } ]
           },
           "createDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The data and time the record was created",
             "example" : "2022-10-01T16:45:45"
           },
           "createUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username who created the row",
             "example" : "X999X"
           },
           "modifyDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time the record was last amended",
             "example" : "2022-10-01T16:45:45"
           },
           "modifyUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username who last modified the row",
             "example" : "X999X"
           }
@@ -4952,58 +5001,61 @@
             "format" : "int64"
           },
           "prisonerNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The prisoner number (NOMIS ID)",
             "example" : "A1234AA",
             "maxLength" : 7,
             "minLength" : 0
           },
           "visitDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date the official visit will take place",
             "example" : "2022-12-23"
           },
           "startTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The start time of the official visit",
             "example" : "10:00"
           },
           "endTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The end time of the official visit",
             "example" : "11:00"
           },
           "dpsLocationId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid",
             "description" : "The DPS location ID where the official visit is to take place",
             "example" : "aaaa-bbbb-9f9f9f9f-9f9f9f9f"
           },
           "visitTypeCode" : {
-            "$ref" : "#/components/schemas/VisitType",
-            "description" : "The visit type code",
-            "enum" : [ "IN_PERSON", "TELEPHONE", "VIDEO" ],
-            "example" : "IN_PERSON"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/VisitType"
+            }, {
+              "type" : "null"
+            } ]
           },
           "staffNotes" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Notes for staff that will not be shared on movement slips",
             "example" : "Staff notes",
             "maxLength" : 240,
             "minLength" : 0
           },
           "prisonerNotes" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Notes for prisoners that may be shared on movement slips",
             "example" : "Prisoner notes",
             "maxLength" : 240,
             "minLength" : 0
           },
           "searchTypeCode" : {
-            "$ref" : "#/components/schemas/SearchLevelType",
-            "description" : "Search type code relates to the search that will be done on the prisoner after the visit",
-            "example" : "FULL"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/SearchLevelType"
+            }, {
+              "type" : "null"
+            } ]
           },
           "officialVisitors" : {
             "type" : "array",
@@ -5052,30 +5104,30 @@
         "description" : "The request with the overlapping criteria to check against",
         "properties" : {
           "prisonerNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The prisoner number (NOMIS ID) to check for overlapping",
             "example" : "A1234AA",
             "maxLength" : 7,
             "minLength" : 0
           },
           "visitDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date on which to check for overlapping",
             "example" : "2022-12-23"
           },
           "startTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The start time on which to check for overlapping",
             "example" : "10:00"
           },
           "endTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The end time on which to check for overlapping",
             "example" : "11:00"
           },
           "contactIds" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "One or more unique identifier for the prisoner contacts, can be null",
             "items" : {
               "type" : "integer",
@@ -5083,7 +5135,7 @@
             }
           },
           "existingOfficialVisitId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The unique identifier of the official visit to exclude from the check. Would be provided for an amend check, otherwise null"
           }
@@ -5139,23 +5191,32 @@
         "description" : "The request with the official visit completion details",
         "properties" : {
           "completionReason" : {
-            "$ref" : "#/components/schemas/VisitCompletionType",
-            "description" : "The reason for completion of the visit",
-            "enum" : [ "NORMAL", "PRISONER_EARLY", "PRISONER_REFUSED", "STAFF_EARLY", "VISITOR_DENIED", "VISITOR_EARLY", "VISITOR_NO_SHOW" ],
-            "example" : "NORMAL"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/VisitCompletionType"
+            }, {
+              "type" : "null"
+            } ]
           },
           "completionNotes" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Optional notes containing details of the completion",
             "example" : "The visitor was late arriving so the the prisoner may need another visit to be arranged.",
             "maxLength" : 240,
             "minLength" : 0
           },
           "prisonerAttendance" : {
-            "$ref" : "#/components/schemas/AttendanceType"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/AttendanceType"
+            }, {
+              "type" : "null"
+            } ]
           },
           "prisonerSearchType" : {
-            "$ref" : "#/components/schemas/SearchLevelType"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/SearchLevelType"
+            }, {
+              "type" : "null"
+            } ]
           },
           "visitorAttendance" : {
             "type" : "array",
@@ -5175,7 +5236,11 @@
             "format" : "int64"
           },
           "visitorAttendance" : {
-            "$ref" : "#/components/schemas/AttendanceType"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/AttendanceType"
+            }, {
+              "type" : "null"
+            } ]
           }
         },
         "required" : [ "officialVisitorId" ]
@@ -5185,13 +5250,14 @@
         "description" : "The request with the official visit cancellation details",
         "properties" : {
           "cancellationReason" : {
-            "$ref" : "#/components/schemas/VisitCompletionType",
-            "description" : "The reason for cancellation of the visit",
-            "enum" : [ "PRISONER_CANCELLED", "STAFF_CANCELLED", "VISITOR_CANCELLED" ],
-            "example" : "PRISONER_CANCELLED"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/VisitCompletionType"
+            }, {
+              "type" : "null"
+            } ]
           },
           "cancellationNotes" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Optional notes containing details of the reason for cancellation",
             "example" : "Prisoner in hospital",
             "maxLength" : 240,
@@ -5205,24 +5271,24 @@
         "description" : "The request with the official visit summary search details",
         "properties" : {
           "searchTerm" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The search term can be a prisoner number, name or partial name.  Must be a minimum of 2 characters or not provided.",
             "example" : "Smith"
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The earliest date the official visits will start",
             "example" : "2022-12-23"
           },
           "endDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The latest date the official visits will end",
             "example" : "2022-12-23"
           },
           "visitTypes" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "The visit types to search for",
             "examples" : [ "IN_PERSON", "VIDEO", "TELEPHONE", "UNKNOWN" ],
             "items" : {
@@ -5230,7 +5296,7 @@
             }
           },
           "visitStatuses" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "The visit statuses to search for",
             "examples" : [ "SCHEDULED", "COMPLETED", "CANCELLED", "EXPIRED" ],
             "items" : {
@@ -5238,7 +5304,7 @@
             }
           },
           "prisonerNumbers" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "The prisoner numbers to search for",
             "examples" : [ "G9190VP", "G9190VP" ],
             "items" : {
@@ -5246,7 +5312,7 @@
             }
           },
           "locationIds" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "The location identifiers to search for",
             "examples" : [ "aaaa-bbbb-9f9f9f9f-9f9f9f9f" ],
             "items" : {
@@ -5329,17 +5395,17 @@
             "example" : 1
           },
           "staffNotes" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Notes for staff that will not be shared on movement slips",
             "example" : "Legal representation details"
           },
           "prisonerNotes" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Notes for prisoners that may be shared on movement slips",
             "example" : "Please arrive 10 minutes early"
           },
           "visitorConcernNotes" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "numberOfVisitors" : {
             "type" : "integer",
@@ -5348,16 +5414,18 @@
             "example" : 2
           },
           "completionCode" : {
-            "$ref" : "#/components/schemas/VisitCompletionType",
-            "description" : "The official visit completion type",
-            "example" : "VISITOR_CANCELLED"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/VisitCompletionType"
+            }, {
+              "type" : "null"
+            } ]
           },
           "completionDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The official visit completion description"
           },
           "completionNotes" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Optional notes captured when a visit is either cancelled or completed",
             "example" : "Cancelled due to prisoner in hospital"
           },
@@ -5373,12 +5441,12 @@
             "example" : "2025-12-02 14:45"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The name of the last user who updated the official visit",
             "example" : "Jane Bloggs"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time the official visit was last updated",
             "example" : "22025-12-04 09:50"
@@ -5443,37 +5511,37 @@
             "description" : "The official visitor Prisoner code"
           },
           "firstName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The official visitor - Prisoner first name"
           },
           "lastName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The official visitor prisoner last name"
           },
           "dateOfBirth" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The official visitor - Prisoner date of birth"
           },
           "cellLocation" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Prisoner Cell location"
           },
           "middleNames" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Prisoner middle name"
           },
           "offenderBookId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "Prisoner offender booking id"
           },
           "attendanceCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Prisoner attendance code"
           },
           "attendanceCodeDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Prisoner attendance code description"
           }
         },
@@ -5484,7 +5552,7 @@
         "description" : "The request containing the details of the notification",
         "properties" : {
           "notificationType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The type of notification to send",
             "enum" : [ "CREATE", "AMEND", "CANCEL" ],
             "example" : "CREATE"
@@ -5543,13 +5611,13 @@
         "description" : "The request containing sent-email search criteria",
         "properties" : {
           "fromDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The start date filter (optional)",
             "example" : "2026-05-01"
           },
           "toDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The end date filter (optional)",
             "example" : "2026-05-31"
@@ -5642,39 +5710,39 @@
         "description" : "Request to migrate a day and time slot for a prison and its associated visit slots from NOMIS",
         "properties" : {
           "prisonCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The 3-letter agy_loc_id from NOMIS where this visit time slot exists",
             "example" : "MDI"
           },
           "dayCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The 3-letter day of the week code where this slot falls in this prison.",
             "example" : "TUE"
           },
           "timeSlotSeq" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "The time slot sequence in NOMIS. This is used to build a response object for cross-reference",
             "example" : 1
           },
           "startTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The start time for this visit time slot",
             "example" : "13:30"
           },
           "endTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The end time for this visit time slot",
             "example" : "14:30"
           },
           "effectiveDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date from which this row will be effective",
             "example" : "1980-01-01"
           },
           "expiryDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date from which this row will no longer be effective",
             "example" : "1980-01-01"
@@ -5687,24 +5755,24 @@
             }
           },
           "createDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The data and time the record was created",
             "example" : "2022-10-01T16:45:45"
           },
           "createUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username who created the record",
             "example" : "X999X"
           },
           "modifyDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time the record was last amended",
             "example" : "2022-10-01T16:45:45"
           },
           "modifyUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username who last modified the record",
             "example" : "X999X"
           }
@@ -5715,65 +5783,65 @@
         "type" : "object",
         "properties" : {
           "agencyVisitSlotId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "Unique ID for this visit slot in NOMIS. For building a response to cross-reference with a DPS visit slot.",
             "example" : 1
           },
           "internalLocationId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The internal location ID from NOMIS. Information only",
             "example" : 1090909
           },
           "locationKey" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The location key from NOMIS. Information only",
             "example" : "MDI-OFFICIAL_VISITS"
           },
           "dpsLocationId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid",
             "description" : "The DPS location ID (mapped from the NOMIS internal location ID)",
             "example" : "9485cf4a-750b-4d74-b594-59bacbcda247"
           },
           "maxGroups" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "The maximum number of groups that can be booked into this visit slot. Effectively, the max visits limit for the slot.",
             "example" : 8
           },
           "maxAdults" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "The maximum number of adults who can be booked into this visits slot.",
             "example" : 22
           },
           "maxVideoSessions" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "The maximum number of video sessions that can be booked into this visits slot.",
             "example" : 8
           },
           "createDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The data and time the record was created",
             "example" : "2022-10-01T16:45:45"
           },
           "createUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username who created the record",
             "example" : "X999X"
           },
           "modifyDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time the record was last amended",
             "example" : "2022-10-01T16:45:45"
           },
           "modifyUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username who last modified the record",
             "example" : "X999X"
           }
@@ -5847,7 +5915,7 @@
             "example" : "2026-01-21"
           },
           "expiryDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Expiry date. The date from which this time slot will no longer be considered active",
             "example" : "2027-01-21"
@@ -5866,17 +5934,17 @@
             "example" : "123e4567-e89b-12d3-a456-426614174000"
           },
           "maxAdults" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Maximum adults allowed in the visit slot"
           },
           "maxGroups" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Maximum groups allowed in the visit slot"
           },
           "maxVideo" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Maximum video sessions allowed in the visit slot"
           }
@@ -5918,7 +5986,7 @@
             "type" : "string"
           },
           "visitStatusCode" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "visitTypeCode" : {
             "type" : "string"
@@ -5927,23 +5995,23 @@
             "type" : "string"
           },
           "contactId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64"
           },
           "visitorTypeCode" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "relationshipTypeCode" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "relationshipCode" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "firstName" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "lastName" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "dpsLocationId" : {
             "type" : "string",
@@ -6163,97 +6231,97 @@
             "description" : "Restriction Summary"
           },
           "titleCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The title code for the contact"
           },
           "titleDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The description of the title code, if present"
           },
           "middleNames" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The middle names of the contact, if any"
           },
           "dateOfBirth" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date of birth of the contact"
           },
           "deceasedDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date the contact deceased, if known"
           },
           "flat" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Flat number in the address, if any"
           },
           "property" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Property name or number"
           },
           "street" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Street Name"
           },
           "area" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Area or locality, if any"
           },
           "cityCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "City code"
           },
           "cityDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The description of city code"
           },
           "countyCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Country code"
           },
           "countyDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The description of county code"
           },
           "postcode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Postal code"
           },
           "countryCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Country Code"
           },
           "countryDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Flag to indicate whether this address indicates no fixed address"
           },
           "noFixedAddress" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Flag to indicate whether this address indicates no fixed address"
           },
           "primaryAddress" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "If true this address should be considered as the primary residential address"
           },
           "mailAddress" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "If true this address should be considered for sending mail to"
           },
           "phoneType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Type of the latest phone number"
           },
           "phoneTypeDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Description of the type of the latest phone number"
           },
           "phoneNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The latest phone number, if there are any"
           },
           "extNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The extension number of the latest phone number"
           }
         },
@@ -6364,97 +6432,97 @@
             "description" : "Restriction Summary"
           },
           "titleCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The title code for the contact"
           },
           "titleDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The description of the title code, if present"
           },
           "middleNames" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The middle names of the contact, if any"
           },
           "dateOfBirth" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date of birth of the contact"
           },
           "deceasedDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date the contact deceased, if known"
           },
           "flat" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Flat number in the address, if any"
           },
           "property" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Property name or number"
           },
           "street" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Street Name"
           },
           "area" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Area or locality, if any"
           },
           "cityCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "City code"
           },
           "cityDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The description of city code"
           },
           "countyCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Country code"
           },
           "countyDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The description of county code"
           },
           "postcode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Postal code"
           },
           "countryCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Country Code"
           },
           "countryDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Flag to indicate whether this address indicates no fixed address"
           },
           "noFixedAddress" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Flag to indicate whether this address indicates no fixed address"
           },
           "primaryAddress" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "If true this address should be considered as the primary residential address"
           },
           "mailAddress" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "If true this address should be considered for sending mail to"
           },
           "phoneType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Type of the latest phone number"
           },
           "phoneTypeDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Description of the type of the latest phone number"
           },
           "phoneNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The latest phone number, if there are any"
           },
           "extNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The extension number of the latest phone number"
           }
         },
@@ -6475,7 +6543,7 @@
             "example" : "MDI"
           },
           "prisonDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The official visit prison description",
             "example" : "Moorland (HMP & YOI)"
           },
@@ -6484,7 +6552,7 @@
             "description" : "The Official visit status type "
           },
           "visitStatusDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The Official visit status description",
             "example" : "Visit Status"
           },
@@ -6516,44 +6584,50 @@
             "description" : "The Official visit Location Id"
           },
           "locationDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The Official visit location description"
           },
           "visitSlotId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The Official visit - visitor slot slot identifier for the official visit takes place"
           },
           "staffNotes" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The Official visit - staff notes"
           },
           "prisonerNotes" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The Official visit - prisoner notes"
           },
           "visitorConcernNotes" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The Official visit - visitor concern notes"
           },
           "completionCode" : {
-            "$ref" : "#/components/schemas/VisitCompletionType",
-            "description" : "The Official visit completion type"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/VisitCompletionType"
+            }, {
+              "type" : "null"
+            } ]
           },
           "completionNotes" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Optional notes captured when a visit is either cancelled or completed"
           },
           "completionDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The Official visit creation description"
           },
           "searchTypeCode" : {
-            "$ref" : "#/components/schemas/SearchLevelType",
-            "description" : "The Official visit Search Level type"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/SearchLevelType"
+            }, {
+              "type" : "null"
+            } ]
           },
           "searchTypeDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The Official visit search type"
           },
           "createdTime" : {
@@ -6566,24 +6640,27 @@
             "description" : "The Official visit created by User"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The Official visit updated date time"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The Official visit updated by user"
           },
           "officialVisitors" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "The Official visit updated by user",
             "items" : {
               "$ref" : "#/components/schemas/OfficialVisitorDetails"
             }
           },
           "prisonerVisited" : {
-            "$ref" : "#/components/schemas/PrisonerVisitedDetails",
-            "description" : "The Prisoner Information"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PrisonerVisitedDetails"
+            }, {
+              "type" : "null"
+            } ]
           }
         },
         "required" : [ "createdBy", "createdTime", "dpsLocationId", "endTime", "officialVisitId", "prisonCode", "startTime", "visitDate", "visitStatus", "visitTypeCode", "visitTypeDescription" ]
@@ -6602,41 +6679,44 @@
             "description" : "The Official visitor Visit Type code"
           },
           "visitorTypeDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The Official visitor TypeDescription"
           },
           "firstName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The Official visitor first name"
           },
           "lastName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The Official visitor last name"
           },
           "contactId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The Official visitor contact id"
           },
           "prisonerContactId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The prisoner contact id"
           },
           "relationshipTypeCode" : {
-            "$ref" : "#/components/schemas/RelationshipType",
-            "description" : "The Official visitor relationship type code"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/RelationshipType"
+            }, {
+              "type" : "null"
+            } ]
           },
           "relationshipTypeDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The Official visitor relationship Type Description"
           },
           "relationshipCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The Official visitor relationship code"
           },
           "relationshipDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The Official visitor relationship description"
           },
           "leadVisitor" : {
@@ -6648,15 +6728,18 @@
             "description" : "The Official visitor - is assisted visit"
           },
           "visitorNotes" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The Official visitor visitor notes"
           },
           "attendanceCode" : {
-            "$ref" : "#/components/schemas/AttendanceType",
-            "description" : "The Official visitor attendance type"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/AttendanceType"
+            }, {
+              "type" : "null"
+            } ]
           },
           "attendanceDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The Official visitor attendance description"
           },
           "createdBy" : {
@@ -6669,34 +6752,37 @@
             "description" : "The Official visitor created date time"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The Official visitor updated by user"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The Official visitor updated date time"
           },
           "offenderVisitVisitorId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The Official visitor offender visit visitor id"
           },
           "visitorEquipment" : {
-            "$ref" : "#/components/schemas/VisitorEquipment",
-            "description" : "Equipment the visitor may bring"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/VisitorEquipment"
+            }, {
+              "type" : "null"
+            } ]
           },
           "assistanceNotes" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Notes on whether the visitor requires any assistance",
             "example" : "Wheelchair access required"
           },
           "phoneNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The visitors phone number if present"
           },
           "emailAddress" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The visitors email address if present"
           }
         },
@@ -6767,7 +6853,7 @@
             "description" : "The available groups capacity remaining for this official visit slot"
           },
           "locationDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The description of the prison location this visit slot is in",
             "example" : "Legal visits room 8"
           }
@@ -6826,7 +6912,7 @@
             "description" : "DPS location id"
           },
           "locationName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The formatted local name of the location",
             "example" : "Legal visits room 8"
           }

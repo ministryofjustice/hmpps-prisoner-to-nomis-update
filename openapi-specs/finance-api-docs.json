@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-05-13.782.5e25ab9"
+    "version" : "2026-05-29.800.448e029"
   },
   "servers" : [ {
     "url" : "https://prisoner-finance-sync-api-dev.hmpps.service.justice.gov.uk/",
@@ -690,6 +690,36 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearer-jwt" : [ "ROLE_PRISONER_FINANCE_SYNC__RW" ]
+        } ]
+      }
+    },
+    "/verify/offender-transactions/{date}" : {
+      "get" : {
+        "tags" : [ "NOMIS Sync" ],
+        "operationId" : "getDailyReconciliation",
+        "parameters" : [ {
+          "name" : "date",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DailyReconciliationResponse"
                 }
               }
             }
@@ -1678,6 +1708,71 @@
         },
         "required" : [ "accountCode", "asOfTimestamp", "balance" ]
       },
+      "DailyReconciliationResponse" : {
+        "type" : "object",
+        "properties" : {
+          "transactions" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/TransactionReconciliationResponse"
+            }
+          }
+        },
+        "required" : [ "transactions" ]
+      },
+      "PostingResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "createdBy" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "type" : {
+            "type" : "string",
+            "enum" : [ "CR", "DR" ]
+          },
+          "amount" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "subAccountID" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        },
+        "required" : [ "amount", "createdAt", "createdBy", "id", "subAccountID", "type" ]
+      },
+      "TransactionReconciliationResponse" : {
+        "type" : "object",
+        "properties" : {
+          "nomisTransactionId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "glTransactionId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "transactionCreatedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "postings" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PostingResponse"
+            }
+          }
+        },
+        "required" : [ "glTransactionId", "nomisTransactionId", "postings", "transactionCreatedAt" ]
+      },
       "SyncOffenderTransactionResponse" : {
         "type" : "object",
         "description" : "A response containing a list of offender transactions",
@@ -2023,20 +2118,6 @@
             "type" : "string",
             "format" : "date-time"
           },
-          "caseloadId" : {
-            "type" : [ "string", "null" ]
-          },
-          "transactionTimestamp" : {
-            "type" : [ "string", "null" ],
-            "format" : "date-time"
-          },
-          "legacyTransactionId" : {
-            "type" : [ "integer", "null" ],
-            "format" : "int64"
-          },
-          "requestTypeIdentifier" : {
-            "type" : [ "string", "null" ]
-          },
           "requestId" : {
             "type" : "string",
             "format" : "uuid"
@@ -2046,6 +2127,20 @@
             "format" : "uuid"
           },
           "transactionType" : {
+            "type" : [ "string", "null" ]
+          },
+          "transactionTimestamp" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time"
+          },
+          "caseloadId" : {
+            "type" : [ "string", "null" ]
+          },
+          "legacyTransactionId" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int64"
+          },
+          "requestTypeIdentifier" : {
             "type" : [ "string", "null" ]
           }
         },
