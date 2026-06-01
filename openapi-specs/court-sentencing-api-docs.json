@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-05-28.1799.81ad6c5"
+    "version" : "2026-05-29.1807.f914db9"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -4199,64 +4199,6 @@
         }
       }
     },
-    "/recall/person/{prisonerId}" : {
-      "get" : {
-        "tags" : [ "recall-controller" ],
-        "summary" : "Retrieve all recalls for a person",
-        "description" : "This endpoint will retrieve  all recalls for a person",
-        "operationId" : "getRecallsByPrisonerId",
-        "parameters" : [ {
-          "name" : "prisonerId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Returns all recalls for person",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/Recall"
-                  }
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorised, requires a valid Oauth2 token",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/Recall"
-                  }
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden, requires an appropriate role",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/Recall"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "deprecated" : true
-      }
-    },
     "/recall/person/{prisonerId}/search" : {
       "get" : {
         "tags" : [ "recall-controller" ],
@@ -6770,7 +6712,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:09.815986147"
+            "example" : "07:44:29.981828112"
           },
           "outcomeDispositionCode" : {
             "type" : [ "string", "null" ]
@@ -7146,7 +7088,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:09.815986147"
+            "example" : "07:44:29.981828112"
           },
           "courtCode" : {
             "type" : "string"
@@ -9828,7 +9770,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:09.815986147"
+            "example" : "07:44:29.981828112"
           },
           "courtCode" : {
             "type" : "string"
@@ -10516,7 +10458,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:44:09.815986147"
+            "example" : "07:44:29.981828112"
           },
           "nomisOutcomeCode" : {
             "type" : [ "string", "null" ]
@@ -10595,7 +10537,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:09.815986147"
+            "example" : "07:44:29.981828112"
           },
           "courtId" : {
             "type" : "string"
@@ -10747,7 +10689,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:44:09.815986147"
+            "example" : "07:44:29.981828112"
           },
           "charges" : {
             "type" : "array",
@@ -10781,7 +10723,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:09.815986147"
+            "example" : "07:44:29.981828112"
           },
           "courtId" : {
             "type" : "string"
@@ -11062,16 +11004,16 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
-          "pageSize" : {
-            "type" : "integer",
-            "format" : "int32"
+          "paged" : {
+            "type" : "boolean"
           },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
           },
-          "paged" : {
-            "type" : "boolean"
+          "pageSize" : {
+            "type" : "integer",
+            "format" : "int32"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -11363,7 +11305,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:09.815986147"
+            "example" : "07:44:29.981828112"
           },
           "courtCode" : {
             "type" : [ "string", "null" ]
