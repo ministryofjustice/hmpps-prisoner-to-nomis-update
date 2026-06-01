@@ -100,13 +100,16 @@ class CourtSchedulerNomisApiMockServer(private val jsonMapper: JsonMapper) {
       courtCaseId = null,
     )
 
-    fun bookingCourtMovementOut(seq: Int) = BookingCourtMovementOut(
+    fun bookingCourtMovementOut(
+      seq: Int,
+      court: String? = "LEEDMC",
+    ) = BookingCourtMovementOut(
       sequence = seq,
       movementDate = yesterday.toLocalDate(),
       movementTime = yesterday,
       movementReason = "CRT",
       fromPrison = "BXI",
-      toCourt = "LEEDMC",
+      toCourt = court,
       audit = NomisAudit(
         createDatetime = yesterday,
         createUsername = "USER",

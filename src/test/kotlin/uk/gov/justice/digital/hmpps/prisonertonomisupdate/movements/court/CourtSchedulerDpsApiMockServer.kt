@@ -91,14 +91,14 @@ class CourtSchedulerDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       directionCode: String = "OUT",
       movementTime: LocalDateTime = yesterday,
       movementReasonCode: String = "CRT",
-      toAgency: String = "LEEDMC",
+      toAgency: String? = "LEEDMC",
     ) = CourtEventMovement(
       dpsId = id,
       occurredAt = movementTime,
       directionCode = directionCode,
       movementReasonCode = movementReasonCode,
       fromAgencyId = fromAgency,
-      toAgencyId = toAgency,
+      toAgencyId = toAgency ?: "NULL",
       commentText = "court movement comment",
     )
   }
