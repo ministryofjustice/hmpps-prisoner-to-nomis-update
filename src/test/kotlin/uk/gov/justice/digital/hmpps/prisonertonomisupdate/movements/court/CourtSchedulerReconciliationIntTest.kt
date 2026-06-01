@@ -800,6 +800,24 @@ class CourtSchedulerReconciliationIntTest(
           isNull(),
         )
       }
+
+      @Test
+      fun `should NOT report null court`() = runTest {
+        stubDpsCourtEvent(movementOut = courtEventMovement(toAgency = null, id = dpsScheduledMovementOutId, directionCode = "OUT"))
+        stubNomisCourtEvent(movementOut = bookingCourtMovementOut(seq = 456, court = null))
+        stubMappings(MovementId(12345, 456), dpsScheduledMovementOutId)
+
+        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+        awaitReportFinished()
+
+        verify(telemetryClient, never()).trackEvent(
+          eq("court-scheduler-reconciliation-mismatch"),
+          check {
+            assertThat(it["type"]).isEqualTo("COURT")
+          },
+          isNull(),
+        )
+      }
     }
 
     @Nested

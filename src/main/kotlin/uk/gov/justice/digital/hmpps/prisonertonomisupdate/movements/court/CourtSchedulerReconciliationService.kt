@@ -585,7 +585,7 @@ class CourtSchedulerReconciliationService(
     }
 
     // court must match
-    if (nomisCourt != dpsCourt) {
+    if (nomisCourt ?: "NULL" != dpsCourt) {
       mismatches.add(mismatch(MismatchPrisonerCourtMovementDetails.Type.COURT, nomisCourt ?: "null", dpsCourt))
     }
 
