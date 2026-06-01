@@ -75,7 +75,7 @@ class CourtSchedulerReconciliationIntTest(
       reconciliationService.generateCourtSchedulerReconciliationReportBatch()
 
       verify(telemetryClient).trackEvent(
-        eq("temporary-absences-active-reconciliation-requested"),
+        eq("court-scheduler-reconciliation-requested"),
         any(),
         isNull(),
       )

@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court
 
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
+import com.github.tomakehurst.wiremock.client.WireMock.put
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
@@ -14,6 +15,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Bo
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingCourtScheduleOut
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.NomisAudit
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderCourtMovementsResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertCourtScheduleOut
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertCourtScheduleOutResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDateTime
@@ -41,6 +44,35 @@ class CourtSchedulerNomisApiMockServer(private val jsonMapper: JsonMapper) {
   ) {
     nomisApi.stubFor(
       get(urlPathMatching("/movements/.*/court")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(status.value())
+          .withBody(jsonMapper.writeValueAsString(error)),
+      ),
+    )
+  }
+
+  fun stubUpsertCourtScheduleOut(
+    prisonerNumber: String = "A1234BC",
+    eventId: Long = 123,
+    response: UpsertCourtScheduleOutResponse = upsertCourtScheduleOutResponse(eventId = eventId),
+  ) {
+    nomisApi.stubFor(
+      put(urlPathEqualTo("/movements/$prisonerNumber/court/schedule/out")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.CREATED.value())
+          .withBody(jsonMapper.writeValueAsString(response)),
+      ),
+    )
+  }
+
+  fun stubUpsertCourtScheduleOut(
+    status: HttpStatus = HttpStatus.INTERNAL_SERVER_ERROR,
+    error: ErrorResponse = ErrorResponse(status = status.value()),
+  ) {
+    nomisApi.stubFor(
+      put(urlPathMatching("/movements/.*/court/schedule/out")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(status.value())
@@ -130,5 +162,18 @@ class CourtSchedulerNomisApiMockServer(private val jsonMapper: JsonMapper) {
       ),
       commentText = "Some movement in comment",
     )
+
+    fun upsertCourtScheduleOut(eventId: Long? = 123) = UpsertCourtScheduleOut(
+      eventId = eventId,
+      eventType = "CRT",
+      eventStatus = "SCH",
+      returnStatus = null,
+      startTime = yesterday,
+      prison = "BXI",
+      court = "LEEDMC",
+      comment = "Some schedule comment",
+    )
+
+    fun upsertCourtScheduleOutResponse(eventId: Long = 123) = UpsertCourtScheduleOutResponse(12435, eventId)
   }
 }

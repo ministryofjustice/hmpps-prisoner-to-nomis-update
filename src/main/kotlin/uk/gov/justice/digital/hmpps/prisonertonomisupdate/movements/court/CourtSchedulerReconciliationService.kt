@@ -56,7 +56,7 @@ class CourtSchedulerReconciliationService(
 
   suspend fun generateCourtSchedulerReconciliationReportBatch() {
     telemetryClient.trackEvent(
-      "$TELEMETRY_ACTIVE_TAPS-requested",
+      "$TELEMETRY_COURT_SCHEDULER-requested",
       mapOf(),
     )
 
