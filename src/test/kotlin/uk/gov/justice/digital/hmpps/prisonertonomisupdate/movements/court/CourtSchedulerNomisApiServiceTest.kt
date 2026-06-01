@@ -3,6 +3,8 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
+import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
@@ -15,6 +17,7 @@ import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
 import org.springframework.http.HttpStatus.NOT_FOUND
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.CourtSchedulerNomisApiMockServer.Companion.upsertCourtScheduleOut
 import java.time.LocalDateTime
 
 @SpringAPIServiceTest
@@ -83,6 +86,44 @@ class CourtSchedulerNomisApiServiceTest {
 
       assertThrows<WebClientResponseException.InternalServerError> {
         apiService.getOffenderCourtMovementsOrNull(offenderNo = "A1234BC")
+      }
+    }
+  }
+
+  @Nested
+  inner class UpsertCourtScheduleOut {
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      courtSchedulerNomisApiMockServer.stubUpsertCourtScheduleOut("A1234BC")
+
+      apiService.upsertCourtScheduleOut("A1234BC", upsertCourtScheduleOut())
+
+      courtSchedulerNomisApiMockServer.verify(
+        putRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call upsert endpoint`() = runTest {
+      courtSchedulerNomisApiMockServer.stubUpsertCourtScheduleOut("A1234BC")
+
+      apiService.upsertCourtScheduleOut("A1234BC", upsertCourtScheduleOut())
+
+      courtSchedulerNomisApiMockServer.verify(
+        putRequestedFor(urlPathEqualTo("/movements/A1234BC/court/schedule/out"))
+          .withRequestBody(
+            matchingJsonPath("prison", equalTo("BXI")),
+          ),
+      )
+    }
+
+    @Test
+    fun `will throw if error`() = runTest {
+      courtSchedulerNomisApiMockServer.stubUpsertCourtScheduleOut(status = INTERNAL_SERVER_ERROR)
+
+      assertThrows<WebClientResponseException.InternalServerError> {
+        apiService.upsertCourtScheduleOut("A1234BC", upsertCourtScheduleOut())
       }
     }
   }

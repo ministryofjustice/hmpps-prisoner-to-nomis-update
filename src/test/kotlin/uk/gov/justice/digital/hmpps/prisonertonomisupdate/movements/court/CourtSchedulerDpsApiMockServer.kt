@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
+import com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching
 import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
@@ -80,7 +81,7 @@ class CourtSchedulerDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       agyLocId = "LEEDMC",
       start = startTime,
       courtEventType = "CRT",
-      eventStatus = "COMP",
+      eventStatus = "COMPLETED",
       commentText = "court event comment",
       externalReferenceUrn = "some-ext-ref-urn",
     )
@@ -118,6 +119,30 @@ class CourtSchedulerDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   fun stubGetCourtSchedulerReconciliation(personIdentifier: String, status: Int = 500, error: ErrorResponse = ErrorResponse(status = status)) {
     courtSchedulerDpsApiServer.stubFor(
       get("/reconciliation/court-appearances/$personIdentifier")
+        .willReturn(
+          aResponse()
+            .withStatus(status)
+            .withHeader("Content-Type", "application/json")
+            .withBody(jsonMapper.writeValueAsString(error)),
+        ),
+    )
+  }
+
+  fun stubGetCourtAppearance(id: UUID, response: CourtEvent = courtEvent(id)) {
+    courtSchedulerDpsApiServer.stubFor(
+      get("/sync/court-appearances/$id")
+        .willReturn(
+          aResponse()
+            .withStatus(200)
+            .withHeader("Content-Type", "application/json")
+            .withBody(jsonMapper.writeValueAsString(response)),
+        ),
+    )
+  }
+
+  fun stubGetCourtAppearance(status: Int = 500, error: ErrorResponse = ErrorResponse(status = status)) {
+    courtSchedulerDpsApiServer.stubFor(
+      get(urlPathMatching("/sync/court-appearances/.*"))
         .willReturn(
           aResponse()
             .withStatus(status)

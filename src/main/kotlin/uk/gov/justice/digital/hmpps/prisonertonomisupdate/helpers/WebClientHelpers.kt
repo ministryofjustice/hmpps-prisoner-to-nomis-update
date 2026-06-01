@@ -22,6 +22,19 @@ suspend inline fun <T : Any> Mono<T>.awaitBodyOrNullForNotFound(retrySpec: Retry
   .retryWhen(retrySpec)
   .awaitSingleOrNull()
 
+suspend inline fun <T : Any> Mono<T>.awaitBodyOrLogAndRethrowBadRequest(): T = this
+  .doOnError(WebClientResponseException.BadRequest::class.java) {
+    log.error("Received Bad Request (400) with body {}", it.responseBodyAsString)
+  }
+  .awaitSingle()
+
+suspend inline fun <T : Any> Mono<T>.awaitBodyOrLogAndRethrowBadRequest(retrySpec: Retry): T = this
+  .doOnError(WebClientResponseException.BadRequest::class.java) {
+    log.error("Received Bad Request (400) with body {}", it.responseBodyAsString)
+  }
+  .retryWhen(retrySpec)
+  .awaitSingle()
+
 suspend inline fun <reified T : Any> WebClient.ResponseSpec.awaitBodyOrNullForNotFound(): T? = this.bodyToMono<T>()
   .awaitBodyOrNullForNotFound()
 

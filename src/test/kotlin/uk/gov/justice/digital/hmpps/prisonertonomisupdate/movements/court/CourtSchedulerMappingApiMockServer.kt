@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtMovementMappingIdsDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtScheduleMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtScheduleMappingIdsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtSchedulerPrisonerMappingIdsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
@@ -45,6 +46,41 @@ class CourtSchedulerMappingApiMockServer(private val jsonMapper: JsonMapper) {
   fun stubGetCourtSchedulerPrisonerMappingIds(prisonerNumber: String = "A1234BC", status: HttpStatus, error: ErrorResponse = ErrorResponse(status = status.value())) {
     mappingServer.stubFor(
       get(urlPathMatching("/mapping/court-scheduler/$prisonerNumber/ids")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(status.value())
+          .withBody(jsonMapper.writeValueAsString(error)),
+      ),
+    )
+  }
+
+  fun stubGetCourtScheduleMapping(
+    prisonerNumber: String = "A1234BC",
+    dpsId: UUID = UUID.randomUUID(),
+    nomisEventId: Long = 123,
+    mapping: CourtScheduleMappingDto = CourtScheduleMappingDto(
+      prisonerNumber,
+      12435L,
+      nomisEventId,
+      dpsId,
+      CourtScheduleMappingDto.MappingType.MIGRATED,
+    ),
+  ) {
+    mappingServer.stubFor(
+      get(urlPathMatching("/mapping/court-scheduler/schedule/dps-id/$dpsId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(jsonMapper.writeValueAsString(mapping)),
+      ),
+    )
+  }
+
+  fun stubGetCourtScheduleMapping(
+    status: HttpStatus,
+    error: ErrorResponse = ErrorResponse(status = status.value()),
+  ) {
+    mappingServer.stubFor(
+      get(urlPathMatching("/mapping/court-scheduler/schedule/dps-id/.*")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(status.value())

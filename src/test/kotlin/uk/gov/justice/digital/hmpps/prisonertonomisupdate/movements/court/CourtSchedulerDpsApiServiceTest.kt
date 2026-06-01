@@ -15,6 +15,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.CourtSchedulerDpsApiExtension.Companion.courtSchedulerDpsApiServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
+import java.util.*
 
 @SpringAPIServiceTest
 @Import(
@@ -77,6 +78,56 @@ class CourtSchedulerDpsApiServiceTest {
 
       assertThrows<WebClientResponseException.InternalServerError> {
         apiService.getCourtSchedulerReconciliation(personIdentifier)
+      }
+    }
+  }
+
+  @Nested
+  inner class GetCourtAppearance {
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      val id = UUID.randomUUID()
+      courtSchedulerDpsApiServer.stubGetCourtAppearance(id)
+
+      apiService.getCourtAppearance(id)
+
+      courtSchedulerDpsApiServer.verify(
+        getRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call get endpoint`() = runTest {
+      val id = UUID.randomUUID()
+      courtSchedulerDpsApiServer.stubGetCourtAppearance(id)
+
+      apiService.getCourtAppearance(id)
+
+      courtSchedulerDpsApiServer.verify(
+        getRequestedFor(urlPathEqualTo("/sync/court-appearances/$id")),
+      )
+    }
+
+    @Test
+    fun `will return data`() = runTest {
+      val id = UUID.randomUUID()
+      courtSchedulerDpsApiServer.stubGetCourtAppearance(id)
+
+      with(apiService.getCourtAppearance(id)) {
+        assertThat(this.dpsId).isEqualTo(id)
+        assertThat(agyLocId).isEqualTo("LEEDMC")
+        assertThat(eventStatus).isEqualTo("COMPLETED")
+      }
+    }
+
+    @Test
+    fun `will throw if error`() = runTest {
+      val id = UUID.randomUUID()
+      courtSchedulerDpsApiServer.stubGetCourtAppearance(status = 500)
+
+      assertThrows<WebClientResponseException.InternalServerError> {
+        apiService.getCourtAppearance(id)
       }
     }
   }
