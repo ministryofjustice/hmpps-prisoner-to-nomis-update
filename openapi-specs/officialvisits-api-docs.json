@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-05-29.855.830bc3c"
+    "version" : "2026-06-01.865.901fe03"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -1757,6 +1757,50 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/notify/callback" : {
+      "post" : {
+        "tags" : [ "Notify callback" ],
+        "summary" : "Receives callback events from GOV.UK Notify after notification delivery attempts.",
+        "description" : "Accept and process the gov notify callback for notifications",
+        "operationId" : "callback",
+        "parameters" : [ {
+          "name" : "Authorization",
+          "in" : "header",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/NotifyCallbackNotificationRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Gov notify callback processed"
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "204" : {
+            "description" : "No Content"
           }
         }
       }
@@ -5546,6 +5590,59 @@
           }
         },
         "required" : [ "prisonCode", "prisonerNumber" ]
+      },
+      "NotifyCallbackNotificationRequest" : {
+        "type" : "object",
+        "description" : "Gov Notify Callback Notification",
+        "properties" : {
+          "notificationId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The UUID of the notification"
+          },
+          "eventAuditReference" : {
+            "type" : [ "string", "null" ],
+            "description" : "The id of the event audit which the notification is linked to"
+          },
+          "status" : {
+            "type" : "string",
+            "description" : "The final status of the notification"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The timestamp for when the vsip notification service sent the notification to gov notify"
+          },
+          "completedAt" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "The timestamp for the final update of the notification (when delivered or ultimately failed) "
+          },
+          "sentAt" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "The timestamp for when gov notify sent the notification"
+          },
+          "sentTo" : {
+            "type" : "string",
+            "description" : "The email or phone number the notification was sent to"
+          },
+          "notificationType" : {
+            "type" : "string",
+            "description" : "The type of the notification"
+          },
+          "templateId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The id the template used for the notification"
+          },
+          "templateVersion" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The version of the template used for the notification"
+          }
+        },
+        "required" : [ "createdAt", "eventAuditReference", "notificationId", "notificationType", "sentTo", "status", "templateId", "templateVersion" ]
       },
       "NotificationRequest" : {
         "type" : "object",
