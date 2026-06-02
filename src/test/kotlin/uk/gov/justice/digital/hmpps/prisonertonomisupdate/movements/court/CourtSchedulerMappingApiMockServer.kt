@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court
 import com.github.tomakehurst.wiremock.client.CountMatchingStrategy
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
+import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.springframework.http.HttpStatus
@@ -12,6 +13,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtScheduleMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtScheduleMappingIdsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtSchedulerPrisonerMappingIdsDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateMappingErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.util.*
@@ -58,13 +60,7 @@ class CourtSchedulerMappingApiMockServer(private val jsonMapper: JsonMapper) {
     prisonerNumber: String = "A1234BC",
     dpsId: UUID = UUID.randomUUID(),
     nomisEventId: Long = 123,
-    mapping: CourtScheduleMappingDto = CourtScheduleMappingDto(
-      prisonerNumber,
-      12435L,
-      nomisEventId,
-      dpsId,
-      CourtScheduleMappingDto.MappingType.MIGRATED,
-    ),
+    mapping: CourtScheduleMappingDto = courtScheduleMapping(prisonerNumber, nomisEventId, dpsId),
   ) {
     mappingServer.stubFor(
       get(urlPathMatching("/mapping/court-scheduler/schedule/dps-id/$dpsId")).willReturn(
@@ -88,6 +84,41 @@ class CourtSchedulerMappingApiMockServer(private val jsonMapper: JsonMapper) {
       ),
     )
   }
+
+  fun stubCreateCourtScheduleMapping() {
+    mappingServer.stubFor(
+      post("/mapping/court-scheduler/schedule")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(201),
+        ),
+    )
+  }
+
+  fun stubCreateCourtScheduleMapping(status: HttpStatus, error: ErrorResponse = ErrorResponse(status = status.value())) {
+    mappingServer.stubFor(
+      post("/mapping/court-scheduler/schedule").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(status.value())
+          .withBody(jsonMapper.writeValueAsString(error)),
+      ),
+    )
+  }
+
+  fun stubCreateCourtScheduleMappingConflict(error: DuplicateMappingErrorResponse) {
+    mappingServer.stubFor(
+      post("/mapping/court-scheduler/schedule").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(409)
+          .withBody(jsonMapper.writeValueAsString(error)),
+      ),
+    )
+  }
+
+  fun stubCreateCourtScheduleMappingFailureFollowedBySuccess() = mappingServer.stubMappingCreateFailureFollowedBySuccess("/mapping/court-scheduler/schedule")
 
   fun verify(pattern: RequestPatternBuilder) = mappingServer.verify(pattern)
   fun verify(count: Int, pattern: RequestPatternBuilder) = mappingServer.verify(count, pattern)
@@ -115,4 +146,16 @@ fun courtSchedulerPrisonerIdMappings(
     CourtMovementMappingIdsDto(bookingId, nomisUnscheduledMovementOutSeq, dpsUnscheduledMovementOutId),
     CourtMovementMappingIdsDto(bookingId, nomisUnscheduledMovementInSeq, dpsUnscheduledMovementInId),
   ),
+)
+
+fun courtScheduleMapping(
+  prisonerNumber: String = "A1234BC",
+  nomisEventId: Long = 123,
+  dpsId: UUID = UUID.randomUUID(),
+) = CourtScheduleMappingDto(
+  prisonerNumber,
+  12435L,
+  nomisEventId,
+  dpsId,
+  CourtScheduleMappingDto.MappingType.MIGRATED,
 )

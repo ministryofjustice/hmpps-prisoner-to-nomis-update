@@ -1,28 +1,109 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court
 
+import com.github.tomakehurst.wiremock.client.WireMock.absent
+import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import org.assertj.core.api.Assertions.assertThat
-import org.awaitility.kotlin.await
-import org.awaitility.kotlin.untilAsserted
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.springframework.boot.test.system.CapturedOutput
+import org.mockito.ArgumentMatchers.eq
+import org.mockito.kotlin.check
+import org.mockito.kotlin.isNull
+import org.mockito.kotlin.verify
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.HttpStatus.NOT_FOUND
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
-import java.util.UUID
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.CourtSchedulerDpsApiExtension.Companion.courtSchedulerDpsApiServer
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertCourtScheduleOutResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.withRequestBodyJsonPath
+import java.time.LocalDateTime
+import java.util.*
 
-class CourtSchedulerScheduleIntTest : SqsIntegrationTestBase() {
+class CourtSchedulerScheduleIntTest(
+  @Autowired private val nomisApi: CourtSchedulerNomisApiMockServer,
+  @Autowired private val mappingApi: CourtSchedulerMappingApiMockServer,
+) : SqsIntegrationTestBase() {
+
+  private val dpsApi = courtSchedulerDpsApiServer
 
   @Nested
   @DisplayName("Court appearance created")
   inner class CourtAppearanceCreated {
-    // TODO replace with proper tests
-    @Test
-    fun `will consume message`(output: CapturedOutput) {
-      publishCourtAppearanceDomainEvent(UUID.randomUUID(), "A1234BC")
-      await untilAsserted {
-        assertThat(output.out).contains("Ignoring DPS court appearance")
+    private val prisonerNumber = "A1234BC"
+    private val dpsCourtAppearanceId = UUID.randomUUID()
+    private val nomisEventId = 123L
+    private val startTime = LocalDateTime.now()
+
+    @Nested
+    inner class WhenDpsCreated {
+
+      @Nested
+      inner class HappyPath {
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetCourtScheduleMapping(status = NOT_FOUND)
+          dpsApi.stubGetCourtAppearance(id = dpsCourtAppearanceId, startTime = startTime)
+          nomisApi.stubUpsertCourtScheduleOut(response = UpsertCourtScheduleOutResponse(12345L, nomisEventId))
+          mappingApi.stubCreateCourtScheduleMapping()
+
+          publishCourtAppearanceDomainEvent(dpsCourtAppearanceId, "A1234BC")
+          waitForAnyProcessingToComplete("court-scheduler-schedule-create-success")
+        }
+
+        @Test
+        fun `will check for existing mapping`() {
+          mappingApi.verify(getRequestedFor(urlEqualTo("/mapping/court-scheduler/schedule/dps-id/$dpsCourtAppearanceId")))
+        }
+
+        @Test
+        fun `will get DPS court appearance`() {
+          dpsApi.verify(getRequestedFor(urlEqualTo("/sync/court-appearances/$dpsCourtAppearanceId")))
+        }
+
+        @Test
+        fun `will upsert NOMIS court schedule`() {
+          nomisApi.verify(
+            putRequestedFor(urlEqualTo("/movements/A1234BC/court/schedule/out"))
+              .withRequestBodyJsonPath("eventId", absent())
+              .withRequestBodyJsonPath("prison", "BXI")
+              .withRequestBodyJsonPath("court", "LEEDMC")
+              .withRequestBodyJsonPath("startTime", "$startTime")
+              .withRequestBodyJsonPath("eventType", "CRT")
+              .withRequestBodyJsonPath("eventStatus", "COMP")
+              .withRequestBodyJsonPath("returnStatus", "COMP")
+              .withRequestBodyJsonPath("comment", "court event comment"),
+          )
+        }
+
+        @Test
+        fun `will create mapping`() {
+          mappingApi.verify(
+            postRequestedFor(urlEqualTo("/mapping/court-scheduler/schedule"))
+              .withRequestBodyJsonPath("nomisEventId", "$nomisEventId")
+              .withRequestBodyJsonPath("dpsCourtAppearanceId", "$dpsCourtAppearanceId"),
+          )
+        }
+
+        @Test
+        fun `will publish success telemetry`() {
+          verify(telemetryClient).trackEvent(
+            eq("court-scheduler-schedule-create-success"),
+            check {
+              assertThat(it).containsEntry("dpsCourtAppearanceId", "$dpsCourtAppearanceId")
+              assertThat(it).containsEntry("nomisEventId", nomisEventId.toString())
+              assertThat(it).containsEntry("offenderNo", prisonerNumber)
+              assertThat(it).containsEntry("bookingId", "12345")
+            },
+            isNull(),
+          )
+        }
       }
     }
   }

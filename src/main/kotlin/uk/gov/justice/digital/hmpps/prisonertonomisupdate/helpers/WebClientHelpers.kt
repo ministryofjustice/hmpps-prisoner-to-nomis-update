@@ -35,6 +35,12 @@ suspend inline fun <T : Any> Mono<T>.awaitBodyOrLogAndRethrowBadRequest(retrySpe
   .retryWhen(retrySpec)
   .awaitSingle()
 
+suspend inline fun Mono<Unit>.awaitBodilessEntityOrThrowOnConflict() = this
+  .onErrorResume(WebClientResponseException.Conflict::class.java) {
+    Mono.error(DuplicateMappingException(it.getResponseBodyAs(DuplicateErrorResponse::class.java)!!))
+  }
+  .awaitSingleOrNull()
+
 suspend inline fun <reified T : Any> WebClient.ResponseSpec.awaitBodyOrNullForNotFound(): T? = this.bodyToMono<T>()
   .awaitBodyOrNullForNotFound()
 

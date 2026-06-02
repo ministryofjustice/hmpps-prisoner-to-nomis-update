@@ -128,7 +128,11 @@ class CourtSchedulerDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetCourtAppearance(id: UUID, response: CourtEvent = courtEvent(id)) {
+  fun stubGetCourtAppearance(
+    id: UUID,
+    startTime: LocalDateTime = yesterday,
+    response: CourtEvent = courtEvent(id, startTime),
+  ) {
     courtSchedulerDpsApiServer.stubFor(
       get("/sync/court-appearances/$id")
         .willReturn(
