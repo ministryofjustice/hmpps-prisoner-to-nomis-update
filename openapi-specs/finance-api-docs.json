@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-05-29.800.448e029"
+    "version" : "2026-06-02.812.966a579"
   },
   "servers" : [ {
     "url" : "https://prisoner-finance-sync-api-dev.hmpps.service.justice.gov.uk/",
@@ -703,6 +703,8 @@
     "/verify/offender-transactions/{date}" : {
       "get" : {
         "tags" : [ "NOMIS Sync" ],
+        "summary" : "Verify NOMIS transactions in the General Ledger",
+        "description" : "Retrieve a list of NOMIS transactions synchronised to the Prisoner Finance general ledger on a given date, using the createdAt field.",
         "operationId" : "getDailyReconciliation",
         "parameters" : [ {
           "name" : "date",
@@ -715,11 +717,51 @@
         } ],
         "responses" : {
           "200" : {
-            "description" : "OK",
+            "description" : "General ledger transactions successfully retrieved.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DailyReconciliationResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad request - invalid date format.",
             "content" : {
               "*/*" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/DailyReconciliationResponse"
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - requires a valid OAuth2 token",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden - requires an appropriate role",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error - An unexpected error occurred.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -1720,7 +1762,7 @@
         },
         "required" : [ "transactions" ]
       },
-      "PostingResponse" : {
+      "SearchPostingResponse" : {
         "type" : "object",
         "properties" : {
           "id" : {
@@ -1745,9 +1787,19 @@
           "subAccountID" : {
             "type" : "string",
             "format" : "uuid"
+          },
+          "subAccountReference" : {
+            "type" : "string"
+          },
+          "accountID" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "accountReference" : {
+            "type" : "string"
           }
         },
-        "required" : [ "amount", "createdAt", "createdBy", "id", "subAccountID", "type" ]
+        "required" : [ "accountID", "accountReference", "amount", "createdAt", "createdBy", "id", "subAccountID", "subAccountReference", "type" ]
       },
       "TransactionReconciliationResponse" : {
         "type" : "object",
@@ -1767,7 +1819,7 @@
           "postings" : {
             "type" : "array",
             "items" : {
-              "$ref" : "#/components/schemas/PostingResponse"
+              "$ref" : "#/components/schemas/SearchPostingResponse"
             }
           }
         },
@@ -2118,6 +2170,20 @@
             "type" : "string",
             "format" : "date-time"
           },
+          "caseloadId" : {
+            "type" : [ "string", "null" ]
+          },
+          "transactionTimestamp" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time"
+          },
+          "requestTypeIdentifier" : {
+            "type" : [ "string", "null" ]
+          },
+          "legacyTransactionId" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int64"
+          },
           "requestId" : {
             "type" : "string",
             "format" : "uuid"
@@ -2127,20 +2193,6 @@
             "format" : "uuid"
           },
           "transactionType" : {
-            "type" : [ "string", "null" ]
-          },
-          "transactionTimestamp" : {
-            "type" : [ "string", "null" ],
-            "format" : "date-time"
-          },
-          "caseloadId" : {
-            "type" : [ "string", "null" ]
-          },
-          "legacyTransactionId" : {
-            "type" : [ "integer", "null" ],
-            "format" : "int64"
-          },
-          "requestTypeIdentifier" : {
             "type" : [ "string", "null" ]
           }
         },
