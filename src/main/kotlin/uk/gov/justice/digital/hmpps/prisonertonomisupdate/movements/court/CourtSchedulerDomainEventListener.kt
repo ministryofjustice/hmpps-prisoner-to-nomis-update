@@ -17,6 +17,7 @@ class CourtSchedulerDomainEventListener(
   jsonMapper: JsonMapper,
   eventFeatureSwitch: EventFeatureSwitch,
   retryService: CourtSchedulerRetryService,
+  private val appearanceService: CourtSchedulerAppearanceService,
   telemetryClient: TelemetryClient,
 ) : DomainEventListener(
   service = retryService,
@@ -44,7 +45,7 @@ class CourtSchedulerDomainEventListener(
       "person.court-appearance.recategorised",
       "person.court-appearance.rescheduled",
       "person.court-appearance.comments-changed",
-      -> log.info("Ignoring DPS court appearance upsert event")
+      -> appearanceService.courtAppearanceChanged(message.fromJson())
 
       "person.court-appearance.cancelled",
       -> log.info("Ignoring DPS court appearance deleted event")
