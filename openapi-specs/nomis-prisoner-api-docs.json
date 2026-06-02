@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-05-28.1500.eac70a2"
+    "version" : "2026-06-01.1516.e3390c2"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -14953,7 +14953,7 @@
         "tags" : [ "staff-resource" ],
         "summary" : "Get staff details",
         "description" : "Gets staff details. Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-        "operationId" : "getUser",
+        "operationId" : "getStaff",
         "parameters" : [ {
           "name" : "staffId",
           "in" : "path",
@@ -14967,11 +14967,11 @@
         }, {
           "name" : "dpsRolesOnly",
           "in" : "query",
-          "description" : "Only return dps roles for the user",
+          "description" : "Only return dps roles for the staff",
           "required" : false,
           "schema" : {
             "type" : "boolean",
-            "description" : "Only return dps roles for the user",
+            "description" : "Only return dps roles for the staff",
             "example" : true
           },
           "example" : true
@@ -15030,6 +15030,79 @@
         }
       }
     },
+    "/staff/ids" : {
+      "get" : {
+        "tags" : [ "staff-resource" ],
+        "summary" : "Get all staff Ids",
+        "description" : "Typically for a migration. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getStaffIds",
+        "parameters" : [ {
+          "name" : "page",
+          "in" : "query",
+          "description" : "Zero-based page index (0..N)",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "default" : 0,
+            "minimum" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "description" : "The size of the page to be returned",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "default" : 20,
+            "minimum" : 1
+          }
+        }, {
+          "name" : "sort",
+          "in" : "query",
+          "description" : "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "default" : [ "id,ASC" ],
+            "items" : {
+              "type" : "string"
+            }
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Page of staff Ids",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PagedModelStaffIdResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/staff/ids/all-from-id" : {
       "get" : {
         "tags" : [ "staff-resource" ],
@@ -15063,7 +15136,7 @@
         } ],
         "responses" : {
           "200" : {
-            "description" : "Page of staff user Ids",
+            "description" : "Page of staff Ids",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -32228,12 +32301,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "paged" : {
+            "type" : "boolean"
+          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "paged" : {
-            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -32684,7 +32757,7 @@
       "CaseloadResponse" : {
         "type" : "object",
         "properties" : {
-          "caseload" : {
+          "caseloadId" : {
             "type" : "string",
             "description" : "Caseload id",
             "example" : "MDI"
@@ -32701,7 +32774,7 @@
             "description" : "Audit data associated with the user caseload"
           }
         },
-        "required" : [ "audit", "caseload", "roles" ]
+        "required" : [ "audit", "caseloadId", "roles" ]
       },
       "RoleResponse" : {
         "type" : "object",
@@ -32815,6 +32888,20 @@
           }
         },
         "required" : [ "accounts", "audit", "firstName", "id", "lastName", "status" ]
+      },
+      "PagedModelStaffIdResponse" : {
+        "type" : "object",
+        "properties" : {
+          "content" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/StaffIdResponse"
+            }
+          },
+          "page" : {
+            "$ref" : "#/components/schemas/PageMetadata"
+          }
+        }
       },
       "StaffIdResponse" : {
         "type" : "object",
