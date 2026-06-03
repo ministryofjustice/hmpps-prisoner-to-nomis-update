@@ -12,6 +12,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.okJson
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.put
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
+import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import com.github.tomakehurst.wiremock.stubbing.Scenario
 import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
@@ -64,6 +65,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
   companion object {
     private const val WIREMOCK_PORT = 8082
     private const val ERROR_RESPONSE = """{ "status": 500, "error": "some error" }"""
+
+    inline fun <reified T> getRequestBody(pattern: RequestPatternBuilder): T = nomisApi.getRequestBody(pattern, jsonMapper)
   }
 
   fun stubHealthPing(status: Int) {
