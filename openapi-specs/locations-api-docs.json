@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-06-01.801.4fdcc81"
+    "version" : "2026-06-03.813.b291452"
   },
   "servers" : [ {
     "url" : "/",
@@ -2521,6 +2521,76 @@
         "responses" : {
           "200" : {
             "description" : "Returns the approval request status",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CertificationApprovalRequestDto"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the LOCATION_CERTIFICATION role.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Location not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/certification/location/permanent-deactivation-request-approval" : {
+      "put" : {
+        "tags" : [ "Certification" ],
+        "summary" : "Requests approval to permanently deactivate a location (and any sub-locations below it)",
+        "description" : "Requires role LOCATION_CERTIFICATION. The location must already be temporarily deactivated. On approval the location is permanently deactivated and removed from the cell certificate; on rejection or withdrawal the location stays in its existing inactive status.",
+        "operationId" : "requestPermanentDeactivationApproval",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PermanentDeactivationApprovalRequestDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Returns the approval request",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -8090,6 +8160,16 @@
             "type" : [ "boolean", "null" ],
             "description" : "Pending in-cell sanitation",
             "example" : true
+          },
+          "specialistCellTypes" : {
+            "type" : [ "array", "null" ],
+            "description" : "Pending specialist cell types",
+            "items" : {
+              "type" : "string",
+              "description" : "Specialist Cell Types",
+              "enum" : [ "ACCESSIBLE_CELL", "BIOHAZARD_DIRTY_PROTEST", "CSU", "CAT_A", "CONSTANT_SUPERVISION", "DRY", "ESCAPE_LIST", "ISOLATION_DISEASES", "LISTENER_CRISIS", "LOCATE_FLAT_CELL", "MEDICAL", "MOTHER_AND_BABY", "SAFE_CELL", "UNFURNISHED" ]
+            },
+            "uniqueItems" : true
           }
         }
       },
@@ -8311,6 +8391,13 @@
               "enum" : [ "ACCESSIBLE_CELL", "BIOHAZARD_DIRTY_PROTEST", "CSU", "CAT_A", "CONSTANT_SUPERVISION", "DRY", "ESCAPE_LIST", "ISOLATION_DISEASES", "LISTENER_CRISIS", "LOCATE_FLAT_CELL", "MEDICAL", "MOTHER_AND_BABY", "SAFE_CELL", "UNFURNISHED" ]
             },
             "uniqueItems" : true
+          },
+          "certifiedNormalAccommodation" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int32",
+            "description" : "Baseline CNA",
+            "example" : 1,
+            "maximum" : 99
           },
           "maxCapacity" : {
             "type" : "integer",
@@ -9000,7 +9087,7 @@
           "approvalType" : {
             "type" : "string",
             "description" : "Type of approval",
-            "enum" : [ "SIGNED_OP_CAP", "DRAFT", "DEACTIVATION", "CELL_MARK", "CELL_SANITATION", "REACTIVATION", "CAPACITY_CHANGE", "SPECIALIST_CELL_TYPE", "CONVERT_CELL_TO_ROOM", "PRISON_BASELINE" ],
+            "enum" : [ "SIGNED_OP_CAP", "DRAFT", "DEACTIVATION", "PERMANENT_DEACTIVATION", "CELL_MARK", "CELL_SANITATION", "REACTIVATION", "CAPACITY_CHANGE", "SPECIALIST_CELL_TYPE", "CONVERT_ROOM_TO_CELL", "CONVERT_CELL_TO_ROOM", "PRISON_BASELINE" ],
             "example" : "SIGNED_OP_CAP"
           },
           "prisonId" : {
@@ -9177,6 +9264,21 @@
             },
             "uniqueItems" : true
           },
+          "accommodationType" : {
+            "type" : [ "string", "null" ],
+            "description" : "Proposed accommodation type for a convert-to-cell approval",
+            "enum" : [ "CARE_AND_SEPARATION", "HEALTHCARE_INPATIENTS", "NORMAL_ACCOMMODATION", "OTHER_NON_RESIDENTIAL" ],
+            "example" : "NORMAL_ACCOMMODATION"
+          },
+          "usedForTypes" : {
+            "type" : [ "array", "null" ],
+            "description" : "Proposed used-for types for a convert-to-cell approval",
+            "items" : {
+              "type" : "string",
+              "description" : "Used For Types",
+              "enum" : [ "CLOSE_SUPERVISION_CENTRE", "SUB_MISUSE_DRUG_RECOVERY", "FIRST_NIGHT_CENTRE", "HIGH_SECURITY", "IPP_LONG_TERM_SENTENCES", "MOTHER_AND_BABY", "OPEN_UNIT", "PATHWAY_TO_PROG", "PERINATAL_UNIT", "PERSONALITY_DISORDER", "PIPE", "REMAND", "SEPARATION_CENTRE", "STANDARD_ACCOMMODATION", "THERAPEUTIC_COMMUNITY", "VULNERABLE_PRISONERS", "YOUNG_PERSONS" ]
+            }
+          },
           "convertedCellType" : {
             "type" : [ "string", "null" ],
             "description" : "Proposed converted (non-residential) cell type for a convert-to-room approval",
@@ -9187,6 +9289,35 @@
             "type" : [ "string", "null" ],
             "description" : "Free-text description when the converted cell type is OTHER",
             "example" : "Swimming pool"
+          },
+          "currentConvertedCellType" : {
+            "type" : [ "string", "null" ],
+            "description" : "Current converted (non-residential) cell type being removed by a convert-to-cell approval",
+            "enum" : [ "HOLDING_ROOM", "INTERVIEW_ROOM", "KITCHEN_SERVERY", "LISTENERS_ROOM", "OFFICE", "SHOWER", "STAFF_ROOM", "STORE", "TREATMENT_ROOM", "UTILITY_ROOM", "OTHER" ],
+            "example" : "OFFICE"
+          },
+          "currentOtherConvertedCellType" : {
+            "type" : [ "string", "null" ],
+            "description" : "Current free-text description when the current converted cell type is OTHER",
+            "example" : "Swimming pool"
+          },
+          "currentAccommodationTypes" : {
+            "type" : [ "array", "null" ],
+            "description" : "Current accommodation types on the parent, surfaced for a convert-to-cell approval only when the proposed accommodation type differs",
+            "items" : {
+              "type" : "string",
+              "description" : "Accommodation Types",
+              "enum" : [ "CARE_AND_SEPARATION", "HEALTHCARE_INPATIENTS", "NORMAL_ACCOMMODATION", "OTHER_NON_RESIDENTIAL" ]
+            }
+          },
+          "currentUsedForTypes" : {
+            "type" : [ "array", "null" ],
+            "description" : "Current used-for types on the parent, surfaced for a convert-to-cell approval only when the proposed used-for types differ",
+            "items" : {
+              "type" : "string",
+              "description" : "Used For Types",
+              "enum" : [ "CLOSE_SUPERVISION_CENTRE", "SUB_MISUSE_DRUG_RECOVERY", "FIRST_NIGHT_CENTRE", "HIGH_SECURITY", "IPP_LONG_TERM_SENTENCES", "MOTHER_AND_BABY", "OPEN_UNIT", "PATHWAY_TO_PROG", "PERINATAL_UNIT", "PERSONALITY_DISORDER", "PIPE", "REMAND", "SEPARATION_CENTRE", "STANDARD_ACCOMMODATION", "THERAPEUTIC_COMMUNITY", "VULNERABLE_PRISONERS", "YOUNG_PERSONS" ]
+            }
           }
         },
         "required" : [ "approvalType", "certifiedNormalAccommodationChange", "currentCellMark", "currentSignedOperationCapacity", "id", "maxCapacityChange", "prisonId", "requestedBy", "requestedDate", "signedOperationCapacityChange", "status", "workingCapacityChange" ]
@@ -9490,6 +9621,24 @@
           }
         },
         "required" : [ "topLevelLocationId" ]
+      },
+      "PermanentDeactivationApprovalRequestDto" : {
+        "type" : "object",
+        "description" : "Request to permanently deactivate a location (and any sub-locations) that is already temporarily deactivated",
+        "properties" : {
+          "locationId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The location Id to permanently deactivate, must already be temporarily deactivated",
+            "example" : "2475f250-434a-4257-afe7-b911f1773a4d"
+          },
+          "reason" : {
+            "type" : "string",
+            "description" : "Reason for permanent deactivation",
+            "example" : "Wing demolished"
+          }
+        },
+        "required" : [ "locationId", "reason" ]
       },
       "ApproveCertificationRequestDto" : {
         "type" : "object",
