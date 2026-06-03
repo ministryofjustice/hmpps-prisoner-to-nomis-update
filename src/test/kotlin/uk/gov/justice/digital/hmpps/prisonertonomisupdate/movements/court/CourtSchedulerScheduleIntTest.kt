@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court
 
-import com.github.tomakehurst.wiremock.client.WireMock.absent
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
@@ -20,8 +19,11 @@ import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.CourtSchedulerDpsApiExtension.Companion.courtSchedulerDpsApiServer
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtScheduleMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertCourtScheduleOut
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertCourtScheduleOutResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.withRequestBodyJsonPath
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingMockServer
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiMockServer
 import java.time.LocalDateTime
 import java.util.*
 
@@ -69,26 +71,28 @@ class CourtSchedulerScheduleIntTest(
 
         @Test
         fun `will upsert NOMIS court schedule`() {
-          nomisApi.verify(
-            putRequestedFor(urlEqualTo("/movements/A1234BC/court/schedule/out"))
-              .withRequestBodyJsonPath("eventId", absent())
-              .withRequestBodyJsonPath("prison", "BXI")
-              .withRequestBodyJsonPath("court", "LEEDMC")
-              .withRequestBodyJsonPath("startTime", "$startTime")
-              .withRequestBodyJsonPath("eventType", "CRT")
-              .withRequestBodyJsonPath("eventStatus", "COMP")
-              .withRequestBodyJsonPath("returnStatus", "COMP")
-              .withRequestBodyJsonPath("comment", "court event comment"),
-          )
+          NomisApiMockServer.getRequestBody<UpsertCourtScheduleOut>(
+            putRequestedFor(urlEqualTo("/movements/A1234BC/court/schedule/out")),
+          ).also { request ->
+            assertThat(request.eventId).isNull()
+            assertThat(request.prison).isEqualTo("BXI")
+            assertThat(request.court).isEqualTo("LEEDMC")
+            assertThat(request.startTime).isEqualTo(this@CourtAppearanceCreated.startTime)
+            assertThat(request.eventType).isEqualTo("CRT")
+            assertThat(request.eventStatus).isEqualTo("COMP")
+            assertThat(request.returnStatus).isEqualTo("COMP")
+            assertThat(request.comment).isEqualTo("court event comment")
+          }
         }
 
         @Test
         fun `will create mapping`() {
-          mappingApi.verify(
-            postRequestedFor(urlEqualTo("/mapping/court-scheduler/schedule"))
-              .withRequestBodyJsonPath("nomisEventId", "$nomisEventId")
-              .withRequestBodyJsonPath("dpsCourtAppearanceId", "$dpsCourtAppearanceId"),
-          )
+          MappingMockServer.getRequestBody<CourtScheduleMappingDto>(
+            postRequestedFor(urlEqualTo("/mapping/court-scheduler/schedule")),
+          ).also { request ->
+            assertThat(request.nomisEventId).isEqualTo(nomisEventId)
+            assertThat(request.dpsCourtAppearanceId).isEqualTo(dpsCourtAppearanceId)
+          }
         }
 
         @Test
