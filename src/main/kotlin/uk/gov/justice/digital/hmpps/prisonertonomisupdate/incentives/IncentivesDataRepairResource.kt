@@ -17,11 +17,11 @@ class IncentivesDataRepairResource(
   private val nomisApiService: NomisApiService,
   private val telemetryClient: TelemetryClient,
 ) {
-  @PostMapping("/incentives/prisoner/booking-id/{bookingId}/repair")
+  @PostMapping("/incentives/prisoner/{prisonNumber}/repair")
   @ResponseStatus(HttpStatus.OK)
   @PreAuthorize("hasRole('ROLE_PRISONER_TO_NOMIS__UPDATE__RW')")
-  suspend fun repairIncentive(@PathVariable bookingId: Long) {
-    incentivesApiService.getCurrentIncentive(bookingId)?.also { currentIncentive ->
+  suspend fun repairIncentive(@PathVariable prisonNumber: String) {
+    incentivesApiService.getCurrentIncentive(prisonNumber)?.also { currentIncentive ->
       incentivesApiService.getIncentive(currentIncentive.id)
         .run {
           nomisApiService.createIncentive(
@@ -44,7 +44,7 @@ class IncentivesDataRepairResource(
           }
         }
     } ?: run {
-      throw IllegalArgumentException("No current incentive for bookingId $bookingId")
+      throw IllegalArgumentException("No current incentive for prisonNumber $prisonNumber")
     }
   }
 }

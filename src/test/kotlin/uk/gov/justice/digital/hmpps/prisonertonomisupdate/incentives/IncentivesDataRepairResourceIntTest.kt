@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.IncentivesApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 
 private const val BOOKING_ID = 1234L
+private const val PRISON_NUMBER = "A1234AA"
 
 @ExtendWith(MockitoExtension::class)
 class IncentivesDataRepairResourceIntTest : IntegrationTestBase() {
@@ -27,13 +28,13 @@ class IncentivesDataRepairResourceIntTest : IntegrationTestBase() {
   @Captor
   lateinit var telemetryCaptor: ArgumentCaptor<Map<String, String>>
 
-  @DisplayName("POST /incentives/prisoner/booking-id/{bookingId}/repair")
+  @DisplayName("POST /incentives/prisoner/{prisonNumber}/repair")
   @Nested
   inner class RepairIncentive {
     @BeforeEach
     fun setUp() {
       reset(telemetryClient)
-      incentivesApi.stubCurrentIncentiveGet(BOOKING_ID, id = 8765, prisonerNumber = "A1234AA")
+      incentivesApi.stubCurrentIncentiveGet(id = 8765, prisonerNumber = PRISON_NUMBER)
       incentivesApi.stubIncentiveGet(
         8765,
         """
@@ -61,7 +62,7 @@ class IncentivesDataRepairResourceIntTest : IntegrationTestBase() {
     inner class Security {
       @Test
       fun `access forbidden when no role`() {
-        webTestClient.post().uri("/incentives/prisoner/booking-id/{bookingId}/repair", BOOKING_ID)
+        webTestClient.post().uri("/incentives/prisoner/{prisonNumber}/repair", PRISON_NUMBER)
           .headers(setAuthorisation(roles = listOf()))
           .contentType(MediaType.APPLICATION_JSON)
           .exchange()
@@ -70,7 +71,7 @@ class IncentivesDataRepairResourceIntTest : IntegrationTestBase() {
 
       @Test
       fun `access forbidden with wrong role`() {
-        webTestClient.post().uri("/incentives/prisoner/booking-id/{bookingId}/repair", BOOKING_ID)
+        webTestClient.post().uri("/incentives/prisoner/{prisonNumber}/repair", PRISON_NUMBER)
           .headers(setAuthorisation(roles = listOf("ROLE_BANANAS")))
           .contentType(MediaType.APPLICATION_JSON)
           .exchange()
@@ -79,7 +80,7 @@ class IncentivesDataRepairResourceIntTest : IntegrationTestBase() {
 
       @Test
       fun `access unauthorised with no auth token`() {
-        webTestClient.post().uri("/incentives/prisoner/booking-id/{bookingId}/repair", BOOKING_ID)
+        webTestClient.post().uri("/incentives/prisoner/{prisonNumber}/repair", PRISON_NUMBER)
           .contentType(MediaType.APPLICATION_JSON)
           .exchange()
           .expectStatus().isUnauthorized
@@ -90,7 +91,7 @@ class IncentivesDataRepairResourceIntTest : IntegrationTestBase() {
     inner class HappyPath {
       @Test
       fun `repair incentive`() {
-        webTestClient.post().uri("/incentives/prisoner/booking-id/{bookingId}/repair", BOOKING_ID)
+        webTestClient.post().uri("/incentives/prisoner/{prisonNumber}/repair", PRISON_NUMBER)
           .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_TO_NOMIS__UPDATE__RW")))
           .contentType(MediaType.APPLICATION_JSON)
           .exchange()

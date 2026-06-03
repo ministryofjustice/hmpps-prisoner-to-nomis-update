@@ -21,8 +21,8 @@ class IncentivesApiService(@Qualifier("incentivesApiWebClient") webClient: WebCl
 
   suspend fun getIncentive(incentiveId: Long): IncentiveReviewDetail = maintainIncentiveReviewsApi.getIncentiveReviewById(incentiveId).awaitSingle()
 
-  suspend fun getCurrentIncentive(bookingId: Long): IncentiveReviewSummary? = maintainIncentiveReviewsApi.prepare(
-    maintainIncentiveReviewsApi.getPrisonerIncentiveLevelHistoryRequestConfig(bookingId, withDetails = false),
+  suspend fun getCurrentIncentive(prisonNumber: String): IncentiveReviewSummary? = maintainIncentiveReviewsApi.prepare(
+    maintainIncentiveReviewsApi.getPrisonerIncentiveReviewHistoryRequestConfig(prisonNumber),
   )
     .retrieve()
     .awaitBodyOrNullForNotFound()
