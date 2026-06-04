@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court
 
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
+import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
@@ -124,6 +125,41 @@ class CourtSchedulerNomisApiServiceTest {
 
       assertThrows<WebClientResponseException.InternalServerError> {
         apiService.upsertCourtScheduleOut("A1234BC", upsertCourtScheduleOut())
+      }
+    }
+  }
+
+  @Nested
+  inner class DeleteCourtScheduleOut {
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      courtSchedulerNomisApiMockServer.stubDeleteCourtScheduleOut("A1234BC", 12345L)
+
+      apiService.deleteCourtScheduleOut("A1234BC", 12345L)
+
+      courtSchedulerNomisApiMockServer.verify(
+        deleteRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call delete endpoint`() = runTest {
+      courtSchedulerNomisApiMockServer.stubDeleteCourtScheduleOut("A1234BC", 12345L)
+
+      apiService.deleteCourtScheduleOut("A1234BC", 12345L)
+
+      courtSchedulerNomisApiMockServer.verify(
+        deleteRequestedFor(urlPathEqualTo("/movements/A1234BC/court/schedule/out/12345")),
+      )
+    }
+
+    @Test
+    fun `will throw if error`() = runTest {
+      courtSchedulerNomisApiMockServer.stubDeleteCourtScheduleOut("A1234BC", 12345L, INTERNAL_SERVER_ERROR)
+
+      assertThrows<WebClientResponseException.InternalServerError> {
+        apiService.deleteCourtScheduleOut("A1234BC", 12345L)
       }
     }
   }

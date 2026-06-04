@@ -22,4 +22,6 @@ class CourtSchedulerMappingApiService(@Qualifier("mappingWebClient") webClient: 
   suspend fun getCourtScheduleMapping(id: UUID) = scheduleApi.getCourtScheduleMappingByDpsId(id).awaitBodyOrNullForNotFound()
 
   suspend fun createCourtScheduleMapping(mapping: CourtScheduleMappingDto) = scheduleApi.createCourtScheduleMapping(mapping).awaitBodilessEntityOrThrowOnConflict()
+
+  suspend fun deleteCourtScheduleMapping(id: UUID) = scheduleApi.deleteCourtScheduleMappingByDpsId(id).awaitSingle()
 }

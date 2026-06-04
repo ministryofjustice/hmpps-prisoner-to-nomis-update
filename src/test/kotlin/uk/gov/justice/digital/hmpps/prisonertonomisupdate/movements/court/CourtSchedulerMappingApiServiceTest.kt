@@ -1,10 +1,12 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court
 
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
+import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
@@ -163,6 +165,42 @@ class CourtSchedulerMappingApiServiceTest {
 
       assertThrows<WebClientResponseException.InternalServerError> {
         apiService.createCourtScheduleMapping(courtScheduleMapping())
+      }
+    }
+  }
+
+  @Nested
+  inner class DeleteCourtScheduleMapping {
+    private val dpsId = UUID.randomUUID()
+
+    @Test
+    internal fun `should pass oath2 token to service`() = runTest {
+      mappingApi.stubDeleteCourtScheduleMapping(dpsId = dpsId)
+
+      apiService.deleteCourtScheduleMapping(dpsId)
+
+      mappingApi.verify(
+        deleteRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `should call delete endpoint`() = runTest {
+      mappingApi.stubDeleteCourtScheduleMapping(dpsId = dpsId)
+
+      apiService.deleteCourtScheduleMapping(dpsId)
+
+      mappingApi.verify(
+        deleteRequestedFor(urlPathEqualTo("/mapping/court-scheduler/schedule/dps-id/$dpsId")),
+      )
+    }
+
+    @Test
+    fun `should throw if API calls fail`() = runTest {
+      mappingApi.stubDeleteCourtScheduleMapping(status = INTERNAL_SERVER_ERROR)
+
+      assertThrows<WebClientResponseException.InternalServerError> {
+        apiService.deleteCourtScheduleMapping(dpsId)
       }
     }
   }
