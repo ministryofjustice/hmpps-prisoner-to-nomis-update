@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court
 
 import com.github.tomakehurst.wiremock.client.CountMatchingStrategy
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import com.github.tomakehurst.wiremock.client.WireMock.delete
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching
@@ -119,6 +120,28 @@ class CourtSchedulerMappingApiMockServer(private val jsonMapper: JsonMapper) {
   }
 
   fun stubCreateCourtScheduleMappingFailureFollowedBySuccess() = mappingServer.stubMappingCreateFailureFollowedBySuccess("/mapping/court-scheduler/schedule")
+
+  fun stubDeleteCourtScheduleMapping(dpsId: UUID) {
+    mappingServer.stubFor(
+      delete("/mapping/court-scheduler/schedule/dps-id/$dpsId")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(204),
+        ),
+    )
+  }
+
+  fun stubDeleteCourtScheduleMapping(status: HttpStatus, error: ErrorResponse = ErrorResponse(status = status.value())) {
+    mappingServer.stubFor(
+      delete(urlPathMatching("/mapping/court-scheduler/schedule/dps-id/.*")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(status.value())
+          .withBody(jsonMapper.writeValueAsString(error)),
+      ),
+    )
+  }
 
   fun verify(pattern: RequestPatternBuilder) = mappingServer.verify(pattern)
   fun verify(count: Int, pattern: RequestPatternBuilder) = mappingServer.verify(count, pattern)

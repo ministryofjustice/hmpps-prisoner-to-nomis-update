@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-06-02.1518.888f5e4"
+    "version" : "2026-06-04.1527.d446bc4"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -19843,6 +19843,71 @@
             }
           }
         }
+      },
+      "delete" : {
+        "tags" : [ "court-schedule-resource" ],
+        "summary" : "Deleete a specific court schedule out for an offender",
+        "description" : "Delete a specific court schedule out for an offender by event ID. Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "deleteCourtScheduleOut",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender number (NOMS ID)",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender number (NOMS ID)",
+            "example" : "A1234BC"
+          },
+          "example" : "A1234BC"
+        }, {
+          "name" : "eventId",
+          "in" : "path",
+          "description" : "Event ID",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Event ID",
+            "example" : 123
+          },
+          "example" : 123
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Offender court schedule out returned"
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Unalbe to delete court schedule",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/movements/{offenderNo}/court/movement/out/{bookingId}/{movementSeq}" : {
@@ -32301,12 +32366,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "paged" : {
+            "type" : "boolean"
+          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "paged" : {
-            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"

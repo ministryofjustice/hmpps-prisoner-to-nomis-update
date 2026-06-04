@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-05-29.600.bf51ba6"
+    "version" : "2026-06-04.602.834f6e2"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -13781,6 +13781,47 @@
             }
           }
         }
+      },
+      "delete" : {
+        "tags" : [ "court-schedule-resource" ],
+        "summary" : "Deletes a mapping for a single court schedule by DPS event ID",
+        "description" : "Deletes a mapping for a single court schedule by DPS event ID. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "deleteCourtScheduleMappingByDpsId",
+        "parameters" : [ {
+          "name" : "dpsId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Court schedule mapping deleted",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/mapping/court-scheduler/movement/nomis-id/{nomisBookingId}/{nomisMovementSeq}" : {
@@ -24653,15 +24694,15 @@
             "type" : "integer",
             "format" : "int64"
           },
+          "paged" : {
+            "type" : "boolean"
+          },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
           "pageSize" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "paged" : {
-            "type" : "boolean"
           },
           "pageNumber" : {
             "type" : "integer",

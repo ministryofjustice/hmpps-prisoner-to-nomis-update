@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court
 
+import kotlinx.coroutines.reactor.awaitSingle
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
@@ -24,4 +25,6 @@ class CourtSchedulerNomisApiService(
     .awaitBodyOrNullForNotFound()
 
   suspend fun upsertCourtScheduleOut(prisonerNumber: String, request: UpsertCourtScheduleOut): UpsertCourtScheduleOutResponse = scheduleApi.upsertCourtScheduleOut(prisonerNumber, request).awaitBodyOrLogAndRethrowBadRequest()
+
+  suspend fun deleteCourtScheduleOut(prisonerNumber: String, eventId: Long) = scheduleApi.deleteCourtScheduleOut(prisonerNumber, eventId).awaitSingle()
 }
