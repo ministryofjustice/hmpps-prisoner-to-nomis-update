@@ -6,7 +6,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-05-28.176.5672dea"
+    "version" : "2026-06-03.190.5501964"
   },
   "servers" : [ {
     "url" : "https://court-appearance-scheduler-api-dev.hmpps.service.justice.gov.uk",
@@ -700,7 +700,7 @@
           "start" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-05-28T13:34:57"
+            "example" : "2026-06-04T09:54:00"
           },
           "courtEventType" : {
             "type" : "string"
@@ -715,6 +715,10 @@
           "externalReferenceUrn" : {
             "type" : "string",
             "nullable" : true
+          },
+          "externalCourtEventType" : {
+            "type" : "boolean",
+            "nullable" : true
           }
         }
       },
@@ -725,7 +729,7 @@
           "occurredAt" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-05-28T13:34:57"
+            "example" : "2026-06-04T09:54:00"
           },
           "user" : {
             "$ref" : "#/components/schemas/SyncUser"
@@ -782,7 +786,7 @@
           "occurredAt" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-05-28T13:34:57"
+            "example" : "2026-06-04T09:54:00"
           },
           "movementReasonCode" : {
             "type" : "string"
@@ -809,7 +813,7 @@
           "occurredAt" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-05-28T13:34:57"
+            "example" : "2026-06-04T09:54:00"
           },
           "user" : {
             "$ref" : "#/components/schemas/SyncUser"
@@ -826,7 +830,7 @@
           "at" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-05-28T13:34:57"
+            "example" : "2026-06-04T09:54:00"
           },
           "by" : {
             "type" : "string"
@@ -1176,7 +1180,7 @@
           "occurredAt" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-05-28T13:34:57"
+            "example" : "2026-06-04T09:54:00"
           },
           "domainEvents" : {
             "type" : "array",
@@ -1370,13 +1374,13 @@
           "start" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-05-28T13:34:57"
+            "example" : "2026-06-04T09:54:00"
           },
           "end" : {
             "type" : "string",
             "format" : "date-time",
             "nullable" : true,
-            "example" : "2026-05-28T13:34:57"
+            "example" : "2026-06-04T09:54:00"
           },
           "comments" : {
             "type" : "string",
@@ -1530,13 +1534,13 @@
           "start" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-05-28T13:34:57"
+            "example" : "2026-06-04T09:54:00"
           },
           "end" : {
             "type" : "string",
             "format" : "date-time",
             "nullable" : true,
-            "example" : "2026-05-28T13:34:57"
+            "example" : "2026-06-04T09:54:00"
           },
           "status" : {
             "$ref" : "#/components/schemas/AppearanceStatus"
@@ -1645,13 +1649,13 @@
           "start" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-05-28T13:34:57"
+            "example" : "2026-06-04T09:54:00"
           },
           "end" : {
             "type" : "string",
             "format" : "date-time",
             "nullable" : true,
-            "example" : "2026-05-28T13:34:57"
+            "example" : "2026-06-04T09:54:00"
           },
           "comments" : {
             "type" : "string",
@@ -1715,13 +1719,13 @@
           "start" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-05-28T13:34:57"
+            "example" : "2026-06-04T09:54:00"
           },
           "end" : {
             "type" : "string",
             "format" : "date-time",
             "nullable" : true,
-            "example" : "2026-05-28T13:34:57"
+            "example" : "2026-06-04T09:54:00"
           },
           "comments" : {
             "type" : "string",
@@ -1790,7 +1794,7 @@
           "occurredAt" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-05-28T13:34:57"
+            "example" : "2026-06-04T09:54:00"
           },
           "comments" : {
             "type" : "string",
@@ -1857,13 +1861,13 @@
           "start" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-05-28T13:34:57"
+            "example" : "2026-06-04T09:54:00"
           },
           "end" : {
             "type" : "string",
             "format" : "date-time",
             "nullable" : true,
-            "example" : "2026-05-28T13:34:57"
+            "example" : "2026-06-04T09:54:00"
           },
           "comments" : {
             "type" : "string",
