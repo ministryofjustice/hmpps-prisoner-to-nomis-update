@@ -75,6 +75,7 @@ class CourtSchedulerDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       id: UUID = UUID.randomUUID(),
       startTime: LocalDateTime = yesterday,
       prison: String = "BXI",
+      external: Boolean = true,
     ) = CourtEvent(
       dpsId = id,
       prisonCodeAtTimeOfScheduling = prison,
@@ -84,6 +85,7 @@ class CourtSchedulerDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       eventStatus = "COMPLETED",
       commentText = "court event comment",
       externalReferenceUrn = "some-ext-ref-urn",
+      externalCourtEventType = external,
     )
 
     fun courtEventMovement(
@@ -131,7 +133,8 @@ class CourtSchedulerDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   fun stubGetCourtAppearance(
     id: UUID,
     startTime: LocalDateTime = yesterday,
-    response: CourtEvent = courtEvent(id, startTime),
+    external: Boolean = true,
+    response: CourtEvent = courtEvent(id, startTime, external = external),
   ) {
     courtSchedulerDpsApiServer.stubFor(
       get("/sync/court-appearances/$id")

@@ -700,7 +700,7 @@
           "start" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-06-04T09:54:00"
+            "example" : "2026-06-04T09:51:54"
           },
           "courtEventType" : {
             "type" : "string"
@@ -729,7 +729,7 @@
           "occurredAt" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-06-04T09:54:00"
+            "example" : "2026-06-04T09:51:54"
           },
           "user" : {
             "$ref" : "#/components/schemas/SyncUser"
@@ -786,7 +786,7 @@
           "occurredAt" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-06-04T09:54:00"
+            "example" : "2026-06-04T09:51:54"
           },
           "movementReasonCode" : {
             "type" : "string"
@@ -813,7 +813,7 @@
           "occurredAt" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-06-04T09:54:00"
+            "example" : "2026-06-04T09:51:54"
           },
           "user" : {
             "$ref" : "#/components/schemas/SyncUser"
@@ -830,7 +830,7 @@
           "at" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-06-04T09:54:00"
+            "example" : "2026-06-04T09:51:54"
           },
           "by" : {
             "type" : "string"
@@ -1180,7 +1180,7 @@
           "occurredAt" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-06-04T09:54:00"
+            "example" : "2026-06-04T09:51:54"
           },
           "domainEvents" : {
             "type" : "array",
@@ -1374,13 +1374,13 @@
           "start" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-06-04T09:54:00"
+            "example" : "2026-06-04T09:51:54"
           },
           "end" : {
             "type" : "string",
             "format" : "date-time",
             "nullable" : true,
-            "example" : "2026-06-04T09:54:00"
+            "example" : "2026-06-04T09:51:54"
           },
           "comments" : {
             "type" : "string",
@@ -1534,13 +1534,13 @@
           "start" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-06-04T09:54:00"
+            "example" : "2026-06-04T09:51:54"
           },
           "end" : {
             "type" : "string",
             "format" : "date-time",
             "nullable" : true,
-            "example" : "2026-06-04T09:54:00"
+            "example" : "2026-06-04T09:51:54"
           },
           "status" : {
             "$ref" : "#/components/schemas/AppearanceStatus"
@@ -1649,13 +1649,13 @@
           "start" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-06-04T09:54:00"
+            "example" : "2026-06-04T09:51:54"
           },
           "end" : {
             "type" : "string",
             "format" : "date-time",
             "nullable" : true,
-            "example" : "2026-06-04T09:54:00"
+            "example" : "2026-06-04T09:51:54"
           },
           "comments" : {
             "type" : "string",
@@ -1719,13 +1719,13 @@
           "start" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-06-04T09:54:00"
+            "example" : "2026-06-04T09:51:54"
           },
           "end" : {
             "type" : "string",
             "format" : "date-time",
             "nullable" : true,
-            "example" : "2026-06-04T09:54:00"
+            "example" : "2026-06-04T09:51:54"
           },
           "comments" : {
             "type" : "string",
@@ -1794,7 +1794,7 @@
           "occurredAt" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-06-04T09:54:00"
+            "example" : "2026-06-04T09:51:54"
           },
           "comments" : {
             "type" : "string",
@@ -1861,13 +1861,13 @@
           "start" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-06-04T09:54:00"
+            "example" : "2026-06-04T09:51:54"
           },
           "end" : {
             "type" : "string",
             "format" : "date-time",
             "nullable" : true,
-            "example" : "2026-06-04T09:54:00"
+            "example" : "2026-06-04T09:51:54"
           },
           "comments" : {
             "type" : "string",
