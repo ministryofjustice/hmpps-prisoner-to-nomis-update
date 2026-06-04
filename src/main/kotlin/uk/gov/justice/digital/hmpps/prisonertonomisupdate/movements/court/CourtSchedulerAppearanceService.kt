@@ -103,7 +103,7 @@ class CourtSchedulerAppearanceService(
 }
 
 private fun CourtEvent.toNomisUpsertRequest(eventId: Long? = null): UpsertCourtScheduleOut {
-  val (status, returnStatus) = eventStatus.toNomisSchedulesStatus()
+  val (status, returnStatus) = eventStatus.toNomisSchedulesStatus(externalCourtEventType ?: true)
   return UpsertCourtScheduleOut(
     eventId = eventId,
     startTime = start,
@@ -116,10 +116,11 @@ private fun CourtEvent.toNomisUpsertRequest(eventId: Long? = null): UpsertCourtS
   )
 }
 
-fun String.toNomisSchedulesStatus() = when (this) {
-  "SCHEDULED" -> "SCH" to null
-  "EXPIRED" -> "EXP" to null
-  "IN_PROGRESS" -> "COMP" to "SCH"
-  "COMPLETED" -> "COMP" to "COMP"
+fun String.toNomisSchedulesStatus(external: Boolean) = when {
+  !external -> "EXP" to null
+  this == "SCHEDULED" -> "SCH" to null
+  this == "EXPIRED" -> "EXP" to null
+  this == "IN_PROGRESS" -> "COMP" to "SCH"
+  this == "COMPLETED" -> "COMP" to "COMP"
   else -> throw IllegalArgumentException("Unknown DPS court appearance status: $this")
 }
