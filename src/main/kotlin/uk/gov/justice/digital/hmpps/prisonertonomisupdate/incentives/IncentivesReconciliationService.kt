@@ -68,10 +68,9 @@ class IncentivesReconciliationService(
     .also { log.info("Page requested: $page, with ${it.size} active prisoners") }
 
   private suspend fun checkBookingIncentiveMatch(prisonerId: PrisonerIds): MismatchIncentiveLevel? = runCatching {
-    // log.debug("Checking booking: ${prisonerId.bookingId}")
     val (nomisIncentiveLevel, dpsIncentiveLevel) = withContext(Dispatchers.Unconfined) {
       async { nomisApiService.getCurrentIncentive(prisonerId.bookingId) } to
-        async { incentivesApiService.getCurrentIncentive(prisonerId.bookingId) }
+        async { incentivesApiService.getCurrentIncentive(prisonerId.offenderNo) }
     }.awaitBoth()
 
     return if (nomisIncentiveLevel?.iepLevel?.code != dpsIncentiveLevel?.iepCode) {

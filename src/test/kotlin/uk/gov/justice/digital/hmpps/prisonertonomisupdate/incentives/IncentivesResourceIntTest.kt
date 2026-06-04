@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.IncentivesApiExtension.Companion.incentivesApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.generateOffenderNo
 
 @ExtendWith(MockitoExtension::class)
 class IncentivesResourceIntTest(
@@ -51,7 +52,7 @@ class IncentivesResourceIntTest(
       (1..numberOfActivePrisoners).forEach {
         nomisApi.stubCurrentIncentiveGet(it, "STD")
         // every 10th prisoner has an ENH incentive
-        incentivesApi.stubCurrentIncentiveGet(it, if (it.toInt() % 10 == 0) "ENH" else "STD")
+        incentivesApi.stubCurrentIncentiveGet(iepCode = if (it.toInt() % 10 == 0) "ENH" else "STD", prisonerNumber = generateOffenderNo(sequence = it))
       }
     }
 
@@ -128,8 +129,8 @@ class IncentivesResourceIntTest(
 
     @Test
     fun `will attempt to complete a report even if some of the checks fail`() = runTest {
-      nomisApi.stubCurrentIncentiveGetWithError(2, 500)
-      incentivesApi.stubCurrentIncentiveGetWithError(20, 500)
+      nomisApi.stubCurrentIncentiveGetWithError(bookingId = 2, responseCode = 500)
+      incentivesApi.stubCurrentIncentiveGetWithError(prisonNumber = "A0020TZ", responseCode = 500)
 
       incentivesReconciliationService.generateIncentiveReconciliationReport()
 

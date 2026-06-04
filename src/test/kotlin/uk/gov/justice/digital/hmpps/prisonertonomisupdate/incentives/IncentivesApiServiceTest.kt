@@ -96,39 +96,39 @@ internal class IncentivesApiServiceTest {
   inner class GetCurrentIncentive {
     @BeforeEach
     internal fun setUp() {
-      IncentivesApiExtension.incentivesApi.stubCurrentIncentiveGet(99, "STD")
+      IncentivesApiExtension.incentivesApi.stubCurrentIncentiveGet("STD")
     }
 
     @Test
     fun `should call api with OAuth2 token`() = runTest {
-      incentivesApiService.getCurrentIncentive(99)
+      incentivesApiService.getCurrentIncentive("A1234AA")
 
       IncentivesApiExtension.incentivesApi.verify(
-        WireMock.getRequestedFor(WireMock.urlEqualTo("/incentive-reviews/booking/99?with-details=false"))
+        WireMock.getRequestedFor(WireMock.urlEqualTo("/incentive-reviews/prisoner/A1234AA"))
           .withHeader("Authorization", WireMock.equalTo("Bearer ABCDE")),
       )
     }
 
     @Test
     internal fun `get parse core data`() = runTest {
-      val incentive = incentivesApiService.getCurrentIncentive(99)
+      val incentive = incentivesApiService.getCurrentIncentive("A1234AA")
 
       assertThat(incentive?.iepCode).isEqualTo("STD")
     }
 
     @Test
     internal fun `when incentive is not found level will be null`() = runTest {
-      val incentive = incentivesApiService.getCurrentIncentive(88)
+      val incentive = incentivesApiService.getCurrentIncentive("Z1234ZZ")
 
       assertThat(incentive).isNull()
     }
 
     @Test
     internal fun `when any bad response is received an exception is thrown`() = runTest {
-      IncentivesApiExtension.incentivesApi.stubCurrentIncentiveGetWithError(99, responseCode = 503)
+      IncentivesApiExtension.incentivesApi.stubCurrentIncentiveGetWithError("A1234AA", responseCode = 503)
 
       assertThrows<ServiceUnavailable> {
-        incentivesApiService.getCurrentIncentive(99)
+        incentivesApiService.getCurrentIncentive("A1234AA")
       }
     }
   }
