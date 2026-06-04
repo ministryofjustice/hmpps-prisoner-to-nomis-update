@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-05-05.361.13cdf75"
+    "version" : "2026-06-03.406.20894df"
   },
   "servers" : [ {
     "url" : "/",
@@ -1661,8 +1661,8 @@
     "/incentive-reviews/booking/{bookingId}" : {
       "get" : {
         "tags" : [ "Maintain incentive reviews" ],
-        "summary" : "Returns a history of incentive reviews for a prisoner, Requires INCENTIVE_REVIEWS role and read scope",
-        "description" : "Booking ID is an internal ID for a prisoner in NOMIS",
+        "summary" : "Deprecated: Please use `/incentive-reviews/prisoner/{prisonerNumber}` instead.",
+        "description" : "Returns a history of incentive reviews for a prisoner, Requires INCENTIVE_REVIEWS role and read scope.",
         "operationId" : "getPrisonerIncentiveLevelHistory",
         "parameters" : [ {
           "name" : "bookingId",
@@ -1742,7 +1742,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated" : true
       }
     }
   },
@@ -2123,7 +2124,7 @@
             "description" : "The url to be used to download the attachment file"
           },
           "filesize" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "The size of the attachment file in bytes"
           },
@@ -2139,7 +2140,7 @@
             }
           }
         },
-        "required" : [ "attachmentNumber", "contentType", "filename", "filesize", "name", "url" ]
+        "required" : [ "attachmentNumber", "contentType", "filename", "name", "url" ]
       },
       "AttachmentHeader" : {
         "type" : "object",
