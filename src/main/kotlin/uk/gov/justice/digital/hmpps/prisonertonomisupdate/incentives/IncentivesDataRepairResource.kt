@@ -25,7 +25,7 @@ class IncentivesDataRepairResource(
       incentivesApiService.getIncentive(currentIncentive.id)
         .run {
           nomisApiService.createIncentive(
-            this.bookingId,
+            this.prisonerNumber,
             this.toNomisIncentive(),
           ).also { nomisIep ->
             // no need for a mapping - mappings are only used to prevent double creates

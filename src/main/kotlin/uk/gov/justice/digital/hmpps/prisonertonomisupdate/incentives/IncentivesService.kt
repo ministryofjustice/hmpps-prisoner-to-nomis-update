@@ -49,7 +49,7 @@ class IncentivesService(
               "iepTime" to incentive.iepTime.format(DateTimeFormatter.ISO_TIME),
             )
             nomisApiService.createIncentive(
-              incentive.bookingId,
+              incentive.prisonerNumber,
               incentive.toNomisIncentive(),
             ).let { nomisResponse ->
               IncentiveMappingDto(

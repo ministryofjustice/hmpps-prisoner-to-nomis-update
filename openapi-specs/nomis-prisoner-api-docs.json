@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-06-04.1527.d446bc4"
+    "version" : "2026-06-04.1529.8d544ae"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -9251,6 +9251,78 @@
           },
           "404" : {
             "description" : "Prisoner does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prisoners/{prisonNumber}/incentives" : {
+      "post" : {
+        "tags" : [ "incentives-resource" ],
+        "summary" : "Creates a new incentive",
+        "description" : "Creates a new incentive using next sequence no.",
+        "operationId" : "createIncentiveForPrisoner",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "description" : "Prison number",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prison number",
+            "example" : "A1234BC"
+          },
+          "example" : "A1234BC"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateIncentiveRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Incentive information with created sequence",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CreateIncentiveResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Prison or iep value do not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "prisoner does not exist",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -28194,6 +28266,55 @@
         },
         "required" : [ "visitBalanceAdjustmentId" ]
       },
+      "CreateIncentiveRequest" : {
+        "type" : "object",
+        "description" : "IEP creation request",
+        "properties" : {
+          "iepLevel" : {
+            "type" : "string",
+            "description" : "IEP Level",
+            "example" : "Standard"
+          },
+          "comments" : {
+            "type" : "string",
+            "description" : "Review comments",
+            "example" : "A review took place"
+          },
+          "iepDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Date and time when last review took place",
+            "example" : "2022-08-12T14:30"
+          },
+          "prisonId" : {
+            "type" : "string",
+            "description" : "Prison ID",
+            "example" : "MDI"
+          },
+          "userId" : {
+            "type" : "string",
+            "description" : "Username of the reviewer",
+            "example" : "AJONES"
+          }
+        },
+        "required" : [ "iepDateTime", "iepLevel", "prisonId" ]
+      },
+      "CreateIncentiveResponse" : {
+        "type" : "object",
+        "description" : "Incentive creation response",
+        "properties" : {
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The created Nomis booking and sequence"
+          },
+          "sequence" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "bookingId", "sequence" ]
+      },
       "CreateVisitRequest" : {
         "type" : "object",
         "description" : "Visit creation request",
@@ -30480,55 +30601,6 @@
         },
         "required" : [ "id" ]
       },
-      "CreateIncentiveRequest" : {
-        "type" : "object",
-        "description" : "IEP creation request",
-        "properties" : {
-          "iepLevel" : {
-            "type" : "string",
-            "description" : "IEP Level",
-            "example" : "Standard"
-          },
-          "comments" : {
-            "type" : "string",
-            "description" : "Review comments",
-            "example" : "A review took place"
-          },
-          "iepDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "Date and time when last review took place",
-            "example" : "2022-08-12T14:30"
-          },
-          "prisonId" : {
-            "type" : "string",
-            "description" : "Prison ID",
-            "example" : "MDI"
-          },
-          "userId" : {
-            "type" : "string",
-            "description" : "Username of the reviewer",
-            "example" : "AJONES"
-          }
-        },
-        "required" : [ "iepDateTime", "iepLevel", "prisonId" ]
-      },
-      "CreateIncentiveResponse" : {
-        "type" : "object",
-        "description" : "Incentive creation response",
-        "properties" : {
-          "bookingId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The created Nomis booking and sequence"
-          },
-          "sequence" : {
-            "type" : "integer",
-            "format" : "int64"
-          }
-        },
-        "required" : [ "bookingId", "sequence" ]
-      },
       "CreateKeyDateAdjustmentRequest" : {
         "type" : "object",
         "description" : "Key date adjustment create request",
@@ -32366,12 +32438,12 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paged" : {
+            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"

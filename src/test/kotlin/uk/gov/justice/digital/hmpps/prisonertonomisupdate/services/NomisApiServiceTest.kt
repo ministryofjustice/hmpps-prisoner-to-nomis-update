@@ -351,43 +351,43 @@ internal class NomisApiServiceTest {
 
     @Test
     fun `should call nomis api with OAuth2 token`() = runTest {
-      nomisApi.stubIncentiveCreate(456)
+      nomisApi.stubIncentiveCreate("A1234AA")
 
-      nomisApiService.createIncentive(456, newIncentive())
+      nomisApiService.createIncentive("A1234AA", newIncentive())
 
       nomisApi.verify(
-        postRequestedFor(urlEqualTo("/prisoners/booking-id/456/incentives"))
+        postRequestedFor(urlEqualTo("/prisoners/A1234AA/incentives"))
           .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
 
     @Test
     fun `will post data to nomis api`() = runTest {
-      nomisApi.stubIncentiveCreate(456)
+      nomisApi.stubIncentiveCreate("A1234AA")
 
-      nomisApiService.createIncentive(456, newIncentive())
+      nomisApiService.createIncentive("A1234AA", newIncentive())
 
       nomisApi.verify(
-        postRequestedFor(urlEqualTo("/prisoners/booking-id/456/incentives"))
+        postRequestedFor(urlEqualTo("/prisoners/A1234AA/incentives"))
           .withRequestBody(matchingJsonPath("$.prisonId", equalTo("MDI"))),
       )
     }
 
     @Test
     fun `when offender is not found an exception is thrown`() = runTest {
-      nomisApi.stubIncentiveCreateWithError(456, 404)
+      nomisApi.stubIncentiveCreateWithError("A1234AA", 404)
 
       assertThrows<NotFound> {
-        nomisApiService.createIncentive(456, newIncentive())
+        nomisApiService.createIncentive("A1234AA", newIncentive())
       }
     }
 
     @Test
     fun `when any bad response is received an exception is thrown`() = runTest {
-      nomisApi.stubIncentiveCreateWithError(456, 503)
+      nomisApi.stubIncentiveCreateWithError("A1234AA", 503)
 
       assertThrows<ServiceUnavailable> {
-        nomisApiService.createIncentive(456, newIncentive())
+        nomisApiService.createIncentive("A1234AA", newIncentive())
       }
     }
   }

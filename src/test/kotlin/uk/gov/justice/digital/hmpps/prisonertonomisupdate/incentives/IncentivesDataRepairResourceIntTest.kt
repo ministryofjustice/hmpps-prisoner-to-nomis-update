@@ -55,7 +55,7 @@ class IncentivesDataRepairResourceIntTest : IntegrationTestBase() {
           }
         """.trimIndent(),
       )
-      nomisApi.stubIncentiveCreate(BOOKING_ID)
+      nomisApi.stubIncentiveCreate(PRISON_NUMBER)
     }
 
     @Nested
