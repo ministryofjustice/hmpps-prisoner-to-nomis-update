@@ -11,7 +11,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtScheduleMappingDto.MappingType.DPS_CREATED
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertCourtScheduleOut
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.TelemetryEnabled
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.createMapping
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.track
 import java.util.*
 
 @Service
@@ -20,12 +22,13 @@ class CourtSchedulerAppearanceService(
   private val dpsApi: CourtSchedulerDpsApiService,
   private val nomisApi: CourtSchedulerNomisApiService,
   private val retryQueueService: CourtSchedulerRetryQueueService,
-  private val telemetryClient: TelemetryClient,
-) {
+  override val telemetryClient: TelemetryClient,
+) : TelemetryEnabled {
   companion object {
     private val TELEMETRY_KEY = "court-scheduler-schedule"
     private val TELEMETRY_KEY_CREATE = "$TELEMETRY_KEY-create"
     private val TELEMETRY_KEY_UPDATE = "$TELEMETRY_KEY-update"
+    private val TELEMETRY_KEY_DELETE = "$TELEMETRY_KEY-delete"
 
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
@@ -65,6 +68,27 @@ class CourtSchedulerAppearanceService(
         telemetryClient.trackEvent("$telemetryKey-error", telemetryMap)
         throw it
       }
+  }
+
+  suspend fun courtAppearanceDeleted(event: CourtSchedulerEvent) {
+    val prisonerNumber = event.personReference.prisonerNumber()
+    val dpsCourtAppearanceId = event.additionalInformation.id
+    val telemetryMap = mutableMapOf(
+      "offenderNo" to prisonerNumber,
+      "dpsCourtAppearanceId" to dpsCourtAppearanceId.toString(),
+    )
+
+    if (event.additionalInformation.source != "DPS") {
+      telemetryClient.trackEvent("$TELEMETRY_KEY_DELETE-ignored", telemetryMap)
+      return
+    }
+
+    track(TELEMETRY_KEY_DELETE, telemetryMap) {
+      val mapping = mappingApi.getCourtScheduleMapping(dpsCourtAppearanceId)
+        ?.also { telemetryMap["nomisEventId"] = it.nomisEventId.toString() }
+        ?: throw CourtSchedulerSyncException("Cannot find court schedule mapping for $dpsCourtAppearanceId")
+      nomisApi.deleteCourtScheduleOut(prisonerNumber, mapping.nomisEventId)
+    }
   }
 
   private suspend fun createCourtAppearanceMapping(
@@ -124,3 +148,5 @@ fun String.toNomisSchedulesStatus(external: Boolean) = when {
   this == "COMPLETED" -> "COMP" to "COMP"
   else -> throw IllegalArgumentException("Unknown DPS court appearance status: $this")
 }
+
+class CourtSchedulerSyncException(message: String) : RuntimeException(message)

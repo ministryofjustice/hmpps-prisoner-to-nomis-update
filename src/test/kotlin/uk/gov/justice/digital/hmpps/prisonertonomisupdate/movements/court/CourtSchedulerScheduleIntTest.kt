@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court
 
+import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
@@ -17,6 +18,7 @@ import org.mockito.kotlin.check
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.HttpStatus.CONFLICT
 import org.springframework.http.HttpStatus.NOT_FOUND
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
@@ -29,6 +31,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Up
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertCourtScheduleOutResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingMockServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiMockServer
+import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 import java.time.LocalDateTime
 import java.util.*
 
@@ -326,6 +329,107 @@ class CourtSchedulerScheduleIntTest(
           isNull(),
         )
       }
+    }
+  }
+
+  @Nested
+  @DisplayName("Court Appearance Deleted")
+  inner class CourtAppearanceDeleted {
+    private val prisonerNumber = "A1234BC"
+    private val dpsCourtAppearanceId = UUID.randomUUID()
+    private val nomisEventId = 123L
+
+    @BeforeEach
+    fun setUp() {
+      mappingApi.stubGetCourtScheduleMapping(dpsId = dpsCourtAppearanceId)
+      nomisApi.stubDeleteCourtScheduleOut(prisonerNumber, nomisEventId)
+    }
+
+    private fun publishDeleteEvent(source: String = "DPS", completedTelemetry: String? = null) {
+      publishCourtAppearanceDomainEvent(dpsCourtAppearanceId, prisonerNumber, source, "person.court-appearance.cancelled")
+      if (completedTelemetry == null) {
+        waitForAnyProcessingToComplete()
+      } else {
+        waitForAnyProcessingToComplete(completedTelemetry)
+      }
+    }
+
+    @Test
+    fun `should delete the scheduled movement in NOMIS`() {
+      publishDeleteEvent()
+
+      nomisApi.verify(deleteRequestedFor(urlEqualTo("/movements/$prisonerNumber/court/schedule/out/$nomisEventId")))
+    }
+
+    @Test
+    fun `should publish telemetry`() {
+      publishDeleteEvent()
+
+      verify(telemetryClient).trackEvent(
+        eq("court-scheduler-schedule-delete-success"),
+        check {
+          assertThat(it).containsEntry("dpsCourtAppearanceId", dpsCourtAppearanceId.toString())
+          assertThat(it).containsEntry("nomisEventId", nomisEventId.toString())
+          assertThat(it).containsEntry("offenderNo", prisonerNumber)
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `should ignore if triggered by NOMIS`() {
+      publishDeleteEvent(source = "NOMIS")
+
+      verify(telemetryClient).trackEvent(
+        eq("court-scheduler-schedule-delete-ignored"),
+        check {
+          assertThat(it).containsEntry("dpsCourtAppearanceId", dpsCourtAppearanceId.toString())
+          assertThat(it).containsEntry("offenderNo", prisonerNumber)
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `should end up on DLQ if mapping does not exist`() {
+      mappingApi.stubGetCourtScheduleMapping(status = NOT_FOUND)
+
+      publishDeleteEvent(completedTelemetry = "court-scheduler-schedule-delete-error")
+
+      await untilAsserted {
+        assertThat(courtMovementsDlqClient!!.countAllMessagesOnQueue(courtMovementsDlqUrl!!).get()).isEqualTo(1)
+      }
+
+      verify(telemetryClient).trackEvent(
+        eq("court-scheduler-schedule-delete-error"),
+        check {
+          assertThat(it).containsEntry("offenderNo", prisonerNumber)
+          assertThat(it).containsEntry("dpsCourtAppearanceId", dpsCourtAppearanceId.toString())
+          assertThat(it).containsEntry("error", "Cannot find court schedule mapping for $dpsCourtAppearanceId")
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `should end up on DLQ if NOMIS returns a conflict`() {
+      nomisApi.stubDeleteCourtScheduleOut(prisonerNumber, nomisEventId, status = CONFLICT)
+
+      publishDeleteEvent(completedTelemetry = "court-scheduler-schedule-delete-error")
+
+      await untilAsserted {
+        assertThat(courtMovementsDlqClient!!.countAllMessagesOnQueue(courtMovementsDlqUrl!!).get()).isEqualTo(1)
+      }
+
+      verify(telemetryClient).trackEvent(
+        eq("court-scheduler-schedule-delete-error"),
+        check {
+          assertThat(it).containsEntry("offenderNo", prisonerNumber)
+          assertThat(it).containsEntry("dpsCourtAppearanceId", dpsCourtAppearanceId.toString())
+          assertThat(it).containsEntry("error", "409 Conflict from DELETE http://localhost:8082/movements/$prisonerNumber/court/schedule/out/$nomisEventId")
+        },
+        isNull(),
+      )
     }
   }
 

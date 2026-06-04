@@ -87,7 +87,7 @@ class CourtSchedulerNomisApiMockServer(private val jsonMapper: JsonMapper) {
     eventId: Long = 123,
   ) {
     nomisApi.stubFor(
-      delete(urlPathEqualTo("/movements/$prisonerNumber/court/schedule/out/$eventId")).willReturn(
+      delete(urlPathMatching("/movements/$prisonerNumber/court/schedule/out/$eventId")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.NO_CONTENT.value()),

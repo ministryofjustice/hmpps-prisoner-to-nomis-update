@@ -47,7 +47,7 @@ class CourtSchedulerDomainEventListener(
       -> appearanceService.courtAppearanceChanged(message.fromJson())
 
       "person.court-appearance.cancelled",
-      -> log.info("Ignoring DPS court appearance deleted event")
+      -> appearanceService.courtAppearanceDeleted(message.fromJson())
 
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }
