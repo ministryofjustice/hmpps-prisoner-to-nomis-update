@@ -28,7 +28,7 @@ class IncentiveToNomisTest : SqsIntegrationTestBase() {
     incentivesApi.stubIncentiveGet(12, buildIncentiveApiDtoJsonResponse())
     mappingServer.stubGetIncentiveIdWithError(12, 404)
     mappingServer.stubCreateIncentive()
-    nomisApi.stubIncentiveCreate(bookingId = 456)
+    nomisApi.stubIncentiveCreate(prisonNumber = "A1234AA")
 
     awsSnsClient.publish(
       PublishRequest.builder().topicArn(topicArn)
@@ -43,9 +43,9 @@ class IncentiveToNomisTest : SqsIntegrationTestBase() {
 
     await untilCallTo { awsSqsIncentiveClient.countMessagesOnQueue(incentiveQueueUrl).get() } matches { it == 0 }
     await untilCallTo { incentivesApi.getCountFor("/incentive-reviews/id/12") } matches { it == 1 }
-    await untilCallTo { nomisApi.postCountFor("/prisoners/booking-id/456/incentives") } matches { it == 1 }
+    await untilCallTo { nomisApi.postCountFor("/prisoners/A1234AA/incentives") } matches { it == 1 }
     nomisApi.verify(
-      WireMock.postRequestedFor(WireMock.urlEqualTo("/prisoners/booking-id/456/incentives"))
+      WireMock.postRequestedFor(WireMock.urlEqualTo("/prisoners/A1234AA/incentives"))
         .withRequestBody(WireMock.matchingJsonPath("iepDateTime", WireMock.equalTo("2022-12-02T10:00:00")))
         .withRequestBody(WireMock.matchingJsonPath("prisonId", WireMock.equalTo("MDI")))
         .withRequestBody(WireMock.matchingJsonPath("iepLevel", WireMock.equalTo("STD"))),
@@ -63,7 +63,7 @@ class IncentiveToNomisTest : SqsIntegrationTestBase() {
   fun `will retry after a mapping failure`() {
     incentivesApi.stubIncentiveGet(12, buildIncentiveApiDtoJsonResponse())
     mappingServer.stubGetIncentiveIdWithError(12, 404)
-    nomisApi.stubIncentiveCreate(bookingId = 456)
+    nomisApi.stubIncentiveCreate(prisonNumber = "A1234AA")
     mappingServer.stubCreateIncentiveWithError()
 
     awsSnsClient.publish(
@@ -78,7 +78,7 @@ class IncentiveToNomisTest : SqsIntegrationTestBase() {
     ).get()
 
     await untilCallTo { incentivesApi.getCountFor("/incentive-reviews/id/12") } matches { it == 1 }
-    await untilCallTo { nomisApi.postCountFor("/prisoners/booking-id/456/incentives") } matches { it == 1 }
+    await untilCallTo { nomisApi.postCountFor("/prisoners/A1234AA/incentives") } matches { it == 1 }
 
     // the mapping call fails resulting in a retry message being queued
     // the retry message is processed and fails resulting in a message on the DLQ after 2 attempts
@@ -103,7 +103,7 @@ class IncentiveToNomisTest : SqsIntegrationTestBase() {
   fun `will log when duplicate is detected`() {
     incentivesApi.stubIncentiveGet(12, buildIncentiveApiDtoJsonResponse())
     mappingServer.stubGetIncentiveIdWithError(12, 404)
-    nomisApi.stubIncentiveCreate(bookingId = 456)
+    nomisApi.stubIncentiveCreate(prisonNumber = "A1234AA")
     mappingServer.stubCreateIncentiveWithDuplicateError(incentiveId = 12, nomisBookingId = 456, nomisIncentiveSequence = 1, duplicateNomisIncentiveSequence = 2)
 
     awsSnsClient.publish(
@@ -125,7 +125,7 @@ class IncentiveToNomisTest : SqsIntegrationTestBase() {
       )
     }
     await untilCallTo { incentivesApi.getCountFor("/incentive-reviews/id/12") } matches { it == 1 }
-    await untilCallTo { nomisApi.postCountFor("/prisoners/booking-id/456/incentives") } matches { it == 1 }
+    await untilCallTo { nomisApi.postCountFor("/prisoners/A1234AA/incentives") } matches { it == 1 }
 
     // the mapping call fails but is not queued for retry
     await untilCallTo { awsSqsIncentiveDlqClient!!.countAllMessagesOnQueue(incentiveDlqUrl!!).get() } matches { it == 0 }

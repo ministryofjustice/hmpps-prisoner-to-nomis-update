@@ -15,6 +15,7 @@ import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import org.springframework.web.reactive.function.client.awaitBodilessEntity
 import org.springframework.web.reactive.function.client.awaitBody
+import org.springframework.web.reactive.function.client.bodyToMono
 import reactor.core.publisher.Mono
 import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodilessEntityAsTrueNotFoundAsFalse
@@ -164,7 +165,7 @@ class NomisApiService(
         .build()
     }
     .retrieve()
-    .bodyToMono(PrisonerNosWithLast::class.java)
+    .bodyToMono<PrisonerNosWithLast>()
     .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/prisoners/ids/all-from-id", "offenderId", fromId)))
     .awaitSingle()
 
@@ -193,7 +194,7 @@ class NomisApiService(
       ),
     )
     .retrieve()
-    .bodyToMono(BookingIdsWithLast::class.java)
+    .bodyToMono<BookingIdsWithLast>()
     .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/bookings/ids/latest-from-id", "bookingId", lastBookingId)))
     .awaitSingle()
 
@@ -205,7 +206,7 @@ class NomisApiService(
     .uri("/prisoners/{offenderNo}/visits", prisonerId)
     .bodyValue(request)
     .retrieve()
-    .bodyToMono(CreateVisitResponseDto::class.java)
+    .bodyToMono<CreateVisitResponseDto>()
     .onErrorResume(WebClientResponseException.Conflict::class.java) {
       val errorResponse = it.getResponseBodyAs(ErrorResponse::class.java) as ErrorResponse
       throw CreateVisitDuplicateResponse(nomisVisitId = errorResponse.moreInfo.toString())
@@ -219,7 +220,7 @@ class NomisApiService(
       .uri("/prisoners/{offenderNo}/visits/{nomisVisitId}/cancel", request.offenderNo, request.nomisVisitId)
       .bodyValue(request)
       .retrieve()
-      .bodyToMono(Unit::class.java)
+      .bodyToMono<Unit>()
       .onErrorResume(WebClientResponseException.Conflict::class.java) {
         log.warn("cancelVisit failed for offender no ${request.offenderNo} and Nomis visit id ${request.nomisVisitId} with message ${it.message}")
         Mono.empty()
@@ -237,8 +238,8 @@ class NomisApiService(
 
   // ////////// INCENTIVES //////////////
 
-  suspend fun createIncentive(bookingId: Long, request: CreateIncentiveRequest): CreateIncentiveResponse = incentivesResourceApi
-    .createIncentive(bookingId, request).awaitSingle()
+  suspend fun createIncentive(prisonNumber: String, request: CreateIncentiveRequest): CreateIncentiveResponse = incentivesResourceApi
+    .createIncentiveForPrisoner(prisonNumber, request).awaitSingle()
 
   suspend fun getCurrentIncentive(bookingId: Long): IncentiveResponse? = incentivesResourceApi.prepare(
     incentivesResourceApi.getCurrentIncentiveRequestConfig(bookingId),
@@ -745,7 +746,7 @@ class NomisApiService(
     .get()
     .uri("/locations/{id}", id)
     .retrieve()
-    .bodyToMono(LocationResponse::class.java)
+    .bodyToMono<LocationResponse>()
     .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/locations/{id}")))
     .awaitSingle()
 
