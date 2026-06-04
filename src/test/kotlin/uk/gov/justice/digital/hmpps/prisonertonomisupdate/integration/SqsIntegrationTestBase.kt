@@ -206,8 +206,8 @@ abstract class SqsIntegrationTestBase : IntegrationTestBase() {
     movementsQueueClient.purgeQueue(movementsQueueUrl).get()
     movementsDlqClient?.purgeQueue(movementsDlqUrl)?.get()
 
-    courtMovementsQueueClient.purgeQueue(movementsQueueUrl).get()
-    courtMovementsDlqClient?.purgeQueue(movementsDlqUrl)?.get()
+    courtMovementsQueueClient.purgeQueue(courtMovementsQueueUrl).get()
+    courtMovementsDlqClient?.purgeQueue(courtMovementsDlqUrl)?.get()
 
     fromNomisCourtSentencingQueue.purgeQueue().get()
   }
