@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-06-03.1823.b61b3b2"
+    "version" : "2026-06-04.1839.9c915a3"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -28,6 +28,9 @@
   }, {
     "name" : "legacy-court-appearance-controller",
     "description" : "CRUD operations for syncing court appearance data from NOMIS Court Events into remand and sentencing api database."
+  }, {
+    "name" : "court-case-admin-controller",
+    "description" : "Court case"
   }, {
     "name" : "migration-controller",
     "description" : "Create operation for migrating court case data from NOMIS into remand and sentencing api database."
@@ -3172,6 +3175,19 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/court-case-admin/cleanup-many-charges-to-sentence" : {
+      "post" : {
+        "tags" : [ "court-case-admin-controller" ],
+        "summary" : "Fixes the single sentence to many charges issue",
+        "description" : "\n      NOMIS contains an erroneous relationship between sentences and charges where a single sentence is \n      linked to multiple charges. This endpoint identifies all court cases with this issue and creates \n      new sentences for each charge, ensuring that each sentence is correctly linked to its respective charge.\n      ",
+        "operationId" : "cleanupManyChargesToSentence",
+        "responses" : {
+          "202" : {
+            "description" : "Cleanup tiggered"
           }
         }
       }
@@ -6712,7 +6728,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:09.386614845"
+            "example" : "07:44:10.274705529"
           },
           "outcomeDispositionCode" : {
             "type" : [ "string", "null" ]
@@ -7088,7 +7104,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:09.386614845"
+            "example" : "07:44:10.274705529"
           },
           "courtCode" : {
             "type" : "string"
@@ -9770,7 +9786,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:09.386614845"
+            "example" : "07:44:10.274705529"
           },
           "courtCode" : {
             "type" : "string"
@@ -10458,7 +10474,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:44:09.386614845"
+            "example" : "07:44:10.274705529"
           },
           "nomisOutcomeCode" : {
             "type" : [ "string", "null" ]
@@ -10537,7 +10553,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:09.386614845"
+            "example" : "07:44:10.274705529"
           },
           "courtId" : {
             "type" : "string"
@@ -10689,7 +10705,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:44:09.386614845"
+            "example" : "07:44:10.274705529"
           },
           "charges" : {
             "type" : "array",
@@ -10723,7 +10739,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:09.386614845"
+            "example" : "07:44:10.274705529"
           },
           "courtId" : {
             "type" : "string"
@@ -11005,15 +11021,15 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
           "pageSize" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paged" : {
+            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -11305,7 +11321,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:09.386614845"
+            "example" : "07:44:10.274705529"
           },
           "courtCode" : {
             "type" : [ "string", "null" ]
@@ -11492,10 +11508,10 @@
           "empty" : {
             "type" : "boolean"
           },
-          "unsorted" : {
+          "sorted" : {
             "type" : "boolean"
           },
-          "sorted" : {
+          "unsorted" : {
             "type" : "boolean"
           }
         }
