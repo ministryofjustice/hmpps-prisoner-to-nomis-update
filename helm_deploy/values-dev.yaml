@@ -59,7 +59,7 @@ generic-service:
     SPRINGDOC_API-DOCS_ENABLED: "true"
     SPRINGDOC_SWAGGER-UI_ENABLED: "true"
 
-  # The name has max length of 21 chars (Cronjob name max length is 52 chars, including prefix "hmpps-prisoner-to-nomis-update-")
+  # The name has max length of 43 chars (Cronjob name max length is 52 chars, including prefix "to-nomis-")
   # The type must exist in enum BatchType
   # Can be removed once testing in dev complete
   batchjobs:
@@ -85,11 +85,11 @@ generic-service:
       type: COREPERSON_ACTIVE_RECON
       schedule: "30 14 * * *"
       suspend: true
-    - name: court-sched-act-recon
+    - name: court-scheduler-active-recon
       type: COURT_SCHEDULER_ACTIVE_RECON
       schedule: "00 4 * * *"
       suspend: true
-    - name: court-sched-all-recon
+    - name: court-scheduler-all-recon
       type: COURT_SCHEDULER_ALL_RECON
       schedule: "00 4 * * *"
       suspend: true

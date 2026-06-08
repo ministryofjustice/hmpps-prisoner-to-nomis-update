@@ -65,7 +65,7 @@ generic-service:
     REPORTS_CONTACT-PERSON_PRISONER-CONTACT_RECONCILIATION_PAGE-SIZE: 10
     REPORTS_CONTACT-PERSON_PERSON-CONTACT_RECONCILIATION_PAGE-SIZE: 30
 
-  # The name has max length of 21 chars (Cronjob name max length is 52 chars, including prefix "hmpps-prisoner-to-nomis-update-")
+  # The name has max length of 43 chars (Cronjob name max length is 52 chars, including prefix "to-nomis-")
   # The type must exist in enum BatchType
   batchjobs:
     - name: adjudication-recon
@@ -112,11 +112,11 @@ generic-service:
     - name: court-case-a-recon
       type: COURT_CASE_ACTIVE_PRISONER_RECON
       schedule: "10 3 * * *"
-    - name: court-sched-act-recon
+    - name: court-scheduler-active-recon
       type: COURT_SCHEDULER_ACTIVE_RECON
       schedule: "00 4 * * SUN,MON,TUE,WED,THU,FRI"
       suspend: true
-    - name: court-sched-all-recon
+    - name: court-scheduler-all-recon
       type: COURT_SCHEDULER_ALL_RECON
       schedule: "00 4 * * SAT"
       suspend: true
