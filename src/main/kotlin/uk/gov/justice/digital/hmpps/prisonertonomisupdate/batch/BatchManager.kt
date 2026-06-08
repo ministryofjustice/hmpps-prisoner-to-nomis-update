@@ -26,7 +26,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.CORE_P
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.CORE_PERSON_FULL_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.COURT_CASE_ACTIVE_PRISONER_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.COURT_CASE_PRISONER_RECON
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.COURT_SCHEDULER_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.COURT_SCHEDULER_ACTIVE_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.COURT_SCHEDULER_ALL_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.CSIP_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.DELETE_UNKNOWN_ACTIVITY_MAPPINGS
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.INCENTIVES_RECON
@@ -62,7 +63,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.PrisonerTransa
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives.IncentivesReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.IncidentsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.LocationsReconciliationService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.CourtSchedulerReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.CourtSchedulerReconciliationServiceActivePrisoners
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.CourtSchedulerReconciliationServiceAllPrisoners
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapActivePrisonersReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapAllPrisonersReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nonassociations.NonAssociationsReconciliationService
@@ -92,7 +94,8 @@ enum class BatchType {
   CORE_PERSON_FULL_RECON,
   COURT_CASE_PRISONER_RECON,
   COURT_CASE_ACTIVE_PRISONER_RECON,
-  COURT_SCHEDULER_RECON,
+  COURT_SCHEDULER_ACTIVE_RECON,
+  COURT_SCHEDULER_ALL_RECON,
   CSIP_RECON,
   DELETE_UNKNOWN_ACTIVITY_MAPPINGS,
   INCENTIVES_RECON,
@@ -132,7 +135,8 @@ class BatchManager(
   private val contactPersonProfileDetailsReconService: ContactPersonProfileDetailsReconciliationService,
   private val contactPersonReconciliationService: ContactPersonReconciliationService,
   private val corePersonReconciliationService: CorePersonReconciliationService,
-  private val courtSchedulerReconciliationService: CourtSchedulerReconciliationService,
+  private val courtSchedulerReconciliationServiceAll: CourtSchedulerReconciliationServiceAllPrisoners,
+  private val courtSchedulerReconciliationServiceActive: CourtSchedulerReconciliationServiceActivePrisoners,
   private val courtSentencingReconciliationService: CourtSentencingReconciliationService,
   private val csipReconciliationService: CSIPReconciliationService,
   private val hmppsQueueService: HmppsQueueService,
@@ -175,7 +179,8 @@ class BatchManager(
       CORE_PERSON_FULL_RECON -> corePersonReconciliationService.generateReconciliationReport(activeOnly = false)
       COURT_CASE_PRISONER_RECON -> courtSentencingReconciliationService.generateCourtCasePrisonerReconciliationReportBatch()
       COURT_CASE_ACTIVE_PRISONER_RECON -> courtSentencingReconciliationService.generateCourtCaseActivePrisonerReconciliationReportBatch()
-      COURT_SCHEDULER_RECON -> courtSchedulerReconciliationService.generateCourtSchedulerReconciliationReportBatch()
+      COURT_SCHEDULER_ACTIVE_RECON -> courtSchedulerReconciliationServiceActive.generateCourtSchedulerReconciliationReportBatch()
+      COURT_SCHEDULER_ALL_RECON -> courtSchedulerReconciliationServiceAll.generateCourtSchedulerReconciliationReportBatch()
       CSIP_RECON -> csipReconciliationService.generateCSIPReconciliationReport()
       DELETE_UNKNOWN_ACTIVITY_MAPPINGS -> schedulesService.deleteUnknownMappings()
       INCENTIVES_RECON -> incentivesReconciliationService.generateIncentiveReconciliationReport()

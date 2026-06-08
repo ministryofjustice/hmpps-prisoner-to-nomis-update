@@ -44,7 +44,7 @@ import java.time.LocalDateTime
 import java.util.*
 
 class CourtSchedulerReconciliationIntTest(
-  @Autowired private val reconciliationService: CourtSchedulerReconciliationService,
+  @Autowired private val reconciliationService: CourtSchedulerReconciliationServiceAllPrisoners,
   @Autowired private val courtScheduleNomisApi: CourtSchedulerNomisApiMockServer,
   @Autowired private val mappingApi: CourtSchedulerMappingApiMockServer,
   @Autowired private val courtSentencingMappingApi: CourtSentencingMappingApiMockServer,
