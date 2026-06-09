@@ -274,6 +274,10 @@ class CourtSentencingMappingApiMockServer(private val jsonMapper: JsonMapper) {
     stubDelete("/mapping/court-sentencing/sentences/dps-sentence-id/$id")
   }
 
+  fun stubDeleteSentenceWithErrorFollowedBySuccess(id: String) {
+    stubDeleteWithErrorFollowedBySuccess(url = "/mapping/court-sentencing/sentences/dps-sentence-id/$id", "SentenceDel")
+  }
+
   fun stubCreateSentenceWithErrorFollowedBySuccess() {
     stubCreateWithErrorFollowedBySuccess(url = "/mapping/court-sentencing/sentences", "Sentence")
   }
@@ -324,6 +328,10 @@ class CourtSentencingMappingApiMockServer(private val jsonMapper: JsonMapper) {
 
   fun stubDeleteSentenceTerm(id: String) {
     stubDelete("/mapping/court-sentencing/sentence-terms/dps-term-id/$id")
+  }
+
+  fun stubDeleteSentenceTermWithErrorFollowedBySuccess(id: String) {
+    stubDeleteWithErrorFollowedBySuccess(url = "/mapping/court-sentencing/sentence-terms/dps-term-id/$id", "SentenceTermDel")
   }
 
   fun stubCreateSentenceTermWithErrorFollowedBySuccess() {
@@ -485,6 +493,32 @@ class CourtSentencingMappingApiMockServer(private val jsonMapper: JsonMapper) {
           aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(200),
+
+        ).willSetStateTo(Scenario.STARTED),
+    )
+  }
+
+  fun stubDeleteWithErrorFollowedBySuccess(url: String, name: String) {
+    mappingServer.stubFor(
+      delete(url)
+        .inScenario("Retry $name")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withStatus(500) // request unsuccessful with status code 500
+            .withHeader("Content-Type", "application/json"),
+        )
+        .willSetStateTo("Delete $name Success"),
+    )
+
+    mappingServer.stubFor(
+      delete(url)
+        .inScenario("Retry $name")
+        .whenScenarioStateIs("Delete $name Success")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(204),
 
         ).willSetStateTo(Scenario.STARTED),
     )
