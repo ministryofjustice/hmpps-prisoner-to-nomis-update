@@ -75,8 +75,6 @@ import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
-import kotlin.text.get
-import kotlin.toString
 
 private const val NOMIS_COURT_CASE_ID = 7L
 private const val DPS_COURT_CASE_ID = "4321"
