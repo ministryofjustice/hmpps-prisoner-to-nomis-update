@@ -453,7 +453,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           COURT_CASE_ID_FOR_CREATION,
           legacyCourtCaseResponse(),
         )
-        publishUpdateCourtCaseDomainEvent().also { waitForAnyProcessingToComplete("court-case-updated-awaiting-parent") }
+        publishUpdateCourtCaseDomainEvent().also { waitForAnyProcessingToComplete(4) }
       }
 
       @Test
