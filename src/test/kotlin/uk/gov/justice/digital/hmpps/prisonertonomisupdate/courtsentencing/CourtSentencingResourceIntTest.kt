@@ -1403,6 +1403,135 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
     }
   }
 
+  @DisplayName("PUT /prisoners/{offenderNo}/court-sentencing/dps-court-case/{courtCaseId}/dps-appearance/{appearanceId}/dps-sentence/{sentenceId}/dps-period-length/{periodLengthId}/repair")
+  @Nested
+  inner class SentenceTermUpdatedRepair {
+
+    @Nested
+    inner class Security {
+      @Test
+      fun `access forbidden when no role`() {
+        webTestClient.put().uri("/prisoners/$OFFENDER_NO/court-sentencing/dps-court-case/$DPS_COURT_CASE_ID/dps-appearance/$DPS_COURT_APPEARANCE_ID/dps-sentence/$DPS_SENTENCE_ID/dps-period-length/$DPS_PERIOD_LENGTH_ID/repair")
+          .headers(setAuthorisation(roles = listOf()))
+          .contentType(MediaType.APPLICATION_JSON)
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access forbidden with wrong role`() {
+        webTestClient.put().uri("/prisoners/$OFFENDER_NO/court-sentencing/dps-court-case/$DPS_COURT_CASE_ID/dps-appearance/$DPS_COURT_APPEARANCE_ID/dps-sentence/$DPS_SENTENCE_ID/dps-period-length/$DPS_PERIOD_LENGTH_ID/repair")
+          .headers(setAuthorisation(roles = listOf("BANANAS")))
+          .contentType(MediaType.APPLICATION_JSON)
+          .body(
+            BodyInserters.fromValue(
+              CourtChargeRequest(
+                offenderNo = OFFENDER_NO,
+                dpsChargeId = DPS_COURT_CHARGE_ID,
+                dpsCaseId = DPS_COURT_CASE_ID,
+              ),
+            ),
+          )
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access unauthorised with no auth token`() {
+        webTestClient.put().uri("/prisoners/$OFFENDER_NO/court-sentencing/dps-court-case/$DPS_COURT_CASE_ID/dps-appearance/$DPS_COURT_APPEARANCE_ID/dps-sentence/$DPS_SENTENCE_ID/dps-period-length/$DPS_PERIOD_LENGTH_ID/repair")
+          .contentType(MediaType.APPLICATION_JSON)
+          .body(
+            BodyInserters.fromValue(
+              CourtChargeRequest(
+                offenderNo = OFFENDER_NO,
+                dpsChargeId = DPS_COURT_CHARGE_ID,
+                dpsCaseId = DPS_COURT_CASE_ID,
+              ),
+            ),
+          )
+          .exchange()
+          .expectStatus().isUnauthorized
+      }
+    }
+
+    @Nested
+    inner class HappyPath {
+
+      @BeforeEach
+      fun setUp() {
+        CourtSentencingApiExtension.courtSentencingApi.stubGetPeriodLength(
+          sentenceId = DPS_SENTENCE_ID,
+          offenderNo = OFFENDER_NO,
+          periodLengthId = DPS_PERIOD_LENGTH_ID,
+          appearanceId = DPS_COURT_APPEARANCE_ID,
+          caseId = DPS_COURT_CASE_ID,
+          chargeId = DPS_COURT_CHARGE_ID,
+        )
+
+        courtSentencingMappingApi.stubGetCourtCaseMappingGivenDpsId(
+          id = DPS_COURT_CASE_ID,
+          nomisCourtCaseId = NOMIS_COURT_CASE_ID,
+        )
+
+        courtSentencingMappingApi.stubGetSentenceMappingGivenDpsId(
+          nomisSentenceSequence = NOMIS_SENTENCE_SEQ,
+          nomisBookingId = NOMIS_BOOKING_ID,
+          id = DPS_SENTENCE_ID,
+        )
+
+        courtSentencingMappingApi.stubGetSentenceTermMappingGivenDpsId(
+          id = DPS_PERIOD_LENGTH_ID,
+          nomisBookingId = NOMIS_BOOKING_ID,
+          nomisSentenceSequence = NOMIS_SENTENCE_SEQ,
+          nomisTermSequence = NOMIS_TERM_SEQ,
+        )
+
+        courtSentencingNomisApi.stubSentenceTermUpdate(
+          offenderNo = OFFENDER_NO,
+          caseId = NOMIS_COURT_CASE_ID,
+          sentenceSeq = NOMIS_SENTENCE_SEQ,
+          termSeq = NOMIS_TERM_SEQ,
+        )
+
+        webTestClient.put().uri("/prisoners/$OFFENDER_NO/court-sentencing/dps-court-case/$DPS_COURT_CASE_ID/dps-appearance/$DPS_COURT_APPEARANCE_ID/dps-sentence/$DPS_SENTENCE_ID/dps-period-length/$DPS_PERIOD_LENGTH_ID/repair")
+          .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_TO_NOMIS__UPDATE__RW")))
+          .contentType(MediaType.APPLICATION_JSON)
+          .exchange()
+          .expectStatus().isOk
+
+        waitForAnyProcessingToComplete("sentence-term-updated-success")
+      }
+
+      @Test
+      fun `will callback back to court sentencing service to get more details`() {
+        CourtSentencingApiExtension.courtSentencingApi.verify(WireMock.getRequestedFor(urlEqualTo("/legacy/period-length/${DPS_PERIOD_LENGTH_ID}")))
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        verify(telemetryClient).trackEvent(
+          eq("sentence-term-updated-success"),
+          check {
+            assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
+            assertThat(it["dpsTermId"]).isEqualTo(DPS_PERIOD_LENGTH_ID)
+            assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
+            assertThat(it["dpsCourtCaseId"]).isEqualTo(DPS_COURT_CASE_ID)
+            assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID.toString())
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["nomisBookingId"]).isEqualTo(NOMIS_BOOKING_ID.toString())
+            assertThat(it["nomisSentenceSeq"]).isEqualTo(NOMIS_SENTENCE_SEQ.toString())
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will call nomis api to update the term`() {
+        nomisApi.verify(putRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/court-cases/$NOMIS_COURT_CASE_ID/sentences/$NOMIS_SENTENCE_SEQ/sentence-terms/$NOMIS_TERM_SEQ")))
+      }
+    }
+  }
+
   @DisplayName("PUT /prisoners/{offenderNo}/court-sentencing/dps-court-case/{courtCaseId}/dps-appearance/{appearanceId}/dps-sentence/{sentenceId}/repair")
   @Nested
   inner class SentenceUpdatedRepair {

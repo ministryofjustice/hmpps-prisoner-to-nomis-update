@@ -212,6 +212,40 @@ class CourtSentencingRepairService(
     )
   }
 
+  suspend fun resynchroniseSentenceTermUpdateToNomis(offenderNo: String, courtCaseId: String, courtAppearanceId: String, sentenceId: String, periodLengthId: String) {
+    courtSentencingService.updateSentenceTerm(
+      createEvent = CourtSentencingService.PeriodLengthCreatedEvent(
+        personReference = PersonReferenceList(
+          identifiers = listOf(
+            PersonReference(
+              type = "NOMS",
+              value = offenderNo,
+            ),
+          ),
+        ),
+        additionalInformation = CourtSentencingService.PeriodLengthAdditionalInformation(
+          courtCaseId = courtCaseId,
+          courtAppearanceId = courtAppearanceId,
+          sentenceId = sentenceId,
+          periodLengthId = periodLengthId,
+          source = "DPS",
+        ),
+      ),
+    )
+
+    telemetryClient.trackEvent(
+      "court-sentencing-repair-sentence-term-updated",
+      mapOf(
+        "offenderNo" to offenderNo,
+        "dpsCourtCaseId" to courtCaseId,
+        "dpsSentenceId" to sentenceId,
+        "dpsTermId" to periodLengthId,
+        "dpsCourtAppearanceId" to courtAppearanceId,
+      ),
+      null,
+    )
+  }
+
   suspend fun resynchroniseChargeUpdateToNomis(offenderNo: String, courtCaseId: String, courtAppearanceId: String, chargeId: String) {
     courtSentencingService.updateCharge(
       createEvent = CourtSentencingService.CourtChargeCreatedEvent(

@@ -282,6 +282,52 @@ class CourtSentencingResource(
     sentenceId = sentenceId,
   )
 
+  @PutMapping("/prisoners/{offenderNo}/court-sentencing/dps-court-case/{courtCaseId}/dps-appearance/{appearanceId}/dps-sentence/{sentenceId}/dps-period-length/{periodLengthId}/repair")
+  @Operation(
+    summary = "Resynchronises a sentence term from DPS to NOMIS",
+    description = "Used when a sentence term with an existing mapping needs an update resynchronising to nomis, so emergency use only. Mappings should all exist. Requires ROLE_PRISONER_TO_NOMIS__UPDATE__RW",
+    responses = [
+      ApiResponse(
+        responseCode = "200",
+        description = "repair successful",
+      ),
+      ApiResponse(
+        responseCode = "401",
+        description = "Unauthorized to access this endpoint",
+      ),
+      ApiResponse(
+        responseCode = "403",
+        description = "Incorrect permissions to call endpoint",
+      ),
+      ApiResponse(
+        responseCode = "404",
+        description = "Either mapping found for case/appearance/sentence/term or case/appearance/sentence/term not found in DPS",
+      ),
+    ],
+  )
+  suspend fun repairSentenceTermUpdateInNomis(
+    @PathVariable
+    offenderNo: String,
+    @Schema(description = "The DPS ID of the related court case")
+    @PathVariable
+    courtCaseId: String,
+    @Schema(description = "The DPS ID of the related appearance")
+    @PathVariable
+    appearanceId: String,
+    @Schema(description = "The DPS ID of the related sentence")
+    @PathVariable
+    sentenceId: String,
+    @Schema(description = "The DPS ID of the related term to be re-synced to NOMIS")
+    @PathVariable
+    periodLengthId: String,
+  ) = courtSentencingRepairService.resynchroniseSentenceTermUpdateToNomis(
+    offenderNo = offenderNo,
+    courtCaseId = courtCaseId,
+    courtAppearanceId = appearanceId,
+    sentenceId = sentenceId,
+    periodLengthId = periodLengthId,
+  )
+
   @PutMapping("/prisoners/{offenderNo}/court-sentencing/dps-court-case/{courtCaseId}/dps-appearance/{appearanceId}/dps-charge/{chargeId}/repair")
   @Operation(
     summary = "Resynchronises a charge for an appearance from DPS to NOMIS",
