@@ -314,7 +314,7 @@ class CourtSentencingResource(
     @Schema(description = "The DPS ID of the related appearance")
     @PathVariable
     appearanceId: String,
-    @Schema(description = "The DPS ID of the related sentence to be re-synced to NOMIS")
+    @Schema(description = "The DPS ID of the related sentence")
     @PathVariable
     sentenceId: String,
     @Schema(description = "The DPS ID of the related term to be re-synced to NOMIS")
