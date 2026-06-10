@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-06-08.1548.2535406"
+    "version" : "2026-06-10.1553.9b96560"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -29621,6 +29621,22 @@
         },
         "required" : [ "bookingId", "sequence" ]
       },
+      "AssessmentCommittee" : {
+        "type" : "string",
+        "enum" : [ "GOV", "MED", "OCA", "RECP", "REVIEW", "SECSTATE", "SECUR" ]
+      },
+      "AssessmentLevel" : {
+        "type" : "string",
+        "enum" : [ "STANDARD", "PEND", "LOW", "MED", "HI" ]
+      },
+      "AssessmentStatusType" : {
+        "type" : "string",
+        "enum" : [ "I", "A", "P" ]
+      },
+      "AssessmentType" : {
+        "type" : "string",
+        "enum" : [ "CSR", "CSR1", "CSRDO", "CSRF", "CSRH", "CSRREV", "CATEGORY" ]
+      },
       "CsraCreateDto" : {
         "type" : "object",
         "properties" : {
@@ -29631,14 +29647,13 @@
             "example" : "2025-11-22"
           },
           "type" : {
-            "type" : "string",
+            "$ref" : "#/components/schemas/AssessmentType",
             "description" : "CSRA type as configured in the ASSESSMENTS table:\n    CSRF\t  CSR Full\n    CSRH\t  CSR Health\n    CSRDO\t  CSR Locate\n    CSR\t    CSR Rating\n    CSR1\t  CSR Reception\n    CSRREV\tCSR Review\n  ",
             "enum" : [ "CSRF", "CSRH", "CSRDO", "CSR", "CSR1", "CSRREV" ]
           },
           "calculatedLevel" : {
-            "type" : "string",
+            "$ref" : "#/components/schemas/AssessmentLevel",
             "description" : "The calculated CSRA level",
-            "enum" : [ "STANDARD", "PEND", "LOW", "MED", "HI" ],
             "example" : "STANDARD"
           },
           "score" : {
@@ -29647,7 +29662,7 @@
             "example" : 1000
           },
           "status" : {
-            "type" : "string",
+            "$ref" : "#/components/schemas/AssessmentStatusType",
             "description" : "Status, active, inactive or provisional",
             "enum" : [ "I", "A", "P" ]
           },
@@ -29658,9 +29673,8 @@
             "example" : 123456
           },
           "committeeCode" : {
-            "type" : "string",
-            "description" : "The assessment committee code (reference code in domain 'ASSESS_COMM')",
-            "enum" : [ "GOV", "MED", "OCA", "RECP", "REVIEW", "SECSTATE", "SECUR" ]
+            "$ref" : "#/components/schemas/AssessmentCommittee",
+            "description" : "The assessment committee code (reference code in domain 'ASSESS_COMM')"
           },
           "nextReviewDate" : {
             "type" : "string",
@@ -29688,14 +29702,12 @@
             "example" : "NQP56Y"
           },
           "reviewLevel" : {
-            "type" : "string",
-            "description" : "The review CSRA level",
-            "enum" : [ "STANDARD", "PEND", "LOW", "MED", "HI" ]
+            "$ref" : "#/components/schemas/AssessmentLevel",
+            "description" : "The review CSRA level"
           },
           "approvedLevel" : {
-            "type" : "string",
-            "description" : "The approval CSRA level",
-            "enum" : [ "STANDARD", "PEND", "LOW", "MED", "HI" ]
+            "$ref" : "#/components/schemas/AssessmentLevel",
+            "description" : "The approval CSRA level"
           },
           "evaluationDate" : {
             "type" : "string",
@@ -29703,14 +29715,12 @@
             "description" : "Evaluation or approval date"
           },
           "evaluationResultCode" : {
-            "type" : "string",
-            "description" : "Approved or rejected indicator",
-            "enum" : [ "APP", "REJ" ]
+            "$ref" : "#/components/schemas/EvaluationResultCode",
+            "description" : "Approved or rejected indicator"
           },
           "reviewCommitteeCode" : {
-            "type" : "string",
-            "description" : "The review/approval committee code (reference code in domain 'ASSESS_COMM')",
-            "enum" : [ "GOV", "MED", "OCA", "RECP", "REVIEW", "SECSTATE", "SECUR" ]
+            "$ref" : "#/components/schemas/AssessmentCommittee",
+            "description" : "The review/approval committee code (reference code in domain 'ASSESS_COMM')"
           },
           "reviewCommitteeComment" : {
             "type" : "string",
@@ -29726,6 +29736,10 @@
           }
         },
         "required" : [ "assessmentDate", "assessmentStaffId", "calculatedLevel", "createdBy", "createdDateTime", "score", "status", "type" ]
+      },
+      "EvaluationResultCode" : {
+        "type" : "string",
+        "enum" : [ "APP", "REJ" ]
       },
       "CreateSentenceResponse" : {
         "type" : "object",
@@ -33913,14 +33927,13 @@
             "example" : "2025-11-22"
           },
           "type" : {
-            "type" : "string",
+            "$ref" : "#/components/schemas/AssessmentType",
             "description" : "CSRA type as configured in the ASSESSMENTS table:\n    CSRF\t  CSR Full\n    CSRH\t  CSR Health\n    CSRDO\t  CSR Locate\n    CSR\t    CSR Rating\n    CSR1\t  CSR Reception\n    CSRREV\tCSR Review\n  ",
             "enum" : [ "CSRF", "CSRH", "CSRDO", "CSR", "CSR1", "CSRREV" ]
           },
           "calculatedLevel" : {
-            "type" : "string",
+            "$ref" : "#/components/schemas/AssessmentLevel",
             "description" : "The calculated CSRA level",
-            "enum" : [ "STANDARD", "PEND", "LOW", "MED", "HI" ],
             "example" : "STANDARD"
           },
           "score" : {
@@ -33929,7 +33942,7 @@
             "example" : 1000
           },
           "status" : {
-            "type" : "string",
+            "$ref" : "#/components/schemas/AssessmentStatusType",
             "description" : "Status, active, inactive or provisional",
             "enum" : [ "I", "A", "P" ]
           },
@@ -33940,9 +33953,8 @@
             "example" : 123456
           },
           "committeeCode" : {
-            "type" : "string",
-            "description" : "The assessment committee code (reference code in domain 'ASSESS_COMM')",
-            "enum" : [ "GOV", "MED", "OCA", "RECP", "REVIEW", "SECSTATE", "SECUR" ]
+            "$ref" : "#/components/schemas/AssessmentCommittee",
+            "description" : "The assessment committee code (reference code in domain 'ASSESS_COMM')"
           },
           "nextReviewDate" : {
             "type" : "string",
@@ -33970,14 +33982,12 @@
             "example" : "NQP56Y"
           },
           "reviewLevel" : {
-            "type" : "string",
-            "description" : "The review CSRA level",
-            "enum" : [ "STANDARD", "PEND", "LOW", "MED", "HI" ]
+            "$ref" : "#/components/schemas/AssessmentLevel",
+            "description" : "The review CSRA level"
           },
           "approvedLevel" : {
-            "type" : "string",
-            "description" : "The approval CSRA level",
-            "enum" : [ "STANDARD", "PEND", "LOW", "MED", "HI" ]
+            "$ref" : "#/components/schemas/AssessmentLevel",
+            "description" : "The approval CSRA level"
           },
           "evaluationDate" : {
             "type" : "string",
@@ -33985,14 +33995,12 @@
             "description" : "Evaluation or approval date"
           },
           "evaluationResultCode" : {
-            "type" : "string",
-            "description" : "Approved or rejected indicator",
-            "enum" : [ "APP", "REJ" ]
+            "$ref" : "#/components/schemas/EvaluationResultCode",
+            "description" : "Approved or rejected indicator"
           },
           "reviewCommitteeCode" : {
-            "type" : "string",
-            "description" : "The review/approval committee code (reference code in domain 'ASSESS_COMM')",
-            "enum" : [ "GOV", "MED", "OCA", "RECP", "REVIEW", "SECSTATE", "SECUR" ]
+            "$ref" : "#/components/schemas/AssessmentCommittee",
+            "description" : "The review/approval committee code (reference code in domain 'ASSESS_COMM')"
           },
           "reviewCommitteeComment" : {
             "type" : "string",
