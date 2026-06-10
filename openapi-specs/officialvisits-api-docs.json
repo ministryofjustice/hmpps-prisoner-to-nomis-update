@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-06-08.901.974e3da"
+    "version" : "2026-06-10.909.551a969"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -3101,6 +3101,70 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/OfficialVisitDetails"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Official visit not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/official-visit/id/{officialVisitId}/audited-events" : {
+      "get" : {
+        "tags" : [ "Official visits" ],
+        "summary" : "Get the audited events for an official visit",
+        "description" : "Get the audited event details of an official visit\n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISITS_ADMIN\n* ROLE_OFFICIAL_VISITS__R\n* ROLE_OFFICIAL_VISITS_RW",
+        "operationId" : "getOfficialVisitAuditedEvents",
+        "parameters" : [ {
+          "name" : "officialVisitId",
+          "in" : "path",
+          "description" : "The official visit ID",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "example" : 123456
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns a list of audited events",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/AuditedEventResponse"
+                  }
                 }
               }
             }
@@ -7149,6 +7213,93 @@
           }
         },
         "required" : [ "assistedVisit", "createdBy", "createdTime", "leadVisitor", "officialVisitorId", "visitorTypeCode" ]
+      },
+      "AuditedEventChange" : {
+        "type" : "object",
+        "properties" : {
+          "field" : {
+            "type" : "string",
+            "description" : "The name of the field affected by the audited event",
+            "example" : "start_time"
+          },
+          "oldValue" : {
+            "type" : [ "string", "null" ],
+            "description" : "The old value of the field affected by the audited event",
+            "example" : "12:00"
+          },
+          "newValue" : {
+            "type" : [ "string", "null" ],
+            "description" : "The new value of the field affected by the audited event",
+            "example" : "17:00"
+          }
+        },
+        "required" : [ "field" ]
+      },
+      "AuditedEventResponse" : {
+        "type" : "object",
+        "properties" : {
+          "auditedEventId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The audited event identifier",
+            "example" : 1
+          },
+          "officialVisitId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The official visit identifier",
+            "example" : 1
+          },
+          "eventSummary" : {
+            "type" : "string",
+            "description" : "A short summary of the audit event",
+            "example" : "Visit updated"
+          },
+          "eventType" : {
+            "type" : "string",
+            "description" : "The type of audit event",
+            "enum" : [ "CREATE", "UPDATE" ],
+            "example" : "UPDATE"
+          },
+          "eventChanges" : {
+            "type" : "array",
+            "description" : "The changes related to an update, otherwise empty",
+            "example" : [ {
+              "field" : "start_time",
+              "oldValue" : "12:00",
+              "newValue" : "17:00"
+            }, {
+              "field" : "end_time",
+              "oldValue" : "14:00",
+              "newValue" : "19:00"
+            } ],
+            "items" : {
+              "$ref" : "#/components/schemas/AuditedEventChange"
+            }
+          },
+          "eventDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time the audited event was recorded",
+            "example" : "2026-05-04 09:50"
+          },
+          "eventUsername" : {
+            "type" : "string",
+            "description" : "The username of the user responsible for the audited event",
+            "example" : "X999X"
+          },
+          "eventUserFullName" : {
+            "type" : "string",
+            "description" : "The full name of the user responsible for the audited event",
+            "example" : "Fred Bloggs"
+          },
+          "significantChange" : {
+            "type" : "boolean",
+            "description" : "\n    A boolean indicator to determine if the audited event is considered a significant change to the official visit.\n    ",
+            "example" : true
+          }
+        },
+        "required" : [ "auditedEventId", "eventChanges", "eventDateTime", "eventSummary", "eventType", "eventUserFullName", "eventUsername", "officialVisitId", "significantChange" ]
       },
       "VisitChangeStatusResponse" : {
         "type" : "object",
