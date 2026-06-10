@@ -128,19 +128,16 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         )
         courtSentencingMappingApi.stubGetCaseMappingGivenDpsIdWithError(COURT_CASE_ID_FOR_CREATION, 404)
         courtSentencingMappingApi.stubCreateCourtCase()
-        publishCreateCourtCaseDomainEvent()
+        publishCreateCourtCaseDomainEvent().also { waitForAnyProcessingToComplete() }
       }
 
       @Test
       fun `will callback back to court sentencing service to get more details`() {
-        waitForAnyProcessingToComplete()
         courtSentencingApi.verify(getRequestedFor(urlEqualTo("/legacy/court-case/${COURT_CASE_ID_FOR_CREATION}")))
       }
 
       @Test
       fun `will create success telemetry`() {
-        waitForAnyProcessingToComplete()
-
         verify(telemetryClient).trackEvent(
           eq("court-case-create-success"),
           check {
@@ -155,7 +152,6 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will call nomis api to create the Court Case`() {
-        waitForAnyProcessingToComplete()
         courtSentencingNomisApi.verify(
           postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases"))
             .withRequestBody(
@@ -194,9 +190,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will send message to nomis migration to resync created case details back to DPS`() {
-        await untilAsserted {
-          assertThat(fromNomisCourtSentencingQueue.countAllMessagesOnQueue()).isEqualTo(1)
-        }
+        assertThat(fromNomisCourtSentencingQueue.countAllMessagesOnQueue()).isEqualTo(1)
         val rawMessage = fromNomisCourtSentencingQueue.readRawMessages().first()
         val sqsMessage: SQSMessage = rawMessage.fromJson()
 
@@ -209,29 +203,25 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will create a mapping between the two court cases`() {
-        waitForAnyProcessingToComplete()
-
-        await untilAsserted {
-          courtSentencingMappingApi.verify(
-            postRequestedFor(urlEqualTo("/mapping/court-sentencing/court-cases"))
-              .withRequestBody(
-                matchingJsonPath(
-                  "dpsCourtCaseId",
-                  equalTo(COURT_CASE_ID_FOR_CREATION),
-                ),
-              )
-              .withRequestBody(
-                matchingJsonPath(
-                  "nomisCourtCaseId",
-                  equalTo(
-                    NOMIS_COURT_CASE_ID_FOR_CREATION.toString(),
-                  ),
+        courtSentencingMappingApi.verify(
+          postRequestedFor(urlEqualTo("/mapping/court-sentencing/court-cases"))
+            .withRequestBody(
+              matchingJsonPath(
+                "dpsCourtCaseId",
+                equalTo(COURT_CASE_ID_FOR_CREATION),
+              ),
+            )
+            .withRequestBody(
+              matchingJsonPath(
+                "nomisCourtCaseId",
+                equalTo(
+                  NOMIS_COURT_CASE_ID_FOR_CREATION.toString(),
                 ),
               ),
+            ),
 
-          )
-        }
-        await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
+        )
+        verify(telemetryClient).trackEvent(any(), any(), isNull())
       }
     }
 
@@ -243,13 +233,11 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           COURT_CASE_ID_FOR_CREATION,
           legacyCourtCaseResponse(),
         )
-        publishCreateCourtCaseDomainEvent(source = "NOMIS")
+        publishCreateCourtCaseDomainEvent(source = "NOMIS").also { waitForAnyProcessingToComplete() }
       }
 
       @Test
       fun `will create success telemetry`() {
-        waitForAnyProcessingToComplete()
-
         verify(telemetryClient).trackEvent(
           eq("court-case-create-ignored"),
           check {
@@ -271,13 +259,11 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           COURT_CASE_ID_FOR_CREATION,
           NOMIS_COURT_CASE_ID_FOR_CREATION,
         )
-        publishCreateCourtCaseDomainEvent()
+        publishCreateCourtCaseDomainEvent().also { waitForAnyProcessingToComplete() }
       }
 
       @Test
       fun `will not create an court case in NOMIS`() {
-        waitForAnyProcessingToComplete()
-
         verify(telemetryClient).trackEvent(
           eq("court-case-create-duplicate"),
           check {
@@ -311,21 +297,17 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         )
         courtSentencingMappingApi.stubGetCaseMappingGivenDpsIdWithError(COURT_CASE_ID_FOR_CREATION, 404)
         courtSentencingMappingApi.stubCreateCourtCaseWithErrorFollowedBySuccess()
-        publishCreateCourtCaseDomainEvent()
-
-        await untilCallTo { courtSentencingApi.getCountFor("/legacy/court-case/$COURT_CASE_ID_FOR_CREATION") } matches { it == 1 }
-        await untilCallTo { courtSentencingNomisApi.postCountFor("/prisoners/$OFFENDER_NO/sentencing/court-cases") } matches { it == 1 }
+        publishCreateCourtCaseDomainEvent().also { waitForAnyProcessingToComplete("court-case-create-mapping-retry-success") }
       }
 
       @Test
       fun `should only create the NOMIS court case once`() {
-        await untilAsserted {
-          verify(telemetryClient).trackEvent(
-            eq("court-case-create-mapping-retry-success"),
-            any(),
-            isNull(),
-          )
-        }
+        verify(telemetryClient).trackEvent(
+          eq("court-case-create-mapping-retry-success"),
+          any(),
+          isNull(),
+        )
+
         courtSentencingNomisApi.verify(
           1,
           postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases")),
@@ -334,33 +316,29 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will eventually create a mapping after NOMIS court case is created`() {
-        await untilAsserted {
-          courtSentencingMappingApi.verify(
-            2,
-            postRequestedFor(urlEqualTo("/mapping/court-sentencing/court-cases"))
-              .withRequestBody(
-                matchingJsonPath(
-                  "dpsCourtCaseId",
-                  equalTo(COURT_CASE_ID_FOR_CREATION),
-                ),
-              )
-              .withRequestBody(
-                matchingJsonPath(
-                  "nomisCourtCaseId",
-                  equalTo(
-                    NOMIS_COURT_CASE_ID_FOR_CREATION.toString(),
-                  ),
+        courtSentencingMappingApi.verify(
+          2,
+          postRequestedFor(urlEqualTo("/mapping/court-sentencing/court-cases"))
+            .withRequestBody(
+              matchingJsonPath(
+                "dpsCourtCaseId",
+                equalTo(COURT_CASE_ID_FOR_CREATION),
+              ),
+            )
+            .withRequestBody(
+              matchingJsonPath(
+                "nomisCourtCaseId",
+                equalTo(
+                  NOMIS_COURT_CASE_ID_FOR_CREATION.toString(),
                 ),
               ),
-          )
-        }
-        await untilAsserted {
-          verify(telemetryClient).trackEvent(
-            eq("court-case-create-mapping-retry-success"),
-            any(),
-            isNull(),
-          )
-        }
+            ),
+        )
+        verify(telemetryClient).trackEvent(
+          eq("court-case-create-mapping-retry-success"),
+          any(),
+          isNull(),
+        )
       }
     }
   }
@@ -372,13 +350,11 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     inner class WhenCourtCaseHasBeenUpdatedInNomis {
       @BeforeEach
       fun setUp() {
-        publishUpdateCourtCaseDomainEvent(source = "NOMIS")
+        publishUpdateCourtCaseDomainEvent(source = "NOMIS").also { waitForAnyProcessingToComplete() }
       }
 
       @Test
       fun `will create ignore telemetry`() {
-        waitForAnyProcessingToComplete()
-
         verify(telemetryClient).trackEvent(
           eq("court-case-updated-ignored"),
           check {
@@ -406,19 +382,16 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           id = COURT_CASE_ID_FOR_CREATION,
           nomisCourtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
         )
-        publishUpdateCourtCaseDomainEvent()
+        publishUpdateCourtCaseDomainEvent().also { waitForAnyProcessingToComplete() }
       }
 
       @Test
       fun `will callback back to court sentencing service to get more details`() {
-        waitForAnyProcessingToComplete()
         courtSentencingApi.verify(getRequestedFor(urlEqualTo("/legacy/court-case/${COURT_CASE_ID_FOR_CREATION}")))
       }
 
       @Test
       fun `will create success telemetry`() {
-        waitForAnyProcessingToComplete()
-
         verify(telemetryClient).trackEvent(
           eq("court-case-updated-success"),
           check {
@@ -432,7 +405,6 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will call nomis api to update the Court case`() {
-        waitForAnyProcessingToComplete()
         courtSentencingNomisApi.verify(
           putRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/${NOMIS_COURT_CASE_ID_FOR_CREATION}"))
             .withRequestBody(matchingJsonPath("status", equalTo("A"))),
@@ -446,22 +418,20 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       @BeforeEach
       fun setUp() {
         courtSentencingApi.stubCourtCaseGetError(COURT_CASE_ID_FOR_CREATION)
-        publishUpdateCourtCaseDomainEvent()
+        publishUpdateCourtCaseDomainEvent().also { waitForAnyProcessingToComplete("court-case-updated-ignored") }
       }
 
       @Test
       fun `will not update an court case in NOMIS`() {
-        await untilAsserted {
-          verify(telemetryClient, times(1)).trackEvent(
-            eq("court-case-updated-ignored"),
-            check {
-              assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
-              assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-              assertThat(it["reason"]).isEqualTo("DPS case $COURT_CASE_ID_FOR_CREATION does not exist in RaS")
-            },
-            isNull(),
-          )
-        }
+        verify(telemetryClient, times(1)).trackEvent(
+          eq("court-case-updated-ignored"),
+          check {
+            assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["reason"]).isEqualTo("DPS case $COURT_CASE_ID_FOR_CREATION does not exist in RaS")
+          },
+          isNull(),
+        )
 
         courtSentencingNomisApi.verify(
           0,
@@ -483,22 +453,20 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           COURT_CASE_ID_FOR_CREATION,
           legacyCourtCaseResponse(),
         )
-        publishUpdateCourtCaseDomainEvent()
+        publishUpdateCourtCaseDomainEvent().also { waitForAnyProcessingToComplete(4) }
       }
 
       @Test
       fun `will not update a court case in NOMIS`() {
-        await untilAsserted {
-          verify(telemetryClient, times(3)).trackEvent(
-            eq("court-case-updated-awaiting-parent"),
-            check {
-              assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
-              assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-              assertThat(it["reason"]).isEqualTo("Missing Dps case id: $COURT_CASE_ID_FOR_CREATION")
-            },
-            isNull(),
-          )
-        }
+        verify(telemetryClient, times(3)).trackEvent(
+          eq("court-case-updated-awaiting-parent"),
+          check {
+            assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["reason"]).isEqualTo("Missing Dps case id: $COURT_CASE_ID_FOR_CREATION")
+          },
+          isNull(),
+        )
 
         courtSentencingNomisApi.verify(
           0,
@@ -524,13 +492,11 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           nomisCourtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
         )
         courtSentencingMappingApi.stubDeleteCourtCase(id = COURT_CASE_ID_FOR_CREATION)
-        publishDeleteCourtCaseDomainEvent()
+        publishDeleteCourtCaseDomainEvent().also { waitForAnyProcessingToComplete() }
       }
 
       @Test
       fun `will create success telemetry`() {
-        waitForHearingProcessingToBeComplete()
-
         verify(telemetryClient).trackEvent(
           org.mockito.kotlin.eq("court-case-deleted-success"),
           check {
@@ -543,13 +509,11 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will call nomis api to delete the court case`() {
-        waitForHearingProcessingToBeComplete()
         courtSentencingNomisApi.verify(deleteRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/$NOMIS_COURT_CASE_ID_FOR_CREATION")))
       }
 
       @Test
       fun `will call the mapping service to delete the mapping`() {
-        waitForHearingProcessingToBeComplete()
         courtSentencingMappingApi.verify(deleteRequestedFor(urlEqualTo("/mapping/court-sentencing/court-cases/dps-court-case-id/$COURT_CASE_ID_FOR_CREATION")))
       }
     }
@@ -560,31 +524,25 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       @BeforeEach
       fun setUp() {
         courtSentencingMappingApi.stubGetCaseMappingGivenDpsIdWithError(COURT_CASE_ID_FOR_CREATION, 404)
-        publishDeleteCourtCaseDomainEvent()
+        publishDeleteCourtCaseDomainEvent().also { waitForAnyProcessingToComplete() }
       }
 
       @Test
       fun `will not attempt to delete a court case in NOMIS`() {
-        await untilAsserted {
-          verify(telemetryClient, times(1)).trackEvent(
-            org.mockito.kotlin.eq("court-case-deleted-skipped"),
-            check {
-              assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
-              assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-            },
-            isNull(),
-          )
-        }
+        verify(telemetryClient, times(1)).trackEvent(
+          org.mockito.kotlin.eq("court-case-deleted-skipped"),
+          check {
+            assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+          },
+          isNull(),
+        )
 
         courtSentencingNomisApi.verify(
           0,
           deleteRequestedFor(WireMock.anyUrl()),
         )
       }
-    }
-
-    private fun waitForHearingProcessingToBeComplete() {
-      await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
     }
   }
 
@@ -595,13 +553,13 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     inner class WhenCourtAppearanceHasBeenCreatedInNomis {
       @BeforeEach
       fun setUp() {
-        publishCreateCourtAppearanceDomainEvent(source = "NOMIS")
+        publishCreateCourtAppearanceDomainEvent(source = "NOMIS").also {
+          waitForAnyProcessingToComplete()
+        }
       }
 
       @Test
       fun `will create ignore telemetry`() {
-        waitForAnyProcessingToComplete()
-
         verify(telemetryClient).trackEvent(
           eq("court-appearance-create-ignored"),
           check {
@@ -976,13 +934,11 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           DPS_COURT_APPEARANCE_ID,
           NOMIS_COURT_APPEARANCE_ID,
         )
-        publishCreateCourtAppearanceDomainEvent()
+        publishCreateCourtAppearanceDomainEvent().also { waitForAnyProcessingToComplete() }
       }
 
       @Test
       fun `will not create an court case in NOMIS`() {
-        waitForAnyProcessingToComplete()
-
         verify(telemetryClient).trackEvent(
           eq("court-appearance-create-duplicate"),
           check {
@@ -1037,21 +993,16 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           DPS_COURT_CHARGE_4_ID,
           NOMIS_COURT_CHARGE_4_ID,
         )
-        publishCreateCourtAppearanceDomainEvent()
-
-        await untilCallTo { courtSentencingApi.getCountFor("/legacy/court-appearance/$DPS_COURT_APPEARANCE_ID") } matches { it == 1 }
-        await untilCallTo { courtSentencingNomisApi.postCountFor("/prisoners/$OFFENDER_NO/sentencing/court-cases/$NOMIS_COURT_CASE_ID_FOR_CREATION/court-appearances") } matches { it == 1 }
+        publishCreateCourtAppearanceDomainEvent().also { waitForAnyProcessingToComplete(3) }
       }
 
       @Test
       fun `should only create the NOMIS court appearance once`() {
-        await untilAsserted {
-          verify(telemetryClient).trackEvent(
-            eq("court-appearance-create-mapping-retry-success"),
-            any(),
-            isNull(),
-          )
-        }
+        verify(telemetryClient).trackEvent(
+          eq("court-appearance-create-mapping-retry-success"),
+          any(),
+          isNull(),
+        )
         courtSentencingNomisApi.verify(
           1,
           postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/${NOMIS_COURT_CASE_ID_FOR_CREATION}/court-appearances")),
@@ -1060,33 +1011,29 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will eventually create a mapping after NOMIS court appearance is created`() {
-        await untilAsserted {
-          courtSentencingMappingApi.verify(
-            2,
-            putRequestedFor(urlEqualTo("/mapping/court-sentencing/court-cases/update-create"))
-              .withRequestBody(
-                matchingJsonPath(
-                  "mappingsToCreate.courtAppearances[0].dpsCourtAppearanceId",
-                  equalTo(DPS_COURT_APPEARANCE_ID),
-                ),
-              )
-              .withRequestBody(
-                matchingJsonPath(
-                  "mappingsToCreate.courtAppearances[0].nomisCourtAppearanceId",
-                  equalTo(
-                    NOMIS_COURT_APPEARANCE_ID.toString(),
-                  ),
+        courtSentencingMappingApi.verify(
+          2,
+          putRequestedFor(urlEqualTo("/mapping/court-sentencing/court-cases/update-create"))
+            .withRequestBody(
+              matchingJsonPath(
+                "mappingsToCreate.courtAppearances[0].dpsCourtAppearanceId",
+                equalTo(DPS_COURT_APPEARANCE_ID),
+              ),
+            )
+            .withRequestBody(
+              matchingJsonPath(
+                "mappingsToCreate.courtAppearances[0].nomisCourtAppearanceId",
+                equalTo(
+                  NOMIS_COURT_APPEARANCE_ID.toString(),
                 ),
               ),
-          )
-        }
-        await untilAsserted {
-          verify(telemetryClient).trackEvent(
-            eq("court-appearance-create-mapping-retry-success"),
-            any(),
-            isNull(),
-          )
-        }
+            ),
+        )
+        verify(telemetryClient).trackEvent(
+          eq("court-appearance-create-mapping-retry-success"),
+          any(),
+          isNull(),
+        )
       }
     }
 
@@ -1117,35 +1064,30 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           DPS_COURT_CHARGE_ID,
           NOMIS_COURT_CHARGE_ID,
         )
-        publishCreateCourtAppearanceDomainEvent()
-
-        await untilCallTo { courtSentencingApi.getCountFor("/legacy/court-appearance/$DPS_COURT_APPEARANCE_ID") } matches { it == 2 }
-        await untilCallTo { courtSentencingNomisApi.postCountFor("/prisoners/$OFFENDER_NO/sentencing/court-cases/$NOMIS_COURT_CASE_ID_FOR_CREATION/court-appearances") } matches { it == 1 }
+        publishCreateCourtAppearanceDomainEvent().also { waitForAnyProcessingToComplete("court-appearance-create-success") }
       }
 
       @Test
       fun `should only create the NOMIS court appearance once`() {
-        await untilAsserted {
-          verify(telemetryClient).trackEvent(
-            eq("court-appearance-create-success"),
-            check {
-              assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
-              assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
-              assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
-              assertThat(it["courtEventCharges"]).isEqualTo(listOf(NOMIS_COURT_CHARGE_ID).toString())
-              assertThat(it["courtEventChargesWithOutcomes"]).isEqualTo(
-                listOf(
-                  CourtEventChargeRequest(
-                    offenderChargeId = NOMIS_COURT_CHARGE_ID,
-                    resultCode1 = COURT_CHARGE_1_RESULT_CODE,
-                  ),
-                ).toString(),
-              )
-              assertThat(it["nomisCourtAppearanceId"]).isEqualTo(NOMIS_COURT_APPEARANCE_ID.toString())
-            },
-            isNull(),
-          )
-        }
+        verify(telemetryClient).trackEvent(
+          eq("court-appearance-create-success"),
+          check {
+            assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
+            assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
+            assertThat(it["courtEventCharges"]).isEqualTo(listOf(NOMIS_COURT_CHARGE_ID).toString())
+            assertThat(it["courtEventChargesWithOutcomes"]).isEqualTo(
+              listOf(
+                CourtEventChargeRequest(
+                  offenderChargeId = NOMIS_COURT_CHARGE_ID,
+                  resultCode1 = COURT_CHARGE_1_RESULT_CODE,
+                ),
+              ).toString(),
+            )
+            assertThat(it["nomisCourtAppearanceId"]).isEqualTo(NOMIS_COURT_APPEARANCE_ID.toString())
+          },
+          isNull(),
+        )
         verify(telemetryClient).trackEvent(
           org.mockito.kotlin.eq("court-appearance-create-awaiting-parent"),
           check {
@@ -1171,13 +1113,11 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     inner class WhenCourtAppearanceHasBeenUpdatedInNomis {
       @BeforeEach
       fun setUp() {
-        publishUpdateCourtAppearanceDomainEvent(source = "NOMIS")
+        publishUpdateCourtAppearanceDomainEvent(source = "NOMIS").also { waitForAnyProcessingToComplete() }
       }
 
       @Test
       fun `will create ignore telemetry`() {
-        waitForAnyProcessingToComplete()
-
         verify(telemetryClient).trackEvent(
           eq("court-appearance-updated-ignored"),
           check {
@@ -1234,19 +1174,16 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           NOMIS_COURT_CHARGE_4_ID,
         )
         courtSentencingMappingApi.stubCourtChargeBatchUpdate()
-        publishUpdateCourtAppearanceDomainEvent()
+        publishUpdateCourtAppearanceDomainEvent().also { waitForAnyProcessingToComplete() }
       }
 
       @Test
       fun `will callback back to court sentencing service to get more details`() {
-        waitForAnyProcessingToComplete()
         courtSentencingApi.verify(getRequestedFor(urlEqualTo("/legacy/court-appearance/${DPS_COURT_APPEARANCE_ID}")))
       }
 
       @Test
       fun `will map new DPS court charges to NOMIS court charges`() {
-        waitForAnyProcessingToComplete()
-
         courtSentencingNomisApi.verify(
           putRequestedFor(WireMock.anyUrl())
             .withRequestBody(matchingJsonPath("courtEventChargesWithOutcomes.size()", equalTo("4")))
@@ -1279,34 +1216,29 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will delete charge mappings as required`() {
-        waitForAnyProcessingToComplete()
-        await untilAsserted {
-          courtSentencingMappingApi.verify(
-            putRequestedFor(urlEqualTo("/mapping/court-sentencing/court-charges"))
-              .withRequestBody(
-                matchingJsonPath(
-                  "courtChargesToDelete[0].nomisCourtChargeId",
-                  equalTo(
-                    NOMIS_COURT_CHARGE_5_ID.toString(),
-                  ),
-                ),
-              )
-              .withRequestBody(
-                matchingJsonPath(
-                  "courtChargesToDelete[1].nomisCourtChargeId",
-                  equalTo(
-                    NOMIS_COURT_CHARGE_6_ID.toString(),
-                  ),
+        courtSentencingMappingApi.verify(
+          putRequestedFor(urlEqualTo("/mapping/court-sentencing/court-charges"))
+            .withRequestBody(
+              matchingJsonPath(
+                "courtChargesToDelete[0].nomisCourtChargeId",
+                equalTo(
+                  NOMIS_COURT_CHARGE_5_ID.toString(),
                 ),
               ),
-          )
-        }
+            )
+            .withRequestBody(
+              matchingJsonPath(
+                "courtChargesToDelete[1].nomisCourtChargeId",
+                equalTo(
+                  NOMIS_COURT_CHARGE_6_ID.toString(),
+                ),
+              ),
+            ),
+        )
       }
 
       @Test
       fun `will create success telemetry`() {
-        waitForAnyProcessingToComplete()
-
         verify(telemetryClient).trackEvent(
           eq("court-appearance-updated-success"),
           check {
@@ -1325,7 +1257,6 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will call nomis api to update the Court Appearance`() {
-        waitForAnyProcessingToComplete()
         courtSentencingNomisApi.verify(
           putRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/${NOMIS_COURT_CASE_ID_FOR_CREATION}/court-appearances/${NOMIS_COURT_APPEARANCE_ID}"))
             .withRequestBody(matchingJsonPath("courtEventType", equalTo("VL"))),
@@ -1379,19 +1310,16 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           DPS_COURT_CHARGE_4_ID,
           NOMIS_COURT_CHARGE_4_ID,
         )
-        publishUpdateCourtAppearanceDomainEvent()
+        publishUpdateCourtAppearanceDomainEvent().also { waitForAnyProcessingToComplete() }
       }
 
       @Test
       fun `will callback back to court sentencing service to get more details`() {
-        waitForAnyProcessingToComplete()
         courtSentencingApi.verify(getRequestedFor(urlEqualTo("/legacy/court-appearance/${DPS_COURT_APPEARANCE_ID}")))
       }
 
       @Test
       fun `will map new DPS court charges to NOMIS court charges`() {
-        waitForAnyProcessingToComplete()
-
         courtSentencingNomisApi.verify(
           putRequestedFor(WireMock.anyUrl())
             .withRequestBody(matchingJsonPath("courtEventChargesWithOutcomes.size()", equalTo("4")))
@@ -1424,8 +1352,6 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will create success telemetry`() {
-        waitForAnyProcessingToComplete()
-
         verify(telemetryClient).trackEvent(
           eq("court-appearance-updated-success"),
           check {
@@ -1443,7 +1369,6 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will call nomis api to update the Court Appearance`() {
-        waitForAnyProcessingToComplete()
         courtSentencingNomisApi.verify(
           putRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/${NOMIS_COURT_CASE_ID_FOR_CREATION}/court-appearances/${NOMIS_COURT_APPEARANCE_ID}"))
             .withRequestBody(matchingJsonPath("courtEventType", equalTo("VL"))),
@@ -3157,13 +3082,13 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           nomisBookingId = NOMIS_BOOKING_ID,
         )
         courtSentencingMappingApi.stubDeleteSentence(id = DPS_SENTENCE_ID)
-        publishDeleteSentenceDomainEvent()
+        publishDeleteSentenceDomainEvent().also {
+          waitForAnyProcessingToComplete()
+        }
       }
 
       @Test
       fun `will create success telemetry`() {
-        waitForAnyProcessingToComplete()
-
         verify(telemetryClient).trackEvent(
           org.mockito.kotlin.eq("sentence-deleted-success"),
           check {
@@ -3177,13 +3102,11 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will call nomis api to delete the sentence`() {
-        waitForAnyProcessingToComplete()
         courtSentencingNomisApi.verify(deleteRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/court-cases/$NOMIS_COURT_CASE_ID_FOR_CREATION/sentences/$NOMIS_SENTENCE_SEQ")))
       }
 
       @Test
       fun `will call the mapping service to delete the mapping`() {
-        waitForAnyProcessingToComplete()
         courtSentencingMappingApi.verify(deleteRequestedFor(urlEqualTo("/mapping/court-sentencing/sentences/dps-sentence-id/$DPS_SENTENCE_ID")))
       }
     }
@@ -3213,6 +3136,52 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         courtSentencingNomisApi.verify(
           0,
           deleteRequestedFor(WireMock.anyUrl()),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenMappingServiceFailsOnce {
+      @BeforeEach
+      fun setUp() {
+        courtSentencingNomisApi.stubSentenceDelete(
+          offenderNo = OFFENDER_NO,
+          caseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
+          sentenceSeq = NOMIS_SENTENCE_SEQ,
+        )
+        courtSentencingMappingApi.stubGetCourtCaseMappingGivenDpsId(
+          id = COURT_CASE_ID_FOR_CREATION,
+          nomisCourtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
+        )
+        courtSentencingMappingApi.stubGetSentenceMappingGivenDpsId(
+          id = DPS_SENTENCE_ID,
+          nomisSentenceSequence = NOMIS_SENTENCE_SEQ,
+          nomisBookingId = NOMIS_BOOKING_ID,
+        )
+        courtSentencingMappingApi.stubDeleteSentenceWithErrorFollowedBySuccess(DPS_SENTENCE_ID)
+        publishDeleteSentenceDomainEvent().also {
+          waitForAnyProcessingToComplete("sentence-delete-mapping-retry-success")
+        }
+      }
+
+      @Test
+      fun `should only delete the sentence in nomis once`() {
+        courtSentencingNomisApi.verify(
+          1,
+          deleteRequestedFor(WireMock.anyUrl()),
+        )
+      }
+
+      @Test
+      fun `will eventually delete a mapping `() {
+        courtSentencingMappingApi.verify(
+          2,
+          deleteRequestedFor(urlEqualTo("/mapping/court-sentencing/sentences/dps-sentence-id/$DPS_SENTENCE_ID")),
+        )
+        verify(telemetryClient).trackEvent(
+          eq("sentence-delete-mapping-retry-success"),
+          any(),
+          isNull(),
         )
       }
     }
@@ -3719,13 +3688,13 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           nomisTermSequence = NOMIS_TERM_SEQ,
         )
         courtSentencingMappingApi.stubDeleteSentenceTerm(id = DPS_TERM_ID)
-        publishDeletePeriodLengthDomainEvent()
+        publishDeletePeriodLengthDomainEvent().also {
+          waitForAnyProcessingToComplete("sentence-term-deleted-success")
+        }
       }
 
       @Test
       fun `will create success telemetry`() {
-        waitForAnyProcessingToComplete()
-
         verify(telemetryClient).trackEvent(
           org.mockito.kotlin.eq("sentence-term-deleted-success"),
           check {
@@ -3740,45 +3709,92 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will call nomis api to delete the sentence term`() {
-        waitForAnyProcessingToComplete()
         courtSentencingNomisApi.verify(deleteRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/court-cases/$NOMIS_COURT_CASE_ID_FOR_CREATION/sentences/$NOMIS_SENTENCE_SEQ/sentence-terms/$NOMIS_TERM_SEQ")))
       }
 
       @Test
       fun `will call the mapping service to delete the mapping`() {
-        waitForAnyProcessingToComplete()
         courtSentencingMappingApi.verify(deleteRequestedFor(urlEqualTo("/mapping/court-sentencing/sentence-terms/dps-term-id/$DPS_TERM_ID")))
       }
     }
+  }
 
-    @Nested
-    inner class WhenNoMappingExistsForPeriodLength {
+  @Nested
+  inner class WhenNoMappingExistsForPeriodLength {
 
-      @BeforeEach
-      fun setUp() {
-        courtSentencingMappingApi.stubGetSentenceTermMappingGivenDpsIdWithError(DPS_TERM_ID, 404)
-        publishDeletePeriodLengthDomainEvent()
-      }
+    @BeforeEach
+    fun setUp() {
+      courtSentencingMappingApi.stubGetSentenceTermMappingGivenDpsIdWithError(DPS_TERM_ID, 404)
+      publishDeletePeriodLengthDomainEvent()
+    }
 
-      @Test
-      fun `will not attempt to delete a sentence term in NOMIS`() {
-        await untilAsserted {
-          verify(telemetryClient, times(1)).trackEvent(
-            org.mockito.kotlin.eq("sentence-term-deleted-skipped"),
-            check {
-              assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
-              assertThat(it["dpsTermId"]).isEqualTo(DPS_TERM_ID)
-              assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-            },
-            isNull(),
-          )
-        }
-
-        courtSentencingNomisApi.verify(
-          0,
-          deleteRequestedFor(WireMock.anyUrl()),
+    @Test
+    fun `will not attempt to delete a sentence term in NOMIS`() {
+      await untilAsserted {
+        verify(telemetryClient, times(1)).trackEvent(
+          org.mockito.kotlin.eq("sentence-term-deleted-skipped"),
+          check {
+            assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
+            assertThat(it["dpsTermId"]).isEqualTo(DPS_TERM_ID)
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+          },
+          isNull(),
         )
       }
+
+      courtSentencingNomisApi.verify(
+        0,
+        deleteRequestedFor(WireMock.anyUrl()),
+      )
+    }
+  }
+
+  @Nested
+  inner class WhenMappingServiceFailsOnce {
+    @BeforeEach
+    fun setUp() {
+      courtSentencingNomisApi.stubSentenceTermDelete(
+        offenderNo = OFFENDER_NO,
+        caseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
+        sentenceSeq = NOMIS_SENTENCE_SEQ,
+        termSeq = NOMIS_TERM_SEQ,
+      )
+      courtSentencingMappingApi.stubGetCourtCaseMappingGivenDpsId(
+        id = COURT_CASE_ID_FOR_CREATION,
+        nomisCourtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
+      )
+      courtSentencingMappingApi.stubGetSentenceTermMappingGivenDpsId(
+        id = DPS_TERM_ID,
+        nomisSentenceSequence = NOMIS_SENTENCE_SEQ,
+        nomisBookingId = NOMIS_BOOKING_ID,
+        nomisTermSequence = NOMIS_TERM_SEQ,
+      )
+
+      courtSentencingMappingApi.stubDeleteSentenceTermWithErrorFollowedBySuccess(DPS_TERM_ID)
+      publishDeletePeriodLengthDomainEvent().also {
+        waitForAnyProcessingToComplete("sentence-term-delete-mapping-retry-success")
+      }
+    }
+
+    @Test
+    fun `should only delete the sentence term in nomis once`() {
+      courtSentencingNomisApi.verify(
+        1,
+        deleteRequestedFor(WireMock.anyUrl()),
+      )
+    }
+
+    @Test
+    fun `will eventually delete a mapping `() {
+      courtSentencingMappingApi.verify(
+        2,
+        deleteRequestedFor(urlEqualTo("/mapping/court-sentencing/sentence-terms/dps-term-id/$DPS_TERM_ID")),
+      )
+      verify(telemetryClient).trackEvent(
+        eq("sentence-term-delete-mapping-retry-success"),
+        any(),
+        isNull(),
+      )
     }
   }
 

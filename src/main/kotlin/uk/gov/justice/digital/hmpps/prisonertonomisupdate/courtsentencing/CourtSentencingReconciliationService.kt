@@ -308,13 +308,13 @@ class CourtSentencingReconciliationService(
 
     // DPS hierarchy view of sentencing means that sentences can be repeated when associated with multiple charges
     val appearanceCharges = dpsResponse.appearances.flatMap { appearance -> appearance.charges }
-    val sentences = appearanceCharges.mapNotNull { charge -> charge.sentence }.map {
+    val sentences = appearanceCharges.mapNotNull { charge -> charge.sentence }.map { sentenceResponse ->
       val offenceCodeString =
-        appearanceCharges.filter { charge -> charge.sentence?.sentenceUuid == it.sentenceUuid }.map { charge ->
+        appearanceCharges.filter { charge -> charge.sentence?.sentenceUuid == sentenceResponse.sentenceUuid }.map { charge ->
           charge.offenceCode
         }.sorted().joinToString(",")
       val terms = sortTerms(
-        it.periodLengths.map { term ->
+        sentenceResponse.periodLengths.map { term ->
           SentenceTermFields(
             sentenceTermCode = term.sentenceTermCode,
             lifeSentenceFlag = term.lifeSentence,
@@ -335,19 +335,19 @@ class CourtSentencingReconciliationService(
       )
       SentenceFields(
         // sentence start date is actually the sentence appearance date which can be different to the start date eg consecutive sentences
-        sentencingAppearanceDate = it.sentenceStartDate.takeIf { it.validDate() },
+        sentencingAppearanceDate = sentenceResponse.sentenceStartDate.takeIf { it.validDate() },
         // for recalls fallback to legacy data when DPS records a NOMIS recall as UNKNOWN
-        sentenceCategory = it.sentenceCategory.takeUnless { it == "UNKNOWN" } ?: it.legacyData?.sentenceCategory,
-        sentenceCalcType = it.sentenceCalcType.takeUnless { it == "UNKNOWN" } ?: it.legacyData?.sentenceCalcType,
-        fine = it.fineAmount?.stripTrailingZeros(),
-        status = if (it.active) {
+        sentenceCategory = sentenceResponse.sentenceCategory.takeUnless { it == "UNKNOWN" } ?: sentenceResponse.legacyData?.sentenceCategory,
+        sentenceCalcType = sentenceResponse.sentenceCalcType.takeUnless { it == "UNKNOWN" } ?: sentenceResponse.legacyData?.sentenceCalcType,
+        fine = sentenceResponse.fineAmount?.stripTrailingZeros(),
+        status = if (sentenceResponse.active) {
           "A"
         } else {
           "I"
         },
-        id = it.sentenceUuid.toString(),
+        id = sentenceResponse.sentenceUuid.toString(),
         mappedId = if (extraInfo == true) {
-          mappingService.getMappingGivenSentenceIdOrNull(it.sentenceUuid.toString())?.nomisSentenceSequence?.toString()
+          mappingService.getMappingGivenSentenceIdOrNull(sentenceResponse.sentenceUuid.toString())?.nomisSentenceSequence?.toString()
             ?: "missing nomis mapping"
         } else {
           null
@@ -358,7 +358,7 @@ class CourtSentencingReconciliationService(
         termsAsString = terms.map { term -> term.toSortString() }.toString(),
       )
     }.distinctBy { it.id }.sortedWith(
-      compareBy<SentenceFields> { it.sentencingAppearanceDate }
+      compareBy<SentenceFields> { sentenceField -> sentenceField.sentencingAppearanceDate }
         .thenBy { it.offenceCodes }
         .thenBy { it.sentenceCategory }
         .thenBy { it.sentenceCalcType }

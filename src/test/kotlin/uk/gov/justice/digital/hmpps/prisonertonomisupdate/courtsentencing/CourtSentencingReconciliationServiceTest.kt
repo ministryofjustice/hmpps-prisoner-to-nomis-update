@@ -2,6 +2,13 @@
 
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing
 
+// leaving these commented as it is a pain to find the correct imports
+// import com.fasterxml.jackson.annotation.JsonInclude
+// import com.fasterxml.jackson.databind.ObjectMapper
+// import com.fasterxml.jackson.databind.SerializationFeature
+// import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+// import com.fasterxml.jackson.module.kotlin.readValue
+// import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.microsoft.applicationinsights.TelemetryClient
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
@@ -144,6 +151,35 @@ internal class CourtSentencingReconciliationServiceTest {
         ).isNull()
       }
     }
+
+    /*@Test
+    fun `will test realistic data using input files`() = runTest {
+      val ras = this::class.java.getResource("/ras.json")!!.readText()
+      val nomis = this::class.java.getResource("/nomis.json")!!.readText()
+      val objectMapper = ObjectMapper()
+        .registerModule(JavaTimeModule())
+        .registerKotlinModule()
+        .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+        .configure(SerializationFeature.INDENT_OUTPUT, true)
+        .setSerializationInclusion(JsonInclude.Include.NON_NULL)
+      val nomisResponse: CourtCaseResponse = objectMapper.readValue(nomis)
+      val rasResponse: ReconciliationCourtCase = objectMapper.readValue(ras)
+
+      stubCase(
+        nomisCase = nomisResponse,
+        dpsCase = rasResponse,
+      )
+      var result = service.checkCase(
+        nomisCaseId = NOMIS_COURT_CASE_ID,
+        dpsCaseId = DPS_COURT_CASE_ID,
+        offenderNo = OFFENDER_NO,
+      )
+
+      System.out.println("result: $result")
+      assertThat(
+        result?.differences,
+      ).isEqualTo(listOf(Difference(property = "case.active", dps = true, nomis = false, id = DPS_COURT_CASE_ID)))
+    }*/
 
     @Test
     fun `will report an case status mismatch`() = runTest {
@@ -1416,7 +1452,7 @@ fun dpsChargeResponse(
   offenceStartDate: LocalDate = LocalDate.of(2023, 1, 1),
   sentenceResponse: ReconciliationSentence? = dpsSentenceResponse(),
 ) = reconciliationCharge(
-  chargeUuid = DPS_COURT_CHARGE_ID,
+  chargeUuid = id,
   offenceCode = offenceCode,
   offenceStartDate = offenceStartDate,
   sentenceResponse = sentenceResponse,

@@ -95,7 +95,9 @@ class CourtSentencingService(
     COURT_APPEARANCE_RECALL_UPDATE("court-appearance-recall-update"),
     COURT_CHARGE("charge"),
     SENTENCE("sentence"),
+    SENTENCE_DELETED("sentence-deleted"),
     SENTENCE_TERM("sentence-term"),
+    SENTENCE_TERM_DELETED("sentence-term-deleted"),
     COURT_CASE_CLONE("court-case-clone"),
   }
 
@@ -385,18 +387,30 @@ class CourtSentencingService(
   }
 
   private suspend fun tryToDeleteSentenceMapping(offenderNo: String, dpsSentenceId: String) = runCatching {
-    courtCaseMappingService.deleteSentenceMappingByDpsId(dpsSentenceId)
+    deleteSentenceMapping(dpsSentenceId)
   }.onFailure { e ->
+    courtSentencingRetryQueueService.sendMessage(
+      DeleteMappingDto(dpsSentenceId),
+      mapOf("dpsSentenceId" to dpsSentenceId, "offenderNo" to offenderNo),
+      EntityType.SENTENCE_DELETED.displayName,
+    )
     telemetryClient.trackEvent(
       "sentence-mapping-deleted-failed",
       mapOf("dpsSentenceId" to dpsSentenceId, "offenderNo" to offenderNo),
     )
-    log.warn("Unable to delete mapping for Sentence $dpsSentenceId for offender $offenderNo. Please delete manually", e)
+    log.warn("Unable to delete mapping for Sentence $dpsSentenceId for offender $offenderNo. Retrying", e)
   }
 
+  data class DeleteMappingDto(val dpsId: String)
+
   private suspend fun tryToDeleteSentenceTermMapping(offenderNo: String, dpsTermId: String) = runCatching {
-    courtCaseMappingService.deleteSentenceTermMappingByDpsId(dpsTermId)
+    deleteSentenceTermMapping(dpsTermId)
   }.onFailure { e ->
+    courtSentencingRetryQueueService.sendMessage(
+      DeleteMappingDto(dpsTermId),
+      mapOf("dpsTermId" to dpsTermId, "offenderNo" to offenderNo),
+      EntityType.SENTENCE_TERM_DELETED.displayName,
+    )
     telemetryClient.trackEvent(
       "sentence-term-mapping-deleted-failed",
       mapOf("dpsTermId" to dpsTermId, "offenderNo" to offenderNo),
@@ -405,6 +419,14 @@ class CourtSentencingService(
       "Unable to delete mapping for Sentence term $dpsTermId for offender $offenderNo. Please delete manually",
       e,
     )
+  }
+
+  private suspend fun deleteSentenceTermMapping(dpsTermId: String) {
+    courtCaseMappingService.deleteSentenceTermMappingByDpsId(dpsTermId)
+  }
+
+  private suspend fun deleteSentenceMapping(dpsSentenceId: String) {
+    courtCaseMappingService.deleteSentenceMappingByDpsId(dpsSentenceId)
   }
 
   suspend fun createCharge(createEvent: CourtChargeCreatedEvent) {
@@ -745,6 +767,26 @@ class CourtSentencingService(
     )
   }
 
+  suspend fun deleteSentenceTermRetry(message: CreateMappingRetryMessage<DeleteMappingDto>) {
+    deleteSentenceTermMapping(message.mapping.dpsId).also {
+      telemetryClient.trackEvent(
+        "sentence-term-delete-mapping-retry-success",
+        message.telemetryAttributes,
+        null,
+      )
+    }
+  }
+
+  suspend fun deleteSentenceRetry(message: CreateMappingRetryMessage<DeleteMappingDto>) {
+    deleteSentenceMapping(message.mapping.dpsId).also {
+      telemetryClient.trackEvent(
+        "sentence-delete-mapping-retry-success",
+        message.telemetryAttributes,
+        null,
+      )
+    }
+  }
+
   override suspend fun retryCreateMapping(message: String) {
     val baseMapping: CreateMappingRetryMessage<*> = message.fromJson()
     when (baseMapping.entityName) {
@@ -767,6 +809,10 @@ class CourtSentencingService(
       EntityType.SENTENCE_TERM.displayName -> createSentenceTermRetry(message.fromJson())
 
       EntityType.COURT_CASE_CLONE.displayName -> createMappingsAndNotifyClonedCasesRetry(message.fromJson())
+
+      EntityType.SENTENCE_TERM_DELETED.displayName -> deleteSentenceTermRetry(message.fromJson())
+
+      EntityType.SENTENCE_DELETED.displayName -> deleteSentenceRetry(message.fromJson())
 
       else -> throw IllegalArgumentException("Unknown entity type: ${baseMapping.entityName}")
     }
