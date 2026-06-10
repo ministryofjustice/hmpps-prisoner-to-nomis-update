@@ -3689,33 +3689,33 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         )
         courtSentencingMappingApi.stubDeleteSentenceTerm(id = DPS_TERM_ID)
         publishDeletePeriodLengthDomainEvent().also {
-          waitForAnyProcessingToComplete()
+          waitForAnyProcessingToComplete("sentence-term-deleted-success")
         }
       }
-    }
 
-    @Test
-    fun `will create success telemetry`() {
-      verify(telemetryClient).trackEvent(
-        org.mockito.kotlin.eq("sentence-term-deleted-success"),
-        check {
-          assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
-          assertThat(it["dpsTermId"]).isEqualTo(DPS_TERM_ID)
-          assertThat(it["nomisSentenceSeq"]).isEqualTo(NOMIS_SENTENCE_SEQ.toString())
-          assertThat(it["nomisBookingId"]).isEqualTo(NOMIS_BOOKING_ID.toString())
-        },
-        isNull(),
-      )
-    }
+      @Test
+      fun `will create success telemetry`() {
+        verify(telemetryClient).trackEvent(
+          org.mockito.kotlin.eq("sentence-term-deleted-success"),
+          check {
+            assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
+            assertThat(it["dpsTermId"]).isEqualTo(DPS_TERM_ID)
+            assertThat(it["nomisSentenceSeq"]).isEqualTo(NOMIS_SENTENCE_SEQ.toString())
+            assertThat(it["nomisBookingId"]).isEqualTo(NOMIS_BOOKING_ID.toString())
+          },
+          isNull(),
+        )
+      }
 
-    @Test
-    fun `will call nomis api to delete the sentence term`() {
-      courtSentencingNomisApi.verify(deleteRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/court-cases/$NOMIS_COURT_CASE_ID_FOR_CREATION/sentences/$NOMIS_SENTENCE_SEQ/sentence-terms/$NOMIS_TERM_SEQ")))
-    }
+      @Test
+      fun `will call nomis api to delete the sentence term`() {
+        courtSentencingNomisApi.verify(deleteRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/court-cases/$NOMIS_COURT_CASE_ID_FOR_CREATION/sentences/$NOMIS_SENTENCE_SEQ/sentence-terms/$NOMIS_TERM_SEQ")))
+      }
 
-    @Test
-    fun `will call the mapping service to delete the mapping`() {
-      courtSentencingMappingApi.verify(deleteRequestedFor(urlEqualTo("/mapping/court-sentencing/sentence-terms/dps-term-id/$DPS_TERM_ID")))
+      @Test
+      fun `will call the mapping service to delete the mapping`() {
+        courtSentencingMappingApi.verify(deleteRequestedFor(urlEqualTo("/mapping/court-sentencing/sentence-terms/dps-term-id/$DPS_TERM_ID")))
+      }
     }
   }
 
