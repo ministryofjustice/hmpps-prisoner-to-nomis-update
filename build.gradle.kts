@@ -11,9 +11,9 @@ import kotlin.io.path.pathString
 import kotlin.io.path.Path as KotlinPath
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.3.1"
-  kotlin("plugin.spring") version "2.3.21"
-  id("org.openapi.generator") version "7.22.0"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.4.0"
+  kotlin("plugin.spring") version "2.4.0"
+  id("org.openapi.generator") version "7.23.0"
 }
 
 configurations {
@@ -28,7 +28,7 @@ dependencyCheck {
 }
 
 dependencies {
-  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:2.2.0")
+  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:2.5.0")
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-webclient")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
@@ -55,10 +55,10 @@ dependencies {
   implementation("com.google.guava:guava:33.6.0-jre")
 
   val appinsightsCore = "core:2.6.4"
-  implementation("io.micrometer:micrometer-registry-azure-monitor:1.16.5")
+  implementation("io.micrometer:micrometer-registry-azure-monitor:1.17.0")
   implementation("com.microsoft.azure:applicationinsights-$appinsightsCore")
 
-  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:2.2.0")
+  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:2.5.0")
   testImplementation("org.springframework.boot:spring-boot-starter-webflux-test")
   testImplementation("io.swagger.parser.v3:swagger-parser:2.1.37") {
     exclude(group = "io.swagger.core.v3")
