@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-06-08.1850.8ba4502"
+    "version" : "2026-06-11.1864.f44164b"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -6728,7 +6728,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:10.659668122"
+            "example" : "08:57:35.8821208"
           },
           "outcomeDispositionCode" : {
             "type" : [ "string", "null" ]
@@ -7104,7 +7104,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:10.659668122"
+            "example" : "08:57:35.8821208"
           },
           "courtCode" : {
             "type" : "string"
@@ -9372,6 +9372,15 @@
           "consecutiveToSentenceUuid" : {
             "type" : [ "string", "null" ],
             "format" : "uuid"
+          },
+          "isDomesticViolenceRelated" : {
+            "type" : [ "boolean", "null" ]
+          },
+          "isTerrorRelated" : {
+            "type" : [ "boolean", "null" ]
+          },
+          "isForeignPowerRelated" : {
+            "type" : [ "boolean", "null" ]
           }
         },
         "required" : [ "offenceCode", "periodLengths", "sentenceServeType", "sentenceUuid" ]
@@ -9786,7 +9795,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:10.659668122"
+            "example" : "08:57:35.8821208"
           },
           "courtCode" : {
             "type" : "string"
@@ -10474,7 +10483,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:44:10.659668122"
+            "example" : "08:57:35.8821208"
           },
           "nomisOutcomeCode" : {
             "type" : [ "string", "null" ]
@@ -10553,7 +10562,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:10.659668122"
+            "example" : "08:57:35.8821208"
           },
           "courtId" : {
             "type" : "string"
@@ -10705,7 +10714,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:44:10.659668122"
+            "example" : "08:57:35.8821208"
           },
           "charges" : {
             "type" : "array",
@@ -10739,7 +10748,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:10.659668122"
+            "example" : "08:57:35.8821208"
           },
           "courtId" : {
             "type" : "string"
@@ -10913,6 +10922,15 @@
           "createdAt" : {
             "type" : "string",
             "format" : "date-time"
+          },
+          "isDomesticViolenceRelated" : {
+            "type" : [ "boolean", "null" ]
+          },
+          "isTerrorRelated" : {
+            "type" : [ "boolean", "null" ]
+          },
+          "isForeignPowerRelated" : {
+            "type" : [ "boolean", "null" ]
           }
         },
         "required" : [ "createdAt", "isRecallable", "periodLengths", "sentenceTypeUuid", "sentenceUuid", "systemOfRecord" ]
@@ -11020,6 +11038,10 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
+          "pageSize" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
           "unpaged" : {
             "type" : "boolean"
           },
@@ -11029,10 +11051,6 @@
           },
           "paged" : {
             "type" : "boolean"
-          },
-          "pageSize" : {
-            "type" : "integer",
-            "format" : "int32"
           }
         }
       },
@@ -11321,7 +11339,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:10.659668122"
+            "example" : "08:57:35.8821208"
           },
           "courtCode" : {
             "type" : [ "string", "null" ]
