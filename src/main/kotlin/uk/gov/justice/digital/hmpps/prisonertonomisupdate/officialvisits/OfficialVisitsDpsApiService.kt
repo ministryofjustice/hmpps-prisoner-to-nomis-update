@@ -48,7 +48,7 @@ class OfficialVisitsDpsApiService(
     fromDate: LocalDate? = null,
     toDate: LocalDate? = null,
     currentTermOnly: Boolean = false,
-  ): List<SyncOfficialVisit> = api.getAllOfficialVisitForPrisoner(
+  ): List<SyncOfficialVisit> = api.getAllOfficialVisitsForPrisoner(
     prisonerNumber = offenderNo,
     fromDate = fromDate,
     toDate = toDate,

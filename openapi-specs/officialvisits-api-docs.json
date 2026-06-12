@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-06-10.909.551a969"
+    "version" : "2026-06-12.929.75a1be2"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -1343,7 +1343,7 @@
       "post" : {
         "tags" : [ "Repair prisoner visits" ],
         "summary" : "Replace all official visits for a single prisoner with the data from NOMIS",
-        "description" : "This replaces all official visits for one prisoner with their visits as they exist in NOMIS\n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION\n* OFFICIAL_VISITS_ADMIN",
+        "description" : "This replaces all official visits for one prisoner with their visits as they exist in NOMIS\n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION",
         "operationId" : "repairPrisonerVisits",
         "parameters" : [ {
           "name" : "prisonerNumber",
@@ -1808,7 +1808,7 @@
     "/notification/{officialVisitId}" : {
       "post" : {
         "tags" : [ "Notifications" ],
-        "summary" : "Endpoint to support the sending of notifications for official visits.",
+        "summary" : "Send notifications for an official visit",
         "description" : "\n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISITS_ADMIN\n* ROLE_OFFICIAL_VISITS__RW",
         "operationId" : "sendNotification",
         "parameters" : [ {
@@ -1876,12 +1876,12 @@
         }
       }
     },
-    "/notification/prison/{prisonCode}/sent-emails" : {
+    "/notification/prison/{prisonCode}/sent-notifications" : {
       "post" : {
         "tags" : [ "Notifications" ],
-        "summary" : "Endpoint to retrieve a list of sent email notifications with search and pagination support.",
+        "summary" : "Retrieve a list of sent notifications with search parameters and pagination support.",
         "description" : "\n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISITS_ADMIN\n* ROLE_OFFICIAL_VISITS__R\n* ROLE_OFFICIAL_VISITS_RW",
-        "operationId" : "searchSentEmails",
+        "operationId" : "searchSentNotifications",
         "parameters" : [ {
           "name" : "prisonCode",
           "in" : "path",
@@ -1894,7 +1894,7 @@
         }, {
           "name" : "page",
           "in" : "query",
-          "description" : "Zero-based page index (0..N)",
+          "description" : "Zero-based page index (0..n)",
           "required" : false,
           "schema" : {
             "type" : "integer",
@@ -1914,7 +1914,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/SentEmailSearchCriteria"
+                "$ref" : "#/components/schemas/NotificationSearchRequest"
               }
             }
           },
@@ -1946,7 +1946,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/PagedModelSentEmailRecord"
+                  "$ref" : "#/components/schemas/PagedModelSentNotification"
                 }
               }
             }
@@ -2271,7 +2271,7 @@
       "get" : {
         "tags" : [ "Synchronisation" ],
         "summary" : "Endpoint to return one official visit by ID",
-        "description" : "\n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION\n* OFFICIAL_VISITS_ADMIN",
+        "description" : "\n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION",
         "operationId" : "getOfficialVisitById",
         "parameters" : [ {
           "name" : "officialVisitId",
@@ -2318,7 +2318,7 @@
       "delete" : {
         "tags" : [ "Synchronisation" ],
         "summary" : "Delete an official visit by ID",
-        "description" : "\n      Delete an official visit including all related information. \n      This endpoint is idempotent, so if the visit is not present it will silently succeed.\n      \n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION\n* OFFICIAL_VISITS_ADMIN",
+        "description" : "\n      Requires role: OFFICIAL_VISITS_MIGRATION.\n      Delete an official visit including all related information. \n      This endpoint is idempotent, so if the visit is not present it will silently succeed.\n      \n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION",
         "operationId" : "syncDeleteOfficialVisit",
         "parameters" : [ {
           "name" : "officialVisitId",
@@ -2634,8 +2634,8 @@
       "get" : {
         "tags" : [ "Reconciliation" ],
         "summary" : "Return all official visits for a prisoner between two dates with optional current term flag",
-        "description" : "\n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION\n* OFFICIAL_VISITS_ADMIN",
-        "operationId" : "getAllOfficialVisitForPrisoner",
+        "description" : "\n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION",
+        "operationId" : "getAllOfficialVisitsForPrisoner",
         "parameters" : [ {
           "name" : "prisonerNumber",
           "in" : "path",
@@ -2713,7 +2713,7 @@
       "get" : {
         "tags" : [ "Reconciliation" ],
         "summary" : "Return a paged list of all official visit IDs",
-        "description" : "\n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION\n* OFFICIAL_VISITS_ADMIN",
+        "description" : "\n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION",
         "operationId" : "getAllOfficialVisitIds",
         "parameters" : [ {
           "name" : "currentTermOnly",
@@ -2788,7 +2788,7 @@
       "get" : {
         "tags" : [ "Reconciliation" ],
         "summary" : "Return one official visit by ID",
-        "description" : "\n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION\n* OFFICIAL_VISITS_ADMIN",
+        "description" : "\n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION",
         "operationId" : "getOfficialVisitById_1",
         "parameters" : [ {
           "name" : "officialVisitId",
@@ -3138,6 +3138,70 @@
         }
       }
     },
+    "/official-visit/id/{officialVisitId}/notifications" : {
+      "get" : {
+        "tags" : [ "Official visits" ],
+        "summary" : "Get all notifications sent for an official visit ID.",
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISITS_ADMIN\n* ROLE_OFFICIAL_VISITS__R\n* ROLE_OFFICIAL_VISITS_RW",
+        "operationId" : "getNotificationsByOfficialVisitId",
+        "parameters" : [ {
+          "name" : "officialVisitId",
+          "in" : "path",
+          "description" : "The official visit identifier",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "example" : 1
+        }, {
+          "name" : "sortDirection",
+          "in" : "query",
+          "description" : "Sort results by created time desc or asc, default to ASC",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "ASC",
+            "enum" : [ "ASC", "DESC" ]
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "A list of notification rows for the official visit",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/OfficialVisitNotification"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/official-visit/id/{officialVisitId}/audited-events" : {
       "get" : {
         "tags" : [ "Official visits" ],
@@ -3355,7 +3419,7 @@
       "get" : {
         "tags" : [ "Admin" ],
         "summary" : "Return summary of prison time slot and associated visit slots based on the prison code",
-        "description" : "\n      Requires role: OFFICIAL_VISITS_ADMIN.\n      Used to get the summary of prison time slot and associated visit slots based on the prison code.\n      \n\nRequires one of the following roles:\n* OFFICIAL_VISITS_ADMIN",
+        "description" : "\n      Requires role: OFFICIAL_VISITS_ADMIN.\n      Used to get the summary of prison time slot and associated visit slots based on the prison code.\n      \n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISITS_ADMIN",
         "operationId" : "getAllTimeSlotsAndVisitSlots",
         "parameters" : [ {
           "name" : "prisonCode",
@@ -5961,9 +6025,9 @@
         },
         "required" : [ "notificationType", "officialVisitId", "recipients" ]
       },
-      "SentEmailSearchCriteria" : {
+      "NotificationSearchRequest" : {
         "type" : "object",
-        "description" : "The request containing sent-email search criteria",
+        "description" : "Notification search request",
         "properties" : {
           "fromDate" : {
             "type" : [ "string", "null" ],
@@ -5979,13 +6043,13 @@
           }
         }
       },
-      "PagedModelSentEmailRecord" : {
+      "PagedModelSentNotification" : {
         "type" : "object",
         "properties" : {
           "content" : {
             "type" : "array",
             "items" : {
-              "$ref" : "#/components/schemas/SentEmailRecord"
+              "$ref" : "#/components/schemas/SentNotification"
             }
           },
           "page" : {
@@ -5993,7 +6057,7 @@
           }
         }
       },
-      "SentEmailRecord" : {
+      "SentNotification" : {
         "type" : "object",
         "properties" : {
           "officialVisitId" : {
@@ -6027,10 +6091,15 @@
             "description" : "The visit end time (HH:MM format)",
             "example" : "10:00"
           },
-          "prisonerName" : {
-            "type" : "string",
-            "description" : "The prisoner's full name",
-            "example" : "John Smith"
+          "firstName" : {
+            "type" : [ "string", "null" ],
+            "description" : "The first name of the visitor",
+            "example" : "Bob"
+          },
+          "lastName" : {
+            "type" : [ "string", "null" ],
+            "description" : "The last name of the visitor",
+            "example" : "Harris"
           },
           "prisonerNumber" : {
             "type" : "string",
@@ -6058,7 +6127,7 @@
             "example" : "Visit Created"
           }
         },
-        "required" : [ "emailAddress", "emailStatus", "notificationType", "notificationTypeDescription", "officialVisitId", "prisonerName", "prisonerNumber", "sentDate", "sentDateTime", "visitDate", "visitEndTime", "visitStartTime" ]
+        "required" : [ "emailAddress", "emailStatus", "notificationType", "notificationTypeDescription", "officialVisitId", "prisonerNumber", "sentDate", "sentDateTime", "visitDate", "visitEndTime", "visitStartTime" ]
       },
       "MigrateVisitConfigRequest" : {
         "type" : "object",
@@ -7213,6 +7282,63 @@
           }
         },
         "required" : [ "assistedVisit", "createdBy", "createdTime", "leadVisitor", "officialVisitorId", "visitorTypeCode" ]
+      },
+      "OfficialVisitNotification" : {
+        "type" : "object",
+        "properties" : {
+          "notificationId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The notification id",
+            "example" : 1
+          },
+          "officialVisitId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The official visit id",
+            "example" : 1
+          },
+          "templateId" : {
+            "type" : "string",
+            "description" : "The template id",
+            "example" : "1"
+          },
+          "emailAddress" : {
+            "type" : "string",
+            "description" : "The email address",
+            "example" : "exmple@example.com"
+          },
+          "reason" : {
+            "type" : "string",
+            "description" : "The reason",
+            "example" : "the reason"
+          },
+          "govNotifyNotificationId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The gov notify notification id",
+            "example" : "12345678-1234-1234-1234-123456789012"
+          },
+          "emailStatus" : {
+            "type" : "string",
+            "description" : "The email status",
+            "enum" : [ "PENDING", "SENT", "PERMANENT_FAILURE", "TEMPORARY_FAILURE", "TECHNICAL_FAILURE", "UNKNOWN" ],
+            "example" : "SENT"
+          },
+          "createdTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The created time",
+            "example" : "09:00"
+          },
+          "statusUpdatedTime" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "The status updated time",
+            "example" : "10:00"
+          }
+        },
+        "required" : [ "createdTime", "emailAddress", "emailStatus", "govNotifyNotificationId", "notificationId", "officialVisitId", "reason", "templateId" ]
       },
       "AuditedEventChange" : {
         "type" : "object",
