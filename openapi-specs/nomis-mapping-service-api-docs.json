@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-06-11.615.fcc8940"
+    "version" : "2026-06-12.619.7f0791e"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -24882,16 +24882,16 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
+          "pageSize" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
           },
           "paged" : {
             "type" : "boolean"
-          },
-          "pageSize" : {
-            "type" : "integer",
-            "format" : "int32"
           },
           "unpaged" : {
             "type" : "boolean"
