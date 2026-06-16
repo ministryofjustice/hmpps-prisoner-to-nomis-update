@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-06-10.1553.9b96560"
+    "version" : "2026-06-12.1581.02493f7"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -10978,79 +10978,6 @@
           },
           "404" : {
             "description" : "Booking or sentence sequence do not exist",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/prisoners/booking-id/{bookingId}/incentives" : {
-      "post" : {
-        "tags" : [ "incentives-resource" ],
-        "summary" : "Creates a new incentive",
-        "description" : "Creates a new incentive using next sequence no.",
-        "operationId" : "createIncentive",
-        "parameters" : [ {
-          "name" : "bookingId",
-          "in" : "path",
-          "description" : "Offender Booking Id",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Offender Booking Id",
-            "example" : 1234567
-          },
-          "example" : 1234567
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/CreateIncentiveRequest"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "201" : {
-            "description" : "Incentive information with created sequence",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/CreateIncentiveResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Prison or iep value do not exist",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "booking does not exist",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -32515,12 +32442,12 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paged" : {
+            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -33925,6 +33852,11 @@
             "format" : "date",
             "description" : "Date the CSRA was created",
             "example" : "2025-11-22"
+          },
+          "assessmentCreationLocation" : {
+            "type" : "string",
+            "description" : "The location (normally a prison) where the assessment was carried out",
+            "example" : "SWI"
           },
           "type" : {
             "$ref" : "#/components/schemas/AssessmentType",
