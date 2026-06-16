@@ -29,5 +29,5 @@ class StaffConfiguration(
   ): WebClient = builder.reactiveAuthorisedWebClient(authorizedClientManager, registrationId = "staff-api", url = apiBaseUri, timeout)
 
   @Component("staff")
-  class PersonRelationshipsApiHealth(@Qualifier("staffApiHealthWebClient") webClient: WebClient) : ReactiveHealthPingCheck(webClient)
+  class StaffApiHealth(@Qualifier("staffApiHealthWebClient") webClient: WebClient) : ReactiveHealthPingCheck(webClient)
 }
