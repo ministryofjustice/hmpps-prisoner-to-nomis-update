@@ -16,24 +16,26 @@ generic-service:
     API_BASE_URL_ADJUDICATIONS: https://manage-adjudications-api.hmpps.service.justice.gov.uk
     API_BASE_URL_ALERTS: https://alerts-api.hmpps.service.justice.gov.uk
     API_BASE_URL_APPOINTMENTS: https://activities-api.prison.service.justice.gov.uk
-    API_BASE_URL_CSIP: https://csip-api.hmpps.service.justice.gov.uk
     API_BASE_URL_CASENOTES: https://offender-case-notes.service.justice.gov.uk
+    API_BASE_URL_CORE_PERSON: https://hmpps-person-record.hmpps.service.justice.gov.uk
     API_BASE_URL_COURT_SENTENCING: https://remand-and-sentencing-api.hmpps.service.justice.gov.uk
-    API_BASE_URL_MOVEMENTS_TAPS: https://external-movements-api.hmpps.service.justice.gov.uk
-    API_BASE_URL_MOVEMENTS_COURT: https://court-appearance-scheduler-api.hmpps.service.justice.gov.uk
+    API_BASE_URL_CSIP: https://csip-api.hmpps.service.justice.gov.uk
     # currently set to self for a mock API until real API is ready
     API_BASE_URL_FINANCE: https://prisoner-to-nomis-update.hmpps.service.justice.gov.uk
     API_BASE_URL_INCENTIVES: https://incentives-api.hmpps.service.justice.gov.uk
     API_BASE_URL_INCIDENTS: https://incident-reporting-api.hmpps.service.justice.gov.uk
     API_BASE_URL_LOCATIONS: https://locations-inside-prison-api.hmpps.service.justice.gov.uk
+    API_BASE_URL_MOVEMENTS_COURT: https://court-appearance-scheduler-api.hmpps.service.justice.gov.uk
+    API_BASE_URL_MOVEMENTS_TAPS: https://external-movements-api.hmpps.service.justice.gov.uk
     API_BASE_URL_NON_ASSOCIATIONS: https://non-associations-api.hmpps.service.justice.gov.uk
+    API_BASE_URL_OFFICIALVISITS: https://official-visits-api.hmpps.service.justice.gov.uk
     API_BASE_URL_ORGANISATIONS: https://organisations-api.hmpps.service.justice.gov.uk
     API_BASE_URL_PERSONAL_RELATIONSHIPS: https://personal-relationships-api.hmpps.service.justice.gov.uk
     API_BASE_URL_SENTENCE_ADJUSTMENTS: https://adjustments-api.hmpps.service.justice.gov.uk
+    # currently set to self for a mock API until real API is ready
+    API_BASE_URL_STAFF: https://prisoner-to-nomis-update.hmpps.service.justice.gov.uk
     API_BASE_URL_VISITS: https://visit-scheduler.prison.service.justice.gov.uk
     API_BASE_URL_VISIT_BALANCE: https://hmpps-visit-allocation-api.prison.service.justice.gov.uk
-    API_BASE_URL_CORE_PERSON: https://hmpps-person-record.hmpps.service.justice.gov.uk
-    API_BASE_URL_OFFICIALVISITS: https://official-visits-api.hmpps.service.justice.gov.uk
     REPORTS_SENTENCING_RECONCILIATION_ALL_PRISONERS: true
     FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION_CREATED: false
     FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION_UPDATED: false

@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapDpsA
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.staff.StaffDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visitbalances.VisitBalanceDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.ActivitiesApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.AppointmentsApiExtension
@@ -61,6 +62,7 @@ class HealthCheckTest : IntegrationTestBase() {
       .jsonPath("components.corePersonApi.status").isEqualTo("UP")
       .jsonPath("components.officialVisitsApi.status").isEqualTo("UP")
       .jsonPath("components.tapsApi.status").isEqualTo("UP")
+      .jsonPath("components.staff.status").isEqualTo("UP")
       .jsonPath("components.courtSchedulerApi.status").isEqualTo("UP")
   }
 
@@ -109,27 +111,28 @@ class HealthCheckTest : IntegrationTestBase() {
   private fun stubPingWithResponse(status: Int) {
     HmppsAuthApiExtension.hmppsAuth.stubHealthPing(status)
     NomisApiExtension.nomisApi.stubHealthPing(status)
-    VisitsApiExtension.visitsApi.stubHealthPing(status)
-    IncentivesApiExtension.incentivesApi.stubHealthPing(status)
-    MappingExtension.mappingServer.stubHealthPing(status)
     ActivitiesApiExtension.activitiesApi.stubHealthPing(status)
-    AppointmentsApiExtension.appointmentsApi.stubHealthPing(status)
-    SentencingAdjustmentsApiExtension.sentencingAdjustmentsApi.stubHealthPing(status)
-    AdjudicationsApiExtension.adjudicationsApiServer.stubHealthPing(status)
-    NonAssociationsApiExtension.nonAssociationsApiServer.stubHealthPing(status)
-    LocationsApiExtension.locationsApi.stubHealthPing(status)
-    CourtSentencingApiExtension.courtSentencingApi.stubHealthPing(status)
     AlertsDpsApiExtension.alertsDpsApi.stubHealthPing(status)
+    AdjudicationsApiExtension.adjudicationsApiServer.stubHealthPing(status)
+    AppointmentsApiExtension.appointmentsApi.stubHealthPing(status)
     CaseNotesDpsApiExtension.caseNotesDpsApi.stubHealthPing(status)
-    CSIPDpsApiExtension.csipDpsApi.stubHealthPing(status)
-    IncidentsDpsApiExtension.incidentsDpsApi.stubHealthPing(status)
     ContactPersonDpsApiExtension.dpsContactPersonServer.stubHealthPing(status)
-    FinanceDpsApiExtension.dpsFinanceServer.stubHealthPing(status)
-    OrganisationsDpsApiExtension.dpsOrganisationsServer.stubHealthPing(status)
-    VisitBalanceDpsApiExtension.visitBalanceDpsApi.stubHealthPing(status)
     CorePersonCprApiExtension.corePersonCprApi.stubHealthPing(status)
-    OfficialVisitsDpsApiExtension.dpsOfficialVisitsServer.stubHealthPing(status)
-    TapDpsApiExtension.tapDpsApiServer.stubHealthPing(status)
     CourtSchedulerDpsApiExtension.courtSchedulerDpsApiServer.stubHealthPing(status)
+    CourtSentencingApiExtension.courtSentencingApi.stubHealthPing(status)
+    CSIPDpsApiExtension.csipDpsApi.stubHealthPing(status)
+    FinanceDpsApiExtension.dpsFinanceServer.stubHealthPing(status)
+    IncentivesApiExtension.incentivesApi.stubHealthPing(status)
+    IncidentsDpsApiExtension.incidentsDpsApi.stubHealthPing(status)
+    LocationsApiExtension.locationsApi.stubHealthPing(status)
+    MappingExtension.mappingServer.stubHealthPing(status)
+    NonAssociationsApiExtension.nonAssociationsApiServer.stubHealthPing(status)
+    OfficialVisitsDpsApiExtension.dpsOfficialVisitsServer.stubHealthPing(status)
+    OrganisationsDpsApiExtension.dpsOrganisationsServer.stubHealthPing(status)
+    SentencingAdjustmentsApiExtension.sentencingAdjustmentsApi.stubHealthPing(status)
+    StaffDpsApiExtension.dpsStaffServer.stubHealthPing(status)
+    TapDpsApiExtension.tapDpsApiServer.stubHealthPing(status)
+    VisitsApiExtension.visitsApi.stubHealthPing(status)
+    VisitBalanceDpsApiExtension.visitBalanceDpsApi.stubHealthPing(status)
   }
 }

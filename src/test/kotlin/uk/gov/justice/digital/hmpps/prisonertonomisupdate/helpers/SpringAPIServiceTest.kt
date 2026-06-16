@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapDpsA
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.staff.StaffDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visitbalances.VisitBalanceDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.ActivitiesApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.AppointmentsApiExtension
@@ -61,21 +62,22 @@ import kotlin.annotation.AnnotationTarget.CLASS
   AppointmentsApiExtension::class,
   CaseNotesDpsApiExtension::class,
   ContactPersonDpsApiExtension::class,
+  CorePersonCprApiExtension::class,
   CourtSentencingApiExtension::class,
+  CourtSchedulerDpsApiExtension::class,
   CSIPDpsApiExtension::class,
   FinanceDpsApiExtension::class,
   IncentivesApiExtension::class,
   IncidentsDpsApiExtension::class,
   LocationsApiExtension::class,
   NonAssociationsApiExtension::class,
+  OfficialVisitsDpsApiExtension::class,
   OrganisationsDpsApiExtension::class,
   SentencingAdjustmentsApiExtension::class,
+  StaffDpsApiExtension::class,
+  TapDpsApiExtension::class,
   VisitBalanceDpsApiExtension::class,
   VisitsApiExtension::class,
-  TapDpsApiExtension::class,
-  CourtSchedulerDpsApiExtension::class,
-  CorePersonCprApiExtension::class,
-  OfficialVisitsDpsApiExtension::class,
 )
 @ActiveProfiles("test")
 @SpringBootTest(classes = [JacksonAutoConfiguration::class, CodecsAutoConfiguration::class, WebClientConfiguration::class, WebClientAutoConfiguration::class, ReactiveOAuth2ClientAutoConfiguration::class, HmppsReactiveWebClientConfiguration::class])

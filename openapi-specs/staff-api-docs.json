@@ -1,0 +1,615 @@
+{
+  "openapi" : "3.1.0",
+  "info" : {
+    "title" : "HMPPS Prison Users Api",
+    "contact" : {
+      "name" : "HMPPS Digital Studio",
+      "email" : "feedback@digital.justice.gov.uk"
+    },
+    "version" : "2026-06-15.63.fa56e91"
+  },
+  "servers" : [ {
+    "url" : "https://prison-users-api-dev.hmpps.service.justice.gov.uk",
+    "description" : "Development"
+  }, {
+    "url" : "https://prison-users-api-preprod.hmpps.service.justice.gov.uk",
+    "description" : "Pre-Production"
+  }, {
+    "url" : "https://prison-users-api.hmpps.service.justice.gov.uk",
+    "description" : "Production"
+  }, {
+    "url" : "http://localhost:8080",
+    "description" : "Local"
+  } ],
+  "tags" : [ ],
+  "paths" : {
+    "/migrate/user" : {
+      "post" : {
+        "tags" : [ "migration-resource" ],
+        "summary" : "Migrate a single user from NOMIS into Prison Users API, including associated accounts, role and caseload link data",
+        "description" : "Creates a user. Requires role ROLE_PRISON_USERS_API__MIGRATION__RW",
+        "operationId" : "migrateUser",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UserMigrationRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "User created with associated accounts, role and caseload links from NOMIS",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UserMigrationResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid request payload",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Conflict (eg. duplicate user or username)",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Incorrect permissions to create a user",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "PRISON_USERS_API__MIGRATION__RW" : [ ]
+        } ]
+      }
+    },
+    "/users/{username}/caseloads" : {
+      "get" : {
+        "tags" : [ "user-caseload-management-resource" ],
+        "summary" : "Get list of caseloads associated with the users account",
+        "description" : "Caseloads for a specific user. Requires role ROLE_MAINTAIN_ACCESS_ROLES_ADMIN or ROLE_MAINTAIN_ACCESS_ROLES or ROLE_VIEW_NOMIS_STAFF_DETAILS",
+        "operationId" : "getUserCaseloads",
+        "parameters" : [ {
+          "name" : "username",
+          "in" : "path",
+          "description" : "Username",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Username",
+            "example" : "TEST_USER1"
+          },
+          "example" : "TEST_USER1"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "User caseload list",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UserCaseloadDetail"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Incorrect request to get caseloads for a user",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Incorrect permissions to get a caseload for a user",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "MAINTAIN_ACCESS_ROLES" : [ ]
+        }, {
+          "MAINTAIN_ACCESS_ROLES_ADMIN" : [ ]
+        }, {
+          "VIEW_NOMIS_STAFF_DETAILS" : [ ]
+        } ]
+      }
+    },
+    "/users/basic/{username}" : {
+      "get" : {
+        "tags" : [ "user-resource" ],
+        "summary" : "Get user basic details",
+        "description" : "Information on a specific user. Requires role ROLE_MAINTAIN_ACCESS_ROLES_ADMIN or ROLE_MAINTAIN_ACCESS_ROLES or ROLE_MANAGE_NOMIS_USER_ACCOUNT or ROLE_VIEW_NOMIS_STAFF_DETAILS",
+        "operationId" : "getUserBasicDetailsInfo",
+        "parameters" : [ {
+          "name" : "username",
+          "in" : "path",
+          "description" : "Username",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Username",
+            "example" : "testuser1"
+          },
+          "example" : "testuser1"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "User Information Returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UserBasicDetails"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Incorrect request to get user information",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Incorrect permissions to get a user",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "user not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "MAINTAIN_ACCESS_ROLES_ADMIN" : [ ]
+        }, {
+          "MAINTAIN_ACCESS_ROLES" : [ ]
+        }, {
+          "MANAGE_NOMIS_USER_ACCOUNT" : [ ]
+        }, {
+          "VIEW_NOMIS_STAFF_DETAILS" : [ ]
+        } ]
+      }
+    },
+    "/example/time" : {
+      "get" : {
+        "tags" : [ "example-resource" ],
+        "operationId" : "getTime",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "date-time"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "MigratedUser" : {
+        "type" : "object",
+        "description" : "Single NOMIS user details",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "int64",
+            "description" : "The NOMIS staff id",
+            "example" : 123456
+          },
+          "email" : {
+            "type" : "string",
+            "description" : "The email address for the user",
+            "example" : "test@email.com"
+          },
+          "firstName" : {
+            "type" : "string",
+            "description" : "First name of the user",
+            "example" : "John"
+          },
+          "lastName" : {
+            "type" : "string",
+            "description" : "The last name of the user",
+            "example" : "Smith"
+          },
+          "status" : {
+            "type" : "string",
+            "description" : "The status of the user e.g. ACTIVE/INACTIVE",
+            "enum" : [ "ACTIVE", "INACTIVE" ]
+          },
+          "createdTimestamp" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Record creation timestamp",
+            "example" : "2022-01-01T12:00:00"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "Username of the record creator",
+            "example" : "TEST_USER"
+          },
+          "modifiedTimestamp" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "Record modification timestamp",
+            "example" : "2022-01-01T12:00:00"
+          },
+          "modifiedBy" : {
+            "type" : [ "string", "null" ],
+            "description" : "Username of the record modifier",
+            "example" : "TEST_USER"
+          }
+        },
+        "required" : [ "createdBy", "createdTimestamp", "email", "firstName", "id", "lastName", "status" ]
+      },
+      "MigratedUserAccessibleCaseload" : {
+        "type" : "object",
+        "description" : "NOMIS user account to caseload link",
+        "properties" : {
+          "username" : {
+            "type" : "string",
+            "description" : "Username for the user account",
+            "example" : "TEST_USER"
+          },
+          "caseloadId" : {
+            "type" : "string",
+            "description" : "Identifier for the caseload the user account can access",
+            "example" : "MRI"
+          },
+          "createdTimestamp" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Record creation timestamp",
+            "example" : "2022-01-01T12:00:00"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "Username of the record creator",
+            "example" : "TEST_USER"
+          }
+        },
+        "required" : [ "caseloadId", "createdBy", "createdTimestamp", "username" ]
+      },
+      "MigratedUserAccount" : {
+        "type" : "object",
+        "description" : "NOMIS User account details",
+        "properties" : {
+          "username" : {
+            "type" : "string",
+            "description" : "Username for the user account",
+            "example" : "TEST_USER"
+          },
+          "accountType" : {
+            "type" : "string",
+            "description" : "The user account type e.g. ADMIN/GENERAL",
+            "enum" : [ "ADMIN", "GENERAL" ]
+          },
+          "accountStatus" : {
+            "type" : "string",
+            "description" : "The user account status indicating if it is open, locked or expired",
+            "enum" : [ "OPEN", "EXPIRED", "EXPIRED_GRACE", "LOCKED_TIMED", "LOCKED", "EXPIRED_LOCKED_TIMED", "EXPIRED_GRACE_LOCKED_TIMED", "EXPIRED_LOCKED", "EXPIRED_GRACE_LOCKED" ]
+          },
+          "createdTimestamp" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Record creation timestamp",
+            "example" : "2022-01-01T12:00:00"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "Username of the record creator",
+            "example" : "TEST_USER"
+          },
+          "lastLoggedIn" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "The timestamp of the last login for the account",
+            "example" : "2022-01-01T12:00:00"
+          },
+          "activeCaseloadId" : {
+            "type" : [ "string", "null" ],
+            "description" : "Identifier for the active caseload for the account",
+            "example" : "MRI"
+          },
+          "modifiedTimestamp" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "Record modification timestamp",
+            "example" : "2022-01-01T12:00:00"
+          },
+          "modifiedBy" : {
+            "type" : [ "string", "null" ],
+            "description" : "Username of the record modifier",
+            "example" : "TEST_USER"
+          }
+        },
+        "required" : [ "accountStatus", "accountType", "createdBy", "createdTimestamp", "username" ]
+      },
+      "MigratedUserRole" : {
+        "type" : "object",
+        "description" : "NOMIS user account to role link",
+        "properties" : {
+          "username" : {
+            "type" : "string",
+            "description" : "Username for the user account",
+            "example" : "TEST_USER"
+          },
+          "roleCode" : {
+            "type" : "string",
+            "description" : "The role code the user account will be assigned",
+            "example" : "TEST_ROLE"
+          },
+          "createdTimestamp" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Record creation timestamp",
+            "example" : "2022-01-01T12:00:00"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "Username of the record creator",
+            "example" : "TEST_USER"
+          }
+        },
+        "required" : [ "createdBy", "createdTimestamp", "roleCode", "username" ]
+      },
+      "UserMigrationRequest" : {
+        "type" : "object",
+        "description" : "Single NOMIS user migration request",
+        "properties" : {
+          "user" : {
+            "$ref" : "#/components/schemas/MigratedUser",
+            "description" : "The NOMIS user to migrate"
+          },
+          "accounts" : {
+            "type" : "array",
+            "description" : "The NOMIS user accounts to migrate",
+            "items" : {
+              "$ref" : "#/components/schemas/MigratedUserAccount"
+            },
+            "minItems" : 1
+          },
+          "roles" : {
+            "type" : [ "array", "null" ],
+            "description" : "Links between the user (via user account) and roles",
+            "items" : {
+              "$ref" : "#/components/schemas/MigratedUserRole"
+            }
+          },
+          "accessibleCaseloads" : {
+            "type" : [ "array", "null" ],
+            "description" : "Links between the user (via user account) and caseloads",
+            "items" : {
+              "$ref" : "#/components/schemas/MigratedUserAccessibleCaseload"
+            }
+          }
+        },
+        "required" : [ "accounts", "user" ]
+      },
+      "ErrorResponse" : {
+        "type" : "object",
+        "properties" : {
+          "status" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "errorCode" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int32"
+          },
+          "userMessage" : {
+            "type" : [ "string", "null" ]
+          },
+          "developerMessage" : {
+            "type" : [ "string", "null" ]
+          }
+        },
+        "required" : [ "status" ]
+      },
+      "UserMigrationResponse" : {
+        "type" : "object",
+        "description" : "Response for successful migration of single NOMIS user",
+        "properties" : {
+          "userId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The unique identifier for the migrated user",
+            "example" : "f59dad25-3f11-4a74-9e03-64d2ee53f498"
+          },
+          "staffId" : {
+            "type" : "string",
+            "description" : "The NOMIS staff id for the migrated user",
+            "example" : "1234567"
+          },
+          "username" : {
+            "type" : "string",
+            "description" : "The usernames of the accounts for the migrated user",
+            "example" : "TEST_USER"
+          }
+        },
+        "required" : [ "staffId", "userId", "username" ]
+      },
+      "PrisonCaseload" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "description" : "identify for caseload",
+            "example" : "WWI"
+          },
+          "name" : {
+            "type" : "string",
+            "description" : "name of caseload, typically prison name",
+            "example" : "WANDSWORTH (HMP)"
+          },
+          "function" : {
+            "type" : "string",
+            "description" : "function of caseload",
+            "example" : "GENERAL"
+          }
+        },
+        "required" : [ "function", "id", "name" ]
+      },
+      "UserCaseloadDetail" : {
+        "type" : "object",
+        "description" : "User & Caseload Information",
+        "properties" : {
+          "username" : {
+            "type" : "string",
+            "description" : "Username",
+            "example" : "TESTUSER1"
+          },
+          "active" : {
+            "type" : "boolean",
+            "description" : "Indicates that the user is active",
+            "example" : true
+          },
+          "accountType" : {
+            "type" : "string",
+            "description" : "Type of user account",
+            "enum" : [ "GENERAL", "ADMIN" ],
+            "example" : "GENERAL"
+          },
+          "activeCaseload" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PrisonCaseload"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "caseloads" : {
+            "type" : "array",
+            "description" : "Caseloads available for this user",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonCaseload"
+            }
+          }
+        },
+        "required" : [ "accountType", "active", "caseloads", "username" ]
+      },
+      "UserBasicDetails" : {
+        "type" : "object",
+        "description" : "Basic User Information",
+        "properties" : {
+          "username" : {
+            "type" : "string",
+            "description" : "Username",
+            "example" : "testuser1"
+          },
+          "staffId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Staff ID",
+            "example" : 324323
+          },
+          "firstName" : {
+            "type" : "string",
+            "description" : "First name of the user",
+            "example" : "John"
+          },
+          "lastName" : {
+            "type" : "string",
+            "description" : "Last name of the user",
+            "example" : "Smith"
+          },
+          "activeCaseloadId" : {
+            "type" : [ "string", "null" ],
+            "description" : "Active Caseload of the user",
+            "example" : "BXI"
+          },
+          "enabled" : {
+            "type" : "boolean",
+            "description" : "User is enabled flag"
+          },
+          "accountStatus" : {
+            "type" : [ "string", "null" ],
+            "description" : "Status of the user",
+            "example" : "OPEN"
+          }
+        },
+        "required" : [ "enabled", "firstName", "lastName", "staffId", "username" ]
+      }
+    }
+  }
+}
