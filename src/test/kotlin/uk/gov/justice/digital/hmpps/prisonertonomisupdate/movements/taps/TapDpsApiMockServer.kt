@@ -99,6 +99,11 @@ class TapDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       id = id,
       direction = direction,
       directionPrisonCode = "LEI",
+      occurredAt = LocalDateTime.now(),
+      absenceReasonCode = "R2",
+      accompaniedByCode = "U",
+      location = Location(address = "some address", postcode = "some postcode", uprn = 1, description = "some description"),
+      comments = "movement notes",
     )
   }
 
