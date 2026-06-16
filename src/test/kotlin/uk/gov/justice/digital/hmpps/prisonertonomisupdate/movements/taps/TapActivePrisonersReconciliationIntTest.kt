@@ -52,9 +52,9 @@ import java.time.LocalDateTime
 import java.util.*
 
 class TapActivePrisonersReconciliationIntTest(
-  @Autowired private val reconciliationService: TapActivePrisonersReconciliationService,
-  @Autowired private val nomisMovementsApi: TapNomisApiMockServer,
-  @Autowired private val mappingApi: TapMappingApiMockServer,
+  @param:Autowired private val reconciliationService: TapActivePrisonersReconciliationService,
+  @param:Autowired private val nomisMovementsApi: TapNomisApiMockServer,
+  @param:Autowired private val mappingApi: TapMappingApiMockServer,
 ) : IntegrationTestBase() {
 
   private val dpsApi = tapDpsApiServer
@@ -520,7 +520,7 @@ class TapActivePrisonersReconciliationIntTest(
               "offenderNo" to "A0001TZ",
               "nomisEventId" to "$scheduleOutId",
               "dpsOccurrenceId" to "$occurrenceId",
-              "type" to "REASON",
+              "type" to "OCCURRENCE_REASON",
             ),
           ),
           isNull(),
@@ -543,7 +543,7 @@ class TapActivePrisonersReconciliationIntTest(
               "offenderNo" to "A0001TZ",
               "nomisEventId" to "$scheduleOutId",
               "dpsOccurrenceId" to "$occurrenceId",
-              "type" to "START_TIME",
+              "type" to "OCCURRENCE_START_TIME",
             ),
           ),
           isNull(),
@@ -566,7 +566,7 @@ class TapActivePrisonersReconciliationIntTest(
               "offenderNo" to "A0001TZ",
               "nomisEventId" to "$scheduleOutId",
               "dpsOccurrenceId" to "$occurrenceId",
-              "type" to "END_TIME",
+              "type" to "OCCURRENCE_END_TIME",
             ),
           ),
           isNull(),
@@ -589,7 +589,7 @@ class TapActivePrisonersReconciliationIntTest(
               "offenderNo" to "A0001TZ",
               "nomisEventId" to "$scheduleOutId",
               "dpsOccurrenceId" to "$occurrenceId",
-              "type" to "POSTCODE",
+              "type" to "OCCURRENCE_POSTCODE",
             ),
           ),
           isNull(),
@@ -629,7 +629,7 @@ class TapActivePrisonersReconciliationIntTest(
               "offenderNo" to "A0001TZ",
               "nomisEventId" to "$scheduleOutId",
               "dpsOccurrenceId" to "$occurrenceId",
-              "type" to "POSTCODE",
+              "type" to "OCCURRENCE_POSTCODE",
             ),
           ),
           isNull(),
@@ -751,6 +751,297 @@ class TapActivePrisonersReconciliationIntTest(
         schedules = listOf(TapScheduleMappingIdsDto(scheduleOutId, occurrenceId)),
         movements = listOfNotNull(
           if (movementOut) TapMovementMappingIdsDto(12345L, movementOutSeq, movementId) else null,
+        ),
+      ),
+    )
+  }
+
+  @Nested
+  @DisplayName("Active Prisoner Detail Reconciliation - Different Movement details")
+  inner class ActivePrisonersReconciliationDifferentMovementDetails {
+    private val applicationId = 1111L
+    private val scheduleOutId = 2222L
+    private val scheduleInId = 3333L
+    private val movementOutSeq = 1
+    private val movementInSeq = 2
+    private val authorisationId = UUID.randomUUID()
+    private val occurrenceId = UUID.randomUUID()
+    private val movementOutId = UUID.randomUUID()
+    private val movementInId = UUID.randomUUID()
+    private val defaultStartTime = LocalDateTime.now().plusDays(1)
+    private val defaultEndTime = LocalDateTime.now().plusDays(2)
+
+    @BeforeEach
+    fun setUp() {
+      reset(telemetryClient)
+      nomisApi.stubGetAllLatestBookings(
+        activeOnly = true,
+        response = BookingIdsWithLast(
+          lastBookingId = 12345,
+          prisonerIds = listOf(PrisonerIds(offenderNo = "A0001TZ", bookingId = 12345)),
+        ),
+      )
+    }
+
+    @Nested
+    inner class ReportDifferences {
+      @Test
+      fun `should not publish telemetry if no differences`() = runTest {
+        stubNomisTaps()
+        stubDpsTaps()
+        stubMappingTaps()
+
+        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
+        awaitReportFinished()
+
+        verify(telemetryClient, never()).trackEvent(
+          eq("temporary-absences-active-reconciliation-mismatch"),
+          anyMap(),
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `should report start time is different`() = runTest {
+        stubNomisTaps()
+        stubDpsTaps(startTime = LocalDateTime.now())
+        stubMappingTaps()
+
+        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
+        awaitReportFinished()
+
+        verify(telemetryClient).trackEvent(
+          eq("temporary-absences-active-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "offenderNo" to "A0001TZ",
+              "nomisMovementId" to "12345_$movementOutSeq",
+              "dpsMovementId" to "$movementOutId",
+              "type" to "MOVEMENT_START_TIME",
+            ),
+          ),
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `should report end time is different on movement in`() = runTest {
+        stubNomisTaps(movementIn = true)
+        stubDpsTaps(movementIn = true, endTime = LocalDateTime.now().plusDays(3))
+        stubMappingTaps(movementIn = true)
+
+        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
+        awaitReportFinished()
+
+        verify(telemetryClient).trackEvent(
+          eq("temporary-absences-active-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "offenderNo" to "A0001TZ",
+              "nomisMovementId" to "12345_$movementInSeq",
+              "dpsMovementId" to "$movementInId",
+              "type" to "MOVEMENT_END_TIME",
+            ),
+          ),
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `should report absence reason code is different`() = runTest {
+        stubNomisTaps()
+        stubDpsTaps(reasonCode = "R2")
+        stubMappingTaps()
+
+        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
+        awaitReportFinished()
+
+        verify(telemetryClient).trackEvent(
+          eq("temporary-absences-active-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "offenderNo" to "A0001TZ",
+              "nomisMovementId" to "12345_$movementOutSeq",
+              "dpsMovementId" to "$movementOutId",
+              "type" to "MOVEMENT_REASON",
+            ),
+          ),
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `should report accompanied by code is different`() = runTest {
+        stubNomisTaps()
+        stubDpsTaps(accompaniedByCode = "POL")
+        stubMappingTaps()
+
+        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
+        awaitReportFinished()
+
+        verify(telemetryClient).trackEvent(
+          eq("temporary-absences-active-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "offenderNo" to "A0001TZ",
+              "nomisMovementId" to "12345_$movementOutSeq",
+              "dpsMovementId" to "$movementOutId",
+              "type" to "MOVEMENT_ACCOMPANIED_BY",
+            ),
+          ),
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `should report comments are different`() = runTest {
+        stubNomisTaps()
+        stubDpsTaps(comments = "different comment")
+        stubMappingTaps()
+
+        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
+        awaitReportFinished()
+
+        verify(telemetryClient).trackEvent(
+          eq("temporary-absences-active-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "offenderNo" to "A0001TZ",
+              "nomisMovementId" to "12345_$movementOutSeq",
+              "dpsMovementId" to "$movementOutId",
+              "type" to "MOVEMENT_COMMENTS",
+            ),
+          ),
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `should report everything is different`() = runTest {
+        stubNomisTaps(movementIn = true)
+        stubDpsTaps(
+          movementIn = true,
+          startTime = LocalDateTime.now().plusDays(2),
+          endTime = LocalDateTime.now().plusDays(3),
+          reasonCode = "R2",
+          accompaniedByCode = "POL",
+          comments = "different comment",
+        )
+        stubMappingTaps(movementIn = true)
+
+        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
+        awaitReportFinished()
+
+        // We should get 4 mismatches from the outbound movement
+        verify(telemetryClient, times(4)).trackEvent(
+          eq("temporary-absences-active-reconciliation-mismatch"),
+          check {
+            assertThat(it["offenderNo"]).isEqualTo("A0001TZ")
+            assertThat(it["nomisMovementId"]).isEqualTo("12345_$movementOutSeq")
+            assertThat(it["dpsMovementId"]).isEqualTo("$movementOutId")
+          },
+          isNull(),
+        )
+
+        // We should only get 1 mismatch from the inbound movement
+        verify(telemetryClient, times(1)).trackEvent(
+          eq("temporary-absences-active-reconciliation-mismatch"),
+          check {
+            assertThat(it["offenderNo"]).isEqualTo("A0001TZ")
+            assertThat(it["nomisMovementId"]).isEqualTo("12345_$movementInSeq")
+            assertThat(it["dpsMovementId"]).isEqualTo("$movementInId")
+          },
+          isNull(),
+        )
+      }
+    }
+
+    private fun stubNomisTaps(
+      startTime: LocalDateTime = defaultStartTime,
+      endTime: LocalDateTime = defaultEndTime,
+      movementIn: Boolean = false,
+    ) = nomisMovementsApi.stubGetOffenderTaps(
+      offenderNo = "A0001TZ",
+      response = emptyOffenderTapsResponse().copy(
+        bookings = listOf(
+          BookingTaps(
+            bookingId = 12345,
+            tapApplications = listOf(
+              tapApplication(
+                id = applicationId,
+                taps = listOf(
+                  tap(
+                    tapScheduleOut = tapScheduleOut(id = scheduleOutId).copy(startTime = startTime, returnTime = endTime),
+                    tapScheduleIn = if (movementIn) tapScheduleIn(id = scheduleInId).copy(startTime = startTime) else null,
+                    tapMovementOut = tapMovementOut(seq = movementOutSeq).copy(movementReason = "C6", movementTime = startTime),
+                    tapMovementIn = if (movementIn) tapMovementIn(seq = movementInSeq).copy(movementTime = endTime) else null,
+                  ),
+                ),
+              ),
+            ),
+            activeBooking = true,
+            latestBooking = true,
+            unscheduledTapMovementOuts = listOf(),
+            unscheduledTapMovementIns = listOf(),
+          ),
+        ),
+      ),
+    )
+
+    private fun stubDpsTaps(
+      startTime: LocalDateTime = defaultStartTime,
+      endTime: LocalDateTime = defaultEndTime,
+      movementIn: Boolean = false,
+      reasonCode: String = "C6",
+      postCode: String = "S1 1AA",
+      accompaniedByCode: String = "U",
+      comments: String = "Absence comment text",
+    ) = dpsApi.stubGetTapReconciliationDetail(
+      personIdentifier = "A0001TZ",
+      response = personTapDetail().copy(
+        scheduledAbsences = listOf(
+          reconAuthorisation(id = authorisationId).copy(
+            occurrences = listOf(
+              reconOccurrence(id = occurrenceId).copy(
+                statusCode = SCHEDULED,
+                reasonCode = "C5",
+                start = defaultStartTime,
+                end = defaultEndTime,
+                location = Location(
+                  address = "1 street",
+                  postcode = postCode,
+                ),
+                movements = listOfNotNull(
+                  reconMovement(id = movementOutId, direction = OUT).copy(
+                    occurredAt = startTime,
+                    absenceReasonCode = reasonCode,
+                    accompaniedByCode = accompaniedByCode,
+                    comments = comments,
+                    location = Location(
+                      address = "1 street",
+                      postcode = postCode,
+                    ),
+                  ),
+                  if (movementIn) reconMovement(id = movementInId, direction = IN).copy(occurredAt = endTime) else null,
+                ),
+              ),
+            ),
+          ),
+        ),
+        unscheduledMovements = listOf(),
+      ),
+    )
+
+    private fun stubMappingTaps(
+      movementIn: Boolean = false,
+    ) = mappingApi.stubGetTapMappingIds(
+      prisonerNumber = "A0001TZ",
+      response = emptyPrisonerMappingIdsDto().copy(
+        applications = listOf(TapApplicationMappingIdsDto(applicationId, authorisationId)),
+        schedules = listOf(TapScheduleMappingIdsDto(scheduleOutId, occurrenceId)),
+        movements = listOfNotNull(
+          TapMovementMappingIdsDto(12345L, movementOutSeq, movementOutId),
+          if (movementIn) TapMovementMappingIdsDto(12345L, movementInSeq, movementInId) else null,
         ),
       ),
     )
