@@ -11,29 +11,31 @@ generic-service:
   env:
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.dev.json
     API_BASE_URL_HMPPS_AUTH: https://sign-in-dev.hmpps.service.justice.gov.uk/auth
-    API_BASE_URL_NOMIS: https://nomis-prisoner-api-dev.prison.service.justice.gov.uk
     API_BASE_URL_MAPPING: https://nomis-sync-prisoner-mapping-dev.hmpps.service.justice.gov.uk
-    API_BASE_URL_VISITS: https://visit-scheduler-dev.prison.service.justice.gov.uk
-    API_BASE_URL_INCENTIVES: https://incentives-api-dev.hmpps.service.justice.gov.uk
+    API_BASE_URL_NOMIS: https://nomis-prisoner-api-dev.prison.service.justice.gov.uk
     API_BASE_URL_ACTIVITIES: https://activities-api-dev.prison.service.justice.gov.uk
-    API_BASE_URL_APPOINTMENTS: https://activities-api-dev.prison.service.justice.gov.uk
-    API_BASE_URL_SENTENCE_ADJUSTMENTS: https://adjustments-api-dev.hmpps.service.justice.gov.uk
-    API_BASE_URL_COURT_SENTENCING: https://remand-and-sentencing-api-dev.hmpps.service.justice.gov.uk
     API_BASE_URL_ADJUDICATIONS: https://manage-adjudications-api-dev.hmpps.service.justice.gov.uk
-    API_BASE_URL_FINANCE: https://prisoner-finance-sync-api-dev.hmpps.service.justice.gov.uk
-    API_BASE_URL_NON_ASSOCIATIONS: https://non-associations-api-dev.hmpps.service.justice.gov.uk
-    API_BASE_URL_LOCATIONS: https://locations-inside-prison-api-dev.hmpps.service.justice.gov.uk
     API_BASE_URL_ALERTS: https://alerts-api-dev.hmpps.service.justice.gov.uk
-    API_BASE_URL_CSIP: https://csip-api-dev.hmpps.service.justice.gov.uk
+    API_BASE_URL_APPOINTMENTS: https://activities-api-dev.prison.service.justice.gov.uk
     API_BASE_URL_CASENOTES: https://dev.offender-case-notes.service.justice.gov.uk
-    API_BASE_URL_INCIDENTS: https://incident-reporting-api-dev.hmpps.service.justice.gov.uk
-    API_BASE_URL_PERSONAL_RELATIONSHIPS: https://personal-relationships-api-dev.hmpps.service.justice.gov.uk
-    API_BASE_URL_ORGANISATIONS: https://organisations-api-dev.hmpps.service.justice.gov.uk
-    API_BASE_URL_VISIT_BALANCE: https://hmpps-visit-allocation-api-dev.prison.service.justice.gov.uk
     API_BASE_URL_CORE_PERSON: https://hmpps-person-record-dev.hmpps.service.justice.gov.uk
-    API_BASE_URL_MOVEMENTS_TAPS: https://external-movements-api-dev.hmpps.service.justice.gov.uk
+    API_BASE_URL_COURT_SENTENCING: https://remand-and-sentencing-api-dev.hmpps.service.justice.gov.uk
+    API_BASE_URL_CSIP: https://csip-api-dev.hmpps.service.justice.gov.uk
+    API_BASE_URL_FINANCE: https://prisoner-finance-sync-api-dev.hmpps.service.justice.gov.uk
+    API_BASE_URL_INCENTIVES: https://incentives-api-dev.hmpps.service.justice.gov.uk
+    API_BASE_URL_INCIDENTS: https://incident-reporting-api-dev.hmpps.service.justice.gov.uk
+    API_BASE_URL_LOCATIONS: https://locations-inside-prison-api-dev.hmpps.service.justice.gov.uk
     API_BASE_URL_MOVEMENTS_COURT: https://court-appearance-scheduler-api-dev.hmpps.service.justice.gov.uk
+    API_BASE_URL_MOVEMENTS_TAPS: https://external-movements-api-dev.hmpps.service.justice.gov.uk
+    API_BASE_URL_NON_ASSOCIATIONS: https://non-associations-api-dev.hmpps.service.justice.gov.uk
     API_BASE_URL_OFFICIALVISITS: https://official-visits-api-dev.hmpps.service.justice.gov.uk
+    API_BASE_URL_ORGANISATIONS: https://organisations-api-dev.hmpps.service.justice.gov.uk
+    API_BASE_URL_PERSONAL_RELATIONSHIPS: https://personal-relationships-api-dev.hmpps.service.justice.gov.uk
+    API_BASE_URL_SENTENCE_ADJUSTMENTS: https://adjustments-api-dev.hmpps.service.justice.gov.uk
+    # currently set to self for a mock API until real API is ready
+    API_BASE_URL_STAFF: https://prisoner-to-nomis-update-dev.hmpps.service.justice.gov.uk
+    API_BASE_URL_VISITS: https://visit-scheduler-dev.prison.service.justice.gov.uk
+    API_BASE_URL_VISIT_BALANCE: https://hmpps-visit-allocation-api-dev.prison.service.justice.gov.uk
     FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION_CREATED: false
     FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION_UPDATED: false
     FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION_DELETED: false

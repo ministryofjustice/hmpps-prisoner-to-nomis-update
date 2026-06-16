@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapDpsA
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.staff.StaffDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visitbalances.VisitBalanceDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.ActivitiesApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.AppointmentsApiExtension
@@ -40,30 +41,31 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.VisitsApiExte
 import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
 
 @ExtendWith(
-  NomisApiExtension::class,
-  MappingExtension::class,
   HmppsAuthApiExtension::class,
-  VisitsApiExtension::class,
-  IncentivesApiExtension::class,
+  MappingExtension::class,
+  NomisApiExtension::class,
   ActivitiesApiExtension::class,
-  AppointmentsApiExtension::class,
-  SentencingAdjustmentsApiExtension::class,
   AdjudicationsApiExtension::class,
-  NonAssociationsApiExtension::class,
-  LocationsApiExtension::class,
-  CourtSentencingApiExtension::class,
   AlertsDpsApiExtension::class,
+  AppointmentsApiExtension::class,
   CaseNotesDpsApiExtension::class,
-  CSIPDpsApiExtension::class,
   ContactPersonDpsApiExtension::class,
-  FinanceDpsApiExtension::class,
-  IncidentsDpsApiExtension::class,
-  OrganisationsDpsApiExtension::class,
-  VisitBalanceDpsApiExtension::class,
-  TapDpsApiExtension::class,
-  CourtSchedulerDpsApiExtension::class,
   CorePersonCprApiExtension::class,
+  CourtSchedulerDpsApiExtension::class,
+  CourtSentencingApiExtension::class,
+  CSIPDpsApiExtension::class,
+  FinanceDpsApiExtension::class,
+  IncentivesApiExtension::class,
+  IncidentsDpsApiExtension::class,
+  LocationsApiExtension::class,
+  NonAssociationsApiExtension::class,
   OfficialVisitsDpsApiExtension::class,
+  OrganisationsDpsApiExtension::class,
+  SentencingAdjustmentsApiExtension::class,
+  StaffDpsApiExtension::class,
+  TapDpsApiExtension::class,
+  VisitsApiExtension::class,
+  VisitBalanceDpsApiExtension::class,
 )
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @ActiveProfiles("test")

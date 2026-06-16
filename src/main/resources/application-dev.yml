@@ -6,22 +6,23 @@ api.base.url:
   mapping: http://localhost:8084
   hmpps-auth: http://localhost:8090/auth
   # Set to ourselves until new service is ready
-  visits: http://localhost:8080
-  incentives: http://localhost:8080
   activities: http://localhost:8080
-  appointments: http://localhost:8080
-  sentence.adjustments: http://localhost:8080
   adjudications: http://localhost:8080
-  nonAssociations: http://localhost:8080
-  court.sentencing: http://localhost:8080
   alerts: http://localhost:8080
+  appointments: http://localhost:8080
+  core.person: http://localhost:8080
+  court.sentencing: http://localhost:8080
   csip: http://localhost:8080
   finance: http://localhost:8080
+  incentives: http://localhost:8080
   incidents: http://localhost:8080
-  personal.relationships: http://localhost:8080
+  nonAssociations: http://localhost:8080
   organisations: http://localhost:8080
+  personal.relationships: http://localhost:8080
+  sentence.adjustments: http://localhost:8080
+  staff: http://localhost:8080
   visit.balance: http://localhost:8080
-  core.person: http://localhost:8080
+  visits: http://localhost:8080
 
 springdoc:
   api-docs:

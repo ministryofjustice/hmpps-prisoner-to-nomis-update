@@ -30,6 +30,7 @@ api.base.url:
   movements-taps: http://localhost:8102
   core.person: http://localhost:8103
   officialvisits: http://localhost:8104
+  staff: http://localhost:8106
 
 hmpps.sqs:
   defaultErrorVisibilityTimeout: 0

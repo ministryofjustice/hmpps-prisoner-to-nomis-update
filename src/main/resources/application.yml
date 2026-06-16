@@ -27,60 +27,40 @@ spring:
             client-id: ${mapping.client.id}
             client-secret: ${mapping.client.secret}
             authorization-grant-type: client_credentials
-          visits-api:
-            provider: hmpps-auth
-            client-id: ${visits.client.id}
-            client-secret: ${visits.client.secret}
-            authorization-grant-type: client_credentials
-          incentives-api:
-            provider: hmpps-auth
-            client-id: ${incentives.client.id}
-            client-secret: ${incentives.client.secret}
-            authorization-grant-type: client_credentials
           activities-api:
             provider: hmpps-auth
             client-id: ${activities.client.id}
             client-secret: ${activities.client.secret}
-            authorization-grant-type: client_credentials
-          appointments-api:
-            provider: hmpps-auth
-            client-id: ${appointments.client.id}
-            client-secret: ${appointments.client.secret}
-            authorization-grant-type: client_credentials
-          non-associations-api:
-            provider: hmpps-auth
-            client-id: ${non-associations.client.id}
-            client-secret: ${non-associations.client.secret}
-            authorization-grant-type: client_credentials
-          locations-api:
-            provider: hmpps-auth
-            client-id: ${locations.client.id}
-            client-secret: ${locations.client.secret}
-            authorization-grant-type: client_credentials
-          sentence-adjustments-api:
-            provider: hmpps-auth
-            client-id: ${sentence.adjustments.client.id}
-            client-secret: ${sentence.adjustments.client.secret}
             authorization-grant-type: client_credentials
           adjudications-api:
             provider: hmpps-auth
             client-id: ${adjudications.client.id}
             client-secret: ${adjudications.client.secret}
             authorization-grant-type: client_credentials
-          court-sentencing-api:
-            provider: hmpps-auth
-            client-id: ${court.sentencing.client.id}
-            client-secret: ${court.sentencing.client.secret}
-            authorization-grant-type: client_credentials
           alerts-api:
             provider: hmpps-auth
             client-id: ${alerts.client.id}
             client-secret: ${alerts.client.secret}
             authorization-grant-type: client_credentials
+          appointments-api:
+            provider: hmpps-auth
+            client-id: ${appointments.client.id}
+            client-secret: ${appointments.client.secret}
+            authorization-grant-type: client_credentials
           casenotes-api:
             provider: hmpps-auth
             client-id: ${casenotes.client.id}
             client-secret: ${casenotes.client.secret}
+            authorization-grant-type: client_credentials
+          core-person-api:
+            provider: hmpps-auth
+            client-id: ${core.person.client.id}
+            client-secret: ${core.person.client.secret}
+            authorization-grant-type: client_credentials
+          court-sentencing-api:
+            provider: hmpps-auth
+            client-id: ${court.sentencing.client.id}
+            client-secret: ${court.sentencing.client.secret}
             authorization-grant-type: client_credentials
           csip-api:
             provider: hmpps-auth
@@ -92,30 +72,20 @@ spring:
             client-id: ${finance.client.id}
             client-secret: ${finance.client.secret}
             authorization-grant-type: client_credentials
+          incentives-api:
+            provider: hmpps-auth
+            client-id: ${incentives.client.id}
+            client-secret: ${incentives.client.secret}
+            authorization-grant-type: client_credentials
           incidents-api:
             provider: hmpps-auth
             client-id: ${incidents.client.id}
             client-secret: ${incidents.client.secret}
             authorization-grant-type: client_credentials
-          personal-relationships-api:
+          locations-api:
             provider: hmpps-auth
-            client-id: ${personal.relationships.client.id}
-            client-secret: ${personal.relationships.client.secret}
-            authorization-grant-type: client_credentials
-          organisations-api:
-            provider: hmpps-auth
-            client-id: ${organisations.client.id}
-            client-secret: ${organisations.client.secret}
-            authorization-grant-type: client_credentials
-          visit-balance-api:
-            provider: hmpps-auth
-            client-id: ${visit.balance.client.id}
-            client-secret: ${visit.balance.client.secret}
-            authorization-grant-type: client_credentials
-          core-person-api:
-            provider: hmpps-auth
-            client-id: ${core.person.client.id}
-            client-secret: ${core.person.client.secret}
+            client-id: ${locations.client.id}
+            client-secret: ${locations.client.secret}
             authorization-grant-type: client_credentials
           movements-court-api:
             provider: hmpps-auth
@@ -127,10 +97,45 @@ spring:
             client-id: ${ext.movements.client.id}
             client-secret: ${ext.movements.client.secret}
             authorization-grant-type: client_credentials
+          non-associations-api:
+            provider: hmpps-auth
+            client-id: ${non-associations.client.id}
+            client-secret: ${non-associations.client.secret}
+            authorization-grant-type: client_credentials
           official-visits-api:
             provider: hmpps-auth
             client-id: ${officialvisits.client.id}
             client-secret: ${officialvisits.client.secret}
+            authorization-grant-type: client_credentials
+          organisations-api:
+            provider: hmpps-auth
+            client-id: ${organisations.client.id}
+            client-secret: ${organisations.client.secret}
+            authorization-grant-type: client_credentials
+          personal-relationships-api:
+            provider: hmpps-auth
+            client-id: ${personal.relationships.client.id}
+            client-secret: ${personal.relationships.client.secret}
+            authorization-grant-type: client_credentials
+          sentence-adjustments-api:
+            provider: hmpps-auth
+            client-id: ${sentence.adjustments.client.id}
+            client-secret: ${sentence.adjustments.client.secret}
+            authorization-grant-type: client_credentials
+          staff-api:
+            provider: hmpps-auth
+            client-id: ${staff.client.id}
+            client-secret: ${staff.client.secret}
+            authorization-grant-type: client_credentials
+          visits-api:
+            provider: hmpps-auth
+            client-id: ${visits.client.id}
+            client-secret: ${visits.client.secret}
+            authorization-grant-type: client_credentials
+          visit-balance-api:
+            provider: hmpps-auth
+            client-id: ${visit.balance.client.id}
+            client-secret: ${visit.balance.client.secret}
             authorization-grant-type: client_credentials
         provider:
           hmpps-auth:
@@ -232,6 +237,9 @@ reports:
       reconciliation:
         page-size: 1000
         thread-count: 30
+  staff:
+    reconciliation:
+      page-size: 100
   temporary-absences:
     all-prisoners:
       reconciliation:
