@@ -2,22 +2,22 @@
   "openapi" : "3.1.0",
   "info" : {
     "title" : "HMPPS Case Notes API",
-    "description" : "API for retrieving and managing case notes relating to a person.\n\n## Person identifier\n\nThe accepted `personIdentifier` is the prison number also known as prisoner number, offender number, offender id or NOMS id.\n\n## Responsibilities of the client\n\nClients should only allow users to read and write case notes where that user is allowed to view the associated person's information.\nFor example a prisoner should be available to the user's caseload. Contact the Connect DPS team for the latest permissions logic.\nIt is no longer the responsibility of this API to verify the permissions of the user in context as per the move away from passing user tokens.\n\n### Sensitive and restricted use case note sub-types\n\nThe case note sub-types used to categorize case notes have two properties that relate to the visibility of case notes and the sub-type\n\n- `sensitive` - the note text may contain sensitive information and therefore should only be displayed to users with one of the `POM`, `VIEW_SENSITIVE_CASE_NOTES` or `ADD_SENSITIVE_CASE_NOTES` DPS roles\n- `restrictedUse` - the sub-type should only be made available to categorize a new case note to users with either the `POM` or `ADD_SENSITIVE_CASE_NOTES` DPS roles\n\n## Case note identifiers and the combined dataset\n\nThe usage of the combined case notes dataset in DPS was released nationally in February 2025.\nThe combined dataset uses UUIDs for case note identifiers replacing the legacy numeric ids.\nThis is a potentially breaking change for typed clients and therefore they cannot be automatically switched.\nInstead API clients can 'opt in' to using the combined dataset by including a non empty `CaseloadId` header value.\nThe presence of this header value declares that the client is:\n\n- Following the responsibilities of the client for prisoner visibility, note sensitivity and restricted use sub-types listed above\n- Compatible with UUID identifiers\n- Authenticating with a client token containing one or more of the required role claims\n- Supplying a username for any write endpoints either in the JWT subject or the `Username` header\n\n## Authentication\n\nThis API uses OAuth2 with JWTs. You will need to pass the JWT in the `Authorization` header using the `Bearer` scheme.\nAll endpoints are designed to work with client tokens and user tokens should not be used with this service.\n\n## Authorisation\n\nThe API uses roles to control access to the endpoints. The roles required for each endpoint are documented in the endpoint descriptions.\nServices integrating with the API should request one of the following roles depending on their needs:\n\n1. `ROLE_PRISONER_CASE_NOTES__RO` - Grants read only access to the API e.g. retrieving case notes for a person\n2. `ROLE_PRISONER_CASE_NOTES__RW` - Grants read/write access to the API e.g. creating case notes and adding amendments\n\n**IMPORTANT** clients should never request the admin role or call admin only endpoints e.g. delete\n\n## Identifying the user\n\nEndpoints that modify case notes require the user to be identified via their username.\nThis is to correctly populate the case note author and for auditing purposes.\nThe username supplied when creating a case note using a sub-type that syncs to NOMIS must exist in NOMIS.\nCase note sub-types that do not sync to NOMIS can be associated with a username from any user known to HMPPS Auth.\nThe username for the request can be supplied in two ways:\n\n1. **Token claim** - Via a `subject` claim in the JWT\n2. **Header** - Via the 'Username' header which will take priority over 1.\n\nWhere possible clients are expected to use the token claim subject to supply the username.",
+    "description" : "API for retrieving and managing case notes relating to a person.\n\n## Person identifier\n\nThe accepted `personIdentifier` is the prison number also known as prisoner number, offender number, offender id or NOMS id.\n\n## Responsibilities of the client\n\nClients should only allow users to read and write case notes where that user is allowed to view the associated person’s information.\nFor example, a prisoner should be available to the user’s caseload. Contact the Connect DPS team for the latest permissions logic.\nIt is no longer the responsibility of this API to verify the permissions of the user in context as per the move away from passing user tokens.\n\n### Sensitive and restricted use case note sub-types\n\nThe case note sub-types used to categorize case notes have two properties that relate to the visibility of case notes and the sub-type\n\n- `sensitive` - the note text may contain sensitive information and therefore should only be displayed to users with one of the `POM`, `VIEW_SENSITIVE_CASE_NOTES` or `ADD_SENSITIVE_CASE_NOTES` DPS roles\n- `restrictedUse` - the sub-type should only be made available to categorize a new case note to users with either the `POM` or `ADD_SENSITIVE_CASE_NOTES` DPS roles\n\n## Case note identifiers and the combined dataset\n\nThe usage of the combined case notes dataset in DPS was released nationally in February 2025.\nThe combined dataset uses UUIDs for case note identifiers replacing the legacy numeric ids.\nClients must now\n\n- handle permissions logic themselves regarding\n  - prisoner visibility,\n  - note sensitivity and\n  - restricted use sub-types listed above\n- use UUID case note identifiers\n- authenticate with a client token containing one or more of the required role claims\n- supply a username for any write endpoints either in the JWT subject or the `Username` header (see below)\n\n## Authentication\n\nThis API uses OAuth2 with JWTs. You will need to pass the JWT in the `Authorization` header using the `Bearer` scheme.\nAll endpoints are designed to work with client tokens and user tokens should not be used with this service.\n\n## Authorisation\n\nThe API uses roles to control access to the endpoints. The roles required for each endpoint are documented in the endpoint descriptions.\nServices integrating with the API should request one of the following roles depending on their needs:\n\n1. `ROLE_PRISONER_CASE_NOTES__RO` - Grants read only access to the API e.g. retrieving case notes for a person\n2. `ROLE_PRISONER_CASE_NOTES__RW` - Grants read/write access to the API e.g. creating case notes and adding amendments\n\n**IMPORTANT** clients should never request the admin role or call admin only endpoints e.g. delete\n\n## Identifying the user\n\nEndpoints that modify case notes require the user to be identified via their username.\nThis is to correctly populate the case note author and for auditing purposes.\nThe username supplied when creating a case note using a sub-type that syncs to NOMIS must exist in NOMIS.\nCase note sub-types that do not sync to NOMIS can be associated with a username from any user known to HMPPS Auth.\nThe username for the request can be supplied in two ways:\n\n1. **Token claim** - Via a `subject` claim in the JWT\n2. **Header** - Via the 'Username' header which will take priority over 1.\n\nWhere possible clients are expected to use the token claim subject to supply the username.",
     "contact" : {
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-04-08.50.3995629"
+    "version" : "2026-06-15.430.b5c4e91"
   },
   "servers" : [ {
     "url" : "https://offender-case-notes.service.justice.gov.uk",
-    "description" : "Prod"
+    "description" : "prod"
   }, {
     "url" : "https://preprod.offender-case-notes.service.justice.gov.uk",
-    "description" : "PreProd"
+    "description" : "preprod"
   }, {
     "url" : "https://dev.offender-case-notes.service.justice.gov.uk",
-    "description" : "Development"
+    "description" : "dev"
   } ],
   "security" : [ {
     "bearer-jwt" : [ "read", "write" ]
@@ -188,18 +188,6 @@
             "type" : "string"
           },
           "example" : "518b2200-6489-4c77-8514-10cf80ccd488"
-        }, {
-          "name" : "CaseloadId",
-          "in" : "header",
-          "description" : "\n    Relevant caseload id for the client identity in context e.g. the active caseload id of the logged in user.\n    Used to declare that the client is compatible with the usage of the combined case notes dataset.\n    ",
-          "required" : false,
-          "content" : {
-            "*/*" : {
-              "schema" : {
-                "type" : "string"
-              }
-            }
-          }
         } ],
         "responses" : {
           "200" : {
@@ -247,18 +235,6 @@
             "type" : "string"
           },
           "example" : "518b2200-6489-4c77-8514-10cf80ccd488"
-        }, {
-          "name" : "CaseloadId",
-          "in" : "header",
-          "description" : "\n    Relevant caseload id for the client identity in context e.g. the active caseload id of the logged in user.\n    Used to declare that the client is compatible with the usage of the combined case notes dataset.\n    ",
-          "required" : false,
-          "content" : {
-            "*/*" : {
-              "schema" : {
-                "type" : "string"
-              }
-            }
-          }
         }, {
           "name" : "Username",
           "in" : "header",
@@ -552,6 +528,70 @@
         }
       }
     },
+    "/search/case-notes/prisons/{prisonCode}/authors/{authorIdentifier}" : {
+      "post" : {
+        "tags" : [ "Retrieve case notes, types and sub-types" ],
+        "summary" : "Finds matching case notes",
+        "description" : "Sorting can be applied on occurrenceDateTime (default) or creationDateTime. Any other sort parameter will have the default result (occurrenceDateTime,desc)",
+        "operationId" : "findAuthorCaseNotes",
+        "parameters" : [ {
+          "name" : "prisonCode",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "authorIdentifier",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "authorIdentifierType",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "AUTHOR_ID",
+            "enum" : [ "AUTHOR_ID", "USERNAME" ]
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SearchNotesRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK - successfully conducted search, providing matching results or empty content when no matching case notes are found",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AuthorNotesResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad request - the search request did not meet validation requirements",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AuthorNotesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/case-notes/{personIdentifier}" : {
       "get" : {
         "tags" : [ "Retrieve case notes, types and sub-types" ],
@@ -580,18 +620,6 @@
           "required" : true,
           "schema" : {
             "$ref" : "#/components/schemas/Pageable"
-          }
-        }, {
-          "name" : "CaseloadId",
-          "in" : "header",
-          "description" : "\n    Relevant caseload id for the client identity in context e.g. the active caseload id of the logged in user.\n    Used to declare that the client is compatible with the usage of the combined case notes dataset.\n    ",
-          "required" : false,
-          "content" : {
-            "*/*" : {
-              "schema" : {
-                "type" : "string"
-              }
-            }
           }
         } ],
         "responses" : {
@@ -622,18 +650,6 @@
             "type" : "string"
           },
           "example" : "A1234AA"
-        }, {
-          "name" : "CaseloadId",
-          "in" : "header",
-          "description" : "\n    Relevant caseload id for the client identity in context e.g. the active caseload id of the logged in user.\n    Used to declare that the client is compatible with the usage of the combined case notes dataset.\n    ",
-          "required" : false,
-          "content" : {
-            "*/*" : {
-              "schema" : {
-                "type" : "string"
-              }
-            }
-          }
         }, {
           "name" : "Username",
           "in" : "header",
@@ -832,12 +848,20 @@
       "get" : {
         "tags" : [ "Subject Access Request" ],
         "summary" : "Provides content for a prisoner to satisfy the needs of a subject access request on their behalf",
-        "description" : "Requires role SAR_DATA_ACCESS\nRequires one of the following roles: \n* SAR_DATA_ACCESS",
+        "description" : "Requires role SAR_DATA_ACCESS or additional role as specified by hmpps.sar.additionalAccessRole configuration.\nRequires one of the following roles: \n* SAR_DATA_ACCESS",
         "operationId" : "getSarContentByReference",
         "parameters" : [ {
           "name" : "prn",
           "in" : "query",
           "description" : "NOMIS Prison Reference Number",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "crn",
+          "in" : "query",
+          "description" : "nDelius Case Reference Number",
           "required" : false,
           "schema" : {
             "type" : "string"
@@ -867,7 +891,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/SubjectAccessResponse"
+                  "$ref" : "#/components/schemas/HmppsSubjectAccessRequestContent"
                 }
               }
             }
@@ -877,7 +901,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/SubjectAccessResponse"
+                  "type" : "object"
                 }
               }
             }
@@ -887,7 +911,56 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/SubjectAccessResponse"
+                  "type" : "object"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "The client does not have authorisation to make this request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Unexpected error occurred",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/subject-access-request/template" : {
+      "get" : {
+        "tags" : [ "Subject Access Request" ],
+        "description" : "\nRequires one of the following roles: \n* SAR_DATA_ACCESS",
+        "operationId" : "getServiceTemplate",
+        "responses" : {
+          "200" : {
+            "description" : "Request successfully processed - return template file content",
+            "content" : {
+              "plain/text" : {
+                "schema" : {
+                  "type" : "string"
                 }
               }
             }
@@ -929,12 +1002,12 @@
       "get" : {
         "tags" : [ "Retrieve case notes, types and sub-types" ],
         "summary" : "Retrieves a list of case note types",
-        "description" : "\n  Please note, current functionality of using user roles from the token is now deprecated. \n  Going forward user roles will not affect the results returned from this endpoint.\n  This has been replaced with optional request params to replicate the same functionality.\n  Setting a value for 'selectableBy' will allow the choice of filtering those that are selectable by dps users only or to include all types regardless.\n  Additionally, the following properties allow filtering: \n  includeInactive -> if this is true the returned results will include inactive types, otherwise only active types will be returned.\n  includeRestricted -> if this is true the returned results will include restricted use types, otherwise only non-restricted types will be returned.\n  \nRequires one of the following roles: \n* ROLE_PRISONER_CASE_NOTES__RO\n* ROLE_PRISONER_CASE_NOTES__RW",
+        "description" : "\n    Please note, current functionality of using user roles from the token is now deprecated. \n    Going forward user roles will not affect the results returned from this endpoint.\n    This has been replaced with optional request params to replicate the same functionality.\n    Setting a value for 'selectableBy' will allow the choice of filtering those that are selectable by dps users only or to include all types regardless.\n    Additionally, the following properties allow filtering: \n    includeInactive -> if this is true the returned results will include inactive types, otherwise only active types will be returned.\n    includeRestricted -> if this is true the returned results will include restricted use types, otherwise only non-restricted types will be returned.\n    \nRequires one of the following roles: \n* ROLE_PRISONER_CASE_NOTES__RO\n* ROLE_PRISONER_CASE_NOTES__RW",
         "operationId" : "getCaseNoteTypes",
         "parameters" : [ {
           "name" : "selectableBy",
           "in" : "query",
-          "required" : true,
+          "required" : false,
           "schema" : {
             "type" : "string",
             "enum" : [ "DPS_USER", "ALL" ]
@@ -1099,7 +1172,7 @@
             "format" : "date-time"
           },
           "system" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "enum" : [ "DPS", "NOMIS" ]
           }
         },
@@ -1115,7 +1188,7 @@
             "example" : 1645251
           },
           "id" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid",
             "description" : "The id for the case note, if provided, the existing case note matching this id will be updated, otherwise a new case note is created.",
             "example" : "c9475622-676f-4659-8bb5-12a4760280d7"
@@ -1181,7 +1254,7 @@
             "uniqueItems" : true
           },
           "system" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "enum" : [ "DPS", "NOMIS" ]
           }
         },
@@ -1195,17 +1268,17 @@
             "format" : "int32"
           },
           "errorCode" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "userMessage" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "developerMessage" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "moreInfo" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           }
         },
         "required" : [ "status" ]
@@ -1266,7 +1339,7 @@
         "properties" : {
           "caseNoteId" : {
             "type" : "string",
-            "description" : "Case Note Identifier. Will be a UUID for all consumers of the combined dataset but can be numeric for those that have not opted in. See documentation above",
+            "description" : "Case note identifier. Will be a UUID for all consumers of the combined dataset. See documentation above",
             "example" : "518b2200-6489-4c77-8514-10cf80ccd488"
           },
           "offenderIdentifier" : {
@@ -1320,7 +1393,7 @@
           "authorUserId" : {
             "type" : "string",
             "description" : "User identifier of case note author - staffId for NOMIS users, username for auth users",
-            "example" : 12345
+            "example" : "12345 or USERNAME_12345"
           },
           "authorUsername" : {
             "type" : "string",
@@ -1333,7 +1406,7 @@
             "example" : "This is some text"
           },
           "locationId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The prison code the prisoner was resident at or a code indicating their transfer or released status at the time of the case note was added",
             "example" : "MDI"
           },
@@ -1364,7 +1437,7 @@
             "type" : "integer",
             "format" : "int64",
             "deprecated" : true,
-            "description" : "The assigned numeric id for the case note. Can be positive or negative. Should only be used temporarily by clients that want to opt into the combined data set but are not fully compatible with UUID case note identifiers"
+            "description" : "The assigned legacy numeric id for the case note. Can be positive or negative. Should be avoided by clients except for cross-referencing historic data."
           }
         },
         "required" : [ "amendments", "authorName", "authorUserId", "authorUsername", "caseNoteId", "creationDateTime", "eventId", "legacyId", "occurrenceDateTime", "offenderIdentifier", "sensitive", "source", "subType", "subTypeDescription", "systemGenerated", "text", "type", "typeDescription" ]
@@ -1387,12 +1460,12 @@
           "authorName" : {
             "type" : "string",
             "description" : "Name of the user amending the case note",
-            "example" : "Mickey Mouse"
+            "example" : "John Smith"
           },
           "authorUserId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "User identifier of the user amending the case note - staffId for NOMIS users, userId for auth users",
-            "example" : 12345
+            "example" : "12345"
           },
           "additionalNoteText" : {
             "type" : "string",
@@ -1400,7 +1473,7 @@
             "example" : "Some Additional Text"
           },
           "id" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid"
           }
         },
@@ -1464,7 +1537,7 @@
         "type" : "object",
         "properties" : {
           "locationId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Location where case note was made",
             "example" : "MDI"
           },
@@ -1481,13 +1554,13 @@
             "minLength" : 1
           },
           "occurrenceDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Occurrence time of case note. If not provided it will be defaulted to the time of the request.",
             "example" : "2019-01-17T10:25:00"
           },
           "authorUsername" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "authorName" : {
             "type" : "string",
@@ -1516,11 +1589,11 @@
             "uniqueItems" : true
           },
           "occurredFrom" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time"
           },
           "occurredTo" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time"
           },
           "page" : {
@@ -1560,15 +1633,21 @@
         "properties" : {
           "totalElements" : {
             "type" : "integer",
-            "format" : "int32"
+            "format" : "int32",
+            "description" : "The total number of results across all pages",
+            "example" : 1
           },
           "page" : {
             "type" : "integer",
-            "format" : "int32"
+            "format" : "int32",
+            "description" : "The current page number",
+            "example" : 1
           },
           "size" : {
             "type" : "integer",
-            "format" : "int32"
+            "format" : "int32",
+            "description" : "The maximum number of results per page",
+            "example" : 10
           }
         },
         "required" : [ "page", "size", "totalElements" ]
@@ -1591,11 +1670,26 @@
         },
         "required" : [ "content", "hasCaseNotes", "metadata" ]
       },
+      "AuthorNotesResponse" : {
+        "type" : "object",
+        "properties" : {
+          "content" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CaseNote"
+            }
+          },
+          "metadata" : {
+            "$ref" : "#/components/schemas/PageMeta"
+          }
+        },
+        "required" : [ "content", "metadata" ]
+      },
       "CreateCaseNoteRequest" : {
         "type" : "object",
         "properties" : {
           "locationId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Location where case note was made",
             "example" : "MDI"
           },
@@ -1612,7 +1706,7 @@
             "minLength" : 1
           },
           "occurrenceDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Occurrence time of case note. If not provided it will be defaulted to the time of the request.",
             "example" : "2019-01-17T10:25:00"
@@ -1623,7 +1717,7 @@
             "minLength" : 1
           },
           "systemGenerated" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Boolean flag to indicate if case not is system generated"
           }
         },
@@ -1641,11 +1735,11 @@
             "uniqueItems" : true
           },
           "from" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time"
           },
           "to" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time"
           },
           "personIdentifiers" : {
@@ -1664,7 +1758,7 @@
             "uniqueItems" : true
           },
           "prisonCode" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "dateType" : {
             "type" : "string",
@@ -1715,7 +1809,11 @@
             "format" : "int32"
           },
           "latestNote" : {
-            "$ref" : "#/components/schemas/LatestNote"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/LatestNote"
+            }, {
+              "type" : "null"
+            } ]
           }
         },
         "required" : [ "count", "personIdentifier", "subType", "type" ]
@@ -1732,11 +1830,11 @@
             "uniqueItems" : true
           },
           "from" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time"
           },
           "to" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time"
           },
           "authorIds" : {
@@ -1748,7 +1846,7 @@
             "uniqueItems" : true
           },
           "prisonCode" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "dateType" : {
             "type" : "string",
@@ -1789,103 +1887,117 @@
             "format" : "int32"
           },
           "latestNote" : {
-            "$ref" : "#/components/schemas/LatestNote"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/LatestNote"
+            }, {
+              "type" : "null"
+            } ]
           }
         },
         "required" : [ "authorId", "count", "subType", "type" ]
       },
-      "SarAmendment" : {
+      "Attachment" : {
         "type" : "object",
         "properties" : {
-          "creationDateTime" : {
+          "attachmentNumber" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The number of the attachment which will match any corresponding reference in the content section"
+          },
+          "name" : {
             "type" : "string",
-            "format" : "date-time"
+            "description" : "The name or description of the attachment which will be included in the report"
           },
-          "additionalNoteText" : {
-            "type" : "string"
-          },
-          "authorUsername" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "additionalNoteText", "authorUsername", "creationDateTime" ]
-      },
-      "SarNote" : {
-        "type" : "object",
-        "properties" : {
-          "creationDateTime" : {
+          "contentType" : {
             "type" : "string",
-            "format" : "date-time"
+            "description" : "The content type of the attachment"
           },
-          "type" : {
-            "type" : "string"
+          "url" : {
+            "type" : "string",
+            "description" : "The url to be used to download the attachment file"
           },
-          "subType" : {
-            "type" : "string"
+          "filesize" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int32",
+            "description" : "The size of the attachment file in bytes"
           },
-          "text" : {
-            "type" : "string"
+          "filename" : {
+            "type" : "string",
+            "description" : "The filename of attachment file"
           },
-          "authorUsername" : {
-            "type" : "string"
-          },
-          "amendments" : {
-            "type" : "array",
+          "headers" : {
+            "type" : [ "array", "null" ],
+            "description" : "The additional headers to use when calling the url for fetching this attachment",
             "items" : {
-              "$ref" : "#/components/schemas/SarAmendment"
+              "$ref" : "#/components/schemas/AttachmentHeader"
             }
           }
         },
-        "required" : [ "amendments", "authorUsername", "creationDateTime", "subType", "text", "type" ]
+        "required" : [ "attachmentNumber", "contentType", "filename", "name", "url" ]
       },
-      "SubjectAccessResponse" : {
+      "AttachmentHeader" : {
         "type" : "object",
         "properties" : {
-          "prn" : {
-            "type" : "string"
+          "name" : {
+            "type" : "string",
+            "description" : "The name of the header"
           },
+          "value" : {
+            "type" : "string",
+            "description" : "The value of the header"
+          }
+        },
+        "required" : [ "name", "value" ]
+      },
+      "HmppsSubjectAccessRequestContent" : {
+        "type" : "object",
+        "properties" : {
           "content" : {
-            "type" : "array",
+            "description" : "The content of the subject access request response"
+          },
+          "attachments" : {
+            "type" : [ "array", "null" ],
+            "description" : "The details of any attachments for the subject access request response",
             "items" : {
-              "$ref" : "#/components/schemas/SarNote"
+              "$ref" : "#/components/schemas/Attachment"
             }
           }
         },
-        "required" : [ "content", "prn" ]
+        "required" : [ "content" ]
       },
       "CaseNoteFilter" : {
         "type" : "object",
         "description" : "Case Note Filter",
         "properties" : {
           "type" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Filter by Case Note Type. Cannot be used in conjunction with typeSubTypes.",
             "example" : "KA"
           },
           "subType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Filter by Case Note Sub Type. Must be used in conjunction with type, and cannot be used in conjunction with typeSubTypes.",
             "example" : "KS"
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Filter case notes from this date",
             "example" : "2017-10-31T01:30:00"
           },
           "endDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Filter case notes up to this date",
             "example" : "2019-05-31T01:30:00"
           },
           "locationId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Filter by the location",
             "example" : "MDI"
           },
           "authorUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Filter by username",
             "example" : "USER1"
           },
@@ -1939,12 +2051,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -1958,6 +2064,12 @@
           "number" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
