@@ -119,6 +119,7 @@ class StaffReconciliationResourceIntTest(
           .expectStatus().isOk
           .expectBody()
           .jsonPath("$.nomisStaffId").isEqualTo(1234)
+          .jsonPath("$.dpsStaffId").isEqualTo("4321")
           .jsonPath("$.reason").isEqualTo("dps-record-missing")
       }
     }

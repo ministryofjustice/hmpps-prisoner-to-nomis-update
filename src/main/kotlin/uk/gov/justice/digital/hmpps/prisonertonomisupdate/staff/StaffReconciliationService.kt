@@ -104,10 +104,11 @@ class StaffReconciliationService(
           "$TELEMETRY_STAFF_PREFIX-mismatch",
           mapOf(
             "nomisStaffId" to nomisStaffId.toString(),
+            "dpsStaffId" to dpsResult.dpsStaffId,
             "reason" to "dps-record-missing",
           ),
         )
-        MismatchStaff(nomisStaffId = nomisStaffId, reason = "dps-record-missing")
+        MismatchStaff(nomisStaffId = nomisStaffId, dpsStaffId = dpsResult.dpsStaffId, reason = "dps-record-missing")
       }
 
       is Staff -> {
