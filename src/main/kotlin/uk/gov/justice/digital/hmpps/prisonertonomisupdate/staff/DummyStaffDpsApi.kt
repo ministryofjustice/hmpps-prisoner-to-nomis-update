@@ -20,6 +20,9 @@ class DummyStaffDpsApi {
   fun getDpsStaff(
     @Schema(description = "staff Id") @PathVariable staffId: Long,
   ) = dpsStaffDetails(staffId.toString())
+
+  @GetMapping("/prison-users/staff/ids")
+  fun getDpsStaffIds(page: Int = 0, size: Int = 1): PagedModelDpsStaffId = pagedModelDpsStaffIds(pageNumber = page, pageSize = size)
 }
 
 // TODO - this is just a copy of the migrateRequest class
@@ -35,6 +38,7 @@ fun dpsStaffDetails(staffId: String = "4321") = DpsStaffDetails(
       createdBy = "JIM_BEAM2",
       modifiedTimestamp = LocalDateTime.parse("2020-12-04T10:42:43"),
       modifiedBy = "FRED_BROWN2",
+      lastLoggedIn = LocalDateTime.parse("2026-03-17T12:30:00"),
     ),
   ),
   roles = listOf(
@@ -60,18 +64,36 @@ fun dpsStaffDetails(staffId: String = "4321") = DpsStaffDetails(
     ),
     MigratedUserAccessibleCaseload(
       username = "JOHNSMITH_ADM",
+      caseloadId = "LEI",
+      createdTimestamp = LocalDateTime.parse("2020-12-04T10:42:43"),
+      createdBy = "JIM_BEAM4",
+    ),
+    MigratedUserAccessibleCaseload(
+      username = "JOHNSMITH_ADM",
       caseloadId = "NWEB",
       createdTimestamp = LocalDateTime.parse("2020-12-04T10:42:43"),
       createdBy = "JIM_BEAM4",
     ),
   ),
 )
+
 fun dpsStaffUser(staffId: String = "4321") = DpsUser(
   id = staffId,
   email = "john.smith@justice.gov.uk",
-  firstName = "John",
-  lastName = "Smith",
+  firstName = "JOHN",
+  lastName = "SMITH",
   status = MigratedUser.Status.ACTIVE,
+)
+
+private val dpsStaffIds = listOf(DpsStaffId("4321"), DpsStaffId("4321"), DpsStaffId("4321"))
+fun pagedModelDpsStaffIds(content: List<DpsStaffId> = dpsStaffIds, pageSize: Int = 20, pageNumber: Int = 1, totalElements: Long = content.size.toLong()) = PagedModelDpsStaffId(
+  content = content,
+  page = PageMetadata(
+    propertySize = pageSize.toLong(),
+    number = pageNumber.toLong(),
+    totalElements = totalElements,
+    totalPages = Math.ceilDiv(totalElements, pageSize),
+  ),
 )
 
 // Temporary return type until API ready
@@ -88,11 +110,12 @@ data class DpsUser(
   val lastName: String,
   val status: MigratedUser.Status,
 )
-data class PagedModelStaffId(
+
+data class PagedModelDpsStaffId(
   val content: List<DpsStaffId>? = null,
   val page: PageMetadata? = null,
 )
 
 data class DpsStaffId(
-  val officialVisitId: Long,
+  val staffId: String,
 )

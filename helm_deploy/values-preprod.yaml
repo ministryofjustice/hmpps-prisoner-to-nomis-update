@@ -115,6 +115,10 @@ generic-service:
       type: PRISONER_TRANSACTIONS_RECON
       schedule: "00 3 * * *"
       suspend: true
+    - name: staff-recon
+      type: STAFF_RECON
+      schedule: "0 4 * * 1-5"
+      suspend: true
     - name: tap-all-prisoners-recon
       type: TAP_ALL_PRISONERS_RECON
       schedule: "30 2 * * *"

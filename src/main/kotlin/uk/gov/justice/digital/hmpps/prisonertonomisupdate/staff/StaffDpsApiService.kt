@@ -17,13 +17,15 @@ class StaffDpsApiService(
     Context.of("api", this::class.java.simpleName),
   )
 
+  // TODO call DPS
   suspend fun getStaffOrNull(staffId: Long): DpsStaffDetails? = webClient.get()
     .uri("/prison-users/{staffId}", staffId)
     .retrieve()
     .awaitBodyOrNullForNotFound(retrySpec = backoffSpec)
 
+  // TODO call DPS and add test when return type defined
   // May need for reconciliation
-  suspend fun getStaffIds(pageNumber: Int = 0, pageSize: Int = 1): PagedModelStaffId = webClient.get()
+  suspend fun getStaffIds(pageNumber: Int = 0, pageSize: Int = 1): PagedModelDpsStaffId = webClient.get()
     .uri {
       it.path("/prison-users/staffIds")
         .queryParam("page", pageNumber)
