@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtscheduler.model.ReconciliationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingMappingService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.NomisMovementId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.MismatchPrisonerCourtMovementDetails.Type.MOVEMENT_TIME
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.MismatchPrisonerCourtMovementDetails.Type.REASON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.MismatchPrisonerCourtScheduleDetails.Type.COURT
@@ -135,7 +136,7 @@ class CourtSchedulerReconciliationService(
     }
 
     // Check for scheduled court movements OUT existing only in 1 system
-    val nomisScheduledMovementOutIds = nomisMovements.bookings.flatMap { booking -> booking.courtSchedules.mapNotNull { it.courtMovementOut?.let { MovementId(booking.bookingId, it.sequence) } } }
+    val nomisScheduledMovementOutIds = nomisMovements.bookings.flatMap { booking -> booking.courtSchedules.mapNotNull { it.courtMovementOut?.let { NomisMovementId(booking.bookingId, it.sequence) } } }
     val dpsScheduledMovementOutIds = dpsMovements.courtEvents.flatMap { it.movements.filter { it.directionCode == "OUT" }.map { it.dpsId!! } }
     if (nomisScheduledMovementOutIds.size != dpsScheduledMovementOutIds.size) {
       mismatches.add(
@@ -151,7 +152,7 @@ class CourtSchedulerReconciliationService(
     }
 
     // Check for scheduled court movements IN existing only in 1 system
-    val nomisScheduledMovementInIds = nomisMovements.bookings.flatMap { booking -> booking.courtSchedules.mapNotNull { it.courtMovementIn?.let { MovementId(booking.bookingId, it.sequence) } } }
+    val nomisScheduledMovementInIds = nomisMovements.bookings.flatMap { booking -> booking.courtSchedules.mapNotNull { it.courtMovementIn?.let { NomisMovementId(booking.bookingId, it.sequence) } } }
     val dpsScheduledMovementInIds = dpsMovements.courtEvents.flatMap { it.movements.filter { it.directionCode == "IN" }.map { it.dpsId!! } }
     if (nomisScheduledMovementInIds.size != dpsScheduledMovementInIds.size) {
       mismatches.add(
@@ -167,7 +168,7 @@ class CourtSchedulerReconciliationService(
     }
 
     // Check for unscheduled court movements OUT existing only in 1 system
-    val nomisUnscheduledMovementOutIds = nomisMovements.bookings.flatMap { booking -> booking.unscheduledCourtMovementOuts.map { MovementId(booking.bookingId, it.sequence) } }
+    val nomisUnscheduledMovementOutIds = nomisMovements.bookings.flatMap { booking -> booking.unscheduledCourtMovementOuts.map { NomisMovementId(booking.bookingId, it.sequence) } }
     val dpsUnscheduledMovementOutIds = dpsMovements.unscheduledMovements.filter { it.directionCode == "OUT" }.map { it.dpsId!! }
     if (nomisUnscheduledMovementOutIds.size != dpsUnscheduledMovementOutIds.size) {
       mismatches.add(
@@ -183,7 +184,7 @@ class CourtSchedulerReconciliationService(
     }
 
     // Check for unscheduled court movements IN existing only in 1 system
-    val nomisUnscheduledMovementInIds = nomisMovements.bookings.flatMap { booking -> booking.unscheduledCourtMovementIns.map { MovementId(booking.bookingId, it.sequence) } }
+    val nomisUnscheduledMovementInIds = nomisMovements.bookings.flatMap { booking -> booking.unscheduledCourtMovementIns.map { NomisMovementId(booking.bookingId, it.sequence) } }
     val dpsUnscheduledMovementInIds = dpsMovements.unscheduledMovements.filter { it.directionCode == "IN" }.map { it.dpsId!! }
     if (nomisUnscheduledMovementInIds.size != dpsUnscheduledMovementInIds.size) {
       mismatches.add(
@@ -351,7 +352,7 @@ class CourtSchedulerReconciliationService(
   ): List<MismatchPrisonerCourtMovementDetails> {
     val nomisScheduledMovementOutIds = nomis.bookings.flatMap { booking ->
       booking.courtSchedules.mapNotNull {
-        it.courtMovementOut?.let { MovementId(booking.bookingId, it.sequence) }
+        it.courtMovementOut?.let { NomisMovementId(booking.bookingId, it.sequence) }
       }
     }
     val dpsScheduledMovementOutIds = dps.courtEvents.flatMap { it.movements.filter { it.directionCode == "OUT" }.map { it.dpsId!! } }
@@ -383,7 +384,7 @@ class CourtSchedulerReconciliationService(
   ): List<MismatchPrisonerCourtMovementDetails> {
     val nomisScheduledMovementInIds = nomis.bookings.flatMap { booking ->
       booking.courtSchedules.mapNotNull {
-        it.courtMovementIn?.let { MovementId(booking.bookingId, it.sequence) }
+        it.courtMovementIn?.let { NomisMovementId(booking.bookingId, it.sequence) }
       }
     }
     val dpsScheduledMovementInIds = dps.courtEvents.flatMap { it.movements.filter { it.directionCode == "IN" }.map { it.dpsId!! } }
@@ -414,7 +415,7 @@ class CourtSchedulerReconciliationService(
     mappings: CourtSchedulerPrisonerMappingIdsDto,
   ): List<MismatchPrisonerCourtMovementDetails> {
     val nomisUnscheduledMovementOutIds = nomis.bookings.flatMap { booking ->
-      booking.unscheduledCourtMovementOuts.map { MovementId(booking.bookingId, it.sequence) }
+      booking.unscheduledCourtMovementOuts.map { NomisMovementId(booking.bookingId, it.sequence) }
     }
     val dpsUnscheduledMovementOutIds = dps.unscheduledMovements.filter { it.directionCode == "OUT" }.map { it.dpsId!! }
 
@@ -444,7 +445,7 @@ class CourtSchedulerReconciliationService(
     mappings: CourtSchedulerPrisonerMappingIdsDto,
   ): List<MismatchPrisonerCourtMovementDetails> {
     val nomisUnscheduledMovementInIds = nomis.bookings.flatMap { booking ->
-      booking.unscheduledCourtMovementIns.map { MovementId(booking.bookingId, it.sequence) }
+      booking.unscheduledCourtMovementIns.map { NomisMovementId(booking.bookingId, it.sequence) }
     }
     val dpsUnscheduledMovementInIds = dps.unscheduledMovements.filter { it.directionCode == "IN" }.map { it.dpsId!! }
 
@@ -469,7 +470,7 @@ class CourtSchedulerReconciliationService(
 
   private fun compareMovements(
     offenderNo: String,
-    nomisId: MovementId,
+    nomisId: NomisMovementId,
     dpsId: UUID,
     nomisPrison: String,
     dpsPrison: String,
@@ -521,7 +522,7 @@ class CourtSchedulerReconciliationService(
   }
 
   private fun CourtSchedulerPrisonerMappingIdsDto.unexpectedNomisMovements(
-    nomisMovementIds: List<MovementId>,
+    nomisMovementIds: List<NomisMovementId>,
     dpsMovementIds: List<UUID>,
   ) = findMissing(nomisMovementIds, dpsMovementIds) { nomisMovementId ->
     movements.find { it.nomisBookingId == nomisMovementId.bookingId && it.nomisMovementSeq == nomisMovementId.sequence }?.dpsCourtMovementId
@@ -529,9 +530,9 @@ class CourtSchedulerReconciliationService(
 
   private fun CourtSchedulerPrisonerMappingIdsDto.unexpectedDpsMovements(
     dpsMovementIds: List<UUID>,
-    nomisMovementIds: List<MovementId>,
+    nomisMovementIds: List<NomisMovementId>,
   ) = findMissing(dpsMovementIds, nomisMovementIds) { dpsMovementId ->
-    movements.find { it.dpsCourtMovementId == dpsMovementId }?.let { MovementId(it.nomisBookingId, it.nomisMovementSeq) }
+    movements.find { it.dpsCourtMovementId == dpsMovementId }?.let { NomisMovementId(it.nomisBookingId, it.nomisMovementSeq) }
   }
 
   private fun CourtSchedulerPrisonerMappingIdsDto.matchingSchedules(
@@ -542,7 +543,7 @@ class CourtSchedulerReconciliationService(
   }
 
   private fun CourtSchedulerPrisonerMappingIdsDto.matchingMovements(
-    nomisMovementIds: List<MovementId>,
+    nomisMovementIds: List<NomisMovementId>,
     dpsMovementIds: List<UUID>,
   ) = findMatches(nomisMovementIds, dpsMovementIds) { nomisId ->
     movements.find { it.nomisBookingId == nomisId.bookingId && it.nomisMovementSeq == nomisId.sequence }?.dpsCourtMovementId
@@ -563,35 +564,35 @@ class CourtSchedulerReconciliationService(
   private fun ReconciliationResponse.findDpsCourtSchedule(dpsId: UUID) = courtEvents.find { it.courtEvent.dpsId == dpsId }
     ?: throw IllegalStateException("Unable to find schedule for dpsId=$dpsId despite having matched it earlier. Has there been a merge or move court event mid reconciliation?")
 
-  private fun OffenderCourtMovementsResponse.findNomisScheduledMovementOut(movementId: MovementId) = bookings.flatMap { booking ->
+  private fun OffenderCourtMovementsResponse.findNomisScheduledMovementOut(nomisMovementId: NomisMovementId) = bookings.flatMap { booking ->
     booking.courtSchedules
       .mapNotNull { it.courtMovementOut }
       .map { it to booking.bookingId }
-  }.find { it.second == movementId.bookingId && it.first.sequence == movementId.sequence }!!.first
+  }.find { it.second == nomisMovementId.bookingId && it.first.sequence == nomisMovementId.sequence }!!.first
 
   private fun ReconciliationResponse.findDpsCourtMovementOut(id: UUID) = courtEvents.flatMap { courtEvent ->
     courtEvent.movements.filter { it.directionCode == "OUT" }
   }.first { it.dpsId == id }
 
-  private fun OffenderCourtMovementsResponse.findNomisScheduledMovementIn(movementId: MovementId) = bookings.flatMap { booking ->
+  private fun OffenderCourtMovementsResponse.findNomisScheduledMovementIn(nomisMovementId: NomisMovementId) = bookings.flatMap { booking ->
     booking.courtSchedules
       .mapNotNull { it.courtMovementIn }
       .map { it to booking.bookingId }
-  }.find { it.second == movementId.bookingId && it.first.sequence == movementId.sequence }!!.first
+  }.find { it.second == nomisMovementId.bookingId && it.first.sequence == nomisMovementId.sequence }!!.first
 
   private fun ReconciliationResponse.findDpsCourtMovementIn(id: UUID) = courtEvents.flatMap { courtEvent ->
     courtEvent.movements.filter { it.directionCode == "IN" }
   }.first { it.dpsId == id }
 
-  private fun OffenderCourtMovementsResponse.findNomisUnscheduledMovementOut(movementId: MovementId) = bookings.flatMap { booking ->
+  private fun OffenderCourtMovementsResponse.findNomisUnscheduledMovementOut(nomisMovementId: NomisMovementId) = bookings.flatMap { booking ->
     booking.unscheduledCourtMovementOuts
       .map { it to booking.bookingId }
-  }.find { it.second == movementId.bookingId && it.first.sequence == movementId.sequence }!!.first
+  }.find { it.second == nomisMovementId.bookingId && it.first.sequence == nomisMovementId.sequence }!!.first
 
-  private fun OffenderCourtMovementsResponse.findNomisUnscheduledMovementIn(movementId: MovementId) = bookings.flatMap { booking ->
+  private fun OffenderCourtMovementsResponse.findNomisUnscheduledMovementIn(nomisMovementId: NomisMovementId) = bookings.flatMap { booking ->
     booking.unscheduledCourtMovementIns
       .map { it to booking.bookingId }
-  }.find { it.second == movementId.bookingId && it.first.sequence == movementId.sequence }!!.first
+  }.find { it.second == nomisMovementId.bookingId && it.first.sequence == nomisMovementId.sequence }!!.first
 
   private fun ReconciliationResponse.findDpsUnscheduledMovementOut(id: UUID) = unscheduledMovements
     .filter { it.directionCode == "OUT" }
@@ -649,7 +650,7 @@ internal class MismatchPrisonerCourtScheduleDetails(
 internal class MismatchPrisonerCourtMovementDetails(
   offenderNo: String,
   type: Type,
-  val nomisMovementId: MovementId,
+  val nomisMovementId: NomisMovementId,
   val dpsCourtMovementId: UUID,
   val nomisValue: String,
   val dpsValue: String,
@@ -660,8 +661,4 @@ internal class MismatchPrisonerCourtMovementDetails(
     PRISON,
     REASON,
   }
-}
-
-internal class MovementId(val bookingId: Long, val sequence: Int) {
-  override fun toString(): String = "${bookingId}_$sequence"
 }

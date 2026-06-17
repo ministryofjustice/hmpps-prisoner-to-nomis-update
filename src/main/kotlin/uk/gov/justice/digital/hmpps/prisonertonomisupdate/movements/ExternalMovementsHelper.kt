@@ -19,3 +19,7 @@ internal fun <SOURCE, TARGET> findMatches(
   .filter { (_, trg) -> trg in targets }
   .filter { (_, trg) -> trg != null }
   .map { (src, trg) -> src to trg!! }
+
+class NomisMovementId(val bookingId: Long, val sequence: Int) {
+  override fun toString(): String = "${bookingId}_$sequence"
+}

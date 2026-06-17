@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtscheduler.model.C
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtscheduler.model.ReconciliationCourtEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingMappingApiMockServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.NomisMovementId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.CourtSchedulerDpsApiExtension.Companion.courtSchedulerDpsApiServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.CourtSchedulerDpsApiMockServer.Companion.courtEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.CourtSchedulerDpsApiMockServer.Companion.courtEventMovement
@@ -713,7 +714,7 @@ class CourtSchedulerReconciliationIntTest(
       fun `should report different prison`() = runTest {
         stubDpsCourtEvent(movementOut = courtEventMovement(fromAgency = "MDI", id = dpsScheduledMovementOutId, directionCode = "OUT"))
         stubNomisCourtEvent(movementOut = bookingCourtMovementOut(seq = 456))
-        stubMappings(MovementId(12345, 456), dpsScheduledMovementOutId)
+        stubMappings(NomisMovementId(12345, 456), dpsScheduledMovementOutId)
 
         reconciliationService.generateCourtSchedulerReconciliationReportBatch()
         awaitReportFinished()
@@ -736,7 +737,7 @@ class CourtSchedulerReconciliationIntTest(
       fun `should report different start time`() = runTest {
         stubDpsCourtEvent(movementOut = courtEventMovement(movementTime = today, id = dpsScheduledMovementOutId, directionCode = "OUT"))
         stubNomisCourtEvent(movementOut = bookingCourtMovementOut(seq = 456))
-        stubMappings(MovementId(12345, 456), dpsScheduledMovementOutId)
+        stubMappings(NomisMovementId(12345, 456), dpsScheduledMovementOutId)
 
         reconciliationService.generateCourtSchedulerReconciliationReportBatch()
         awaitReportFinished()
@@ -759,7 +760,7 @@ class CourtSchedulerReconciliationIntTest(
       fun `should report different reason`() = runTest {
         stubDpsCourtEvent(movementOut = courtEventMovement(movementReasonCode = "CA", id = dpsScheduledMovementOutId, directionCode = "OUT"))
         stubNomisCourtEvent(movementOut = bookingCourtMovementOut(seq = 456))
-        stubMappings(MovementId(12345, 456), dpsScheduledMovementOutId)
+        stubMappings(NomisMovementId(12345, 456), dpsScheduledMovementOutId)
 
         reconciliationService.generateCourtSchedulerReconciliationReportBatch()
         awaitReportFinished()
@@ -782,7 +783,7 @@ class CourtSchedulerReconciliationIntTest(
       fun `should report different court`() = runTest {
         stubDpsCourtEvent(movementOut = courtEventMovement(toAgency = "YORKMC", id = dpsScheduledMovementOutId, directionCode = "OUT"))
         stubNomisCourtEvent(movementOut = bookingCourtMovementOut(seq = 456))
-        stubMappings(MovementId(12345, 456), dpsScheduledMovementOutId)
+        stubMappings(NomisMovementId(12345, 456), dpsScheduledMovementOutId)
 
         reconciliationService.generateCourtSchedulerReconciliationReportBatch()
         awaitReportFinished()
@@ -805,7 +806,7 @@ class CourtSchedulerReconciliationIntTest(
       fun `should NOT report null court`() = runTest {
         stubDpsCourtEvent(movementOut = courtEventMovement(toAgency = null, id = dpsScheduledMovementOutId, directionCode = "OUT"))
         stubNomisCourtEvent(movementOut = bookingCourtMovementOut(seq = 456, court = null))
-        stubMappings(MovementId(12345, 456), dpsScheduledMovementOutId)
+        stubMappings(NomisMovementId(12345, 456), dpsScheduledMovementOutId)
 
         reconciliationService.generateCourtSchedulerReconciliationReportBatch()
         awaitReportFinished()
@@ -838,7 +839,7 @@ class CourtSchedulerReconciliationIntTest(
       fun `should report different prison`() = runTest {
         stubDpsCourtEvent(movementIn = courtEventMovement(toAgency = "MDI", fromAgency = "LEEDMC", id = dpsScheduledMovementInId, directionCode = "IN"))
         stubNomisCourtEvent(movementIn = bookingCourtMovementIn(seq = 789))
-        stubMappings(nomisMovementInId = MovementId(12345, 789), dpsMovementInId = dpsScheduledMovementInId)
+        stubMappings(nomisMovementInId = NomisMovementId(12345, 789), dpsMovementInId = dpsScheduledMovementInId)
 
         reconciliationService.generateCourtSchedulerReconciliationReportBatch()
         awaitReportFinished()
@@ -876,7 +877,7 @@ class CourtSchedulerReconciliationIntTest(
       fun `should report different prison`() = runTest {
         stubDpsUnscheduledCourtMovement(courtEventMovement(fromAgency = "MDI", id = dpsUnscheduledMovementOutId, directionCode = "OUT"))
         stubNomisUnscheduledCourtMovementOut(bookingCourtMovementOut(seq = 654))
-        stubMappings(nomisMovementOutId = MovementId(12345, 654), dpsMovementOutId = dpsUnscheduledMovementOutId)
+        stubMappings(nomisMovementOutId = NomisMovementId(12345, 654), dpsMovementOutId = dpsUnscheduledMovementOutId)
 
         reconciliationService.generateCourtSchedulerReconciliationReportBatch()
         awaitReportFinished()
@@ -914,7 +915,7 @@ class CourtSchedulerReconciliationIntTest(
       fun `should report different court`() = runTest {
         stubDpsUnscheduledCourtMovement(courtEventMovement(toAgency = "BXI", fromAgency = "YORKMC", id = dpsUnscheduledMovementInId, directionCode = "IN"))
         stubNomisUnscheduledCourtMovementIn(bookingCourtMovementIn(seq = 987))
-        stubMappings(nomisMovementInId = MovementId(12345, 987), dpsMovementInId = dpsUnscheduledMovementInId)
+        stubMappings(nomisMovementInId = NomisMovementId(12345, 987), dpsMovementInId = dpsUnscheduledMovementInId)
 
         reconciliationService.generateCourtSchedulerReconciliationReportBatch()
         awaitReportFinished()
@@ -1028,9 +1029,9 @@ class CourtSchedulerReconciliationIntTest(
     )
 
     private fun stubMappings(
-      nomisMovementOutId: MovementId? = null,
+      nomisMovementOutId: NomisMovementId? = null,
       dpsMovementOutId: UUID? = null,
-      nomisMovementInId: MovementId? = null,
+      nomisMovementInId: NomisMovementId? = null,
       dpsMovementInId: UUID? = null,
     ) = mappingApi.stubGetCourtSchedulerPrisonerMappingIds(
       prisonerNumber = offender,
