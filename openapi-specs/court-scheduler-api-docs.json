@@ -6,7 +6,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-06-03.190.5501964"
+    "version" : "2026-06-17.237.bcb6288"
   },
   "servers" : [ {
     "url" : "https://court-appearance-scheduler-api-dev.hmpps.service.justice.gov.uk",
@@ -700,7 +700,7 @@
           "start" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-06-04T09:51:54"
+            "example" : "2026-06-18T09:46:58"
           },
           "courtEventType" : {
             "type" : "string"
@@ -719,6 +719,10 @@
           "externalCourtEventType" : {
             "type" : "boolean",
             "nullable" : true
+          },
+          "currentTerm" : {
+            "type" : "boolean",
+            "nullable" : true
           }
         }
       },
@@ -729,7 +733,7 @@
           "occurredAt" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-06-04T09:51:54"
+            "example" : "2026-06-18T09:46:58"
           },
           "user" : {
             "$ref" : "#/components/schemas/SyncUser"
@@ -786,7 +790,7 @@
           "occurredAt" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-06-04T09:51:54"
+            "example" : "2026-06-18T09:46:58"
           },
           "movementReasonCode" : {
             "type" : "string"
@@ -813,7 +817,7 @@
           "occurredAt" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-06-04T09:51:54"
+            "example" : "2026-06-18T09:46:58"
           },
           "user" : {
             "$ref" : "#/components/schemas/SyncUser"
@@ -830,7 +834,7 @@
           "at" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-06-04T09:51:54"
+            "example" : "2026-06-18T09:46:58"
           },
           "by" : {
             "type" : "string"
@@ -1180,7 +1184,7 @@
           "occurredAt" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-06-04T09:51:54"
+            "example" : "2026-06-18T09:46:58"
           },
           "domainEvents" : {
             "type" : "array",
@@ -1252,7 +1256,7 @@
         }
       },
       "CourtAppearanceSearchRequest" : {
-        "required" : [ "courtCodes", "end", "page", "reason", "size", "sort", "start", "status" ],
+        "required" : [ "end", "page", "size", "sort", "start" ],
         "type" : "object",
         "properties" : {
           "start" : {
@@ -1374,13 +1378,13 @@
           "start" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-06-04T09:51:54"
+            "example" : "2026-06-18T09:46:58"
           },
           "end" : {
             "type" : "string",
             "format" : "date-time",
             "nullable" : true,
-            "example" : "2026-06-04T09:51:54"
+            "example" : "2026-06-18T09:46:58"
           },
           "comments" : {
             "type" : "string",
@@ -1534,13 +1538,13 @@
           "start" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-06-04T09:51:54"
+            "example" : "2026-06-18T09:46:58"
           },
           "end" : {
             "type" : "string",
             "format" : "date-time",
             "nullable" : true,
-            "example" : "2026-06-04T09:51:54"
+            "example" : "2026-06-18T09:46:58"
           },
           "status" : {
             "$ref" : "#/components/schemas/AppearanceStatus"
@@ -1649,13 +1653,13 @@
           "start" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-06-04T09:51:54"
+            "example" : "2026-06-18T09:46:58"
           },
           "end" : {
             "type" : "string",
             "format" : "date-time",
             "nullable" : true,
-            "example" : "2026-06-04T09:51:54"
+            "example" : "2026-06-18T09:46:58"
           },
           "comments" : {
             "type" : "string",
@@ -1719,13 +1723,13 @@
           "start" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-06-04T09:51:54"
+            "example" : "2026-06-18T09:46:58"
           },
           "end" : {
             "type" : "string",
             "format" : "date-time",
             "nullable" : true,
-            "example" : "2026-06-04T09:51:54"
+            "example" : "2026-06-18T09:46:58"
           },
           "comments" : {
             "type" : "string",
@@ -1794,7 +1798,7 @@
           "occurredAt" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-06-04T09:51:54"
+            "example" : "2026-06-18T09:46:58"
           },
           "comments" : {
             "type" : "string",
@@ -1861,13 +1865,13 @@
           "start" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-06-04T09:51:54"
+            "example" : "2026-06-18T09:46:58"
           },
           "end" : {
             "type" : "string",
             "format" : "date-time",
             "nullable" : true,
-            "example" : "2026-06-04T09:51:54"
+            "example" : "2026-06-18T09:46:58"
           },
           "comments" : {
             "type" : "string",
@@ -1875,6 +1879,37 @@
           },
           "status" : {
             "$ref" : "#/components/schemas/AppearanceStatus"
+          },
+          "origin" : {
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/AppearanceOrigin"
+            } ]
+          }
+        }
+      },
+      "AppearanceOrigin" : {
+        "required" : [ "id", "source" ],
+        "type" : "object",
+        "properties" : {
+          "source" : {
+            "$ref" : "#/components/schemas/OriginSource"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }
+      },
+      "OriginSource" : {
+        "required" : [ "code", "name" ],
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
           }
         }
       },
