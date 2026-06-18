@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.staff
 
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import org.junit.jupiter.api.extension.AfterAllCallback
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import tools.jackson.databind.json.JsonMapper
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.staff.StaffDpsApiExtension.Companion.dpsStaffServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.staff.model.ErrorResponse
 
@@ -83,5 +85,33 @@ class StaffDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
           ),
       )
     }
+  }
+
+  fun stubGetStaffIds(
+    pageNumber: Int = 0,
+    pageSize: Int = 1,
+    totalElements: Long = content.size.toLong(),
+    content: List<DpsStaffId>,
+  ) {
+    dpsStaffServer.stubFor(
+      get(urlPathEqualTo("/prison-users/staffIds"))
+        .withQueryParam("page", equalTo(pageNumber.toString()))
+        .withQueryParam("size", equalTo(pageSize.toString()))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.OK.value())
+            .withBody(
+              OfficialVisitsDpsApiExtension.jsonMapper.writeValueAsString(
+                pagedModelDpsStaffIds(
+                  content,
+                  pageSize = pageSize,
+                  pageNumber = pageNumber,
+                  totalElements = totalElements,
+                ),
+              ),
+            ),
+        ),
+    )
   }
 }

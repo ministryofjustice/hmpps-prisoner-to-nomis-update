@@ -68,6 +68,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.PrisonerRestrictionsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.profiledetails.ContactPersonProfileDetailsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing.SentencingReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.staff.StaffReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visitbalances.VisitBalanceReconciliationService
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 
@@ -102,6 +103,7 @@ class BatchManagerTest {
   private val prisonerRestrictionsReconciliationService = mock<PrisonerRestrictionsReconciliationService>()
   private val schedulesService = mock<SchedulesService>()
   private val sentencingReconciliationService = mock<SentencingReconciliationService>()
+  private val staffReconciliationService = mock<StaffReconciliationService>()
   private val tapActivePrisonersReconciliationService = mock<TapActivePrisonersReconciliationService>()
   private val tapAllPrisonersReconciliationService = mock<TapAllPrisonersReconciliationService>()
   private val visitBalanceReconciliationService = mock<VisitBalanceReconciliationService>()
@@ -449,6 +451,16 @@ class BatchManagerTest {
   }
 
   @Test
+  fun `should call the staff reconciliation service`() = runTest {
+    val batchManager = batchManager(BatchType.STAFF_RECON)
+
+    batchManager.onApplicationEvent(event)
+
+    verify(staffReconciliationService).generateReconciliationReportBatch()
+    verify(context).close()
+  }
+
+  @Test
   fun `should call the TAP active prisoner reconciliation service`() = runTest {
     val batchManager = batchManager(BatchType.TAP_ACTIVE_PRISONERS_RECON)
 
@@ -518,6 +530,7 @@ class BatchManagerTest {
     prisonerBalanceReconciliationService = prisonerBalanceReconciliationService,
     prisonerRestrictionsReconciliationService = prisonerRestrictionsReconciliationService,
     schedulesService = schedulesService,
+    staffReconciliationService = staffReconciliationService,
     sentencingReconciliationService = sentencingReconciliationService,
     tapActivePrisonersReconciliationService = tapActivePrisonersReconciliationService,
     tapAllPrisonersReconciliationService = tapAllPrisonersReconciliationService,
