@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-06-16.1893.6eba3fd"
+    "version" : "2026-06-17.1914.7162563"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -6728,7 +6728,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "09:53:31.113287102"
+            "example" : "07:34:13.222875066"
           },
           "outcomeDispositionCode" : {
             "type" : [ "string", "null" ]
@@ -7104,7 +7104,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "09:53:31.113287102"
+            "example" : "07:34:13.222875066"
           },
           "courtCode" : {
             "type" : "string"
@@ -9807,7 +9807,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "09:53:31.113287102"
+            "example" : "07:34:13.222875066"
           },
           "courtCode" : {
             "type" : "string"
@@ -10495,7 +10495,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "09:53:31.113287102"
+            "example" : "07:34:13.222875066"
           },
           "nomisOutcomeCode" : {
             "type" : [ "string", "null" ]
@@ -10574,7 +10574,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "09:53:31.113287102"
+            "example" : "07:34:13.222875066"
           },
           "courtId" : {
             "type" : "string"
@@ -10726,7 +10726,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "09:53:31.113287102"
+            "example" : "07:34:13.222875066"
           },
           "charges" : {
             "type" : "array",
@@ -10760,7 +10760,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "09:53:31.113287102"
+            "example" : "07:34:13.222875066"
           },
           "courtId" : {
             "type" : "string"
@@ -10935,14 +10935,12 @@
             "type" : "string",
             "format" : "date-time"
           },
-          "isDomesticViolenceRelated" : {
-            "type" : [ "boolean", "null" ]
-          },
-          "isTerrorRelated" : {
-            "type" : [ "boolean", "null" ]
-          },
-          "isForeignPowerRelated" : {
-            "type" : [ "boolean", "null" ]
+          "aggravatingFactors" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/AggravatingFactors"
+            }, {
+              "type" : "null"
+            } ]
           }
         },
         "required" : [ "createdAt", "isRecallable", "periodLengths", "sentenceTypeUuid", "sentenceUuid", "systemOfRecord" ]
@@ -11050,19 +11048,19 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
-          "pageSize" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
           "paged" : {
+            "type" : "boolean"
+          },
+          "unpaged" : {
             "type" : "boolean"
           },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
           },
-          "unpaged" : {
-            "type" : "boolean"
+          "pageSize" : {
+            "type" : "integer",
+            "format" : "int32"
           }
         }
       },
@@ -11351,7 +11349,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "09:53:31.113287102"
+            "example" : "07:34:13.222875066"
           },
           "courtCode" : {
             "type" : [ "string", "null" ]
@@ -11538,10 +11536,10 @@
           "empty" : {
             "type" : "boolean"
           },
-          "sorted" : {
+          "unsorted" : {
             "type" : "boolean"
           },
-          "unsorted" : {
+          "sorted" : {
             "type" : "boolean"
           }
         }
