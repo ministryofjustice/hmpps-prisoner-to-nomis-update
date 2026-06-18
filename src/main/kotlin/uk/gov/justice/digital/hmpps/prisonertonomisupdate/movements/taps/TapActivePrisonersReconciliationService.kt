@@ -431,7 +431,7 @@ class TapActivePrisonersReconciliationService(
         }
 
         // accompanied by must match
-        if (dpsMovement.accompaniedByCode != nomisMovementOut.escort) {
+        if (dpsMovement.accompaniedByCode != (nomisMovementOut.escort ?: NULL_NOMIS_ESCORT_CODE)) {
           mismatches.add(mismatch(MismatchedPrisonerTapMovementDetails.Type.MOVEMENT_ACCOMPANIED_BY, "${nomisMovementOut.escort}", dpsMovement.accompaniedByCode))
         }
 
