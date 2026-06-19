@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-06-17.1914.7162563"
+    "version" : "2026-06-19.1933.98233db"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -49,6 +49,9 @@
   }, {
     "name" : "legacy-recall-controller",
     "description" : "GET operation for syncing recall data. This controller is only ever used for syncing DPS recalls to NOMIS."
+  }, {
+    "name" : "court-appearance-schedules-controller",
+    "description" : "Court Appearance schedules"
   }, {
     "name" : "appearance-outcome-controller",
     "description" : "Appearance outcome"
@@ -779,7 +782,11 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/UnlinkEventsToEmit"
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/EventMetadata"
+                  },
+                  "uniqueItems" : true
                 }
               }
             }
@@ -789,7 +796,11 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/UnlinkEventsToEmit"
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/EventMetadata"
+                  },
+                  "uniqueItems" : true
                 }
               }
             }
@@ -799,7 +810,11 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/UnlinkEventsToEmit"
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/EventMetadata"
+                  },
+                  "uniqueItems" : true
                 }
               }
             }
@@ -1342,7 +1357,11 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/PairEntityChangeStatusLegacyChargeCreatedResponse"
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/EventMetadata"
+                  },
+                  "uniqueItems" : true
                 }
               }
             }
@@ -1352,7 +1371,11 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/PairEntityChangeStatusLegacyChargeCreatedResponse"
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/EventMetadata"
+                  },
+                  "uniqueItems" : true
                 }
               }
             }
@@ -1362,7 +1385,11 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/PairEntityChangeStatusLegacyChargeCreatedResponse"
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/EventMetadata"
+                  },
+                  "uniqueItems" : true
                 }
               }
             }
@@ -2376,6 +2403,56 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/FieldErrorErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/search/court-appearance-schedules" : {
+      "post" : {
+        "tags" : [ "court-appearance-schedules-controller" ],
+        "summary" : "Search court appearance schedules",
+        "description" : "This endpoint will search for court appearance in the schedules format for supplied UUIDs",
+        "operationId" : "searchCourtAppearanceSchedules",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SearchCourtAppearanceSchedulesRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Returns court case UUID",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SearchCourtAppearanceSchedulesResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SearchCourtAppearanceSchedulesResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SearchCourtAppearanceSchedulesResponse"
                 }
               }
             }
@@ -6593,28 +6670,12 @@
           },
           "originalSentenceId" : {
             "type" : [ "string", "null" ]
+          },
+          "isOnFutureAppearance" : {
+            "type" : [ "boolean", "null" ]
           }
         },
         "required" : [ "eventType", "prisonerId" ]
-      },
-      "UnlinkEventsToEmit" : {
-        "type" : "object",
-        "properties" : {
-          "courtCaseEventMetadata" : {
-            "oneOf" : [ {
-              "$ref" : "#/components/schemas/EventMetadata"
-            }, {
-              "type" : "null"
-            } ]
-          },
-          "chargesEventMetadata" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/EventMetadata"
-            }
-          }
-        },
-        "required" : [ "chargesEventMetadata" ]
       },
       "LegacyLinkCase" : {
         "type" : "object",
@@ -6728,7 +6789,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:34:13.222875066"
+            "example" : "09:21:35.884504536"
           },
           "outcomeDispositionCode" : {
             "type" : [ "string", "null" ]
@@ -6737,6 +6798,9 @@
             "type" : [ "boolean", "null" ]
           },
           "nomisAppearanceTypeCode" : {
+            "type" : [ "string", "null" ]
+          },
+          "comments" : {
             "type" : [ "string", "null" ]
           }
         }
@@ -6828,35 +6892,6 @@
           }
         },
         "required" : [ "linkedDate", "sourceCourtCaseUuid" ]
-      },
-      "LegacyChargeCreatedResponse" : {
-        "type" : "object",
-        "properties" : {
-          "lifetimeUuid" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "courtCaseUuid" : {
-            "type" : "string"
-          },
-          "prisonerId" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "courtCaseUuid", "lifetimeUuid", "prisonerId" ]
-      },
-      "PairEntityChangeStatusLegacyChargeCreatedResponse" : {
-        "type" : "object",
-        "properties" : {
-          "first" : {
-            "type" : "string",
-            "enum" : [ "NO_CHANGE", "CREATED", "EDITED", "DELETED" ]
-          },
-          "second" : {
-            "$ref" : "#/components/schemas/LegacyChargeCreatedResponse"
-          }
-        },
-        "required" : [ "first", "second" ]
       },
       "LegacyUpdateWholeCharge" : {
         "type" : "object",
@@ -7104,7 +7139,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:34:13.222875066"
+            "example" : "09:21:35.884504536"
           },
           "courtCode" : {
             "type" : "string"
@@ -7475,6 +7510,66 @@
           }
         },
         "required" : [ "sentenceUuid" ]
+      },
+      "SearchCourtAppearanceSchedulesRequest" : {
+        "type" : "object",
+        "properties" : {
+          "uuids" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        },
+        "required" : [ "uuids" ]
+      },
+      "AppearanceScheduleReason" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "code" ]
+      },
+      "CourtAppearanceSchedule" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "personIdentifier" : {
+            "type" : "string"
+          },
+          "courtCode" : {
+            "type" : "string"
+          },
+          "reason" : {
+            "$ref" : "#/components/schemas/AppearanceScheduleReason"
+          },
+          "start" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "isDuplicate" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "courtCode", "id", "isDuplicate", "personIdentifier", "reason", "start" ]
+      },
+      "SearchCourtAppearanceSchedulesResponse" : {
+        "type" : "object",
+        "properties" : {
+          "courtAppearances" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CourtAppearanceSchedule"
+            }
+          }
+        },
+        "required" : [ "courtAppearances" ]
       },
       "IsRecallPossibleRequest" : {
         "type" : "object",
@@ -8642,6 +8737,22 @@
         },
         "required" : [ "appearanceLifetimeUuid", "legacyData", "offenceCode" ]
       },
+      "LegacyChargeCreatedResponse" : {
+        "type" : "object",
+        "properties" : {
+          "lifetimeUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "courtCaseUuid" : {
+            "type" : "string"
+          },
+          "prisonerId" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "courtCaseUuid", "lifetimeUuid", "prisonerId" ]
+      },
       "RepublishEvents" : {
         "type" : "object",
         "properties" : {
@@ -9807,7 +9918,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:34:13.222875066"
+            "example" : "09:21:35.884504536"
           },
           "courtCode" : {
             "type" : "string"
@@ -10495,7 +10606,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:34:13.222875066"
+            "example" : "09:21:35.884504536"
           },
           "nomisOutcomeCode" : {
             "type" : [ "string", "null" ]
@@ -10574,7 +10685,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:34:13.222875066"
+            "example" : "09:21:35.884504536"
           },
           "courtId" : {
             "type" : "string"
@@ -10726,7 +10837,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:34:13.222875066"
+            "example" : "09:21:35.884504536"
           },
           "charges" : {
             "type" : "array",
@@ -10760,7 +10871,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:34:13.222875066"
+            "example" : "09:21:35.884504536"
           },
           "courtId" : {
             "type" : "string"
@@ -11048,19 +11159,19 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
-          "unpaged" : {
-            "type" : "boolean"
-          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
           },
+          "paged" : {
+            "type" : "boolean"
+          },
           "pageSize" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "unpaged" : {
+            "type" : "boolean"
           }
         }
       },
@@ -11349,7 +11460,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:34:13.222875066"
+            "example" : "09:21:35.884504536"
           },
           "courtCode" : {
             "type" : [ "string", "null" ]
@@ -11536,10 +11647,10 @@
           "empty" : {
             "type" : "boolean"
           },
-          "unsorted" : {
+          "sorted" : {
             "type" : "boolean"
           },
-          "sorted" : {
+          "unsorted" : {
             "type" : "boolean"
           }
         }
