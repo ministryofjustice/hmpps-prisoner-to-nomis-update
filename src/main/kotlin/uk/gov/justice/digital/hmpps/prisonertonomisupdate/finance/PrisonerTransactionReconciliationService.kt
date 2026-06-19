@@ -22,13 +22,11 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.UUID
 
 @Service
 class PrisonerTransactionReconciliationService(
   private val telemetryClient: TelemetryClient,
   private val nomisApiService: TransactionNomisApiService,
-  private val mappingApiService: TransactionMappingApiService,
   private val dpsApiService: FinanceDpsApiService,
   @param:Value($$"${reports.prisoner-transactions.reconciliation.page-size:20}") private val pageSize: Int = 20,
 ) {
@@ -37,7 +35,7 @@ class PrisonerTransactionReconciliationService(
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  // Batch job reconciles on the previous day's transactions - but we allow date param for testing
+  // Batch job reconciles on the previous day's transactions - but we allow date param for testing/re-runs
   suspend fun generateReconciliationReportBatch(entryDate: LocalDate = LocalDate.now().minusDays(1)) {
     telemetryClient.trackEvent("$TELEMETRY_PRISONER_PREFIX-requested", mapOf("date" to entryDate))
 
@@ -102,16 +100,11 @@ class PrisonerTransactionReconciliationService(
         nomisApiService.getPrisonerTransaction(nomisTransactionId)
       } to
         async {
-          val mapping = mappingApiService.getByNomisTransactionIdOrNull(nomisTransactionId)
-          if (mapping != null) {
-            val dpsTransaction = dpsApiService.getPrisonerTransactionOrNull(UUID.fromString(mapping.dpsTransactionId))
-            if (dpsTransaction == null) {
-              NoDpsTransaction(mapping.dpsTransactionId)
-            } else {
-              Transaction(dpsTransaction)
-            }
+          val dpsTransactionResponse = dpsApiService.getPrisonerTransactionOrNull(nomisTransactionId)
+          if (dpsTransactionResponse == null) {
+            NoDpsTransaction(nomisTransactionId)
           } else {
-            NoMapping()
+            Transaction(dpsTransactionResponse)
           }
         }
     }.awaitBoth()
@@ -119,29 +112,16 @@ class PrisonerTransactionReconciliationService(
     val prisonNumber = nomisTransaction.first().offenderNo
 
     return when (dpsTransactionResult) {
-      is NoMapping -> {
-        telemetryClient.trackEvent(
-          "$TELEMETRY_PRISONER_PREFIX-mismatch",
-          mapOf(
-            "nomisTransactionId" to nomisTransactionId.toString(),
-            "prisonNumber" to prisonNumber,
-            "reason" to "transaction-mapping-missing",
-          ),
-        )
-        MismatchPrisonerTransaction(nomisTransactionId = nomisTransactionId, prisonNumber = prisonNumber, reason = "transaction-mapping-missing")
-      }
-
       is NoDpsTransaction -> {
         telemetryClient.trackEvent(
           "$TELEMETRY_PRISONER_PREFIX-mismatch",
           mapOf(
             "nomisTransactionId" to nomisTransactionId.toString(),
-            "dpsTransactionId" to dpsTransactionResult.transactionId,
             "prisonNumber" to prisonNumber,
             "reason" to "dps-transaction-missing",
           ),
         )
-        MismatchPrisonerTransaction(nomisTransactionId = nomisTransactionId, dpsTransactionId = dpsTransactionResult.transactionId, prisonNumber = prisonNumber, reason = "dps-transaction-missing")
+        MismatchPrisonerTransaction(nomisTransactionId = nomisTransactionId, prisonNumber = prisonNumber, reason = "dps-transaction-missing")
       }
 
       is Transaction -> {
@@ -195,6 +175,8 @@ data class MismatchPrisonerTransaction(
 
 data class PrisonerTransactionSummary(
   val prisonId: String,
+  // TODO Add in
+  // val prisonNumber: String,
   val nomisTransactionId: Long,
   val entryDateTime: LocalDateTime,
   val entries: List<PrisonerTransactionEntry>,
@@ -239,5 +221,4 @@ fun OffenderTransaction.toPrisonerTransactionEntry() = PrisonerTransactionEntry(
 
 sealed interface DpsTransactionResult
 data class Transaction(val transaction: SyncOffenderTransactionResponse) : DpsTransactionResult
-class NoMapping : DpsTransactionResult
-data class NoDpsTransaction(val transactionId: String) : DpsTransactionResult
+data class NoDpsTransaction(val nomisTransactionId: Long) : DpsTransactionResult

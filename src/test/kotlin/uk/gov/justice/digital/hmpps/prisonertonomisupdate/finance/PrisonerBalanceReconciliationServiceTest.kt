@@ -20,13 +20,12 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationErrorPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationSuccessPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerAccountDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerBalanceDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AccountSummaryDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerBalanceSummaryDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RootOffenderIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import java.math.BigDecimal
-import java.time.LocalDateTime
 
 const val OFFENDER_NO = "A5678BZ"
 const val OFFENDER_ID = 123456789000L
@@ -62,25 +61,25 @@ class PrisonerBalanceReconciliationServiceTest {
 
   @Nested
   inner class CheckMatch {
-    private fun stubBalance(nomisBalance: PrisonerBalanceDto, dpsBalance: PrisonerEstablishmentBalanceDetailsList) {
-      financeNomisApi.stubGetPrisonerAccountDetails(OFFENDER_ID, nomisBalance)
-      dpsApi.stubListPrisonerAccounts(OFFENDER_NO, dpsBalance)
+    private fun stubBalanceSummary(nomisBalance: PrisonerBalanceSummaryDto, dpsBalance: PrisonerEstablishmentBalanceDetailsList) {
+      financeNomisApi.stubGetPrisonerAccountSummary(OFFENDER_ID, nomisBalance)
+      dpsApi.stubGetPrisonerAccountSummary(OFFENDER_NO, dpsBalance)
     }
 
     @Test
     fun `will not report a mismatch when no differences found`() = runTest {
-      stubBalance(
-        nomisPrisonerBalanceResponse(),
-        dpsPrisonerAccountResponse(),
+      stubBalanceSummary(
+        nomisPrisonerBalanceSummary(),
+        dpsPrisonerAccountSummary(),
       )
       assertThat(service.checkPrisonerBalance(OFFENDER_ID)).isNull()
     }
 
     @Test
     fun `will report an extra DPS account`() = runTest {
-      stubBalance(
-        nomisPrisonerBalanceResponse().copy(accounts = listOf()),
-        dpsPrisonerAccountResponse(),
+      stubBalanceSummary(
+        nomisPrisonerBalanceSummary().copy(accounts = listOf()),
+        dpsPrisonerAccountSummary(),
       )
       assertThat(service.checkPrisonerBalance(OFFENDER_ID)?.differences).isEqualTo(
         listOf(
@@ -91,9 +90,9 @@ class PrisonerBalanceReconciliationServiceTest {
 
     @Test
     fun `will report an extra Nomis account`() = runTest {
-      stubBalance(
-        nomisPrisonerBalanceResponse().copy(accounts = listOf(nomisAccount(1001), nomisAccount(1002))),
-        dpsPrisonerAccountResponse(),
+      stubBalanceSummary(
+        nomisPrisonerBalanceSummary().copy(accounts = listOf(nomisAccountSummary(1001), nomisAccountSummary(1002))),
+        dpsPrisonerAccountSummary(),
       )
       assertThat(service.checkPrisonerBalance(OFFENDER_ID)?.differences).isEqualTo(
         listOf(
@@ -104,18 +103,18 @@ class PrisonerBalanceReconciliationServiceTest {
 
     @Test
     fun `will not report a mismatch when accounts are in a different order`() = runTest {
-      stubBalance(
-        nomisPrisonerBalanceResponse().copy(accounts = listOf(nomisAccount(1001), nomisAccount(1002))),
-        dpsPrisonerAccountResponse().copy(items = listOf(dpsAccount(1002), dpsAccount(1001))),
+      stubBalanceSummary(
+        nomisPrisonerBalanceSummary().copy(accounts = listOf(nomisAccountSummary(1001), nomisAccountSummary(1002))),
+        dpsPrisonerAccountSummary().copy(items = listOf(dpsAccount(1002), dpsAccount(1001))),
       )
       assertThat(service.checkPrisonerBalance(OFFENDER_ID)).isNull()
     }
 
     @Test
     fun `will report a balance mismatch`() = runTest {
-      val dps = dpsPrisonerAccountResponse()
-      stubBalance(
-        nomisPrisonerBalanceResponse(),
+      val dps = dpsPrisonerAccountSummary()
+      stubBalanceSummary(
+        nomisPrisonerBalanceSummary(),
         dps.copy(items = listOf(dps.items.first().copy(totalBalance = BigDecimal("100")))),
       )
       assertThat(service.checkPrisonerBalance(OFFENDER_ID)?.differences).isEqualTo(
@@ -127,9 +126,9 @@ class PrisonerBalanceReconciliationServiceTest {
 
     @Test
     fun `will report a hold balance mismatch`() = runTest {
-      val dps = dpsPrisonerAccountResponse()
-      stubBalance(
-        nomisPrisonerBalanceResponse(),
+      val dps = dpsPrisonerAccountSummary()
+      stubBalanceSummary(
+        nomisPrisonerBalanceSummary(),
         dps.copy(items = listOf(dps.items.first().copy(holdBalance = BigDecimal("100")))),
       )
       assertThat(service.checkPrisonerBalance(OFFENDER_ID)?.differences).isEqualTo(
@@ -141,10 +140,10 @@ class PrisonerBalanceReconciliationServiceTest {
 
     @Test
     fun `will handle a null hold balance`() = runTest {
-      val nomis = nomisPrisonerBalanceResponse()
-      stubBalance(
+      val nomis = nomisPrisonerBalanceSummary()
+      stubBalanceSummary(
         nomis.copy(accounts = listOf(nomis.accounts.first().copy(holdBalance = null))),
-        dpsPrisonerAccountResponse(),
+        dpsPrisonerAccountSummary(),
       )
       assertThat(service.checkPrisonerBalance(OFFENDER_ID)?.differences).isEqualTo(
         listOf(
@@ -155,9 +154,9 @@ class PrisonerBalanceReconciliationServiceTest {
 
     @Test
     fun `will handle a null hold balance matching zero in dps`() = runTest {
-      val nomis = nomisPrisonerBalanceResponse()
-      val dps = dpsPrisonerAccountResponse()
-      stubBalance(
+      val nomis = nomisPrisonerBalanceSummary()
+      val dps = dpsPrisonerAccountSummary()
+      stubBalanceSummary(
         nomis.copy(accounts = listOf(nomis.accounts.first().copy(holdBalance = null))),
         dps.copy(items = listOf(dps.items.first().copy(holdBalance = BigDecimal.ZERO))),
 
@@ -167,63 +166,25 @@ class PrisonerBalanceReconciliationServiceTest {
 
     @Test
     fun `will handle an equal hold balance with different scale`() = runTest {
-      val nomis = nomisPrisonerBalanceResponse()
-      stubBalance(
+      val nomis = nomisPrisonerBalanceSummary()
+      stubBalanceSummary(
         nomis.copy(accounts = listOf(nomis.accounts.first().copy(holdBalance = BigDecimal("0.30")))),
-        dpsPrisonerAccountResponse(),
+        dpsPrisonerAccountSummary(),
       )
       assertThat(service.checkPrisonerBalance(OFFENDER_ID)?.differences).isNull()
     }
 
     @Test
     fun `will report an account code mismatch`() = runTest {
-      val dps = dpsPrisonerAccountResponse()
-      stubBalance(
-        nomisPrisonerBalanceResponse(),
+      val dps = dpsPrisonerAccountSummary()
+      stubBalanceSummary(
+        nomisPrisonerBalanceSummary(),
         dps.copy(items = listOf(dps.items.first().copy(accountCode = 1234))),
       )
       assertThat(service.checkPrisonerBalance(OFFENDER_ID)?.differences).isEqualTo(
         listOf(
           Difference(property = "prisoner-balances.accounts[0].accountCode", dps = 1234, nomis = 1001),
         ),
-      )
-    }
-
-    @Test
-    fun `will report a mismatch if same accounts at different prisons`() = runTest {
-      val nomis = nomisPrisonerBalanceResponse()
-      stubBalance(
-        nomis.copy(accounts = listOf(nomis.accounts.first().copy(prisonId = "ASI"))),
-        dpsPrisonerAccountResponse(),
-      )
-      assertThat(service.checkPrisonerBalance(OFFENDER_ID)?.differences).isEqualTo(
-        listOf(
-          Difference(property = "prisoner-balances.accounts[0].prisonId", dps = "MDI", nomis = "ASI"),
-        ),
-      )
-    }
-
-    @Test
-    fun `will report a mismatch if same account codes in different prisons`() = runTest {
-      val nomis = nomisPrisonerBalanceResponse()
-      val dps = dpsPrisonerAccountResponse()
-      stubBalance(
-        nomis.copy(
-          accounts = listOf(
-            nomis.accounts.first().copy(accountCode = 1234),
-            nomis.accounts.first().copy(prisonId = "ASI"),
-          ),
-        ),
-        dpsPrisonerAccountResponse().copy(
-          items = listOf(
-            dps.items.first(),
-            dps.items.first().copy(prisonId = "ASI", accountCode = 1234),
-          ),
-        ),
-      )
-      assertThat(service.checkPrisonerBalance(OFFENDER_ID)?.differences).containsExactly(
-        Difference(property = "prisoner-balances.accounts[0].accountCode", dps = 1234, nomis = 1001),
-        Difference(property = "prisoner-balances.accounts[1].accountCode", dps = 1001, nomis = 1234),
       )
     }
   }
@@ -286,20 +247,17 @@ class PrisonerBalanceReconciliationServiceTest {
   }
 }
 
-fun nomisPrisonerBalanceResponse() = PrisonerBalanceDto(
+fun nomisPrisonerBalanceSummary() = PrisonerBalanceSummaryDto(
   rootOffenderId = OFFENDER_ID,
   prisonNumber = OFFENDER_NO,
-  accounts = listOf(nomisAccount(1001)),
+  accounts = listOf(nomisAccountSummary(1001)),
 )
 
-fun dpsPrisonerAccountResponse() = PrisonerEstablishmentBalanceDetailsList(
+fun dpsPrisonerAccountSummary() = PrisonerEstablishmentBalanceDetailsList(
   items = listOf(dpsAccount(1001)),
 )
 
-private fun nomisAccount(accountCode: Long = 1001): PrisonerAccountDto = PrisonerAccountDto(
-  prisonId = "MDI",
-  lastTransactionId = 999999L,
-  transactionDate = LocalDateTime.now(),
+private fun nomisAccountSummary(accountCode: Long = 1001) = AccountSummaryDto(
   accountCode = accountCode,
   balance = BigDecimal.valueOf(1.5),
   holdBalance = BigDecimal.valueOf(0.3),

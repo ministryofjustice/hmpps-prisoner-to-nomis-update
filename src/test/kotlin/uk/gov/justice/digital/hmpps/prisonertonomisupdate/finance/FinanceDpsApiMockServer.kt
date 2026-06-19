@@ -143,16 +143,24 @@ class FinanceDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       }
   }
 
-  fun stubGetPrisonerTransaction(dpsTransactionId: String, response: SyncOffenderTransactionResponse? = prisonerTransaction(dpsId = UUID.fromString(dpsTransactionId))) {
+  fun stubGetPrisonerTransaction(
+    nomisTransactionId: Long,
+    dpsTransactionId: String = UUID.randomUUID().toString(),
+    response: SyncOffenderTransactionResponse? =
+      prisonerTransaction(
+        nomisTransactionId = nomisTransactionId,
+        dpsId = UUID.fromString(dpsTransactionId),
+      ),
+  ) {
     response?.apply {
       stubFor(
-        get("/sync/offender-transactions/$dpsTransactionId")
+        get("/reconcile/offender-transactions/$nomisTransactionId")
           .willReturn(okJson(jsonMapper.writeValueAsString(response))),
       )
     }
       ?: run {
         stubFor(
-          get("/sync/general-ledger-transactions/$dpsTransactionId")
+          get("/reconcile/general-ledger-transactions/$nomisTransactionId")
             .willReturn(
               aResponse()
                 .withHeader("Content-Type", "application/json")
@@ -187,7 +195,7 @@ class FinanceDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubListPrisonerAccounts(prisonNumber: String, response: PrisonerEstablishmentBalanceDetailsList) {
+  fun stubGetPrisonerAccountSummary(prisonNumber: String, response: PrisonerEstablishmentBalanceDetailsList) {
     stubFor(
       get("/reconcile/prisoner-balances/$prisonNumber")
         .willReturn(okJson(jsonMapper.writeValueAsString(response))),

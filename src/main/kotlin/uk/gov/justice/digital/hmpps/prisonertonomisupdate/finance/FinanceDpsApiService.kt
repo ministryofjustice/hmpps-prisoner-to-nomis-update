@@ -30,7 +30,7 @@ class FinanceDpsApiService(
     .retryWhen(backoffSpec)
     .awaitSingle()
 
-  suspend fun getPrisonerAccounts(prisonNumber: String): PrisonerEstablishmentBalanceDetailsList = syncApi
+  suspend fun getPrisonerAccountSummary(prisonNumber: String): PrisonerEstablishmentBalanceDetailsList = syncApi
     .listPrisonerBalancesByEstablishment(prisonNumber)
     .retryWhen(backoffSpec)
     .awaitSingle()
@@ -39,8 +39,6 @@ class FinanceDpsApiService(
     .getGeneralLedgerTransactionById(id)
     .awaitSingle()
 
-  suspend fun getPrisonerTransactionOrNull(id: UUID): SyncOffenderTransactionResponse? = syncApi
-    .prepare(syncApi.getOffenderTransactionByIdRequestConfig(id))
-    .retrieve()
+  suspend fun getPrisonerTransactionOrNull(nomisTransactionId: Long): SyncOffenderTransactionResponse? = syncApi.getTransactionReconciliationById(nomisTransactionId)
     .awaitBodyOrNullForNotFound(retrySpec = backoffSpec)
 }

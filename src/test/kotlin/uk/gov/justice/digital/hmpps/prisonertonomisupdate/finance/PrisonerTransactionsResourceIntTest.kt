@@ -77,6 +77,7 @@ class PrisonerTransactionsResourceIntTest(
           dpsTransactionId = dpsTransactionId,
         )
         dpsApi.stubGetPrisonerTransaction(
+          nomisTransactionId = nomisTransactionId,
           dpsTransactionId = dpsTransactionId,
           response = prisonerTransaction(nomisTransactionId = nomisTransactionId, dpsId = UUID.fromString(dpsTransactionId)),
         )
@@ -97,7 +98,8 @@ class PrisonerTransactionsResourceIntTest(
       @Test
       fun `will return mismatch data`() {
         dpsApi.stubGetPrisonerTransaction(
-          dpsTransactionId,
+          nomisTransactionId = nomisTransactionId,
+          dpsTransactionId = dpsTransactionId,
           response = prisonerTransaction(nomisTransactionId = nomisTransactionId, dpsId = UUID.fromString(dpsTransactionId)).copy(caseloadId = "SWI"),
         )
 

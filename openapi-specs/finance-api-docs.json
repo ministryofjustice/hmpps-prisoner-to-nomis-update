@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-06-15.844.5505a11"
+    "version" : "2026-06-19.867.22e09b8"
   },
   "servers" : [ {
     "url" : "https://prisoner-finance-sync-api-dev.hmpps.service.justice.gov.uk/",
@@ -874,127 +874,18 @@
         } ]
       }
     },
-    "/reconcile/offender-transactions" : {
-      "get" : {
-        "tags" : [ "NOMIS Sync" ],
-        "summary" : "Retrieve paginated list of offender transactions by a date range using data from the prisoner general ledger",
-        "operationId" : "getTransactionReconciliationByDateRange",
-        "parameters" : [ {
-          "name" : "startDate",
-          "in" : "query",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "format" : "date"
-          }
-        }, {
-          "name" : "endDate",
-          "in" : "query",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "format" : "date"
-          }
-        }, {
-          "name" : "pageNumber",
-          "in" : "query",
-          "required" : false,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int32",
-            "default" : 1,
-            "minimum" : 1
-          }
-        }, {
-          "name" : "pageSize",
-          "in" : "query",
-          "required" : false,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int32",
-            "default" : 25,
-            "minimum" : 1
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Retrieve offender transactions by a date range using data from the prisoner general ledger",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/SyncGeneralLedgerTransactionResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad request - invalid input data.",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized - requires a valid OAuth2 token",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden - requires an appropriate role",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error - An unexpected error occurred.",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "502" : {
-            "description" : "General Ledger threw an unexpected 5XX error.",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        },
-        "security" : [ {
-          "bearer-jwt" : [ "ROLE_PRISONER_FINANCE_SYNC__RW" ]
-        } ]
-      }
-    },
-    "/reconcile/offender-transactions/{synchronizedTransactionId}" : {
+    "/reconcile/offender-transactions/{legacyTransactionId}" : {
       "get" : {
         "tags" : [ "NOMIS Sync" ],
         "summary" : "Retrieve an offender transaction by its ID using data from the prisoner general ledger",
         "operationId" : "getTransactionReconciliationById",
         "parameters" : [ {
-          "name" : "synchronizedTransactionId",
+          "name" : "legacyTransactionId",
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string",
-            "format" : "uuid"
+            "type" : "integer",
+            "format" : "int64"
           }
         } ],
         "responses" : {
@@ -1003,7 +894,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/SyncGeneralLedgerTransactionResponse"
+                  "$ref" : "#/components/schemas/SyncOffenderTransactionResponse"
                 }
               }
             }
@@ -1039,7 +930,7 @@
             }
           },
           "404" : {
-            "description" : "Not Found - Prison Number not found",
+            "description" : "Not Found - Legacy transaction id not found",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -1583,7 +1474,7 @@
             "example" : 1
           },
           "offenderId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The internal ID of the offender.",
             "example" : 1015388
@@ -1883,7 +1774,7 @@
         "description" : "A response containing a list of offender transactions",
         "properties" : {
           "synchronizedTransactionId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid",
             "description" : "The unique UUID generated by the **finance system** for the synchronized transaction. This is the internal identifier for the created or updated record.",
             "example" : "f1e2d3c4-b5a6-9876-5432-10fedcba9876"
@@ -2223,9 +2114,13 @@
             "type" : "string",
             "format" : "date-time"
           },
-          "requestId" : {
+          "synchronizedTransactionId" : {
             "type" : "string",
             "format" : "uuid"
+          },
+          "legacyTransactionId" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int64"
           },
           "caseloadId" : {
             "type" : [ "string", "null" ]
@@ -2234,16 +2129,12 @@
             "type" : [ "string", "null" ],
             "format" : "date-time"
           },
-          "synchronizedTransactionId" : {
+          "requestId" : {
             "type" : "string",
             "format" : "uuid"
           },
           "requestTypeIdentifier" : {
             "type" : [ "string", "null" ]
-          },
-          "legacyTransactionId" : {
-            "type" : [ "integer", "null" ],
-            "format" : "int64"
           },
           "transactionType" : {
             "type" : [ "string", "null" ]

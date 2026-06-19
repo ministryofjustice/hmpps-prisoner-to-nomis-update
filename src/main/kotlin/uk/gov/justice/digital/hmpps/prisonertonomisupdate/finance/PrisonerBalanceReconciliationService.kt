@@ -78,13 +78,12 @@ class PrisonerBalanceReconciliationService(
   )
 
   internal suspend fun checkPrisonerBalance(rootOffenderId: Long): MismatchPrisonerBalance? = runCatching {
-    val nomisResponse = financeNomisApiService.getPrisonerAccountDetails(rootOffenderId)
-    val dpsResponse = dpsApiService.getPrisonerAccounts(nomisResponse.prisonNumber)
+    val nomisAccountSummary = financeNomisApiService.getPrisonerAccountSummary(rootOffenderId)
+    val dpsAccountSummary = dpsApiService.getPrisonerAccountSummary(nomisAccountSummary.prisonNumber)
     val nomisFields = BalanceFields(
-      prisonNumber = nomisResponse.prisonNumber,
-      accounts = nomisResponse.accounts.map {
+      prisonNumber = nomisAccountSummary.prisonNumber,
+      accounts = nomisAccountSummary.accounts.map {
         AccountFields(
-          prisonId = it.prisonId,
           balance = it.balance,
           holdBalance = it.holdBalance,
           accountCode = it.accountCode.toInt(),
@@ -92,10 +91,9 @@ class PrisonerBalanceReconciliationService(
       },
     )
     val dpsFields = BalanceFields(
-      prisonNumber = nomisResponse.prisonNumber,
-      accounts = dpsResponse.items.map {
+      prisonNumber = nomisAccountSummary.prisonNumber,
+      accounts = dpsAccountSummary.items.map {
         AccountFields(
-          prisonId = it.prisonId,
           balance = it.totalBalance,
           holdBalance = it.holdBalance,
           accountCode = it.accountCode,
@@ -112,7 +110,7 @@ class PrisonerBalanceReconciliationService(
       telemetryClient.trackEvent(
         "prisoner-balance-reports-reconciliation-mismatch",
         mapOf(
-          "prisoner" to nomisResponse.prisonNumber,
+          "prisoner" to nomisAccountSummary.prisonNumber,
         ) + differenceList.associate { it.property to it.toString() },
       )
       return MismatchPrisonerBalance(
@@ -156,14 +154,12 @@ class PrisonerBalanceReconciliationService(
           differences.add(Difference("$parentProperty.prisonNumber", dpsObj.prisonNumber, nomisObj.prisonNumber))
         }
         val sortedDpsAppearances = dpsObj.accounts.sortedWith(
-          compareBy<AccountFields> { it.prisonId }
-            .thenBy { it.accountCode }
+          compareBy<AccountFields> { it.accountCode }
             .thenBy { it.balance }
             .thenBy { it.holdBalance },
         )
         val sortedNomisAppearances = nomisObj.accounts.sortedWith(
-          compareBy<AccountFields> { it.prisonId }
-            .thenBy { it.accountCode }
+          compareBy<AccountFields> { it.accountCode }
             .thenBy { it.balance }
             .thenBy { it.holdBalance },
         )
@@ -173,8 +169,8 @@ class PrisonerBalanceReconciliationService(
 
       is AccountFields -> {
         nomisObj as AccountFields
-        if (dpsObj.prisonId.compareTo(nomisObj.prisonId) != 0) {
-          differences.add(Difference("$parentProperty.prisonId", dpsObj.prisonId, nomisObj.prisonId))
+        if (dpsObj.accountCode != nomisObj.accountCode) {
+          differences.add(Difference("$parentProperty.accountCode", dpsObj.accountCode, nomisObj.accountCode))
         }
         if (dpsObj.balance.compareTo(nomisObj.balance) != 0) {
           differences.add(Difference("$parentProperty.balance", dpsObj.balance, nomisObj.balance))
@@ -185,9 +181,6 @@ class PrisonerBalanceReconciliationService(
           dpsObj.holdBalance?.compareTo(nomisRealBalance) != 0
         ) {
           differences.add(Difference("$parentProperty.holdBalance", dpsObj.holdBalance, nomisObj.holdBalance))
-        }
-        if (dpsObj.accountCode != nomisObj.accountCode) {
-          differences.add(Difference("$parentProperty.accountCode", dpsObj.accountCode, nomisObj.accountCode))
         }
       }
     }
@@ -234,10 +227,9 @@ data class BalanceFields(
 )
 
 data class AccountFields(
-  val prisonId: String,
+  val accountCode: Int,
   val balance: BigDecimal,
   val holdBalance: BigDecimal?,
-  val accountCode: Int,
 )
 
 data class Difference(val property: String, val dps: Any?, val nomis: Any?, val id: String? = null)
