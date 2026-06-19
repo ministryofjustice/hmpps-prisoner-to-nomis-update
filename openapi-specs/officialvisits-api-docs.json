@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-06-12.929.75a1be2"
+    "version" : "2026-06-18.961.400e2d8"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -7376,15 +7376,26 @@
             "description" : "The official visit identifier",
             "example" : 1
           },
+          "eventSource" : {
+            "type" : "string",
+            "description" : "The source of the auditing event",
+            "enum" : [ "DPS", "NOMIS" ],
+            "example" : "DPS"
+          },
           "eventSummary" : {
             "type" : "string",
             "description" : "A short summary of the audit event",
             "example" : "Visit updated"
           },
+          "eventDetail" : {
+            "type" : "string",
+            "description" : "A more detailed summary of the audit event",
+            "example" : "Visit updated"
+          },
           "eventType" : {
             "type" : "string",
             "description" : "The type of audit event",
-            "enum" : [ "CREATE", "UPDATE" ],
+            "enum" : [ "CREATE", "UPDATE", "CANCELLED", "COMPLETED", "OTHER" ],
             "example" : "UPDATE"
           },
           "eventChanges" : {
@@ -7419,13 +7430,19 @@
             "description" : "The full name of the user responsible for the audited event",
             "example" : "Fred Bloggs"
           },
+          "eventVersion" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The version number of the audited event, 2 is the current latest version",
+            "example" : 2
+          },
           "significantChange" : {
             "type" : "boolean",
             "description" : "\n    A boolean indicator to determine if the audited event is considered a significant change to the official visit.\n    ",
             "example" : true
           }
         },
-        "required" : [ "auditedEventId", "eventChanges", "eventDateTime", "eventSummary", "eventType", "eventUserFullName", "eventUsername", "officialVisitId", "significantChange" ]
+        "required" : [ "auditedEventId", "eventChanges", "eventDateTime", "eventDetail", "eventSource", "eventSummary", "eventType", "eventUserFullName", "eventUsername", "eventVersion", "officialVisitId", "significantChange" ]
       },
       "VisitChangeStatusResponse" : {
         "type" : "object",
