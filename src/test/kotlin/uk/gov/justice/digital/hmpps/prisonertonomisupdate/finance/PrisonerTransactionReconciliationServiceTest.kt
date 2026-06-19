@@ -33,11 +33,9 @@ import java.util.UUID
   PrisonerTransactionReconciliationService::class,
   NomisApiService::class,
   TransactionNomisApiService::class,
-  TransactionMappingApiService::class,
   FinanceDpsApiService::class,
   FinanceConfiguration::class,
   RetryApiService::class,
-  TransactionMappingApiMockServer::class,
   TransactionNomisApiMockServer::class,
 )
 class PrisonerTransactionReconciliationServiceTest {
@@ -48,9 +46,6 @@ class PrisonerTransactionReconciliationServiceTest {
 
   @Autowired
   private lateinit var nomisTransactionsApi: TransactionNomisApiMockServer
-
-  @Autowired
-  private lateinit var mappingApi: TransactionMappingApiMockServer
 
   @Autowired
   private lateinit var service: PrisonerTransactionReconciliationService
@@ -65,8 +60,7 @@ class PrisonerTransactionReconciliationServiceTest {
       fun beforeEach() {
         val dpsId = UUID.randomUUID().toString()
         nomisTransactionsApi.stubGetPrisonerTransaction()
-        mappingApi.stubGetByNomisTransactionIdOrNull(nomisTransactionId = 2345, dpsTransactionId = dpsId)
-        dpsApi.stubGetPrisonerTransaction(dpsTransactionId = dpsId)
+        dpsApi.stubGetPrisonerTransaction(nomisTransactionId = 2345, dpsTransactionId = dpsId)
       }
 
       @Test
@@ -116,53 +110,13 @@ class PrisonerTransactionReconciliationServiceTest {
     }
 
     @Nested
-    inner class MissingMapping {
-      val dpsId = UUID.randomUUID().toString()
-
-      @BeforeEach
-      fun beforeEach() {
-        nomisTransactionsApi.stubGetPrisonerTransaction()
-        mappingApi.stubGetByNomisTransactionIdOrNull(nomisTransactionId = 2345, mapping = null)
-      }
-
-      @Test
-      fun `will report a mismatch`() = runTest {
-        assertThat(service.checkTransactionMatch(2345)).isEqualTo(
-          MismatchPrisonerTransaction(
-            nomisTransactionId = 2345,
-            prisonNumber = "A1234AA",
-            reason = "transaction-mapping-missing",
-          ),
-        )
-        waitForEventProcessingToBeComplete()
-      }
-
-      @Test
-      fun `telemetry will show mismatch`() = runTest {
-        service.checkTransactionMatch(2345)
-        verify(telemetryClient).trackEvent(
-          eq("prisoner-transactions-reconciliation-mismatch"),
-          eq(
-            mapOf(
-              "nomisTransactionId" to "2345",
-              "prisonNumber" to "A1234AA",
-              "reason" to "transaction-mapping-missing",
-            ),
-          ),
-          isNull(),
-        )
-      }
-    }
-
-    @Nested
     inner class MissingFromDps {
       val dpsId = UUID.randomUUID().toString()
 
       @BeforeEach
       fun beforeEach() {
         nomisTransactionsApi.stubGetPrisonerTransaction()
-        mappingApi.stubGetByNomisTransactionIdOrNull(nomisTransactionId = 2345, dpsTransactionId = dpsId)
-        dpsApi.stubGetPrisonerTransaction(dpsTransactionId = dpsId, response = null)
+        dpsApi.stubGetPrisonerTransaction(nomisTransactionId = 2345, dpsTransactionId = dpsId, response = null)
       }
 
       @Test
@@ -170,7 +124,6 @@ class PrisonerTransactionReconciliationServiceTest {
         assertThat(service.checkTransactionMatch(2345)).isEqualTo(
           MismatchPrisonerTransaction(
             nomisTransactionId = 2345,
-            dpsTransactionId = dpsId,
             prisonNumber = "A1234AA",
             reason = "dps-transaction-missing",
           ),
@@ -187,7 +140,6 @@ class PrisonerTransactionReconciliationServiceTest {
             eq(
               mapOf(
                 "nomisTransactionId" to "2345",
-                "dpsTransactionId" to dpsId,
                 "prisonNumber" to "A1234AA",
                 "reason" to "dps-transaction-missing",
               ),
@@ -205,8 +157,7 @@ class PrisonerTransactionReconciliationServiceTest {
       @BeforeEach
       fun beforeEach() {
         nomisTransactionsApi.stubGetPrisonerTransaction()
-        mappingApi.stubGetByNomisTransactionIdOrNull(nomisTransactionId = 2345, dpsTransactionId = dpsId)
-        dpsApi.stubGetPrisonerTransaction(dpsTransactionId = dpsId, response = prisonerTransaction(UUID.fromString(dpsId)).copy(caseloadId = "SWI"))
+        dpsApi.stubGetPrisonerTransaction(nomisTransactionId = 2345, dpsTransactionId = dpsId, response = prisonerTransaction(UUID.fromString(dpsId)).copy(caseloadId = "SWI"))
       }
 
       @Test

@@ -31,7 +31,6 @@ import java.util.UUID
 class PrisonerTransactionsReconciliationIntTest(
   @Autowired private val reconciliationService: PrisonerTransactionReconciliationService,
   @Autowired private val nomisApi: TransactionNomisApiMockServer,
-  @Autowired private val mappingApi: TransactionMappingApiMockServer,
 ) : IntegrationTestBase() {
 
   private val dpsApi = FinanceDpsApiExtension.dpsFinanceServer
@@ -72,20 +71,17 @@ class PrisonerTransactionsReconciliationIntTest(
       nomisApi.stubGetPrisonerTransaction(nomisId1234)
       nomisApi.stubGetPrisonerTransaction(nomisId2345)
       nomisApi.stubGetPrisonerTransaction(nomisId3456)
-      mappingApi.stubGetByNomisTransactionIdOrNull(dpsTransactionId = dpsId1234)
-      mappingApi.stubGetByNomisTransactionIdOrNull(nomisTransactionId = nomisId2345, dpsTransactionId = dpsId2345)
-      mappingApi.stubGetByNomisTransactionIdOrNull(nomisTransactionId = nomisId3456, dpsTransactionId = dpsId3456)
       dpsApi.stubGetPrisonerTransaction(
+        nomisTransactionId = nomisId1234,
         dpsTransactionId = dpsId1234,
-        response = prisonerTransaction(nomisTransactionId = nomisId1234, dpsId = UUID.fromString(dpsId1234)),
       )
       dpsApi.stubGetPrisonerTransaction(
+        nomisTransactionId = nomisId2345,
         dpsTransactionId = dpsId2345,
-        response = prisonerTransaction(nomisTransactionId = nomisId2345, dpsId = UUID.fromString(dpsId2345)),
       )
       dpsApi.stubGetPrisonerTransaction(
+        nomisTransactionId = nomisId3456,
         dpsTransactionId = dpsId3456,
-        response = prisonerTransaction(nomisTransactionId = nomisId3456, dpsId = UUID.fromString(dpsId3456)),
       )
     }
 
@@ -155,6 +151,7 @@ class PrisonerTransactionsReconciliationIntTest(
       @BeforeEach
       fun setUp() {
         dpsApi.stubGetPrisonerTransaction(
+          nomisTransactionId = nomisId2345,
           dpsTransactionId = dpsId2345,
           response = prisonerTransaction(nomisTransactionId = nomisId2345, dpsId = UUID.fromString(dpsId2345)).copy(
             transactions =

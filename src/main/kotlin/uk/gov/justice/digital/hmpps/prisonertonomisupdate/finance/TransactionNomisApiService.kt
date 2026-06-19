@@ -67,8 +67,3 @@ class TransactionNomisApiService(
     size = pageSize,
   ).retryWhen(backoffSpec).awaitSingle()
 }
-
-data class PrisonerTransactionLists(
-  val offenderTransactions: List<OffenderTransactionDto>,
-  val orphanGlTransactions: List<GeneralLedgerTransactionDto>,
-)

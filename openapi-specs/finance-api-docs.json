@@ -2114,20 +2114,6 @@
             "type" : "string",
             "format" : "date-time"
           },
-          "requestId" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "transactionType" : {
-            "type" : [ "string", "null" ]
-          },
-          "caseloadId" : {
-            "type" : [ "string", "null" ]
-          },
-          "transactionTimestamp" : {
-            "type" : [ "string", "null" ],
-            "format" : "date-time"
-          },
           "synchronizedTransactionId" : {
             "type" : "string",
             "format" : "uuid"
@@ -2136,7 +2122,21 @@
             "type" : [ "integer", "null" ],
             "format" : "int64"
           },
+          "caseloadId" : {
+            "type" : [ "string", "null" ]
+          },
+          "transactionTimestamp" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time"
+          },
+          "requestId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
           "requestTypeIdentifier" : {
+            "type" : [ "string", "null" ]
+          },
+          "transactionType" : {
             "type" : [ "string", "null" ]
           }
         },

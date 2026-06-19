@@ -31,13 +31,13 @@ class FinanceDpsApiServiceTest {
 
   @Nested
   inner class GetPrisonerTransaction {
-    val transactionId: UUID = UUID.randomUUID()
+    val nomisTransactionId = 1234L
 
     @Test
     internal fun `will pass oath2 token to endpoint`() = runTest {
-      dpsFinanceServer.stubGetPrisonerTransaction(transactionId.toString())
+      dpsFinanceServer.stubGetPrisonerTransaction(nomisTransactionId = nomisTransactionId)
 
-      apiService.getPrisonerTransactionOrNull(transactionId)
+      apiService.getPrisonerTransactionOrNull(nomisTransactionId)
 
       dpsFinanceServer.verify(
         getRequestedFor(anyUrl())
@@ -47,12 +47,12 @@ class FinanceDpsApiServiceTest {
 
     @Test
     fun `will call the GET endpoint`() = runTest {
-      dpsFinanceServer.stubGetPrisonerTransaction(transactionId.toString())
+      dpsFinanceServer.stubGetPrisonerTransaction(nomisTransactionId = nomisTransactionId)
 
-      apiService.getPrisonerTransactionOrNull(transactionId)
+      apiService.getPrisonerTransactionOrNull(nomisTransactionId)
 
       dpsFinanceServer.verify(
-        getRequestedFor(urlPathEqualTo("/sync/offender-transactions/$transactionId")),
+        getRequestedFor(urlPathEqualTo("/reconcile/offender-transactions/$nomisTransactionId")),
       )
     }
   }
@@ -92,9 +92,9 @@ class FinanceDpsApiServiceTest {
 
     @Test
     internal fun `will pass oath2 token to endpoint`() = runTest {
-      dpsFinanceServer.stubListPrisonerAccounts(prisonerNo, sampleResponse)
+      dpsFinanceServer.stubGetPrisonerAccountSummary(prisonerNo, sampleResponse)
 
-      apiService.getPrisonerAccounts(prisonerNo)
+      apiService.getPrisonerAccountSummary(prisonerNo)
 
       dpsFinanceServer.verify(
         getRequestedFor(anyUrl())
@@ -104,9 +104,9 @@ class FinanceDpsApiServiceTest {
 
     @Test
     fun `will call the GET endpoint`() = runTest {
-      dpsFinanceServer.stubListPrisonerAccounts(prisonerNo, sampleResponse)
+      dpsFinanceServer.stubGetPrisonerAccountSummary(prisonerNo, sampleResponse)
 
-      apiService.getPrisonerAccounts(prisonerNo)
+      apiService.getPrisonerAccountSummary(prisonerNo)
 
       dpsFinanceServer.verify(
         getRequestedFor(urlPathEqualTo("/reconcile/prisoner-balances/$prisonerNo")),
@@ -115,9 +115,9 @@ class FinanceDpsApiServiceTest {
 
     @Test
     fun `will return data`() = runTest {
-      dpsFinanceServer.stubListPrisonerAccounts(prisonerNo, sampleResponse)
+      dpsFinanceServer.stubGetPrisonerAccountSummary(prisonerNo, sampleResponse)
 
-      val data = apiService.getPrisonerAccounts(prisonerNo)
+      val data = apiService.getPrisonerAccountSummary(prisonerNo)
 
       assertThat(data).isEqualTo(sampleResponse)
     }

@@ -19,7 +19,7 @@ import org.springframework.test.context.TestPropertySource
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiExtension.Companion.dpsFinanceServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.PrisonerEstablishmentBalanceDetailsList
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerBalanceDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerBalanceSummaryDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RootOffenderIdsWithLast
 
 @TestPropertySource(
@@ -46,20 +46,20 @@ class PrisonerBalanceReconciliationBatchReportForPrisonIntTest(
           lastOffenderId = 10002L,
         ),
       )
-      stubBalances(
+      stubBalanceSummaries(
         10000L,
-        nomisPrisonerBalanceResponse().copy(prisonNumber = "A0001NN"),
-        dpsPrisonerAccountResponse(),
+        nomisPrisonerBalanceSummary().copy(prisonNumber = "A0001NN"),
+        dpsPrisonerAccountSummary(),
       )
-      stubBalances(
+      stubBalanceSummaries(
         10001L,
-        nomisPrisonerBalanceResponse().copy(prisonNumber = "A0002NN"),
-        dpsPrisonerAccountResponse(),
+        nomisPrisonerBalanceSummary().copy(prisonNumber = "A0002NN"),
+        dpsPrisonerAccountSummary(),
       )
-      stubBalances(
+      stubBalanceSummaries(
         10002L,
-        nomisPrisonerBalanceResponse().copy(prisonNumber = "A0003NN"),
-        dpsPrisonerAccountResponse(),
+        nomisPrisonerBalanceSummary().copy(prisonNumber = "A0003NN"),
+        dpsPrisonerAccountSummary(),
       )
     }
 
@@ -97,10 +97,10 @@ class PrisonerBalanceReconciliationBatchReportForPrisonIntTest(
 
     @Test
     fun `will output a mismatch when there is a difference in the DPS record`() = runTest {
-      stubBalances(
+      stubBalanceSummaries(
         2,
-        nomisPrisonerBalanceResponse().copy(prisonNumber = "A0002NN"),
-        dpsPrisonerAccountResponse().copy(items = emptyList()),
+        nomisPrisonerBalanceSummary().copy(prisonNumber = "A0002NN"),
+        dpsPrisonerAccountSummary().copy(items = emptyList()),
       )
       prisonerBalanceReconciliationService.generatePrisonerBalanceReconciliationReportBatch()
 
@@ -130,8 +130,8 @@ class PrisonerBalanceReconciliationBatchReportForPrisonIntTest(
     }
   }
 
-  private fun stubBalances(offenderId: Long, nomisResponse: PrisonerBalanceDto, dpsResponse: PrisonerEstablishmentBalanceDetailsList) {
-    financeNomisApi.stubGetPrisonerAccountDetails(offenderId, nomisResponse)
-    dpsFinanceServer.stubListPrisonerAccounts(nomisResponse.prisonNumber, dpsResponse)
+  private fun stubBalanceSummaries(offenderId: Long, nomisResponse: PrisonerBalanceSummaryDto, dpsResponse: PrisonerEstablishmentBalanceDetailsList) {
+    financeNomisApi.stubGetPrisonerAccountSummary(offenderId, nomisResponse)
+    dpsFinanceServer.stubGetPrisonerAccountSummary(nomisResponse.prisonNumber, dpsResponse)
   }
 }
