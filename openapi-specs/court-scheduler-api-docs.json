@@ -6,7 +6,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-06-17.237.bcb6288"
+    "version" : "2026-06-18.249.9c3adc0"
   },
   "servers" : [ {
     "url" : "https://court-appearance-scheduler-api-dev.hmpps.service.justice.gov.uk",
@@ -242,7 +242,11 @@
                 }, {
                   "$ref" : "#/components/schemas/RescheduleAppearance"
                 }, {
+                  "$ref" : "#/components/schemas/ScheduleAppearance"
+                }, {
                   "$ref" : "#/components/schemas/StartAppearance"
+                }, {
+                  "$ref" : "#/components/schemas/UnscheduleAppearance"
                 } ]
               }
             }
@@ -678,7 +682,7 @@
   "components" : {
     "schemas" : {
       "CourtEvent" : {
-        "required" : [ "agyLocId", "courtEventType", "eventStatus", "prisonCodeAtTimeOfScheduling", "start" ],
+        "required" : [ "agyLocId", "courtEventType", "currentTerm", "eventStatus", "prisonCodeAtTimeOfScheduling", "start" ],
         "type" : "object",
         "properties" : {
           "dpsId" : {
@@ -700,7 +704,7 @@
           "start" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-06-18T09:46:58"
+            "example" : "2026-06-19T09:20:50"
           },
           "courtEventType" : {
             "type" : "string"
@@ -721,8 +725,7 @@
             "nullable" : true
           },
           "currentTerm" : {
-            "type" : "boolean",
-            "nullable" : true
+            "type" : "boolean"
           }
         }
       },
@@ -733,7 +736,7 @@
           "occurredAt" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-06-18T09:46:58"
+            "example" : "2026-06-19T09:20:50"
           },
           "user" : {
             "$ref" : "#/components/schemas/SyncUser"
@@ -790,7 +793,7 @@
           "occurredAt" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-06-18T09:46:58"
+            "example" : "2026-06-19T09:20:50"
           },
           "movementReasonCode" : {
             "type" : "string"
@@ -817,7 +820,7 @@
           "occurredAt" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-06-18T09:46:58"
+            "example" : "2026-06-19T09:20:50"
           },
           "user" : {
             "$ref" : "#/components/schemas/SyncUser"
@@ -834,7 +837,7 @@
           "at" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-06-18T09:46:58"
+            "example" : "2026-06-19T09:20:50"
           },
           "by" : {
             "type" : "string"
@@ -1148,7 +1151,35 @@
           }
         } ]
       },
+      "ScheduleAppearance" : {
+        "type" : "object",
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/CourtAppearanceAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "reason" : {
+              "type" : "string",
+              "nullable" : true
+            }
+          }
+        } ]
+      },
       "StartAppearance" : {
+        "type" : "object",
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/CourtAppearanceAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "reason" : {
+              "type" : "string",
+              "nullable" : true
+            }
+          }
+        } ]
+      },
+      "UnscheduleAppearance" : {
         "type" : "object",
         "allOf" : [ {
           "$ref" : "#/components/schemas/CourtAppearanceAction"
@@ -1184,7 +1215,7 @@
           "occurredAt" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-06-18T09:46:58"
+            "example" : "2026-06-19T09:20:50"
           },
           "domainEvents" : {
             "type" : "array",
@@ -1272,7 +1303,7 @@
             "type" : "array",
             "items" : {
               "type" : "string",
-              "enum" : [ "SCHEDULED", "IN_PROGRESS", "COMPLETED", "EXPIRED" ]
+              "enum" : [ "SCHEDULED", "IN_PROGRESS", "COMPLETED", "EXPIRED", "UNSCHEDULED" ]
             }
           },
           "reason" : {
@@ -1333,7 +1364,7 @@
         "properties" : {
           "code" : {
             "type" : "string",
-            "enum" : [ "SCHEDULED", "IN_PROGRESS", "COMPLETED", "EXPIRED" ]
+            "enum" : [ "SCHEDULED", "IN_PROGRESS", "COMPLETED", "EXPIRED", "UNSCHEDULED" ]
           },
           "description" : {
             "type" : "string"
@@ -1378,13 +1409,13 @@
           "start" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-06-18T09:46:58"
+            "example" : "2026-06-19T09:20:50"
           },
           "end" : {
             "type" : "string",
             "format" : "date-time",
             "nullable" : true,
-            "example" : "2026-06-18T09:46:58"
+            "example" : "2026-06-19T09:20:50"
           },
           "comments" : {
             "type" : "string",
@@ -1479,7 +1510,7 @@
             "type" : "array",
             "items" : {
               "type" : "string",
-              "enum" : [ "SCHEDULED", "IN_PROGRESS", "COMPLETED", "EXPIRED" ]
+              "enum" : [ "SCHEDULED", "IN_PROGRESS", "COMPLETED", "EXPIRED", "UNSCHEDULED" ]
             }
           },
           "reason" : {
@@ -1538,13 +1569,13 @@
           "start" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-06-18T09:46:58"
+            "example" : "2026-06-19T09:20:50"
           },
           "end" : {
             "type" : "string",
             "format" : "date-time",
             "nullable" : true,
-            "example" : "2026-06-18T09:46:58"
+            "example" : "2026-06-19T09:20:50"
           },
           "status" : {
             "$ref" : "#/components/schemas/AppearanceStatus"
@@ -1604,7 +1635,7 @@
             "type" : "array",
             "items" : {
               "type" : "string",
-              "enum" : [ "SCHEDULED", "IN_PROGRESS", "COMPLETED", "EXPIRED" ]
+              "enum" : [ "SCHEDULED", "IN_PROGRESS", "COMPLETED", "EXPIRED", "UNSCHEDULED" ]
             }
           },
           "reason" : {
@@ -1653,13 +1684,13 @@
           "start" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-06-18T09:46:58"
+            "example" : "2026-06-19T09:20:50"
           },
           "end" : {
             "type" : "string",
             "format" : "date-time",
             "nullable" : true,
-            "example" : "2026-06-18T09:46:58"
+            "example" : "2026-06-19T09:20:50"
           },
           "comments" : {
             "type" : "string",
@@ -1723,13 +1754,13 @@
           "start" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-06-18T09:46:58"
+            "example" : "2026-06-19T09:20:50"
           },
           "end" : {
             "type" : "string",
             "format" : "date-time",
             "nullable" : true,
-            "example" : "2026-06-18T09:46:58"
+            "example" : "2026-06-19T09:20:50"
           },
           "comments" : {
             "type" : "string",
@@ -1798,7 +1829,7 @@
           "occurredAt" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-06-18T09:46:58"
+            "example" : "2026-06-19T09:20:50"
           },
           "comments" : {
             "type" : "string",
@@ -1865,13 +1896,13 @@
           "start" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-06-18T09:46:58"
+            "example" : "2026-06-19T09:20:50"
           },
           "end" : {
             "type" : "string",
             "format" : "date-time",
             "nullable" : true,
-            "example" : "2026-06-18T09:46:58"
+            "example" : "2026-06-19T09:20:50"
           },
           "comments" : {
             "type" : "string",
