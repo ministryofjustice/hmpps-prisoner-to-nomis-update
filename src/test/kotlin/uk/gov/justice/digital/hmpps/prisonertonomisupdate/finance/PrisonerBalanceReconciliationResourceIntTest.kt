@@ -171,18 +171,12 @@ class PrisonerBalanceReconciliationResourceIntTest(
           dpsPrisonerAccountSummary(),
         )
 
-        val fred = webTestClient.get().uri("/prisoner-balance/reconciliation/id/$OFFENDER_ID")
+        webTestClient.get().uri("/prisoner-balance/reconciliation/id/$OFFENDER_ID")
           .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
           .exchange()
           .expectStatus()
           .isOk
-          .expectBody(object : ParameterizedTypeReference<MismatchPrisonerBalance>() {})
-          .returnResult()
-          .responseBody
-
-        println("FRED is $fred")
-        // .consumeWith (System.out::println)
-          /*
+          .expectBody()
           .jsonPath("nomis.prisonNumber").isEqualTo(OFFENDER_NO)
           .jsonPath("dps.prisonNumber").isEqualTo(OFFENDER_NO)
           .jsonPath("dps.accounts[0].accountCode").isEqualTo(1001)
@@ -198,8 +192,6 @@ class PrisonerBalanceReconciliationResourceIntTest(
           },
           isNull(),
         )
-
-           */
       }
 
       @Test
