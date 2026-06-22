@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-06-18.961.400e2d8"
+    "version" : "2026-06-19.966.ec72664"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -1834,7 +1834,7 @@
         },
         "responses" : {
           "201" : {
-            "description" : "The response containing the details of all notifications sent",
+            "description" : "The response containing the details of notifications sent",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -1844,7 +1844,7 @@
             }
           },
           "404" : {
-            "description" : "No official visit found to send the notification for.",
+            "description" : "The official visit was not found",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -3269,13 +3269,13 @@
     "/notification/{officialVisitId}/change-status" : {
       "get" : {
         "tags" : [ "Notifications" ],
-        "summary" : "Check whether the visit has changed since the last notification was sent, or whether the email was sent after the visit was created.",
+        "summary" : "Check if a visit has changed significantly since the last notification was sent",
         "description" : "\n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISITS_ADMIN\n* ROLE_OFFICIAL_VISITS__R\n* ROLE_OFFICIAL_VISITS_RW",
-        "operationId" : "getVisitChangeStatus",
+        "operationId" : "getVisitChangedSinceLastNotification",
         "parameters" : [ {
           "name" : "officialVisitId",
           "in" : "path",
-          "description" : "The identifier of the official visit to check for changes.",
+          "description" : "The identifier of the official visit to check",
           "required" : true,
           "schema" : {
             "type" : "integer",
@@ -3285,7 +3285,7 @@
         } ],
         "responses" : {
           "200" : {
-            "description" : "Check completed — returns whether the visit has changed since the last notification was sent, or whether the email was sent after the visit was created.",
+            "description" : "Returns the visit changed status true if the visit has changed significantly since the last notification, otherwise false",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -3295,7 +3295,7 @@
             }
           },
           "404" : {
-            "description" : "No official visit found with the given ID.",
+            "description" : "The official visit was not found",
             "content" : {
               "application/json" : {
                 "schema" : {
