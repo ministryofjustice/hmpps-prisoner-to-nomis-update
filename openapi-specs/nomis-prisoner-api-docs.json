@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-06-17.1603.bd8962d"
+    "version" : "2026-06-19.1613.e35a61e"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -32442,12 +32442,12 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paged" : {
+            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -37339,6 +37339,10 @@
             "format" : "int64",
             "description" : "Booking ID"
           },
+          "latestBooking" : {
+            "type" : "boolean",
+            "description" : "Is this the latest booking for the offender?"
+          },
           "eventId" : {
             "type" : "integer",
             "format" : "int64",
@@ -37388,7 +37392,7 @@
             "description" : "Audit data associated with the records"
           }
         },
-        "required" : [ "audit", "bookingId", "court", "eventDate", "eventId", "eventStatus", "eventType", "prison", "startTime" ]
+        "required" : [ "audit", "bookingId", "court", "eventDate", "eventId", "eventStatus", "eventType", "latestBooking", "prison", "startTime" ]
       },
       "CourtMovementOut" : {
         "type" : "object",
