@@ -86,6 +86,7 @@ class CourtSchedulerDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       commentText = "court event comment",
       externalReferenceUrn = "some-ext-ref-urn",
       externalCourtEventType = external,
+      currentTerm = true,
     )
 
     fun courtEventMovement(

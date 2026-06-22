@@ -1009,6 +1009,7 @@ class CourtSchedulerReconciliationIntTest(
               courtEventType = "CRT",
               eventStatus = "COMP",
               commentText = "Some schedule comment",
+              currentTerm = true,
               externalReferenceUrn = EXTERNAL_REF_PREFIX + courtSentencingAppearanceId,
             ),
             movements = listOfNotNull(movementOut, movementIn),
