@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-06-19.1933.98233db"
+    "version" : "2026-06-22.1939.815367a"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -2428,7 +2428,7 @@
         },
         "responses" : {
           "200" : {
-            "description" : "Returns court case UUID",
+            "description" : "Returns court appearance schedules",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -5807,6 +5807,65 @@
         }
       }
     },
+    "/court-appearance-schedule/{appearanceUuid}/delete-status" : {
+      "get" : {
+        "tags" : [ "court-appearance-schedules-controller" ],
+        "summary" : "Delete court appearance schedule status",
+        "description" : "This endpoint will return whether a court appearance schedule can be deleted",
+        "operationId" : "deleteCourtAppearanceScheduleStatus",
+        "parameters" : [ {
+          "name" : "appearanceUuid",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "return delete status",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DeleteCourtAppearanceScheduleStatus"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DeleteCourtAppearanceScheduleStatus"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DeleteCourtAppearanceScheduleStatus"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "No court appearance schedule found",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DeleteCourtAppearanceScheduleStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/charge-outcome/{outcomeUuid}" : {
       "get" : {
         "tags" : [ "charge-outcome-controller" ],
@@ -6789,7 +6848,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "09:21:35.884504536"
+            "example" : "09:16:56.029121689"
           },
           "outcomeDispositionCode" : {
             "type" : [ "string", "null" ]
@@ -7139,7 +7198,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "09:21:35.884504536"
+            "example" : "09:16:56.029121689"
           },
           "courtCode" : {
             "type" : "string"
@@ -9918,7 +9977,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "09:21:35.884504536"
+            "example" : "09:16:56.029121689"
           },
           "courtCode" : {
             "type" : "string"
@@ -10606,7 +10665,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "09:21:35.884504536"
+            "example" : "09:16:56.029121689"
           },
           "nomisOutcomeCode" : {
             "type" : [ "string", "null" ]
@@ -10685,7 +10744,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "09:21:35.884504536"
+            "example" : "09:16:56.029121689"
           },
           "courtId" : {
             "type" : "string"
@@ -10837,7 +10896,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "09:21:35.884504536"
+            "example" : "09:16:56.029121689"
           },
           "charges" : {
             "type" : "array",
@@ -10871,7 +10930,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "09:21:35.884504536"
+            "example" : "09:16:56.029121689"
           },
           "courtId" : {
             "type" : "string"
@@ -11159,14 +11218,14 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
-          "pageNumber" : {
+          "pageSize" : {
             "type" : "integer",
             "format" : "int32"
           },
           "paged" : {
             "type" : "boolean"
           },
-          "pageSize" : {
+          "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
           },
@@ -11460,7 +11519,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "09:21:35.884504536"
+            "example" : "09:16:56.029121689"
           },
           "courtCode" : {
             "type" : [ "string", "null" ]
@@ -11654,6 +11713,16 @@
             "type" : "boolean"
           }
         }
+      },
+      "DeleteCourtAppearanceScheduleStatus" : {
+        "type" : "object",
+        "properties" : {
+          "status" : {
+            "type" : "string",
+            "enum" : [ "SUPPORTED", "NOT_SUPPORTED" ]
+          }
+        },
+        "required" : [ "status" ]
       },
       "DeleteRecallResponse" : {
         "type" : "object",
