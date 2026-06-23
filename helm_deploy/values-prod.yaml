@@ -153,12 +153,20 @@ generic-service:
     - name: person-contact-recon
       type: PERSON_CONTACT_RECON
       schedule: "50 1 * * 6"
+    - name: prisoner-balance-recon
+      type: PRISONER_BALANCE_RECON
+      schedule: "30 3 * * *"
+      suspend: true
     - name: prisner-contact-recon
       type: PRISONER_CONTACT_RECON
       schedule: "50 3 * * *"
     - name: priner-restrict-recon
       type: PRISONER_RESTRICTION_RECON
       schedule: "10 4 * * *"
+    - name: prisoner-transactions-recon
+      type: PRISONER_TRANSACTIONS_RECON
+      schedule: "15 3 * * *"
+      suspend: true
     - name: sentencing-recon
       type: SENTENCING_RECON
       schedule: "50 1 * * *"

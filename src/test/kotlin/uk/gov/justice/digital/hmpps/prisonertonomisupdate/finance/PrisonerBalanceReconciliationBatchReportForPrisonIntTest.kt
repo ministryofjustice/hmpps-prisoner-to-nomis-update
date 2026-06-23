@@ -68,7 +68,7 @@ class PrisonerBalanceReconciliationBatchReportForPrisonIntTest(
       prisonerBalanceReconciliationService.generatePrisonerBalanceReconciliationReportBatch()
 
       verify(telemetryClient).trackEvent(
-        eq("prisoner-balance-reconciliation-requested"),
+        eq("prisoner-balance-reports-reconciliation-requested"),
         any(),
         isNull(),
       )
@@ -81,7 +81,7 @@ class PrisonerBalanceReconciliationBatchReportForPrisonIntTest(
       prisonerBalanceReconciliationService.generatePrisonerBalanceReconciliationReportBatch()
 
       verify(telemetryClient).trackEvent(
-        eq("prisoner-balance-reconciliation-report"),
+        eq("prisoner-balance-reports-reconciliation-report"),
         check {
           assertThat(it).containsEntry("balance-count", "3")
           assertThat(it).containsEntry("page-count", "1")
@@ -105,7 +105,7 @@ class PrisonerBalanceReconciliationBatchReportForPrisonIntTest(
       prisonerBalanceReconciliationService.generatePrisonerBalanceReconciliationReportBatch()
 
       verify(telemetryClient).trackEvent(
-        eq("prisoner-balance-reconciliation-report"),
+        eq("prisoner-balance-reports-reconciliation-report"),
         check {
           assertThat(it).containsEntry("balance-count", "3")
           assertThat(it).containsEntry("page-count", "1")
@@ -122,7 +122,7 @@ class PrisonerBalanceReconciliationBatchReportForPrisonIntTest(
     private fun awaitReportFinished() {
       await untilAsserted {
         verify(telemetryClient).trackEvent(
-          eq("prisoner-balance-reconciliation-report"),
+          eq("prisoner-balance-reports-reconciliation-report"),
           any(),
           isNull(),
         )

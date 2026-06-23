@@ -98,7 +98,7 @@ class PrisonerTransactionReconciliationServiceTest {
       fun `telemetry will show mismatch failure`() = runTest {
         service.checkTransactionMatch(2345)
         verify(telemetryClient).trackEvent(
-          eq("prisoner-transactions-reconciliation-mismatch-error"),
+          eq("prisoner-transactions-reports-reconciliation-mismatch-error"),
           eq(
             mapOf(
               "nomisTransactionId" to "2345",
@@ -136,7 +136,7 @@ class PrisonerTransactionReconciliationServiceTest {
         service.checkTransactionMatch(2345)
         await untilAsserted {
           verify(telemetryClient).trackEvent(
-            eq("prisoner-transactions-reconciliation-mismatch"),
+            eq("prisoner-transactions-reports-reconciliation-mismatch"),
             eq(
               mapOf(
                 "nomisTransactionId" to "2345",
@@ -180,7 +180,7 @@ class PrisonerTransactionReconciliationServiceTest {
         service.checkTransactionMatch(2345)
         await untilAsserted {
           verify(telemetryClient).trackEvent(
-            eq("prisoner-transactions-reconciliation-mismatch"),
+            eq("prisoner-transactions-reports-reconciliation-mismatch"),
             eq(
               mapOf(
                 "nomisTransactionId" to "2345",

@@ -95,7 +95,7 @@ class PrisonerTransactionsReconciliationIntTest(
         awaitReportFinished()
 
         verify(telemetryClient).trackEvent(
-          eq("prisoner-transactions-reconciliation-requested"),
+          eq("prisoner-transactions-reports-reconciliation-requested"),
           check {
             assertThat(it).containsEntry("date", yesterday.toString())
           },
@@ -109,7 +109,7 @@ class PrisonerTransactionsReconciliationIntTest(
         awaitReportFinished()
 
         verify(telemetryClient).trackEvent(
-          eq("prisoner-transactions-reconciliation-requested"),
+          eq("prisoner-transactions-reports-reconciliation-requested"),
           check {
             assertThat(it).containsEntry("date", "2021-02-03")
           },
@@ -133,7 +133,7 @@ class PrisonerTransactionsReconciliationIntTest(
         awaitReportFinished()
 
         verify(telemetryClient).trackEvent(
-          eq("prisoner-transactions-reconciliation-report"),
+          eq("prisoner-transactions-reports-reconciliation-report"),
           check {
             assertThat(it).containsEntry("mismatch-count", "0")
             assertThat(it).containsEntry("pages-count", "2")
@@ -165,7 +165,7 @@ class PrisonerTransactionsReconciliationIntTest(
         reconciliationService.generateReconciliationReportBatch(LocalDate.parse("2021-02-03"))
 
         verify(telemetryClient).trackEvent(
-          eq("prisoner-transactions-reconciliation-requested"),
+          eq("prisoner-transactions-reports-reconciliation-requested"),
           check {
             assertThat(it).containsEntry("date", "2021-02-03")
           },
@@ -180,7 +180,7 @@ class PrisonerTransactionsReconciliationIntTest(
         awaitReportFinished()
 
         verify(telemetryClient).trackEvent(
-          eq("prisoner-transactions-reconciliation-report"),
+          eq("prisoner-transactions-reports-reconciliation-report"),
           check {
             assertThat(it).containsEntry("mismatch-count", "1")
             assertThat(it).containsEntry("pages-count", "2")
@@ -198,7 +198,7 @@ class PrisonerTransactionsReconciliationIntTest(
         awaitReportFinished()
 
         verify(telemetryClient).trackEvent(
-          eq("prisoner-transactions-reconciliation-mismatch"),
+          eq("prisoner-transactions-reports-reconciliation-mismatch"),
           eq(
             mapOf(
               "nomisTransactionId" to "2345",
@@ -213,7 +213,7 @@ class PrisonerTransactionsReconciliationIntTest(
     }
 
     private fun awaitReportFinished() {
-      await untilAsserted { verify(telemetryClient).trackEvent(eq("prisoner-transactions-reconciliation-report"), any(), isNull()) }
+      await untilAsserted { verify(telemetryClient).trackEvent(eq("prisoner-transactions-reports-reconciliation-report"), any(), isNull()) }
     }
   }
 }

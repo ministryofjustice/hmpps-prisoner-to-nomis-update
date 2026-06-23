@@ -31,7 +31,7 @@ class PrisonerTransactionReconciliationService(
   @param:Value($$"${reports.prisoner-transactions.reconciliation.page-size:20}") private val pageSize: Int = 20,
 ) {
   private companion object {
-    private const val TELEMETRY_PRISONER_PREFIX = "prisoner-transactions-reconciliation"
+    private const val TELEMETRY_PRISONER_PREFIX = "prisoner-transactions-reports-reconciliation"
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
