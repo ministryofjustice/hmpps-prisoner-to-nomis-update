@@ -25,7 +25,7 @@ class PrisonerBalanceReconciliationService(
   @Value("\${reports.prisoner.balance.reconciliation.filter-prison:#{null}}") private val filterPrison: String?,
 ) {
   private companion object {
-    private const val TELEMETRY_PRISONER_PREFIX = "prisoner-balance-reconciliation"
+    private const val TELEMETRY_PRISONER_PREFIX = "prisoner-balance-reports-reconciliation"
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
@@ -67,7 +67,7 @@ class PrisonerBalanceReconciliationService(
             "error" to (it.message ?: ""),
           ),
         )
-        log.error("Prisoner contacts reconciliation report failed", it)
+        log.error("Prisoner balance reconciliation report failed", it)
       }
   }
 
@@ -108,7 +108,7 @@ class PrisonerBalanceReconciliationService(
     if (differenceList.isNotEmpty()) {
       // log.info("Differences: ${objectMapper.writeValueAsString(differenceList)}")
       telemetryClient.trackEvent(
-        "prisoner-balance-reports-reconciliation-mismatch",
+        "$TELEMETRY_PRISONER_PREFIX-mismatch",
         mapOf(
           "prisoner" to nomisAccountSummary.prisonNumber,
         ) + differenceList.associate { it.property to it.toString() },
@@ -153,18 +153,18 @@ class PrisonerBalanceReconciliationService(
         if (dpsObj.prisonNumber != nomisObj.prisonNumber) {
           differences.add(Difference("$parentProperty.prisonNumber", dpsObj.prisonNumber, nomisObj.prisonNumber))
         }
-        val sortedDpsAppearances = dpsObj.accounts.sortedWith(
+        val sortedDpsAccounts = dpsObj.accounts.sortedWith(
           compareBy<AccountFields> { it.accountCode }
             .thenBy { it.balance }
             .thenBy { it.holdBalance },
         )
-        val sortedNomisAppearances = nomisObj.accounts.sortedWith(
+        val sortedNomisAccounts = nomisObj.accounts.sortedWith(
           compareBy<AccountFields> { it.accountCode }
             .thenBy { it.balance }
             .thenBy { it.holdBalance },
         )
 
-        differences.addAll(compareLists(sortedDpsAppearances, sortedNomisAppearances, "$parentProperty.accounts"))
+        differences.addAll(compareLists(sortedDpsAccounts, sortedNomisAccounts, "$parentProperty.accounts"))
       }
 
       is AccountFields -> {
@@ -173,14 +173,14 @@ class PrisonerBalanceReconciliationService(
           differences.add(Difference("$parentProperty.accountCode", dpsObj.accountCode, nomisObj.accountCode))
         }
         if (dpsObj.balance.compareTo(nomisObj.balance) != 0) {
-          differences.add(Difference("$parentProperty.balance", dpsObj.balance, nomisObj.balance))
+          differences.add(Difference("$parentProperty.balance: account code ${nomisObj.accountCode}", dpsObj.balance, nomisObj.balance))
         }
         val nomisRealBalance = nomisObj.holdBalance ?: BigDecimal.ZERO
         if (
           // DPS holdBalance is non-null
           dpsObj.holdBalance?.compareTo(nomisRealBalance) != 0
         ) {
-          differences.add(Difference("$parentProperty.holdBalance", dpsObj.holdBalance, nomisObj.holdBalance))
+          differences.add(Difference("$parentProperty.holdBalance: account code ${nomisObj.accountCode}", dpsObj.holdBalance, nomisObj.holdBalance))
         }
       }
     }
@@ -203,7 +203,7 @@ class PrisonerBalanceReconciliationService(
     },
     onFailure = {
       telemetryClient.trackEvent(
-        "prisoner-balance-reports-reconciliation-mismatch-page-error",
+        "$TELEMETRY_PRISONER_PREFIX-mismatch-page-error",
         mapOf(
           "lastOffenderId" to lastOffenderId.toString(),
           "error" to (it.message ?: ""),

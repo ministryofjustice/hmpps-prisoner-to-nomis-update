@@ -118,7 +118,7 @@ class PrisonerTransactionsResourceIntTest(
 
         await untilAsserted {
           verify(telemetryClient).trackEvent(
-            eq("prisoner-transactions-reconciliation-mismatch"),
+            eq("prisoner-transactions-reports-reconciliation-mismatch"),
             check {
               assertThat(it).containsAllEntriesOf(
                 mapOf(
