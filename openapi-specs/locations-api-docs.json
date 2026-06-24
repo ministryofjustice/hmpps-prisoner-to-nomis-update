@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-06-03.813.b291452"
+    "version" : "2026-06-24.895.d022207"
   },
   "servers" : [ {
     "url" : "/",
@@ -3391,6 +3391,163 @@
         }
       }
     },
+    "/locations/bulk/update-cell-certificate/{prisonId}" : {
+      "get" : {
+        "tags" : [ "Bulk Location Operations" ],
+        "summary" : "List cell certificate uploads for a prison",
+        "description" : "Returns the upload history for a prison (most recent first), optionally filtered to those still PROCESSING or those that are COMPLETE. Each entry summarises status, timings and record counts. Requires role MAINTAIN_LOCATIONS.",
+        "operationId" : "getCellCertificateUploads",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "description" : "Prison ID",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prison ID",
+            "example" : "MDI"
+          },
+          "example" : "MDI"
+        }, {
+          "name" : "status",
+          "in" : "query",
+          "description" : "Optional filter",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "description" : "Optional filter",
+            "enum" : [ "PROCESSING", "COMPLETE" ],
+            "example" : "PROCESSING"
+          },
+          "example" : "PROCESSING"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns the list of uploads for the prison",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/CellCertificateUploadDto"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the MAINTAIN_LOCATIONS role.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [ "Bulk Location Operations" ],
+        "summary" : "Upload a cell certificate for a prison and start asynchronous processing",
+        "description" : "Stores the supplied cell capacities, cell marks and sanitation for the prison and queues them for background processing. Returns an identifier that can be used to monitor progress. Requires role MAINTAIN_LOCATIONS and write scope.",
+        "operationId" : "uploadCellCertificate",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "description" : "Prison ID",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prison ID",
+            "example" : "MDI"
+          },
+          "example" : "MDI"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateCapacityRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "202" : {
+            "description" : "Upload accepted and queued for processing",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CellCertificateUploadDto"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the MAINTAIN_LOCATIONS role with write scope.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Prison not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "A cell certificate upload is already in progress for this prison",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/cell-certificates/prison/{prisonId}/baseline" : {
       "post" : {
         "tags" : [ "Cell Certificates" ],
@@ -6170,7 +6327,7 @@
           "schema" : {
             "type" : "string",
             "description" : "Service",
-            "enum" : [ "APPOINTMENT", "PROGRAMMES_AND_ACTIVITIES", "VIDEO_LINK", "HEARING_LOCATION", "LOCATION_OF_INCIDENT", "INTERNAL_MOVEMENTS", "OFFICIAL_VISITS", "USE_OF_FORCE" ],
+            "enum" : [ "APPOINTMENT", "PROGRAMMES_AND_ACTIVITIES", "VIDEO_LINK", "HEARING_LOCATION", "LOCATION_OF_INCIDENT", "INTERNAL_MOVEMENTS", "OFFICIAL_VISITS", "USE_OF_FORCE", "VIDEO_ENABLED" ],
             "example" : "HEARING_LOCATION"
           },
           "example" : "HEARING_LOCATION"
@@ -6488,6 +6645,69 @@
           },
           "404" : {
             "description" : "Data not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/locations/bulk/update-cell-certificate/upload/{uploadId}" : {
+      "get" : {
+        "tags" : [ "Bulk Location Operations" ],
+        "summary" : "Get a single cell certificate upload with its per-cell results",
+        "description" : "Returns the upload summary plus each cell's result (status, dates and the values changed from/to) for drilling into a running or completed upload. Requires role MAINTAIN_LOCATIONS.",
+        "operationId" : "getCellCertificateUpload",
+        "parameters" : [ {
+          "name" : "uploadId",
+          "in" : "path",
+          "description" : "Upload ID",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "Upload ID",
+            "example" : "01912e1e-0000-7000-8000-000000000000"
+          },
+          "example" : "01912e1e-0000-7000-8000-000000000000"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns the upload and its per-cell results",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CellCertificateUploadDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the MAINTAIN_LOCATIONS role.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Cell certificate upload not found",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -7455,6 +7675,41 @@
         }
       }
     },
+    "/cell-certificates/dashboard" : {
+      "get" : {
+        "tags" : [ "Cell Certificates" ],
+        "summary" : "Get the capacity management dashboard",
+        "description" : "Returns one summary row per prison that has a current cell certificate, default-sorted by prison name. Used by the capacity management dashboard.",
+        "operationId" : "getCellCertificateDashboard",
+        "responses" : {
+          "200" : {
+            "description" : "Dashboard rows returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/CellCertificateDashboardDto"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : { }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint",
+            "content" : {
+              "application/json" : { }
+            }
+          }
+        }
+      }
+    },
     "/sync/delete/{id}" : {
       "delete" : {
         "tags" : [ "Sync" ],
@@ -7732,6 +7987,11 @@
             "type" : [ "string", "null" ],
             "description" : "If converted, the type of cell this location has been converted to",
             "enum" : [ "HOLDING_ROOM", "INTERVIEW_ROOM", "KITCHEN_SERVERY", "LISTENERS_ROOM", "OFFICE", "SHOWER", "STAFF_ROOM", "STORE", "TREATMENT_ROOM", "UTILITY_ROOM", "OTHER" ]
+          },
+          "otherConvertedCellType" : {
+            "type" : [ "string", "null" ],
+            "description" : "Free-text description when the converted cell type is OTHER",
+            "example" : "Yoga room"
           },
           "subLocations" : {
             "type" : [ "array", "null" ],
@@ -8179,7 +8439,7 @@
         "properties" : {
           "serviceType" : {
             "type" : "string",
-            "enum" : [ "APPOINTMENT", "PROGRAMMES_AND_ACTIVITIES", "VIDEO_LINK", "HEARING_LOCATION", "LOCATION_OF_INCIDENT", "INTERNAL_MOVEMENTS", "OFFICIAL_VISITS", "USE_OF_FORCE" ]
+            "enum" : [ "APPOINTMENT", "PROGRAMMES_AND_ACTIVITIES", "VIDEO_LINK", "HEARING_LOCATION", "LOCATION_OF_INCIDENT", "INTERNAL_MOVEMENTS", "OFFICIAL_VISITS", "USE_OF_FORCE", "VIDEO_ENABLED" ]
           },
           "serviceFamilyType" : {
             "type" : "string",
@@ -8422,6 +8682,18 @@
               "description" : "Used For Types",
               "enum" : [ "CLOSE_SUPERVISION_CENTRE", "SUB_MISUSE_DRUG_RECOVERY", "FIRST_NIGHT_CENTRE", "HIGH_SECURITY", "IPP_LONG_TERM_SENTENCES", "MOTHER_AND_BABY", "OPEN_UNIT", "PATHWAY_TO_PROG", "PERINATAL_UNIT", "PERSONALITY_DISORDER", "PIPE", "REMAND", "SEPARATION_CENTRE", "STANDARD_ACCOMMODATION", "THERAPEUTIC_COMMUNITY", "VULNERABLE_PRISONERS", "YOUNG_PERSONS" ]
             }
+          },
+          "cellMark" : {
+            "type" : [ "string", "null" ],
+            "description" : "Cell mark (door number) to apply to the converted cell",
+            "example" : "A1",
+            "maxLength" : 12,
+            "minLength" : 1
+          },
+          "inCellSanitation" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Whether the converted cell supports in-cell sanitation",
+            "example" : true
           }
         },
         "required" : [ "accommodationType", "maxCapacity", "workingCapacity" ]
@@ -8442,6 +8714,11 @@
             "example" : "Swimming pool",
             "maxLength" : 255,
             "minLength" : 0
+          },
+          "reasonForChange" : {
+            "type" : [ "string", "null" ],
+            "description" : "The reason why the approval was requested, mandatory if the conversion must be approved",
+            "example" : "Cell converted to an office"
           }
         },
         "required" : [ "convertedCellType" ]
@@ -8548,7 +8825,7 @@
             "description" : "Services that use this location",
             "items" : {
               "type" : "string",
-              "enum" : [ "APPOINTMENT", "PROGRAMMES_AND_ACTIVITIES", "VIDEO_LINK", "HEARING_LOCATION", "LOCATION_OF_INCIDENT", "INTERNAL_MOVEMENTS", "OFFICIAL_VISITS", "USE_OF_FORCE" ]
+              "enum" : [ "APPOINTMENT", "PROGRAMMES_AND_ACTIVITIES", "VIDEO_LINK", "HEARING_LOCATION", "LOCATION_OF_INCIDENT", "INTERNAL_MOVEMENTS", "OFFICIAL_VISITS", "USE_OF_FORCE", "VIDEO_ENABLED" ]
             },
             "uniqueItems" : true
           },
@@ -8624,7 +8901,7 @@
             "description" : "Services that use this location",
             "items" : {
               "type" : "string",
-              "enum" : [ "APPOINTMENT", "PROGRAMMES_AND_ACTIVITIES", "VIDEO_LINK", "HEARING_LOCATION", "LOCATION_OF_INCIDENT", "INTERNAL_MOVEMENTS", "OFFICIAL_VISITS", "USE_OF_FORCE" ]
+              "enum" : [ "APPOINTMENT", "PROGRAMMES_AND_ACTIVITIES", "VIDEO_LINK", "HEARING_LOCATION", "LOCATION_OF_INCIDENT", "INTERNAL_MOVEMENTS", "OFFICIAL_VISITS", "USE_OF_FORCE", "VIDEO_ENABLED" ]
             }
           },
           "status" : {
@@ -9087,7 +9364,7 @@
           "approvalType" : {
             "type" : "string",
             "description" : "Type of approval",
-            "enum" : [ "SIGNED_OP_CAP", "DRAFT", "DEACTIVATION", "PERMANENT_DEACTIVATION", "CELL_MARK", "CELL_SANITATION", "REACTIVATION", "CAPACITY_CHANGE", "SPECIALIST_CELL_TYPE", "CONVERT_ROOM_TO_CELL", "CONVERT_CELL_TO_ROOM", "PRISON_BASELINE" ],
+            "enum" : [ "SIGNED_OP_CAP", "DRAFT", "DEACTIVATION", "PERMANENT_DEACTIVATION", "CELL_MARK", "CELL_SANITATION", "REACTIVATION", "CAPACITY_CHANGE", "SPECIALIST_CELL_TYPE", "CONVERT_ROOM_TO_CELL", "CONVERT_CELL_TO_ROOM", "PRISON_BASELINE", "CELL_CERTIFICATE_UPLOAD" ],
             "example" : "SIGNED_OP_CAP"
           },
           "prisonId" : {
@@ -9318,6 +9595,24 @@
               "description" : "Used For Types",
               "enum" : [ "CLOSE_SUPERVISION_CENTRE", "SUB_MISUSE_DRUG_RECOVERY", "FIRST_NIGHT_CENTRE", "HIGH_SECURITY", "IPP_LONG_TERM_SENTENCES", "MOTHER_AND_BABY", "OPEN_UNIT", "PATHWAY_TO_PROG", "PERINATAL_UNIT", "PERSONALITY_DISORDER", "PIPE", "REMAND", "SEPARATION_CENTRE", "STANDARD_ACCOMMODATION", "THERAPEUTIC_COMMUNITY", "VULNERABLE_PRISONERS", "YOUNG_PERSONS" ]
             }
+          },
+          "topLevelAccommodationTypes" : {
+            "type" : [ "array", "null" ],
+            "description" : "Resulting (post-change) accommodation types at the top-level location (wing), surfaced only when this change alters the set of accommodation types held above the location being approved",
+            "items" : {
+              "type" : "string",
+              "description" : "Accommodation Types",
+              "enum" : [ "CARE_AND_SEPARATION", "HEALTHCARE_INPATIENTS", "NORMAL_ACCOMMODATION", "OTHER_NON_RESIDENTIAL" ]
+            }
+          },
+          "topLevelUsedFor" : {
+            "type" : [ "array", "null" ],
+            "description" : "Resulting (post-change) used-for types at the top-level location (wing), surfaced together with topLevelAccommodationTypes when the change affects the levels above",
+            "items" : {
+              "type" : "string",
+              "description" : "Used For Types",
+              "enum" : [ "CLOSE_SUPERVISION_CENTRE", "SUB_MISUSE_DRUG_RECOVERY", "FIRST_NIGHT_CENTRE", "HIGH_SECURITY", "IPP_LONG_TERM_SENTENCES", "MOTHER_AND_BABY", "OPEN_UNIT", "PATHWAY_TO_PROG", "PERINATAL_UNIT", "PERSONALITY_DISORDER", "PIPE", "REMAND", "SEPARATION_CENTRE", "STANDARD_ACCOMMODATION", "THERAPEUTIC_COMMUNITY", "VULNERABLE_PRISONERS", "YOUNG_PERSONS" ]
+            }
           }
         },
         "required" : [ "approvalType", "certifiedNormalAccommodationChange", "currentCellMark", "currentSignedOperationCapacity", "id", "maxCapacityChange", "prisonId", "requestedBy", "requestedDate", "signedOperationCapacityChange", "status", "workingCapacityChange" ]
@@ -9340,6 +9635,11 @@
           "cellMark" : {
             "type" : [ "string", "null" ],
             "description" : "Cell mark",
+            "example" : "Standard"
+          },
+          "currentCellMark" : {
+            "type" : [ "string", "null" ],
+            "description" : "Current cell mark before this approval",
             "example" : "Standard"
           },
           "localName" : {
@@ -9398,6 +9698,11 @@
             "type" : [ "boolean", "null" ],
             "description" : "In-cell sanitation",
             "example" : true
+          },
+          "currentInCellSanitation" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Current in-cell sanitation before this approval",
+            "example" : false
           },
           "locationType" : {
             "type" : "string",
@@ -10135,7 +10440,7 @@
             "description" : "Services that use this location",
             "items" : {
               "type" : "string",
-              "enum" : [ "APPOINTMENT", "PROGRAMMES_AND_ACTIVITIES", "VIDEO_LINK", "HEARING_LOCATION", "LOCATION_OF_INCIDENT", "INTERNAL_MOVEMENTS", "OFFICIAL_VISITS", "USE_OF_FORCE" ]
+              "enum" : [ "APPOINTMENT", "PROGRAMMES_AND_ACTIVITIES", "VIDEO_LINK", "HEARING_LOCATION", "LOCATION_OF_INCIDENT", "INTERNAL_MOVEMENTS", "OFFICIAL_VISITS", "USE_OF_FORCE", "VIDEO_ENABLED" ]
             },
             "uniqueItems" : true
           },
@@ -10265,6 +10570,171 @@
         },
         "required" : [ "levelCode" ]
       },
+      "CellCertificateUploadDto" : {
+        "type" : "object",
+        "description" : "Cell certificate upload summary",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "Unique identifier for this upload, used to monitor progress",
+            "example" : "01912e1e-0000-7000-8000-000000000000"
+          },
+          "prisonId" : {
+            "type" : "string",
+            "description" : "Prison ID",
+            "example" : "MDI"
+          },
+          "status" : {
+            "type" : "string",
+            "description" : "Current status of the upload",
+            "enum" : [ "PENDING", "STARTED", "FINISHED" ],
+            "example" : "PENDING"
+          },
+          "totalRecords" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Total number of records to be processed",
+            "example" : 240
+          },
+          "processedRecords" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Number of records processed so far",
+            "example" : 0
+          },
+          "skippedRecords" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Number of records skipped",
+            "example" : 0
+          },
+          "failedRecords" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Number of records that failed",
+            "example" : 0
+          },
+          "requestedBy" : {
+            "type" : "string",
+            "description" : "Who requested the upload",
+            "example" : "MALEXANDER_GEN"
+          },
+          "requestedDate" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "When the upload was requested"
+          },
+          "startTime" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "When processing started"
+          },
+          "endTime" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "When processing finished"
+          },
+          "cellCertificateId" : {
+            "type" : [ "string", "null" ],
+            "format" : "uuid",
+            "description" : "ID of the cell certificate generated from this upload, set once complete"
+          },
+          "reasonForChange" : {
+            "type" : [ "string", "null" ],
+            "description" : "Reason supplied for the change, where required"
+          },
+          "locations" : {
+            "type" : [ "array", "null" ],
+            "description" : "Per-cell results, only populated when drilling into a single upload",
+            "items" : {
+              "$ref" : "#/components/schemas/CellCertificateUploadLocationDto"
+            }
+          }
+        },
+        "required" : [ "failedRecords", "id", "prisonId", "processedRecords", "requestedBy", "requestedDate", "skippedRecords", "status", "totalRecords" ]
+      },
+      "CellCertificateUploadLocationDto" : {
+        "type" : "object",
+        "description" : "Result of processing a single uploaded cell",
+        "properties" : {
+          "locationKey" : {
+            "type" : "string",
+            "description" : "Cell location key",
+            "example" : "MDI-A-1-001"
+          },
+          "status" : {
+            "type" : "string",
+            "description" : "Outcome of processing this cell",
+            "enum" : [ "PENDING", "PROCESSED", "SKIPPED", "FAILED" ],
+            "example" : "PROCESSED"
+          },
+          "message" : {
+            "type" : [ "string", "null" ],
+            "description" : "Message describing the outcome, e.g. why it was skipped or failed"
+          },
+          "processedDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "When this cell was processed"
+          },
+          "maxCapacity" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Requested max capacity",
+            "example" : 2
+          },
+          "workingCapacity" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Requested working capacity",
+            "example" : 1
+          },
+          "certifiedNormalAccommodation" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int32",
+            "description" : "Requested certified normal accommodation",
+            "example" : 2
+          },
+          "cellMark" : {
+            "type" : [ "string", "null" ],
+            "description" : "Requested cell mark (door number)",
+            "example" : "A1-01"
+          },
+          "inCellSanitation" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Requested in-cell sanitation flag"
+          },
+          "previousMaxCapacity" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int32",
+            "description" : "Max capacity before the change",
+            "example" : 3
+          },
+          "previousWorkingCapacity" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int32",
+            "description" : "Working capacity before the change",
+            "example" : 2
+          },
+          "previousCertifiedNormalAccommodation" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int32",
+            "description" : "Certified normal accommodation before the change",
+            "example" : 2
+          },
+          "previousCellMark" : {
+            "type" : [ "string", "null" ],
+            "description" : "Cell mark before the change",
+            "example" : "A1-99"
+          },
+          "previousInCellSanitation" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "In-cell sanitation before the change"
+          }
+        },
+        "required" : [ "locationKey", "maxCapacity", "status", "workingCapacity" ]
+      },
       "PatchResidentialLocationRequest" : {
         "type" : "object",
         "description" : "Request to update a residential location",
@@ -10377,7 +10847,7 @@
             "description" : "Services that use this location",
             "items" : {
               "type" : "string",
-              "enum" : [ "APPOINTMENT", "PROGRAMMES_AND_ACTIVITIES", "VIDEO_LINK", "HEARING_LOCATION", "LOCATION_OF_INCIDENT", "INTERNAL_MOVEMENTS", "OFFICIAL_VISITS", "USE_OF_FORCE" ]
+              "enum" : [ "APPOINTMENT", "PROGRAMMES_AND_ACTIVITIES", "VIDEO_LINK", "HEARING_LOCATION", "LOCATION_OF_INCIDENT", "INTERNAL_MOVEMENTS", "OFFICIAL_VISITS", "USE_OF_FORCE", "VIDEO_ENABLED" ]
             },
             "uniqueItems" : true
           },
@@ -10580,9 +11050,19 @@
             "type" : "integer",
             "format" : "int32",
             "description" : "Out of order"
+          },
+          "cellsOvercrowded" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Number of overcrowded cells (cells holding more prisoners than their CNA)"
+          },
+          "totalOvercrowded" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Total amount of overcrowding (sum of prisoners over CNA across all cells)"
           }
         },
-        "required" : [ "bedsInUse", "currentlyInCell", "currentlyOut", "netVacancies", "outOfOrder", "workingCapacity" ]
+        "required" : [ "bedsInUse", "cellsOvercrowded", "currentlyInCell", "currentlyOut", "netVacancies", "outOfOrder", "totalOvercrowded", "workingCapacity" ]
       },
       "PrisonRollCount" : {
         "type" : "object",
@@ -10687,6 +11167,16 @@
             "enum" : [ "DAMAGED", "DAMP", "MAINTENANCE", "MOTHBALLED", "PEST", "REFURBISHMENT", "SECURITY_SEALED", "STAFF_SHORTAGE", "NEW_BUILD", "CONVERT_CELL_TO_ROOM", "OTHER" ],
             "example" : "DAMAGED"
           },
+          "overcrowded" : {
+            "type" : "boolean",
+            "description" : "Indicates this location is overcrowded (for a cell, holds more prisoners than its CNA)"
+          },
+          "overcrowdedBy" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Amount of overcrowding (for a cell, prisoners over CNA; for a parent, the total across its cells)",
+            "example" : 1
+          },
           "rollCount" : {
             "$ref" : "#/components/schemas/LocationRollCount",
             "description" : "Roll count details"
@@ -10699,7 +11189,7 @@
             }
           }
         },
-        "required" : [ "certified", "fullLocationPath", "key", "locationCode", "locationId", "locationType", "rollCount" ]
+        "required" : [ "certified", "fullLocationPath", "key", "locationCode", "locationId", "locationType", "overcrowded", "overcrowdedBy", "rollCount" ]
       },
       "LocationSummary" : {
         "type" : "object",
@@ -10835,14 +11325,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "unpaged" : {
+            "type" : "boolean"
+          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
           },
           "paged" : {
-            "type" : "boolean"
-          },
-          "unpaged" : {
             "type" : "boolean"
           }
         }
@@ -11349,6 +11839,47 @@
           }
         },
         "required" : [ "description", "key", "values" ]
+      },
+      "CellCertificateDashboardDto" : {
+        "type" : "object",
+        "description" : "A summary row for a prison with a current cell certificate, used by the capacity management dashboard",
+        "properties" : {
+          "prisonId" : {
+            "type" : "string",
+            "description" : "Prison ID",
+            "example" : "MDI"
+          },
+          "prisonName" : {
+            "type" : "string",
+            "description" : "Prison name",
+            "example" : "Moorland (HMP & YOI)"
+          },
+          "certifiedWorkingCapacity" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Certified working capacity for the prison",
+            "example" : 1186
+          },
+          "signedOperationCapacity" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Signed operational capacity for the prison",
+            "example" : 1190
+          },
+          "pendingChangeRequests" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Number of pending certification change requests for the prison",
+            "example" : 0
+          },
+          "certificateLastUpdated" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "When the current certificate was last updated",
+            "example" : "2025-02-02T12:00:00"
+          }
+        },
+        "required" : [ "certificateLastUpdated", "certifiedWorkingCapacity", "pendingChangeRequests", "prisonId", "prisonName", "signedOperationCapacity" ]
       }
     },
     "securitySchemes" : {
