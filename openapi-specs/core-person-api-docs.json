@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-06-15.3829.dad8f16"
+    "version" : "2026-06-23.3995.b1d5b6a"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -832,7 +832,35 @@
   },
   "components" : {
     "schemas" : {
-      "Address" : {
+      "Identifier" : {
+        "type" : "object",
+        "properties" : {
+          "nomisIdentifierId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The nomis identifier id",
+            "example" : 4567
+          },
+          "type" : {
+            "type" : "string",
+            "description" : "The identifier type",
+            "enum" : [ "PNC", "CRO", "NINO", "DL" ],
+            "example" : "PNC"
+          },
+          "value" : {
+            "type" : "string",
+            "description" : "The identifier value",
+            "example" : "2000/1234567A"
+          },
+          "comment" : {
+            "type" : [ "string", "null" ],
+            "description" : "The identifier comment",
+            "example" : "Some comment"
+          }
+        },
+        "required" : [ "nomisIdentifierId", "type", "value" ]
+      },
+      "PrisonAddress" : {
         "type" : "object",
         "properties" : {
           "nomisAddressId" : {
@@ -928,20 +956,20 @@
             "type" : "array",
             "description" : "List of address usages",
             "items" : {
-              "$ref" : "#/components/schemas/AddressUsage"
+              "$ref" : "#/components/schemas/PrisonAddressUsage"
             }
           },
           "contacts" : {
             "type" : "array",
             "description" : "List of address contacts",
             "items" : {
-              "$ref" : "#/components/schemas/Contact"
+              "$ref" : "#/components/schemas/PrisonContact"
             }
           }
         },
         "required" : [ "addressUsage", "contacts", "isPrimary", "nomisAddressId" ]
       },
-      "AddressUsage" : {
+      "PrisonAddressUsage" : {
         "type" : "object",
         "properties" : {
           "nomisAddressUsageId" : {
@@ -964,7 +992,7 @@
         },
         "required" : [ "addressUsageCode", "isActive", "nomisAddressUsageId" ]
       },
-      "Alias" : {
+      "PrisonAlias" : {
         "type" : "object",
         "properties" : {
           "nomisAliasId" : {
@@ -1021,7 +1049,7 @@
         },
         "required" : [ "identifiers", "nomisAliasId" ]
       },
-      "Contact" : {
+      "PrisonContact" : {
         "type" : "object",
         "properties" : {
           "nomisContactId" : {
@@ -1049,7 +1077,7 @@
         },
         "required" : [ "type" ]
       },
-      "DemographicAttributes" : {
+      "PrisonDemographicAttributes" : {
         "type" : "object",
         "properties" : {
           "birthPlace" : {
@@ -1109,73 +1137,7 @@
           }
         }
       },
-      "Identifier" : {
-        "type" : "object",
-        "properties" : {
-          "nomisIdentifierId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The nomis identifier id",
-            "example" : 4567
-          },
-          "type" : {
-            "type" : "string",
-            "description" : "The identifier type",
-            "enum" : [ "PNC", "CRO", "NINO", "DL" ],
-            "example" : "PNC"
-          },
-          "value" : {
-            "type" : "string",
-            "description" : "The identifier value",
-            "example" : "2000/1234567A"
-          },
-          "comment" : {
-            "type" : [ "string", "null" ],
-            "description" : "The identifier comment",
-            "example" : "Some comment"
-          }
-        },
-        "required" : [ "nomisIdentifierId", "type", "value" ]
-      },
-      "Prisoner" : {
-        "type" : "object",
-        "properties" : {
-          "demographicAttributes" : {
-            "$ref" : "#/components/schemas/DemographicAttributes",
-            "description" : "The demographic attributes of the person"
-          },
-          "pseudonyms" : {
-            "type" : "array",
-            "description" : "The aliases of the person",
-            "items" : {
-              "$ref" : "#/components/schemas/Alias"
-            }
-          },
-          "addresses" : {
-            "type" : "array",
-            "description" : "The addresses of the person",
-            "items" : {
-              "$ref" : "#/components/schemas/Address"
-            }
-          },
-          "personContacts" : {
-            "type" : "array",
-            "description" : "The contacts of the person",
-            "items" : {
-              "$ref" : "#/components/schemas/Contact"
-            }
-          },
-          "sentences" : {
-            "type" : "array",
-            "description" : "The sentence dates of the person",
-            "items" : {
-              "$ref" : "#/components/schemas/Sentence"
-            }
-          }
-        },
-        "required" : [ "addresses", "demographicAttributes", "personContacts", "pseudonyms", "sentences" ]
-      },
-      "Sentence" : {
+      "PrisonSentence" : {
         "type" : "object",
         "properties" : {
           "sentenceDate" : {
@@ -1185,6 +1147,44 @@
             "example" : "1980-01-01"
           }
         }
+      },
+      "Prisoner" : {
+        "type" : "object",
+        "properties" : {
+          "demographicAttributes" : {
+            "$ref" : "#/components/schemas/PrisonDemographicAttributes",
+            "description" : "The demographic attributes of the person"
+          },
+          "pseudonyms" : {
+            "type" : "array",
+            "description" : "The aliases of the person",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonAlias"
+            }
+          },
+          "addresses" : {
+            "type" : "array",
+            "description" : "The addresses of the person",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonAddress"
+            }
+          },
+          "personContacts" : {
+            "type" : "array",
+            "description" : "The contacts of the person",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonContact"
+            }
+          },
+          "sentences" : {
+            "type" : "array",
+            "description" : "The sentence dates of the person",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonSentence"
+            }
+          }
+        },
+        "required" : [ "addresses", "demographicAttributes", "personContacts", "pseudonyms", "sentences" ]
       },
       "AddressContactMapping" : {
         "type" : "object",
@@ -1711,7 +1711,7 @@
             "example" : "AGNO"
           },
           "changeReasonKnown" : {
-            "type" : [ "boolean", "null" ],
+            "type" : "boolean",
             "description" : "The religion change reason known",
             "example" : true
           },
@@ -1760,7 +1760,7 @@
             "example" : "12345"
           }
         },
-        "required" : [ "createDateTime", "createUserId", "current", "nomisReligionId", "religionCode", "startDate" ]
+        "required" : [ "changeReasonKnown", "createDateTime", "createUserId", "current", "nomisReligionId", "religionCode", "startDate" ]
       },
       "PrisonReligionRequest" : {
         "type" : "object",
@@ -2536,19 +2536,19 @@
         "type" : "object",
         "properties" : {
           "religionCode" : {
-            "type" : [ "string", "null" ]
+            "type" : "string"
           },
           "religionDescription" : {
             "type" : [ "string", "null" ]
           },
           "changeReasonKnown" : {
-            "type" : [ "boolean", "null" ]
+            "type" : "boolean"
           },
           "comments" : {
             "type" : [ "string", "null" ]
           },
           "startDate" : {
-            "type" : [ "string", "null" ],
+            "type" : "string",
             "format" : "date"
           },
           "endDate" : {
@@ -2563,7 +2563,7 @@
             "type" : [ "string", "null" ]
           },
           "current" : {
-            "type" : [ "boolean", "null" ]
+            "type" : "boolean"
           },
           "createDateTime" : {
             "type" : "string",
@@ -2573,7 +2573,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "createDateTime", "createUserId" ]
+        "required" : [ "changeReasonKnown", "createDateTime", "createUserId", "current", "religionCode", "startDate" ]
       },
       "PrisonReligionReadResponse" : {
         "type" : "object",
