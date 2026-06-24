@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-06-23.1969.18eb6a3"
+    "version" : "2026-06-24.1996.655c485"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -70,6 +70,9 @@
   }, {
     "name" : "legacy-court-case-controller",
     "description" : "CRUD operations for syncing court case data from NOMIS into remand and sentencing api database."
+  }, {
+    "name" : "Aggravating Factors",
+    "description" : "Aggravating factors are used to determine the seriousness of an offence and the appropriate sentence. They are used in conjunction with mitigating factors to determine the overall seriousness of an offence."
   }, {
     "name" : "sentence-type-controller",
     "description" : "Sentence Type"
@@ -2432,7 +2435,7 @@
             "content" : {
               "*/*" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/SearchCourtAppearanceSchedulesResponse"
+                  "$ref" : "#/components/schemas/CourtAppearanceSchedulesResponse"
                 }
               }
             }
@@ -2442,7 +2445,7 @@
             "content" : {
               "*/*" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/SearchCourtAppearanceSchedulesResponse"
+                  "$ref" : "#/components/schemas/CourtAppearanceSchedulesResponse"
                 }
               }
             }
@@ -2452,7 +2455,7 @@
             "content" : {
               "*/*" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/SearchCourtAppearanceSchedulesResponse"
+                  "$ref" : "#/components/schemas/CourtAppearanceSchedulesResponse"
                 }
               }
             }
@@ -4672,6 +4675,54 @@
         }
       }
     },
+    "/person/{prisonerId}/court-appearance-schedules" : {
+      "get" : {
+        "tags" : [ "court-appearance-schedules-controller" ],
+        "summary" : "Get court appearance schedules by prisoner id",
+        "description" : "This endpoint will get court appearance in the schedules format for prisoner id",
+        "operationId" : "getCourtAppearanceSchedulesByPrisonerId",
+        "parameters" : [ {
+          "name" : "prisonerId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns court appearance schedules",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CourtAppearanceSchedulesResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CourtAppearanceSchedulesResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CourtAppearanceSchedulesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/person/{prisonerId}/booking-court-case-count" : {
       "get" : {
         "tags" : [ "person-controller" ],
@@ -6264,6 +6315,67 @@
         }
       }
     },
+    "/aggravating-factors/status" : {
+      "get" : {
+        "tags" : [ "Aggravating Factors" ],
+        "summary" : "Get all aggravating factors by status",
+        "description" : "This endpoint will get all aggravating factors by status",
+        "operationId" : "getAllAggravatingFactors",
+        "parameters" : [ {
+          "name" : "statuses",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "ACTIVE", "INACTIVE" ]
+            }
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns all aggravating factors",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/AggravatingFactor"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/AggravatingFactor"
+                  }
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/AggravatingFactor"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/legacy/charge/{chargeUuid}" : {
       "delete" : {
         "tags" : [ "legacy-charge-controller" ],
@@ -6848,7 +6960,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "08:55:09.066864987"
+            "example" : "09:21:26.52196289"
           },
           "outcomeDispositionCode" : {
             "type" : [ "string", "null" ]
@@ -7019,6 +7131,25 @@
         },
         "required" : [ "immigrationDetentionUuid" ]
       },
+      "AggravatingFactor" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "title" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : [ "string", "null" ]
+          },
+          "displayOrder" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "code", "displayOrder", "title" ]
+      },
       "CreateCharge" : {
         "type" : "object",
         "properties" : {
@@ -7078,6 +7209,12 @@
           "createChargeOrder" : {
             "type" : [ "integer", "null" ],
             "format" : "int32"
+          },
+          "aggravatingFactors" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AggravatingFactor"
+            }
           }
         },
         "required" : [ "offenceCode", "offenceStartDate", "prisonId" ]
@@ -7198,7 +7335,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "08:55:09.066864987"
+            "example" : "09:21:26.52196289"
           },
           "courtCode" : {
             "type" : "string"
@@ -7614,11 +7751,14 @@
           },
           "isDuplicate" : {
             "type" : "boolean"
+          },
+          "comments" : {
+            "type" : [ "string", "null" ]
           }
         },
         "required" : [ "courtCode", "id", "isDuplicate", "personIdentifier", "reason", "start" ]
       },
-      "SearchCourtAppearanceSchedulesResponse" : {
+      "CourtAppearanceSchedulesResponse" : {
         "type" : "object",
         "properties" : {
           "courtAppearances" : {
@@ -9720,25 +9860,6 @@
         },
         "required" : [ "appearances" ]
       },
-      "AggravatingFactor" : {
-        "type" : "object",
-        "properties" : {
-          "code" : {
-            "type" : "string"
-          },
-          "title" : {
-            "type" : "string"
-          },
-          "description" : {
-            "type" : [ "string", "null" ]
-          },
-          "displayOrder" : {
-            "type" : "integer",
-            "format" : "int32"
-          }
-        },
-        "required" : [ "code", "displayOrder", "title" ]
-      },
       "AppearanceType" : {
         "type" : "object",
         "properties" : {
@@ -10006,7 +10127,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "08:55:09.066864987"
+            "example" : "09:21:26.52196289"
           },
           "courtCode" : {
             "type" : "string"
@@ -10694,7 +10815,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "08:55:09.066864987"
+            "example" : "09:21:26.52196289"
           },
           "nomisOutcomeCode" : {
             "type" : [ "string", "null" ]
@@ -10773,7 +10894,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "08:55:09.066864987"
+            "example" : "09:21:26.52196289"
           },
           "courtId" : {
             "type" : "string"
@@ -10925,7 +11046,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "08:55:09.066864987"
+            "example" : "09:21:26.52196289"
           },
           "charges" : {
             "type" : "array",
@@ -10959,7 +11080,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "08:55:09.066864987"
+            "example" : "09:21:26.52196289"
           },
           "courtId" : {
             "type" : "string"
@@ -11244,15 +11365,15 @@
             "type" : "integer",
             "format" : "int64"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
           },
           "paged" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "pageSize" : {
             "type" : "integer",
@@ -11548,7 +11669,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "08:55:09.066864987"
+            "example" : "09:21:26.52196289"
           },
           "courtCode" : {
             "type" : [ "string", "null" ]
