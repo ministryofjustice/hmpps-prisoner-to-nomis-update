@@ -117,11 +117,9 @@ generic-service:
     - name: court-scheduler-active-recon
       type: COURT_SCHEDULER_ACTIVE_RECON
       schedule: "00 4 * * SUN,MON,TUE,WED,THU,FRI"
-      suspend: true
     - name: court-scheduler-all-recon
       type: COURT_SCHEDULER_ALL_RECON
       schedule: "00 4 * * SAT"
-      suspend: true
     - name: csip-recon
       type: CSIP_RECON
       schedule: "5 0 * * *"
