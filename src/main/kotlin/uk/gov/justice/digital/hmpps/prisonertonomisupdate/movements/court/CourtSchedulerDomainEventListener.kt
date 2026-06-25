@@ -63,6 +63,7 @@ data class CourtSchedulerEvent(
 data class CourtSchedulerAdditionalInformation(
   val id: UUID,
   val source: String,
+  val externalReferenceUrn: String? = null,
 )
 
 data class PersonReference(val identifiers: List<Identifier> = listOf()) {
