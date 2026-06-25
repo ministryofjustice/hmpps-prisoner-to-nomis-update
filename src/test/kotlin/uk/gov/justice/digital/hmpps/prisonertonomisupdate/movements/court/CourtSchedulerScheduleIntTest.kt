@@ -299,6 +299,55 @@ class CourtSchedulerScheduleIntTest(
           )
         }
       }
+
+      @Nested
+      inner class WhenUpdateComesFromSentencing {
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetCourtScheduleMapping(status = NOT_FOUND)
+          dpsApi.stubGetCourtAppearance(id = dpsCourtAppearanceId, startTime = startTime)
+          nomisApi.stubUpsertCourtScheduleOut(response = UpsertCourtScheduleOutResponse(12345L, nomisEventId))
+          mappingApi.stubCreateCourtScheduleMapping()
+
+          publishCourtAppearanceDomainEvent(
+            dpsId = dpsCourtAppearanceId,
+            prisonerNumber = "A1234BC",
+            eventType = "person.court-appearance.scheduled",
+            externalReferenceExists = true,
+          )
+          waitForAnyProcessingToComplete("court-scheduler-schedule-create-ignored")
+        }
+
+        @Test
+        fun `will not check for existing mapping`() {
+          mappingApi.verify(
+            count = 0,
+            getRequestedFor(urlEqualTo("/mapping/court-scheduler/schedule/dps-id/$dpsCourtAppearanceId")),
+          )
+        }
+
+        @Test
+        fun `will not upsert NOMIS court schedule`() {
+          nomisApi.verify(
+            count = 0,
+            putRequestedFor(urlEqualTo("/movements/A1234BC/court/schedule/out")),
+          )
+        }
+
+        @Test
+        fun `will publish ignored telemetry`() {
+          verify(telemetryClient).trackEvent(
+            eq("court-scheduler-schedule-create-ignored"),
+            check {
+              assertThat(it).containsEntry("dpsCourtAppearanceId", "$dpsCourtAppearanceId")
+              assertThat(it).containsEntry("offenderNo", prisonerNumber)
+              assertThat(it).containsEntry("externalReferenceUrn", "some-ext-ref")
+            },
+            isNull(),
+          )
+        }
+      }
     }
 
     @Nested
@@ -345,8 +394,8 @@ class CourtSchedulerScheduleIntTest(
       nomisApi.stubDeleteCourtScheduleOut(prisonerNumber, nomisEventId)
     }
 
-    private fun publishDeleteEvent(source: String = "DPS", completedTelemetry: String? = null) {
-      publishCourtAppearanceDomainEvent(dpsCourtAppearanceId, prisonerNumber, source, "person.court-appearance.cancelled")
+    private fun publishDeleteEvent(source: String = "DPS", completedTelemetry: String? = null, externalReferenceExists: Boolean = false) {
+      publishCourtAppearanceDomainEvent(dpsCourtAppearanceId, prisonerNumber, source, "person.court-appearance.cancelled", externalReferenceExists)
       if (completedTelemetry == null) {
         waitForAnyProcessingToComplete()
       } else {
@@ -431,11 +480,31 @@ class CourtSchedulerScheduleIntTest(
         isNull(),
       )
     }
+
+    @Test
+    fun `should ignore if message has a sentencing external reference`() {
+      publishDeleteEvent(externalReferenceExists = true)
+
+      verify(telemetryClient).trackEvent(
+        eq("court-scheduler-schedule-delete-ignored"),
+        check {
+          assertThat(it).containsEntry("dpsCourtAppearanceId", dpsCourtAppearanceId.toString())
+          assertThat(it).containsEntry("offenderNo", prisonerNumber)
+        },
+        isNull(),
+      )
+    }
   }
 
-  private fun publishCourtAppearanceDomainEvent(dpsId: UUID, prisonerNumber: String, source: String = "DPS", eventType: String = "person.court-appearance.scheduled") {
+  private fun publishCourtAppearanceDomainEvent(
+    dpsId: UUID,
+    prisonerNumber: String,
+    source: String = "DPS",
+    eventType: String = "person.court-appearance.scheduled",
+    externalReferenceExists: Boolean = false,
+  ) {
     with(eventType) {
-      publishDomainEvent(eventType = this, payload = messagePayload(eventType = this, id = dpsId, prisonerNumber = prisonerNumber, source = source))
+      publishDomainEvent(eventType = this, payload = messagePayload(eventType = this, id = dpsId, prisonerNumber = prisonerNumber, source = source, externalReferenceExists = externalReferenceExists))
     }
   }
 
@@ -460,6 +529,7 @@ class CourtSchedulerScheduleIntTest(
     prisonerNumber: String,
     id: UUID,
     source: String,
+    externalReferenceExists: Boolean = false,
   ) = //language=JSON
     """
     {
@@ -468,6 +538,7 @@ class CourtSchedulerScheduleIntTest(
       "additionalInformation": {
         "id": "$id",
         "source": "$source"
+        ${if (externalReferenceExists) """, "externalReferenceUrn":"some-ext-ref"""" else "" }
       },
       "personReference": {
         "identifiers": [

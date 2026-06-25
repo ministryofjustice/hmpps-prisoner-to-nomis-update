@@ -16,6 +16,13 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.createMapping
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.track
 import java.util.*
 
+// These events are ignored if there is a RaS external reference on the event (we expect this to be true for all events soon)
+val ignoreSentencingEvents = listOf(
+  "person.court-appearance.scheduled",
+  "person.court-appearance.recorded",
+  "person.court-appearance.cancelled",
+)
+
 @Service
 class CourtSchedulerAppearanceService(
   private val mappingApi: CourtSchedulerMappingApiService,
@@ -36,13 +43,15 @@ class CourtSchedulerAppearanceService(
   suspend fun courtAppearanceChanged(event: CourtSchedulerEvent) {
     val prisonerNumber = event.personReference.prisonerNumber()
     val dpsCourtAppearanceId = event.additionalInformation.id
+    val externalReference = event.additionalInformation.externalReferenceUrn
     val telemetryMap = mutableMapOf(
       "offenderNo" to prisonerNumber,
       "dpsCourtAppearanceId" to dpsCourtAppearanceId.toString(),
+      "externalReferenceUrn" to externalReference.toString(),
     )
     var telemetryKey = TELEMETRY_KEY_CREATE
 
-    if (event.additionalInformation.source != "DPS") {
+    if (event.additionalInformation.source != "DPS" || shouldIgnoreSentencingEvent(externalReference, event.eventType)) {
       telemetryClient.trackEvent("$telemetryKey-ignored", telemetryMap)
       return
     }
@@ -73,12 +82,14 @@ class CourtSchedulerAppearanceService(
   suspend fun courtAppearanceDeleted(event: CourtSchedulerEvent) {
     val prisonerNumber = event.personReference.prisonerNumber()
     val dpsCourtAppearanceId = event.additionalInformation.id
+    val externalReference = event.additionalInformation.externalReferenceUrn
     val telemetryMap = mutableMapOf(
       "offenderNo" to prisonerNumber,
       "dpsCourtAppearanceId" to dpsCourtAppearanceId.toString(),
+      "externalReferenceUrn" to externalReference.toString(),
     )
 
-    if (event.additionalInformation.source != "DPS") {
+    if (event.additionalInformation.source != "DPS" || shouldIgnoreSentencingEvent(externalReference, event.eventType)) {
       telemetryClient.trackEvent("$TELEMETRY_KEY_DELETE-ignored", telemetryMap)
       return
     }
@@ -150,3 +161,5 @@ fun String.toNomisSchedulesStatus(external: Boolean) = when {
 }
 
 class CourtSchedulerSyncException(message: String) : RuntimeException(message)
+
+private fun shouldIgnoreSentencingEvent(externalReferenceUrn: String?, eventType: String): Boolean = ignoreSentencingEvents.contains(eventType) && externalReferenceUrn != null
