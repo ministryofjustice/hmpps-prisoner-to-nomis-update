@@ -369,6 +369,154 @@ class CourtSchedulerReconciliationIntTest(
         )
       }
     }
+
+    @Nested
+    inner class AdditionalMovementsInDpsWithPartialResults {
+      private val offender: String = "A0001TZ"
+      private val courtEventId: UUID = UUID.randomUUID()
+      private val courtEventMovementOutId: UUID = UUID.randomUUID()
+      private val courtEventMovementInId: UUID = UUID.randomUUID()
+      private val courtMovementOutId: UUID = UUID.randomUUID()
+      private val courtMovementInId: UUID = UUID.randomUUID()
+      private val courtEventMovementOutId2: UUID = UUID.randomUUID()
+      private val courtEventMovementInId2: UUID = UUID.randomUUID()
+      private val courtMovementOutId2: UUID = UUID.randomUUID()
+      private val courtMovementInId2: UUID = UUID.randomUUID()
+
+      @BeforeEach
+      fun `stub additional DPS entities and run report`() = runTest {
+        courtScheduleNomisApi.stubGetOffenderCourtMovements(
+          offenderNo = offender,
+          response = offenderCourtMovementsResponse(
+            courtSchedules = listOf(
+              bookingCourtSchedule(
+                eventId = 123,
+                courtMovementOut = bookingCourtMovementOut(seq = 456),
+                courtMovementIn = bookingCourtMovementIn(seq = 789),
+              ),
+            ),
+            unscheduledCourtMovementOuts = listOf(bookingCourtMovementOut(seq = 654)),
+            unscheduledCourtMovementIns = listOf(bookingCourtMovementIn(seq = 987)),
+          ),
+        )
+
+        // None of the movements suffixed "2" exist in NOMIS or the mapping service.
+        // This is to test a bug where ALL DPS movements were being reported, not just those missing from NOMIS
+        dpsApi.stubGetCourtSchedulerReconciliation(
+          personIdentifier = offender,
+          response = reconciliation(
+            courtEvents = listOf(
+              ReconciliationCourtEvent(
+                courtEvent = courtEvent(id = courtEventId),
+                movements = listOf(
+                  courtEventMovement(id = courtEventMovementOutId),
+                  courtEventMovement(id = courtEventMovementOutId2),
+                  courtEventMovement(id = courtEventMovementInId).copy(fromAgencyId = "LEEDMC", toAgencyId = "BXI", directionCode = "IN"),
+                  courtEventMovement(id = courtEventMovementInId2).copy(fromAgencyId = "LEEDMC", toAgencyId = "BXI", directionCode = "IN"),
+                ),
+              ),
+            ),
+            unscheduledMovements = listOf(
+              courtEventMovement(id = courtMovementOutId),
+              courtEventMovement(id = courtMovementOutId2),
+              courtEventMovement(id = courtMovementInId).copy(fromAgencyId = "LEEDMC", toAgencyId = "BXI", directionCode = "IN"),
+              courtEventMovement(id = courtMovementInId2).copy(fromAgencyId = "LEEDMC", toAgencyId = "BXI", directionCode = "IN"),
+            ),
+          ),
+        )
+
+        mappingApi.stubGetCourtSchedulerPrisonerMappingIds(
+          prisonerNumber = offender,
+          idMappings = CourtSchedulerPrisonerMappingIdsDto(
+            prisonerNumber = offender,
+            schedules = listOf(
+              CourtScheduleMappingIdsDto(123, courtEventId),
+            ),
+            movements = listOf(
+              CourtMovementMappingIdsDto(12345, 456, courtEventMovementOutId),
+              CourtMovementMappingIdsDto(12345, 789, courtEventMovementInId),
+              CourtMovementMappingIdsDto(12345, 654, courtMovementOutId),
+              CourtMovementMappingIdsDto(12345, 987, courtMovementInId),
+            ),
+          ),
+        )
+
+        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+        awaitReportFinished()
+      }
+
+      @Test
+      fun `should report extra DPS court movements OUT`() = runTest {
+        verify(telemetryClient).trackEvent(
+          eq("court-scheduler-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "offenderNo" to offender,
+              "type" to "SCHEDULED_MOVEMENT_OUT",
+              "nomisCount" to "1",
+              "dpsCount" to "2",
+              "unexpected-nomis-ids" to "[]",
+              "unexpected-dps-ids" to "[$courtEventMovementOutId2]",
+            ),
+          ),
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `should report extra unscheduled DPS court movements OUT`() = runTest {
+        verify(telemetryClient).trackEvent(
+          eq("court-scheduler-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "offenderNo" to offender,
+              "type" to "UNSCHEDULED_MOVEMENT_OUT",
+              "nomisCount" to "1",
+              "dpsCount" to "2",
+              "unexpected-nomis-ids" to "[]",
+              "unexpected-dps-ids" to "[$courtMovementOutId2]",
+            ),
+          ),
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `should report extra DPS court movements IN`() = runTest {
+        verify(telemetryClient).trackEvent(
+          eq("court-scheduler-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "offenderNo" to offender,
+              "type" to "SCHEDULED_MOVEMENT_IN",
+              "nomisCount" to "1",
+              "dpsCount" to "2",
+              "unexpected-nomis-ids" to "[]",
+              "unexpected-dps-ids" to "[$courtEventMovementInId2]",
+            ),
+          ),
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `should report extra unscheduled DPS court movements IN`() = runTest {
+        verify(telemetryClient).trackEvent(
+          eq("court-scheduler-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "offenderNo" to offender,
+              "type" to "UNSCHEDULED_MOVEMENT_IN",
+              "nomisCount" to "1",
+              "dpsCount" to "2",
+              "unexpected-nomis-ids" to "[]",
+              "unexpected-dps-ids" to "[$courtMovementInId2]",
+            ),
+          ),
+          isNull(),
+        )
+      }
+    }
   }
 
   @Nested
