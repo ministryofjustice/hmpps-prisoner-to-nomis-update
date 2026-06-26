@@ -21,26 +21,6 @@ class CourtSentencingRepairService(
   private val dpsApiService: CourtSentencingApiService,
   private val courtCaseMappingService: CourtSentencingMappingService,
 ) {
-  suspend fun chargeInsertedRepair(request: CourtChargeRequest) {
-    val event: CourtSentencingService.CourtChargeCreatedEvent = CourtSentencingService.CourtChargeCreatedEvent(
-      additionalInformation = CourtSentencingService.CourtChargeAdditionalInformation(
-        courtChargeId = request.dpsChargeId,
-        courtCaseId = request.dpsCaseId,
-        source = "DPS",
-        courtAppearanceId = null,
-      ),
-      personReference = PersonReferenceList(
-        identifiers = listOf(
-          PersonReference(
-            type = "NOMS",
-            value = request.offenderNo,
-          ),
-        ),
-      ),
-    )
-    courtSentencingService.createCharge(event)
-  }
-
   suspend fun cloneCaseToLatestBooking(offenderNo: String, dpsCourtCaseId: String) {
     val telemetryMap = mutableMapOf(
       "dpsCourtCaseId" to dpsCourtCaseId,

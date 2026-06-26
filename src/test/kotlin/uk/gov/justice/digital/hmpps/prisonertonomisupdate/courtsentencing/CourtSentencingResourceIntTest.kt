@@ -15,6 +15,7 @@ import org.mockito.ArgumentMatchers.eq
 import org.mockito.kotlin.any
 import org.mockito.kotlin.check
 import org.mockito.kotlin.isNull
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
@@ -359,53 +360,26 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
     inner class Security {
       @Test
       fun `access forbidden when no role`() {
-        webTestClient.post().uri("/court-sentencing/court-charges/repair")
+        webTestClient.post().uri("/prisoners/$OFFENDER_NO/court-sentencing/dps-court-case/$DPS_COURT_CASE_ID/dps-appearance/$DPS_COURT_APPEARANCE_ID/dps-charge/$DPS_COURT_CHARGE_ID/repair")
           .headers(setAuthorisation(roles = listOf()))
           .contentType(MediaType.APPLICATION_JSON)
-          .body(
-            BodyInserters.fromValue(
-              CourtChargeRequest(
-                offenderNo = OFFENDER_NO,
-                dpsChargeId = DPS_COURT_CHARGE_ID,
-                dpsCaseId = DPS_COURT_CASE_ID,
-              ),
-            ),
-          )
           .exchange()
           .expectStatus().isForbidden
       }
 
       @Test
       fun `access forbidden with wrong role`() {
-        webTestClient.post().uri("/court-sentencing/court-charges/repair")
+        webTestClient.post().uri("/prisoners/$OFFENDER_NO/court-sentencing/dps-court-case/$DPS_COURT_CASE_ID/dps-appearance/$DPS_COURT_APPEARANCE_ID/dps-charge/$DPS_COURT_CHARGE_ID/repair")
           .headers(setAuthorisation(roles = listOf("BANANAS")))
           .contentType(MediaType.APPLICATION_JSON)
-          .body(
-            BodyInserters.fromValue(
-              CourtChargeRequest(
-                offenderNo = OFFENDER_NO,
-                dpsChargeId = DPS_COURT_CHARGE_ID,
-                dpsCaseId = DPS_COURT_CASE_ID,
-              ),
-            ),
-          )
           .exchange()
           .expectStatus().isForbidden
       }
 
       @Test
       fun `access unauthorised with no auth token`() {
-        webTestClient.post().uri("/court-sentencing/court-charges/repair")
+        webTestClient.post().uri("/prisoners/$OFFENDER_NO/court-sentencing/dps-court-case/$DPS_COURT_CASE_ID/dps-appearance/$DPS_COURT_APPEARANCE_ID/dps-charge/$DPS_COURT_CHARGE_ID/repair")
           .contentType(MediaType.APPLICATION_JSON)
-          .body(
-            BodyInserters.fromValue(
-              CourtChargeRequest(
-                offenderNo = OFFENDER_NO,
-                dpsChargeId = DPS_COURT_CHARGE_ID,
-                dpsCaseId = DPS_COURT_CASE_ID,
-              ),
-            ),
-          )
           .exchange()
           .expectStatus().isUnauthorized
       }
@@ -416,10 +390,11 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setUp() {
-        CourtSentencingApiExtension.courtSentencingApi.stubGetCourtCharge(
+        CourtSentencingApiExtension.courtSentencingApi.stubGetCourtChargeByAppearance(
           DPS_COURT_CHARGE_ID,
           offenderNo = OFFENDER_NO,
           caseID = DPS_COURT_CASE_ID,
+          courtAppearanceId = DPS_COURT_APPEARANCE_ID,
         )
         courtSentencingNomisApi.stubCourtChargeCreate(
           OFFENDER_NO,
@@ -431,35 +406,30 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
           nomisCourtCaseId = NOMIS_COURT_CASE_ID,
         )
 
+        courtSentencingMappingApi.stubGetCourtAppearanceMappingGivenDpsId(
+          id = DPS_COURT_APPEARANCE_ID,
+          nomisCourtAppearanceId = NOMIS_COURT_APPEARANCE_ID,
+        )
+
         courtSentencingMappingApi.stubGetCourtChargeMappingGivenDpsIdWithError(DPS_COURT_CHARGE_ID, 404)
         courtSentencingMappingApi.stubCreateCourtCharge()
 
-        webTestClient.post().uri("/court-sentencing/court-charges/repair")
+        webTestClient.post().uri("/prisoners/$OFFENDER_NO/court-sentencing/dps-court-case/$DPS_COURT_CASE_ID/dps-appearance/$DPS_COURT_APPEARANCE_ID/dps-charge/$DPS_COURT_CHARGE_ID/repair")
           .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_TO_NOMIS__UPDATE__RW")))
           .contentType(MediaType.APPLICATION_JSON)
-          .body(
-            BodyInserters.fromValue(
-              CourtChargeRequest(
-                offenderNo = OFFENDER_NO,
-                dpsChargeId = DPS_COURT_CHARGE_ID,
-                dpsCaseId = DPS_COURT_CASE_ID,
-              ),
-            ),
-          )
           .exchange()
           .expectStatus().isOk
+
+        waitForAnyProcessingToComplete(2)
       }
 
       @Test
       fun `will callback back to court sentencing service to get more details`() {
-        waitForAnyProcessingToComplete()
-        CourtSentencingApiExtension.courtSentencingApi.verify(WireMock.getRequestedFor(urlEqualTo("/legacy/charge/${DPS_COURT_CHARGE_ID}")))
+        CourtSentencingApiExtension.courtSentencingApi.verify(WireMock.getRequestedFor(urlEqualTo("/legacy/court-appearance/${DPS_COURT_APPEARANCE_ID}/charge/${DPS_COURT_CHARGE_ID}")))
       }
 
       @Test
       fun `will create success telemetry`() {
-        waitForAnyProcessingToComplete()
-
         verify(telemetryClient).trackEvent(
           eq("charge-create-success"),
           check {
@@ -476,14 +446,11 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will call nomis api to create the Charge`() {
-        waitForAnyProcessingToComplete()
         nomisApi.verify(postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/${NOMIS_COURT_CASE_ID}/charges")))
       }
 
       @Test
       fun `will create a mapping between the two charges`() {
-        waitForAnyProcessingToComplete()
-
         await untilAsserted {
           courtSentencingMappingApi.verify(
             postRequestedFor(urlEqualTo("/mapping/court-sentencing/court-charges"))
@@ -503,7 +470,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
               ),
           )
         }
-        await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
+        await untilAsserted { verify(telemetryClient, times(2)).trackEvent(any(), any(), isNull()) }
       }
     }
   }

@@ -6,17 +6,14 @@ import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
-import jakarta.validation.Valid
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
@@ -59,19 +56,6 @@ class CourtSentencingResource(
   suspend fun getCaseReconciliationByOffenderNoList(
     @RequestBody offenderNoList: List<String>,
   ): List<List<MismatchCaseResponse>> = courtSentencingReconciliationService.manualCheckCaseOffenderNoList(offenderNoList = offenderNoList)
-
-  @PostMapping("/court-sentencing/court-charges/repair")
-  @ResponseStatus(HttpStatus.OK)
-  @Operation(
-    summary = "Resynchronises a charge.inserted from DPS to NOMIS",
-    description = "Used when DPS is in the correct state but NOMIS is wrong, so emergency use only. Requires ROLE_PRISONER_TO_NOMIS__UPDATE__RW",
-  )
-  suspend fun chargeInserted(
-    @RequestBody @Valid
-    request: CourtChargeRequest,
-  ) {
-    courtSentencingRepairService.chargeInsertedRepair(request = request)
-  }
 
   @PostMapping("/prisoners/{offenderNo}/court-sentencing/court-case/{dpsCourtCaseId}/booking-repair")
   @Operation(
@@ -180,6 +164,54 @@ class CourtSentencingResource(
     courtCaseId = courtCaseId,
     courtAppearanceId = appearanceId,
     sentenceId = sentenceId,
+  )
+
+  @PostMapping("/prisoners/{offenderNo}/court-sentencing/dps-court-case/{courtCaseId}/dps-appearance/{appearanceId}/dps-charge/{chargeId}/repair")
+  @Operation(
+    summary = "Resynchronises a charge insert from DPS to NOMIS",
+    description = "Used when a charge insert needs resynchronising to NOMIS which failed previously or was erroneously deleted, so emergency use only. Requires ROLE_PRISONER_TO_NOMIS__UPDATE__RW",
+    responses = [
+      ApiResponse(
+        responseCode = "200",
+        description = "repair successful",
+        content = [
+          Content(
+            mediaType = "application/json",
+            schema = Schema(implementation = CourtCaseRepairResponse::class),
+          ),
+        ],
+      ),
+      ApiResponse(
+        responseCode = "401",
+        description = "Unauthorized to access this endpoint",
+      ),
+      ApiResponse(
+        responseCode = "403",
+        description = "Incorrect permissions to call endpoint",
+      ),
+      ApiResponse(
+        responseCode = "404",
+        description = "Either mapping found for case/appearance or case/appearance/charge not found in DPS",
+      ),
+    ],
+  )
+  suspend fun repairChargeInsertInNomis(
+    @PathVariable
+    offenderNo: String,
+    @Schema(description = "The DPS ID of the related court case")
+    @PathVariable
+    courtCaseId: String,
+    @Schema(description = "The DPS ID of the related appearance")
+    @PathVariable
+    appearanceId: String,
+    @Schema(description = "The DPS ID of the charge to be re-synced to NOMIS")
+    @PathVariable
+    chargeId: String,
+  ) = courtSentencingRepairService.resynchroniseChargeInsertToNomis(
+    offenderNo = offenderNo,
+    courtCaseId = courtCaseId,
+    courtAppearanceId = appearanceId,
+    chargeId = chargeId,
   )
 
   @PostMapping("/prisoners/{offenderNo}/court-sentencing/dps-court-case/{courtCaseId}/dps-appearance/{appearanceId}/dps-sentence/{sentenceId}/dps-period-length/{periodLengthId}/repair")
