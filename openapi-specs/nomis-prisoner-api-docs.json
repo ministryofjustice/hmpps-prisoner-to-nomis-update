@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-06-24.1626.715fac9"
+    "version" : "2026-06-26.1637.7fab0f7"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -5039,6 +5039,15 @@
             "example" : "A1234AK"
           },
           "example" : "A1234AK"
+        }, {
+          "name" : "recreate",
+          "in" : "query",
+          "description" : "Recreate the court schedule out with the same event ID. This either creates a new court schedule out or overwrites the existing one if it exists.",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "description" : "Recreate the court schedule out with the same event ID. This either creates a new court schedule out or overwrites the existing one if it exists."
+          }
         } ],
         "requestBody" : {
           "content" : {
@@ -18360,6 +18369,68 @@
         }
       }
     },
+    "/prison/{prisonId}" : {
+      "get" : {
+        "tags" : [ "agency-resource" ],
+        "summary" : "Gets details of a prison",
+        "description" : "Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getPrison",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "description" : "Prison id (aka agencyId)",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prison id (aka agencyId)",
+            "example" : "WWI"
+          },
+          "example" : "WWI"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Prison details",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Prison not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/persons/ids" : {
       "get" : {
         "tags" : [ "contact-person-resource" ],
@@ -23281,6 +23352,68 @@
         }
       }
     },
+    "/agency/{agencyId}" : {
+      "get" : {
+        "tags" : [ "agency-resource" ],
+        "summary" : "Gets details of a agency",
+        "description" : "Requires ROLE_NOMIS_AGENCYER_API__SYNCHRONISATION__RW",
+        "operationId" : "getAgency",
+        "parameters" : [ {
+          "name" : "agencyId",
+          "in" : "path",
+          "description" : "Agency id (aka agencyId)",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Agency id (aka agencyId)",
+            "example" : "WWI"
+          },
+          "example" : "WWI"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Agency details",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AgencyResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Agency not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/agency-switches/{serviceCode}" : {
       "get" : {
         "tags" : [ "service-agency-switches-resource" ],
@@ -23409,6 +23542,68 @@
           },
           "404" : {
             "description" : "Not Found, the service is not turned on for the prison",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agency-location/{agencyId}" : {
+      "get" : {
+        "tags" : [ "agency-resource" ],
+        "summary" : "Gets details of a agency",
+        "description" : "Requires ROLE_NOMIS_AGENCYER_API__SYNCHRONISATION__RW",
+        "operationId" : "getAgencyLocation",
+        "parameters" : [ {
+          "name" : "agencyId",
+          "in" : "path",
+          "description" : "Agency id (aka agencyId)",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Agency id (aka agencyId)",
+            "example" : "WWI"
+          },
+          "example" : "WWI"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Agency details",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AgencyLocationResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Agency not found",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -32445,12 +32640,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "paged" : {
+            "type" : "boolean"
+          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "paged" : {
-            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -35360,6 +35555,26 @@
           }
         },
         "required" : [ "alerts" ]
+      },
+      "PrisonResponse" : {
+        "type" : "object",
+        "properties" : {
+          "prisonId" : {
+            "type" : "string",
+            "description" : "The prison id",
+            "example" : "WWI"
+          },
+          "description" : {
+            "type" : "string",
+            "description" : "Name of prison",
+            "example" : "WANDSWORTH (HMP)"
+          },
+          "district" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "Area district"
+          }
+        },
+        "required" : [ "description", "prisonId" ]
       },
       "ContactForPrisoner" : {
         "type" : "object",
@@ -40069,6 +40284,26 @@
           }
         }
       },
+      "AgencyResponse" : {
+        "type" : "object",
+        "properties" : {
+          "agencyId" : {
+            "type" : "string",
+            "description" : "The agency id",
+            "example" : "LCSY02"
+          },
+          "description" : {
+            "type" : "string",
+            "description" : "Name of agency",
+            "example" : "Blackburn YOT"
+          },
+          "district" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "Geographic district"
+          }
+        },
+        "required" : [ "agencyId", "description" ]
+      },
       "AgencyDetails" : {
         "type" : "object",
         "description" : "A agency",
@@ -40085,6 +40320,22 @@
           }
         },
         "required" : [ "agencyId", "name" ]
+      },
+      "AgencyLocationResponse" : {
+        "type" : "object",
+        "properties" : {
+          "agencyId" : {
+            "type" : "string",
+            "description" : "The agency id",
+            "example" : "LCSY02"
+          },
+          "description" : {
+            "type" : "string",
+            "description" : "Name of agency",
+            "example" : "Blackburn YOT"
+          }
+        },
+        "required" : [ "agencyId", "description" ]
       },
       "AdjudicationChargeIdResponse" : {
         "type" : "object",
