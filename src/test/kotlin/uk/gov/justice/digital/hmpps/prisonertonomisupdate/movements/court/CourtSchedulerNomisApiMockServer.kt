@@ -59,7 +59,7 @@ class CourtSchedulerNomisApiMockServer(private val jsonMapper: JsonMapper) {
     response: UpsertCourtScheduleOutResponse = upsertCourtScheduleOutResponse(eventId = eventId),
   ) {
     nomisApi.stubFor(
-      put(urlPathEqualTo("/movements/$prisonerNumber/court/schedule/out")).willReturn(
+      put(urlPathMatching("/movements/$prisonerNumber/court/schedule/out.*")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.CREATED.value())
@@ -73,7 +73,7 @@ class CourtSchedulerNomisApiMockServer(private val jsonMapper: JsonMapper) {
     error: ErrorResponse = ErrorResponse(status = status.value()),
   ) {
     nomisApi.stubFor(
-      put(urlPathMatching("/movements/.*/court/schedule/out")).willReturn(
+      put(urlPathMatching("/movements/.*/court/schedule/out.*")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(status.value())
