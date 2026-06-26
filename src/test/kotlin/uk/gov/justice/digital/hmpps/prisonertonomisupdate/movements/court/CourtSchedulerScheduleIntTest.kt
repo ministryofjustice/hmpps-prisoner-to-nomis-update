@@ -80,7 +80,7 @@ class CourtSchedulerScheduleIntTest(
         @Test
         fun `will upsert NOMIS court schedule`() {
           NomisApiMockServer.getRequestBody<UpsertCourtScheduleOut>(
-            putRequestedFor(urlEqualTo("/movements/A1234BC/court/schedule/out")),
+            putRequestedFor(urlEqualTo("/movements/A1234BC/court/schedule/out?recreate=false")),
           ).also { request ->
             assertThat(request.eventId).isNull()
             assertThat(request.prison).isEqualTo("BXI")
@@ -135,7 +135,7 @@ class CourtSchedulerScheduleIntTest(
         @Test
         fun `will upsert NOMIS court schedule with event ID`() {
           NomisApiMockServer.getRequestBody<UpsertCourtScheduleOut>(
-            putRequestedFor(urlEqualTo("/movements/A1234BC/court/schedule/out")),
+            putRequestedFor(urlEqualTo("/movements/A1234BC/court/schedule/out?recreate=false")),
           ).also { request ->
             assertThat(request.eventId).isEqualTo(nomisEventId)
           }
@@ -182,7 +182,7 @@ class CourtSchedulerScheduleIntTest(
         @Test
         fun `will upsert NOMIS court schedule as expired`() {
           NomisApiMockServer.getRequestBody<UpsertCourtScheduleOut>(
-            putRequestedFor(urlEqualTo("/movements/A1234BC/court/schedule/out")),
+            putRequestedFor(urlEqualTo("/movements/A1234BC/court/schedule/out?recreate=false")),
           ).also { request ->
             assertThat(request.eventStatus).isEqualTo("EXP")
             assertThat(request.returnStatus).isEqualTo(null)
@@ -228,7 +228,7 @@ class CourtSchedulerScheduleIntTest(
         @Test
         fun `will upsert NOMIS court schedule once`() {
           nomisApi.verify(
-            putRequestedFor(urlEqualTo("/movements/A1234BC/court/schedule/out")),
+            putRequestedFor(urlEqualTo("/movements/A1234BC/court/schedule/out?recreate=false")),
           )
         }
 
@@ -286,7 +286,7 @@ class CourtSchedulerScheduleIntTest(
         @Test
         fun `will upsert NOMIS court schedule once`() {
           nomisApi.verify(
-            putRequestedFor(urlEqualTo("/movements/A1234BC/court/schedule/out")),
+            putRequestedFor(urlEqualTo("/movements/A1234BC/court/schedule/out?recreate=false")),
           )
         }
 
@@ -316,7 +316,7 @@ class CourtSchedulerScheduleIntTest(
             eventType = "person.court-appearance.scheduled",
             externalReferenceExists = true,
           )
-          waitForAnyProcessingToComplete("court-scheduler-schedule-create-ignored")
+          waitForAnyProcessingToComplete("court-scheduler-schedule-ignored")
         }
 
         @Test
@@ -338,7 +338,7 @@ class CourtSchedulerScheduleIntTest(
         @Test
         fun `will publish ignored telemetry`() {
           verify(telemetryClient).trackEvent(
-            eq("court-scheduler-schedule-create-ignored"),
+            eq("court-scheduler-schedule-ignored"),
             check {
               assertThat(it).containsEntry("dpsCourtAppearanceId", "$dpsCourtAppearanceId")
               assertThat(it).containsEntry("offenderNo", prisonerNumber)
@@ -356,7 +356,7 @@ class CourtSchedulerScheduleIntTest(
       @BeforeEach
       fun setUp() {
         publishCourtAppearanceDomainEvent(dpsCourtAppearanceId, "A1234BC", source = "NOMIS")
-        waitForAnyProcessingToComplete("court-scheduler-schedule-create-ignored")
+        waitForAnyProcessingToComplete("court-scheduler-schedule-ignored")
       }
 
       @Test
@@ -370,7 +370,7 @@ class CourtSchedulerScheduleIntTest(
       @Test
       fun `will publish ignored telemetry`() {
         verify(telemetryClient).trackEvent(
-          eq("court-scheduler-schedule-create-ignored"),
+          eq("court-scheduler-schedule-ignored"),
           check {
             assertThat(it).containsEntry("dpsCourtAppearanceId", "$dpsCourtAppearanceId")
             assertThat(it).containsEntry("offenderNo", prisonerNumber)

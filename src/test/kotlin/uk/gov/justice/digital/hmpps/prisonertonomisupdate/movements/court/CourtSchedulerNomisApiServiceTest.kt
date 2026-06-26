@@ -6,6 +6,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
@@ -112,10 +113,21 @@ class CourtSchedulerNomisApiServiceTest {
       apiService.upsertCourtScheduleOut("A1234BC", upsertCourtScheduleOut())
 
       courtSchedulerNomisApiMockServer.verify(
-        putRequestedFor(urlPathEqualTo("/movements/A1234BC/court/schedule/out"))
+        putRequestedFor(urlEqualTo("/movements/A1234BC/court/schedule/out?recreate=false"))
           .withRequestBody(
             matchingJsonPath("prison", equalTo("BXI")),
           ),
+      )
+    }
+
+    @Test
+    fun `will allow recreate=true`() = runTest {
+      courtSchedulerNomisApiMockServer.stubUpsertCourtScheduleOut("A1234BC")
+
+      apiService.upsertCourtScheduleOut("A1234BC", upsertCourtScheduleOut(), recreate = true)
+
+      courtSchedulerNomisApiMockServer.verify(
+        putRequestedFor(urlEqualTo("/movements/A1234BC/court/schedule/out?recreate=true")),
       )
     }
 

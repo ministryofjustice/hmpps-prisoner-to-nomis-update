@@ -24,7 +24,7 @@ class CourtSchedulerNomisApiService(
     .retrieve()
     .awaitBodyOrNullForNotFound()
 
-  suspend fun upsertCourtScheduleOut(prisonerNumber: String, request: UpsertCourtScheduleOut): UpsertCourtScheduleOutResponse = scheduleApi.upsertCourtScheduleOut(prisonerNumber, request).awaitBodyOrLogAndRethrowBadRequest()
+  suspend fun upsertCourtScheduleOut(prisonerNumber: String, request: UpsertCourtScheduleOut, recreate: Boolean = false): UpsertCourtScheduleOutResponse = scheduleApi.upsertCourtScheduleOut(prisonerNumber, request, recreate).awaitBodyOrLogAndRethrowBadRequest()
 
   suspend fun deleteCourtScheduleOut(prisonerNumber: String, eventId: Long) = scheduleApi.prepare(scheduleApi.deleteCourtScheduleOutRequestConfig(prisonerNumber, eventId))
     .retrieve()
