@@ -171,7 +171,7 @@ class CourtSchedulerResourceIntTest(
         .queryParam("recreate", true)
         .build()
     }
-      .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_TO_NOMIS__UPDATE__RW")))
+      .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_TO_NOMIS__SYNCHRONISATION__RW")))
       .exchange()
   }
 }

@@ -17,7 +17,7 @@ import java.util.UUID
 
 @RestController
 @Tag(name = "Court Scheduler Resource")
-@PreAuthorize("hasRole('ROLE_PRISONER_TO_NOMIS__UPDATE__RW')")
+@PreAuthorize("hasRole('ROLE_PRISONER_TO_NOMIS__SYNCHRONISATION__RW')")
 class CourtSchedulerResource(
   private val courtScheduleService: CourtSchedulerAppearanceService,
   private val telemetryClient: TelemetryClient,
