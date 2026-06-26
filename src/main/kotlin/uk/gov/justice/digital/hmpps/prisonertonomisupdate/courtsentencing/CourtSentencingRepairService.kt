@@ -147,6 +147,39 @@ class CourtSentencingRepairService(
     )
   }
 
+  suspend fun resynchroniseChargeInsertToNomis(offenderNo: String, courtCaseId: String, courtAppearanceId: String, chargeId: String) {
+    courtSentencingService.createCharge(
+      createEvent = CourtSentencingService.CourtChargeCreatedEvent(
+        personReference = PersonReferenceList(
+          identifiers = listOf(
+            PersonReference(
+              type = "NOMS",
+              value = offenderNo,
+            ),
+          ),
+        ),
+        additionalInformation = CourtSentencingService.CourtChargeAdditionalInformation(
+          courtCaseId = courtCaseId,
+          courtAppearanceId = courtAppearanceId,
+          courtChargeId = chargeId,
+          source = "DPS",
+        ),
+      ),
+    )
+
+    // will need to use operation id in appinsights to see created nomis ids
+    telemetryClient.trackEvent(
+      "court-sentencing-repair-charge-inserted",
+      mapOf(
+        "offenderNo" to offenderNo,
+        "dpsCourtCaseId" to courtCaseId,
+        "dpsCourtAppearanceId" to courtAppearanceId,
+        "dpsChargeId" to chargeId,
+      ),
+      null,
+    )
+  }
+
   suspend fun resynchroniseTermInsertToNomis(offenderNo: String, courtCaseId: String, courtAppearanceId: String, sentenceId: String, periodLengthId: String) {
     courtSentencingService.createSentenceTerm(
       createEvent = CourtSentencingService.PeriodLengthCreatedEvent(
@@ -272,6 +305,36 @@ class CourtSentencingRepairService(
         "offenderNo" to offenderNo,
         "dpsCourtCaseId" to courtCaseId,
         "dpsChargeId" to chargeId,
+        "dpsCourtAppearanceId" to courtAppearanceId,
+      ),
+      null,
+    )
+  }
+
+  suspend fun resynchroniseAppearanceUpdateToNomis(offenderNo: String, courtCaseId: String, courtAppearanceId: String) {
+    courtSentencingService.updateCourtAppearance(
+      createEvent = CourtSentencingService.CourtAppearanceCreatedEvent(
+        personReference = PersonReferenceList(
+          identifiers = listOf(
+            PersonReference(
+              type = "NOMS",
+              value = offenderNo,
+            ),
+          ),
+        ),
+        additionalInformation = CourtSentencingService.CourtAppearanceAdditionalInformation(
+          courtCaseId = courtCaseId,
+          courtAppearanceId = courtAppearanceId,
+          source = "DPS",
+        ),
+      ),
+    )
+
+    telemetryClient.trackEvent(
+      "court-sentencing-repair-appearance-updated",
+      mapOf(
+        "offenderNo" to offenderNo,
+        "dpsCourtCaseId" to courtCaseId,
         "dpsCourtAppearanceId" to courtAppearanceId,
       ),
       null,

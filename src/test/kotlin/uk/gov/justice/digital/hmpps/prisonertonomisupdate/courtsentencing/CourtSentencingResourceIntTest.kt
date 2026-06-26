@@ -69,6 +69,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Se
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceIdAndAdjustmentsCreated
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceTermResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateCourtAppearanceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.getRequestBody
 import java.math.BigDecimal
@@ -350,7 +351,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
     }
   }
 
-  @DisplayName("GET /prisoners/{offenderNo}/court-sentencing/court-charges/repair")
+  @DisplayName("POST /prisoners/{offenderNo}/court-sentencing/dps-court-case/{courtCaseId}/dps-appearance/{appearanceId}/dps-charge/{chargeId}/repair")
   @Nested
   inner class ChargeInsertedRepair {
 
@@ -1771,6 +1772,124 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
       fun `will call nomis api to create the charge`() {
         waitForAnyProcessingToComplete(2)
         nomisApi.verify(putRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/$NOMIS_COURT_CASE_ID/court-appearances/$NOMIS_COURT_APPEARANCE_ID/charges/$NOMIS_COURT_CHARGE_ID")))
+      }
+    }
+  }
+
+  @DisplayName("PUT /prisoners/{offenderNo}/court-sentencing/dps-court-case/{courtCaseId}/dps-appearance/{appearanceId}/repair")
+  @Nested
+  inner class AppearanceUpdatedRepair {
+
+    @Nested
+    inner class Security {
+      @Test
+      fun `access forbidden when no role`() {
+        webTestClient.put().uri("/prisoners/$OFFENDER_NO/court-sentencing/dps-court-case/$DPS_COURT_CASE_ID/dps-appearance/$DPS_COURT_APPEARANCE_ID/repair")
+          .headers(setAuthorisation(roles = listOf()))
+          .contentType(MediaType.APPLICATION_JSON)
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access forbidden with wrong role`() {
+        webTestClient.put().uri("/prisoners/$OFFENDER_NO/court-sentencing/dps-court-case/$DPS_COURT_CASE_ID/dps-appearance/$DPS_COURT_APPEARANCE_ID/repair")
+          .headers(setAuthorisation(roles = listOf("BANANAS")))
+          .contentType(MediaType.APPLICATION_JSON)
+          .body(
+            BodyInserters.fromValue(
+              CourtChargeRequest(
+                offenderNo = OFFENDER_NO,
+                dpsChargeId = DPS_COURT_CHARGE_ID,
+                dpsCaseId = DPS_COURT_CASE_ID,
+              ),
+            ),
+          )
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access unauthorised with no auth token`() {
+        webTestClient.put().uri("/prisoners/$OFFENDER_NO/court-sentencing/dps-court-case/$DPS_COURT_CASE_ID/dps-appearance/$DPS_COURT_APPEARANCE_ID/repair")
+          .contentType(MediaType.APPLICATION_JSON)
+          .body(
+            BodyInserters.fromValue(
+              CourtChargeRequest(
+                offenderNo = OFFENDER_NO,
+                dpsChargeId = DPS_COURT_CHARGE_ID,
+                dpsCaseId = DPS_COURT_CASE_ID,
+              ),
+            ),
+          )
+          .exchange()
+          .expectStatus().isUnauthorized
+      }
+    }
+
+    @Nested
+    inner class HappyPath {
+
+      @BeforeEach
+      fun setUp() {
+        CourtSentencingApiExtension.courtSentencingApi.stubCourtAppearanceGetWitOneCharge(
+          courtAppearanceId = DPS_COURT_APPEARANCE_ID,
+          offenderNo = OFFENDER_NO,
+          courtCaseId = DPS_COURT_CASE_ID,
+          courtCharge1Id = DPS_COURT_CHARGE_ID,
+        )
+        courtSentencingNomisApi.stubCourtAppearanceUpdate(
+          offenderNo = OFFENDER_NO,
+          courtCaseId = NOMIS_COURT_CASE_ID,
+          courtAppearanceId = NOMIS_COURT_APPEARANCE_ID,
+          response = UpdateCourtAppearanceResponse(emptyList(), emptyList()),
+        )
+        courtSentencingMappingApi.stubGetCourtCaseMappingGivenDpsId(
+          id = DPS_COURT_CASE_ID,
+          nomisCourtCaseId = NOMIS_COURT_CASE_ID,
+        )
+
+        courtSentencingMappingApi.stubGetCourtChargeMappingGivenDpsId(
+          id = DPS_COURT_CHARGE_ID,
+          nomisCourtChargeId = NOMIS_COURT_CHARGE_ID,
+        )
+
+        courtSentencingMappingApi.stubGetCourtAppearanceMappingGivenDpsId(
+          id = DPS_COURT_APPEARANCE_ID,
+          nomisCourtAppearanceId = NOMIS_COURT_APPEARANCE_ID,
+        )
+
+        webTestClient.put().uri("/prisoners/$OFFENDER_NO/court-sentencing/dps-court-case/$DPS_COURT_CASE_ID/dps-appearance/$DPS_COURT_APPEARANCE_ID/repair")
+          .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_TO_NOMIS__UPDATE__RW")))
+          .contentType(MediaType.APPLICATION_JSON)
+          .exchange()
+          .expectStatus().isOk
+
+        waitForAnyProcessingToComplete(2)
+      }
+
+      @Test
+      fun `will callback back to court sentencing service to get more details`() {
+        CourtSentencingApiExtension.courtSentencingApi.verify(WireMock.getRequestedFor(urlEqualTo("/legacy/court-appearance/${DPS_COURT_APPEARANCE_ID}")))
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        verify(telemetryClient).trackEvent(
+          eq("court-appearance-updated-success"),
+          check {
+            assertThat(it["dpsCourtCaseId"]).isEqualTo(DPS_COURT_CASE_ID)
+            assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID.toString())
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will call nomis api to update the appearance`() {
+        nomisApi.verify(putRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/$NOMIS_COURT_CASE_ID/court-appearances/$NOMIS_COURT_APPEARANCE_ID")))
       }
     }
   }
