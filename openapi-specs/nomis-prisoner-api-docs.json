@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-06-25.1635.b8f89ad"
+    "version" : "2026-06-26.1649.80e4e77"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -9189,6 +9189,56 @@
         }
       }
     },
+    "/property-containers" : {
+      "post" : {
+        "tags" : [ "property-resource" ],
+        "summary" : "Creates a prisoner property container record",
+        "description" : "Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "create",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PropertyContainerCreateRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CreatePropertyResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid agency or user",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Booking does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/prisoners/{prisonNumber}/visit-balance-adjustments" : {
       "post" : {
         "tags" : [ "visit-balance-resource" ],
@@ -15827,6 +15877,134 @@
           },
           "403" : {
             "description" : "Forbidden to access this endpoint when role NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/property-containers/{id}" : {
+      "get" : {
+        "tags" : [ "property-resource" ],
+        "summary" : "Get a prisoner property container record",
+        "description" : "Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "get",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "property container Id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "property container Id",
+            "example" : 2345678
+          },
+          "example" : 2345678
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PropertyContainerGetResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "prisoner property container record does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/property-containers/ids" : {
+      "get" : {
+        "tags" : [ "property-resource" ],
+        "summary" : "get property container by filter",
+        "description" : "Retrieves a paged list of property container ids by filter. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
+        "operationId" : "getPropertyContainersByFilter",
+        "parameters" : [ {
+          "name" : "page",
+          "in" : "query",
+          "description" : "Zero-based page index (0..N)",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "default" : 0,
+            "minimum" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "description" : "The size of the page to be returned",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "default" : 10,
+            "minimum" : 1
+          }
+        }, {
+          "name" : "sort",
+          "in" : "query",
+          "description" : "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "default" : [ "propertyContainerId,ASC" ],
+            "items" : {
+              "type" : "string"
+            }
+          }
+        }, {
+          "name" : "prisonIds",
+          "in" : "query",
+          "description" : "Filter results by prison ids",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "example" : "['MDI','LEI']"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Pageable list of ids are returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PageContainerIdResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint when role not present",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -23577,7 +23755,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/AgencyResponse"
+                  "$ref" : "#/components/schemas/AgencyLocationResponse"
                 }
               }
             }
@@ -28403,6 +28581,71 @@
         },
         "required" : [ "internalLocationId" ]
       },
+      "CreatePropertyResponse" : {
+        "type" : "object",
+        "description" : "Prisoner property creation response",
+        "properties" : {
+          "propertyContainerId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The created PROPERTY_CONTAINER_ID"
+          }
+        },
+        "required" : [ "propertyContainerId" ]
+      },
+      "PropertyContainerCode" : {
+        "type" : "string",
+        "enum" : [ "BRA", "BULK", "CO", "DES", "VALU" ]
+      },
+      "PropertyContainerCreateRequest" : {
+        "type" : "object",
+        "description" : "Prisoner property container",
+        "properties" : {
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The offender booking id",
+            "example" : 1234567
+          },
+          "internalLocationId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The property box id for the container",
+            "example" : 1234567
+          },
+          "prisonId" : {
+            "type" : "string",
+            "description" : "The container is in this prison",
+            "example" : "LEI"
+          },
+          "active" : {
+            "type" : "boolean",
+            "description" : "Whether the container is active",
+            "example" : true
+          },
+          "sealMark" : {
+            "type" : "string",
+            "description" : "The container's seal number",
+            "example" : "1234"
+          },
+          "containerCode" : {
+            "$ref" : "#/components/schemas/PropertyContainerCode",
+            "description" : "The container's code",
+            "example" : "BULK"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Date the container is no longer active"
+          },
+          "proposedDisposalDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Date the container will be disposed of"
+          }
+        },
+        "required" : [ "active", "bookingId", "containerCode", "prisonId", "sealMark" ]
+      },
       "CreateVisitBalanceAdjustmentRequest" : {
         "type" : "object",
         "properties" : {
@@ -32640,12 +32883,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "paged" : {
+            "type" : "boolean"
+          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "paged" : {
-            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -33713,6 +33956,134 @@
           }
         },
         "required" : [ "questionnaireId" ]
+      },
+      "PropertyContainerGetResponse" : {
+        "type" : "object",
+        "description" : "Prisoner property container",
+        "properties" : {
+          "containerId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The property container id"
+          },
+          "offenderNo" : {
+            "type" : "string",
+            "description" : "The NOMIS reference of the owner",
+            "example" : "A1234AA"
+          },
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The offender booking id",
+            "example" : 1234567
+          },
+          "internalLocationId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The property box id for the container",
+            "example" : 1234567
+          },
+          "prisonId" : {
+            "type" : "string",
+            "description" : "The container is in this prison",
+            "example" : "LEI"
+          },
+          "active" : {
+            "type" : "boolean",
+            "description" : "Whether the container is active",
+            "example" : true
+          },
+          "sealMark" : {
+            "type" : "string",
+            "description" : "The container's seal number",
+            "example" : "1234"
+          },
+          "containerCode" : {
+            "$ref" : "#/components/schemas/PropertyContainerCode",
+            "description" : "The container's code",
+            "example" : "DES"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Date the container is no longer active"
+          },
+          "proposedDisposalDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Date the container will be disposed of"
+          },
+          "createdDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Timestamp for when the container was created",
+            "example" : "2025-12-06T12:34:56"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "Username of the staff creating the container",
+            "example" : "AJONES"
+          }
+        },
+        "required" : [ "active", "bookingId", "containerCode", "containerId", "createdBy", "createdDateTime", "offenderNo", "prisonId" ]
+      },
+      "ContainerIdResponse" : {
+        "type" : "object",
+        "description" : "property container response",
+        "properties" : {
+          "containerId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The property container id"
+          }
+        },
+        "required" : [ "containerId" ]
+      },
+      "PageContainerIdResponse" : {
+        "type" : "object",
+        "properties" : {
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "totalPages" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "content" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ContainerIdResponse"
+            }
+          },
+          "number" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
+          "numberOfElements" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
+          },
+          "empty" : {
+            "type" : "boolean"
+          }
+        }
       },
       "ProfileDetailsResponse" : {
         "type" : "object",
@@ -35558,6 +35929,7 @@
       },
       "PrisonResponse" : {
         "type" : "object",
+        "description" : "A response to get an agency of type INST which is a prison",
         "properties" : {
           "prisonId" : {
             "type" : "string",
@@ -35568,9 +35940,34 @@
             "type" : "string",
             "description" : "Name of prison",
             "example" : "WANDSWORTH (HMP)"
+          },
+          "district" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "Area district"
+          },
+          "active" : {
+            "type" : "boolean",
+            "description" : "Indicates if still used",
+            "example" : true
+          },
+          "deactivationDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Date no longer active",
+            "example" : "2020-01-01"
+          },
+          "updateAllowed" : {
+            "type" : "boolean",
+            "description" : "Indicates if data is allowed to be updated",
+            "example" : true
+          },
+          "contactName" : {
+            "type" : "string",
+            "description" : "Name of contact at agency",
+            "example" : "John Smith"
           }
         },
-        "required" : [ "description", "prisonId" ]
+        "required" : [ "active", "description", "prisonId", "updateAllowed" ]
       },
       "ContactForPrisoner" : {
         "type" : "object",
@@ -40282,6 +40679,7 @@
       },
       "AgencyResponse" : {
         "type" : "object",
+        "description" : "A response to get an agency that is not a prison",
         "properties" : {
           "agencyId" : {
             "type" : "string",
@@ -40292,9 +40690,42 @@
             "type" : "string",
             "description" : "Name of agency",
             "example" : "Blackburn YOT"
+          },
+          "district" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "Geographic district"
+          },
+          "type" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "Agency type"
+          },
+          "active" : {
+            "type" : "boolean",
+            "description" : "Indicates if still used",
+            "example" : true
+          },
+          "deactivationDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Date no longer active",
+            "example" : "2020-01-01"
+          },
+          "updateAllowed" : {
+            "type" : "boolean",
+            "description" : "Indicates if data is allowed to be updated",
+            "example" : true
+          },
+          "contactName" : {
+            "type" : "string",
+            "description" : "Name of contact at agency",
+            "example" : "John Smith"
+          },
+          "courtType" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "Court type"
           }
         },
-        "required" : [ "agencyId", "description" ]
+        "required" : [ "active", "agencyId", "description", "type", "updateAllowed" ]
       },
       "AgencyDetails" : {
         "type" : "object",
@@ -40312,6 +40743,48 @@
           }
         },
         "required" : [ "agencyId", "name" ]
+      },
+      "AgencyLocationResponse" : {
+        "type" : "object",
+        "description" : "A response to get any agency but only return data common to all agency types",
+        "properties" : {
+          "agencyId" : {
+            "type" : "string",
+            "description" : "The agency id",
+            "example" : "LCSY02"
+          },
+          "description" : {
+            "type" : "string",
+            "description" : "Name of agency",
+            "example" : "Blackburn YOT"
+          },
+          "type" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "Agency type"
+          },
+          "active" : {
+            "type" : "boolean",
+            "description" : "Indicates if still used",
+            "example" : true
+          },
+          "deactivationDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Date no longer active",
+            "example" : "2020-01-01"
+          },
+          "updateAllowed" : {
+            "type" : "boolean",
+            "description" : "Indicates if data is allowed to be updated",
+            "example" : true
+          },
+          "contactName" : {
+            "type" : "string",
+            "description" : "Name of contact at agency",
+            "example" : "John Smith"
+          }
+        },
+        "required" : [ "active", "agencyId", "description", "type", "updateAllowed" ]
       },
       "AdjudicationChargeIdResponse" : {
         "type" : "object",
