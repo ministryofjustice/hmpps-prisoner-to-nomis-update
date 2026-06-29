@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-06-19.628.28c69b1"
+    "version" : "2026-06-26.638.0f7f492"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -527,6 +527,110 @@
           "409" : {
             "description" : "One of the punishment mappings already exist",
             "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/property/merge/from/{oldOffenderNo}/to/{newOffenderNo}" : {
+      "put" : {
+        "tags" : [ "property-container-mapping-resource" ],
+        "summary" : "Replaces all occurrences of the 'from' id with the 'to' id in the mapping table",
+        "description" : "Used for update after a prisoner number merge. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "updatePropertyContainerMappingsByNomisId",
+        "parameters" : [ {
+          "name" : "oldOffenderNo",
+          "in" : "path",
+          "description" : "Old prisoner number to replace",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Old prisoner number to replace",
+            "example" : "A3456KM"
+          },
+          "example" : "A3456KM"
+        }, {
+          "name" : "newOffenderNo",
+          "in" : "path",
+          "description" : "New prisoner number to use",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "New prisoner number to use",
+            "example" : "A3457LZ"
+          },
+          "example" : "A3457LZ"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Replacement made, or not present in table",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/property/merge/booking-id/{bookingId}/to/{newOffenderNo}" : {
+      "put" : {
+        "tags" : [ "property-container-mapping-resource" ],
+        "summary" : "For all property containers with the given booking id in the mapping table, sets the offender no to the given 'to' id",
+        "description" : "Used for update after a booking has been moved from one offender to another. Returns the affected property containers. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "updatePropertyContainerMappingsByBookingId",
+        "parameters" : [ {
+          "name" : "bookingId",
+          "in" : "path",
+          "description" : "The booking id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The booking id",
+            "example" : 1234567
+          },
+          "example" : 1234567
+        }, {
+          "name" : "newOffenderNo",
+          "in" : "path",
+          "description" : "New prisoner number to use",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "New prisoner number to use",
+            "example" : "A3457LZ"
+          },
+          "example" : "A3457LZ"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Replacement made, or not present in table",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/PropertyContainerMappingDto"
+                  }
+                }
+              }
+            }
           },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
@@ -2682,6 +2786,40 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/property" : {
+      "post" : {
+        "tags" : [ "property-container-mapping-resource" ],
+        "summary" : "Creates a new property container mapping",
+        "description" : "Creates a mapping between Nomis property container id, and DPS property container id. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "createPropertyContainerMapping",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PropertyContainerMappingDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Mapping created",
+            "content" : { }
+          },
+          "409" : {
+            "description" : "Indicates a duplicate mapping has been rejected. If Error code = 1409 the body will return a DuplicateErrorResponse",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DuplicateMappingErrorResponse"
                 }
               }
             }
@@ -9603,6 +9741,210 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/mapping/property/nomis-id/{nomisId}" : {
+      "get" : {
+        "tags" : [ "property-container-mapping-resource" ],
+        "summary" : "get mapping",
+        "description" : "Retrieves a mapping by NOMIS id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "getPropertyContainerMappingByNomisId",
+        "parameters" : [ {
+          "name" : "nomisId",
+          "in" : "path",
+          "description" : "NOMIS id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS id",
+            "example" : 23456789
+          },
+          "example" : 23456789
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Mapping Information Returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PropertyContainerMappingDto"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Id does not exist in mapping table",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "property-container-mapping-resource" ],
+        "summary" : "Deletes mapping",
+        "description" : "Deletes a mapping by Nomis id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "deletePropertyContainerMappingByNomisId",
+        "parameters" : [ {
+          "name" : "nomisId",
+          "in" : "path",
+          "description" : "NOMIS id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS id",
+            "example" : 23456789
+          },
+          "example" : 23456789
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Mapping Deleted",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "integer",
+                  "format" : "int32"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/property/migration-id/{migrationId}/count" : {
+      "get" : {
+        "tags" : [ "property-container-mapping-resource" ],
+        "summary" : "Get count of mappings by migration id",
+        "description" : "Counts all mappings of type 'MIGRATED' for the given migration id (identifies a single migration run).",
+        "operationId" : "getPropertyContainerMappingsByMigrationIdCount",
+        "parameters" : [ {
+          "name" : "migrationId",
+          "in" : "path",
+          "description" : "Migration Id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Migration Id",
+            "example" : "2020-03-24T12:00:00"
+          },
+          "example" : "2020-03-24T12:00:00"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Mapping page returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "integer",
+                  "format" : "int64"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/property/migrated/latest" : {
+      "get" : {
+        "tags" : [ "property-container-mapping-resource" ],
+        "summary" : "get the latest mapping for a migration",
+        "description" : "Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "getLatestMigratedPropertyContainerMapping",
+        "responses" : {
+          "200" : {
+            "description" : "Mapping Information Returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PropertyContainerMappingDto"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "No mappings found at all for any migration",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/property/dps-id/{dpsPropertyContainerId}" : {
+      "get" : {
+        "tags" : [ "property-container-mapping-resource" ],
+        "summary" : "get mapping given DPS id",
+        "description" : "Retrieves mapping by DPS id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "getPropertyContainerMappingByDpsId",
+        "parameters" : [ {
+          "name" : "dpsPropertyContainerId",
+          "in" : "path",
+          "description" : "DPS property container id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "DPS property container id",
+            "example" : "edcd118c-41ba-42ea-b5c4-404b453ad58b"
+          },
+          "example" : "edcd118c-41ba-42ea-b5c4-404b453ad58b"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Mapping Information Returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PropertyContainerMappingDto"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Id does not exist in mapping table",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "property-container-mapping-resource" ],
+        "summary" : "Deletes a mapping",
+        "description" : "Deletes mapping by DPS id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "deletePropertyContainerMappingByDpsId",
+        "parameters" : [ {
+          "name" : "dpsPropertyContainerId",
+          "in" : "path",
+          "description" : "DPS property container id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "DPS property container id",
+            "example" : "edcd118c-41ba-42ea-b5c4-404b453ad58b"
+          },
+          "example" : "edcd118c-41ba-42ea-b5c4-404b453ad58b"
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Mapping Deleted",
+            "content" : { }
           }
         }
       }
@@ -21485,6 +21827,48 @@
         },
         "required" : [ "nomisBookingId", "nomisSanctionSequence" ]
       },
+      "PropertyContainerMappingDto" : {
+        "type" : "object",
+        "description" : "property container mapping",
+        "properties" : {
+          "dpsPropertyContainerId" : {
+            "type" : "string",
+            "description" : "property container id in DPS"
+          },
+          "nomisPropertyContainerId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Nomis property container id"
+          },
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Nomis booking id"
+          },
+          "offenderNo" : {
+            "type" : "string",
+            "description" : "Prisoner number in Nomis"
+          },
+          "label" : {
+            "type" : [ "string", "null" ],
+            "description" : "Label (a timestamp for migrated ids)",
+            "maxLength" : 20,
+            "minLength" : 0
+          },
+          "mappingType" : {
+            "type" : "string",
+            "description" : "Mapping type",
+            "enum" : [ "MIGRATED", "NOMIS_CREATED", "DPS_CREATED" ]
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "description" : "Date-time the mapping was created",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          }
+        },
+        "required" : [ "bookingId", "dpsPropertyContainerId", "mappingType", "nomisPropertyContainerId", "offenderNo" ]
+      },
       "CsraMappingDto" : {
         "type" : "object",
         "description" : "CSRA mapping",
@@ -23094,11 +23478,11 @@
       },
       "CsraMappingIdDto" : {
         "type" : "object",
-        "description" : "NOMIS to Case note mapping IDs",
+        "description" : "NOMIS to DPS mapping IDs",
         "properties" : {
           "dpsCsraId" : {
             "type" : "string",
-            "description" : "DPS case note id"
+            "description" : "DPS CSRA id"
           },
           "nomisBookingId" : {
             "type" : "integer",
@@ -24957,12 +25341,12 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paged" : {
+            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
