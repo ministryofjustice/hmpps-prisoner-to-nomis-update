@@ -510,6 +510,7 @@ class TapActivePrisonersReconciliationService(
 
   private fun PersonTapDetail.findMovement(movementId: UUID): ReconciliationMovement = scheduledAbsences.flatMap { absence -> absence.occurrences }
     .flatMap { it.movements }
+    .let { it + unscheduledMovements }
     .firstOrNull { it.id == movementId }
     ?: throw IllegalStateException("Unable to find movement for movementId=$movementId despite having matched it earlier. Has there been a merge or move booking?")
 
