@@ -1065,6 +1065,161 @@ class TapActivePrisonersReconciliationIntTest(
   }
 
   @Nested
+  @DisplayName("Active Prisoner Detail Reconciliation - Unscheduled Movement details")
+  inner class ActivePrisonersReconciliationUnscheduledMovementDetails {
+    private val movementOutSeq = 1
+    private val movementInSeq = 2
+    private val movementOutId = UUID.randomUUID()
+    private val movementInId = UUID.randomUUID()
+    private val defaultStartTime = LocalDateTime.now().plusDays(1)
+    private val defaultEndTime = LocalDateTime.now().plusDays(2)
+
+    @BeforeEach
+    fun setUp() {
+      reset(telemetryClient)
+      nomisApi.stubGetAllLatestBookings(
+        activeOnly = true,
+        response = BookingIdsWithLast(
+          lastBookingId = 12345,
+          prisonerIds = listOf(PrisonerIds(offenderNo = "A0001TZ", bookingId = 12345)),
+        ),
+      )
+    }
+
+    @Nested
+    inner class ReportDifferences {
+      @Test
+      fun `should not publish telemetry if no differences`() = runTest {
+        stubNomisTaps()
+        stubDpsTaps()
+        stubMappingTaps()
+
+        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
+        awaitReportFinished()
+
+        verify(telemetryClient, never()).trackEvent(
+          eq("temporary-absences-active-reconciliation-mismatch"),
+          anyMap(),
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `should report everything is different`() = runTest {
+        stubNomisTaps()
+        stubDpsTaps(
+          startTime = LocalDateTime.now().plusDays(2),
+          endTime = LocalDateTime.now().plusDays(3),
+          reasonCode = "R2",
+          accompaniedByCode = "POL",
+          comments = "different comment",
+        )
+        stubMappingTaps()
+
+        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
+        awaitReportFinished()
+
+        // We should get 4 mismatches from the outbound movement
+        verify(telemetryClient, times(4)).trackEvent(
+          eq("temporary-absences-active-reconciliation-mismatch"),
+          check {
+            assertThat(it["offenderNo"]).isEqualTo("A0001TZ")
+            assertThat(it["nomisMovementId"]).isEqualTo("12345_$movementOutSeq")
+            assertThat(it["dpsMovementId"]).isEqualTo("$movementOutId")
+          },
+          isNull(),
+        )
+
+        // We should only get 1 mismatch from the inbound movement
+        verify(telemetryClient, times(1)).trackEvent(
+          eq("temporary-absences-active-reconciliation-mismatch"),
+          check {
+            assertThat(it["offenderNo"]).isEqualTo("A0001TZ")
+            assertThat(it["nomisMovementId"]).isEqualTo("12345_$movementInSeq")
+            assertThat(it["dpsMovementId"]).isEqualTo("$movementInId")
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `should report differences via the reconciliation endpoint`() = runTest {
+        stubNomisTaps()
+        stubDpsTaps(comments = "different comment")
+        stubMappingTaps()
+
+        webTestClient.getActiveTapsPrisonerReconOk()
+          .expectBody()
+          .jsonPath("$.length()").isEqualTo(1)
+          .jsonPath("$[0].offenderNo").isEqualTo("A0001TZ")
+          .jsonPath("$[0].nomisMovementId.bookingId").isEqualTo("12345")
+          .jsonPath("$[0].nomisMovementId.sequence").isEqualTo("$movementOutSeq")
+          .jsonPath("$[0].dpsMovementId").isEqualTo("$movementOutId")
+          .jsonPath("$[0].nomisValue").isEqualTo("Absence comment text")
+          .jsonPath("$[0].dpsValue").isEqualTo("different comment")
+      }
+    }
+
+    private fun stubNomisTaps(
+      startTime: LocalDateTime = defaultStartTime,
+      endTime: LocalDateTime = defaultEndTime,
+    ) = nomisMovementsApi.stubGetOffenderTaps(
+      offenderNo = "A0001TZ",
+      response = emptyOffenderTapsResponse().copy(
+        bookings = listOf(
+          BookingTaps(
+            bookingId = 12345,
+            tapApplications = listOf(),
+            activeBooking = true,
+            latestBooking = true,
+            unscheduledTapMovementOuts = listOf(tapMovementOut(seq = movementOutSeq).copy(movementReason = "C6", movementTime = startTime)),
+            unscheduledTapMovementIns = listOf(tapMovementIn(seq = movementInSeq).copy(movementTime = endTime)),
+          ),
+        ),
+      ),
+    )
+
+    private fun stubDpsTaps(
+      startTime: LocalDateTime = defaultStartTime,
+      endTime: LocalDateTime = defaultEndTime,
+      reasonCode: String = "C6",
+      postCode: String = "S1 1AA",
+      accompaniedByCode: String = "U",
+      comments: String = "Absence comment text",
+    ) = dpsApi.stubGetTapReconciliationDetail(
+      personIdentifier = "A0001TZ",
+      response = personTapDetail().copy(
+        scheduledAbsences = listOf(),
+        unscheduledMovements = listOf(
+          reconMovement(id = movementOutId, direction = OUT).copy(
+            occurredAt = startTime,
+            absenceReasonCode = reasonCode,
+            accompaniedByCode = accompaniedByCode,
+            comments = comments,
+            location = Location(
+              address = "1 street",
+              postcode = postCode,
+            ),
+          ),
+          reconMovement(id = movementInId, direction = IN).copy(occurredAt = endTime),
+        ),
+      ),
+    )
+
+    private fun stubMappingTaps() = mappingApi.stubGetTapMappingIds(
+      prisonerNumber = "A0001TZ",
+      response = emptyPrisonerMappingIdsDto().copy(
+        applications = listOf(),
+        schedules = listOf(),
+        movements = listOfNotNull(
+          TapMovementMappingIdsDto(12345L, movementOutSeq, movementOutId),
+          TapMovementMappingIdsDto(12345L, movementInSeq, movementInId),
+        ),
+      ),
+    )
+  }
+
+  @Nested
   @DisplayName("Active Detail Reconciliation Missing Mappings")
   inner class ActivePrisonersReconciliationMissingMappings {
     private val applicationId = 1111L
