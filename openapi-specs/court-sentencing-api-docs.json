@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-06-26.2026.508531c"
+    "version" : "2026-06-29.2031.de58c66"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -2009,6 +2009,50 @@
           },
           "404" : {
             "description" : "Not found if no court appearance at uuid"
+          }
+        }
+      }
+    },
+    "/court-appearance-schedule/{appearanceUuid}" : {
+      "put" : {
+        "tags" : [ "court-appearance-schedules-controller" ],
+        "summary" : "Update court appearance schedule by appearance uuid",
+        "description" : "This endpoint will update court appearance schedule by appearance uuid",
+        "operationId" : "updateCourtAppearanceSchedule",
+        "parameters" : [ {
+          "name" : "appearanceUuid",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateCourtAppearanceSchedule"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Returns court appearance schedules"
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token"
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role"
+          },
+          "404" : {
+            "description" : "No court appearance schedule found"
+          },
+          "204" : {
+            "description" : "No Content"
           }
         }
       }
@@ -7033,7 +7077,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:12.560132152"
+            "example" : "07:44:20.710700258"
           },
           "outcomeDispositionCode" : {
             "type" : [ "string", "null" ]
@@ -7065,15 +7109,15 @@
           "legacyData" : {
             "$ref" : "#/components/schemas/CourtAppearanceLegacyData"
           },
-          "appearanceTypeUuid" : {
-            "type" : [ "string", "null" ],
-            "format" : "uuid"
-          },
           "performedByUser" : {
             "type" : [ "string", "null" ]
+          },
+          "appearanceDateTime" : {
+            "type" : "string",
+            "format" : "date-time"
           }
         },
-        "required" : [ "appearanceDate", "courtCaseUuid", "courtCode", "legacyData" ]
+        "required" : [ "appearanceDate", "appearanceDateTime", "courtCaseUuid", "courtCode", "legacyData" ]
       },
       "ChargeLegacyData" : {
         "type" : "object",
@@ -7408,7 +7452,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:12.560132152"
+            "example" : "07:44:20.710700258"
           },
           "courtCode" : {
             "type" : "string"
@@ -7570,6 +7614,28 @@
           }
         },
         "required" : [ "appearances", "charges", "courtCaseUuid" ]
+      },
+      "UpdateCourtAppearanceSchedule" : {
+        "type" : "object",
+        "properties" : {
+          "courtCode" : {
+            "type" : "string"
+          },
+          "reasonCode" : {
+            "type" : "string"
+          },
+          "start" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "comments" : {
+            "type" : [ "string", "null" ]
+          },
+          "prisonCode" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "courtCode", "prisonCode", "reasonCode", "start" ]
       },
       "CreateChargeOutcome" : {
         "type" : "object",
@@ -8055,10 +8121,6 @@
             "type" : "string",
             "format" : "date"
           },
-          "appearanceTypeUuid" : {
-            "type" : [ "string", "null" ],
-            "format" : "uuid"
-          },
           "legacyData" : {
             "$ref" : "#/components/schemas/CourtAppearanceLegacyData"
           },
@@ -8400,10 +8462,6 @@
             "type" : "string",
             "format" : "date"
           },
-          "appearanceTypeUuid" : {
-            "type" : [ "string", "null" ],
-            "format" : "uuid"
-          },
           "legacyData" : {
             "$ref" : "#/components/schemas/CourtAppearanceLegacyData"
           },
@@ -8716,10 +8774,6 @@
           "appearanceDate" : {
             "type" : "string",
             "format" : "date"
-          },
-          "appearanceTypeUuid" : {
-            "type" : [ "string", "null" ],
-            "format" : "uuid"
           },
           "legacyData" : {
             "$ref" : "#/components/schemas/CourtAppearanceLegacyData"
@@ -10200,7 +10254,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:12.560132152"
+            "example" : "07:44:20.710700258"
           },
           "courtCode" : {
             "type" : "string"
@@ -10888,7 +10942,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:44:12.560132152"
+            "example" : "07:44:20.710700258"
           },
           "nomisOutcomeCode" : {
             "type" : [ "string", "null" ]
@@ -10967,7 +11021,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:12.560132152"
+            "example" : "07:44:20.710700258"
           },
           "courtId" : {
             "type" : "string"
@@ -11119,7 +11173,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:44:12.560132152"
+            "example" : "07:44:20.710700258"
           },
           "charges" : {
             "type" : "array",
@@ -11153,7 +11207,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:12.560132152"
+            "example" : "07:44:20.710700258"
           },
           "courtId" : {
             "type" : "string"
@@ -11445,12 +11499,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "paged" : {
+            "type" : "boolean"
+          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "paged" : {
-            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -11748,7 +11802,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:12.560132152"
+            "example" : "07:44:20.710700258"
           },
           "courtCode" : {
             "type" : [ "string", "null" ]
