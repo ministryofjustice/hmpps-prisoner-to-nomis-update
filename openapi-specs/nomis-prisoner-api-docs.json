@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-06-26.1649.80e4e77"
+    "version" : "2026-06-29.1660.a933764"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -35965,6 +35965,27 @@
             "type" : "string",
             "description" : "Name of contact at agency",
             "example" : "John Smith"
+          },
+          "disabilityAccessCode" : {
+            "type" : "string",
+            "description" : "Disability access code",
+            "example" : "Y"
+          },
+          "area" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "Area"
+          },
+          "subArea" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "Sub-Area"
+          },
+          "region" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "Region"
+          },
+          "nomsRegion" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "NOMS Region"
           }
         },
         "required" : [ "active", "description", "prisonId", "updateAllowed" ]
@@ -40723,6 +40744,27 @@
           "courtType" : {
             "$ref" : "#/components/schemas/CodeDescription",
             "description" : "Court type"
+          },
+          "disabilityAccessCode" : {
+            "type" : "string",
+            "description" : "Disability access code",
+            "example" : "Y"
+          },
+          "area" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "Area"
+          },
+          "subArea" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "Sub-Area"
+          },
+          "region" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "Region"
+          },
+          "nomsRegion" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "NOMS Region"
           }
         },
         "required" : [ "active", "agencyId", "description", "type", "updateAllowed" ]
@@ -40782,6 +40824,27 @@
             "type" : "string",
             "description" : "Name of contact at agency",
             "example" : "John Smith"
+          },
+          "disabilityAccessCode" : {
+            "type" : "string",
+            "description" : "Disability access code",
+            "example" : "Y"
+          },
+          "area" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "Area"
+          },
+          "subArea" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "Sub-Area"
+          },
+          "region" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "Region"
+          },
+          "nomsRegion" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "NOMS Region"
           }
         },
         "required" : [ "active", "agencyId", "description", "type", "updateAllowed" ]
