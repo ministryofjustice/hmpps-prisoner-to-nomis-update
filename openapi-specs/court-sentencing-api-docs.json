@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-06-29.2031.de58c66"
+    "version" : "2026-07-01.2054.3e820e7"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -7077,7 +7077,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:20.710700258"
+            "example" : "09:32:29.113398688"
           },
           "outcomeDispositionCode" : {
             "type" : [ "string", "null" ]
@@ -7452,7 +7452,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:20.710700258"
+            "example" : "09:32:29.113398688"
           },
           "courtCode" : {
             "type" : "string"
@@ -7499,7 +7499,7 @@
           },
           "type" : {
             "type" : "string",
-            "enum" : [ "SENTENCE_LENGTH", "CUSTODIAL_TERM", "LICENCE_PERIOD", "TARIFF_LENGTH", "TERM_LENGTH", "OVERALL_SENTENCE_LENGTH", "UNSUPPORTED" ]
+            "enum" : [ "SENTENCE_LENGTH", "CUSTODIAL_TERM", "LICENCE_PERIOD", "TARIFF_LENGTH", "TERM_LENGTH", "OVERALL_SENTENCE_LENGTH", "BREACH_OF_SUPERVISION_REQUIREMENTS", "UNSUPPORTED" ]
           },
           "prisonId" : {
             "type" : "string"
@@ -9255,7 +9255,7 @@
           },
           "periodLengthType" : {
             "type" : "string",
-            "enum" : [ "SENTENCE_LENGTH", "CUSTODIAL_TERM", "LICENCE_PERIOD", "TARIFF_LENGTH", "TERM_LENGTH", "OVERALL_SENTENCE_LENGTH", "UNSUPPORTED" ]
+            "enum" : [ "SENTENCE_LENGTH", "CUSTODIAL_TERM", "LICENCE_PERIOD", "TARIFF_LENGTH", "TERM_LENGTH", "OVERALL_SENTENCE_LENGTH", "BREACH_OF_SUPERVISION_REQUIREMENTS", "UNSUPPORTED" ]
           },
           "legacyData" : {
             "oneOf" : [ {
@@ -9660,20 +9660,6 @@
         },
         "required" : [ "sentenceTypes" ]
       },
-      "AggravatingFactors" : {
-        "type" : "object",
-        "properties" : {
-          "isDomesticViolenceRelated" : {
-            "type" : [ "boolean", "null" ]
-          },
-          "isForeignPowerRelated" : {
-            "type" : [ "boolean", "null" ]
-          },
-          "isTerrorRelated" : {
-            "type" : [ "boolean", "null" ]
-          }
-        }
-      },
       "Recall" : {
         "type" : "object",
         "properties" : {
@@ -9825,14 +9811,13 @@
             "format" : "uuid"
           },
           "aggravatingFactors" : {
-            "oneOf" : [ {
-              "$ref" : "#/components/schemas/AggravatingFactors"
-            }, {
-              "type" : "null"
-            } ]
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AggravatingFactor"
+            }
           }
         },
-        "required" : [ "offenceCode", "periodLengths", "sentenceServeType", "sentenceUuid" ]
+        "required" : [ "aggravatingFactors", "offenceCode", "periodLengths", "sentenceServeType", "sentenceUuid" ]
       },
       "PrisonerRecallsResponse" : {
         "type" : "object",
@@ -10254,7 +10239,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:20.710700258"
+            "example" : "09:32:29.113398688"
           },
           "courtCode" : {
             "type" : "string"
@@ -10319,7 +10304,7 @@
           },
           "periodLengthType" : {
             "type" : "string",
-            "enum" : [ "SENTENCE_LENGTH", "CUSTODIAL_TERM", "LICENCE_PERIOD", "TARIFF_LENGTH", "TERM_LENGTH", "OVERALL_SENTENCE_LENGTH", "UNSUPPORTED" ]
+            "enum" : [ "SENTENCE_LENGTH", "CUSTODIAL_TERM", "LICENCE_PERIOD", "TARIFF_LENGTH", "TERM_LENGTH", "OVERALL_SENTENCE_LENGTH", "BREACH_OF_SUPERVISION_REQUIREMENTS", "UNSUPPORTED" ]
           },
           "legacyData" : {
             "oneOf" : [ {
@@ -10640,7 +10625,7 @@
         "properties" : {
           "type" : {
             "type" : "string",
-            "enum" : [ "SENTENCE_LENGTH", "CUSTODIAL_TERM", "LICENCE_PERIOD", "TARIFF_LENGTH", "TERM_LENGTH", "OVERALL_SENTENCE_LENGTH", "UNSUPPORTED" ]
+            "enum" : [ "SENTENCE_LENGTH", "CUSTODIAL_TERM", "LICENCE_PERIOD", "TARIFF_LENGTH", "TERM_LENGTH", "OVERALL_SENTENCE_LENGTH", "BREACH_OF_SUPERVISION_REQUIREMENTS", "UNSUPPORTED" ]
           },
           "auto" : {
             "type" : "boolean"
@@ -10669,7 +10654,7 @@
           },
           "periodLengthType" : {
             "type" : "string",
-            "enum" : [ "SENTENCE_LENGTH", "CUSTODIAL_TERM", "LICENCE_PERIOD", "TARIFF_LENGTH", "TERM_LENGTH", "OVERALL_SENTENCE_LENGTH", "UNSUPPORTED" ]
+            "enum" : [ "SENTENCE_LENGTH", "CUSTODIAL_TERM", "LICENCE_PERIOD", "TARIFF_LENGTH", "TERM_LENGTH", "OVERALL_SENTENCE_LENGTH", "BREACH_OF_SUPERVISION_REQUIREMENTS", "UNSUPPORTED" ]
           },
           "description" : {
             "type" : "string"
@@ -10942,7 +10927,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:44:20.710700258"
+            "example" : "09:32:29.113398688"
           },
           "nomisOutcomeCode" : {
             "type" : [ "string", "null" ]
@@ -11021,7 +11006,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:20.710700258"
+            "example" : "09:32:29.113398688"
           },
           "courtId" : {
             "type" : "string"
@@ -11173,7 +11158,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:44:20.710700258"
+            "example" : "09:32:29.113398688"
           },
           "charges" : {
             "type" : "array",
@@ -11207,7 +11192,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:20.710700258"
+            "example" : "09:32:29.113398688"
           },
           "courtId" : {
             "type" : "string"
@@ -11383,14 +11368,13 @@
             "format" : "date-time"
           },
           "aggravatingFactors" : {
-            "oneOf" : [ {
-              "$ref" : "#/components/schemas/AggravatingFactors"
-            }, {
-              "type" : "null"
-            } ]
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AggravatingFactor"
+            }
           }
         },
-        "required" : [ "createdAt", "isRecallable", "periodLengths", "sentenceTypeUuid", "sentenceUuid", "systemOfRecord" ]
+        "required" : [ "aggravatingFactors", "createdAt", "isRecallable", "periodLengths", "sentenceTypeUuid", "sentenceUuid", "systemOfRecord" ]
       },
       "RecallableCourtCasesResponse" : {
         "type" : "object",
@@ -11499,12 +11483,12 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paged" : {
+            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -11539,7 +11523,7 @@
           },
           "type" : {
             "type" : "string",
-            "enum" : [ "SENTENCE_LENGTH", "CUSTODIAL_TERM", "LICENCE_PERIOD", "TARIFF_LENGTH", "TERM_LENGTH", "OVERALL_SENTENCE_LENGTH", "UNSUPPORTED" ]
+            "enum" : [ "SENTENCE_LENGTH", "CUSTODIAL_TERM", "LICENCE_PERIOD", "TARIFF_LENGTH", "TERM_LENGTH", "OVERALL_SENTENCE_LENGTH", "BREACH_OF_SUPERVISION_REQUIREMENTS", "UNSUPPORTED" ]
           }
         },
         "required" : [ "order", "periodLengthUuid", "type" ]
@@ -11802,7 +11786,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:20.710700258"
+            "example" : "09:32:29.113398688"
           },
           "courtCode" : {
             "type" : [ "string", "null" ]
@@ -11898,7 +11882,7 @@
           },
           "type" : {
             "type" : [ "string", "null" ],
-            "enum" : [ "SENTENCE_LENGTH", "CUSTODIAL_TERM", "LICENCE_PERIOD", "TARIFF_LENGTH", "TERM_LENGTH", "OVERALL_SENTENCE_LENGTH", "UNSUPPORTED" ]
+            "enum" : [ "SENTENCE_LENGTH", "CUSTODIAL_TERM", "LICENCE_PERIOD", "TARIFF_LENGTH", "TERM_LENGTH", "OVERALL_SENTENCE_LENGTH", "BREACH_OF_SUPERVISION_REQUIREMENTS", "UNSUPPORTED" ]
           },
           "legacyData" : {
             "oneOf" : [ {
