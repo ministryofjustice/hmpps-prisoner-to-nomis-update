@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-06-29.1660.a933764"
+    "version" : "2026-07-01.1673.71f5eb0"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -21317,6 +21317,13 @@
             "example" : 123456
           },
           "example" : 123456
+        }, {
+          "name" : "excludeZeroBalances",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          }
         } ],
         "responses" : {
           "200" : {
@@ -32883,12 +32890,12 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paged" : {
+            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -35941,6 +35948,11 @@
             "description" : "Name of prison",
             "example" : "WANDSWORTH (HMP)"
           },
+          "longDescription" : {
+            "type" : "string",
+            "description" : "Description of agency",
+            "example" : "Blackburn YOT"
+          },
           "district" : {
             "$ref" : "#/components/schemas/CodeDescription",
             "description" : "Area district"
@@ -35986,9 +35998,25 @@
           "nomsRegion" : {
             "$ref" : "#/components/schemas/CodeDescription",
             "description" : "NOMS Region"
+          },
+          "payrollRegion" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "Payroll Region"
+          },
+          "cjitCode" : {
+            "type" : "string",
+            "description" : "CJIT code",
+            "example" : "D62L087"
+          },
+          "localAuthorities" : {
+            "type" : "array",
+            "description" : "Local Authorities",
+            "items" : {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }
           }
         },
-        "required" : [ "active", "description", "prisonId", "updateAllowed" ]
+        "required" : [ "active", "description", "localAuthorities", "prisonId", "updateAllowed" ]
       },
       "ContactForPrisoner" : {
         "type" : "object",
@@ -40712,6 +40740,11 @@
             "description" : "Name of agency",
             "example" : "Blackburn YOT"
           },
+          "longDescription" : {
+            "type" : "string",
+            "description" : "Description of agency",
+            "example" : "Blackburn YOT"
+          },
           "district" : {
             "$ref" : "#/components/schemas/CodeDescription",
             "description" : "Geographic district"
@@ -40765,9 +40798,25 @@
           "nomsRegion" : {
             "$ref" : "#/components/schemas/CodeDescription",
             "description" : "NOMS Region"
+          },
+          "payrollRegion" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "Payroll Region"
+          },
+          "cjitCode" : {
+            "type" : "string",
+            "description" : "CJIT code",
+            "example" : "D62L087"
+          },
+          "localAuthorities" : {
+            "type" : "array",
+            "description" : "Local Authorities",
+            "items" : {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }
           }
         },
-        "required" : [ "active", "agencyId", "description", "type", "updateAllowed" ]
+        "required" : [ "active", "agencyId", "description", "localAuthorities", "type", "updateAllowed" ]
       },
       "AgencyDetails" : {
         "type" : "object",
@@ -40798,6 +40847,11 @@
           "description" : {
             "type" : "string",
             "description" : "Name of agency",
+            "example" : "Blackburn YOT"
+          },
+          "longDescription" : {
+            "type" : "string",
+            "description" : "Description of agency",
             "example" : "Blackburn YOT"
           },
           "type" : {
@@ -40845,9 +40899,25 @@
           "nomsRegion" : {
             "$ref" : "#/components/schemas/CodeDescription",
             "description" : "NOMS Region"
+          },
+          "payrollRegion" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "Payroll Region"
+          },
+          "cjitCode" : {
+            "type" : "string",
+            "description" : "CJIT code",
+            "example" : "D62L087"
+          },
+          "localAuthorities" : {
+            "type" : "array",
+            "description" : "Local Authorities",
+            "items" : {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }
           }
         },
-        "required" : [ "active", "agencyId", "description", "type", "updateAllowed" ]
+        "required" : [ "active", "agencyId", "description", "localAuthorities", "type", "updateAllowed" ]
       },
       "AdjudicationChargeIdResponse" : {
         "type" : "object",
