@@ -190,12 +190,14 @@ data class PrisonerTransactionEntry(
   val prisonEntries: List<TransactionEntry>,
 )
 
-fun List<OffenderTransactionDto>.toPrisonerTransactionSummary(): PrisonerTransactionSummary = first().run {
-  PrisonerTransactionSummary(
-    nomisTransactionId = transactionId,
-    prisonId = caseloadId,
-    entryDateTime = generalLedgerTransactions.first().transactionTimestamp,
-    entries = this@toPrisonerTransactionSummary.map { it.toPrisonerTransactionEntry() },
+// Nomis
+fun List<OffenderTransactionDto>.toPrisonerTransactionSummary(): PrisonerTransactionSummary {
+  val first = first()
+  return PrisonerTransactionSummary(
+    nomisTransactionId = first.transactionId,
+    prisonId = first.caseloadId,
+    entryDateTime = first.generalLedgerTransactions.first().transactionTimestamp,
+    entries = map { it.toPrisonerTransactionEntry() }.sortedBy { it.transactionSequence },
   )
 }
 fun OffenderTransactionDto.toPrisonerTransactionEntry() = PrisonerTransactionEntry(
@@ -203,20 +205,22 @@ fun OffenderTransactionDto.toPrisonerTransactionEntry() = PrisonerTransactionEnt
   subAccountType = subAccountType.value,
   postingType = postingType.value,
   amount = amount.setScale(2, RoundingMode.HALF_UP),
-  prisonEntries = generalLedgerTransactions.map { it.toTransactionEntry() },
+  prisonEntries = generalLedgerTransactions.map { it.toTransactionEntry() }.sortedBy { it.entrySequence },
 )
+
+// Dps
 fun SyncOffenderTransactionResponse.toPrisonerTransactionSummary() = PrisonerTransactionSummary(
   nomisTransactionId = legacyTransactionId!!,
   prisonId = caseloadId,
   entryDateTime = transactionTimestamp,
-  entries = transactions.map { it.toPrisonerTransactionEntry() },
+  entries = transactions.map { it.toPrisonerTransactionEntry() }.sortedBy { it.transactionSequence },
 )
 fun OffenderTransaction.toPrisonerTransactionEntry() = PrisonerTransactionEntry(
   transactionSequence = entrySequence,
   subAccountType = subAccountType,
   postingType = postingType.value,
   amount = amount.setScale(2, RoundingMode.HALF_UP),
-  prisonEntries = generalLedgerEntries.map { it.toTransactionEntry() },
+  prisonEntries = generalLedgerEntries.map { it.toTransactionEntry() }.sortedBy { it.entrySequence },
 )
 
 sealed interface DpsTransactionResult
