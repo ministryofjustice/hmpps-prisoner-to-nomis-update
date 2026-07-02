@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-07-01.1673.71f5eb0"
+    "version" : "2026-07-02.1687.4e01486"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -32890,12 +32890,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "paged" : {
+            "type" : "boolean"
+          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "paged" : {
-            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -35934,6 +35934,137 @@
         },
         "required" : [ "alerts" ]
       },
+      "AgencyAddress" : {
+        "type" : "object",
+        "description" : "The data held in NOMIS about an address",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Unique NOMIS Id of number"
+          },
+          "type" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "Address type"
+          },
+          "flat" : {
+            "type" : "string",
+            "description" : "Flat name or number",
+            "example" : "Apartment 3"
+          },
+          "premise" : {
+            "type" : "string",
+            "description" : "Premise",
+            "example" : "22"
+          },
+          "street" : {
+            "type" : "string",
+            "description" : "Street",
+            "example" : "West Street"
+          },
+          "locality" : {
+            "type" : "string",
+            "description" : "Locality",
+            "example" : "Keighley"
+          },
+          "postcode" : {
+            "type" : "string",
+            "description" : "Post code",
+            "example" : "MK15 2ST"
+          },
+          "city" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "City"
+          },
+          "county" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "County"
+          },
+          "country" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "Country"
+          },
+          "phoneNumbers" : {
+            "type" : "array",
+            "description" : "List of phone numbers for the address",
+            "items" : {
+              "$ref" : "#/components/schemas/AgencyPhoneNumber"
+            }
+          },
+          "validatedPAF" : {
+            "type" : "boolean",
+            "description" : "true if address validated by Post Office Address file??"
+          },
+          "noFixedAddress" : {
+            "type" : "boolean",
+            "description" : "true if address not fixed. for example homeless"
+          },
+          "primaryAddress" : {
+            "type" : "boolean",
+            "description" : "true if this is the agency's primary address"
+          },
+          "mailAddress" : {
+            "type" : "boolean",
+            "description" : "true if this is used for mail"
+          },
+          "comment" : {
+            "type" : "string",
+            "description" : "Free format comment about the address"
+          },
+          "startDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Date address was valid from"
+          },
+          "endDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Date address was valid to"
+          }
+        },
+        "required" : [ "id", "mailAddress", "phoneNumbers", "primaryAddress", "validatedPAF" ]
+      },
+      "AgencyEmailAddress" : {
+        "type" : "object",
+        "description" : "The data held in NOMIS about an email address",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Unique NOMIS Id of email address"
+          },
+          "emailAddress" : {
+            "type" : "string",
+            "description" : "The email address",
+            "example" : "john.smith@internet.co.uk"
+          }
+        },
+        "required" : [ "emailAddress", "id" ]
+      },
+      "AgencyPhoneNumber" : {
+        "type" : "object",
+        "description" : "The data held in NOMIS about a phone number",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Unique NOMIS Id of number"
+          },
+          "number" : {
+            "type" : "string",
+            "description" : "The number"
+          },
+          "extension" : {
+            "type" : "string",
+            "description" : "Extension"
+          },
+          "type" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "Phone type"
+          }
+        },
+        "required" : [ "id", "number", "type" ]
+      },
       "PrisonResponse" : {
         "type" : "object",
         "description" : "A response to get an agency of type INST which is a prison",
@@ -36014,9 +36145,30 @@
             "items" : {
               "$ref" : "#/components/schemas/CodeDescription"
             }
+          },
+          "addresses" : {
+            "type" : "array",
+            "description" : "Addresses",
+            "items" : {
+              "$ref" : "#/components/schemas/AgencyAddress"
+            }
+          },
+          "phones" : {
+            "type" : "array",
+            "description" : "Phone numbers",
+            "items" : {
+              "$ref" : "#/components/schemas/AgencyPhoneNumber"
+            }
+          },
+          "emailAddresses" : {
+            "type" : "array",
+            "description" : "Email addresses",
+            "items" : {
+              "$ref" : "#/components/schemas/AgencyEmailAddress"
+            }
           }
         },
-        "required" : [ "active", "description", "localAuthorities", "prisonId", "updateAllowed" ]
+        "required" : [ "active", "addresses", "description", "emailAddresses", "localAuthorities", "phones", "prisonId", "updateAllowed" ]
       },
       "ContactForPrisoner" : {
         "type" : "object",
@@ -40814,9 +40966,30 @@
             "items" : {
               "$ref" : "#/components/schemas/CodeDescription"
             }
+          },
+          "addresses" : {
+            "type" : "array",
+            "description" : "Addresses",
+            "items" : {
+              "$ref" : "#/components/schemas/AgencyAddress"
+            }
+          },
+          "phones" : {
+            "type" : "array",
+            "description" : "Phone numbers",
+            "items" : {
+              "$ref" : "#/components/schemas/AgencyPhoneNumber"
+            }
+          },
+          "emailAddresses" : {
+            "type" : "array",
+            "description" : "Email addresses",
+            "items" : {
+              "$ref" : "#/components/schemas/AgencyEmailAddress"
+            }
           }
         },
-        "required" : [ "active", "agencyId", "description", "localAuthorities", "type", "updateAllowed" ]
+        "required" : [ "active", "addresses", "agencyId", "description", "emailAddresses", "localAuthorities", "phones", "type", "updateAllowed" ]
       },
       "AgencyDetails" : {
         "type" : "object",
@@ -40915,9 +41088,30 @@
             "items" : {
               "$ref" : "#/components/schemas/CodeDescription"
             }
+          },
+          "addresses" : {
+            "type" : "array",
+            "description" : "Addresses",
+            "items" : {
+              "$ref" : "#/components/schemas/AgencyAddress"
+            }
+          },
+          "phones" : {
+            "type" : "array",
+            "description" : "Phone numbers",
+            "items" : {
+              "$ref" : "#/components/schemas/AgencyPhoneNumber"
+            }
+          },
+          "emailAddresses" : {
+            "type" : "array",
+            "description" : "Email addresses",
+            "items" : {
+              "$ref" : "#/components/schemas/AgencyEmailAddress"
+            }
           }
         },
-        "required" : [ "active", "agencyId", "description", "localAuthorities", "type", "updateAllowed" ]
+        "required" : [ "active", "addresses", "agencyId", "description", "emailAddresses", "localAuthorities", "phones", "type", "updateAllowed" ]
       },
       "AdjudicationChargeIdResponse" : {
         "type" : "object",
