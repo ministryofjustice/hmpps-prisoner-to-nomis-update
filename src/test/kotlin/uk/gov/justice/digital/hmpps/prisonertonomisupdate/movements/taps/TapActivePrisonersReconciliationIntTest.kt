@@ -825,6 +825,30 @@ class TapActivePrisonersReconciliationIntTest(
       }
 
       @Test
+      fun `should NOT report start time is different if seconds in NOMIS are zero`() = runTest {
+        // The NOMIS datetime "corrections" batch job corrupts movement times by resetting seconds to zero.
+        stubNomisTaps(startTime = defaultStartTime.withSecond(0))
+        stubDpsTaps()
+        stubMappingTaps()
+
+        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
+        awaitReportFinished()
+
+        verify(telemetryClient, never()).trackEvent(
+          eq("temporary-absences-active-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "offenderNo" to "A0001TZ",
+              "nomisMovementId" to "12345_$movementOutSeq",
+              "dpsMovementId" to "$movementOutId",
+              "type" to "MOVEMENT_START_TIME",
+            ),
+          ),
+          isNull(),
+        )
+      }
+
+      @Test
       fun `should report end time is different on movement in`() = runTest {
         stubNomisTaps(movementIn = true)
         stubDpsTaps(movementIn = true, endTime = LocalDateTime.now().plusDays(3))
@@ -834,6 +858,30 @@ class TapActivePrisonersReconciliationIntTest(
         awaitReportFinished()
 
         verify(telemetryClient).trackEvent(
+          eq("temporary-absences-active-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "offenderNo" to "A0001TZ",
+              "nomisMovementId" to "12345_$movementInSeq",
+              "dpsMovementId" to "$movementInId",
+              "type" to "MOVEMENT_END_TIME",
+            ),
+          ),
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `should NOT report end time is different if seconds in NOMIS are zero`() = runTest {
+        // The NOMIS datetime "corrections" batch job corrupts movement times by resetting seconds to zero.
+        stubNomisTaps(movementIn = true, endTime = defaultEndTime.withSecond(0))
+        stubDpsTaps(movementIn = true)
+        stubMappingTaps(movementIn = true)
+
+        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
+        awaitReportFinished()
+
+        verify(telemetryClient, never()).trackEvent(
           eq("temporary-absences-active-reconciliation-mismatch"),
           eq(
             mapOf(
