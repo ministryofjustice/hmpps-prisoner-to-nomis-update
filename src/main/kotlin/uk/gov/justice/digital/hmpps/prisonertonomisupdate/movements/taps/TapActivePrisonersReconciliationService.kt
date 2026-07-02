@@ -420,8 +420,8 @@ class TapActivePrisonersReconciliationService(
         val dpsMovement = dps.findMovement(dpsMovementId)
         fun mismatch(type: MismatchedPrisonerTapMovementDetails.Type, nomisValue: String, dpsValue: String) = MismatchedPrisonerTapMovementDetails(offenderNo, type, nomisMovementId, dpsMovementId, nomisValue, dpsValue)
 
-        // movement start time must match
-        if (dpsMovement.occurredAt != nomisMovementOut.movementTime) {
+        // movement start time must match (ignore seconds as these can be corrupted by the NOMIS date corrections batch job)
+        if (dpsMovement.occurredAt.withSecond(0) != nomisMovementOut.movementTime.withSecond(0)) {
           mismatches.add(mismatch(MismatchedPrisonerTapMovementDetails.Type.MOVEMENT_START_TIME, "${nomisMovementOut.movementTime}", "${dpsMovement.occurredAt}"))
         }
 
@@ -451,7 +451,8 @@ class TapActivePrisonersReconciliationService(
         fun mismatch(type: MismatchedPrisonerTapMovementDetails.Type, nomisValue: String, dpsValue: String) = MismatchedPrisonerTapMovementDetails(offenderNo, type, nomisMovementId, dpsMovementId, nomisValue, dpsValue)
 
         // movement end time must match (the time of the movements back IN)
-        if (dpsMovement.occurredAt != nomisMovementIn.movementTime) {
+        // (ignore seconds as these can be corrupted by the NOMIS date corrections batch job)
+        if (dpsMovement.occurredAt.withSecond(0) != nomisMovementIn.movementTime.withSecond(0)) {
           mismatches.add(mismatch(MismatchedPrisonerTapMovementDetails.Type.MOVEMENT_END_TIME, "${nomisMovementIn.movementTime}", "${dpsMovement.occurredAt}"))
         }
       }
