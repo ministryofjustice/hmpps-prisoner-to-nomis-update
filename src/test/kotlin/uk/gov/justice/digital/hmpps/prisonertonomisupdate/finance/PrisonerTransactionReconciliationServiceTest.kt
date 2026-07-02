@@ -19,7 +19,11 @@ import org.mockito.kotlin.verifyNoInteractions
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import org.springframework.test.context.bean.override.mockito.MockitoBean
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiExtension.Companion.offenderTransaction
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiExtension.Companion.prisonEntry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiExtension.Companion.prisonerTransaction
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.TransactionNomisApiMockServer.Companion.nomisPrisonTransaction
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.TransactionNomisApiMockServer.Companion.nomisPrisonerTransaction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
@@ -56,22 +60,57 @@ class PrisonerTransactionReconciliationServiceTest {
     @Nested
     inner class TransactionsMatch {
 
-      @BeforeEach
-      fun beforeEach() {
-        val dpsId = UUID.randomUUID().toString()
-        nomisTransactionsApi.stubGetPrisonerTransaction()
-        dpsApi.stubGetPrisonerTransaction(nomisTransactionId = 2345, dpsTransactionId = dpsId)
+      @Nested
+      inner class SinglePrisonTransactions {
+        @BeforeEach
+        fun beforeEach() {
+          val dpsId = UUID.randomUUID().toString()
+          nomisTransactionsApi.stubGetPrisonerTransaction()
+          dpsApi.stubGetPrisonerTransaction(nomisTransactionId = 2345, dpsTransactionId = dpsId)
+        }
+
+        @Test
+        fun `will not report a mismatch`() = runTest {
+          assertThat(service.checkTransactionMatch(2345)).isNull()
+        }
+
+        @Test
+        fun `will produce no telemetry`() = runTest {
+          service.checkTransactionMatch(2345)
+          verifyNoInteractions(telemetryClient)
+        }
       }
 
-      @Test
-      fun `will not report a mismatch`() = runTest {
-        assertThat(service.checkTransactionMatch(2345)).isNull()
-      }
+      @Nested
+      inner class MultiplePrisonTransactions {
+        @Test
+        fun `will not report a mismatch - even with multiple prison transactions in different order`() = runTest {
+          val dpsId = UUID.randomUUID()
+          val nomisId = 2345L
 
-      @Test
-      fun `will produce no telemetry`() = runTest {
-        service.checkTransactionMatch(2345)
-        verifyNoInteractions(telemetryClient)
+          val nomisPrisonTransaction1 = nomisPrisonTransaction().copy(generalLedgerEntrySequence = 2, accountCode = 1502, amount = BigDecimal.valueOf(3.2))
+          val nomisPrisonTransactions = listOf(nomisPrisonTransaction(), nomisPrisonTransaction1)
+          nomisTransactionsApi.stubGetPrisonerTransaction(
+            response = listOf(
+              nomisPrisonerTransaction(nomisId).copy(
+                generalLedgerTransactions = nomisPrisonTransactions,
+              ),
+            ),
+          )
+
+          val dpsPrisonEntry1 = prisonEntry().copy(entrySequence = 2, code = 1502, amount = BigDecimal.valueOf(3.2))
+          val dpsPrisonEntries = listOf(dpsPrisonEntry1, prisonEntry())
+          val dpsPrisonTransactions = listOf(offenderTransaction().copy(generalLedgerEntries = dpsPrisonEntries))
+          dpsApi.stubGetPrisonerTransaction(
+            nomisTransactionId = nomisId,
+            dpsTransactionId = dpsId.toString(),
+            response = prisonerTransaction(dpsId, nomisId).copy
+              (transactions = dpsPrisonTransactions),
+          )
+
+          assertThat(service.checkTransactionMatch(2345)).isNull()
+          verifyNoInteractions(telemetryClient)
+        }
       }
     }
   }
