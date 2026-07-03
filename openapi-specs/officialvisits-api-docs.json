@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-06-19.966.ec72664"
+    "version" : "2026-07-02.1001.c3cbfef"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -7331,6 +7331,11 @@
             "description" : "The created time",
             "example" : "09:00"
           },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "The created by",
+            "example" : "Fred Bloggs"
+          },
           "statusUpdatedTime" : {
             "type" : [ "string", "null" ],
             "format" : "date-time",
@@ -7338,7 +7343,7 @@
             "example" : "10:00"
           }
         },
-        "required" : [ "createdTime", "emailAddress", "emailStatus", "govNotifyNotificationId", "notificationId", "officialVisitId", "reason", "templateId" ]
+        "required" : [ "createdBy", "createdTime", "emailAddress", "emailStatus", "govNotifyNotificationId", "notificationId", "officialVisitId", "reason", "templateId" ]
       },
       "AuditedEventChange" : {
         "type" : "object",
