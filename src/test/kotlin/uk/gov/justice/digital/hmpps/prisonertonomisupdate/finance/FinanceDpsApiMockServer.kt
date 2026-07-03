@@ -37,7 +37,7 @@ class FinanceDpsApiExtension :
     val dpsFinanceServer = FinanceDpsApiMockServer()
     lateinit var jsonMapper: JsonMapper
 
-    val prisonEntry = GeneralLedgerEntry(
+    fun prisonEntry() = GeneralLedgerEntry(
       entrySequence = 1,
       code = 1501,
       postingType = GeneralLedgerEntry.PostingType.CR,
@@ -51,7 +51,7 @@ class FinanceDpsApiExtension :
       caseloadId = "MDI",
       transactionType = "SPEN",
       reference = "ref 123",
-      generalLedgerEntries = listOf(prisonEntry),
+      generalLedgerEntries = listOf(prisonEntry()),
       transactionTimestamp = LocalDateTime.parse("2024-06-18T14:30:12"),
       createdAt = LocalDateTime.parse("2024-06-18T14:30:12.364617"),
       createdBy = "J_BROWN",
@@ -86,7 +86,7 @@ class FinanceDpsApiExtension :
       description = "Sub-Account Transfer",
       amount = BigDecimal.valueOf(162),
       reference = "string",
-      generalLedgerEntries = listOf(prisonEntry),
+      generalLedgerEntries = listOf(prisonEntry()),
     )
   }
   override fun beforeAll(context: ExtensionContext) {
@@ -146,11 +146,10 @@ class FinanceDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   fun stubGetPrisonerTransaction(
     nomisTransactionId: Long,
     dpsTransactionId: String = UUID.randomUUID().toString(),
-    response: SyncOffenderTransactionResponse? =
-      prisonerTransaction(
-        nomisTransactionId = nomisTransactionId,
-        dpsId = UUID.fromString(dpsTransactionId),
-      ),
+    response: SyncOffenderTransactionResponse? = prisonerTransaction(
+      nomisTransactionId = nomisTransactionId,
+      dpsId = UUID.fromString(dpsTransactionId),
+    ),
   ) {
     response?.apply {
       stubFor(
