@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-07-02.2070.98444a6"
+    "version" : "2026-07-03.2084.bd1c399"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -7130,7 +7130,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "08:51:05.386460388"
+            "example" : "09:26:20.768116426"
           },
           "outcomeDispositionCode" : {
             "type" : [ "string", "null" ]
@@ -7346,12 +7346,6 @@
             "type" : [ "string", "null" ],
             "format" : "uuid"
           },
-          "terrorRelated" : {
-            "type" : [ "boolean", "null" ]
-          },
-          "foreignPowerRelated" : {
-            "type" : [ "boolean", "null" ]
-          },
           "domesticViolenceRelated" : {
             "type" : [ "boolean", "null" ]
           },
@@ -7505,7 +7499,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "08:51:05.386460388"
+            "example" : "09:26:20.768116426"
           },
           "courtCode" : {
             "type" : "string"
@@ -10108,12 +10102,6 @@
               "type" : "null"
             } ]
           },
-          "terrorRelated" : {
-            "type" : [ "boolean", "null" ]
-          },
-          "foreignPowerRelated" : {
-            "type" : [ "boolean", "null" ]
-          },
           "aggravatingFactors" : {
             "type" : "array",
             "items" : {
@@ -10330,7 +10318,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "08:51:05.386460388"
+            "example" : "09:26:20.768116426"
           },
           "courtCode" : {
             "type" : "string"
@@ -11018,7 +11006,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "08:51:05.386460388"
+            "example" : "09:26:20.768116426"
           },
           "nomisOutcomeCode" : {
             "type" : [ "string", "null" ]
@@ -11097,7 +11085,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "08:51:05.386460388"
+            "example" : "09:26:20.768116426"
           },
           "courtId" : {
             "type" : "string"
@@ -11249,7 +11237,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "08:51:05.386460388"
+            "example" : "09:26:20.768116426"
           },
           "charges" : {
             "type" : "array",
@@ -11283,7 +11271,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "08:51:05.386460388"
+            "example" : "09:26:20.768116426"
           },
           "courtId" : {
             "type" : "string"
@@ -11570,12 +11558,12 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
-          "unpaged" : {
-            "type" : "boolean"
-          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "unpaged" : {
+            "type" : "boolean"
           },
           "paged" : {
             "type" : "boolean"
@@ -11636,12 +11624,6 @@
           "offenceEndDate" : {
             "type" : [ "string", "null" ],
             "format" : "date"
-          },
-          "terrorRelated" : {
-            "type" : [ "boolean", "null" ]
-          },
-          "foreignPowerRelated" : {
-            "type" : [ "boolean", "null" ]
           },
           "aggravatingFactors" : {
             "type" : [ "array", "null" ],
@@ -11880,7 +11862,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "08:51:05.386460388"
+            "example" : "09:26:20.768116426"
           },
           "courtCode" : {
             "type" : [ "string", "null" ]
@@ -12067,10 +12049,10 @@
           "empty" : {
             "type" : "boolean"
           },
-          "sorted" : {
+          "unsorted" : {
             "type" : "boolean"
           },
-          "unsorted" : {
+          "sorted" : {
             "type" : "boolean"
           }
         }
