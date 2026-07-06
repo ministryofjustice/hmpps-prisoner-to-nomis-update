@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-07-02.1691.c82c8b0"
+    "version" : "2026-07-03.1695.63e883d"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -21311,7 +21311,7 @@
       "get" : {
         "tags" : [ "prisoner-balance-resource" ],
         "summary" : "Get a prisoner's finance account summary by their root offender id",
-        "description" : "Retrieves a prisoner's trust account summary, for each sub-account, aggregated for all caseloads. \n      Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "description" : "Retrieves a prisoner's trust account summary, for each sub-account with a balance. \n      Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
         "operationId" : "getPrisonerAccountSummary",
         "parameters" : [ {
           "name" : "rootOffenderId",
@@ -32759,6 +32759,9 @@
             "type" : "integer",
             "format" : "int64"
           },
+          "unpaged" : {
+            "type" : "boolean"
+          },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
@@ -32766,14 +32769,11 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
           },
-          "unpaged" : {
+          "paged" : {
             "type" : "boolean"
           }
         }
@@ -38967,6 +38967,11 @@
       "AccountSummaryDto" : {
         "type" : "object",
         "properties" : {
+          "prisonId" : {
+            "type" : "string",
+            "description" : "The prison",
+            "example" : "ASI"
+          },
           "accountCode" : {
             "type" : "integer",
             "format" : "int64",
@@ -38977,14 +38982,9 @@
             "type" : "number",
             "description" : "The account balance",
             "example" : "12.50"
-          },
-          "holdBalance" : {
-            "type" : "number",
-            "description" : "The amount on hold",
-            "example" : "12.50"
           }
         },
-        "required" : [ "accountCode", "balance" ]
+        "required" : [ "accountCode", "balance", "prisonId" ]
       },
       "PrisonerBalanceSummaryDto" : {
         "type" : "object",
