@@ -141,9 +141,9 @@ class PrisonerBalanceNomisApiServiceTest {
       prisonNumber = "A1234AA",
       accounts = listOf(
         AccountSummaryDto(
+          prisonId = "MDI",
           accountCode = 1001,
           balance = BigDecimal.valueOf(100.00),
-          holdBalance = BigDecimal.valueOf(50.00),
         ),
       ),
     )

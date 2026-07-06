@@ -385,7 +385,6 @@ class PrisonerBalanceReconciliationResourceIntTest(
         assertThat(first.nomis.accounts).isEmpty()
         assertThat(first.dps.prisonNumber).isEqualTo("A0002NN")
         assertThat(first.dps.accounts.first().balance).isEqualTo(BigDecimal("1.5"))
-        assertThat(first.dps.accounts.first().holdBalance).isEqualTo(BigDecimal("0.3"))
         assertThat(first.dps.accounts.first().accountCode).isEqualTo(1001)
         assertThat(first.differences.first().property).isEqualTo("prisoner-balances.accounts")
         assertThat(first.differences.first().nomis).isEqualTo(0)

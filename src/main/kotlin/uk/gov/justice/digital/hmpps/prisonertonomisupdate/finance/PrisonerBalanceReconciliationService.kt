@@ -85,7 +85,6 @@ class PrisonerBalanceReconciliationService(
       accounts = nomisAccountSummary.accounts.map {
         AccountFields(
           balance = it.balance,
-          holdBalance = it.holdBalance,
           accountCode = it.accountCode.toInt(),
         )
       },
@@ -95,7 +94,6 @@ class PrisonerBalanceReconciliationService(
       accounts = dpsAccountSummary.items.map {
         AccountFields(
           balance = it.totalBalance,
-          holdBalance = it.holdBalance,
           accountCode = it.accountCode,
         )
       },
@@ -156,12 +154,10 @@ class PrisonerBalanceReconciliationService(
         val sortedDpsAccounts = dpsObj.accounts.sortedWith(
           compareBy<AccountFields> { it.accountCode }
             .thenBy { it.balance }
-            .thenBy { it.holdBalance },
         )
         val sortedNomisAccounts = nomisObj.accounts.sortedWith(
           compareBy<AccountFields> { it.accountCode }
             .thenBy { it.balance }
-            .thenBy { it.holdBalance },
         )
 
         differences.addAll(compareLists(sortedDpsAccounts, sortedNomisAccounts, "$parentProperty.accounts"))
@@ -174,13 +170,6 @@ class PrisonerBalanceReconciliationService(
         }
         if (dpsObj.balance.compareTo(nomisObj.balance) != 0) {
           differences.add(Difference("$parentProperty.balance: account code ${nomisObj.accountCode}", dpsObj.balance, nomisObj.balance))
-        }
-        val nomisRealBalance = nomisObj.holdBalance ?: BigDecimal.ZERO
-        if (
-          // DPS holdBalance is non-null
-          dpsObj.holdBalance?.compareTo(nomisRealBalance) != 0
-        ) {
-          differences.add(Difference("$parentProperty.holdBalance: account code ${nomisObj.accountCode}", dpsObj.holdBalance, nomisObj.holdBalance))
         }
       }
     }
@@ -229,7 +218,6 @@ data class BalanceFields(
 data class AccountFields(
   val accountCode: Int,
   val balance: BigDecimal,
-  val holdBalance: BigDecimal?,
 )
 
 data class Difference(val property: String, val dps: Any?, val nomis: Any?, val id: String? = null)
