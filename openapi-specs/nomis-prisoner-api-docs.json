@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-07-02.1691.c82c8b0"
+    "version" : "2026-07-06.1699.7776449"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -21311,7 +21311,7 @@
       "get" : {
         "tags" : [ "prisoner-balance-resource" ],
         "summary" : "Get a prisoner's finance account summary by their root offender id",
-        "description" : "Retrieves a prisoner's trust account summary, for each sub-account, aggregated for all caseloads. \n      Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "description" : "Retrieves a prisoner's trust account summary, for each sub-account with a balance. \n      Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
         "operationId" : "getPrisonerAccountSummary",
         "parameters" : [ {
           "name" : "rootOffenderId",
@@ -33906,6 +33906,17 @@
             "type" : "string",
             "description" : "Username of the staff creating the container",
             "example" : "AJONES"
+          },
+          "updatedDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Timestamp for when the container was modified",
+            "example" : "2025-12-06T12:34:56"
+          },
+          "updatedBy" : {
+            "type" : "string",
+            "description" : "Username of the staff modifying the container",
+            "example" : "AJONES"
           }
         },
         "required" : [ "active", "bookingId", "containerCode", "containerId", "createdBy", "createdDateTime", "offenderNo", "prisonId" ]
@@ -38885,8 +38896,7 @@
           },
           "auditModule" : {
             "type" : "string",
-            "description" : "The NOMIS module that created this IEP",
-            "enum" : [ "OCUWARNG", "PRISON_API", "OIDADMIS", "MERGE", "OIDOIEPS", "OIDITRAN", "OSIOSEAR" ]
+            "description" : "The NOMIS module that created this IEP"
           },
           "whenCreated" : {
             "type" : "string",
@@ -38967,6 +38977,11 @@
       "AccountSummaryDto" : {
         "type" : "object",
         "properties" : {
+          "prisonId" : {
+            "type" : "string",
+            "description" : "The prison",
+            "example" : "ASI"
+          },
           "accountCode" : {
             "type" : "integer",
             "format" : "int64",
@@ -38977,14 +38992,9 @@
             "type" : "number",
             "description" : "The account balance",
             "example" : "12.50"
-          },
-          "holdBalance" : {
-            "type" : "number",
-            "description" : "The amount on hold",
-            "example" : "12.50"
           }
         },
-        "required" : [ "accountCode", "balance" ]
+        "required" : [ "accountCode", "balance", "prisonId" ]
       },
       "PrisonerBalanceSummaryDto" : {
         "type" : "object",

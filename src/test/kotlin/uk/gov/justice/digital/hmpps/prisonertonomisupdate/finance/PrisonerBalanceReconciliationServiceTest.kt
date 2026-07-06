@@ -125,56 +125,6 @@ class PrisonerBalanceReconciliationServiceTest {
     }
 
     @Test
-    fun `will report a hold balance mismatch`() = runTest {
-      val dps = dpsPrisonerAccountSummary()
-      stubBalanceSummary(
-        nomisPrisonerBalanceSummary(),
-        dps.copy(items = listOf(dps.items.first().copy(holdBalance = BigDecimal("100")))),
-      )
-      assertThat(service.checkPrisonerBalance(OFFENDER_ID)?.differences).isEqualTo(
-        listOf(
-          Difference(property = "prisoner-balances.accounts[0].holdBalance: account code 1001", dps = BigDecimal("100"), nomis = BigDecimal("0.3")),
-        ),
-      )
-    }
-
-    @Test
-    fun `will handle a null hold balance`() = runTest {
-      val nomis = nomisPrisonerBalanceSummary()
-      stubBalanceSummary(
-        nomis.copy(accounts = listOf(nomis.accounts.first().copy(holdBalance = null))),
-        dpsPrisonerAccountSummary(),
-      )
-      assertThat(service.checkPrisonerBalance(OFFENDER_ID)?.differences).isEqualTo(
-        listOf(
-          Difference(property = "prisoner-balances.accounts[0].holdBalance: account code 1001", dps = BigDecimal("0.3"), nomis = null),
-        ),
-      )
-    }
-
-    @Test
-    fun `will handle a null hold balance matching zero in dps`() = runTest {
-      val nomis = nomisPrisonerBalanceSummary()
-      val dps = dpsPrisonerAccountSummary()
-      stubBalanceSummary(
-        nomis.copy(accounts = listOf(nomis.accounts.first().copy(holdBalance = null))),
-        dps.copy(items = listOf(dps.items.first().copy(holdBalance = BigDecimal.ZERO))),
-
-      )
-      assertThat(service.checkPrisonerBalance(OFFENDER_ID)).isNull()
-    }
-
-    @Test
-    fun `will handle an equal hold balance with different scale`() = runTest {
-      val nomis = nomisPrisonerBalanceSummary()
-      stubBalanceSummary(
-        nomis.copy(accounts = listOf(nomis.accounts.first().copy(holdBalance = BigDecimal("0.30")))),
-        dpsPrisonerAccountSummary(),
-      )
-      assertThat(service.checkPrisonerBalance(OFFENDER_ID)?.differences).isNull()
-    }
-
-    @Test
     fun `will report an account code mismatch`() = runTest {
       val dps = dpsPrisonerAccountSummary()
       stubBalanceSummary(
@@ -258,9 +208,9 @@ fun dpsPrisonerAccountSummary() = PrisonerEstablishmentBalanceDetailsList(
 )
 
 private fun nomisAccountSummary(accountCode: Long = 1001) = AccountSummaryDto(
+  prisonId = "MDI",
   accountCode = accountCode,
   balance = BigDecimal.valueOf(1.5),
-  holdBalance = BigDecimal.valueOf(0.3),
 )
 
 private fun dpsAccount(accountCode: Int = 1001): PrisonerEstablishmentBalanceDetails = PrisonerEstablishmentBalanceDetails(

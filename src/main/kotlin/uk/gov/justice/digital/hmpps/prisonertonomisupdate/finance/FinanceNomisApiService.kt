@@ -44,8 +44,8 @@ class FinanceNomisApiService(
     .retryWhen(backoffSpec)
     .awaitSingle()
 
-  suspend fun getPrisonerAccountDetails(rootOffenderId: Long): PrisonerBalanceDto = prisonerBalanceApi
-    .getPrisonerAccountDetails(rootOffenderId)
+  suspend fun getPrisonerAccountDetails(rootOffenderId: Long, excludeZeroBalances: Boolean = false): PrisonerBalanceDto = prisonerBalanceApi
+    .getPrisonerAccountDetails(rootOffenderId, excludeZeroBalances)
     .retryWhen(backoffSpec)
     .awaitSingle()
 
