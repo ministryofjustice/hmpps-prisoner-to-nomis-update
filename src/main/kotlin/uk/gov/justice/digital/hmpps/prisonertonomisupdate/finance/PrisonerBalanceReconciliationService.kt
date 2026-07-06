@@ -153,11 +153,11 @@ class PrisonerBalanceReconciliationService(
         }
         val sortedDpsAccounts = dpsObj.accounts.sortedWith(
           compareBy<AccountFields> { it.accountCode }
-            .thenBy { it.balance }
+            .thenBy { it.balance },
         )
         val sortedNomisAccounts = nomisObj.accounts.sortedWith(
           compareBy<AccountFields> { it.accountCode }
-            .thenBy { it.balance }
+            .thenBy { it.balance },
         )
 
         differences.addAll(compareLists(sortedDpsAccounts, sortedNomisAccounts, "$parentProperty.accounts"))
