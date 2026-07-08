@@ -706,6 +706,12 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
                   "courtEventChargesWithOutcomes[3].offenderChargeId",
                   equalTo(NOMIS_COURT_CHARGE_4_ID.toString()),
                 ),
+              )
+              .withRequestBody(
+                matchingJsonPath(
+                  "comment",
+                  equalTo("a comment"),
+                ),
               ),
           )
         }

@@ -1702,6 +1702,7 @@ fun LegacyCourtAppearance.toNomisCourtAppearance(
   },
   courtEventChargesWithOutcomes = courtEventChargesWithOutcomes,
   nextCourtId = this.nextCourtAppearance?.courtId,
+  comment = this.comments,
 )
 
 fun LegacyCharge.toNomisCourtCharge(): OffenderChargeRequest = OffenderChargeRequest(
