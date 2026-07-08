@@ -233,6 +233,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
       appearanceDate = LocalDate.parse("2024-09-23"),
       appearanceTime = "10:00",
       nextCourtAppearance = nextCourtAppearance,
+      comments = "a comment",
       charges = listOf(
         LegacyCharge(
           lifetimeUuid = UUID.fromString(courtCharge1Id),
