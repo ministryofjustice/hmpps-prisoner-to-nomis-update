@@ -38885,8 +38885,7 @@
           },
           "auditModule" : {
             "type" : "string",
-            "description" : "The NOMIS module that created this IEP",
-            "enum" : [ "OCUWARNG", "PRISON_API", "OIDADMIS", "MERGE", "OIDOIEPS", "OIDITRAN", "OSIOSEAR" ]
+            "description" : "The NOMIS module that created this IEP"
           },
           "whenCreated" : {
             "type" : "string",
