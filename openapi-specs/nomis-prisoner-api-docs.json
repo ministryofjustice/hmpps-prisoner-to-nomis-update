@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-07-06.1699.7776449"
+    "version" : "2026-07-07.1704.6dc7a28"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -9465,6 +9465,80 @@
           },
           "409" : {
             "description" : "visit already exists exist. The moreInfo contains the NOMIS visitId for the existing visit",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prisoners/{offenderNo}/sentencing/imprisonment-status/repair" : {
+      "post" : {
+        "tags" : [ "court-sentencing-resource" ],
+        "summary" : "Repairs null offender charge outcomes and refreshes imprisonment status",
+        "description" : "Required role NOMIS_PRISONER_API__SYNCHRONISATION__RW Looks for null offender charge outcomes possibly caused by future appearances and resets them using outcomes from an earlier appearance.",
+        "operationId" : "repairCourtCaseNullOffenderChargeOutcomesToCorrectImprisonmentStatus",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender No",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender No",
+            "example" : "AK1234B"
+          },
+          "example" : "AK1234B"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CourtCaseRepairRequest"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Any null offender charge outcomes meeting the criteria repaired"
+          },
+          "400" : {
+            "description" : "Supplied data is invalid, for instance missing required fields or invalid values. See schema for details",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint when role NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Offender does not exist",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -24921,6 +24995,9 @@
           },
           "nextCourtId" : {
             "type" : "string"
+          },
+          "comment" : {
+            "type" : "string"
           }
         },
         "required" : [ "courtEventChargesWithOutcomes", "courtEventType", "courtId", "eventDateTime" ]
@@ -28698,6 +28775,146 @@
         },
         "required" : [ "visitId" ]
       },
+      "CaseIdentifier" : {
+        "type" : "object",
+        "description" : "Court case associated reference",
+        "properties" : {
+          "reference" : {
+            "type" : "string"
+          },
+          "createdDate" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        },
+        "required" : [ "createdDate", "reference" ]
+      },
+      "CaseIdentifierRequest" : {
+        "type" : "object",
+        "description" : "Case identifier list",
+        "properties" : {
+          "caseIdentifiers" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CaseIdentifier"
+            }
+          }
+        },
+        "required" : [ "caseIdentifiers" ]
+      },
+      "CourtAppearanceRepairRequest" : {
+        "type" : "object",
+        "description" : "Court Event",
+        "properties" : {
+          "eventDateTime" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "courtEventType" : {
+            "type" : "string"
+          },
+          "courtId" : {
+            "type" : "string"
+          },
+          "outcomeReasonCode" : {
+            "type" : "string"
+          },
+          "nextEventDateTime" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "courtEventCharges" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CourtEventChargeRepairRequest"
+            }
+          },
+          "nextCourtId" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "courtEventCharges", "courtEventType", "courtId", "eventDateTime" ]
+      },
+      "CourtCaseRepairRequest" : {
+        "type" : "object",
+        "description" : "Court case repair request",
+        "properties" : {
+          "startDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "legalCaseType" : {
+            "type" : "string"
+          },
+          "courtId" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "courtAppearances" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CourtAppearanceRepairRequest"
+            }
+          },
+          "offenderCharges" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/OffenderChargeRepairRequest"
+            }
+          },
+          "caseReferences" : {
+            "$ref" : "#/components/schemas/CaseIdentifierRequest"
+          }
+        },
+        "required" : [ "courtAppearances", "courtId", "legalCaseType", "offenderCharges", "startDate", "status" ]
+      },
+      "CourtEventChargeRepairRequest" : {
+        "type" : "object",
+        "description" : "Court event charge repair",
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "offenceDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "offenceEndDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "resultCode1" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "id" ]
+      },
+      "OffenderChargeRepairRequest" : {
+        "type" : "object",
+        "description" : "Court Charge",
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "offenceCode" : {
+            "type" : "string"
+          },
+          "offenceDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "offenceEndDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "resultCode1" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "id", "offenceCode" ]
+      },
       "CreateCourtCaseRequest" : {
         "type" : "object",
         "description" : "Court case create request",
@@ -29577,146 +29794,6 @@
           }
         },
         "required" : [ "createdByUsername", "lifeSentenceFlag", "prisonId", "startDate", "termSequence" ]
-      },
-      "CaseIdentifier" : {
-        "type" : "object",
-        "description" : "Court case associated reference",
-        "properties" : {
-          "reference" : {
-            "type" : "string"
-          },
-          "createdDate" : {
-            "type" : "string",
-            "format" : "date-time"
-          }
-        },
-        "required" : [ "createdDate", "reference" ]
-      },
-      "CaseIdentifierRequest" : {
-        "type" : "object",
-        "description" : "Case identifier list",
-        "properties" : {
-          "caseIdentifiers" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/CaseIdentifier"
-            }
-          }
-        },
-        "required" : [ "caseIdentifiers" ]
-      },
-      "CourtAppearanceRepairRequest" : {
-        "type" : "object",
-        "description" : "Court Event",
-        "properties" : {
-          "eventDateTime" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "courtEventType" : {
-            "type" : "string"
-          },
-          "courtId" : {
-            "type" : "string"
-          },
-          "outcomeReasonCode" : {
-            "type" : "string"
-          },
-          "nextEventDateTime" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "courtEventCharges" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/CourtEventChargeRepairRequest"
-            }
-          },
-          "nextCourtId" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "courtEventCharges", "courtEventType", "courtId", "eventDateTime" ]
-      },
-      "CourtCaseRepairRequest" : {
-        "type" : "object",
-        "description" : "Court case repair request",
-        "properties" : {
-          "startDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "legalCaseType" : {
-            "type" : "string"
-          },
-          "courtId" : {
-            "type" : "string"
-          },
-          "status" : {
-            "type" : "string"
-          },
-          "courtAppearances" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/CourtAppearanceRepairRequest"
-            }
-          },
-          "offenderCharges" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/OffenderChargeRepairRequest"
-            }
-          },
-          "caseReferences" : {
-            "$ref" : "#/components/schemas/CaseIdentifierRequest"
-          }
-        },
-        "required" : [ "courtAppearances", "courtId", "legalCaseType", "offenderCharges", "startDate", "status" ]
-      },
-      "CourtEventChargeRepairRequest" : {
-        "type" : "object",
-        "description" : "Court event charge repair",
-        "properties" : {
-          "id" : {
-            "type" : "string"
-          },
-          "offenceDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "offenceEndDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "resultCode1" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "id" ]
-      },
-      "OffenderChargeRepairRequest" : {
-        "type" : "object",
-        "description" : "Court Charge",
-        "properties" : {
-          "id" : {
-            "type" : "string"
-          },
-          "offenceCode" : {
-            "type" : "string"
-          },
-          "offenceDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "offenceEndDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "resultCode1" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "id", "offenceCode" ]
       },
       "CourtCaseRepairResponse" : {
         "type" : "object",
@@ -32766,12 +32843,12 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paged" : {
+            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
