@@ -11,7 +11,7 @@ import kotlin.io.path.pathString
 import kotlin.io.path.Path as KotlinPath
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.5.6"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.0-beta"
   kotlin("plugin.spring") version "2.4.0"
   id("org.openapi.generator") version "7.23.0"
 }
@@ -24,7 +24,7 @@ configurations {
 }
 
 dependencies {
-  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:2.5.0")
+  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:3.0.0-beta")
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-webclient")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
@@ -50,7 +50,7 @@ dependencies {
   implementation("io.opentelemetry:opentelemetry-extension-kotlin:1.62.0")
   implementation("com.google.guava:guava:33.6.0-jre")
 
-  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:2.5.0")
+  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:3.0.0-beta")
   testImplementation("org.springframework.boot:spring-boot-starter-webflux-test")
   testImplementation("io.swagger.parser.v3:swagger-parser:2.1.45") {
     exclude(group = "io.swagger.core.v3")
