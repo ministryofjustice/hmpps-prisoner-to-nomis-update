@@ -126,7 +126,7 @@ class StaffReconciliationResourceIntTest(
   }
 
   fun stubStaff(nomisStaffId: Long, dpsStaffId: String, nomisStaff: StaffDetails, dpsStaff: DpsStaffDetails) {
-    nomisApi.stubGetStaff(nomisStaffId, response = nomisStaff.copy(id = nomisStaffId))
+    nomisApi.stubGetStaffById(nomisStaffId, response = nomisStaff.copy(id = nomisStaffId))
     dpsApi.stubGetStaff(dpsStaffId, response = dpsStaff.copy(user = dpsStaff.user.copy(id = dpsStaffId)))
     mappingService.stubGetStaffByNomisIdOrNull(
       nomisStaffId = nomisStaffId,

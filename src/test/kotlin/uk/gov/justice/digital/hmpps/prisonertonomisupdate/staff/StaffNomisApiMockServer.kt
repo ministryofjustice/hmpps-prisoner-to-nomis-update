@@ -62,12 +62,12 @@ class StaffNomisApiMockServer(private val jsonMapper: JsonMapper) {
     )
   }
 
-  fun stubGetStaff(
+  fun stubGetStaffById(
     staffId: Long = 1234,
     response: StaffDetails = staffDetails(),
   ) {
     nomisApi.stubFor(
-      get(urlPathEqualTo("/staff/$staffId")).willReturn(
+      get(urlPathEqualTo("/staff/id/$staffId")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value())

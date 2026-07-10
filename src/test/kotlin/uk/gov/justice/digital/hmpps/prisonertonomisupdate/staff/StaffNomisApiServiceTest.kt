@@ -70,7 +70,7 @@ class StaffNomisApiServiceTest {
   inner class GetStaffDetails {
     @Test
     internal fun `will pass oath2 token to endpoint`() = runTest {
-      mockServer.stubGetStaff()
+      mockServer.stubGetStaffById()
 
       apiService.getStaffDetails(staffId = 1234)
 
@@ -82,12 +82,12 @@ class StaffNomisApiServiceTest {
 
     @Test
     fun `will call the get visit endpoint`() = runTest {
-      mockServer.stubGetStaff()
+      mockServer.stubGetStaffById()
 
       apiService.getStaffDetails(staffId = 1234)
 
       mockServer.verify(
-        getRequestedFor(urlPathEqualTo("/staff/1234")),
+        getRequestedFor(urlPathEqualTo("/staff/id/1234")),
       )
     }
   }
