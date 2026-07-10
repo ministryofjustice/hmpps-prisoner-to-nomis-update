@@ -46,7 +46,7 @@ class StaffReconciliationIntTest(
           mappingType = StaffMappingDto.MappingType.MIGRATED,
         ),
       )
-      nomisApi.stubGetStaff(staffId = 1, response = staffDetails().copy(id = 1))
+      nomisApi.stubGetStaffById(staffId = 1, response = staffDetails().copy(id = 1))
       dpsApi.stubGetStaff(staffId = "100", response = dpsStaffDetails(staffId = "100"))
 
       // staffId 2 - missing mapping
@@ -54,7 +54,7 @@ class StaffReconciliationIntTest(
         nomisStaffId = 2,
         mapping = null,
       )
-      nomisApi.stubGetStaff(staffId = 2, response = staffDetails().copy(id = 2))
+      nomisApi.stubGetStaffById(staffId = 2, response = staffDetails().copy(id = 2))
 
       // staffId 3 - missing from Dps
       mappingApi.stubGetStaffByNomisIdOrNull(
@@ -65,7 +65,7 @@ class StaffReconciliationIntTest(
           mappingType = StaffMappingDto.MappingType.MIGRATED,
         ),
       )
-      nomisApi.stubGetStaff(staffId = 3, response = staffDetails().copy(id = 3))
+      nomisApi.stubGetStaffById(staffId = 3, response = staffDetails().copy(id = 3))
       dpsApi.stubGetStaff(staffId = "300", response = null)
     }
 
