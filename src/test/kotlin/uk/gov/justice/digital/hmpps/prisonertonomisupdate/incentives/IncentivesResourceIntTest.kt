@@ -128,9 +128,35 @@ class IncentivesResourceIntTest(
     }
 
     @Test
-    fun `will attempt to complete a report even if some of the checks fail`() = runTest {
+    fun `will attempt to complete a report even if some of the checks fail and report network errors`() = runTest {
       nomisApi.stubCurrentIncentiveGetWithError(bookingId = 2, responseCode = 500)
       incentivesApi.stubCurrentIncentiveGetWithError(prisonNumber = "A0020TZ", responseCode = 500)
+
+      incentivesReconciliationService.generateIncentiveReconciliationReport()
+
+      awaitReportFinished()
+
+      verify(telemetryClient, times(2)).trackEvent(
+        eq("incentives-reports-reconciliation-network-error"),
+        any(),
+        isNull(),
+      )
+
+      verify(telemetryClient).trackEvent(
+        eq("incentives-reports-reconciliation-report"),
+        check {
+          assertThat(it).containsEntry("mismatch-count", "2")
+          assertThat(it).containsEntry("A0010TZ", "STD:ENH")
+          assertThat(it).containsEntry("A0030TZ", "STD:ENH")
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `will attempt to complete a report even if some of the checks fail and report errors`() = runTest {
+      nomisApi.stubCurrentIncentiveGet(bookingId = 2, iepCode = "ENH\", ")
+      incentivesApi.stubCurrentIncentiveGet(prisonerNumber = "A0020TZ", iepCode = "ENH\", ")
 
       incentivesReconciliationService.generateIncentiveReconciliationReport()
 
