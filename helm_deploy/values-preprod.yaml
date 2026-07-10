@@ -70,6 +70,7 @@ generic-service:
     - name: visit-balance-recon
       type: VISIT_BALANCE_RECON
       schedule: "0 18 * * 1-5"
+      suspend: true
     - name: court-case-recon
       type: COURT_CASE_PRISONER_RECON
       schedule: "0 18 * * 1-5"
