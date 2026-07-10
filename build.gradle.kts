@@ -111,7 +111,7 @@ abstract class ReadProductionVersionTask : DefaultTask() {
   }
 }
 
-data class ModelConfiguration(val name: String, val packageName: String, val testPackageName: String? = null, val url: String, val models: String = "") {
+data class ModelConfiguration(val name: String, val packageName: String, val testPackageName: String? = null, val url: String, val models: String = "", val hasProductionVersion: Boolean = true) {
   fun toBuildModelTaskName(): String = "build${nameToCamel()}ApiModel"
   fun toWriteJsonTaskName(): String = "write${nameToCamel()}Json"
   fun toReadProductionVersionTaskName(): String = "read${nameToCamel()}ProductionVersion"
@@ -247,6 +247,7 @@ val models = listOf(
     name = "staff",
     packageName = "staff",
     url = "https://prison-users-api-dev.prison.service.justice.gov.uk/v3/api-docs",
+    hasProductionVersion = false,
   ),
   ModelConfiguration(
     name = "visit-balance",
@@ -305,10 +306,20 @@ models.forEachIndexed { i, model ->
     // ensure that the write task happens every time
     outputs.upToDateWhen { false }
   }
-  tasks.register<ReadProductionVersionTask>(model.toReadProductionVersionTaskName()) {
-    group = "Read current production version"
-    description = "Read current production version for ${model.name}"
-    url.set(model.url)
+  if (model.hasProductionVersion) {
+    tasks.register<ReadProductionVersionTask>(model.toReadProductionVersionTaskName()) {
+      group = "Read current production version"
+      description = "Read current production version for ${model.name}"
+      url.set(model.url)
+    }
+  } else {
+    tasks.register(model.toReadProductionVersionTaskName()) {
+      group = "Read current production version"
+      description = "Read current production version for ${model.name}"
+      doLast {
+        println("no production version")
+      }
+    }
   }
   if (model.testPackageName != null) {
     separateTestPackages.add(model.testPackageName)
