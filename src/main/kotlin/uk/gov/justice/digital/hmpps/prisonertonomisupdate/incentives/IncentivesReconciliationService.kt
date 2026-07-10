@@ -9,6 +9,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import org.springframework.web.reactive.function.client.WebClientException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
@@ -91,8 +92,9 @@ class IncentivesReconciliationService(
     }
   }.onFailure {
     log.error("Unable to match incentives for booking: ${prisonerId.bookingId}", it)
+    val event = if (it is WebClientException) "incentives-reports-reconciliation-network-error" else "incentives-reports-reconciliation-mismatch-error"
     telemetryClient.trackEvent(
-      "incentives-reports-reconciliation-mismatch-error",
+      event,
       mapOf(
         "offenderNo" to prisonerId.offenderNo,
         "bookingId" to prisonerId.bookingId.toString(),
