@@ -39,7 +39,7 @@ class FinanceNomisApiMockServer(private val jsonMapper: JsonMapper) {
 
   fun stubGetPrisonerAccountDetails(rootOffenderId: Long, response: PrisonerBalanceDto) {
     nomisApi.stubFor(
-      get(urlPathEqualTo("/finance/prisoners/$rootOffenderId/balance"))
+      get(urlPathEqualTo("/finance/prisoners/rootOffenderId/$rootOffenderId/balance"))
         .willReturn(okJson(jsonMapper.writeValueAsString(response))),
     )
   }

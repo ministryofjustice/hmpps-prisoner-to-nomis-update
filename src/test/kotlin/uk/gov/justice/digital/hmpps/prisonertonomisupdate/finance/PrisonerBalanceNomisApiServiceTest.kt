@@ -84,7 +84,7 @@ class PrisonerBalanceNomisApiServiceTest {
   }
 
   @Nested
-  @DisplayName("GET /finance/prisoners/{rootOffenderId}/balance")
+  @DisplayName("GET /finance/prisoners/rootOffenderId/{rootOffenderId}/balance")
   inner class GetPrisonerAccountDetails {
 
     private val sampleDto = PrisonerBalanceDto(
@@ -118,7 +118,7 @@ class PrisonerBalanceNomisApiServiceTest {
       apiService.getPrisonerAccountDetails(35L)
 
       mockServer.verify(
-        getRequestedFor(urlPathEqualTo("/finance/prisoners/35/balance")),
+        getRequestedFor(urlPathEqualTo("/finance/prisoners/rootOffenderId/35/balance")),
       )
     }
 
