@@ -88,6 +88,7 @@ generic-service:
     - name: prisoner-balance-recon
       type: PRISONER_BALANCE_RECON
       schedule: "30 3 * * *"
+      suspend: true
     - name: prison-transactions-recon
       type: PRISON_TRANSACTIONS_RECON
       schedule: "00 2 * * *"
@@ -95,6 +96,7 @@ generic-service:
     - name: prisoner-transactions-recon
       type: PRISONER_TRANSACTIONS_RECON
       schedule: "00 3 * * *"
+      suspend: true
     - name: staff-recon
       type: STAFF_RECON
       schedule: "0 4 * * 1-5"
