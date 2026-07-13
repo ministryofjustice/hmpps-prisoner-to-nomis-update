@@ -12,12 +12,14 @@ import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.json.AutoConfigureJson
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.model.PurgeQueueRequest
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest
 import tools.jackson.databind.json.JsonMapper
 import tools.jackson.module.kotlin.readValue
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.SQSMessage
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.CourtSchedulerFeatureSwitches
 import uk.gov.justice.hmpps.sqs.HmppsQueue
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.HmppsTopic
@@ -151,6 +153,9 @@ abstract class SqsIntegrationTestBase : IntegrationTestBase() {
   internal val courtMovementsDlqClient by lazy { courtMovementsQueue.sqsDlqClient }
   internal val courtMovementsQueueUrl by lazy { courtMovementsQueue.queueUrl }
   internal val courtMovementsDlqUrl by lazy { courtMovementsQueue.dlqUrl }
+
+  @MockitoSpyBean
+  internal lateinit var courtSchedulerFeature: CourtSchedulerFeatureSwitches
 
   internal val awsSnsClient by lazy { topic.snsClient }
   internal val topicArn by lazy { topic.arn }
