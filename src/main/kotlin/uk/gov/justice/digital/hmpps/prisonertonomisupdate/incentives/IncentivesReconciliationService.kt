@@ -1,3 +1,5 @@
+@file:Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
+
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives
 
 import com.microsoft.applicationinsights.TelemetryClient
@@ -25,7 +27,13 @@ class IncentivesReconciliationService(
   private val pageSize: Long = 20,
 ) {
   private companion object {
-    val log: Logger = LoggerFactory.getLogger(this::class.java)
+    private val log: Logger = LoggerFactory.getLogger(this::class.java)
+
+    private val excludedBookingIds = IncentivesReconciliationService::class.java
+      .getResource("/excludedIncentiveReconciliationBookingIds.txt")
+      .readText()
+      .split(",")
+      .mapNotNull { it.trim().toLongOrNull() }
   }
 
   suspend fun generateIncentiveReconciliationReport() {
@@ -74,20 +82,48 @@ class IncentivesReconciliationService(
         async { incentivesApiService.getCurrentIncentive(prisonerId.offenderNo) }
     }.awaitBoth()
 
+    val excludedBooking = excludedBookingIds.contains(prisonerId.bookingId)
     return if (nomisIncentiveLevel?.iepLevel?.code != dpsIncentiveLevel?.iepCode) {
-      MismatchIncentiveLevel(prisonerId, nomisIncentiveLevel?.iepLevel?.code, dpsIncentiveLevel?.iepCode).also { mismatch ->
-        log.info("Incentive Mismatch found  $mismatch")
+      if (!excludedBooking) {
+        MismatchIncentiveLevel(
+          prisonerId,
+          nomisIncentiveLevel?.iepLevel?.code,
+          dpsIncentiveLevel?.iepCode,
+        ).also { mismatch ->
+          log.info("Incentive Mismatch found $mismatch")
+          telemetryClient.trackEvent(
+            "incentives-reports-reconciliation-mismatch",
+            mapOf(
+              "offenderNo" to mismatch.prisonerId.offenderNo,
+              "bookingId" to mismatch.prisonerId.bookingId.toString(),
+              "nomisIncentiveLevel" to (mismatch.nomisIncentiveLevel ?: "null"),
+              "dpsIncentiveLevel" to (mismatch.dpsIncentiveLevel ?: "null"),
+            ),
+          )
+        }
+      } else {
         telemetryClient.trackEvent(
-          "incentives-reports-reconciliation-mismatch",
+          "incentives-reports-reconciliation-excluded-booking",
           mapOf(
-            "offenderNo" to mismatch.prisonerId.offenderNo,
-            "bookingId" to mismatch.prisonerId.bookingId.toString(),
-            "nomisIncentiveLevel" to (mismatch.nomisIncentiveLevel ?: "null"),
-            "dpsIncentiveLevel" to (mismatch.dpsIncentiveLevel ?: "null"),
+            "offenderNo" to prisonerId.offenderNo,
+            "bookingId" to prisonerId.bookingId.toString(),
+            "reason" to "Excluding reconciliation mismatches for booking id ${prisonerId.bookingId}",
           ),
         )
+        null
       }
     } else {
+      if (excludedBooking) {
+        telemetryClient.trackEvent(
+          "incentives-reports-reconciliation-mismatch-excluded-booking-resolved",
+          mapOf(
+            "offenderNo" to prisonerId.offenderNo,
+            "bookingId" to prisonerId.bookingId.toString(),
+            "reason" to "No reconciliation mismatches found for excluded booking id ${prisonerId.bookingId}. Remove from exclusion file.",
+          ),
+          null,
+        )
+      }
       null
     }
   }.onFailure {
