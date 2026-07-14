@@ -98,6 +98,7 @@ fun corePersonDto(nationality: String? = null, religion: String? = null) = DpsPr
     nationalInsuranceNumbers = listOf(),
     driverLicenseNumbers = listOf(),
     arrestSummonsNumbers = listOf(),
+    otherIdentifiers = listOf(),
   ),
   lastName = "Smith",
   middleNames = null,
