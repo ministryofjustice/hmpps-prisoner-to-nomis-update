@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-06-26.4072.f6c1823"
+    "version" : "2026-07-14.4242.03ac3be"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -1857,9 +1857,16 @@
               "description" : "List of arrest summons numbers",
               "example" : "0700000000000002536Y"
             }
+          },
+          "otherIdentifiers" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "description" : "List of other identifiers"
+            }
           }
         },
-        "required" : [ "arrestSummonsNumbers", "cids", "crns", "cros", "defendantIds", "driverLicenseNumbers", "nationalInsuranceNumbers", "pncs", "prisonNumbers" ]
+        "required" : [ "arrestSummonsNumbers", "cids", "crns", "cros", "defendantIds", "driverLicenseNumbers", "nationalInsuranceNumbers", "otherIdentifiers", "pncs", "prisonNumbers" ]
       },
       "CanonicalNationality" : {
         "type" : "object",
