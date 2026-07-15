@@ -65,6 +65,7 @@ internal fun Type.mapDps(): String = when (this) {
   Type.TEMPORARY_RELEASE_FAILURE_3 -> "TRF2"
   Type.TEMPORARY_RELEASE_FAILURE_4 -> "TRF3"
   Type.TOOL_LOSS_1 -> "TOOL_LOSS"
+  Type.TOOL_LOSS_2 -> "TOOL_LOSS2"
   Type.UNLAWFUL_DETENTION_1 -> "UNLAW_DET"
 }
 
@@ -128,6 +129,7 @@ internal fun HistoryType.mapDps(): String = when (this) {
   HistoryType.TEMPORARY_RELEASE_FAILURE_3 -> "TRF2"
   HistoryType.TEMPORARY_RELEASE_FAILURE_4 -> "TRF3"
   HistoryType.TOOL_LOSS_1 -> "TOOL_LOSS"
+  HistoryType.TOOL_LOSS_2 -> "TOOL_LOSS2"
   HistoryType.UNLAWFUL_DETENTION_1 -> "UNLAW_DET"
 }
 
