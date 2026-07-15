@@ -103,14 +103,18 @@ fun corePersonDto(nationality: String? = null, religion: String? = null) = DpsPr
   lastName = "Smith",
   middleNames = null,
   nationalities = if (nationality != null) listOf(CanonicalNationality(nationality, "$nationality Description")) else listOf(),
-  religion = CanonicalReligion(religion, if (religion != null) "$religion Description" else null),
-  sexualOrientation = CanonicalSexualOrientation("HET", "Hetrosexual Description"),
+  religion = if (religion != null) {
+    CanonicalReligion(CanonicalReligion.Code.valueOf(religion), "$religion Description")
+  } else {
+    CanonicalReligion(null, null)
+  },
+  sexualOrientation = CanonicalSexualOrientation(CanonicalSexualOrientation.Code.HET, "Hetrosexual Description"),
   sex = CanonicalSex(),
   title = CanonicalTitle(),
   religionHistory = if (religion != null) {
     listOf(
       PrisonReligion(
-        religionCode = religion,
+        religionCode = PrisonReligion.ReligionCode.valueOf(religion),
         religionDescription = "$religion Description",
         changeReasonKnown = false,
         startDate = LocalDate.parse("2024-01-01"),
