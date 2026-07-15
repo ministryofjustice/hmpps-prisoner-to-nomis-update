@@ -203,7 +203,7 @@ fun DpsPrisonRecord.toPerson() = PrisonerPerson(
   religion = religion.description,
   religions = religionHistory.map {
     PrisonerReligion(
-      religion = it.religionCode,
+      religion = it.religionCode.name,
       startDate = it.startDate,
       endDate = it.endDate,
       current = it.current,

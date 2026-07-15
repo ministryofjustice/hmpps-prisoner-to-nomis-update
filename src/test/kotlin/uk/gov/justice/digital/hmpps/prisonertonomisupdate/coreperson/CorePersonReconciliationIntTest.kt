@@ -32,6 +32,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.BAD_GATEWAY
 import org.springframework.http.HttpStatus.NOT_FOUND
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonReligion
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonReligion.ReligionCode
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
@@ -63,8 +64,8 @@ class CorePersonReconciliationIntTest(
   inner class SinglePrisoner {
     @Test
     fun `should do nothing if no differences`() = runTest {
-      stubGetCorePerson(prisonNumber = "A1234BC", nationality = "BR", religion = "ZOO")
-      cprApi.stubGetCorePerson(prisonNumber = "A1234BC", corePersonDto(nationality = "BR", religion = "ZOO"))
+      stubGetCorePerson(prisonNumber = "A1234BC", nationality = "BR", religion = "ZORO")
+      cprApi.stubGetCorePerson(prisonNumber = "A1234BC", corePersonDto(nationality = "BR", religion = "ZORO"))
 
       service.checkCorePersonMatch("A1234BC").also {
         assertThat(it).isNull()
@@ -78,13 +79,13 @@ class CorePersonReconciliationIntTest(
     @Test
     fun `should report differences`() = runTest {
       stubGetCorePerson(prisonNumber = "A1234BC", nationality = "BR")
-      cprApi.stubGetCorePerson(prisonNumber = "A1234BC", corePersonDto(nationality = "M", religion = "ZOO"))
+      cprApi.stubGetCorePerson(prisonNumber = "A1234BC", corePersonDto(nationality = "M", religion = "ZORO"))
 
       service.checkCorePersonMatch("A1234BC").also {
         assertThat(it?.prisonNumber).isEqualTo("A1234BC")
         assertThat(it?.differences).containsExactly(
           entry("nationality", "nomis=BR, cpr=M"),
-          entry("religion", "nomis=null, cpr=ZOO Description"),
+          entry("religion", "nomis=null, cpr=ZORO Description"),
           entry("religions", "nomis=0, cpr=1"),
         )
       }
@@ -110,7 +111,7 @@ class CorePersonReconciliationIntTest(
           beliefs = listOf(
             OffenderBelief(
               beliefId = 12345L,
-              belief = CodeDescription("ZOO", "ZOO Description"),
+              belief = CodeDescription("ZORO", "ZORO Description"),
               startDate = LocalDate.parse("2024-01-01"),
               audit = NomisAudit(
                 createDatetime = LocalDateTime.now(),
@@ -135,11 +136,11 @@ class CorePersonReconciliationIntTest(
       )
       cprApi.stubGetCorePerson(
         prisonNumber = "A1234BC",
-        corePersonDto(religion = "ZOO").copy(
+        corePersonDto(religion = "ZORO").copy(
           religionHistory = listOf(
             PrisonReligion(
               // different religion
-              religionCode = "DRU",
+              religionCode = ReligionCode.DRU,
               religionDescription = "DRU Description",
               changeReasonKnown = true,
               comments = "Some comment",
@@ -151,7 +152,7 @@ class CorePersonReconciliationIntTest(
               current = true,
             ),
             PrisonReligion(
-              religionCode = "DRU",
+              religionCode = ReligionCode.DRU,
               religionDescription = "DRU Description",
               changeReasonKnown = true,
               comments = "Some comment",
@@ -170,7 +171,7 @@ class CorePersonReconciliationIntTest(
       service.checkCorePersonMatch("A1234BC").also {
         assertThat(it?.prisonNumber).isEqualTo("A1234BC")
         assertThat(it?.differences).containsExactly(
-          entry("religions", "0-code:nomis=ZOO, cpr=DRU,1-startDate:nomis=2025-01-01, cpr=2024-01-01"),
+          entry("religions", "0-code:nomis=ZORO, cpr=DRU,1-startDate:nomis=2025-01-01, cpr=2024-01-01"),
         )
       }
     }
