@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-07-14.4246.406bd78"
+    "version" : "2026-07-14.4253.9abaad1"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -1198,6 +1198,7 @@
           "religionCode" : {
             "type" : "string",
             "description" : "The religion code",
+            "enum" : [ "ADV", "AGNO", "APO", "ATHE", "BAHA", "BAPT", "BLAC", "BUDD", "CALV", "CCOG", "CE", "CHJCLDS", "CHRODX", "CHRST", "CHSC", "CINW", "COFE", "COFI", "COFN", "COFS", "CONG", "COPT", "CSW", "DRU", "EODX", "EORTH", "EPIS", "ETHO", "EVAN", "GOSP", "GROX", "HARE", "HIND", "HNDHAR", "HUM", "JAIN", "JEHV", "JEW", "LUTH", "METH", "MORM", "MOS", "MUSOTH", "NIL", "NONC", "NONP", "OORTH", "ORTH", "OTH", "PAG", "PAGDRU", "PENT", "PRES", "PROT", "QUAK", "RAST", "RC", "RUSS", "SALV", "SATN", "SCIE", "SDAY", "SHIA", "SHIN", "SHNTAO", "SIKH", "SPIR", "SUNI", "TAO", "TPRNTS", "UNIF", "UNIT", "UNKN", "UR", "WELS", "ZORO" ],
             "example" : "AGNO"
           },
           "changeReasonKnown" : {
@@ -1630,6 +1631,7 @@
           "countryCode" : {
             "type" : [ "string", "null" ],
             "description" : "Person address country code",
+            "enum" : [ "ABW", "AFG", "AGO", "AIA", "AKR", "ALA", "ALB", "AND", "ANT", "ARE", "ARG", "ARM", "ASM", "ATA", "ATF", "ATG", "AUS", "AUT", "AZE", "BDI", "BEL", "BEN", "BES", "BFA", "BGD", "BGR", "BHR", "BHS", "BIH", "BLM", "BLR", "BLZ", "BMU", "BOL", "BRA", "BRB", "BRN", "BTN", "BVT", "BWA", "CAF", "CAN", "CCK", "CHE", "CHL", "CHN", "CI", "CIV", "CMR", "COD", "COG", "COK", "COL", "COM", "CPV", "CRI", "CUB", "CUW", "CXR", "CYM", "CYP", "CZE", "DEU", "DJI", "DKL", "DMA", "DNK", "DOM", "DZA", "ECU", "EGY", "ENG", "ERI", "ESH", "ESP", "EST", "ETH", "FIN", "FJI", "FLK", "FRA", "FRO", "FSM", "FXX", "GAB", "GBR", "GEO", "GGY", "GHA", "GIB", "GIN", "GLP", "GMB", "GNB", "GNQ", "GRC", "GRD", "GRL", "GTM", "GUF", "GUM", "GUY", "HKG", "HMD", "HND", "HRV", "HTI", "HUN", "IDN", "IMN", "IND", "IOT", "IRL", "IRN", "IRQ", "ISL", "ISR", "ITA", "JAM", "JEY", "JOR", "JPN", "KAZ", "KEN", "KGZ", "KHM", "KIR", "KNA", "KOR", "KOS", "KWT", "LAO", "LBN", "LBR", "LBY", "LCA", "LIE", "LKA", "LSO", "LTU", "LUX", "LVA", "MAC", "MAF", "MAR", "MCO", "MDA", "MDG", "MDV", "MEX", "MHL", "MKD", "MLI", "MLT", "MMR", "MNE", "MNG", "MNP", "MOZ", "MRT", "MSR", "MTQ", "MUS", "MWI", "MYS", "MYT", "NAM", "NCL", "NER", "NFK", "NGA", "NI", "NIC", "NIU", "NLD", "NOR", "NPL", "NRU", "NZL", "OMN", "PAK", "PAN", "PCN", "PER", "PHL", "PLW", "PNG", "POL", "PRI", "PRK", "PRT", "PRY", "PSE", "PYF", "QAT", "REU", "ROU", "RUS", "RWA", "SAU", "SCG", "SCOT", "SDN", "SEN", "SGP", "SGS", "SHN", "SJM", "SLB", "SLE", "SLV", "SMR", "SOM", "SPM", "SRB", "SSD", "STP", "SU", "SUR", "SVK", "SVN", "SWE", "SWZ", "SXM", "SYC", "SYR", "TCA", "TCD", "TGO", "THA", "TJK", "TKL", "TKM", "TLS", "TON", "TTO", "TUN", "TUR", "TUV", "TWN", "TZA", "UGA", "UKR", "UMI", "URY", "USA", "UZB", "VAT", "VCT", "VEN", "VGB", "VIR", "VNM", "VUT", "WALES", "WLF", "WSM", "XRK", "XX", "XZ", "YEM", "YU", "ZAF", "ZMB", "ZWE" ],
             "example" : "GBR"
           },
           "uprn" : {
@@ -1674,6 +1676,7 @@
           "code" : {
             "type" : [ "string", "null" ],
             "description" : "Address status code",
+            "enum" : [ "B", "M", "MA", "P", "PR", "PR1", "RJ", "RT", "S", "PM", "UNKNOWN" ],
             "example" : "M"
           },
           "description" : {
@@ -1689,6 +1692,7 @@
           "code" : {
             "type" : [ "string", "null" ],
             "description" : "Address usage code",
+            "enum" : [ "CARE", "CURFEW", "DAP", "DBA", "DBH", "DNF", "DOH", "DPH", "DSH", "DST", "DUT", "HDC", "HDC2", "HOME", "HOSP", "HOST", "OTHER", "RECEP", "RELEASE", "RES", "ROTL", "A02", "A16", "A10", "A11", "A17", "A07B", "A07A", "A14", "A13", "A08A", "A08C", "A08", "A01A", "A15", "A12", "A01C", "A01D", "A04", "A03", "UNKNOWN" ],
             "example" : "CURFEW"
           },
           "description" : {
@@ -1774,6 +1778,7 @@
           "code" : {
             "type" : [ "string", "null" ],
             "description" : "Person ethnicity code",
+            "enum" : [ "A1", "A2", "A3", "A4", "A9", "B1", "B2", "B9", "ETH03", "M1", "M2", "M3", "M9", "MERGE", "NS", "O1", "O2", "O9", "UN", "W1", "W2", "W3", "W4", "W5", "W8", "W9", "Z1" ],
             "example" : "B9"
           },
           "description" : {
@@ -1975,6 +1980,7 @@
           "code" : {
             "type" : [ "string", "null" ],
             "description" : "Person religion code",
+            "enum" : [ "ADV", "AGNO", "APO", "ATHE", "BAHA", "BAPT", "BLAC", "BUDD", "CALV", "CCOG", "CE", "CHJCLDS", "CHRODX", "CHRST", "CHSC", "CINW", "COFE", "COFI", "COFN", "COFS", "CONG", "COPT", "CSW", "DRU", "EODX", "EORTH", "EPIS", "ETHO", "EVAN", "GOSP", "GROX", "HARE", "HIND", "HNDHAR", "HUM", "JAIN", "JEHV", "JEW", "LUTH", "METH", "MORM", "MOS", "MUSOTH", "NIL", "NONC", "NONP", "OORTH", "ORTH", "OTH", "PAG", "PAGDRU", "PENT", "PRES", "PROT", "QUAK", "RAST", "RC", "RUSS", "SALV", "SATN", "SCIE", "SDAY", "SHIA", "SHIN", "SHNTAO", "SIKH", "SPIR", "SUNI", "TAO", "TPRNTS", "UNIF", "UNIT", "UNKN", "UR", "WELS", "ZORO" ],
             "example" : "Christianity"
           },
           "description" : {
@@ -1990,6 +1996,7 @@
           "code" : {
             "type" : [ "string", "null" ],
             "description" : "Person sex code",
+            "enum" : [ "M", "F", "N", "NS" ],
             "example" : "M"
           },
           "description" : {
@@ -2005,6 +2012,7 @@
           "code" : {
             "type" : [ "string", "null" ],
             "description" : "Person sexual orientation code",
+            "enum" : [ "BIS", "HOM", "HET", "ND", "OTH", "REF", "UNKNOWN" ],
             "example" : "HET"
           },
           "description" : {
@@ -2020,6 +2028,7 @@
           "code" : {
             "type" : [ "string", "null" ],
             "description" : "Person title code",
+            "enum" : [ "MR", "MRS", "MISS", "MS", "MX", "REV", "FR", "IMAM", "RABBI", "BR", "SR", "DME", "DR", "LDY", "LRD", "SIR", "UN" ],
             "example" : "Mr"
           },
           "description" : {
@@ -2033,7 +2042,8 @@
         "type" : "object",
         "properties" : {
           "religionCode" : {
-            "type" : "string"
+            "type" : "string",
+            "enum" : [ "ADV", "AGNO", "APO", "ATHE", "BAHA", "BAPT", "BLAC", "BUDD", "CALV", "CCOG", "CE", "CHJCLDS", "CHRODX", "CHRST", "CHSC", "CINW", "COFE", "COFI", "COFN", "COFS", "CONG", "COPT", "CSW", "DRU", "EODX", "EORTH", "EPIS", "ETHO", "EVAN", "GOSP", "GROX", "HARE", "HIND", "HNDHAR", "HUM", "JAIN", "JEHV", "JEW", "LUTH", "METH", "MORM", "MOS", "MUSOTH", "NIL", "NONC", "NONP", "OORTH", "ORTH", "OTH", "PAG", "PAGDRU", "PENT", "PRES", "PROT", "QUAK", "RAST", "RC", "RUSS", "SALV", "SATN", "SCIE", "SDAY", "SHIA", "SHIN", "SHNTAO", "SIKH", "SPIR", "SUNI", "TAO", "TPRNTS", "UNIF", "UNIT", "UNKN", "UR", "WELS", "ZORO" ]
           },
           "religionDescription" : {
             "type" : [ "string", "null" ]
