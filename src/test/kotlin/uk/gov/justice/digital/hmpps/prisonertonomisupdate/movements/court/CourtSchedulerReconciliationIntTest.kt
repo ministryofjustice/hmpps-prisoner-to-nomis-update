@@ -150,13 +150,60 @@ class CourtSchedulerReconciliationIntTest(
             unscheduledCourtMovementIns = listOf(bookingCourtMovementIn(seq = 987)),
           ),
         )
-
-        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
-        awaitReportFinished()
       }
 
       @Test
       fun `should report extra NOMIS court event`() = runTest {
+        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+        awaitReportFinished()
+
+        verify(telemetryClient).trackEvent(
+          eq("court-scheduler-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "offenderNo" to "A0001TZ",
+              "type" to "SCHEDULE",
+              "nomisCount" to "1",
+              "dpsCount" to "0",
+              "unexpected-nomis-ids" to "[123]",
+              "unexpected-dps-ids" to "[]",
+            ),
+          ),
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `should report extra NOMIS court event if there is a court case with sentencing mapping`() = runTest {
+        // The NOMIS court event has a court case
+        courtScheduleNomisApi.stubGetOffenderCourtMovements(
+          offenderNo = "A0001TZ",
+          response = offenderCourtMovementsResponse(
+            courtSchedules = listOf(
+              bookingCourtSchedule(
+                eventId = 123,
+                courtCaseId = 12345,
+                courtMovementOut = null,
+                courtMovementIn = null,
+              ),
+            ),
+            unscheduledCourtMovementOuts = listOf(),
+            unscheduledCourtMovementIns = listOf(),
+          ),
+        )
+        // The court sentencing mapping does not exist, but should if we have a court case
+        courtSentencingMappingApi.stubGetAllCourtAppearanceByNomisIds(
+          mappings = listOf(
+            CourtAppearanceMappingDto(
+              nomisCourtAppearanceId = 123,
+              dpsCourtAppearanceId = UUID.randomUUID().toString(),
+            ),
+          ),
+        )
+
+        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+        awaitReportFinished()
+
         verify(telemetryClient).trackEvent(
           eq("court-scheduler-reconciliation-mismatch"),
           eq(
@@ -175,6 +222,9 @@ class CourtSchedulerReconciliationIntTest(
 
       @Test
       fun `should report extra NOMIS court movements OUT`() = runTest {
+        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+        awaitReportFinished()
+
         verify(telemetryClient).trackEvent(
           eq("court-scheduler-reconciliation-mismatch"),
           eq(
@@ -193,6 +243,9 @@ class CourtSchedulerReconciliationIntTest(
 
       @Test
       fun `should report extra unscheduled NOMIS court movements OUT`() = runTest {
+        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+        awaitReportFinished()
+
         verify(telemetryClient).trackEvent(
           eq("court-scheduler-reconciliation-mismatch"),
           eq(
@@ -211,6 +264,9 @@ class CourtSchedulerReconciliationIntTest(
 
       @Test
       fun `should report extra NOMIS court movements IN`() = runTest {
+        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+        awaitReportFinished()
+
         verify(telemetryClient).trackEvent(
           eq("court-scheduler-reconciliation-mismatch"),
           eq(
@@ -229,6 +285,9 @@ class CourtSchedulerReconciliationIntTest(
 
       @Test
       fun `should report extra unscheduled NOMIS court movements IN`() = runTest {
+        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+        awaitReportFinished()
+
         verify(telemetryClient).trackEvent(
           eq("court-scheduler-reconciliation-mismatch"),
           eq(
@@ -527,6 +586,7 @@ class CourtSchedulerReconciliationIntTest(
     private val courtEventMovementInId: UUID = UUID.randomUUID()
     private val courtMovementOutId: UUID = UUID.randomUUID()
     private val courtMovementInId: UUID = UUID.randomUUID()
+    private val externalReference: String = "urn:ras:${UUID.randomUUID()}"
 
     @BeforeEach
     fun setUp() = runTest {
@@ -557,7 +617,7 @@ class CourtSchedulerReconciliationIntTest(
         response = reconciliation(
           courtEvents = listOf(
             ReconciliationCourtEvent(
-              courtEvent = courtEvent(id = courtEventId),
+              courtEvent = courtEvent(id = courtEventId, externalReference = null),
               movements = listOf(
                 courtEventMovement(id = courtEventMovementOutId),
                 courtEventMovement(id = courtEventMovementInId).copy(fromAgencyId = "LEEDMC", toAgencyId = "BXI", directionCode = "IN"),
@@ -580,13 +640,13 @@ class CourtSchedulerReconciliationIntTest(
           movements = listOf(),
         ),
       )
-
-      reconciliationService.generateCourtSchedulerReconciliationReportBatch()
-      awaitReportFinished()
     }
 
     @Test
     fun `should report missing court event mappings`() = runTest {
+      reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+      awaitReportFinished()
+
       verify(telemetryClient).trackEvent(
         eq("court-scheduler-reconciliation-mismatch"),
         eq(
@@ -595,8 +655,61 @@ class CourtSchedulerReconciliationIntTest(
             "type" to "MISSING_MAPPING_SCHEDULE",
             "nomisCount" to "1",
             "dpsCount" to "1",
-            "unexpected-nomis-ids" to "[123]",
-            "unexpected-dps-ids" to "[$courtEventId]",
+            "unexpected-nomis-ids" to "[(eventId=123, caseId=null)]",
+            "unexpected-dps-ids" to "[(id=$courtEventId, extRef=null)]",
+          ),
+        ),
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `should report missing sentencing mapping if there is a court case`() = runTest {
+      // The NOMIS stub to have a court case
+      courtScheduleNomisApi.stubGetOffenderCourtMovements(
+        offenderNo = offender,
+        response = offenderCourtMovementsResponse(
+          courtSchedules = listOf(
+            bookingCourtSchedule(
+              eventId = 123,
+              courtCaseId = 12345,
+              courtMovementOut = null,
+              courtMovementIn = null,
+            ),
+          ),
+          unscheduledCourtMovementOuts = listOf(),
+          unscheduledCourtMovementIns = listOf(),
+        ),
+      )
+      // The DPS stub has an external reference
+      dpsApi.stubGetCourtSchedulerReconciliation(
+        personIdentifier = offender,
+        response = reconciliation(
+          courtEvents = listOf(
+            ReconciliationCourtEvent(
+              courtEvent = courtEvent(id = courtEventId, externalReference = externalReference),
+              movements = listOf(),
+            ),
+          ),
+          unscheduledMovements = listOf(),
+        ),
+      )
+      // But the court sentencing mapping does not exist
+      courtSentencingMappingApi.stubGetAllCourtAppearanceByNomisIds(mappings = listOf())
+
+      reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+      awaitReportFinished()
+
+      verify(telemetryClient).trackEvent(
+        eq("court-scheduler-reconciliation-mismatch"),
+        eq(
+          mapOf(
+            "offenderNo" to offender,
+            "type" to "MISSING_MAPPING_SCHEDULE",
+            "nomisCount" to "1",
+            "dpsCount" to "1",
+            "unexpected-nomis-ids" to "[(eventId=123, caseId=12345)]",
+            "unexpected-dps-ids" to "[(id=$courtEventId, extRef=$externalReference)]",
           ),
         ),
         isNull(),
@@ -605,6 +718,9 @@ class CourtSchedulerReconciliationIntTest(
 
     @Test
     fun `should report missing scheduled court movement out mappings`() = runTest {
+      reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+      awaitReportFinished()
+
       verify(telemetryClient).trackEvent(
         eq("court-scheduler-reconciliation-mismatch"),
         eq(
@@ -623,6 +739,9 @@ class CourtSchedulerReconciliationIntTest(
 
     @Test
     fun `should report missing scheduled court movement in mappings`() = runTest {
+      reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+      awaitReportFinished()
+
       verify(telemetryClient).trackEvent(
         eq("court-scheduler-reconciliation-mismatch"),
         eq(
@@ -641,6 +760,9 @@ class CourtSchedulerReconciliationIntTest(
 
     @Test
     fun `should report missing unscheduled court movementout mappings`() = runTest {
+      reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+      awaitReportFinished()
+
       verify(telemetryClient).trackEvent(
         eq("court-scheduler-reconciliation-mismatch"),
         eq(
@@ -659,6 +781,9 @@ class CourtSchedulerReconciliationIntTest(
 
     @Test
     fun `should report missing unscheduled court movement in mappings`() = runTest {
+      reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+      awaitReportFinished()
+
       verify(telemetryClient).trackEvent(
         eq("court-scheduler-reconciliation-mismatch"),
         eq(
@@ -784,59 +909,6 @@ class CourtSchedulerReconciliationIntTest(
               "nomisEventId" to "123",
               "dpsCourtEventId" to "$courtEventId",
               "type" to "EVENT_TYPE",
-            ),
-          ),
-          isNull(),
-        )
-      }
-
-      @Test
-      fun `should report different court sentencing URN`() = runTest {
-        stubDpsCourtEvent()
-        stubNomisCourtEvent(courtCaseId = 87878L)
-        // The court sentencing mapping does not have a RaS UUID, so mismatch expected
-        stubCourtSentencingMappings(mappings = listOf())
-        stubMappings()
-
-        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
-        awaitReportFinished()
-
-        verify(telemetryClient).trackEvent(
-          eq("court-scheduler-reconciliation-mismatch"),
-          eq(
-            mapOf(
-              "offenderNo" to "A0001TZ",
-              "nomisEventId" to "123",
-              "dpsCourtEventId" to "$courtEventId",
-              "type" to "EXTERNAL_REFERENCE_URN",
-            ),
-          ),
-          isNull(),
-        )
-      }
-
-      @Test
-      fun `should NOT report different court sentencing URN`() = runTest {
-        stubDpsCourtEvent()
-        stubNomisCourtEvent(courtCaseId = 87878L)
-        // The court sentencing UUID is mapped to the NOMIS event ID as expected, so no mismatch
-        stubCourtSentencingMappings(listOf(CourtAppearanceMappingDto(123, "$courtSentencingAppearanceId")))
-        stubMappings()
-
-        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
-        awaitReportFinished()
-
-        verify(
-          telemetryClient,
-          never(),
-        ).trackEvent(
-          eq("court-scheduler-reconciliation-mismatch"),
-          eq(
-            mapOf(
-              "offenderNo" to "A0001TZ",
-              "nomisEventId" to "123",
-              "dpsCourtEventId" to "$courtEventId",
-              "type" to "EXTERNAL_REFERENCE_URN",
             ),
           ),
           isNull(),
@@ -1192,12 +1264,6 @@ class CourtSchedulerReconciliationIntTest(
           nomisMovementInId?.let { CourtMovementMappingIdsDto(nomisMovementInId.bookingId, nomisMovementInId.sequence, dpsMovementInId!!) },
         ),
       ),
-    )
-
-    private fun stubCourtSentencingMappings(
-      mappings: List<CourtAppearanceMappingDto> = listOf(),
-    ) = courtSentencingMappingApi.stubGetAllCourtAppearanceByNomisIds(
-      mappings = mappings,
     )
   }
 

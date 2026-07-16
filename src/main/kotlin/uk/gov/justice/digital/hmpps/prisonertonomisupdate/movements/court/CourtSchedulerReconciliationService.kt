@@ -42,8 +42,9 @@ class CourtSchedulerReconciliationService(
     val nomisMovements = async { nomisApiService.getOffenderCourtMovementsOrNull(offenderNo) }
     val dpsMovements = async { dpsApiService.getCourtSchedulerReconciliation(offenderNo) }
     val movementMappings = async { mappingService.getCourtSchedulerPrisonMappingIds(offenderNo) }
+    val sentencingMappings = async { nomisMovements.await()?.bookings?.findCourtSentencingIds() }
 
-    checkPrisonersMatch(offenderNo, nomisMovements.await(), dpsMovements.await(), movementMappings.await(), suppressTelemetry)
+    checkPrisonersMatch(offenderNo, nomisMovements.await(), dpsMovements.await(), movementMappings.await(), sentencingMappings.await() ?: mapOf(), suppressTelemetry)
   }
 
   private suspend fun checkPrisonersMatch(
@@ -51,13 +52,14 @@ class CourtSchedulerReconciliationService(
     nomisMovements: OffenderCourtMovementsResponse?,
     dpsMovements: ReconciliationResponse,
     movementMappings: CourtSchedulerPrisonerMappingIdsDto,
+    sentencingMappings: Map<Long, String>,
     suppressTelemetry: Boolean,
   ): List<MismatchedPrisonerCourtMovements> {
     if (nomisMovements == null) {
       throw IllegalStateException("Cannot perform reconciliation for a prisoner that doesn't exist in NOMIS - has the prisoner been merged or deleted recently?")
     }
 
-    val mismatchedEntities = findMismatchedEntities(offenderNo, nomisMovements, dpsMovements, movementMappings)
+    val mismatchedEntities = findMismatchedEntities(offenderNo, nomisMovements, dpsMovements, movementMappings, sentencingMappings)
     if (!suppressTelemetry) {
       mismatchedEntities.forEach {
         telemetryClient.trackEvent(
@@ -74,7 +76,7 @@ class CourtSchedulerReconciliationService(
       }
     }
 
-    val mismatchedScheduleDetails = findMismatchedCourtScheduleDetails(offenderNo, nomisMovements, dpsMovements, movementMappings)
+    val mismatchedScheduleDetails = findMismatchedCourtScheduleDetails(offenderNo, nomisMovements, dpsMovements, movementMappings, sentencingMappings)
     if (!suppressTelemetry) {
       mismatchedScheduleDetails.forEach {
         telemetryClient.trackEvent(
@@ -116,6 +118,7 @@ class CourtSchedulerReconciliationService(
     nomisMovements: OffenderCourtMovementsResponse,
     dpsMovements: ReconciliationResponse,
     movementMappings: CourtSchedulerPrisonerMappingIdsDto,
+    sentencingMappings: Map<Long, String>,
   ): List<MismatchedPrisonerCourtMovementIds> {
     val mismatches = mutableListOf<MismatchedPrisonerCourtMovementIds>()
 
@@ -200,18 +203,20 @@ class CourtSchedulerReconciliationService(
     }
 
     // check for missing schedule mappings
-    val matchedScheduleIds = movementMappings.matchingSchedules(nomisCourtEventIds, dpsCourtEventIds)
+    val dpsCourtAppearances = dpsMovements.courtEvents.map { DpsCourtAppearance(it.courtEvent.dpsId!!, it.courtEvent.externalReferenceUrn) }
+    val nomisCourtAppearances = nomisMovements.bookings.flatMap { it.courtSchedules.map { NomisCourtAppearance(it.eventId, it.courtCaseId) } }
+    val matchedScheduleIds = movementMappings.matchingSchedules(nomisCourtAppearances, dpsCourtAppearances, sentencingMappings)
     if (matchedScheduleIds.size != nomisCourtEventIds.size || matchedScheduleIds.size != dpsCourtEventIds.size) {
-      val missingNomisIds = nomisCourtEventIds - matchedScheduleIds.map { it.first }.toSet()
-      val missingDpsIds = dpsCourtEventIds - matchedScheduleIds.map { it.second }.toSet()
+      val missingNomisAppearances = nomisCourtAppearances.filterNot { it.eventId in matchedScheduleIds.map { it.first.eventId }.toSet() }
+      val missingDpsAppearances = dpsCourtAppearances.filterNot { it.dpsCourtAppearanceId in matchedScheduleIds.map { it.second }.toSet() }
       mismatches.add(
         MismatchedPrisonerCourtMovementIds(
           offenderNo = offenderNo,
           type = MISSING_MAPPING_SCHEDULE,
-          nomisCount = missingNomisIds.size,
-          dpsCount = missingDpsIds.size,
-          unexpectedNomisIds = "$missingNomisIds",
-          unexpectedDpsIds = "$missingDpsIds",
+          nomisCount = missingNomisAppearances.size,
+          dpsCount = missingDpsAppearances.size,
+          unexpectedNomisIds = "$missingNomisAppearances",
+          unexpectedDpsIds = "$missingDpsAppearances",
         ),
       )
     }
@@ -292,16 +297,16 @@ class CourtSchedulerReconciliationService(
     nomis: OffenderCourtMovementsResponse,
     dps: ReconciliationResponse,
     mappings: CourtSchedulerPrisonerMappingIdsDto,
+    sentencingMappings: Map<Long, String>,
   ): List<MismatchPrisonerCourtScheduleDetails> {
-    val nomisCourtEventIds = nomis.bookings.flatMap { it.courtSchedules.map { it.eventId } }
-    val dpsCourtAppearanceIds = dps.courtEvents.map { it.courtEvent.dpsId!! }
-    val dpsCourtSentencingAppearanceIds = nomis.bookings.findCourtSentencingIds()
+    val nomisCourtEventIds = nomis.bookings.flatMap { it.courtSchedules.map { NomisCourtAppearance(it.eventId, it.courtCaseId) } }
+    val dpsCourtAppearances = dps.courtEvents.map { DpsCourtAppearance(it.courtEvent.dpsId!!, it.courtEvent.externalReferenceUrn) }
 
     val mismatches = mutableListOf<MismatchPrisonerCourtScheduleDetails>()
-    mappings.matchingSchedules(nomisCourtEventIds, dpsCourtAppearanceIds).forEach { (nomisId, dpsId) ->
-      val nomisCourtEvent = nomis.findNomisCourtSchedule(nomisId)
+    mappings.matchingSchedules(nomisCourtEventIds, dpsCourtAppearances, sentencingMappings).forEach { (nomisCourtAppearance, dpsId) ->
+      val nomisCourtEvent = nomis.findNomisCourtSchedule(nomisCourtAppearance.eventId)
       val dpsCourtEvent = dps.findDpsCourtSchedule(dpsId)
-      fun mismatch(type: MismatchPrisonerCourtScheduleDetails.Type, nomisValue: String, dpsValue: String) = MismatchPrisonerCourtScheduleDetails(offenderNo, type, nomisId, dpsId, nomisValue, dpsValue)
+      fun mismatch(type: MismatchPrisonerCourtScheduleDetails.Type, nomisValue: String, dpsValue: String) = MismatchPrisonerCourtScheduleDetails(offenderNo, type, nomisCourtAppearance.eventId, dpsId, nomisValue, dpsValue)
 
       // prison must match
       if (nomisCourtEvent.prison != dpsCourtEvent.courtEvent.prisonCodeAtTimeOfScheduling) {
@@ -328,16 +333,6 @@ class CourtSchedulerReconciliationService(
       // event type must match
       if (nomisCourtEvent.eventType != dpsCourtEvent.courtEvent.courtEventType) {
         mismatches.add(mismatch(EVENT_TYPE, nomisCourtEvent.eventType, dpsCourtEvent.courtEvent.courtEventType))
-      }
-
-      // external reference must match
-      if (nomisCourtEvent.courtCaseId != null) {
-        val expectedDpsCourtAppearanceId = dpsCourtSentencingAppearanceIds[nomisCourtEvent.eventId]
-        val actualDpsCourtAppearanceId = dpsCourtEvent.courtEvent.externalReferenceUrn
-        // The external reference is not the exact court sentencing UUID, but it does contain the UUID
-        if (expectedDpsCourtAppearanceId == null || actualDpsCourtAppearanceId == null || !actualDpsCourtAppearanceId.contains(expectedDpsCourtAppearanceId)) {
-          mismatches.add(mismatch(MismatchPrisonerCourtScheduleDetails.Type.EXTERNAL_REFERENCE_URN, expectedDpsCourtAppearanceId ?: "null", dpsCourtEvent.courtEvent.externalReferenceUrn ?: "null"))
-        }
       }
     }
 
@@ -536,10 +531,18 @@ class CourtSchedulerReconciliationService(
   }
 
   private fun CourtSchedulerPrisonerMappingIdsDto.matchingSchedules(
-    nomisCourtEventIds: List<Long>,
-    dpsCourtEventIds: List<UUID>,
-  ) = findMatches(nomisCourtEventIds, dpsCourtEventIds) { nomisId ->
-    schedules.find { it.nomisEventId == nomisId }?.dpsCourtAppearanceId
+    nomisCourtAppearances: List<NomisCourtAppearance>,
+    dpsCourtAppearances: List<DpsCourtAppearance>,
+    sentencingMappings: Map<Long, String>,
+  ) = findMatches(nomisCourtAppearances, dpsCourtAppearances.map { it.dpsCourtAppearanceId }) { nomisCourtAppearance ->
+    if (nomisCourtAppearance.courtCaseId == null) {
+      schedules.find { it.nomisEventId == nomisCourtAppearance.eventId }
+        ?.dpsCourtAppearanceId
+    } else {
+      sentencingMappings[nomisCourtAppearance.eventId]
+        ?.let { sentencingId -> dpsCourtAppearances.find { sentencingId == it.sentencingId() } }
+        ?.dpsCourtAppearanceId
+    }
   }
 
   private fun CourtSchedulerPrisonerMappingIdsDto.matchingMovements(
@@ -661,4 +664,13 @@ internal class MismatchPrisonerCourtMovementDetails(
     PRISON,
     REASON,
   }
+}
+
+private class DpsCourtAppearance(val dpsCourtAppearanceId: UUID, val externalReference: String?) {
+  fun sentencingId() = externalReference?.replace(EXTERNAL_REF_PREFIX, "")
+  override fun toString() = """(id=$dpsCourtAppearanceId, extRef=$externalReference)"""
+}
+
+private class NomisCourtAppearance(val eventId: Long, val courtCaseId: Long?) {
+  override fun toString() = "(eventId=$eventId, caseId=$courtCaseId)"
 }
