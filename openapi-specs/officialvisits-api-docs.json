@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-07-02.1001.c3cbfef"
+    "version" : "2026-07-15.1032.df7ebb6"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -5451,33 +5451,38 @@
         "properties" : {
           "officialVisitId" : {
             "type" : "integer",
-            "format" : "int64"
+            "format" : "int64",
+            "description" : "The official visit ID"
           },
           "prisonerNumber" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "The prisoner number"
           },
           "visitorAndContactIds" : {
             "type" : "array",
+            "description" : "The visitor and contact IDs",
             "items" : {
-              "$ref" : "#/components/schemas/PairLongLong"
+              "$ref" : "#/components/schemas/VisitorAndContactId"
             }
           }
         },
         "required" : [ "officialVisitId", "prisonerNumber", "visitorAndContactIds" ]
       },
-      "PairLongLong" : {
+      "VisitorAndContactId" : {
         "type" : "object",
         "properties" : {
-          "first" : {
+          "visitorId" : {
             "type" : "integer",
-            "format" : "int64"
+            "format" : "int64",
+            "description" : "The visitor ID"
           },
-          "second" : {
-            "type" : "integer",
-            "format" : "int64"
+          "contactId" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int64",
+            "description" : "The contact ID (null when no contact was created)"
           }
         },
-        "required" : [ "first", "second" ]
+        "required" : [ "visitorId" ]
       },
       "OverlappingVisitsCriteriaRequest" : {
         "type" : "object",
@@ -5991,7 +5996,9 @@
         "type" : "object",
         "properties" : {
           "emailAddress" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "The email address of the recipient",
+            "example" : "example@example.com"
           },
           "notificationId" : {
             "type" : "integer",
