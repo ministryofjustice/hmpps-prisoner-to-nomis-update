@@ -334,16 +334,6 @@ class CourtSchedulerReconciliationService(
       if (nomisCourtEvent.eventType != dpsCourtEvent.courtEvent.courtEventType) {
         mismatches.add(mismatch(EVENT_TYPE, nomisCourtEvent.eventType, dpsCourtEvent.courtEvent.courtEventType))
       }
-
-      // external reference must match
-      if (nomisCourtEvent.courtCaseId != null) {
-        val expectedDpsCourtAppearanceId = sentencingMappings[nomisCourtEvent.eventId]
-        val actualDpsCourtAppearanceId = dpsCourtEvent.courtEvent.externalReferenceUrn
-        // The external reference is not the exact court sentencing UUID, but it does contain the UUID
-        if (expectedDpsCourtAppearanceId == null || actualDpsCourtAppearanceId == null || !actualDpsCourtAppearanceId.contains(expectedDpsCourtAppearanceId)) {
-          mismatches.add(mismatch(MismatchPrisonerCourtScheduleDetails.Type.EXTERNAL_REFERENCE_URN, expectedDpsCourtAppearanceId ?: "null", dpsCourtEvent.courtEvent.externalReferenceUrn ?: "null"))
-        }
-      }
     }
 
     return mismatches.toList()
