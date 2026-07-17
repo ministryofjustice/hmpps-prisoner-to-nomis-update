@@ -132,7 +132,6 @@ class CorePersonReconciliationService(
     val differences = mutableMapOf<String, String>()
 
     appendDifference(nomisCorePerson.nationality, cprCorePerson.nationality, differences, "nationality")
-    // This should be comparing the code, but core person only currently holds the description (even in code field)
     appendDifference(nomisCorePerson.religion, cprCorePerson.religion, differences, "religion")
     appendReligionsDifference(nomisCorePerson.religions, cprCorePerson.religions, differences, "religions")
 
@@ -200,7 +199,7 @@ private fun LocalDateTime?.notEqualsIgnoringNanos(createDatetime: LocalDateTime?
 
 fun DpsPrisonRecord.toPerson() = PrisonerPerson(
   nationality = nationalities.firstOrNull()?.code,
-  religion = religion.description,
+  religion = religion.code?.name,
   religions = religionHistory.map {
     PrisonerReligion(
       religion = it.religionCode.name,
@@ -218,7 +217,7 @@ fun DpsPrisonRecord.toPerson() = PrisonerPerson(
 
 fun CorePerson.toPerson() = PrisonerPerson(
   nationality = this.nationalities?.firstOrNull()?.takeIf { it.latestBooking }?.nationality?.code,
-  religion = this.beliefs?.firstOrNull()?.belief?.description,
+  religion = this.beliefs?.firstOrNull()?.belief?.code,
   religions = this.beliefs?.mapIndexed { i, r ->
     PrisonerReligion(
       religion = r.belief.code,
