@@ -6,16 +6,16 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-06-15.63.fa56e91"
+    "version" : "2026-07-17.135.351bba1"
   },
   "servers" : [ {
-    "url" : "https://prison-users-api-dev.hmpps.service.justice.gov.uk",
+    "url" : "https://prison-users-api-dev.prison.service.justice.gov.uk",
     "description" : "Development"
   }, {
-    "url" : "https://prison-users-api-preprod.hmpps.service.justice.gov.uk",
+    "url" : "https://prison-users-api-preprod.prison.service.justice.gov.uk",
     "description" : "Pre-Production"
   }, {
-    "url" : "https://prison-users-api.hmpps.service.justice.gov.uk",
+    "url" : "https://prison-users-api.prison.service.justice.gov.uk",
     "description" : "Production"
   }, {
     "url" : "http://localhost:8080",
@@ -23,6 +23,64 @@
   } ],
   "tags" : [ ],
   "paths" : {
+    "/sync/user/{legacyStaffId}" : {
+      "put" : {
+        "tags" : [ "sync-resource" ],
+        "summary" : "Sync user creation/updates from NOMIS to Prison Users API",
+        "description" : "Creates or updates a Prison User by the legacy staffId. Requires role ROLE_PRISON_USERS_API__SYNC__RW",
+        "operationId" : "putPrisonUserForSync",
+        "parameters" : [ {
+          "name" : "legacyStaffId",
+          "in" : "path",
+          "description" : "The legacy NOMIS staff Id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The legacy NOMIS staff Id",
+            "example" : 123456
+          },
+          "example" : 123456
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PrisonUserSyncRequest"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "204" : {
+            "description" : "Prison User sync successful."
+          },
+          "400" : {
+            "description" : "Invalid request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "ROLE_PRISON_USERS_API__SYNC__RW" : [ ]
+        } ]
+      }
+    },
     "/migrate/user" : {
       "post" : {
         "tags" : [ "migration-resource" ],
@@ -246,6 +304,72 @@
         } ]
       }
     },
+    "/reconciliation/user/{legacyStaffId}" : {
+      "get" : {
+        "tags" : [ "reconciliation-resource" ],
+        "summary" : "Get the details of a migrated user by the legacy staff Id",
+        "description" : "Get the full view of a migrated user. Requires role ROLE_PRISON_USERS_API__MIGRATION__RW",
+        "operationId" : "getPrisonUserForReconciliation",
+        "parameters" : [ {
+          "name" : "legacyStaffId",
+          "in" : "path",
+          "description" : "The legacy NOMIS staff Id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The legacy NOMIS staff Id",
+            "example" : 123456
+          },
+          "example" : 123456
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns the prison user data.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonUserReconciliationResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "User not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "PRISON_USERS_API__MIGRATION__RW" : [ ]
+        } ]
+      }
+    },
     "/example/time" : {
       "get" : {
         "tags" : [ "example-resource" ],
@@ -268,20 +392,249 @@
   },
   "components" : {
     "schemas" : {
+      "PrisonUserSyncRequest" : {
+        "type" : "object",
+        "description" : "NOMIS-to-Prison-User sync request",
+        "properties" : {
+          "firstName" : {
+            "type" : "string",
+            "description" : "First name of the user",
+            "example" : "John"
+          },
+          "lastName" : {
+            "type" : "string",
+            "description" : "The last name of the user",
+            "example" : "Smith"
+          },
+          "status" : {
+            "type" : "string",
+            "description" : "The status of the user e.g. ACTIVE/INACTIVE",
+            "enum" : [ "ACTIVE", "INACTIVE" ]
+          },
+          "createdTimestamp" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Record creation timestamp",
+            "example" : "2022-01-01T12:00:00"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "Username of the record creator",
+            "example" : "TEST_USER"
+          },
+          "modifiedTimestamp" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "Record modification timestamp",
+            "example" : "2022-01-01T12:00:00"
+          },
+          "modifiedBy" : {
+            "type" : [ "string", "null" ],
+            "description" : "Username of the record modifier",
+            "example" : "TEST_USER"
+          },
+          "emails" : {
+            "type" : "array",
+            "description" : "The email addresses for the user",
+            "items" : {
+              "$ref" : "#/components/schemas/SyncPrisonUserEmail"
+            }
+          },
+          "accounts" : {
+            "type" : "array",
+            "description" : "The list of accounts associated with the user",
+            "items" : {
+              "$ref" : "#/components/schemas/SyncPrisonUserAccount"
+            }
+          }
+        },
+        "required" : [ "accounts", "createdBy", "createdTimestamp", "emails", "firstName", "lastName", "status" ]
+      },
+      "SyncPrisonUserAccount" : {
+        "type" : "object",
+        "description" : "User account details to sync from NOMIS",
+        "properties" : {
+          "username" : {
+            "type" : "string",
+            "description" : "Username for the user account",
+            "example" : "TEST_USER"
+          },
+          "accountType" : {
+            "type" : "string",
+            "description" : "The user account type e.g. ADMIN/GENERAL",
+            "enum" : [ "ADMIN", "GENERAL" ]
+          },
+          "accountStatus" : {
+            "type" : "string",
+            "description" : "The user account status indicating if it is open, locked or expired",
+            "enum" : [ "OPEN", "EXPIRED", "EXPIRED_GRACE", "LOCKED_TIMED", "LOCKED", "EXPIRED_LOCKED_TIMED", "EXPIRED_GRACE_LOCKED_TIMED", "EXPIRED_LOCKED", "EXPIRED_GRACE_LOCKED" ]
+          },
+          "caseloads" : {
+            "type" : "array",
+            "description" : "The caseloads assigned to the user account",
+            "items" : {
+              "$ref" : "#/components/schemas/SyncPrisonUserCaseload"
+            }
+          },
+          "roles" : {
+            "type" : "array",
+            "description" : "The roles assigned to the user account",
+            "items" : {
+              "$ref" : "#/components/schemas/SyncPrisonUserRole"
+            }
+          },
+          "lastLoggedIn" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "The timestamp of the last login for the account",
+            "example" : "2022-01-01T12:00:00"
+          },
+          "activeCaseloadId" : {
+            "type" : [ "string", "null" ],
+            "description" : "Identifier for the active caseload for the account",
+            "example" : "MRI"
+          },
+          "createdTimestamp" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Record creation timestamp",
+            "example" : "2022-01-01T12:00:00"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "Username of the record creator",
+            "example" : "TEST_USER"
+          },
+          "modifiedTimestamp" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "Record modification timestamp",
+            "example" : "2022-01-01T12:00:00"
+          },
+          "modifiedBy" : {
+            "type" : [ "string", "null" ],
+            "description" : "Username of the record modifier",
+            "example" : "TEST_USER"
+          }
+        },
+        "required" : [ "accountStatus", "accountType", "caseloads", "createdBy", "createdTimestamp", "roles", "username" ]
+      },
+      "SyncPrisonUserCaseload" : {
+        "type" : "object",
+        "description" : "Caseload assigned to a user account to sync",
+        "properties" : {
+          "caseloadId" : {
+            "type" : "string",
+            "description" : "Identifier for the caseload the user account can access",
+            "example" : "MRI"
+          },
+          "createdTimestamp" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Record creation timestamp",
+            "example" : "2022-01-01T12:00:00"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "Username of the record creator",
+            "example" : "TEST_USER"
+          }
+        },
+        "required" : [ "caseloadId", "createdBy", "createdTimestamp" ]
+      },
+      "SyncPrisonUserEmail" : {
+        "type" : "object",
+        "description" : "User emails to sync from NOMIS",
+        "properties" : {
+          "email" : {
+            "type" : [ "string", "null" ],
+            "description" : "The email address for the user",
+            "example" : "test@email.com"
+          },
+          "createdTimestamp" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "Record creation timestamp",
+            "example" : "2022-01-01T12:00:00"
+          },
+          "createdBy" : {
+            "type" : [ "string", "null" ],
+            "description" : "Username of the record creator",
+            "example" : "TEST_USER"
+          },
+          "modifiedTimestamp" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "Record modification timestamp",
+            "example" : "2022-01-01T12:00:00"
+          },
+          "modifiedBy" : {
+            "type" : [ "string", "null" ],
+            "description" : "Username of the record modifier",
+            "example" : "TEST_USER"
+          }
+        },
+        "required" : [ "createdBy", "createdTimestamp", "email" ]
+      },
+      "SyncPrisonUserRole" : {
+        "type" : "object",
+        "description" : "Role assigned to a user account to sync",
+        "properties" : {
+          "roleCode" : {
+            "type" : "string",
+            "description" : "The role code the user account will be assigned",
+            "example" : "TEST_ROLE"
+          },
+          "createdTimestamp" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Record creation timestamp",
+            "example" : "2022-01-01T12:00:00"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "Username of the record creator",
+            "example" : "TEST_USER"
+          }
+        },
+        "required" : [ "createdBy", "createdTimestamp", "roleCode" ]
+      },
+      "ErrorResponse" : {
+        "type" : "object",
+        "properties" : {
+          "status" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "errorCode" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int32"
+          },
+          "userMessage" : {
+            "type" : [ "string", "null" ]
+          },
+          "developerMessage" : {
+            "type" : [ "string", "null" ]
+          }
+        },
+        "required" : [ "status" ]
+      },
       "MigratedUser" : {
         "type" : "object",
         "description" : "Single NOMIS user details",
         "properties" : {
-          "id" : {
-            "type" : "string",
+          "staffId" : {
+            "type" : "integer",
             "format" : "int64",
             "description" : "The NOMIS staff id",
             "example" : 123456
           },
-          "email" : {
-            "type" : "string",
-            "description" : "The email address for the user",
-            "example" : "test@email.com"
+          "emails" : {
+            "type" : [ "array", "null" ],
+            "description" : "The email addresses for the user",
+            "items" : {
+              "$ref" : "#/components/schemas/MigratedUserEmail"
+            }
           },
           "firstName" : {
             "type" : "string",
@@ -321,7 +674,7 @@
             "example" : "TEST_USER"
           }
         },
-        "required" : [ "createdBy", "createdTimestamp", "email", "firstName", "id", "lastName", "status" ]
+        "required" : [ "createdBy", "createdTimestamp", "firstName", "lastName", "staffId", "status" ]
       },
       "MigratedUserAccessibleCaseload" : {
         "type" : "object",
@@ -406,6 +759,46 @@
         },
         "required" : [ "accountStatus", "accountType", "createdBy", "createdTimestamp", "username" ]
       },
+      "MigratedUserEmail" : {
+        "type" : "object",
+        "description" : "Single NOMIS user email details",
+        "properties" : {
+          "email" : {
+            "type" : "string",
+            "description" : "The email address for the user",
+            "example" : "test@email.com"
+          },
+          "legacyEmailId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The legacy NOMIS internet address ID for the email",
+            "example" : 123456
+          },
+          "createdTimestamp" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Record creation timestamp",
+            "example" : "2022-01-01T12:00:00"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "Username of the record creator",
+            "example" : "TEST_USER"
+          },
+          "modifiedTimestamp" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "Record modification timestamp",
+            "example" : "2022-01-01T12:00:00"
+          },
+          "modifiedBy" : {
+            "type" : [ "string", "null" ],
+            "description" : "Username of the record modifier",
+            "example" : "TEST_USER"
+          }
+        },
+        "required" : [ "createdBy", "createdTimestamp", "email", "legacyEmailId" ]
+      },
       "MigratedUserRole" : {
         "type" : "object",
         "description" : "NOMIS user account to role link",
@@ -443,12 +836,11 @@
             "description" : "The NOMIS user to migrate"
           },
           "accounts" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "The NOMIS user accounts to migrate",
             "items" : {
               "$ref" : "#/components/schemas/MigratedUserAccount"
-            },
-            "minItems" : 1
+            }
           },
           "roles" : {
             "type" : [ "array", "null" ],
@@ -465,27 +857,7 @@
             }
           }
         },
-        "required" : [ "accounts", "user" ]
-      },
-      "ErrorResponse" : {
-        "type" : "object",
-        "properties" : {
-          "status" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "errorCode" : {
-            "type" : [ "integer", "null" ],
-            "format" : "int32"
-          },
-          "userMessage" : {
-            "type" : [ "string", "null" ]
-          },
-          "developerMessage" : {
-            "type" : [ "string", "null" ]
-          }
-        },
-        "required" : [ "status" ]
+        "required" : [ "user" ]
       },
       "UserMigrationResponse" : {
         "type" : "object",
@@ -498,17 +870,13 @@
             "example" : "f59dad25-3f11-4a74-9e03-64d2ee53f498"
           },
           "staffId" : {
-            "type" : "string",
+            "type" : "integer",
+            "format" : "int64",
             "description" : "The NOMIS staff id for the migrated user",
-            "example" : "1234567"
-          },
-          "username" : {
-            "type" : "string",
-            "description" : "The usernames of the accounts for the migrated user",
-            "example" : "TEST_USER"
+            "example" : 123456
           }
         },
-        "required" : [ "staffId", "userId", "username" ]
+        "required" : [ "staffId", "userId" ]
       },
       "PrisonCaseload" : {
         "type" : "object",
@@ -609,6 +977,240 @@
           }
         },
         "required" : [ "enabled", "firstName", "lastName", "staffId", "username" ]
+      },
+      "PrisonUserAccount" : {
+        "type" : "object",
+        "description" : "User account details",
+        "properties" : {
+          "username" : {
+            "type" : "string",
+            "description" : "Username for the user account",
+            "example" : "TEST_USER"
+          },
+          "accountType" : {
+            "type" : "string",
+            "description" : "The user account type e.g. ADMIN/GENERAL",
+            "enum" : [ "ADMIN", "GENERAL" ]
+          },
+          "accountStatus" : {
+            "type" : "string",
+            "description" : "The user account status indicating if it is open, locked or expired",
+            "enum" : [ "OPEN", "EXPIRED", "EXPIRED_GRACE", "LOCKED_TIMED", "LOCKED", "EXPIRED_LOCKED_TIMED", "EXPIRED_GRACE_LOCKED_TIMED", "EXPIRED_LOCKED", "EXPIRED_GRACE_LOCKED" ]
+          },
+          "caseloads" : {
+            "type" : "array",
+            "description" : "The caseloads assigned to the user account",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonUserCaseload"
+            }
+          },
+          "roles" : {
+            "type" : "array",
+            "description" : "The roles assigned to the user account",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonUserRole"
+            }
+          },
+          "lastLoggedIn" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "The timestamp of the last login for the account",
+            "example" : "2022-01-01T12:00:00"
+          },
+          "activeCaseloadId" : {
+            "type" : [ "string", "null" ],
+            "description" : "Identifier for the active caseload for the account",
+            "example" : "MRI"
+          },
+          "createdTimestamp" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Record creation timestamp",
+            "example" : "2022-01-01T12:00:00"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "Username of the record creator",
+            "example" : "TEST_USER"
+          },
+          "modifiedTimestamp" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "Record modification timestamp",
+            "example" : "2022-01-01T12:00:00"
+          },
+          "modifiedBy" : {
+            "type" : [ "string", "null" ],
+            "description" : "Username of the record modifier",
+            "example" : "TEST_USER"
+          }
+        },
+        "required" : [ "accountStatus", "accountType", "caseloads", "createdBy", "createdTimestamp", "roles", "username" ]
+      },
+      "PrisonUserCaseload" : {
+        "type" : "object",
+        "description" : "Caseload assigned to a user account",
+        "properties" : {
+          "caseloadId" : {
+            "type" : "string",
+            "description" : "Identifier for the caseload the user account can access",
+            "example" : "MRI"
+          },
+          "createdTimestamp" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Record creation timestamp",
+            "example" : "2022-01-01T12:00:00"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "Username of the record creator",
+            "example" : "TEST_USER"
+          }
+        },
+        "required" : [ "caseloadId", "createdBy", "createdTimestamp" ]
+      },
+      "PrisonUserEmail" : {
+        "type" : "object",
+        "description" : "User email details",
+        "properties" : {
+          "emailId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The id of the email record",
+            "example" : 123456
+          },
+          "email" : {
+            "type" : "string",
+            "description" : "The email address for the user",
+            "example" : "test@email.com"
+          },
+          "isPrimary" : {
+            "type" : "string",
+            "description" : "Boolean indicating if this is the primary email address for the user",
+            "example" : "true"
+          },
+          "createdTimestamp" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Record creation timestamp",
+            "example" : "2022-01-01T12:00:00"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "Username of the record creator",
+            "example" : "TEST_USER"
+          },
+          "modifiedTimestamp" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "Record modification timestamp",
+            "example" : "2022-01-01T12:00:00"
+          },
+          "modifiedBy" : {
+            "type" : [ "string", "null" ],
+            "description" : "Username of the record modifier",
+            "example" : "TEST_USER"
+          },
+          "primary" : {
+            "type" : "boolean",
+            "writeOnly" : true
+          }
+        },
+        "required" : [ "createdBy", "createdTimestamp", "email", "emailId", "isPrimary" ]
+      },
+      "PrisonUserReconciliationResponse" : {
+        "type" : "object",
+        "description" : "The full User representation of a migrated NOMIS staff record migrated to a ",
+        "properties" : {
+          "userId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The unique identifier for the prison user",
+            "example" : "f59dad25-3f11-4a74-9e03-64d2ee53f498"
+          },
+          "staffId" : {
+            "type" : "string",
+            "format" : "int64",
+            "description" : "The NOMIS staff id",
+            "example" : 123456
+          },
+          "firstName" : {
+            "type" : "string",
+            "description" : "First name of the user",
+            "example" : "John"
+          },
+          "lastName" : {
+            "type" : "string",
+            "description" : "The last name of the user",
+            "example" : "Smith"
+          },
+          "status" : {
+            "type" : "string",
+            "description" : "The status of the user e.g. ACTIVE/INACTIVE",
+            "enum" : [ "ACTIVE", "INACTIVE" ]
+          },
+          "createdTimestamp" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Record creation timestamp",
+            "example" : "2022-01-01T12:00:00"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "Username of the record creator",
+            "example" : "TEST_USER"
+          },
+          "modifiedTimestamp" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "Record modification timestamp",
+            "example" : "2022-01-01T12:00:00"
+          },
+          "modifiedBy" : {
+            "type" : [ "string", "null" ],
+            "description" : "Username of the record modifier",
+            "example" : "TEST_USER"
+          },
+          "emails" : {
+            "type" : "array",
+            "description" : "The email addresses for the user",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonUserEmail"
+            }
+          },
+          "accounts" : {
+            "type" : "array",
+            "description" : "The list of accounts associated with the user",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonUserAccount"
+            }
+          }
+        },
+        "required" : [ "accounts", "createdBy", "createdTimestamp", "emails", "firstName", "lastName", "staffId", "status", "userId" ]
+      },
+      "PrisonUserRole" : {
+        "type" : "object",
+        "description" : "Role assigned to a user account",
+        "properties" : {
+          "roleCode" : {
+            "type" : "string",
+            "description" : "The role code the user account will be assigned",
+            "example" : "TEST_ROLE"
+          },
+          "createdTimestamp" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Record creation timestamp",
+            "example" : "2022-01-01T12:00:00"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "Username of the record creator",
+            "example" : "TEST_USER"
+          }
+        },
+        "required" : [ "createdBy", "createdTimestamp", "roleCode" ]
       }
     }
   }

@@ -11,8 +11,9 @@
 **/api/*
 **/model/*
 !**/ErrorResponse.kt
-!**/UserMigrationRequest.kt
 !**/MigratedUser.kt
 !**/MigratedUserAccessibleCaseload.kt
 !**/MigratedUserAccount.kt
+!**/MigratedUserEmail.kt
 !**/MigratedUserRole.kt
+!**/UserMigrationRequest.kt
