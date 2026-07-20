@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Pa
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RoleResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.StaffAccount
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.StaffDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.StaffEmail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.StaffIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.StaffIdsPage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
@@ -99,7 +100,9 @@ fun staffDetails(staffId: Long = 1234) = StaffDetails(
   firstName = "JOHN",
   lastName = "SMITH",
   status = "ACTIVE",
-  email = "john.smith@justice.gov.uk",
+  emailAddresses = listOf(
+    StaffEmail(emailAddressId = 3456, email = "john.smith@justice.gov.uk", audit = audit()),
+  ),
   audit = audit(),
   accounts = listOf(
     StaffAccount(

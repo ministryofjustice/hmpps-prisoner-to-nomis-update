@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.P
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.staff.model.MigratedUser
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.staff.model.MigratedUserAccessibleCaseload
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.staff.model.MigratedUserAccount
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.staff.model.MigratedUserEmail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.staff.model.MigratedUserRole
 import java.time.LocalDateTime
 
@@ -79,7 +80,16 @@ fun dpsStaffDetails(staffId: String = "4321") = DpsStaffDetails(
 
 fun dpsStaffUser(staffId: String = "4321") = DpsUser(
   id = staffId,
-  email = "john.smith@justice.gov.uk",
+  emails = listOf(
+    MigratedUserEmail(
+      email = "john.smith@justice.gov.uk",
+      legacyEmailId = 3456,
+      createdTimestamp = LocalDateTime.parse("2020-12-04T10:42:43"),
+      createdBy = "JIM_BEAM",
+      modifiedTimestamp = LocalDateTime.parse("2021-09-12T10:42:43"),
+      modifiedBy = "FRED_BROWN",
+    ),
+  ),
   firstName = "JOHN",
   lastName = "SMITH",
   status = MigratedUser.Status.ACTIVE,
@@ -105,7 +115,7 @@ data class DpsStaffDetails(
 )
 data class DpsUser(
   val id: String,
-  val email: String,
+  val emails: List<MigratedUserEmail>? = null,
   val firstName: String,
   val lastName: String,
   val status: MigratedUser.Status,

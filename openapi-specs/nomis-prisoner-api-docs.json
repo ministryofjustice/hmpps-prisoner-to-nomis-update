@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-07-10.1723.c7f9144"
+    "version" : "2026-07-20.1733.d7cdc0c"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -33549,10 +33549,13 @@
             "description" : "The unique staff id",
             "example" : 12345
           },
-          "email" : {
-            "type" : "string",
-            "description" : "Primary email address of the staff user",
-            "example" : "john.smith@internet.co.uk"
+          "emailAddresses" : {
+            "type" : "array",
+            "description" : "List of email addresses for the staff user",
+            "example" : "['fred@example.com','fred2.example.com']",
+            "items" : {
+              "$ref" : "#/components/schemas/StaffEmail"
+            }
           },
           "firstName" : {
             "type" : "string",
@@ -33581,7 +33584,28 @@
             "description" : "Audit data associated with the staff user"
           }
         },
-        "required" : [ "accounts", "audit", "firstName", "id", "lastName", "status" ]
+        "required" : [ "accounts", "audit", "emailAddresses", "firstName", "id", "lastName", "status" ]
+      },
+      "StaffEmail" : {
+        "type" : "object",
+        "description" : "Staff email",
+        "properties" : {
+          "emailAddressId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Unique NOMIS Id of email address"
+          },
+          "email" : {
+            "type" : "string",
+            "description" : "The email address",
+            "example" : "john.smith@internet.co.uk"
+          },
+          "audit" : {
+            "$ref" : "#/components/schemas/NomisAudit",
+            "description" : "Audit data associated with the staff email"
+          }
+        },
+        "required" : [ "audit", "email", "emailAddressId" ]
       },
       "PagedModelStaffIdResponse" : {
         "type" : "object",

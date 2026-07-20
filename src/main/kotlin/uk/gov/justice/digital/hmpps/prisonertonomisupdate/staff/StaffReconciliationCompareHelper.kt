@@ -14,7 +14,7 @@ data class StaffSummary(
   val lastName: String,
   val status: String,
   val accounts: List<StaffAccountSummary>,
-  val email: String?,
+  val emails: List<String>,
 )
 data class StaffAccountSummary(
   val username: String,
@@ -32,7 +32,7 @@ fun StaffDetails.toStaff() = StaffSummary(
   lastName = lastName,
   status = status,
   accounts = accounts.map { it.toStaffAccountSummary() }.sortedBy { it.username },
-  email = null,
+  emails = emailAddresses.map { it.email },
 )
 fun StaffAccount.toStaffAccountSummary() = StaffAccountSummary(
   username = username,
@@ -50,7 +50,7 @@ fun DpsStaffDetails.toStaff() = StaffSummary(
   lastName = user.lastName,
   status = user.status.mapDps(),
   accounts = accounts.map { it.toStaffAccountSummary(this) }.sortedBy { it.username },
-  email = null,
+  emails = user.emails?.map { it.email } ?: listOf(),
 )
 fun MigratedUserAccount.toStaffAccountSummary(dpsStaffDetails: DpsStaffDetails) = StaffAccountSummary(
   username = username,
