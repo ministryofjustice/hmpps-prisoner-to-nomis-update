@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-07-16.929.4e26f30"
+    "version" : "2026-07-17.940.04ea6e8"
   },
   "servers" : [ {
     "url" : "https://prisoner-finance-sync-api-dev.hmpps.service.justice.gov.uk/",
@@ -847,8 +847,8 @@
     "/reconcile/prisoner-balances/{prisonNumber}" : {
       "get" : {
         "tags" : [ "NOMIS Sync" ],
-        "summary" : "Get a list of all subaccount balances for a prisoner, grouped by establishment where transactions occurred",
-        "operationId" : "listPrisonerBalancesByEstablishment",
+        "summary" : "Get all sub account balances for a prisoner across all prisons",
+        "operationId" : "listPrisonerSubaccountBalances",
         "parameters" : [ {
           "name" : "prisonNumber",
           "in" : "path",
@@ -863,7 +863,93 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/PrisonerEstablishmentBalanceDetailsList"
+                  "type" : "object",
+                  "additionalProperties" : {
+                    "$ref" : "#/components/schemas/SubAccountBalanceForReconciliation"
+                  }
+                },
+                "examples" : {
+                  "SubAccountBalances" : {
+                    "summary" : "Example response",
+                    "description" : "SubAccountBalances",
+                    "value" : {
+                      "2101" : {
+                        "totalBalance" : 100.5,
+                        "holdBalance" : 0,
+                        "balanceDateTime" : "2026-07-17T12:55:12.813Z"
+                      },
+                      "2102" : {
+                        "totalBalance" : 50.0,
+                        "holdBalance" : 10.0,
+                        "balanceDateTime" : "2026-07-17T12:55:12.813Z"
+                      },
+                      "2103" : {
+                        "totalBalance" : 0,
+                        "holdBalance" : 0,
+                        "balanceDateTime" : "2026-07-17T12:55:12.813Z"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad request - invalid input data.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - requires a valid OAuth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden - requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found - Prisoner not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error - An unexpected error occurred.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502" : {
+            "description" : "General Ledger threw an unexpected 5XX error.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -2003,18 +2089,21 @@
         },
         "required" : [ "last", "page", "totalElements", "totalPages", "transactions" ]
       },
-      "PrisonerEstablishmentBalanceDetailsList" : {
+      "SubAccountBalanceForReconciliation" : {
         "type" : "object",
-        "description" : "A list of a prisoner's sub account balances, broken down by establishment.",
         "properties" : {
-          "items" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/PrisonerEstablishmentBalanceDetails"
-            }
+          "totalBalance" : {
+            "type" : "number"
+          },
+          "holdBalance" : {
+            "type" : "number"
+          },
+          "balanceDateTime" : {
+            "type" : "string",
+            "format" : "date-time"
           }
         },
-        "required" : [ "items" ]
+        "required" : [ "balanceDateTime", "holdBalance", "totalBalance" ]
       },
       "GeneralLedgerBalanceDetails" : {
         "type" : "object",
