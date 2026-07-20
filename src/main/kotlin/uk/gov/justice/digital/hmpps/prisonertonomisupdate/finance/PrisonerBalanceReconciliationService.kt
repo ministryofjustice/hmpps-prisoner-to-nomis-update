@@ -78,25 +78,26 @@ class PrisonerBalanceReconciliationService(
   )
 
   internal suspend fun checkPrisonerBalance(rootOffenderId: Long): MismatchPrisonerBalance? = runCatching {
-    val nomisAccountSummary = financeNomisApiService.getPrisonerAccountSummary(rootOffenderId)
-    val dpsAccountSummary = dpsApiService.getPrisonerAccountSummary(nomisAccountSummary.prisonNumber)
+    val nomisAccounts = financeNomisApiService.getPrisonerAccounts(rootOffenderId)
+    val dpsAccounts = dpsApiService.getPrisonerAccounts(nomisAccounts.prisonNumber)
     val nomisFields = BalanceFields(
-      prisonNumber = nomisAccountSummary.prisonNumber,
-      accounts = nomisAccountSummary.accounts.map {
+      prisonNumber = nomisAccounts.prisonNumber,
+      accounts = nomisAccounts.accounts.map {
         AccountFields(
-          balance = it.balance,
           accountCode = it.accountCode.toInt(),
+          balance = it.balance,
         )
       },
     )
     val dpsFields = BalanceFields(
-      prisonNumber = nomisAccountSummary.prisonNumber,
-      accounts = dpsAccountSummary.items.map {
-        AccountFields(
-          balance = it.totalBalance,
-          accountCode = it.accountCode,
-        )
-      },
+      prisonNumber = nomisAccounts.prisonNumber,
+      accounts = dpsAccounts.filter { it.value.totalBalance != BigDecimal.ZERO }
+        .map {
+          AccountFields(
+            accountCode = it.key.toInt(),
+            balance = it.value.totalBalance,
+          )
+        },
     )
 
     val differenceList = compareObjects(dpsFields, nomisFields, "prisoner-balances")
@@ -108,7 +109,7 @@ class PrisonerBalanceReconciliationService(
       telemetryClient.trackEvent(
         "$TELEMETRY_PRISONER_PREFIX-mismatch",
         mapOf(
-          "prisoner" to nomisAccountSummary.prisonNumber,
+          "prisoner" to nomisAccounts.prisonNumber,
         ) + differenceList.associate { it.property to it.toString() },
       )
       return MismatchPrisonerBalance(

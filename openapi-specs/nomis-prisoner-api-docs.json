@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-07-20.1733.d7cdc0c"
+    "version" : "2026-07-20.1741.8cfc0ff"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -717,6 +717,61 @@
           },
           "404" : {
             "description" : "Forbidden, requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/property-containers/{propertyContainerId}" : {
+      "put" : {
+        "tags" : [ "property-resource" ],
+        "summary" : "Updates a prisoner property container record",
+        "description" : "Replaces the container's mutable details (type, seal, location, proposed disposal date).\n      Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "update",
+        "parameters" : [ {
+          "name" : "propertyContainerId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PropertyContainerUpdateRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : { }
+            }
+          },
+          "400" : {
+            "description" : "Invalid location",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Property container does not exist",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -21524,6 +21579,68 @@
         }
       }
     },
+    "/finance/prisoners/{prisonNumber}/balance/reconcile" : {
+      "get" : {
+        "tags" : [ "prisoner-balance-resource" ],
+        "summary" : "Get a prisoner's finance details by their prison number",
+        "description" : "Retrieves a prisoner's trust account details for aggregated caseloads. Zero account balances are not returned. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getAggregatedAccountsForPrisonNumber",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "description" : "prisonNumber",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "prisonNumber",
+            "example" : "A1234BC"
+          },
+          "example" : "A1234BC"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Transaction Information Returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonerAggregatedAccountsDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint when role NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Prisoner does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/finance/prisoners/rootOffenderId/{rootOffenderId}/balance" : {
       "get" : {
         "tags" : [ "prisoner-balance-resource" ],
@@ -21557,6 +21674,69 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/PrisonerBalanceDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint when role NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Prisoner does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/finance/prisoners/rootOffenderId/{rootOffenderId}/balance/reconcile" : {
+      "get" : {
+        "tags" : [ "prisoner-balance-resource" ],
+        "summary" : "Get a prisoner's finance details by their root offender id",
+        "description" : "Retrieves a prisoner's trust account details for aggregated caseloads. Zero account balances are not returned. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getAggregatedAccountsForId",
+        "parameters" : [ {
+          "name" : "rootOffenderId",
+          "in" : "path",
+          "description" : "rootOffenderId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "rootOffenderId",
+            "example" : 123456
+          },
+          "example" : 123456
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Transaction Information Returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonerAggregatedAccountsDto"
                 }
               }
             }
@@ -25037,6 +25217,38 @@
           }
         },
         "required" : [ "courseScheduleId", "created", "eventId", "prisonId" ]
+      },
+      "PropertyContainerCode" : {
+        "type" : "string",
+        "enum" : [ "BRA", "BULK", "CO", "DES", "VALU" ]
+      },
+      "PropertyContainerUpdateRequest" : {
+        "type" : "object",
+        "description" : "Prisoner property field which are mutable",
+        "properties" : {
+          "internalLocationId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The property box location id for the container",
+            "example" : 1234567
+          },
+          "sealMark" : {
+            "type" : "string",
+            "description" : "The container's seal number",
+            "example" : "1234"
+          },
+          "containerCode" : {
+            "$ref" : "#/components/schemas/PropertyContainerCode",
+            "description" : "The container's code",
+            "example" : "BULK"
+          },
+          "proposedDisposalDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Date the container will be disposed of"
+          }
+        },
+        "required" : [ "containerCode", "sealMark" ]
       },
       "UpdateVisitBalanceRequest" : {
         "type" : "object",
@@ -28702,10 +28914,6 @@
           }
         },
         "required" : [ "propertyContainerId" ]
-      },
-      "PropertyContainerCode" : {
-        "type" : "string",
-        "enum" : [ "BRA", "BULK", "CO", "DES", "VALU" ]
       },
       "PropertyContainerCreateRequest" : {
         "type" : "object",
@@ -32996,12 +33204,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "paged" : {
+            "type" : "boolean"
+          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "paged" : {
-            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -39269,6 +39477,47 @@
             "description" : "The accounts associated with the prisoner",
             "items" : {
               "$ref" : "#/components/schemas/PrisonerAccountDto"
+            }
+          }
+        },
+        "required" : [ "accounts", "prisonNumber", "rootOffenderId" ]
+      },
+      "AggregatedAccountDto" : {
+        "type" : "object",
+        "properties" : {
+          "accountCode" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The account code for the balance entry",
+            "example" : 2101
+          },
+          "balance" : {
+            "type" : "number",
+            "description" : "The account balance",
+            "example" : "12.50"
+          }
+        },
+        "required" : [ "accountCode", "balance" ]
+      },
+      "PrisonerAggregatedAccountsDto" : {
+        "type" : "object",
+        "properties" : {
+          "rootOffenderId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The root offender Id",
+            "example" : 12345
+          },
+          "prisonNumber" : {
+            "type" : "string",
+            "description" : "The prison Number",
+            "example" : "A1234BC"
+          },
+          "accounts" : {
+            "type" : "array",
+            "description" : "The aggregated prisoner accounts",
+            "items" : {
+              "$ref" : "#/components/schemas/AggregatedAccountDto"
             }
           }
         },

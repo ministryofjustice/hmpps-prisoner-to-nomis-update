@@ -7,7 +7,7 @@ import org.springframework.web.reactive.function.client.WebClient
 import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.api.NOMISSyncApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.GeneralLedgerBalanceDetailsList
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.PrisonerEstablishmentBalanceDetailsList
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SubAccountBalanceForReconciliation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SyncGeneralLedgerTransactionResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SyncOffenderTransactionResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
@@ -30,8 +30,8 @@ class FinanceDpsApiService(
     .retryWhen(backoffSpec)
     .awaitSingle()
 
-  suspend fun getPrisonerAccountSummary(prisonNumber: String): PrisonerEstablishmentBalanceDetailsList = syncApi
-    .listPrisonerBalancesByEstablishment(prisonNumber)
+  suspend fun getPrisonerAccounts(prisonNumber: String): Map<String, SubAccountBalanceForReconciliation> = syncApi
+    .listPrisonerSubaccountBalances(prisonNumber)
     .retryWhen(backoffSpec)
     .awaitSingle()
 
