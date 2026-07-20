@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-07-14.649.5d77512"
+    "version" : "2026-07-17.656.fb47e28"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -1156,6 +1156,69 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/court-scheduler/schedule/update-prisoner/nomis-id/{nomisEventId}" : {
+      "put" : {
+        "tags" : [ "court-schedule-resource" ],
+        "summary" : "A court schedule has been moved to a different prisoner so update the mapping",
+        "description" : "Updates the mapping from the old to the new prisoner. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "updateMappingPrisoner",
+        "parameters" : [ {
+          "name" : "nomisEventId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateScheduleMappingPrisonerRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Court schedule mapping upserted or exists",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "The mapping was not found.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -22375,6 +22438,40 @@
         },
         "required" : [ "errorCode", "moreInfo", "status", "userMessage" ]
       },
+      "UpdateScheduleMappingPrisonerRequest" : {
+        "type" : "object",
+        "description" : "A request to update a mapping's prisoner",
+        "properties" : {
+          "dpsCourtAppearanceId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS court appearance id"
+          },
+          "oldPrisonerNumber" : {
+            "type" : "string",
+            "description" : "The NOMIS offender number on the existing mapping",
+            "example" : "A1234BC"
+          },
+          "oldBookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS ID of the booking on the existing mapping",
+            "example" : 12345
+          },
+          "newPrisonerNumber" : {
+            "type" : "string",
+            "description" : "The new NOMIS offender number",
+            "example" : "B1234BC"
+          },
+          "newBookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The new NOMIS ID of the booking",
+            "example" : 54321
+          }
+        },
+        "required" : [ "dpsCourtAppearanceId", "newBookingId", "newPrisonerNumber", "oldBookingId", "oldPrisonerNumber" ]
+      },
       "CourtScheduleMappingDto" : {
         "type" : "object",
         "description" : "Mapping for a single court schedule",
@@ -25306,14 +25403,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -25341,12 +25438,12 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paged" : {
+            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -25565,14 +25662,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -25697,14 +25794,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -25743,14 +25840,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -25829,14 +25926,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -26055,14 +26152,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -26101,14 +26198,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -26249,14 +26346,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -26379,14 +26476,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -26425,14 +26522,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -26499,14 +26596,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -26567,14 +26664,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",

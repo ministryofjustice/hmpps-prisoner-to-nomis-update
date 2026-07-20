@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-07-16.4288.1c68a1c"
+    "version" : "2026-07-17.4310.293c9bc"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -1378,13 +1378,13 @@
             "type" : "string",
             "format" : "date-time",
             "description" : "The address start date",
-            "example" : "2026-05-15T11:08:46.347"
+            "example" : "2026-05-15T11:08:46.347Z"
           },
           "endDate" : {
             "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The address end date",
-            "example" : "2026-05-15T11:08:46.347"
+            "example" : "2026-05-15T11:08:46.347Z"
           },
           "postcode" : {
             "type" : [ "string", "null" ],
@@ -1569,8 +1569,8 @@
           "startDateTime" : {
             "type" : [ "string", "null" ],
             "format" : "date-time",
-            "description" : "Person address start date time (always midnight)",
-            "example" : "2026-02-26T00:00:00"
+            "description" : "Person address start date time",
+            "example" : "2026-02-26T11:08:46.347Z"
           },
           "endDate" : {
             "type" : [ "string", "null" ],
@@ -1580,8 +1580,8 @@
           "endDateTime" : {
             "type" : [ "string", "null" ],
             "format" : "date-time",
-            "description" : "Person address end date time (always midnight)",
-            "example" : "2026-07-15T00:00:00"
+            "description" : "Person address end date time",
+            "example" : "2026-07-15T11:08:46.347Z"
           },
           "postcode" : {
             "type" : [ "string", "null" ],
