@@ -1084,6 +1084,7 @@ private fun PunishmentDto.toComment(): String = // copy of existing logic from p
       }
 
     Type.DAMAGES_OWED -> "Added by DPS: OTHER - Damages owed £${String.format("%.2f", this.damagesOwedAmount!!)}"
+
     else -> "Added by DPS"
   }
 
@@ -1103,16 +1104,28 @@ private fun PunishmentDto.toNomisSanctionStatus(): SanctionStatus {
 
 private fun Type.toNomisSanctionType(): HearingResultAwardRequest.SanctionType = when (this) {
   Type.PRIVILEGE -> FORFEIT
+
   Type.EARNINGS -> HearingResultAwardRequest.SanctionType.STOP_PCT
+
   Type.CONFINEMENT -> HearingResultAwardRequest.SanctionType.CC
+
   Type.REMOVAL_ACTIVITY -> HearingResultAwardRequest.SanctionType.REMACT
-  Type.EXCLUSION_WORK -> HearingResultAwardRequest.SanctionType.EXTRA_WORK // yes, this mapping is correct
+
+  Type.EXCLUSION_WORK -> HearingResultAwardRequest.SanctionType.EXTRA_WORK
+
+  // yes, this mapping is correct
   Type.EXTRA_WORK -> HearingResultAwardRequest.SanctionType.EXTW
+
   Type.REMOVAL_WING -> HearingResultAwardRequest.SanctionType.REMWIN
+
   Type.ADDITIONAL_DAYS -> HearingResultAwardRequest.SanctionType.ADA
+
   Type.PROSPECTIVE_DAYS -> HearingResultAwardRequest.SanctionType.ADA
+
   Type.CAUTION -> HearingResultAwardRequest.SanctionType.CAUTION
+
   Type.DAMAGES_OWED -> HearingResultAwardRequest.SanctionType.OTHER
+
   Type.PAYBACK -> HearingResultAwardRequest.SanctionType.PP
 }
 
@@ -1182,14 +1195,27 @@ private fun OutcomeHistoryDto.getOutcome(): String? = this.outcome?.outcome?.cod
 
 private fun toNomisFindingCode(code: String) = when (code) {
   OutcomeDto.Code.REFER_POLICE.name -> "REF_POLICE"
-  OutcomeDto.Code.REFER_INAD.name -> "ADJOURNED" // TODO from John/Tim - to confirm
-  OutcomeDto.Code.REFER_GOV.name -> "ADJOURNED" // TODO from John/Tim - to confirm
+
+  OutcomeDto.Code.REFER_INAD.name -> "ADJOURNED"
+
+  // TODO from John/Tim - to confirm
+  OutcomeDto.Code.REFER_GOV.name -> "ADJOURNED"
+
+  // TODO from John/Tim - to confirm
   OutcomeDto.Code.NOT_PROCEED.name -> "NOT_PROCEED"
+
   OutcomeDto.Code.DISMISSED.name -> "D"
+
   OutcomeDto.Code.PROSECUTION.name -> "PROSECUTED"
+
   OutcomeDto.Code.CHARGE_PROVED.name -> "PROVED"
+
   OutcomeDto.Code.QUASHED.name -> "QUASHED"
+
+  OutcomeDto.Code.SCHEDULE_HEARING.name -> "ADJOURNED"
+
   HearingOutcomeDto.Code.ADJOURN.name -> "ADJOURNED"
+
   else -> throw InvalidFindingCodeException("DPS Outcome code $code does not map to a NOMIS finding code")
 }
 
