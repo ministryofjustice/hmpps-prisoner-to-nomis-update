@@ -7,7 +7,6 @@ import org.awaitility.kotlin.untilAsserted
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
@@ -218,6 +217,38 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
     }
 
     @Nested
+    inner class WhenHearingHasAReferralOutcomeOfScheduleHearing {
+      @BeforeEach
+      fun setUp() {
+        MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER, ADJUDICATION_NUMBER)
+        AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGetWithReferralOutcome(
+          outcomeCode = OutcomeDto.Code.REFER_INAD.name,
+          referralOutcomeCode = OutcomeDto.Code.SCHEDULE_HEARING.name,
+          hearingId = DPS_HEARING_ID.toLong(),
+          chargeNumber = CHARGE_NUMBER,
+          offenderNo = OFFENDER_NO,
+          hearingType = "GOV_ADULT",
+        )
+        NomisApiExtension.nomisApi.stubHearingResultUpsert(ADJUDICATION_NUMBER, NOMIS_HEARING_ID)
+        MappingExtension.mappingServer.stubGetByDpsHearingId(DPS_HEARING_ID, NOMIS_HEARING_ID)
+        publishCreateHearingReferralReferGovDomainEvent()
+      }
+
+      @Test
+      fun `will callback back to adjudication service, post the create and track success`() {
+        waitForEventProcessingToBeComplete()
+
+        AdjudicationsApiExtension.adjudicationsApiServer.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/reported-adjudications/$CHARGE_NUMBER/v2")))
+        NomisApiExtension.nomisApi.verify(
+          WireMock.postRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings/$NOMIS_HEARING_ID/charge/$CHARGE_SEQUENCE/result"))
+            .withRequestBody(WireMock.matchingJsonPath("$.adjudicatorUsername", WireMock.equalTo("jack_b"))),
+        )
+
+        verifyHearingResultUpsertedSuccessCustomEvent(plea = "NOT_ASKED", findingCode = "ADJOURNED")
+      }
+    }
+
+    @Nested
     inner class WhenHearingHasAnOutcomeOfCompleted {
       @BeforeEach
       fun setUp() {
@@ -243,39 +274,6 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
         )
 
         verifyHearingResultUpsertedSuccessCustomEvent(findingCode = "PROVED", plea = "GUILTY")
-      }
-    }
-
-    @Nested
-    inner class InvalidFindingCodeFromDPS {
-      @BeforeEach
-      fun setUp() {
-        MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER, ADJUDICATION_NUMBER)
-        AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGetWithCompletedOutcome(
-          hearingId = DPS_HEARING_ID.toLong(),
-          chargeNumber = CHARGE_NUMBER,
-          offenderNo = OFFENDER_NO,
-          outcomeFindingCode = OutcomeDto.Code.SCHEDULE_HEARING.name,
-        )
-        MappingExtension.mappingServer.stubGetByDpsHearingId(DPS_HEARING_ID, NOMIS_HEARING_ID)
-        publishCreateHearingCompletedDomainEvent()
-      }
-
-      @Test
-      fun `invalid finding code is rejected`() {
-        await untilAsserted {
-          verify(telemetryClient, Mockito.times(3)).trackEvent(
-            eq("hearing-result-upserted-failed"),
-            org.mockito.kotlin.check {
-              Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER)
-              Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-              Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
-              Assertions.assertThat(it["dpsHearingId"]).isEqualTo(DPS_HEARING_ID)
-              Assertions.assertThat(it["nomisHearingId"]).isEqualTo(NOMIS_HEARING_ID.toString())
-            },
-            isNull(),
-          )
-        }
       }
     }
 
