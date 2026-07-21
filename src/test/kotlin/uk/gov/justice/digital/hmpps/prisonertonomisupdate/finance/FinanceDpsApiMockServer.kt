@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.GeneralL
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.GeneralLedgerBalanceDetailsList
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.GeneralLedgerEntry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.OffenderTransaction
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.PrisonerEstablishmentBalanceDetailsList
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SubAccountBalanceForReconciliation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SyncGeneralLedgerTransactionResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SyncOffenderTransactionResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ErrorResponse
@@ -194,7 +194,7 @@ class FinanceDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetPrisonerAccountSummary(prisonNumber: String, response: PrisonerEstablishmentBalanceDetailsList) {
+  fun stubGetPrisonerAccounts(prisonNumber: String, response: Map<String, SubAccountBalanceForReconciliation>) {
     stubFor(
       get("/reconcile/prisoner-balances/$prisonNumber")
         .willReturn(okJson(jsonMapper.writeValueAsString(response))),

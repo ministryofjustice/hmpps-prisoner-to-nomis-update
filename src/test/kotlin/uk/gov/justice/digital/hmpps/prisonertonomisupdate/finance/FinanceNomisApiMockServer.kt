@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonAccountBalanceDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonBalanceDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerAggregatedAccountsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerBalanceDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerBalanceSummaryDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RootOffenderIdsWithLast
@@ -47,6 +48,13 @@ class FinanceNomisApiMockServer(private val jsonMapper: JsonMapper) {
   fun stubGetPrisonerAccountSummary(rootOffenderId: Long, response: PrisonerBalanceSummaryDto) {
     nomisApi.stubFor(
       get(urlPathEqualTo("/finance/prisoners/$rootOffenderId/balance/summary"))
+        .willReturn(okJson(jsonMapper.writeValueAsString(response))),
+    )
+  }
+
+  fun stubGetPrisonerAccounts(rootOffenderId: Long, response: PrisonerAggregatedAccountsDto) {
+    nomisApi.stubFor(
+      get(urlPathEqualTo("/finance/prisoners/rootOffenderId/$rootOffenderId/balance/reconcile"))
         .willReturn(okJson(jsonMapper.writeValueAsString(response))),
     )
   }

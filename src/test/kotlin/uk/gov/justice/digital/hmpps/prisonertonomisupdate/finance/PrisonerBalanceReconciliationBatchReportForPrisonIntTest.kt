@@ -17,9 +17,9 @@ import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.context.TestPropertySource
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiExtension.Companion.dpsFinanceServer
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.PrisonerEstablishmentBalanceDetailsList
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SubAccountBalanceForReconciliation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerBalanceSummaryDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerAggregatedAccountsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RootOffenderIdsWithLast
 
 @TestPropertySource(
@@ -46,20 +46,20 @@ class PrisonerBalanceReconciliationBatchReportForPrisonIntTest(
           lastOffenderId = 10002L,
         ),
       )
-      stubBalanceSummaries(
+      stubBalances(
         10000L,
-        nomisPrisonerBalanceSummary().copy(prisonNumber = "A0001NN"),
-        dpsPrisonerAccountSummary(),
+        nomisPrisonerAccounts().copy(prisonNumber = "A0001NN"),
+        dpsAccount(),
       )
-      stubBalanceSummaries(
+      stubBalances(
         10001L,
-        nomisPrisonerBalanceSummary().copy(prisonNumber = "A0002NN"),
-        dpsPrisonerAccountSummary(),
+        nomisPrisonerAccounts().copy(prisonNumber = "A0002NN"),
+        dpsAccount(),
       )
-      stubBalanceSummaries(
+      stubBalances(
         10002L,
-        nomisPrisonerBalanceSummary().copy(prisonNumber = "A0003NN"),
-        dpsPrisonerAccountSummary(),
+        nomisPrisonerAccounts().copy(prisonNumber = "A0003NN"),
+        dpsAccount(),
       )
     }
 
@@ -97,10 +97,10 @@ class PrisonerBalanceReconciliationBatchReportForPrisonIntTest(
 
     @Test
     fun `will output a mismatch when there is a difference in the DPS record`() = runTest {
-      stubBalanceSummaries(
+      stubBalances(
         2,
-        nomisPrisonerBalanceSummary().copy(prisonNumber = "A0002NN"),
-        dpsPrisonerAccountSummary().copy(items = emptyList()),
+        nomisPrisonerAccounts().copy(prisonNumber = "A0002NN"),
+        emptyMap(),
       )
       prisonerBalanceReconciliationService.generatePrisonerBalanceReconciliationReportBatch()
 
@@ -130,8 +130,8 @@ class PrisonerBalanceReconciliationBatchReportForPrisonIntTest(
     }
   }
 
-  private fun stubBalanceSummaries(offenderId: Long, nomisResponse: PrisonerBalanceSummaryDto, dpsResponse: PrisonerEstablishmentBalanceDetailsList) {
-    financeNomisApi.stubGetPrisonerAccountSummary(offenderId, nomisResponse)
-    dpsFinanceServer.stubGetPrisonerAccountSummary(nomisResponse.prisonNumber, dpsResponse)
+  private fun stubBalances(offenderId: Long, nomisResponse: PrisonerAggregatedAccountsDto, dpsResponse: Map<String, SubAccountBalanceForReconciliation>) {
+    financeNomisApi.stubGetPrisonerAccounts(offenderId, nomisResponse)
+    dpsFinanceServer.stubGetPrisonerAccounts(nomisResponse.prisonNumber, dpsResponse)
   }
 }

@@ -14,7 +14,9 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AccountSummaryDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AggregatedAccountDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerAccountDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerAggregatedAccountsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerBalanceDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerBalanceSummaryDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RootOffenderIdsWithLast
@@ -173,6 +175,51 @@ class PrisonerBalanceNomisApiServiceTest {
       mockServer.stubGetPrisonerAccountSummary(35L, sampleDto)
 
       val data = apiService.getPrisonerAccountSummary(35L)
+
+      assertThat(data).isEqualTo(sampleDto)
+    }
+  }
+
+  @Nested
+  @DisplayName("GET /finance/prisoners/rootOffenderId/{rootOffenderId}/balance/reconcile")
+  inner class GetPrisonerAggregatedAccounts {
+
+    private val sampleDto = PrisonerAggregatedAccountsDto(
+      rootOffenderId = 35L,
+      prisonNumber = "A1234AA",
+      accounts = listOf(
+        AggregatedAccountDto(
+          accountCode = 1001,
+          balance = BigDecimal.valueOf(100.00),
+        ),
+      ),
+    )
+
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      apiService.getPrisonerAccounts(35L)
+
+      mockServer.verify(
+        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the get endpoint`() = runTest {
+      mockServer.stubGetPrisonerAccounts(35L, sampleDto)
+
+      apiService.getPrisonerAccounts(35L)
+
+      mockServer.verify(
+        getRequestedFor(urlPathEqualTo("/finance/prisoners/rootOffenderId/35/balance/reconcile")),
+      )
+    }
+
+    @Test
+    fun `will return data`() = runTest {
+      mockServer.stubGetPrisonerAccounts(35L, sampleDto)
+
+      val data = apiService.getPrisonerAccounts(35L)
 
       assertThat(data).isEqualTo(sampleDto)
     }

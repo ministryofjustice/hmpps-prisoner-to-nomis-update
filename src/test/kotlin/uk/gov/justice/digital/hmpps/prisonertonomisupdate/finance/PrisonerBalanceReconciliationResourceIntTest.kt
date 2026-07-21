@@ -18,10 +18,10 @@ import org.mockito.kotlin.verifyNoInteractions
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.core.ParameterizedTypeReference
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiExtension.Companion.dpsFinanceServer
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.PrisonerEstablishmentBalanceDetailsList
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SubAccountBalanceForReconciliation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerBalanceSummaryDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerAggregatedAccountsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RootOffenderIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
@@ -49,18 +49,18 @@ class PrisonerBalanceReconciliationResourceIntTest(
 
       stubBalances(
         1,
-        nomisPrisonerBalanceSummary().copy(prisonNumber = "A0001NN"),
-        dpsPrisonerAccountSummary(),
+        nomisPrisonerAccounts().copy(prisonNumber = "A0001NN"),
+        dpsAccount(),
       )
       stubBalances(
         2,
-        nomisPrisonerBalanceSummary().copy(prisonNumber = "A0002NN"),
-        dpsPrisonerAccountSummary(),
+        nomisPrisonerAccounts().copy(prisonNumber = "A0002NN"),
+        dpsAccount(),
       )
       stubBalances(
         3,
-        nomisPrisonerBalanceSummary().copy(prisonNumber = "A0003NN"),
-        dpsPrisonerAccountSummary(),
+        nomisPrisonerAccounts().copy(prisonNumber = "A0003NN"),
+        dpsAccount(),
       )
     }
 
@@ -100,8 +100,8 @@ class PrisonerBalanceReconciliationResourceIntTest(
     fun `will output a mismatch when there is a difference in the DPS record`() = runTest {
       stubBalances(
         2,
-        nomisPrisonerBalanceSummary().copy(prisonNumber = "A0002NN"),
-        dpsPrisonerAccountSummary().copy(items = emptyList()),
+        nomisPrisonerAccounts().copy(prisonNumber = "A0002NN"),
+        emptyMap(),
       )
       prisonerBalanceReconciliationService.generatePrisonerBalanceReconciliationReportBatch()
 
@@ -167,8 +167,8 @@ class PrisonerBalanceReconciliationResourceIntTest(
       fun `will output a mismatch when there is a difference in the DPS record`() = runTest {
         stubBalances(
           OFFENDER_ID,
-          nomisPrisonerBalanceSummary().copy(accounts = emptyList()),
-          dpsPrisonerAccountSummary(),
+          nomisPrisonerAccounts().copy(accounts = emptyList()),
+          dpsAccount(),
         )
 
         webTestClient.get().uri("/prisoner-balance/reconciliation/id/$OFFENDER_ID")
@@ -198,8 +198,8 @@ class PrisonerBalanceReconciliationResourceIntTest(
       fun `will return no differences when there is a match`() = runTest {
         stubBalances(
           OFFENDER_ID,
-          nomisPrisonerBalanceSummary(),
-          dpsPrisonerAccountSummary(),
+          nomisPrisonerAccounts(),
+          dpsAccount(),
         )
 
         webTestClient.get().uri("/prisoner-balance/reconciliation/id/$OFFENDER_ID")
@@ -266,8 +266,8 @@ class PrisonerBalanceReconciliationResourceIntTest(
       fun `will output a mismatch when there is a difference in the DPS record`() = runTest {
         stubBalances(
           OFFENDER_ID,
-          nomisPrisonerBalanceSummary().copy(accounts = emptyList()),
-          dpsPrisonerAccountSummary(),
+          nomisPrisonerAccounts().copy(accounts = emptyList()),
+          dpsAccount(),
         )
 
         webTestClient.get().uri("/prisoner-balance/reconciliation/$OFFENDER_NO")
@@ -288,8 +288,8 @@ class PrisonerBalanceReconciliationResourceIntTest(
       fun `will return no differences when there is a match`() = runTest {
         stubBalances(
           OFFENDER_ID,
-          nomisPrisonerBalanceSummary(),
-          dpsPrisonerAccountSummary(),
+          nomisPrisonerAccounts(),
+          dpsAccount(),
         )
 
         webTestClient.get().uri("/prisoner-balance/reconciliation/$OFFENDER_NO")
@@ -346,18 +346,18 @@ class PrisonerBalanceReconciliationResourceIntTest(
 
         stubBalances(
           1,
-          nomisPrisonerBalanceSummary().copy(prisonNumber = "A0001NN"),
-          dpsPrisonerAccountSummary(),
+          nomisPrisonerAccounts().copy(prisonNumber = "A0001NN"),
+          dpsAccount(),
         )
         stubBalances(
           2,
-          nomisPrisonerBalanceSummary().copy(prisonNumber = "A0002NN"),
-          dpsPrisonerAccountSummary(),
+          nomisPrisonerAccounts().copy(prisonNumber = "A0002NN"),
+          dpsAccount(),
         )
         stubBalances(
           3,
-          nomisPrisonerBalanceSummary().copy(prisonNumber = "A0003NN"),
-          dpsPrisonerAccountSummary(),
+          nomisPrisonerAccounts().copy(prisonNumber = "A0003NN"),
+          dpsAccount(),
         )
       }
 
@@ -365,8 +365,8 @@ class PrisonerBalanceReconciliationResourceIntTest(
       fun `will output a mismatch when there is a difference in the DPS record`() = runTest {
         stubBalances(
           2,
-          nomisPrisonerBalanceSummary().copy(prisonNumber = "A0002NN").copy(accounts = emptyList()),
-          dpsPrisonerAccountSummary(),
+          nomisPrisonerAccounts().copy(prisonNumber = "A0002NN").copy(accounts = emptyList()),
+          dpsAccount(),
         )
 
         val result = webTestClient.get()
@@ -381,9 +381,7 @@ class PrisonerBalanceReconciliationResourceIntTest(
 
         assertThat(result.mismatches).hasSize(1)
         val first = result.mismatches.first()
-        assertThat(first.nomis.prisonNumber).isEqualTo("A0002NN")
         assertThat(first.nomis.accounts).isEmpty()
-        assertThat(first.dps.prisonNumber).isEqualTo("A0002NN")
         assertThat(first.dps.accounts.first().balance).isEqualTo(BigDecimal("1.5"))
         assertThat(first.dps.accounts.first().accountCode).isEqualTo(1001)
         assertThat(first.differences.first().property).isEqualTo("prisoner-balances.accounts")
@@ -404,8 +402,8 @@ class PrisonerBalanceReconciliationResourceIntTest(
     }
   }
 
-  private fun stubBalances(offenderId: Long, nomisResponse: PrisonerBalanceSummaryDto, dpsResponse: PrisonerEstablishmentBalanceDetailsList) {
-    financeNomisApi.stubGetPrisonerAccountSummary(offenderId, nomisResponse)
-    dpsFinanceServer.stubGetPrisonerAccountSummary(nomisResponse.prisonNumber, dpsResponse)
+  private fun stubBalances(offenderId: Long, nomisResponse: PrisonerAggregatedAccountsDto, dpsResponse: Map<String, SubAccountBalanceForReconciliation>) {
+    financeNomisApi.stubGetPrisonerAccounts(offenderId, nomisResponse)
+    dpsFinanceServer.stubGetPrisonerAccounts(nomisResponse.prisonNumber, dpsResponse)
   }
 }

@@ -8,6 +8,7 @@ import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.PrisonBalanceResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.PrisonerBalanceResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonBalanceDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerAggregatedAccountsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerBalanceDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerBalanceSummaryDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RootOffenderIdsWithLast
@@ -51,6 +52,11 @@ class FinanceNomisApiService(
 
   suspend fun getPrisonerAccountSummary(rootOffenderId: Long): PrisonerBalanceSummaryDto = prisonerBalanceApi
     .getPrisonerAccountSummary(rootOffenderId)
+    .retryWhen(backoffSpec)
+    .awaitSingle()
+
+  suspend fun getPrisonerAccounts(rootOffenderId: Long): PrisonerAggregatedAccountsDto = prisonerBalanceApi
+    .getAggregatedAccountsForId(rootOffenderId)
     .retryWhen(backoffSpec)
     .awaitSingle()
 }
