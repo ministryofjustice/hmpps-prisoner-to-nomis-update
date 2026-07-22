@@ -161,7 +161,6 @@ private fun CourtEvent.toNomisUpsertRequest(eventId: Long? = null): UpsertCourtS
     eventType = courtEventType,
     eventStatus = status,
     returnStatus = returnStatus,
-    prison = prisonCodeAtTimeOfScheduling,
     court = agyLocId,
     comment = commentText,
   )

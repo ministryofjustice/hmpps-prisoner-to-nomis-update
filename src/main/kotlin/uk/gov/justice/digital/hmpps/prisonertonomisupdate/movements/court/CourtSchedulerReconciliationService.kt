@@ -13,7 +13,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.Mismat
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.MismatchPrisonerCourtMovementDetails.Type.REASON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.MismatchPrisonerCourtScheduleDetails.Type.COURT
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.MismatchPrisonerCourtScheduleDetails.Type.EVENT_TYPE
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.MismatchPrisonerCourtScheduleDetails.Type.PRISON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.MismatchPrisonerCourtScheduleDetails.Type.START_TIME
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.MismatchedPrisonerCourtMovementIds.Type.MISSING_MAPPING_SCHEDULE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.findMatches
@@ -307,11 +306,6 @@ class CourtSchedulerReconciliationService(
       val nomisCourtEvent = nomis.findNomisCourtSchedule(nomisCourtAppearance.eventId)
       val dpsCourtEvent = dps.findDpsCourtSchedule(dpsId)
       fun mismatch(type: MismatchPrisonerCourtScheduleDetails.Type, nomisValue: String, dpsValue: String) = MismatchPrisonerCourtScheduleDetails(offenderNo, type, nomisCourtAppearance.eventId, dpsId, nomisValue, dpsValue)
-
-      // prison must match
-      if (nomisCourtEvent.prison != dpsCourtEvent.courtEvent.prisonCodeAtTimeOfScheduling) {
-        mismatches.add(mismatch(PRISON, nomisCourtEvent.prison, dpsCourtEvent.courtEvent.prisonCodeAtTimeOfScheduling))
-      }
 
       // court must match
       if (nomisCourtEvent.court != dpsCourtEvent.courtEvent.agyLocId) {
@@ -644,8 +638,6 @@ internal class MismatchPrisonerCourtScheduleDetails(
   enum class Type {
     COURT,
     EVENT_TYPE,
-    EXTERNAL_REFERENCE_URN,
-    PRISON,
     START_TIME,
   }
 }
