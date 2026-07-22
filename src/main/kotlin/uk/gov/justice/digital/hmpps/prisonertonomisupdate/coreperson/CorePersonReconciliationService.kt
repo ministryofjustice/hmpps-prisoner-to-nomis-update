@@ -15,7 +15,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.Reconciliation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationSuccessPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.generateReconciliationReport
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CorePerson
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CorePersonReligion
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
@@ -105,7 +105,7 @@ class CorePersonReconciliationService(
 
   suspend fun checkCorePersonMatch(prisonerId: PrisonerIds): MismatchCorePerson? = runCatching {
     val (nomisCorePerson, cprCorePerson) = withContext(Dispatchers.Unconfined) {
-      async { nomisCorePersonApiService.getPrisoner(prisonerId.offenderNo)?.toPerson() ?: PrisonerPerson() } to
+      async { nomisCorePersonApiService.getPrisonerReligion(prisonerId.offenderNo)?.toPerson() ?: PrisonerPerson() } to
         async { cprCorePersonApiService.getCorePerson(prisonerId.offenderNo)?.toPerson() ?: PrisonerPerson() }
     }.awaitBoth()
 
@@ -215,10 +215,9 @@ fun DpsPrisonRecord.toPerson() = PrisonerPerson(
   },
 )
 
-fun CorePerson.toPerson() = PrisonerPerson(
-  nationality = this.nationalities?.firstOrNull()?.takeIf { it.latestBooking }?.nationality?.code,
-  religion = this.beliefs?.firstOrNull()?.belief?.code,
-  religions = this.beliefs?.mapIndexed { i, r ->
+fun CorePersonReligion.toPerson() = PrisonerPerson(
+  religion = this.religion?.code,
+  religions = this.beliefs.mapIndexed { i, r ->
     PrisonerReligion(
       religion = r.belief.code,
       startDate = r.startDate,
@@ -230,7 +229,7 @@ fun CorePerson.toPerson() = PrisonerPerson(
       modifyUsername = r.audit.modifyUserId,
       modifyDatetime = r.audit.modifyDatetime,
     )
-  } ?: emptyList(),
+  },
 )
 
 data class MismatchCorePerson(

@@ -12,10 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CorePerson
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderNationality
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CorePersonReligion
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
-import java.time.LocalDateTime
 
 @SpringAPIServiceTest
 @Import(
@@ -31,12 +29,12 @@ class CorePersonNomisApiServiceTest {
   private lateinit var mockServer: CorePersonNomisApiMockServer
 
   @Nested
-  inner class GetCorePerson {
+  inner class GetCorePersonReligion {
     @Test
     fun `will pass oath2 token to service`() = runTest {
-      mockServer.stubGetCorePerson("A1234BC")
+      mockServer.stubGetCorePersonReligion("A1234BC")
 
-      apiService.getPrisoner(prisonNumber = "A1234BC")
+      apiService.getPrisonerReligion(prisonNumber = "A1234BC")
 
       mockServer.verify(
         getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
@@ -45,37 +43,29 @@ class CorePersonNomisApiServiceTest {
 
     @Test
     fun `will pass NOMIS id to service`() = runTest {
-      mockServer.stubGetCorePerson("A1234BC")
+      mockServer.stubGetCorePersonReligion("A1234BC")
 
-      apiService.getPrisoner(prisonNumber = "A1234BC")
+      apiService.getPrisonerReligion(prisonNumber = "A1234BC")
 
       mockServer.verify(
-        getRequestedFor(urlPathEqualTo("/core-person/A1234BC")),
+        getRequestedFor(urlPathEqualTo("/core-person/A1234BC/religion")),
       )
     }
 
     @Test
     fun `will return core person`() = runTest {
-      mockServer.stubGetCorePerson(
+      mockServer.stubGetCorePersonReligion(
         prisonNumber = "A1234BC",
-        CorePerson(
+        CorePersonReligion(
           prisonNumber = "A1234BC",
-          activeFlag = true,
-          inOutStatus = "IN",
-          nationalities = listOf(
-            OffenderNationality(
-              nationality = CodeDescription("BR", "British"),
-              startDateTime = LocalDateTime.now(),
-              bookingId = 12345,
-              latestBooking = true,
-            ),
-          ),
+          religion = CodeDescription("JEHV", "Jehovah's Witnesses"),
+          beliefs = listOf(),
         ),
       )
 
-      val corePerson = apiService.getPrisoner(prisonNumber = "A1234BC")!!
+      val corePerson = apiService.getPrisonerReligion(prisonNumber = "A1234BC")!!
 
-      assertThat(corePerson.nationalities?.map { it.nationality.code }).isEqualTo(listOf("BR"))
+      assertThat(corePerson.religion?.code).isEqualTo("JEHV")
     }
   }
 }

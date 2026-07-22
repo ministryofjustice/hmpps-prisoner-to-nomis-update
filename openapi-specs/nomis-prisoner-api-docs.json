@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-07-20.1741.8cfc0ff"
+    "version" : "2026-07-21.1748.1d6c987"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -22884,24 +22884,23 @@
         }
       }
     },
-    "/core-person/root-offender-id/{rootOffenderId}/religions" : {
+    "/core-person/{prisonNumber}/religion" : {
       "get" : {
         "tags" : [ "core-person-resource" ],
-        "summary" : "Get all the religion information for an offender by root offender id",
+        "summary" : "Get the current religion for an offender as well as all the religion history",
         "description" : "Retrieves the religion information for an offender. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-        "operationId" : "getOffenderReligionsByRootOffenderId",
+        "operationId" : "getOffenderReligion",
         "parameters" : [ {
-          "name" : "rootOffenderId",
+          "name" : "prisonNumber",
           "in" : "path",
-          "description" : "Root offender id",
+          "description" : "Prison number aka noms id / offender id display",
           "required" : true,
           "schema" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Root offender id",
-            "example" : 12345
+            "type" : "string",
+            "description" : "Prison number aka noms id / offender id display",
+            "example" : "A1234BC"
           },
-          "example" : 12345
+          "example" : "A1234BC"
         } ],
         "responses" : {
           "200" : {
@@ -22909,10 +22908,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/OffenderBelief"
-                  }
+                  "$ref" : "#/components/schemas/CorePersonReligion"
                 }
               }
             }
@@ -40543,6 +40539,29 @@
           }
         },
         "required" : [ "bookingId", "latestBooking", "sexualOrientation", "startDateTime" ]
+      },
+      "CorePersonReligion" : {
+        "type" : "object",
+        "description" : "The religion held in NOMIS for an offender",
+        "properties" : {
+          "prisonNumber" : {
+            "type" : "string",
+            "description" : "The prison number"
+          },
+          "religion" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "Belief",
+            "example" : "SCIE"
+          },
+          "beliefs" : {
+            "type" : "array",
+            "description" : "History of all beliefs for the person",
+            "items" : {
+              "$ref" : "#/components/schemas/OffenderBelief"
+            }
+          }
+        },
+        "required" : [ "beliefs", "prisonNumber" ]
       },
       "BookingIdsWithLast" : {
         "type" : "object",
