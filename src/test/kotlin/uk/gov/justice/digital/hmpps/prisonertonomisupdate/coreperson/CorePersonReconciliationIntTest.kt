@@ -104,31 +104,32 @@ class CorePersonReconciliationIntTest(
 
     @Test
     fun `should report religions differences`() = runTest {
-      corePersonNomisApi.stubGetCorePersonReligions(prisonNumber = "A1234BC",
+      corePersonNomisApi.stubGetCorePersonReligions(
+        prisonNumber = "A1234BC",
         response = listOf(
-            OffenderBelief(
-              beliefId = 12345L,
-              belief = CodeDescription("ZORO", "ZORO Description"),
-              startDate = LocalDate.parse("2024-01-01"),
-              audit = NomisAudit(
-                createDatetime = LocalDateTime.now(),
-                createUsername = "User",
-              ),
-              changeReason = true,
-              comments = "Some comment",
+          OffenderBelief(
+            beliefId = 12345L,
+            belief = CodeDescription("ZORO", "ZORO Description"),
+            startDate = LocalDate.parse("2024-01-01"),
+            audit = NomisAudit(
+              createDatetime = LocalDateTime.now(),
+              createUsername = "User",
             ),
-            OffenderBelief(
-              beliefId = 12345L,
-              belief = CodeDescription("DRU", "DRU Description"),
-              startDate = LocalDate.parse("2025-01-01"),
-              audit = NomisAudit(
-                createDatetime = LocalDateTime.now(),
-                createUsername = "User",
-              ),
-              changeReason = true,
-              comments = "Some comment",
-            ),
+            changeReason = true,
+            comments = "Some comment",
           ),
+          OffenderBelief(
+            beliefId = 12345L,
+            belief = CodeDescription("DRU", "DRU Description"),
+            startDate = LocalDate.parse("2025-01-01"),
+            audit = NomisAudit(
+              createDatetime = LocalDateTime.now(),
+              createUsername = "User",
+            ),
+            changeReason = true,
+            comments = "Some comment",
+          ),
+        ),
       )
       cprApi.stubGetCorePerson(
         prisonNumber = "A1234BC",
@@ -324,7 +325,7 @@ class CorePersonReconciliationIntTest(
       corePersonNomisApi.stubGetCorePersonReligions("A0001TZ", corePersonReligions(religion = "JEHV"))
       cprApi.stubGetCorePerson("A0001TZ", corePersonDto(religion = "ATHE"))
 
-      corePersonNomisApi.stubGetCorePersonReligions("A0002TZ", corePersonReligions( religion = "US"))
+      corePersonNomisApi.stubGetCorePersonReligions("A0002TZ", corePersonReligions(religion = "US"))
       cprApi.stubGetCorePerson("A0002TZ", corePersonDto(religion = "BAHA"))
 
       corePersonNomisApi.stubGetCorePersonReligions("A0034TZ", corePersonReligions(religion = "IS"))

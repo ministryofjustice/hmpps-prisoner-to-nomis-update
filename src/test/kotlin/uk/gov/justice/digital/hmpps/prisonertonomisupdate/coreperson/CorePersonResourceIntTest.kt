@@ -104,16 +104,16 @@ class CorePersonResourceIntTest(
         corePersonNomisApi.stubGetCorePersonReligions(
           prisonNumber,
           listOf(
-              OffenderBelief(
-                beliefId = 12345,
-                belief = CodeDescription("BR", "British"),
-                startDate = LocalDate.parse("2021-01-01"),
-                audit = NomisAudit(
-                  createDatetime = LocalDateTime.parse("2012-01-02T10:20:30"),
-                  createUsername = "BillyBob",
-                ),
+            OffenderBelief(
+              beliefId = 12345,
+              belief = CodeDescription("BR", "British"),
+              startDate = LocalDate.parse("2021-01-01"),
+              audit = NomisAudit(
+                createDatetime = LocalDateTime.parse("2012-01-02T10:20:30"),
+                createUsername = "BillyBob",
               ),
             ),
+          ),
         )
 
         webTestClient.get().uri("/core-person/reconciliation/$prisonNumber")
@@ -124,7 +124,7 @@ class CorePersonResourceIntTest(
           .expectBody()
           .jsonPath("prisonNumber").isEqualTo(prisonNumber)
           .jsonPath("differences").value<Map<String, String>> {
-            assertThat(it).containsExactly(entry("religion", "nomis=BR, cpr=null"), entry("religions","nomis=1, cpr=0"))
+            assertThat(it).containsExactly(entry("religion", "nomis=BR, cpr=null"), entry("religions", "nomis=1, cpr=0"))
           }
 
         verify(telemetryClient).trackEvent(

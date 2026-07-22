@@ -55,7 +55,7 @@ class CorePersonNomisApiServiceTest {
       mockServer.stubGetCorePersonReligions(
         prisonNumber = "A1234BC",
         corePersonReligions(
-          religion = "JEHV"
+          religion = "JEHV",
         ),
       )
 

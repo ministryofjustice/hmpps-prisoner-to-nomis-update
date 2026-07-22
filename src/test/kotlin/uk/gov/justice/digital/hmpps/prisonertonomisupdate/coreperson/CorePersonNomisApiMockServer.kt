@@ -46,7 +46,7 @@ class CorePersonNomisApiMockServer(private val jsonMapper: JsonMapper) {
     error: ErrorResponse = ErrorResponse(status = status.value()),
   ) {
     nomisApi.stubFor(
-      get(urlEqualTo("/core-person/${prisonNumber}/religions")).willReturn(
+      get(urlEqualTo("/core-person/$prisonNumber/religions")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(status.value())
@@ -89,17 +89,15 @@ fun corePerson(prisonNumber: String? = null, nationality: String? = null, religi
   },
 )
 
-fun corePersonReligions(religion: String? = null): List<OffenderBelief> =
-  if (religion != null) {
-    listOf(
-      OffenderBelief(
-        beliefId = 1,
-        belief = CodeDescription(code = religion, description = "$religion Description"),
-        startDate = LocalDate.parse("2024-01-01"),
-        audit = NomisAudit(createDatetime = LocalDateTime.parse("2025-02-03T10:20:30"), createUsername = "ME"),
-      ),
-    )
-  } else {
-    listOf()
-  }
-
+fun corePersonReligions(religion: String? = null): List<OffenderBelief> = if (religion != null) {
+  listOf(
+    OffenderBelief(
+      beliefId = 1,
+      belief = CodeDescription(code = religion, description = "$religion Description"),
+      startDate = LocalDate.parse("2024-01-01"),
+      audit = NomisAudit(createDatetime = LocalDateTime.parse("2025-02-03T10:20:30"), createUsername = "ME"),
+    ),
+  )
+} else {
+  listOf()
+}
