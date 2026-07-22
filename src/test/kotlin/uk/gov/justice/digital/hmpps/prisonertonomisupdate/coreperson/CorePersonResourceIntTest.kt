@@ -69,7 +69,7 @@ class CorePersonResourceIntTest(
     inner class Validation {
       @Test
       fun `return null when offender not found`() {
-        corePersonNomisApi.stubGetCorePersonReligion("A9999BC", status = HttpStatus.NOT_FOUND)
+        corePersonNomisApi.stubGetCorePersonReligions("A9999BC", status = HttpStatus.NOT_FOUND)
         webTestClient.get().uri("/core-person/reconciliation/A9999BC")
           .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
           .exchange()
@@ -83,7 +83,7 @@ class CorePersonResourceIntTest(
 
       @BeforeEach
       fun setup() {
-        corePersonNomisApi.stubGetCorePersonReligion()
+        corePersonNomisApi.stubGetCorePersonReligions()
         corePersonCprApi.stubGetCorePerson()
       }
 
@@ -101,18 +101,16 @@ class CorePersonResourceIntTest(
 
       @Test
       fun `will return mismatch with nomis`() {
-        corePersonNomisApi.stubGetCorePersonReligion(
+        corePersonNomisApi.stubGetCorePersonReligions(
           prisonNumber,
-          corePersonReligion(prisonNumber).copy(
-            beliefs = listOf(
-              OffenderBelief(
-                beliefId = 12345,
-                belief = CodeDescription("BR", "British"),
-                startDate = LocalDate.parse("2021-01-01"),
-                audit = NomisAudit(
-                  createDatetime = LocalDateTime.parse("2012-01-02T10:20:30"),
-                  createUsername = "BillyBob",
-                ),
+          listOf(
+            OffenderBelief(
+              beliefId = 12345,
+              belief = CodeDescription("BR", "British"),
+              startDate = LocalDate.parse("2021-01-01"),
+              audit = NomisAudit(
+                createDatetime = LocalDateTime.parse("2012-01-02T10:20:30"),
+                createUsername = "BillyBob",
               ),
             ),
           ),
@@ -126,7 +124,7 @@ class CorePersonResourceIntTest(
           .expectBody()
           .jsonPath("prisonNumber").isEqualTo(prisonNumber)
           .jsonPath("differences").value<Map<String, String>> {
-            assertThat(it).containsExactly(entry("religions", "nomis=1, cpr=0"))
+            assertThat(it).containsExactly(entry("religion", "nomis=BR, cpr=null"), entry("religions", "nomis=1, cpr=0"))
           }
 
         verify(telemetryClient).trackEvent(
