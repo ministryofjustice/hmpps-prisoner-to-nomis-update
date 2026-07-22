@@ -85,7 +85,6 @@ class CourtSchedulerScheduleIntTest(
             putRequestedFor(urlEqualTo("/movements/A1234BC/court/schedule/out?recreate=false")),
           ).also { request ->
             assertThat(request.eventId).isNull()
-            assertThat(request.prison).isEqualTo("BXI")
             assertThat(request.court).isEqualTo("LEEDMC")
             assertThat(request.startTime).isEqualTo(startTime)
             assertThat(request.eventType).isEqualTo("CRT")

@@ -6,7 +6,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-06-22.269.2fc583d"
+    "version" : "2026-07-22.484.1b1eba3"
   },
   "servers" : [ {
     "url" : "https://court-appearance-scheduler-api-dev.hmpps.service.justice.gov.uk",
@@ -198,7 +198,7 @@
       "put" : {
         "tags" : [ "UI" ],
         "description" : "\n\nRequires one of the following roles:\n* ROLE_COURT_APPEARANCES__COURT_APPEARANCE_SCHEDULER_UI",
-        "operationId" : "applyAction",
+        "operationId" : "applyActions",
         "parameters" : [ {
           "name" : "id",
           "in" : "path",
@@ -223,33 +223,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "oneOf" : [ {
-                  "$ref" : "#/components/schemas/CancelAppearance"
-                }, {
-                  "$ref" : "#/components/schemas/ChangeAppearanceComments"
-                }, {
-                  "$ref" : "#/components/schemas/ChangeAppearancePrison"
-                }, {
-                  "$ref" : "#/components/schemas/CompleteAppearance"
-                }, {
-                  "$ref" : "#/components/schemas/ExpireAppearance"
-                }, {
-                  "$ref" : "#/components/schemas/RecategoriseAppearance"
-                }, {
-                  "$ref" : "#/components/schemas/RelocateAppearance"
-                }, {
-                  "$ref" : "#/components/schemas/RequestAppearanceByVideoLink"
-                }, {
-                  "$ref" : "#/components/schemas/RequestAppearanceInPerson"
-                }, {
-                  "$ref" : "#/components/schemas/RescheduleAppearance"
-                }, {
-                  "$ref" : "#/components/schemas/ScheduleAppearance"
-                }, {
-                  "$ref" : "#/components/schemas/StartAppearance"
-                }, {
-                  "$ref" : "#/components/schemas/UnscheduleAppearance"
-                } ]
+                "$ref" : "#/components/schemas/CourtAppearanceActions"
               }
             }
           },
@@ -684,7 +658,7 @@
   "components" : {
     "schemas" : {
       "CourtEvent" : {
-        "required" : [ "agyLocId", "courtEventType", "currentTerm", "eventStatus", "prisonCodeAtTimeOfScheduling", "start" ],
+        "required" : [ "agyLocId", "courtEventType", "currentTerm", "eventStatus", "start" ],
         "type" : "object",
         "properties" : {
           "dpsId" : {
@@ -706,7 +680,7 @@
           "start" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-06-22T11:58:07"
+            "example" : "2026-07-22T11:29:44"
           },
           "courtEventType" : {
             "type" : "string"
@@ -738,7 +712,7 @@
           "occurredAt" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-06-22T11:58:07"
+            "example" : "2026-07-22T11:29:44"
           },
           "user" : {
             "$ref" : "#/components/schemas/SyncUser"
@@ -795,7 +769,7 @@
           "occurredAt" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-06-22T11:58:07"
+            "example" : "2026-07-22T11:29:44"
           },
           "movementReasonCode" : {
             "type" : "string"
@@ -822,7 +796,7 @@
           "occurredAt" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-06-22T11:58:07"
+            "example" : "2026-07-22T11:29:44"
           },
           "user" : {
             "$ref" : "#/components/schemas/SyncUser"
@@ -839,7 +813,7 @@
           "at" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-06-22T11:58:07"
+            "example" : "2026-07-22T11:29:44"
           },
           "by" : {
             "type" : "string"
@@ -994,14 +968,6 @@
         "type" : "object",
         "allOf" : [ {
           "$ref" : "#/components/schemas/CourtAppearanceAction"
-        }, {
-          "type" : "object",
-          "properties" : {
-            "reason" : {
-              "type" : "string",
-              "nullable" : true
-            }
-          }
         } ]
       },
       "ChangeAppearanceComments" : {
@@ -1012,10 +978,6 @@
           "type" : "object",
           "properties" : {
             "comments" : {
-              "type" : "string",
-              "nullable" : true
-            },
-            "reason" : {
               "type" : "string",
               "nullable" : true
             }
@@ -1032,10 +994,6 @@
           "properties" : {
             "prisonCode" : {
               "type" : "string"
-            },
-            "reason" : {
-              "type" : "string",
-              "nullable" : true
             }
           }
         } ]
@@ -1044,23 +1002,12 @@
         "type" : "object",
         "allOf" : [ {
           "$ref" : "#/components/schemas/CourtAppearanceAction"
-        }, {
-          "type" : "object",
-          "properties" : {
-            "reason" : {
-              "type" : "string",
-              "nullable" : true
-            }
-          }
         } ]
       },
       "CourtAppearanceAction" : {
         "required" : [ "type" ],
         "type" : "object",
         "properties" : {
-          "reason" : {
-            "type" : "string"
-          },
           "type" : {
             "type" : "string"
           }
@@ -1069,18 +1016,52 @@
           "propertyName" : "type"
         }
       },
+      "CourtAppearanceActions" : {
+        "required" : [ "actions" ],
+        "type" : "object",
+        "properties" : {
+          "actions" : {
+            "type" : "array",
+            "items" : {
+              "oneOf" : [ {
+                "$ref" : "#/components/schemas/CancelAppearance"
+              }, {
+                "$ref" : "#/components/schemas/ChangeAppearanceComments"
+              }, {
+                "$ref" : "#/components/schemas/ChangeAppearancePrison"
+              }, {
+                "$ref" : "#/components/schemas/CompleteAppearance"
+              }, {
+                "$ref" : "#/components/schemas/ExpireAppearance"
+              }, {
+                "$ref" : "#/components/schemas/RecategoriseAppearance"
+              }, {
+                "$ref" : "#/components/schemas/RelocateAppearance"
+              }, {
+                "$ref" : "#/components/schemas/RequestAppearanceByVideoLink"
+              }, {
+                "$ref" : "#/components/schemas/RequestAppearanceInPerson"
+              }, {
+                "$ref" : "#/components/schemas/RescheduleAppearance"
+              }, {
+                "$ref" : "#/components/schemas/ScheduleAppearance"
+              }, {
+                "$ref" : "#/components/schemas/StartAppearance"
+              }, {
+                "$ref" : "#/components/schemas/UnscheduleAppearance"
+              } ]
+            }
+          },
+          "reason" : {
+            "type" : "string",
+            "nullable" : true
+          }
+        }
+      },
       "ExpireAppearance" : {
         "type" : "object",
         "allOf" : [ {
           "$ref" : "#/components/schemas/CourtAppearanceAction"
-        }, {
-          "type" : "object",
-          "properties" : {
-            "reason" : {
-              "type" : "string",
-              "nullable" : true
-            }
-          }
         } ]
       },
       "RecategoriseAppearance" : {
@@ -1093,10 +1074,6 @@
           "properties" : {
             "reasonCode" : {
               "type" : "string"
-            },
-            "reason" : {
-              "type" : "string",
-              "nullable" : true
             }
           }
         } ]
@@ -1111,10 +1088,6 @@
           "properties" : {
             "courtCode" : {
               "type" : "string"
-            },
-            "reason" : {
-              "type" : "string",
-              "nullable" : true
             }
           }
         } ]
@@ -1123,28 +1096,12 @@
         "type" : "object",
         "allOf" : [ {
           "$ref" : "#/components/schemas/CourtAppearanceAction"
-        }, {
-          "type" : "object",
-          "properties" : {
-            "reason" : {
-              "type" : "string",
-              "nullable" : true
-            }
-          }
         } ]
       },
       "RequestAppearanceInPerson" : {
         "type" : "object",
         "allOf" : [ {
           "$ref" : "#/components/schemas/CourtAppearanceAction"
-        }, {
-          "type" : "object",
-          "properties" : {
-            "reason" : {
-              "type" : "string",
-              "nullable" : true
-            }
-          }
         } ]
       },
       "RescheduleAppearance" : {
@@ -1163,10 +1120,6 @@
               "type" : "string",
               "format" : "date-time",
               "nullable" : true
-            },
-            "reason" : {
-              "type" : "string",
-              "nullable" : true
             }
           }
         } ]
@@ -1175,42 +1128,18 @@
         "type" : "object",
         "allOf" : [ {
           "$ref" : "#/components/schemas/CourtAppearanceAction"
-        }, {
-          "type" : "object",
-          "properties" : {
-            "reason" : {
-              "type" : "string",
-              "nullable" : true
-            }
-          }
         } ]
       },
       "StartAppearance" : {
         "type" : "object",
         "allOf" : [ {
           "$ref" : "#/components/schemas/CourtAppearanceAction"
-        }, {
-          "type" : "object",
-          "properties" : {
-            "reason" : {
-              "type" : "string",
-              "nullable" : true
-            }
-          }
         } ]
       },
       "UnscheduleAppearance" : {
         "type" : "object",
         "allOf" : [ {
           "$ref" : "#/components/schemas/CourtAppearanceAction"
-        }, {
-          "type" : "object",
-          "properties" : {
-            "reason" : {
-              "type" : "string",
-              "nullable" : true
-            }
-          }
         } ]
       },
       "AuditHistory" : {
@@ -1235,7 +1164,7 @@
           "occurredAt" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-06-22T11:58:07"
+            "example" : "2026-07-22T11:29:44"
           },
           "domainEvents" : {
             "type" : "array",
@@ -1429,13 +1358,13 @@
           "start" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-06-22T11:58:07"
+            "example" : "2026-07-22T11:29:44"
           },
           "end" : {
             "type" : "string",
             "format" : "date-time",
             "nullable" : true,
-            "example" : "2026-06-22T11:58:07"
+            "example" : "2026-07-22T11:29:44"
           },
           "comments" : {
             "type" : "string",
@@ -1589,13 +1518,13 @@
           "start" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-06-22T11:58:07"
+            "example" : "2026-07-22T11:29:44"
           },
           "end" : {
             "type" : "string",
             "format" : "date-time",
             "nullable" : true,
-            "example" : "2026-06-22T11:58:07"
+            "example" : "2026-07-22T11:29:44"
           },
           "status" : {
             "$ref" : "#/components/schemas/AppearanceStatus"
@@ -1704,13 +1633,13 @@
           "start" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-06-22T11:58:07"
+            "example" : "2026-07-22T11:29:44"
           },
           "end" : {
             "type" : "string",
             "format" : "date-time",
             "nullable" : true,
-            "example" : "2026-06-22T11:58:07"
+            "example" : "2026-07-22T11:29:44"
           },
           "comments" : {
             "type" : "string",
@@ -1774,13 +1703,13 @@
           "start" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-06-22T11:58:07"
+            "example" : "2026-07-22T11:29:44"
           },
           "end" : {
             "type" : "string",
             "format" : "date-time",
             "nullable" : true,
-            "example" : "2026-06-22T11:58:07"
+            "example" : "2026-07-22T11:29:44"
           },
           "comments" : {
             "type" : "string",
@@ -1849,7 +1778,7 @@
           "occurredAt" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-06-22T11:58:07"
+            "example" : "2026-07-22T11:29:44"
           },
           "comments" : {
             "type" : "string",
@@ -1891,7 +1820,7 @@
         }
       },
       "Appearance" : {
-        "required" : [ "court", "external", "id", "person", "prison", "reason", "start", "status" ],
+        "required" : [ "cancellable", "court", "external", "id", "person", "prison", "reason", "start", "status" ],
         "type" : "object",
         "properties" : {
           "id" : {
@@ -1916,13 +1845,13 @@
           "start" : {
             "type" : "string",
             "format" : "date-time",
-            "example" : "2026-06-22T11:58:07"
+            "example" : "2026-07-22T11:29:44"
           },
           "end" : {
             "type" : "string",
             "format" : "date-time",
             "nullable" : true,
-            "example" : "2026-06-22T11:58:07"
+            "example" : "2026-07-22T11:29:44"
           },
           "comments" : {
             "type" : "string",
@@ -1936,6 +1865,9 @@
             "allOf" : [ {
               "$ref" : "#/components/schemas/AppearanceOrigin"
             } ]
+          },
+          "cancellable" : {
+            "type" : "boolean"
           }
         }
       },

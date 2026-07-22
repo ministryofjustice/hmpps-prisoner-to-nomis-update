@@ -115,7 +115,7 @@ class CourtSchedulerNomisApiServiceTest {
       courtSchedulerNomisApiMockServer.verify(
         putRequestedFor(urlEqualTo("/movements/A1234BC/court/schedule/out?recreate=false"))
           .withRequestBody(
-            matchingJsonPath("prison", equalTo("BXI")),
+            matchingJsonPath("court", equalTo("LEEDMC")),
           ),
       )
     }

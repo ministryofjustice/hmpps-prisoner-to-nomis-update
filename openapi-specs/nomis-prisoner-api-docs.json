@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-07-21.1748.1d6c987"
+    "version" : "2026-07-22.1753.0b6d1d3"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -26587,16 +26587,12 @@
             "type" : "string",
             "description" : "Comment"
           },
-          "prison" : {
-            "type" : "string",
-            "description" : "Prison code"
-          },
           "court" : {
             "type" : "string",
             "description" : "Court code"
           }
         },
-        "required" : [ "court", "eventStatus", "eventType", "prison", "startTime" ]
+        "required" : [ "court", "eventStatus", "eventType", "startTime" ]
       },
       "UpsertCourtScheduleOutResponse" : {
         "type" : "object",
@@ -28915,11 +28911,10 @@
         "type" : "object",
         "description" : "Prisoner property container",
         "properties" : {
-          "bookingId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The offender booking id",
-            "example" : 1234567
+          "offenderNo" : {
+            "type" : "string",
+            "description" : "The prisoner number. The container will be created under the latest booking",
+            "example" : "A3456EW"
           },
           "internalLocationId" : {
             "type" : "integer",
@@ -28958,7 +28953,7 @@
             "description" : "Date the container will be disposed of"
           }
         },
-        "required" : [ "active", "bookingId", "containerCode", "prisonId", "sealMark" ]
+        "required" : [ "active", "containerCode", "offenderNo", "prisonId", "sealMark" ]
       },
       "CreateVisitBalanceAdjustmentRequest" : {
         "type" : "object",

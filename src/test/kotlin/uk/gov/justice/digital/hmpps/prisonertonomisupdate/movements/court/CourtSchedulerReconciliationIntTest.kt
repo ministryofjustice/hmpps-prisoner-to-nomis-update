@@ -824,29 +824,6 @@ class CourtSchedulerReconciliationIntTest(
       }
 
       @Test
-      fun `should report different prison`() = runTest {
-        stubDpsCourtEvent()
-        stubNomisCourtEvent(prison = "MDI")
-        stubMappings()
-
-        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
-        awaitReportFinished()
-
-        verify(telemetryClient).trackEvent(
-          eq("court-scheduler-reconciliation-mismatch"),
-          eq(
-            mapOf(
-              "offenderNo" to "A0001TZ",
-              "nomisEventId" to "123",
-              "dpsCourtEventId" to "$courtEventId",
-              "type" to "PRISON",
-            ),
-          ),
-          isNull(),
-        )
-      }
-
-      @Test
       fun `should report different court`() = runTest {
         stubDpsCourtEvent()
         stubNomisCourtEvent(court = "YORKMC")
@@ -1350,8 +1327,8 @@ class CourtSchedulerReconciliationIntTest(
               bookingCourtSchedule(
                 eventId = 123,
                 startTime = today,
-                // The prison is different to DPS
-                prison = "MDI",
+                // The court is different to DPS
+                court = "SHEFFCC",
                 courtMovementOut = null,
                 courtMovementIn = null,
               ),
@@ -1368,8 +1345,8 @@ class CourtSchedulerReconciliationIntTest(
                 courtEvent = courtEvent(
                   id = dpsCourtEventId,
                   startTime = today,
-                  // The prison is different to NOMIS
-                  prison = "BXI",
+                  // The court is different to NOMIS
+                  court = "LEEDMC",
                 ),
                 movements = listOf(),
               ),
@@ -1393,11 +1370,11 @@ class CourtSchedulerReconciliationIntTest(
           .expectStatus().isOk()
           .expectBody()
           .jsonPath("$[0].offenderNo").isEqualTo("A0001TZ")
-          .jsonPath("$[0].type").isEqualTo("PRISON")
+          .jsonPath("$[0].type").isEqualTo("COURT")
           .jsonPath("$[0].nomisEventId").isEqualTo("123")
           .jsonPath("$[0].dpsCourtEventId").isEqualTo("$dpsCourtEventId")
-          .jsonPath("$[0].nomisValue").isEqualTo("MDI")
-          .jsonPath("$[0].dpsValue").isEqualTo("BXI")
+          .jsonPath("$[0].nomisValue").isEqualTo("SHEFFCC")
+          .jsonPath("$[0].dpsValue").isEqualTo("LEEDMC")
 
         // does not publish telemetry
         verify(
