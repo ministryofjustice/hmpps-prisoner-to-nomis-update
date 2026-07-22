@@ -6,7 +6,7 @@ import org.springframework.web.reactive.function.client.WebClient
 import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.CorePersonResourceApi
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CorePersonReligion
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderBelief
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 
 @Service
@@ -20,8 +20,8 @@ class CorePersonNomisApiService(
 
   private val api = CorePersonResourceApi(webClient)
 
-  suspend fun getPrisonerReligion(prisonNumber: String): CorePersonReligion? = api
-    .prepare(api.getOffenderReligionRequestConfig(prisonNumber))
+  suspend fun getPrisonerReligions(prisonNumber: String): List<OffenderBelief>? = api
+    .prepare(api.getOffenderReligionsByPrisonNumberRequestConfig(prisonNumber))
     .retrieve()
     .awaitBodyOrNullForNotFound(retrySpec = backoffSpec)
 }
