@@ -10,6 +10,7 @@ import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CorePerson
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CorePersonReligion
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.NomisAudit
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderBelief
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderNationality
@@ -30,6 +31,23 @@ class CorePersonNomisApiMockServer(private val jsonMapper: JsonMapper) {
   ) {
     nomisApi.stubFor(
       get(urlEqualTo("/core-person/${response.prisonNumber}")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(status.value())
+          .withBody(jsonMapper.writeValueAsString(if (status == HttpStatus.OK) response else error))
+          .withFixedDelay(fixedDelay),
+      ),
+    )
+  }
+  fun stubGetCorePersonReligion(
+    prisonNumber: String = "AA1234A",
+    response: CorePersonReligion = corePersonReligion(prisonNumber = prisonNumber),
+    fixedDelay: Int = 30,
+    status: HttpStatus = HttpStatus.OK,
+    error: ErrorResponse = ErrorResponse(status = status.value()),
+  ) {
+    nomisApi.stubFor(
+      get(urlEqualTo("/core-person/${response.prisonNumber}/religion")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(status.value())
@@ -69,5 +87,22 @@ fun corePerson(prisonNumber: String? = null, nationality: String? = null, religi
     )
   } else {
     null
+  },
+)
+
+fun corePersonReligion(prisonNumber: String? = null, religion: String? = null): CorePersonReligion = CorePersonReligion(
+  prisonNumber = prisonNumber ?: "A1234KT",
+  religion = religion?.let { CodeDescription(religion, "$religion Description") },
+  beliefs = if (religion != null) {
+    listOf(
+      OffenderBelief(
+        beliefId = 1,
+        belief = CodeDescription(code = religion, description = "$religion Description"),
+        startDate = LocalDate.parse("2024-01-01"),
+        audit = NomisAudit(createDatetime = LocalDateTime.parse("2025-02-03T10:20:30"), createUsername = "ME"),
+      ),
+    )
+  } else {
+    listOf()
   },
 )

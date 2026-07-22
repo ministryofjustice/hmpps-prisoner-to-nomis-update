@@ -38,7 +38,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Bo
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.NomisAudit
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderBelief
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderNationality
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.generateOffenderNo
@@ -64,27 +63,26 @@ class CorePersonReconciliationIntTest(
   inner class SinglePrisoner {
     @Test
     fun `should do nothing if no differences`() = runTest {
-      stubGetCorePerson(prisonNumber = "A1234BC", nationality = "BR", religion = "ZORO")
-      cprApi.stubGetCorePerson(prisonNumber = "A1234BC", corePersonDto(nationality = "BR", religion = "ZORO"))
+      stubGetCorePerson(prisonNumber = "A1234BC", religion = "ZORO")
+      cprApi.stubGetCorePerson(prisonNumber = "A1234BC", corePersonDto(religion = "ZORO"))
 
       service.checkCorePersonMatch("A1234BC").also {
         assertThat(it).isNull()
       }
 
-      corePersonNomisApi.verify(getRequestedFor(urlPathMatching("/core-person/A1234BC")))
+      corePersonNomisApi.verify(getRequestedFor(urlPathMatching("/core-person/A1234BC/religion")))
       cprApi.verify(getRequestedFor(urlPathEqualTo("/person/prison/dps/A1234BC")))
       verify(telemetryClient, never()).trackEvent(anyString(), anyMap(), isNull())
     }
 
     @Test
     fun `should report differences`() = runTest {
-      stubGetCorePerson(prisonNumber = "A1234BC", nationality = "BR")
-      cprApi.stubGetCorePerson(prisonNumber = "A1234BC", corePersonDto(nationality = "M", religion = "ZORO"))
+      stubGetCorePerson(prisonNumber = "A1234BC")
+      cprApi.stubGetCorePerson(prisonNumber = "A1234BC", corePersonDto(religion = "ZORO"))
 
       service.checkCorePersonMatch("A1234BC").also {
         assertThat(it?.prisonNumber).isEqualTo("A1234BC")
         assertThat(it?.differences).containsExactly(
-          entry("nationality", "nomis=BR, cpr=M"),
           entry("religion", "nomis=null, cpr=ZORO"),
           entry("religions", "nomis=0, cpr=1"),
         )
@@ -96,7 +94,7 @@ class CorePersonReconciliationIntTest(
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
               "prisonNumber" to "A1234BC",
-              "differences5" to "nationality, religion, religions",
+              "differences5" to "religion, religions",
             ),
           )
         },
@@ -106,8 +104,8 @@ class CorePersonReconciliationIntTest(
 
     @Test
     fun `should report religions differences`() = runTest {
-      corePersonNomisApi.stubGetCorePerson(
-        response = corePerson(prisonNumber = "A1234BC").copy(
+      corePersonNomisApi.stubGetCorePersonReligion(
+        response = corePersonReligion(prisonNumber = "A1234BC").copy(
           beliefs = listOf(
             OffenderBelief(
               beliefId = 12345L,
@@ -171,56 +169,23 @@ class CorePersonReconciliationIntTest(
       service.checkCorePersonMatch("A1234BC").also {
         assertThat(it?.prisonNumber).isEqualTo("A1234BC")
         assertThat(it?.differences).containsExactly(
+          entry("religion", "nomis=null, cpr=ZORO"),
           entry("religions", "0-code:nomis=ZORO, cpr=DRU,1-startDate:nomis=2025-01-01, cpr=2024-01-01"),
         )
       }
     }
 
     @Test
-    fun `should ignore previous bookings`() = runTest {
-      corePersonNomisApi.stubGetCorePerson(
-        prisonNumber = "A1234BC",
-        response = corePerson(prisonNumber = "A1234BC").copy(
-          nationalities =
-          listOf(
-            OffenderNationality(
-              bookingId = 1,
-              nationality = CodeDescription(code = "M", description = "M Description"),
-              latestBooking = false,
-              startDateTime = LocalDateTime.now().minusDays(1),
-            ),
-          ),
-        ),
-      )
-      cprApi.stubGetCorePerson(prisonNumber = "A1234BC", corePersonDto(nationality = "M"))
-
-      service.checkCorePersonMatch("A1234BC").also {
-        assertThat(it?.prisonNumber).isEqualTo("A1234BC")
-        assertThat(it?.differences).containsExactly(entry("nationality", "nomis=null, cpr=M"))
-      }
-
-      verify(telemetryClient).trackEvent(
-        eq("$TELEMETRY_PREFIX-mismatch"),
-        check {
-          assertThat(it).containsExactlyInAnyOrderEntriesOf(
-            mapOf(
-              "prisonNumber" to "A1234BC",
-              "differences5" to "nationality",
-            ),
-          )
-        },
-        isNull(),
-      )
-    }
-
-    @Test
     fun `should report null differences`() = runTest {
-      stubGetCorePerson(prisonNumber = "A1234BC", nationality = null)
-      cprApi.stubGetCorePerson(prisonNumber = "A1234BC", corePersonDto(nationality = "BR"))
+      stubGetCorePerson(prisonNumber = "A1234BC", religion = null)
+      cprApi.stubGetCorePerson(prisonNumber = "A1234BC", corePersonDto(religion = "ATHE"))
 
       service.checkCorePersonMatch("A1234BC").also {
         assertThat(it?.prisonNumber).isEqualTo("A1234BC")
-        assertThat(it?.differences).containsExactly(entry("nationality", "nomis=null, cpr=BR"))
+        assertThat(it?.differences).containsExactly(
+          entry("religion", "nomis=null, cpr=ATHE"),
+          entry("religions", "nomis=0, cpr=1"),
+        )
       }
 
       verify(telemetryClient).trackEvent(
@@ -229,7 +194,7 @@ class CorePersonReconciliationIntTest(
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
               "prisonNumber" to "A1234BC",
-              "differences5" to "nationality",
+              "differences5" to "religion, religions",
             ),
           )
         },
@@ -239,12 +204,15 @@ class CorePersonReconciliationIntTest(
 
     @Test
     fun `should report null differences when not found`() = runTest {
-      corePersonNomisApi.stubGetCorePerson("A1234BC", status = NOT_FOUND)
-      cprApi.stubGetCorePerson(prisonNumber = "A1234BC", corePersonDto(nationality = "BR"))
+      corePersonNomisApi.stubGetCorePersonReligion("A1234BC", status = NOT_FOUND)
+      cprApi.stubGetCorePerson(prisonNumber = "A1234BC", corePersonDto(religion = "ATHE"))
 
       service.checkCorePersonMatch("A1234BC").also {
         assertThat(it?.prisonNumber).isEqualTo("A1234BC")
-        assertThat(it?.differences).containsExactly(entry("nationality", "nomis=null, cpr=BR"))
+        assertThat(it?.differences).containsExactly(
+          entry("religion", "nomis=null, cpr=ATHE"),
+          entry("religions", "nomis=0, cpr=1"),
+        )
       }
 
       verify(telemetryClient).trackEvent(
@@ -253,7 +221,7 @@ class CorePersonReconciliationIntTest(
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
               "prisonNumber" to "A1234BC",
-              "differences5" to "nationality",
+              "differences5" to "religion, religions",
             ),
           )
         },
@@ -263,8 +231,8 @@ class CorePersonReconciliationIntTest(
 
     @Test
     fun `should do nothing if both systems have null values`() = runTest {
-      stubGetCorePerson(prisonNumber = "A1234BC", nationality = null)
-      cprApi.stubGetCorePerson(prisonNumber = "A1234BC", corePersonDto(nationality = null))
+      stubGetCorePerson(prisonNumber = "A1234BC", religion = null)
+      cprApi.stubGetCorePerson(prisonNumber = "A1234BC", corePersonDto(religion = null))
 
       service.checkCorePersonMatch("A1234BC").also {
         assertThat(it).isNull()
@@ -275,8 +243,8 @@ class CorePersonReconciliationIntTest(
 
     @Test
     fun `should report errors from NOMIS`() = runTest {
-      corePersonNomisApi.stubGetCorePerson("A1234BC", status = HttpStatus.INTERNAL_SERVER_ERROR)
-      cprApi.stubGetCorePerson(prisonNumber = "A1234BC", corePersonDto(nationality = "BR"))
+      corePersonNomisApi.stubGetCorePersonReligion("A1234BC", status = HttpStatus.INTERNAL_SERVER_ERROR)
+      cprApi.stubGetCorePerson(prisonNumber = "A1234BC", corePersonDto(religion = "ATHE"))
 
       service.checkCorePersonMatch("A1234BC").also {
         assertThat(it).isNull()
@@ -288,7 +256,7 @@ class CorePersonReconciliationIntTest(
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
               "prisonNumber" to "A1234BC",
-              "error" to "500 Internal Server Error from GET http://localhost:8082/core-person/A1234BC",
+              "error" to "500 Internal Server Error from GET http://localhost:8082/core-person/A1234BC/religion",
             ),
           )
         },
@@ -298,7 +266,7 @@ class CorePersonReconciliationIntTest(
 
     @Test
     fun `should report errors from DPS`() = runTest {
-      stubGetCorePerson(prisonNumber = "A1234BC", nationality = null)
+      stubGetCorePerson(prisonNumber = "A1234BC", religion = null)
       cprApi.stubGetCorePerson(prisonNumber = "A1234BC", status = BAD_GATEWAY)
 
       service.checkCorePersonMatch("A1234BC").also {
@@ -356,20 +324,20 @@ class CorePersonReconciliationIntTest(
       )
 
       // mock non-matching for first, second and last prisoners
-      corePersonNomisApi.stubGetCorePerson("A0001TZ", corePerson("A0001TZ", nationality = "GB"))
-      cprApi.stubGetCorePerson("A0001TZ", corePersonDto(nationality = "12"))
+      corePersonNomisApi.stubGetCorePersonReligion("A0001TZ", corePersonReligion("A0001TZ", religion = "JEHV"))
+      cprApi.stubGetCorePerson("A0001TZ", corePersonDto(religion = "ATHE"))
 
-      corePersonNomisApi.stubGetCorePerson("A0002TZ", corePerson("A0002TZ", nationality = "US"))
-      cprApi.stubGetCorePerson("A0002TZ", corePersonDto(nationality = "9"))
+      corePersonNomisApi.stubGetCorePersonReligion("A0002TZ", corePersonReligion("A0002TZ", religion = "US"))
+      cprApi.stubGetCorePerson("A0002TZ", corePersonDto(religion = "BAHA"))
 
-      corePersonNomisApi.stubGetCorePerson("A0034TZ", corePerson("A0034TZ", nationality = "IS"))
-      cprApi.stubGetCorePerson("A0034TZ", corePersonDto(nationality = "17"))
+      corePersonNomisApi.stubGetCorePersonReligion("A0034TZ", corePersonReligion("A0034TZ", religion = "IS"))
+      cprApi.stubGetCorePerson("A0034TZ", corePersonDto(religion = "BUDD"))
 
       // all others are ok
       (3L..<34L).forEach {
         val offenderNo = generateOffenderNo(sequence = it)
-        corePersonNomisApi.stubGetCorePerson(offenderNo, corePerson(offenderNo, nationality = "BR"))
-        cprApi.stubGetCorePerson(offenderNo, corePersonDto(nationality = "BR"))
+        corePersonNomisApi.stubGetCorePersonReligion(offenderNo, corePersonReligion(offenderNo, religion = "AGNO"))
+        cprApi.stubGetCorePerson(offenderNo, corePersonDto(religion = "AGNO"))
       }
     }
 
@@ -490,15 +458,15 @@ class CorePersonReconciliationIntTest(
       assertThat(mismatchedRecords).containsOnly("A0001TZ", "A0002TZ", "A0034TZ")
       with(telemetryCaptor.allValues.find { it["prisonNumber"] == "A0001TZ" }) {
         assertThat(this).containsEntry("bookingId", "1")
-        assertThat(this).containsEntry("differences5", "nationality")
+        assertThat(this).containsEntry("differences5", "religion, religions")
       }
       with(telemetryCaptor.allValues.find { it["prisonNumber"] == "A0002TZ" }) {
         assertThat(this).containsEntry("bookingId", "2")
-        assertThat(this).containsEntry("differences5", "nationality")
+        assertThat(this).containsEntry("differences5", "religion, religions")
       }
       with(telemetryCaptor.allValues.find { it["prisonNumber"] == "A0034TZ" }) {
         assertThat(this).containsEntry("bookingId", "34")
-        assertThat(this).containsEntry("differences5", "nationality")
+        assertThat(this).containsEntry("differences5", "religion, religions")
       }
     }
 
@@ -527,7 +495,7 @@ class CorePersonReconciliationIntTest(
 
     @Test
     fun `will complete a report even if a core person from Nomis does not exist`() = runTest {
-      corePersonNomisApi.stubGetCorePerson("A0002TZ", status = NOT_FOUND)
+      corePersonNomisApi.stubGetCorePersonReligion("A0002TZ", status = NOT_FOUND)
 
       service.generateReconciliationReport(true)
 
@@ -573,7 +541,7 @@ class CorePersonReconciliationIntTest(
 
     @Test
     fun `will complete a report even if a core person from both nomis and dps do not exist`() = runTest {
-      corePersonNomisApi.stubGetCorePerson("A0002TZ", status = NOT_FOUND)
+      corePersonNomisApi.stubGetCorePersonReligion("A0002TZ", status = NOT_FOUND)
       cprApi.stubGetCorePerson("A0002TZ", status = NOT_FOUND)
 
       service.generateReconciliationReport(true)
@@ -636,11 +604,10 @@ class CorePersonReconciliationIntTest(
 
   fun stubGetCorePerson(
     prisonNumber: String = "A1234BC",
-    nationality: String? = "BR",
     religion: String? = null,
     fixedDelay: Int = 0,
-  ) = corePersonNomisApi.stubGetCorePerson(
-    response = corePerson(prisonNumber = prisonNumber, nationality = nationality, religion = religion),
+  ) = corePersonNomisApi.stubGetCorePersonReligion(
+    response = corePersonReligion(prisonNumber = prisonNumber, religion = religion),
     fixedDelay = fixedDelay,
   )
 

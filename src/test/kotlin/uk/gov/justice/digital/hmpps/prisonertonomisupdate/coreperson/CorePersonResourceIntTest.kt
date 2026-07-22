@@ -19,7 +19,9 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderNationality
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.NomisAudit
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderBelief
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 @ExtendWith(MockitoExtension::class)
@@ -67,7 +69,7 @@ class CorePersonResourceIntTest(
     inner class Validation {
       @Test
       fun `return null when offender not found`() {
-        corePersonNomisApi.stubGetCorePerson("A9999BC", status = HttpStatus.NOT_FOUND)
+        corePersonNomisApi.stubGetCorePersonReligion("A9999BC", status = HttpStatus.NOT_FOUND)
         webTestClient.get().uri("/core-person/reconciliation/A9999BC")
           .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
           .exchange()
@@ -81,7 +83,7 @@ class CorePersonResourceIntTest(
 
       @BeforeEach
       fun setup() {
-        corePersonNomisApi.stubGetCorePerson()
+        corePersonNomisApi.stubGetCorePersonReligion()
         corePersonCprApi.stubGetCorePerson()
       }
 
@@ -99,15 +101,18 @@ class CorePersonResourceIntTest(
 
       @Test
       fun `will return mismatch with nomis`() {
-        corePersonNomisApi.stubGetCorePerson(
+        corePersonNomisApi.stubGetCorePersonReligion(
           prisonNumber,
-          corePerson(prisonNumber).copy(
-            nationalities = listOf(
-              OffenderNationality(
-                bookingId = 12345,
-                nationality = CodeDescription("BR", "British"),
-                startDateTime = LocalDateTime.parse("2021-01-01T12:00:00"),
-                latestBooking = true,
+          corePersonReligion(prisonNumber).copy(
+            beliefs = listOf(
+              OffenderBelief(
+                beliefId = 12345,
+                belief = CodeDescription("BR", "British"),
+                startDate = LocalDate.parse("2021-01-01"),
+                audit = NomisAudit(
+                  createDatetime = LocalDateTime.parse("2012-01-02T10:20:30"),
+                  createUsername = "BillyBob",
+                ),
               ),
             ),
           ),
@@ -119,10 +124,9 @@ class CorePersonResourceIntTest(
           .expectStatus()
           .isOk
           .expectBody()
-          .consumeWith(System.out::println)
           .jsonPath("prisonNumber").isEqualTo(prisonNumber)
           .jsonPath("differences").value<Map<String, String>> {
-            assertThat(it).containsExactly(entry("nationality", "nomis=BR, cpr=null"))
+            assertThat(it).containsExactly(entry("religions", "nomis=1, cpr=0"))
           }
 
         verify(telemetryClient).trackEvent(
