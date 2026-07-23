@@ -30,12 +30,15 @@ generic-service:
     API_BASE_URL_OFFICIALVISITS: https://official-visits-api.hmpps.service.justice.gov.uk
     API_BASE_URL_ORGANISATIONS: https://organisations-api.hmpps.service.justice.gov.uk
     API_BASE_URL_PERSONAL_RELATIONSHIPS: https://personal-relationships-api.hmpps.service.justice.gov.uk
+    API_BASE_URL_PROPERTY: https://prisoner-property-api.hmpps.service.justice.gov.uk
     API_BASE_URL_SENTENCE_ADJUSTMENTS: https://adjustments-api.hmpps.service.justice.gov.uk
     # currently set to self for a mock API until real API is ready
     API_BASE_URL_STAFF: https://prisoner-to-nomis-update.hmpps.service.justice.gov.uk
     API_BASE_URL_VISITS: https://visit-scheduler.prison.service.justice.gov.uk
     API_BASE_URL_VISIT_BALANCE: https://hmpps-visit-allocation-api.prison.service.justice.gov.uk
     REPORTS_SENTENCING_RECONCILIATION_ALL_PRISONERS: true
+    FEATURE_EVENT_PRISON-PROPERTY_CONTAINER_CREATED: false
+    FEATURE_EVENT_PRISON-PROPERTY_CONTAINER_UPDATED: false
     FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION_CREATED: false
     FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION_UPDATED: false
     FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION_DELETED: false
@@ -222,6 +225,9 @@ generic-prometheus-alerts:
     personalrelationships:
       - "syscon-devs-prod-hmpps_prisoner_to_nomis_personalrelationships_queue"
       - "syscon-devs-prod-hmpps_prisoner_to_nomis_personalrelationships_dlq"
+    property:
+      - "syscon-devs-prod-hmpps_prisoner_to_nomis_property_queue"
+      - "syscon-devs-prod-hmpps_prisoner_to_nomis_property_dlq"
     organisations:
       - "syscon-devs-prod-hmpps_prisoner_to_nomis_organisations_queue"
       - "syscon-devs-prod-hmpps_prisoner_to_nomis_organisations_dlq"

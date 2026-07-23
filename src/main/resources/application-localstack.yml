@@ -170,6 +170,15 @@ hmpps.sqs:
         { "eventType":[
           "TBD"
         ]}
+    property:
+      queueName: hmpps_prisoner_to_nomis_property_queue
+      dlqName: hmpps_prisoner_to_nomis_property_dlq
+      subscribeTopicId: domainevents
+      subscribeFilter: >-
+        { "eventType":[
+          "prison-property.container.created",
+          "prison-property.container.updated"
+        ]}
     organisations:
       queueName: hmpps_prisoner_to_nomis_organisations_queue
       dlqName: hmpps_prisoner_to_nomis_organisations_dlq

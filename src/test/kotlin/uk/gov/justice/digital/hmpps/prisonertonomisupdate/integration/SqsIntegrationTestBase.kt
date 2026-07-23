@@ -136,6 +136,12 @@ abstract class SqsIntegrationTestBase : IntegrationTestBase() {
   internal val personalRelationshipsQueueUrl by lazy { personalRelationshipsQueue.queueUrl }
   internal val personalRelationshipsDlqUrl by lazy { personalRelationshipsQueue.dlqUrl }
 
+  internal val propertyQueue by lazy { hmppsQueueService.findByQueueId("property") as HmppsQueue }
+  internal val awsSqsPropertyClient by lazy { propertyQueue.sqsClient }
+  internal val awsSqsPropertyDlqClient by lazy { propertyQueue.sqsDlqClient }
+  internal val propertyQueueUrl by lazy { propertyQueue.queueUrl }
+  internal val propertyDlqUrl by lazy { propertyQueue.dlqUrl }
+
   internal val visitBalanceQueue by lazy { hmppsQueueService.findByQueueId("visitbalance") as HmppsQueue }
   internal val visitBalanceQueueClient by lazy { visitBalanceQueue.sqsClient }
   internal val visitBalanceDlqClient by lazy { visitBalanceQueue.sqsDlqClient }

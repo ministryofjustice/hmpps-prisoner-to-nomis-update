@@ -31,6 +31,7 @@ api.base.url:
   core.person: http://localhost:8103
   officialvisits: http://localhost:8104
   staff: http://localhost:8106
+  property: http://localhost:8107
 
 hmpps.sqs:
   defaultErrorVisibilityTimeout: 0

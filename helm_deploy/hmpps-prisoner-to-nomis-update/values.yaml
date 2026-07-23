@@ -94,6 +94,8 @@ generic-service:
       ORGANISATIONS_CLIENT_SECRET: "ORGANISATIONS_CLIENT_SECRET"
       PERSONAL_RELATIONSHIPS_CLIENT_ID: "PERSONAL_RELATIONSHIPS_CLIENT_ID"
       PERSONAL_RELATIONSHIPS_CLIENT_SECRET: "PERSONAL_RELATIONSHIPS_CLIENT_SECRET"
+      PROPERTY_CLIENT_ID: "PROPERTY_CLIENT_ID"
+      PROPERTY_CLIENT_SECRET: "PROPERTY_CLIENT_SECRET"
       SENTENCE_ADJUSTMENTS_CLIENT_ID: "SENTENCE_ADJUSTMENTS_CLIENT_ID"
       SENTENCE_ADJUSTMENTS_CLIENT_SECRET: "SENTENCE_ADJUSTMENTS_CLIENT_SECRET"
       STAFF_CLIENT_ID: "STAFF_CLIENT_ID"
@@ -160,6 +162,10 @@ generic-service:
       HMPPS_SQS_QUEUES_PERSONALRELATIONSHIPS_QUEUE_NAME: "sqs_queue_name"
     domain-events-sqs-nomis-update-personalrelationships-dlq:
       HMPPS_SQS_QUEUES_PERSONALRELATIONSHIPS_DLQ_NAME: "sqs_queue_name"
+    domain-events-sqs-nomis-update-property:
+      HMPPS_SQS_QUEUES_PROPERTY_QUEUE_NAME: "sqs_queue_name"
+    domain-events-sqs-nomis-update-property-dlq:
+      HMPPS_SQS_QUEUES_PROPERTY_DLQ_NAME: "sqs_queue_name"
     domain-events-sqs-nomis-update-organisations:
       HMPPS_SQS_QUEUES_ORGANISATIONS_QUEUE_NAME: "sqs_queue_name"
     domain-events-sqs-nomis-update-organisations-dlq:
