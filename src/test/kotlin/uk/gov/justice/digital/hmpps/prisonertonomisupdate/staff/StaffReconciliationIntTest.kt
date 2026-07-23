@@ -35,7 +35,7 @@ class StaffReconciliationIntTest(
       reset(telemetryClient)
       nomisApi.stubGetStaffIds(content = listOf(StaffIdResponse(1), StaffIdResponse(2), StaffIdResponse(3)))
       nomisApi.stubGetStaffIdsFromId(content = listOf(StaffIdResponse(1), StaffIdResponse(2), StaffIdResponse(3)))
-      dpsApi.stubGetStaffIds(content = listOf(DpsStaffId("100")))
+      // dpsApi.stubGetStaffIds(content = listOf(DpsStaffId("100")))
 
       // staffId 1 - matches
       mappingApi.stubGetStaffByNomisIdOrNull(
@@ -46,15 +46,15 @@ class StaffReconciliationIntTest(
           mappingType = StaffMappingDto.MappingType.MIGRATED,
         ),
       )
-      nomisApi.stubGetStaffById(staffId = 1, response = staffDetails().copy(id = 1))
-      dpsApi.stubGetStaff(staffId = "100", response = dpsStaffDetails(staffId = "100"))
+      nomisApi.stubGetStaffById(staffId = 1)
+      dpsApi.stubGetStaff(nomisStaffId = 1)
 
       // staffId 2 - missing mapping
       mappingApi.stubGetStaffByNomisIdOrNull(
         nomisStaffId = 2,
         mapping = null,
       )
-      nomisApi.stubGetStaffById(staffId = 2, response = staffDetails().copy(id = 2))
+      nomisApi.stubGetStaffById(staffId = 2)
 
       // staffId 3 - missing from Dps
       mappingApi.stubGetStaffByNomisIdOrNull(
@@ -65,8 +65,8 @@ class StaffReconciliationIntTest(
           mappingType = StaffMappingDto.MappingType.MIGRATED,
         ),
       )
-      nomisApi.stubGetStaffById(staffId = 3, response = staffDetails().copy(id = 3))
-      dpsApi.stubGetStaff(staffId = "300", response = null)
+      nomisApi.stubGetStaffById(staffId = 3)
+      dpsApi.stubGetStaff(nomisStaffId = 3, response = null)
     }
 
     @Test
@@ -98,6 +98,8 @@ class StaffReconciliationIntTest(
       )
     }
 
+    /*
+    TODO add back in if reconcile totals
     @Test
     fun `will output a mismatch of totals`() = runTest {
       reconciliationService.generateReconciliationReportBatch()
@@ -114,6 +116,7 @@ class StaffReconciliationIntTest(
         isNull(),
       )
     }
+     */
 
     @Test
     fun `will output a mismatch for missing mapping`() = runTest {

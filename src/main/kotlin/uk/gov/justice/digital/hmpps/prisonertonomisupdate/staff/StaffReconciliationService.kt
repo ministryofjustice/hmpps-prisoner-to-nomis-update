@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.Reconciliation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.generateReconciliationReport
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.StaffDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.staff.model.PrisonUserReconciliationResponse
 
 @Service
 class StaffReconciliationService(
@@ -59,7 +60,8 @@ class StaffReconciliationService(
     .sortedBy { it.nomisStaffId }.take(10).let { mismatch -> "nomisStaffIds" to mismatch.map { it.nomisStaffId }.joinToString() }
 
   suspend fun generateStaffReconciliationReport(): ReconciliationResult<MismatchStaff> {
-    checkTotalsMatch()
+    // TODO reinstate this method if reconciling totals
+    //  checkTotalsMatch()
 
     return generateReconciliationReport(
       threadCount = pageSize,
@@ -114,7 +116,7 @@ class StaffReconciliationService(
       is Staff -> {
         checkStaffMatch(
           nomisStaffId = nomisStaffId,
-          dpsStaffId = dpsResult.staff.user.id,
+          dpsStaffId = dpsResult.staff.userId.toString(),
           dpsStaff = dpsResult.staff.toStaff(),
           nomisStaff = nomisStaff.toStaff(),
         )?.also {
@@ -122,7 +124,7 @@ class StaffReconciliationService(
             "$TELEMETRY_STAFF_PREFIX-mismatch",
             mapOf(
               "nomisStaffId" to nomisStaffId.toString(),
-              "dpsStaffId" to dpsResult.staff.user.id,
+              "dpsStaffId" to dpsResult.staff.userId.toString(),
               "reason" to "different-staff-details",
             ),
           )
@@ -143,7 +145,7 @@ class StaffReconciliationService(
       async {
         val mapping = mappingService.getStaffByNomisIdOrNull(nomisStaffId)
         if (mapping != null) {
-          val dpsStaff = dpsApiService.getStaffOrNull(mapping.dpsId.toLong())
+          val dpsStaff = dpsApiService.getStaffOrNull(mapping.nomisId)
           if (dpsStaff == null) {
             NoStaff(mapping.dpsId)
           } else {
@@ -155,6 +157,8 @@ class StaffReconciliationService(
       }
   }.awaitBoth()
 
+  /*
+  TODO Determine if needed
   private suspend fun checkTotalsMatch() = runCatching {
     val (nomisTotal, dpsTotal) = withContext(Dispatchers.Unconfined) {
       async { nomisApiService.getStaffIds().page!!.totalElements } to
@@ -177,8 +181,9 @@ class StaffReconciliationService(
       mapOf(),
     )
   }
+   */
 
-  // TODO Additional code to have more specific reconciliation messages
+  // TODO Add code to have more specific reconciliation messages
   private fun checkStaffMatch(nomisStaffId: Long, dpsStaffId: String, dpsStaff: StaffSummary, nomisStaff: StaffSummary): MismatchStaff? = takeIf { dpsStaff != nomisStaff }?.let {
     MismatchStaff(
       nomisStaffId = nomisStaffId,
@@ -199,6 +204,6 @@ data class MismatchStaff(
 )
 
 sealed interface DpsStaffResult
-data class Staff(val staff: DpsStaffDetails) : DpsStaffResult
+data class Staff(val staff: PrisonUserReconciliationResponse) : DpsStaffResult
 class NoMapping : DpsStaffResult
 data class NoStaff(val dpsStaffId: String) : DpsStaffResult
