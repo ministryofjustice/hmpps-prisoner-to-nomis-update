@@ -151,7 +151,6 @@ class CourtSchedulerNomisApiMockServer(private val jsonMapper: JsonMapper) {
       startTime = startTime,
       eventType = "CRT",
       eventStatus = "COMP",
-      prison = "BXI",
       court = court,
       audit = NomisAudit(
         createDatetime = yesterday,
