@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-07-20.950.74312ed"
+    "version" : "2026-07-21.959.ba1c5be"
   },
   "servers" : [ {
     "url" : "https://prisoner-finance-sync-api-dev.hmpps.service.justice.gov.uk/",
@@ -308,7 +308,7 @@
         },
         "responses" : {
           "201" : {
-            "description" : "Offender transaction successfully created.",
+            "description" : "Offender transactions successfully created.",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -318,7 +318,7 @@
             }
           },
           "200" : {
-            "description" : "Offender transaction metadata successfully updated or processed with no new creations.",
+            "description" : "All transactions previously posted successfully were created",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -353,6 +353,16 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422" : {
+            "description" : "Partially processed - some transactions were successfully created but some failed.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncTransactionReceipt"
                 }
               }
             }
@@ -619,6 +629,16 @@
                 }
               }
             }
+          },
+          "502" : {
+            "description" : "The Sync service is working but general ledger is throwing an unexpected 5XX error.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security" : [ {
@@ -651,9 +671,6 @@
           "required" : true
         },
         "responses" : {
-          "200" : {
-            "description" : "General ledger balances successfully migrated."
-          },
           "400" : {
             "description" : "Bad request - invalid input data.",
             "content" : {
@@ -684,8 +701,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error - An unexpected error occurred.",
+          "501" : {
+            "description" : "This endpoint is not yet implemented.",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -2207,6 +2224,9 @@
             "type" : "string",
             "format" : "uuid"
           },
+          "transactionType" : {
+            "type" : [ "string", "null" ]
+          },
           "caseloadId" : {
             "type" : [ "string", "null" ]
           },
@@ -2223,9 +2243,6 @@
             "format" : "int64"
           },
           "requestTypeIdentifier" : {
-            "type" : [ "string", "null" ]
-          },
-          "transactionType" : {
             "type" : [ "string", "null" ]
           }
         },
