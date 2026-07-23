@@ -104,7 +104,7 @@ generic-service:
       schedule: "0 19 * * SAT"
     - name: court-case-a-recon
       type: COURT_CASE_ACTIVE_PRISONER_RECON
-      schedule: "10 3 * * *"
+      schedule: "45 3 * * *"
     - name: court-scheduler-active-recon
       type: COURT_SCHEDULER_ACTIVE_RECON
       schedule: "00 4 * * SUN,MON,TUE,WED,THU,FRI"
