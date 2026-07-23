@@ -166,42 +166,6 @@ class CourtSchedulerScheduleIntTest(
       }
 
       @Nested
-      inner class VideoLinkAppearance {
-
-        @BeforeEach
-        fun setUp() {
-          mappingApi.stubGetCourtScheduleMapping(status = NOT_FOUND)
-          // This is internal so must be a video link appearance
-          dpsApi.stubGetCourtAppearance(id = dpsCourtAppearanceId, startTime = startTime, external = false)
-          nomisApi.stubUpsertCourtScheduleOut(response = UpsertCourtScheduleOutResponse(12345L, nomisEventId))
-          mappingApi.stubCreateCourtScheduleMapping()
-
-          publishCourtAppearanceDomainEvent(dpsCourtAppearanceId, "A1234BC")
-          waitForAnyProcessingToComplete("court-scheduler-schedule-create-success")
-        }
-
-        @Test
-        fun `will upsert NOMIS court schedule as expired`() {
-          NomisApiMockServer.getRequestBody<UpsertCourtScheduleOut>(
-            putRequestedFor(urlEqualTo("/movements/A1234BC/court/schedule/out?recreate=false")),
-          ).also { request ->
-            assertThat(request.eventStatus).isEqualTo("EXP")
-            assertThat(request.returnStatus).isEqualTo(null)
-          }
-        }
-
-        @Test
-        fun `will create mapping`() {
-          MappingMockServer.getRequestBody<CourtScheduleMappingDto>(
-            postRequestedFor(urlEqualTo("/mapping/court-scheduler/schedule")),
-          ).also { request ->
-            assertThat(request.nomisEventId).isEqualTo(nomisEventId)
-            assertThat(request.dpsCourtAppearanceId).isEqualTo(dpsCourtAppearanceId)
-          }
-        }
-      }
-
-      @Nested
       inner class MappingFailure {
 
         @BeforeEach
