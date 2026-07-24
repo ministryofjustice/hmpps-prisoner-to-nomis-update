@@ -58,6 +58,7 @@ generic-service:
     REPORTS_CONTACT-PERSON_PRISONER-CONTACT_RECONCILIATION_PAGE-SIZE: 10
     REPORTS_CONTACT-PERSON_PERSON-CONTACT_RECONCILIATION_PAGE-SIZE: 30
     REPORTS_CORE-PERSON_RECONCILIATION_PAGE-SIZE: 10
+    FEATURE_COURT-SCHEDULER_IGNORE-ALL-SENTENCING-EVENTS: true
 
   # The name has max length of 43 chars (Cronjob name max length is 52 chars, including prefix "to-nomis-")
   # The type must exist in enum BatchType
