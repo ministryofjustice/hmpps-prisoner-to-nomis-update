@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-07-23.1761.092381e"
+    "version" : "2026-07-23.1771.0aa5309"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -21510,7 +21510,69 @@
         }
       }
     },
-    "/finance/prisoners/{prisonNumber}/balance" : {
+    "/finance/prisoners/{prisonNumber}/balance/reconcile" : {
+      "get" : {
+        "tags" : [ "prisoner-balance-resource" ],
+        "summary" : "Get a prisoner's finance details by their prison number",
+        "description" : "Retrieves a prisoner's trust account details for aggregated caseloads. Zero account balances are not returned. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getAggregatedAccountsForPrisonNumber",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "description" : "prisonNumber",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "prisonNumber",
+            "example" : "A1234BC"
+          },
+          "example" : "A1234BC"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Transaction Information Returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonerAggregatedAccountsDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint when role NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Prisoner does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/finance/prisoners/{prisonNumber}/balance-details" : {
       "get" : {
         "tags" : [ "prisoner-balance-resource" ],
         "summary" : "Get a prisoner's finance details by their prison number",
@@ -21579,74 +21641,12 @@
         }
       }
     },
-    "/finance/prisoners/{prisonNumber}/balance/reconcile" : {
-      "get" : {
-        "tags" : [ "prisoner-balance-resource" ],
-        "summary" : "Get a prisoner's finance details by their prison number",
-        "description" : "Retrieves a prisoner's trust account details for aggregated caseloads. Zero account balances are not returned. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-        "operationId" : "getAggregatedAccountsForPrisonNumber",
-        "parameters" : [ {
-          "name" : "prisonNumber",
-          "in" : "path",
-          "description" : "prisonNumber",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "description" : "prisonNumber",
-            "example" : "A1234BC"
-          },
-          "example" : "A1234BC"
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Transaction Information Returned",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/PrisonerAggregatedAccountsDto"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden to access this endpoint when role NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Prisoner does not exist",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/finance/prisoners/rootOffenderId/{rootOffenderId}/balance" : {
       "get" : {
         "tags" : [ "prisoner-balance-resource" ],
         "summary" : "Get a prisoner's finance details by their root offender id",
-        "description" : "Retrieves a prisoner's trust account details for all caseloads with option to ignore zero balances. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-        "operationId" : "getPrisonerAccountDetails",
+        "description" : "Used for migration.Retrieves a prisoner's trust account details for all caseloads with transactionDate from the transaction itself. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getPrisonerAccountDetailsForMigration",
         "parameters" : [ {
           "name" : "rootOffenderId",
           "in" : "path",
@@ -21659,13 +21659,6 @@
             "example" : 123456
           },
           "example" : 123456
-        }, {
-          "name" : "excludeZeroBalances",
-          "in" : "query",
-          "required" : false,
-          "schema" : {
-            "type" : "boolean"
-          }
         } ],
         "responses" : {
           "200" : {
@@ -21737,6 +21730,76 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/PrisonerAggregatedAccountsDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint when role NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Prisoner does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/finance/prisoners/rootOffenderId/{rootOffenderId}/balance-details" : {
+      "get" : {
+        "tags" : [ "prisoner-balance-resource" ],
+        "summary" : "Get a prisoner's finance details by their root offender id",
+        "description" : "Retrieves a prisoner's trust account details for all caseloads with option to ignore zero balances. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getPrisonerAccountDetails",
+        "parameters" : [ {
+          "name" : "rootOffenderId",
+          "in" : "path",
+          "description" : "rootOffenderId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "rootOffenderId",
+            "example" : 123456
+          },
+          "example" : 123456
+        }, {
+          "name" : "excludeZeroBalances",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Transaction Information Returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonerBalanceDto"
                 }
               }
             }
@@ -28840,10 +28903,17 @@
           "propertyContainerId" : {
             "type" : "integer",
             "format" : "int64",
-            "description" : "The created PROPERTY_CONTAINER_ID"
+            "description" : "The created PROPERTY_CONTAINER_ID",
+            "example" : 123456789
+          },
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "ID of the booking the property container was added to",
+            "example" : 123456789
           }
         },
-        "required" : [ "propertyContainerId" ]
+        "required" : [ "bookingId", "propertyContainerId" ]
       },
       "PropertyContainerCreateRequest" : {
         "type" : "object",
@@ -33133,12 +33203,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "paged" : {
+            "type" : "boolean"
+          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "paged" : {
-            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -39340,6 +39410,47 @@
         },
         "required" : [ "accounts", "prisonNumber", "rootOffenderId" ]
       },
+      "AggregatedAccountDto" : {
+        "type" : "object",
+        "properties" : {
+          "accountCode" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The account code for the balance entry",
+            "example" : 2101
+          },
+          "balance" : {
+            "type" : "number",
+            "description" : "The account balance",
+            "example" : "12.50"
+          }
+        },
+        "required" : [ "accountCode", "balance" ]
+      },
+      "PrisonerAggregatedAccountsDto" : {
+        "type" : "object",
+        "properties" : {
+          "rootOffenderId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The root offender Id",
+            "example" : 12345
+          },
+          "prisonNumber" : {
+            "type" : "string",
+            "description" : "The prison Number",
+            "example" : "A1234BC"
+          },
+          "accounts" : {
+            "type" : "array",
+            "description" : "The aggregated prisoner accounts",
+            "items" : {
+              "$ref" : "#/components/schemas/AggregatedAccountDto"
+            }
+          }
+        },
+        "required" : [ "accounts", "prisonNumber", "rootOffenderId" ]
+      },
       "PrisonerAccountDto" : {
         "type" : "object",
         "properties" : {
@@ -39398,47 +39509,6 @@
             "description" : "The accounts associated with the prisoner",
             "items" : {
               "$ref" : "#/components/schemas/PrisonerAccountDto"
-            }
-          }
-        },
-        "required" : [ "accounts", "prisonNumber", "rootOffenderId" ]
-      },
-      "AggregatedAccountDto" : {
-        "type" : "object",
-        "properties" : {
-          "accountCode" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The account code for the balance entry",
-            "example" : 2101
-          },
-          "balance" : {
-            "type" : "number",
-            "description" : "The account balance",
-            "example" : "12.50"
-          }
-        },
-        "required" : [ "accountCode", "balance" ]
-      },
-      "PrisonerAggregatedAccountsDto" : {
-        "type" : "object",
-        "properties" : {
-          "rootOffenderId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The root offender Id",
-            "example" : 12345
-          },
-          "prisonNumber" : {
-            "type" : "string",
-            "description" : "The prison Number",
-            "example" : "A1234BC"
-          },
-          "accounts" : {
-            "type" : "array",
-            "description" : "The aggregated prisoner accounts",
-            "items" : {
-              "$ref" : "#/components/schemas/AggregatedAccountDto"
             }
           }
         },
