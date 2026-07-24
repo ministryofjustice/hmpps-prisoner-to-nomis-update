@@ -55,7 +55,7 @@ internal fun Type.mapDps(): String = when (this) {
   Type.INCIDENT_AT_HEIGHT_1 -> "ROOF_CLIMB"
   Type.KEY_OR_LOCK_1 -> "KEY_LOCK"
   Type.KEY_OR_LOCK_2 -> "KEY_LOCKNEW"
-  Type.KEY_OR_LOCK_3 ->"KEY_LOCK3"
+  Type.KEY_OR_LOCK_3 -> "KEY_LOCK3"
   Type.MISCELLANEOUS_1 -> "MISC"
   Type.MOBILE_PHONE_1 -> "MOBILES"
   Type.RADIO_COMPROMISE_1 -> "RADIO_COMP"
