@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-07-20.2199.b86ecc9"
+    "version" : "2026-07-22.2230.90f4834"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -7142,7 +7142,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:30.251765281"
+            "example" : "07:44:25.421250641"
           },
           "outcomeDispositionCode" : {
             "type" : [ "string", "null" ]
@@ -7517,7 +7517,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:30.251765281"
+            "example" : "07:44:25.421250641"
           },
           "courtCode" : {
             "type" : "string"
@@ -10231,9 +10231,15 @@
           "deleteStatus" : {
             "type" : "string",
             "enum" : [ "SUPPORTED", "NOT_SUPPORTED" ]
+          },
+          "periodLengths" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PeriodLength"
+            }
           }
         },
-        "required" : [ "appearanceDate", "appearanceUuid", "charges", "courtCode", "deleteStatus", "documents", "source", "warrantType" ]
+        "required" : [ "appearanceDate", "appearanceUuid", "charges", "courtCode", "deleteStatus", "documents", "periodLengths", "source", "warrantType" ]
       },
       "CourtAppearanceSubtype" : {
         "type" : "object",
@@ -10339,7 +10345,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:30.251765281"
+            "example" : "07:44:25.421250641"
           },
           "courtCode" : {
             "type" : "string"
@@ -11027,7 +11033,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:44:30.251765281"
+            "example" : "07:44:25.421250641"
           },
           "nomisOutcomeCode" : {
             "type" : [ "string", "null" ]
@@ -11106,7 +11112,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:30.251765281"
+            "example" : "07:44:25.421250641"
           },
           "courtId" : {
             "type" : "string"
@@ -11258,7 +11264,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:44:30.251765281"
+            "example" : "07:44:25.421250641"
           },
           "charges" : {
             "type" : "array",
@@ -11295,7 +11301,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:30.251765281"
+            "example" : "07:44:25.421250641"
           },
           "courtId" : {
             "type" : "string"
@@ -11582,16 +11588,16 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
+          "pageNumber" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
           "pageSize" : {
             "type" : "integer",
             "format" : "int32"
           },
           "paged" : {
             "type" : "boolean"
-          },
-          "pageNumber" : {
-            "type" : "integer",
-            "format" : "int32"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -11825,9 +11831,15 @@
             "items" : {
               "$ref" : "#/components/schemas/PagedCharge"
             }
+          },
+          "periodLengths" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PagedAppearancePeriodLength"
+            }
           }
         },
-        "required" : [ "appearanceUuid", "charges", "courtCode", "warrantDate", "warrantType" ]
+        "required" : [ "appearanceUuid", "charges", "courtCode", "periodLengths", "warrantDate", "warrantType" ]
       },
       "PagedMergedFromCase" : {
         "type" : "object",
@@ -11886,7 +11898,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:30.251765281"
+            "example" : "07:44:25.421250641"
           },
           "courtCode" : {
             "type" : [ "string", "null" ]
@@ -12073,10 +12085,10 @@
           "empty" : {
             "type" : "boolean"
           },
-          "sorted" : {
+          "unsorted" : {
             "type" : "boolean"
           },
-          "unsorted" : {
+          "sorted" : {
             "type" : "boolean"
           }
         }
