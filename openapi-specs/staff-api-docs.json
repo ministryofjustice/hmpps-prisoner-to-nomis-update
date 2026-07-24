@@ -6,7 +6,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-07-21.148.5257686"
+    "version" : "2026-07-23.157.a73606c"
   },
   "servers" : [ {
     "url" : "https://prison-users-api-dev.prison.service.justice.gov.uk",
@@ -1141,7 +1141,7 @@
             "example" : "f59dad25-3f11-4a74-9e03-64d2ee53f498"
           },
           "staffId" : {
-            "type" : "string",
+            "type" : "integer",
             "format" : "int64",
             "description" : "The NOMIS staff id",
             "example" : 123456
