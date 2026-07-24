@@ -61,6 +61,8 @@ generic-service:
     REPORTS_PRISONER_BALANCE_RECONCILIATION_FILTER_PRISON: ASI,BWI,LEI
     SPRINGDOC_API-DOCS_ENABLED: "true"
     SPRINGDOC_SWAGGER-UI_ENABLED: "true"
+    FEATURE_COURT-SCHEDULER_IGNORE-ALL-SENTENCING-EVENTS: true
+
 
   # The name has max length of 43 chars (Cronjob name max length is 52 chars, including prefix "to-nomis-")
   # The type must exist in enum BatchType
