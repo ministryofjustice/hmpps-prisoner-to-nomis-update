@@ -2,8 +2,8 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.staff
 
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.StaffAccount
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.StaffDetails
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.staff.model.MigratedUser
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.staff.model.MigratedUserAccount
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.staff.model.PrisonUserAccount
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.staff.model.PrisonUserReconciliationResponse
 import java.time.LocalDateTime
 
 const val DPS_CASELOAD = "NWEB"
@@ -44,37 +44,35 @@ fun StaffAccount.toStaffAccountSummary() = StaffAccountSummary(
   activeCaseloadId = activeCaseloadId,
 )
 
-// TODO DPS conversions - waiting for DPS endpoint
-fun DpsStaffDetails.toStaff() = StaffSummary(
-  firstName = user.firstName,
-  lastName = user.lastName,
-  status = user.status.mapDps(),
-  accounts = accounts.map { it.toStaffAccountSummary(this) }.sortedBy { it.username },
-  emails = user.emails?.map { it.email } ?: listOf(),
+// DPS conversions
+fun PrisonUserReconciliationResponse.toStaff() = StaffSummary(
+  firstName = firstName,
+  lastName = lastName,
+  status = status.mapDps(),
+  accounts = accounts.map { it.toStaffAccountSummary() }.sortedBy { it.username },
+  emails = emails.map { it.email },
 )
-fun MigratedUserAccount.toStaffAccountSummary(dpsStaffDetails: DpsStaffDetails) = StaffAccountSummary(
+fun PrisonUserAccount.toStaffAccountSummary() = StaffAccountSummary(
   username = username,
   typeCode = accountType.value,
   status = accountStatus.mapDps(),
-  caseloads = dpsStaffDetails.accessibleCaseloads
-    ?.filter { staff -> staff.username == username }
-    ?.map { it.caseloadId }?.sorted() ?: emptyList(),
-  dpsRoles = dpsStaffDetails.roles?.map { it.roleCode }?.sorted() ?: emptyList(),
+  caseloads = caseloads.map { it.caseloadId }.sorted(),
+  dpsRoles = roles.map { it.roleCode }.sorted(),
   lastLoggedIn = lastLoggedIn,
   activeCaseloadId = activeCaseloadId,
 )
-fun MigratedUser.Status.mapDps(): String = when (this) {
-  MigratedUser.Status.ACTIVE -> "ACTIVE"
-  MigratedUser.Status.INACTIVE -> "INACT"
+fun PrisonUserReconciliationResponse.Status.mapDps(): String = when (this) {
+  PrisonUserReconciliationResponse.Status.ACTIVE -> "ACTIVE"
+  PrisonUserReconciliationResponse.Status.INACTIVE -> "INACT"
 }
-fun MigratedUserAccount.AccountStatus.mapDps(): String = when (this) {
-  MigratedUserAccount.AccountStatus.OPEN -> return "OPEN"
-  MigratedUserAccount.AccountStatus.EXPIRED -> "EXPIRED"
-  MigratedUserAccount.AccountStatus.EXPIRED_GRACE -> "EXPIRED(GRACE)"
-  MigratedUserAccount.AccountStatus.EXPIRED_LOCKED -> "EXPIRED & LOCKED"
-  MigratedUserAccount.AccountStatus.EXPIRED_LOCKED_TIMED -> "EXPIRED & LOCKED(TIMED)"
-  MigratedUserAccount.AccountStatus.EXPIRED_GRACE_LOCKED -> "EXPIRED(GRACE) & LOCKED"
-  MigratedUserAccount.AccountStatus.EXPIRED_GRACE_LOCKED_TIMED -> "EXPIRED(GRACE) & LOCKED(TIMED)"
-  MigratedUserAccount.AccountStatus.LOCKED -> "LOCKED"
-  MigratedUserAccount.AccountStatus.LOCKED_TIMED -> return "LOCKED(TIMED)"
+fun PrisonUserAccount.AccountStatus.mapDps(): String = when (this) {
+  PrisonUserAccount.AccountStatus.OPEN -> return "OPEN"
+  PrisonUserAccount.AccountStatus.EXPIRED -> "EXPIRED"
+  PrisonUserAccount.AccountStatus.EXPIRED_GRACE -> "EXPIRED(GRACE)"
+  PrisonUserAccount.AccountStatus.EXPIRED_LOCKED -> "EXPIRED & LOCKED"
+  PrisonUserAccount.AccountStatus.EXPIRED_LOCKED_TIMED -> "EXPIRED & LOCKED(TIMED)"
+  PrisonUserAccount.AccountStatus.EXPIRED_GRACE_LOCKED -> "EXPIRED(GRACE) & LOCKED"
+  PrisonUserAccount.AccountStatus.EXPIRED_GRACE_LOCKED_TIMED -> "EXPIRED(GRACE) & LOCKED(TIMED)"
+  PrisonUserAccount.AccountStatus.LOCKED -> "LOCKED"
+  PrisonUserAccount.AccountStatus.LOCKED_TIMED -> return "LOCKED(TIMED)"
 }

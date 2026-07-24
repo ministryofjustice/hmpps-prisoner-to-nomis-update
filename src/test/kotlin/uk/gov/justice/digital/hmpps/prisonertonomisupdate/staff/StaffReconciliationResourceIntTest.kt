@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.StaffMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.StaffDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.staff.model.PrisonUserReconciliationResponse
+import java.util.UUID
 
 class StaffReconciliationResourceIntTest(
   @Autowired
@@ -22,16 +24,19 @@ class StaffReconciliationResourceIntTest(
   @DisplayName("GET /staff/nomis-staff-id/{nomisStaffId}/reconciliation")
   @Nested
   inner class GetStaffReconciliationByNomisId {
+    val nomisStaffId = 1234L
+    val dpsStaffId = UUID.randomUUID().toString()
+
     @BeforeEach
     fun setUp() {
-      stubStaff(1234, "4321", staffDetails(), dpsStaffDetails())
+      stubStaff(nomisStaffId, dpsStaffId, nomisStaffDetails(), dpsStaffDetails())
     }
 
     @Nested
     inner class Security {
       @Test
       fun `access forbidden when no role`() {
-        webTestClient.get().uri("/staff/nomis-staff-id/1234/reconciliation")
+        webTestClient.get().uri("/staff/nomis-staff-id/$nomisStaffId/reconciliation")
           .headers(setAuthorisation(roles = listOf()))
           .exchange()
           .expectStatus().isForbidden
@@ -39,7 +44,7 @@ class StaffReconciliationResourceIntTest(
 
       @Test
       fun `access forbidden with wrong role`() {
-        webTestClient.get().uri("/staff/nomis-staff-id/1234/reconciliation")
+        webTestClient.get().uri("/staff/nomis-staff-id/$nomisStaffId/reconciliation")
           .headers(setAuthorisation(roles = listOf("ROLE_BANANAS")))
           .exchange()
           .expectStatus().isForbidden
@@ -47,7 +52,7 @@ class StaffReconciliationResourceIntTest(
 
       @Test
       fun `access unauthorised with no auth token`() {
-        webTestClient.get().uri("/staff/nomis-staff-id/1234/reconciliation")
+        webTestClient.get().uri("/staff/nomis-staff-id/$nomisStaffId/reconciliation")
           .exchange()
           .expectStatus().isUnauthorized
       }
@@ -57,7 +62,7 @@ class StaffReconciliationResourceIntTest(
     inner class HappyPathNoMismatch {
       @Test
       fun `will not return mismatch`() {
-        webTestClient.get().uri("/staff/nomis-staff-id/1234/reconciliation")
+        webTestClient.get().uri("/staff/nomis-staff-id/$nomisStaffId/reconciliation")
           .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
           .exchange()
           .expectStatus().isOk
@@ -71,22 +76,22 @@ class StaffReconciliationResourceIntTest(
       @BeforeEach
       fun setUp() {
         stubStaff(
-          1234,
-          "4321",
-          staffDetails().copy(firstName = "FRED"),
-          dpsStaffDetails().copy(user = dpsStaffUser().copy(firstName = "BOB")),
+          nomisStaffId,
+          dpsStaffId,
+          nomisStaffDetails().copy(firstName = "FRED"),
+          dpsStaffDetails().copy(firstName = "BOB"),
         )
       }
 
       @Test
       fun `will return mismatch`() {
-        webTestClient.get().uri("/staff/nomis-staff-id/1234/reconciliation")
+        webTestClient.get().uri("/staff/nomis-staff-id/$nomisStaffId/reconciliation")
           .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
           .exchange()
           .expectStatus().isOk
           .expectBody()
-          .jsonPath("$.nomisStaffId").isEqualTo(1234)
-          .jsonPath("$.dpsStaffId").isEqualTo("4321")
+          .jsonPath("$.nomisStaffId").isEqualTo(nomisStaffId)
+          .jsonPath("$.dpsStaffId").isEqualTo(dpsStaffId)
           .jsonPath("$.reason").isEqualTo("different-staff-details")
           .jsonPath("$.nomisStaff.firstName").isEqualTo("FRED")
           .jsonPath("$.dpsStaff.firstName").isEqualTo("BOB")
@@ -100,12 +105,12 @@ class StaffReconciliationResourceIntTest(
       @Test
       fun `will return mismatch`() {
         mappingService.stubGetStaffByNomisIdOrNull(mapping = null)
-        webTestClient.get().uri("/staff/nomis-staff-id/1234/reconciliation")
+        webTestClient.get().uri("/staff/nomis-staff-id/$nomisStaffId/reconciliation")
           .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
           .exchange()
           .expectStatus().isOk
           .expectBody()
-          .jsonPath("$.nomisStaffId").isEqualTo(1234)
+          .jsonPath("$.nomisStaffId").isEqualTo(nomisStaffId)
           .jsonPath("$.reason").isEqualTo("staff-mapping-missing")
       }
     }
@@ -115,21 +120,21 @@ class StaffReconciliationResourceIntTest(
       @Test
       fun `will return mismatch`() {
         dpsApi.stubGetStaff(response = null)
-        webTestClient.get().uri("/staff/nomis-staff-id/1234/reconciliation")
+        webTestClient.get().uri("/staff/nomis-staff-id/$nomisStaffId/reconciliation")
           .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
           .exchange()
           .expectStatus().isOk
           .expectBody()
-          .jsonPath("$.nomisStaffId").isEqualTo(1234)
-          .jsonPath("$.dpsStaffId").isEqualTo("4321")
+          .jsonPath("$.nomisStaffId").isEqualTo(nomisStaffId)
+          .jsonPath("$.dpsStaffId").isEqualTo(dpsStaffId)
           .jsonPath("$.reason").isEqualTo("dps-record-missing")
       }
     }
   }
 
-  fun stubStaff(nomisStaffId: Long, dpsStaffId: String, nomisStaff: StaffDetails, dpsStaff: DpsStaffDetails) {
+  fun stubStaff(nomisStaffId: Long, dpsStaffId: String, nomisStaff: StaffDetails, dpsStaff: PrisonUserReconciliationResponse) {
     nomisApi.stubGetStaffById(nomisStaffId, response = nomisStaff.copy(id = nomisStaffId))
-    dpsApi.stubGetStaff(dpsStaffId, response = dpsStaff.copy(user = dpsStaff.user.copy(id = dpsStaffId)))
+    dpsApi.stubGetStaff(nomisStaffId, response = dpsStaff.copy(userId = UUID.fromString(dpsStaffId)))
     mappingService.stubGetStaffByNomisIdOrNull(
       nomisStaffId = nomisStaffId,
       mapping = StaffMappingDto(

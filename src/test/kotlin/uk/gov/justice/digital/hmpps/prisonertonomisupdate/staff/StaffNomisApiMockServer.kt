@@ -65,7 +65,7 @@ class StaffNomisApiMockServer(private val jsonMapper: JsonMapper) {
 
   fun stubGetStaffById(
     staffId: Long = 1234,
-    response: StaffDetails = staffDetails(),
+    response: StaffDetails = nomisStaffDetails(staffId),
   ) {
     nomisApi.stubFor(
       get(urlPathEqualTo("/staff/id/$staffId")).willReturn(
@@ -95,7 +95,7 @@ class StaffNomisApiMockServer(private val jsonMapper: JsonMapper) {
   fun verify(count: Int, pattern: RequestPatternBuilder) = nomisApi.verify(count, pattern)
 }
 
-fun staffDetails(staffId: Long = 1234) = StaffDetails(
+fun nomisStaffDetails(staffId: Long = 1234) = StaffDetails(
   id = staffId,
   firstName = "JOHN",
   lastName = "SMITH",

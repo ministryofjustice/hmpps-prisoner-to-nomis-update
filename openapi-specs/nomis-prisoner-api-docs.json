@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-07-22.1753.0b6d1d3"
+    "version" : "2026-07-23.1761.092381e"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -22884,68 +22884,6 @@
         }
       }
     },
-    "/core-person/{prisonNumber}/religion" : {
-      "get" : {
-        "tags" : [ "core-person-resource" ],
-        "summary" : "Get the current religion for an offender as well as all the religion history",
-        "description" : "Retrieves the religion information for an offender. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-        "operationId" : "getOffenderReligion",
-        "parameters" : [ {
-          "name" : "prisonNumber",
-          "in" : "path",
-          "description" : "Prison number aka noms id / offender id display",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "description" : "Prison number aka noms id / offender id display",
-            "example" : "A1234BC"
-          },
-          "example" : "A1234BC"
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Core religion information returned",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/CorePersonReligion"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Offender does not exist",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/contact/{contactId}" : {
       "get" : {
         "tags" : [ "contact-person-resource" ],
@@ -33195,12 +33133,12 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paged" : {
+            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -38211,10 +38149,6 @@
             "type" : "string",
             "description" : "Comment"
           },
-          "prison" : {
-            "type" : "string",
-            "description" : "Prison code at time of scheduling"
-          },
           "court" : {
             "type" : "string",
             "description" : "Court code"
@@ -38229,7 +38163,7 @@
             "description" : "Audit data associated with the records"
           }
         },
-        "required" : [ "audit", "court", "eventDate", "eventId", "eventStatus", "eventType", "prison", "startTime" ]
+        "required" : [ "audit", "court", "eventDate", "eventId", "eventStatus", "eventType", "startTime" ]
       },
       "OffenderCourtMovementsResponse" : {
         "type" : "object",
@@ -38285,10 +38219,6 @@
             "type" : "string",
             "description" : "Comment"
           },
-          "prison" : {
-            "type" : "string",
-            "description" : "Prison code at time of scheduling"
-          },
           "court" : {
             "type" : "string",
             "description" : "Court code"
@@ -38307,7 +38237,7 @@
             "description" : "Audit data associated with the records"
           }
         },
-        "required" : [ "audit", "bookingId", "court", "eventDate", "eventId", "eventStatus", "eventType", "latestBooking", "prison", "startTime" ]
+        "required" : [ "audit", "bookingId", "court", "eventDate", "eventId", "eventStatus", "eventType", "latestBooking", "startTime" ]
       },
       "CourtMovementOut" : {
         "type" : "object",
@@ -40534,29 +40464,6 @@
           }
         },
         "required" : [ "bookingId", "latestBooking", "sexualOrientation", "startDateTime" ]
-      },
-      "CorePersonReligion" : {
-        "type" : "object",
-        "description" : "The religion held in NOMIS for an offender",
-        "properties" : {
-          "prisonNumber" : {
-            "type" : "string",
-            "description" : "The prison number"
-          },
-          "religion" : {
-            "$ref" : "#/components/schemas/CodeDescription",
-            "description" : "Belief",
-            "example" : "SCIE"
-          },
-          "beliefs" : {
-            "type" : "array",
-            "description" : "History of all beliefs for the person",
-            "items" : {
-              "$ref" : "#/components/schemas/OffenderBelief"
-            }
-          }
-        },
-        "required" : [ "beliefs", "prisonNumber" ]
       },
       "BookingIdsWithLast" : {
         "type" : "object",

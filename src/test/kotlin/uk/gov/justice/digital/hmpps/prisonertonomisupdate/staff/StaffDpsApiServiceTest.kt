@@ -26,7 +26,7 @@ class StaffDpsApiServiceTest {
     internal fun `will pass oath2 token to endpoint`() = runTest {
       dpsStaffServer.stubGetStaff()
 
-      apiService.getStaffOrNull(staffId = 4321)
+      apiService.getStaffOrNull(nomisStaffId = 1234)
 
       dpsStaffServer.verify(
         getRequestedFor(anyUrl())
@@ -38,10 +38,10 @@ class StaffDpsApiServiceTest {
     fun `will call the get endpoint`() = runTest {
       dpsStaffServer.stubGetStaff()
 
-      apiService.getStaffOrNull(staffId = 4321)
+      apiService.getStaffOrNull(nomisStaffId = 1234)
 
       dpsStaffServer.verify(
-        getRequestedFor(urlPathEqualTo("/prison-users/4321")),
+        getRequestedFor(urlPathEqualTo("/reconciliation/user/1234")),
       )
     }
 
@@ -49,14 +49,14 @@ class StaffDpsApiServiceTest {
     fun `will return null when not found`() = runTest {
       dpsStaffServer.stubGetStaff(response = null)
 
-      assertThat(apiService.getStaffOrNull(staffId = 4321)).isNull()
+      assertThat(apiService.getStaffOrNull(nomisStaffId = 1234)).isNull()
     }
 
     @Test
     fun `will return staff when found`() = runTest {
       dpsStaffServer.stubGetStaff()
 
-      assertThat(apiService.getStaffOrNull(staffId = 4321)).isNotNull()
+      assertThat(apiService.getStaffOrNull(nomisStaffId = 1234)).isNotNull()
     }
   }
 }

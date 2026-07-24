@@ -1133,7 +1133,6 @@ class CourtSchedulerReconciliationIntTest(
     }
 
     private fun stubNomisCourtEvent(
-      prison: String = "BXI",
       court: String = "LEEDMC",
       startTime: LocalDateTime = yesterday,
       eventType: String = "CRT",
@@ -1151,7 +1150,6 @@ class CourtSchedulerReconciliationIntTest(
             startTime = startTime,
             eventType = eventType,
             eventStatus = eventStatus,
-            prison = prison,
             court = court,
             audit = NomisAudit(
               createDatetime = yesterday,
