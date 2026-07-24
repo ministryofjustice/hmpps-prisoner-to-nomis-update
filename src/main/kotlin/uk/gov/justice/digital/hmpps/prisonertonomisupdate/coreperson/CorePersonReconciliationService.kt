@@ -1,3 +1,5 @@
+@file:Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
+
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson
 
 import com.microsoft.applicationinsights.TelemetryClient
@@ -39,6 +41,12 @@ class CorePersonReconciliationService(
   private companion object {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
     private const val TELEMETRY_CORE_PERSON_PREFIX = "coreperson-reports-reconciliation"
+
+    private val excludedOffenderNos = CorePersonReconciliationService::class.java
+      .getResource("/excludedCorePersonReconciliationBookingId.txt")
+      .readText()
+      .split(",")
+      .mapNotNull { it.trim().toLongOrNull() }
   }
 
   suspend fun generateReconciliationReport(activeOnly: Boolean) {
@@ -135,19 +143,42 @@ class CorePersonReconciliationService(
     appendDifference(nomisCorePerson.religion, cprCorePerson.religion, differences, "religion")
     appendReligionsDifference(nomisCorePerson.religions, cprCorePerson.religions, differences, "religions")
 
-    return differences.takeIf { it.isNotEmpty() }?.let { MismatchCorePerson(prisonNumber = prisonerId.offenderNo, differences = it) }?.also { mismatch ->
-      log.info("CorePerson mismatch found {}", mismatch)
-      telemetryClient.trackEvent(
-        "$TELEMETRY_CORE_PERSON_PREFIX-mismatch",
-        telemetryOf(
-          "prisonNumber" to mismatch.prisonNumber,
-        ).also { telemetry ->
-          // only put the first 5 differences into telemetry
-          telemetry["differences5"] = differences.keys.asSequence().take(5).joinToString()
-          // booking will be 0 if reconciliation is run for a single prisoner, in which case ignore
-          prisonerId.bookingId.takeIf { it != 0L }?.let { telemetry["bookingId"] = it }
-        },
-      )
+    val excluded = excludedOffenderNos.contains(prisonerId.bookingId)
+    return if (!excluded) {
+      differences.takeIf { it.isNotEmpty() }
+        ?.let { MismatchCorePerson(prisonNumber = prisonerId.offenderNo, differences = it) }?.also { mismatch ->
+          log.info("CorePerson mismatch found {}", mismatch)
+          telemetryClient.trackEvent(
+            "$TELEMETRY_CORE_PERSON_PREFIX-mismatch",
+            telemetryOf(
+              "prisonNumber" to mismatch.prisonNumber,
+            ).also { telemetry ->
+              // only put the first 5 differences into telemetry
+              telemetry["differences5"] = differences.keys.asSequence().take(5).joinToString()
+              // booking will be 0 if reconciliation is run for a single prisoner, in which case ignore
+              prisonerId.bookingId.takeIf { it != 0L }?.let { telemetry["bookingId"] = it }
+            },
+          )
+        }
+    } else {
+      if (differences.isEmpty()) {
+        telemetryClient.trackEvent(
+          "$TELEMETRY_CORE_PERSON_PREFIX-excluded-offender-resolved",
+          mapOf(
+            "reason" to ("No reconciliation mismatches found for excluded bookingId ${prisonerId.bookingId}. Remove from exclusion file."),
+          ),
+          null,
+        )
+      } else {
+        telemetryClient.trackEvent(
+          "$TELEMETRY_CORE_PERSON_PREFIX-excluded-offender",
+          mapOf(
+            "reason" to ("Excluding reconciliation mismatches for bookingId ${prisonerId.bookingId}"),
+          ),
+          null,
+        )
+      }
+      null
     }
   }
 
