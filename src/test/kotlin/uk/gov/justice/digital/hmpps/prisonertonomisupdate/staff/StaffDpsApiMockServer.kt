@@ -126,7 +126,7 @@ class StaffDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
 fun dpsStaffDetails(nomisStaffId: Long = 1234) = PrisonUserReconciliationResponse(
   userId = UUID.randomUUID(),
-  staffId = nomisStaffId.toString(),
+  staffId = nomisStaffId,
   emails = listOf(
     PrisonUserEmail(
       emailId = 3456,
