@@ -8,7 +8,9 @@ import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.put
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import com.github.tomakehurst.wiremock.stubbing.Scenario
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingApiExtension.Companion.jsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingCourtCaseCloneResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CaseIdentifierResponse
@@ -77,37 +79,6 @@ class CourtSentencingNomisApiMockServer {
     stubPut("/prisoners/$offenderNo/sentencing/court-cases/$caseId")
   }
 
-  fun stubCourtCaseCreateWithError(offenderNo: String, status: Int = 500) {
-    stubPostWithError("/prisoners/$offenderNo/sentencing/court-cases", status)
-  }
-
-  fun stubCourtCaseCreateWithErrorFollowedBySlowSuccess(offenderNo: String, response: String) {
-    nomisApi.stubFor(
-      post("/prisoners/$offenderNo/sentencing/court-cases")
-        .inScenario("Retry NOMIS Court Case Scenario")
-        .whenScenarioStateIs(Scenario.STARTED)
-        .willReturn(
-          aResponse()
-            .withStatus(500) // request unsuccessful with status code 500
-            .withHeader("Content-Type", "application/json"),
-        )
-        .willSetStateTo("Cause NOMIS Court Case Success"),
-    )
-
-    nomisApi.stubFor(
-      post("/prisoners/$offenderNo/sentencing/court-cases")
-        .inScenario("Retry NOMIS Court Case Scenario")
-        .whenScenarioStateIs("Cause NOMIS Court Case Success")
-        .willReturn(
-          aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withBody(response)
-            .withStatus(200)
-            .withFixedDelay(1500),
-        ).willSetStateTo(Scenario.STARTED),
-    )
-  }
-
   fun stubHealthPing(status: Int) {
     nomisApi.stubFor(
       get("/health/ping").willReturn(
@@ -172,6 +143,41 @@ class CourtSentencingNomisApiMockServer {
     stubPost("/prisoners/$offenderNo/sentencing/court-cases/$courtCaseId/court-appearances", response = response)
   }
 
+  fun stubCourtAppearanceCreateSuccessAfterError(
+    offenderNo: String,
+    courtCaseId: Long,
+    errorStatus: HttpStatus,
+    errorResponse: ErrorResponse,
+    response: CreateCourtAppearanceResponse,
+  ) {
+    val scenarioName = "Retry Court appearance created"
+    val successScenario = "Cause NOMIS Court appearance Success"
+    nomisApi.stubFor(
+      post("/prisoners/$offenderNo/sentencing/court-cases/$courtCaseId/court-appearances")
+        .inScenario(scenarioName)
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withStatus(errorStatus.value())
+            .withHeader("Content-Type", "application/json")
+            .withBody(jsonMapper.writeValueAsString(errorResponse)),
+        )
+        .willSetStateTo(successScenario),
+    )
+
+    nomisApi.stubFor(
+      post("/prisoners/$offenderNo/sentencing/court-cases/$courtCaseId/court-appearances")
+        .inScenario(scenarioName)
+        .whenScenarioStateIs(successScenario)
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(jsonMapper.writeValueAsString(response))
+            .withStatus(201),
+        ).willSetStateTo(Scenario.STARTED),
+    )
+  }
+
   fun stubCourtAppearanceUpdate(offenderNo: String, courtCaseId: Long, courtAppearanceId: Long, response: UpdateCourtAppearanceResponse) {
     stubPutWithResponse("/prisoners/$offenderNo/sentencing/court-cases/$courtCaseId/court-appearances/$courtAppearanceId", response)
   }
@@ -182,10 +188,6 @@ class CourtSentencingNomisApiMockServer {
 
   fun stubCourtChargeUpdate(offenderChargeId: Long, courtAppearanceId: Long, offenderNo: String, courtCaseId: Long) {
     stubPut("/prisoners/$offenderNo/sentencing/court-cases/$courtCaseId/court-appearances/$courtAppearanceId/charges/$offenderChargeId")
-  }
-
-  fun stubCourtChargeCreateWithError(offenderNo: String, courtCaseId: Long, status: Int = 500) {
-    stubPostWithError("/prisoners/$offenderNo/sentencing/court-cases/{caseId}/charges", status)
   }
 
   fun stubCourtCaseDelete(offenderNo: String, nomisCourtCaseId: Long) {
@@ -308,36 +310,6 @@ class CourtSentencingNomisApiMockServer {
     ),
   )
 
-  private fun stubGetWithError(url: String, status: Int = 500) = nomisApi.stubFor(
-    get(url).willReturn(
-      aResponse()
-        .withHeader("Content-Type", "application/json")
-        .withBody(
-          """
-              {
-                "error": "some error"
-              }
-          """.trimIndent(),
-        )
-        .withStatus(status),
-    ),
-  )
-
-  private fun stubPostWithError(url: String, status: Int = 500) = nomisApi.stubFor(
-    post(url).willReturn(
-      aResponse()
-        .withHeader("Content-Type", "application/json")
-        .withBody(
-          """
-              {
-                "error": "some error"
-              }
-          """.trimIndent(),
-        )
-        .withStatus(status),
-    ),
-  )
-
   private fun stubPost(url: String, response: Any) = nomisApi.stubFor(
     post(url).willReturn(
       aResponse()
@@ -375,5 +347,4 @@ class CourtSentencingNomisApiMockServer {
   fun verify(pattern: RequestPatternBuilder) = nomisApi.verify(pattern)
   fun verify(count: Int, pattern: RequestPatternBuilder) = nomisApi.verify(count, pattern)
   fun postCountFor(url: String) = nomisApi.findAll(WireMock.postRequestedFor(WireMock.urlEqualTo(url))).count()
-  fun putCountFor(url: String) = nomisApi.findAll(WireMock.putRequestedFor(WireMock.urlEqualTo(url))).count()
 }

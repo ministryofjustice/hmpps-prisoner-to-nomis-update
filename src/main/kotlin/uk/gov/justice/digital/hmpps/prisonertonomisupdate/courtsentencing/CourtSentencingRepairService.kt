@@ -306,6 +306,7 @@ class CourtSentencingRepairService(
           courtCaseId = courtCaseId,
           courtAppearanceId = courtAppearanceId,
           source = "DPS",
+          isOnFutureCourtAppearance = false,
         ),
       ),
     )
