@@ -45,18 +45,20 @@ class FinanceNomisApiService(
     .retryWhen(backoffSpec)
     .awaitSingle()
 
+  suspend fun getPrisonerAccountsToReconcile(rootOffenderId: Long): PrisonerAggregatedAccountsDto = prisonerBalanceApi
+    .getAggregatedAccountsForId(rootOffenderId)
+    .retryWhen(backoffSpec)
+    .awaitSingle()
+
+  // Not currently used - TODO check and remove if not required
   suspend fun getPrisonerAccountDetails(rootOffenderId: Long, excludeZeroBalances: Boolean = false): PrisonerBalanceDto = prisonerBalanceApi
     .getPrisonerAccountDetails(rootOffenderId, excludeZeroBalances)
     .retryWhen(backoffSpec)
     .awaitSingle()
 
+  // Not currently used - TODO check and remove if not required
   suspend fun getPrisonerAccountSummary(rootOffenderId: Long): PrisonerBalanceSummaryDto = prisonerBalanceApi
     .getPrisonerAccountSummary(rootOffenderId)
-    .retryWhen(backoffSpec)
-    .awaitSingle()
-
-  suspend fun getPrisonerAccounts(rootOffenderId: Long): PrisonerAggregatedAccountsDto = prisonerBalanceApi
-    .getAggregatedAccountsForId(rootOffenderId)
     .retryWhen(backoffSpec)
     .awaitSingle()
 }
