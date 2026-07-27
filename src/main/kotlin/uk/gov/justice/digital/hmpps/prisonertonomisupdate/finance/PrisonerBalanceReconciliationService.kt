@@ -78,7 +78,7 @@ class PrisonerBalanceReconciliationService(
   )
 
   internal suspend fun checkPrisonerBalance(rootOffenderId: Long): MismatchPrisonerBalance? = runCatching {
-    val nomisAccounts = financeNomisApiService.getPrisonerAccounts(rootOffenderId)
+    val nomisAccounts = financeNomisApiService.getPrisonerAccountsToReconcile(rootOffenderId)
     val dpsAccounts = dpsApiService.getPrisonerAccounts(nomisAccounts.prisonNumber)
     val nomisFields = BalanceFields(
       prisonNumber = nomisAccounts.prisonNumber,
