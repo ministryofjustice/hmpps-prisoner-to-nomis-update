@@ -1127,6 +1127,9 @@ private fun Type.toNomisSanctionType(): HearingResultAwardRequest.SanctionType =
   Type.DAMAGES_OWED -> HearingResultAwardRequest.SanctionType.OTHER
 
   Type.PAYBACK -> HearingResultAwardRequest.SanctionType.PP
+
+  // for now map to other until DPS decide if they want new NOMIS punishments
+  Type.RESTRICTION_OF_SOCIAL_VISITS, Type.LOSS_OF_SOCIAL_VISITS -> HearingResultAwardRequest.SanctionType.OTHER
 }
 
 private fun HearingDto.toNomisUpdateHearing(nomisInternalLocationId: Long): UpdateHearingRequest = UpdateHearingRequest(
