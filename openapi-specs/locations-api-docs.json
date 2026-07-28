@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-06-24.895.d022207"
+    "version" : "2026-07-27.1016.0cce370"
   },
   "servers" : [ {
     "url" : "/",
@@ -635,6 +635,89 @@
           },
           "403" : {
             "description" : "Missing required role. Requires the MAINTAIN_LOCATIONS role with write scope.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Location not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/locations/{id}/unarchive" : {
+      "put" : {
+        "tags" : [ "Locations" ],
+        "summary" : "Un-archive (restore) a permanently deactivated location",
+        "description" : "Restores an archived location back to a temporarily inactive state - visible again but not available for use. Where certification is active for the prison the cell certificate is regenerated via an auto-approved approval step. Requires role UNARCHIVE_LOCATIONS and write scope.",
+        "operationId" : "unarchiveLocation",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "The location Id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The location Id",
+            "example" : "de91dfa7-821f-4552-a427-bf2f32eafeb0"
+          },
+          "example" : "de91dfa7-821f-4552-a427-bf2f32eafeb0"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UnArchiveLocationRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Returns the restored, temporarily inactive location",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Location"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid Request, e.g. the location is not archived",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the UNARCHIVE_LOCATIONS role with write scope.",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -1532,6 +1615,231 @@
         }
       }
     },
+    "/locations/property/{id}" : {
+      "get" : {
+        "tags" : [ "Non-residential functions" ],
+        "summary" : "Return a single property storage location, with capacity, by id",
+        "description" : "Returns the property location if it can hold property (has a PROPERTY non-residential usage), otherwise 404. Lets callers confirm a location can store property without knowing how that is modelled here. Requires role VIEW_LOCATIONS",
+        "operationId" : "getPropertyLocation",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "The location id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The location id",
+            "example" : "de91dfa7-821f-4552-a427-bf2f32eafeb0"
+          },
+          "example" : "de91dfa7-821f-4552-a427-bf2f32eafeb0"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns the property location",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PropertyLocationDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the VIEW_LOCATIONS role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not found, or the location cannot store property",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put" : {
+        "tags" : [ "Non-residential functions" ],
+        "summary" : "Update a property storage location's name and/or capacity",
+        "description" : "Capacity stays on the PROPERTY usage so it continues to sync to NOMIS. Requires role MANAGE_PROPERTY_LOCATIONS and write scope",
+        "operationId" : "updatePropertyLocation",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "The location Id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The location Id",
+            "example" : "de91dfa7-821f-4552-a427-bf2f32eafeb0"
+          },
+          "example" : "de91dfa7-821f-4552-a427-bf2f32eafeb0"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdatePropertyLocationRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Returns the updated property location",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PropertyLocationDto"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the MANAGE_PROPERTY_LOCATIONS role with write scope.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Location not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "A location with this name already exists in the prison",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "Non-residential functions" ],
+        "summary" : "Remove the property designation from a location",
+        "description" : "Drops the location's PROPERTY usage so it can no longer store property (the location itself is not deleted). Reflected to NOMIS as a removed usage. Requires role MANAGE_PROPERTY_LOCATIONS and write scope",
+        "operationId" : "removePropertyLocation",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "The location Id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The location Id",
+            "example" : "de91dfa7-821f-4552-a427-bf2f32eafeb0"
+          },
+          "example" : "de91dfa7-821f-4552-a427-bf2f32eafeb0"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns the location the designation was removed from",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PropertyLocationDto"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "The location is not a property storage location",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the MANAGE_PROPERTY_LOCATIONS role with write scope.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Location not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/locations/non-residential/{id}" : {
       "get" : {
         "tags" : [ "Non-residential functions" ],
@@ -1777,10 +2085,83 @@
         }
       }
     },
+    "/locations/non-residential/{id}/hide" : {
+      "put" : {
+        "tags" : [ "Non-residential functions" ],
+        "summary" : "Removes a parent non-residential location from the non-residential locations list",
+        "description" : "Hides the location from the list shown to users maintaining non-residential locations. This is not a deactivation: the location keeps its status, its child locations are unaffected and it remains available to anything that looks it up directly. Only permitted for a parent location that no service uses - archive a leaf location instead. Requires role MAINTAIN_LOCATIONS and write scope",
+        "operationId" : "hideNonResidentialLocationFromList",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "The non-residential location Id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The non-residential location Id",
+            "example" : "de91dfa7-821f-4552-a427-bf2f32eafeb0"
+          },
+          "example" : "de91dfa7-821f-4552-a427-bf2f32eafeb0"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns the hidden location",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/NonResidentialLocationDTO"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the MAINTAIN_LOCATIONS role with write scope.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Data not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Location is a leaf location, is still used by a service, or is already hidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/locations/edit-cells" : {
       "put" : {
         "tags" : [ "Locations" ],
-        "summary" : "Updates a list of DRAFT cells below a parent DRAFT location",
+        "summary" : "Updates a list of DRAFT cells below a parent location",
         "description" : "Requires role MAINTAIN_LOCATIONS and write scope",
         "operationId" : "updateCells",
         "requestBody" : {
@@ -2942,6 +3323,157 @@
         }
       }
     },
+    "/locations/prison/{prisonId}/property" : {
+      "get" : {
+        "tags" : [ "Non-residential functions" ],
+        "summary" : "Return the leaf property storage locations, with capacity, for this prison",
+        "description" : "Returns every location that has a PROPERTY non-residential usage (any location type), leaf-only so aggregate parents are not double-counted, each carrying the capacity of its PROPERTY usage. Requires role VIEW_LOCATIONS",
+        "operationId" : "getPropertyLocations",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "description" : "Prison Id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prison Id",
+            "example" : "MDI",
+            "maxLength" : 5,
+            "minLength" : 3,
+            "pattern" : "^[A-Z]{2}I|ZZGHI$"
+          },
+          "example" : "MDI"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns property locations",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/PropertyLocationDto"
+                  }
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the VIEW_LOCATIONS role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [ "Non-residential functions" ],
+        "summary" : "Create a new property storage location for a prison",
+        "description" : "Creates a top-level BOX location with an auto-generated code and a PROPERTY usage carrying the given capacity. Requires role MANAGE_PROPERTY_LOCATIONS and write scope",
+        "operationId" : "createPropertyLocation",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "description" : "Prison Id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prison Id",
+            "example" : "MDI",
+            "maxLength" : 5,
+            "minLength" : 3,
+            "pattern" : "^[A-Z]{2}I|ZZGHI$"
+          },
+          "example" : "MDI"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreatePropertyLocationRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Returns the created property location",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PropertyLocationDto"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the MANAGE_PROPERTY_LOCATIONS role with write scope.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "A location with this name already exists in the prison",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/locations/non-residential" : {
       "post" : {
         "tags" : [ "Non-residential functions" ],
@@ -3164,6 +3696,73 @@
           },
           "403" : {
             "description" : "Missing required role. Requires the MAINTAIN_LOCATIONS role with write scope.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/locations/non-residential/batch" : {
+      "post" : {
+        "tags" : [ "Non-residential functions" ],
+        "summary" : "Returns non-residential location information for the supplied ids in one call",
+        "description" : "Resolves several locations at once. Only ids that are non-residential locations are returned; residential or unknown ids are silently omitted. Requires role VIEW_LOCATIONS",
+        "operationId" : "getNonResidentialLocationsByIds",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string",
+                  "format" : "uuid"
+                }
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Returns the matching non-residential locations",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/NonResidentialLocationDTO"
+                  }
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the VIEW_LOCATIONS role",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -5642,111 +6241,6 @@
         }
       }
     },
-    "/locations/prison/{prisonId}/non-residential-usage-type/{usageType}" : {
-      "get" : {
-        "tags" : [ "Non-residential functions" ],
-        "summary" : "Return non-residential locations by usage for this prison",
-        "description" : "Requires role VIEW_LOCATIONS",
-        "operationId" : "getLocationsByPrisonAndNonResidentialUsageType",
-        "parameters" : [ {
-          "name" : "prisonId",
-          "in" : "path",
-          "description" : "Prison Id",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "description" : "Prison Id",
-            "example" : "MDI",
-            "maxLength" : 5,
-            "minLength" : 3,
-            "pattern" : "^[A-Z]{2}I|ZZGHI$"
-          },
-          "example" : "MDI"
-        }, {
-          "name" : "usageType",
-          "in" : "path",
-          "description" : "Usage type",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "description" : "Usage type",
-            "enum" : [ "ADJUDICATION_HEARING", "APPOINTMENT", "MOVEMENT", "OCCURRENCE", "PROGRAMMES_ACTIVITIES", "PROPERTY", "VISIT", "OTHER" ],
-            "example" : "APPOINTMENTS"
-          },
-          "example" : "APPOINTMENTS"
-        }, {
-          "name" : "sortByLocalName",
-          "in" : "query",
-          "required" : false,
-          "schema" : {
-            "type" : "boolean",
-            "default" : false
-          }
-        }, {
-          "name" : "formatLocalName",
-          "in" : "query",
-          "required" : false,
-          "schema" : {
-            "type" : "boolean",
-            "default" : false
-          }
-        }, {
-          "name" : "filterParents",
-          "in" : "query",
-          "required" : false,
-          "schema" : {
-            "type" : "boolean",
-            "default" : true
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Returns non-residential locations",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/Location"
-                  }
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Invalid Request",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Missing required role. Requires the VIEW_LOCATIONS role",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        },
-        "deprecated" : true
-      }
-    },
     "/locations/prison/{prisonId}/location-type/{locationType}" : {
       "get" : {
         "tags" : [ "Locations" ],
@@ -6128,7 +6622,7 @@
     "/locations/non-residential/summary/{prisonId}" : {
       "get" : {
         "tags" : [ "Non-residential functions" ],
-        "summary" : "Get a paged list of non-residential locations for a prison (excluding RTU and BOXes)",
+        "summary" : "Get a paged list of non-residential locations for a prison (excluding RTU and property-only locations)",
         "description" : "Requires role VIEW_LOCATIONS",
         "operationId" : "getPaginatedNonResidentialList",
         "parameters" : [ {
@@ -6183,14 +6677,14 @@
           },
           "example" : false
         }, {
-          "name" : "includeBoxes",
+          "name" : "includeProperty",
           "in" : "query",
-          "description" : "Include box locations",
+          "description" : "Include property-only locations",
           "required" : false,
           "schema" : {
             "type" : "boolean",
             "default" : false,
-            "description" : "Include BOX types of locations",
+            "description" : "Include locations that can only store property (sole usage of PROPERTY). Locations used for property alongside another service are always returned.",
             "example" : false
           },
           "example" : false
@@ -6222,6 +6716,20 @@
             }
           },
           "example" : "[ACTIVITIES_APPOINTMENTS,ADJUDICATIONS]"
+        }, {
+          "name" : "serviceType",
+          "in" : "query",
+          "description" : "Filter by service type. More granular than serviceFamilyType - filters to individual services. If both serviceType and serviceFamilyType are supplied, the two are combined (union).",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "default" : null,
+            "items" : {
+              "type" : "string",
+              "enum" : [ "APPOINTMENT", "PROGRAMMES_AND_ACTIVITIES", "VIDEO_LINK", "HEARING_LOCATION", "LOCATION_OF_INCIDENT", "INTERNAL_MOVEMENTS", "OFFICIAL_VISITS", "USE_OF_FORCE", "VIDEO_ENABLED" ]
+            }
+          },
+          "example" : "[HEARING_LOCATION,APPOINTMENT]"
         }, {
           "name" : "page",
           "in" : "query",
@@ -7353,6 +7861,52 @@
         }
       }
     },
+    "/constants/approval-type" : {
+      "get" : {
+        "tags" : [ "Constants" ],
+        "summary" : "Get approval type reference data",
+        "description" : "Requires the READ_LOCATION_REFERENCE_DATA role.",
+        "operationId" : "approvalTypeConstants",
+        "responses" : {
+          "200" : {
+            "description" : "Returns location reference data",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object",
+                  "additionalProperties" : {
+                    "type" : "array",
+                    "items" : {
+                      "$ref" : "#/components/schemas/Constant"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the READ_LOCATION_REFERENCE_DATA role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/constants/accommodation-type" : {
       "get" : {
         "tags" : [ "Constants" ],
@@ -7516,6 +8070,67 @@
           },
           "403" : {
             "description" : "Missing required role. Requires the LOCATION_CERTIFICATION role.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/certification/location/{id}/pending-approvals-below" : {
+      "get" : {
+        "tags" : [ "Certification" ],
+        "summary" : "Check whether any location below the given location has a pending certification approval request",
+        "description" : "Used to block archiving a location while a child location has an in-flight change request. Requires role LOCATION_CERTIFICATION",
+        "operationId" : "getPendingApprovalsBelow",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "Location ID being archived",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "example" : "2475f250-434a-4257-afe7-b911f1773a4d"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns whether a pending approval exists below the location, with the pending location and its parent",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PendingApprovalsBelowDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the LOCATION_CERTIFICATION role.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Location not found",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -8466,7 +9081,7 @@
           "attributeCode" : {
             "type" : "string",
             "description" : "Attribute Code",
-            "enum" : [ "STATUS", "LOCATION_CREATED", "CERTIFICATION", "ACCOMMODATION_TYPE", "USED_FOR", "SPECIALIST_CELL_TYPE", "CONVERTED_CELL_TYPE", "WORKING_CAPACITY", "MAX_CAPACITY", "CERTIFIED_CAPACITY", "DEACTIVATION_REASON", "PROPOSED_REACTIVATION_DATE", "PLANET_FM_NUMBER", "LOCAL_NAME", "CELL_MARK", "IN_CELL_SANITATION", "USAGE", "NON_RESIDENTIAL_CAPACITY", "INTERNAL_MOVEMENT_ALLOWED", "USED_BY_SERVICE", "CODE", "LOCATION_TYPE", "RESIDENTIAL_HOUSING_TYPE", "PARENT_LOCATION", "ORDER_WITHIN_PARENT_LOCATION", "COMMENTS", "ATTRIBUTES", "PERMANENT_DEACTIVATION", "ACTIVE", "DEACTIVATED_DATE", "DEACTIVATED_REASON", "DEACTIVATED_REASON_DESCRIPTION" ]
+            "enum" : [ "STATUS", "LOCATION_CREATED", "CERTIFICATION", "ACCOMMODATION_TYPE", "USED_FOR", "SPECIALIST_CELL_TYPE", "CONVERTED_CELL_TYPE", "WORKING_CAPACITY", "MAX_CAPACITY", "CERTIFIED_CAPACITY", "DEACTIVATION_REASON", "PROPOSED_REACTIVATION_DATE", "PLANET_FM_NUMBER", "LOCAL_NAME", "CELL_MARK", "IN_CELL_SANITATION", "USAGE", "NON_RESIDENTIAL_CAPACITY", "INTERNAL_MOVEMENT_ALLOWED", "USED_BY_SERVICE", "HIDDEN_FROM_LIST", "CODE", "LOCATION_TYPE", "RESIDENTIAL_HOUSING_TYPE", "PARENT_LOCATION", "ORDER_WITHIN_PARENT_LOCATION", "COMMENTS", "ATTRIBUTES", "PERMANENT_DEACTIVATION", "ACTIVE", "DEACTIVATED_DATE", "DEACTIVATED_REASON", "DEACTIVATED_REASON_DESCRIPTION" ]
           },
           "attribute" : {
             "type" : "string",
@@ -8616,6 +9231,33 @@
           }
         },
         "required" : [ "convertedCellType" ]
+      },
+      "UnArchiveLocationRequest" : {
+        "type" : "object",
+        "description" : "Request to un-archive (restore) a permanently deactivated location back to a temporarily inactive state",
+        "properties" : {
+          "deactivationReason" : {
+            "type" : "string",
+            "description" : "Reason the restored location will be temporarily inactive for",
+            "enum" : [ "DAMAGED", "DAMP", "MAINTENANCE", "MOTHBALLED", "PEST", "REFURBISHMENT", "SECURITY_SEALED", "STAFF_SHORTAGE", "NEW_BUILD", "CONVERT_CELL_TO_ROOM", "OTHER" ],
+            "example" : "MOTHBALLED"
+          },
+          "deactivationReasonDescription" : {
+            "type" : [ "string", "null" ],
+            "description" : "Additional information on the deactivation, for OTHER DeactivatedReason must be provided",
+            "example" : "Archived in error",
+            "maxLength" : 255,
+            "minLength" : 0
+          },
+          "reason" : {
+            "type" : [ "string", "null" ],
+            "description" : "Explanation of why the location is being un-archived, recorded for audit",
+            "example" : "Wing was archived in error",
+            "maxLength" : 200,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "deactivationReason" ]
       },
       "PermanentDeactivationLocationRequest" : {
         "type" : "object",
@@ -8809,6 +9451,71 @@
         },
         "required" : [ "cellMark" ]
       },
+      "UpdatePropertyLocationRequest" : {
+        "type" : "object",
+        "description" : "Request to update a property storage location's name and/or capacity. Omitted fields are left unchanged.",
+        "properties" : {
+          "localName" : {
+            "type" : [ "string", "null" ],
+            "description" : "New name to display for the location",
+            "example" : "Reception property store",
+            "maxLength" : 80,
+            "minLength" : 1
+          },
+          "capacity" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int32",
+            "description" : "New number of property containers this location can hold",
+            "example" : 12,
+            "minimum" : 0
+          }
+        }
+      },
+      "PropertyLocationDto" : {
+        "type" : "object",
+        "description" : "A leaf location that can hold prisoner property, with the capacity of its PROPERTY usage",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "Location Id",
+            "example" : "2475f250-434a-4257-afe7-b911f1773a4d"
+          },
+          "prisonId" : {
+            "type" : "string",
+            "description" : "Prison ID",
+            "example" : "MDI"
+          },
+          "code" : {
+            "type" : "string",
+            "description" : "Location Code",
+            "example" : "PROP1"
+          },
+          "pathHierarchy" : {
+            "type" : "string",
+            "description" : "Full path of the location within the prison",
+            "example" : "PROP-1-001"
+          },
+          "localName" : {
+            "type" : [ "string", "null" ],
+            "description" : "Description to display for the location",
+            "example" : "Property store 1"
+          },
+          "locationType" : {
+            "type" : "string",
+            "description" : "Location Type",
+            "enum" : [ "WING", "SPUR", "LANDING", "CELL", "ROOM", "HOLDING_AREA", "MOVEMENT_AREA", "RESIDENTIAL_UNIT", "EXTERNAL_GROUNDS", "HOLDING_CELL", "MEDICAL", "GROUP", "OFFICE", "ADMINISTRATION_AREA", "BOOTH", "BOX", "RETURN_TO_UNIT", "CLASSROOM", "TRAINING_AREA", "TRAINING_ROOM", "EXERCISE_AREA", "AREA", "SPORTS", "WORKSHOP", "INSIDE_PARTY", "OUTSIDE_PARTY", "FAITH_AREA", "ADJUDICATION_ROOM", "APPOINTMENTS", "VISITS", "VIDEO_LINK", "ASSOCIATION", "INTERNAL_GROUNDS", "INTERVIEW", "LOCATION", "POSITION", "SHELF", "STORE", "TABLE" ],
+            "example" : "BOX"
+          },
+          "capacity" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int32",
+            "description" : "Capacity of this location's PROPERTY usage - how many property containers it can hold. May be null if not configured.",
+            "example" : 10
+          }
+        },
+        "required" : [ "code", "id", "locationType", "pathHierarchy", "prisonId" ]
+      },
       "CreateOrUpdateNonResidentialLocationRequest" : {
         "type" : "object",
         "description" : "Request to create or update non-residential location",
@@ -8836,6 +9543,55 @@
           }
         },
         "required" : [ "servicesUsingLocation" ]
+      },
+      "LocationSummary" : {
+        "type" : "object",
+        "description" : "Location Hierarchy Summary",
+        "properties" : {
+          "id" : {
+            "type" : [ "string", "null" ],
+            "format" : "uuid",
+            "description" : "ID of location",
+            "example" : "c73e8ad1-191b-42b8-bfce-2550cc858dab"
+          },
+          "prisonId" : {
+            "type" : "string",
+            "description" : "Prison ID where the location is situated",
+            "example" : "MDI",
+            "maxLength" : 5,
+            "minLength" : 3,
+            "pattern" : "^[A-Z]{2}I|ZZGHI$"
+          },
+          "code" : {
+            "type" : "string",
+            "description" : "Code of the location",
+            "example" : "001",
+            "minLength" : 1
+          },
+          "type" : {
+            "type" : "string",
+            "description" : "Location type",
+            "enum" : [ "WING", "SPUR", "LANDING", "CELL", "ROOM", "HOLDING_AREA", "MOVEMENT_AREA", "RESIDENTIAL_UNIT", "EXTERNAL_GROUNDS", "HOLDING_CELL", "MEDICAL", "GROUP", "OFFICE", "ADMINISTRATION_AREA", "BOOTH", "BOX", "RETURN_TO_UNIT", "CLASSROOM", "TRAINING_AREA", "TRAINING_ROOM", "EXERCISE_AREA", "AREA", "SPORTS", "WORKSHOP", "INSIDE_PARTY", "OUTSIDE_PARTY", "FAITH_AREA", "ADJUDICATION_ROOM", "APPOINTMENTS", "VISITS", "VIDEO_LINK", "ASSOCIATION", "INTERNAL_GROUNDS", "INTERVIEW", "LOCATION", "POSITION", "SHELF", "STORE", "TABLE" ],
+            "example" : "WING"
+          },
+          "localName" : {
+            "type" : [ "string", "null" ],
+            "description" : "Alternative description to display for location",
+            "example" : "Wing A"
+          },
+          "pathHierarchy" : {
+            "type" : [ "string", "null" ],
+            "description" : "Full path of the location within the prison",
+            "example" : "A-1-001"
+          },
+          "level" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Current Level within hierarchy, starts at 1, e.g Wing = 1",
+            "examples" : [ 1, 2, 3 ]
+          }
+        },
+        "required" : [ "code", "level", "pathHierarchy", "prisonId", "type" ]
       },
       "NonResidentialLocationDTO" : {
         "type" : "object",
@@ -8943,13 +9699,30 @@
             "description" : "Parent Location Id",
             "example" : "57718979-573c-433a-9e51-2d83f887c11c"
           },
+          "locationHierarchy" : {
+            "type" : [ "array", "null" ],
+            "description" : "Location hierarchy (ancestors and self), top to bottom",
+            "items" : {
+              "$ref" : "#/components/schemas/LocationSummary"
+            }
+          },
+          "hiddenFromList" : {
+            "type" : "boolean",
+            "description" : "Indicates a user has removed this location from the non-residential locations list. Display only - the location is not deactivated and remains available to any service using it.",
+            "example" : false
+          },
+          "canBeHiddenFromList" : {
+            "type" : "boolean",
+            "description" : "Indicates this location can be removed from the non-residential locations list, i.e. it is a parent location that no service uses",
+            "example" : false
+          },
           "key" : {
             "type" : "string",
             "description" : "Key for a location",
             "example" : "MDI-ADJU"
           }
         },
-        "required" : [ "code", "id", "isLeafLevel", "key", "level", "localName", "locationType", "pathHierarchy", "permanentlyInactive", "prisonId", "status", "usedByGroupedServices", "usedByServices" ]
+        "required" : [ "canBeHiddenFromList", "code", "hiddenFromList", "id", "isLeafLevel", "key", "level", "localName", "locationType", "pathHierarchy", "permanentlyInactive", "prisonId", "status", "usedByGroupedServices", "usedByServices" ]
       },
       "CellDraftUpdateRequest" : {
         "type" : "object",
@@ -9364,7 +10137,7 @@
           "approvalType" : {
             "type" : "string",
             "description" : "Type of approval",
-            "enum" : [ "SIGNED_OP_CAP", "DRAFT", "DEACTIVATION", "PERMANENT_DEACTIVATION", "CELL_MARK", "CELL_SANITATION", "REACTIVATION", "CAPACITY_CHANGE", "SPECIALIST_CELL_TYPE", "CONVERT_ROOM_TO_CELL", "CONVERT_CELL_TO_ROOM", "PRISON_BASELINE", "CELL_CERTIFICATE_UPLOAD" ],
+            "enum" : [ "SIGNED_OP_CAP", "DRAFT", "DEACTIVATION", "PERMANENT_DEACTIVATION", "UN_ARCHIVE", "CELL_MARK", "CELL_SANITATION", "REACTIVATION", "CAPACITY_CHANGE", "SPECIALIST_CELL_TYPE", "CONVERT_ROOM_TO_CELL", "CONVERT_CELL_TO_ROOM", "PRISON_BASELINE", "CELL_CERTIFICATE_UPLOAD" ],
             "example" : "SIGNED_OP_CAP"
           },
           "prisonId" : {
@@ -10398,6 +11171,27 @@
         },
         "required" : [ "accommodationType", "code", "isCell", "locationType", "prisonId" ]
       },
+      "CreatePropertyLocationRequest" : {
+        "type" : "object",
+        "description" : "Request to create a new property storage location. A top-level BOX location is created with a generated code and a PROPERTY usage carrying the capacity.",
+        "properties" : {
+          "localName" : {
+            "type" : "string",
+            "description" : "Name to display for the location",
+            "example" : "Reception property store",
+            "maxLength" : 80,
+            "minLength" : 1
+          },
+          "capacity" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "How many property containers this location can hold",
+            "example" : 10,
+            "minimum" : 0
+          }
+        },
+        "required" : [ "capacity", "localName" ]
+      },
       "CreateNonResidentialLocationRequest" : {
         "type" : "object",
         "description" : "Request to create a non-residential location",
@@ -10994,6 +11788,12 @@
             "type" : [ "string", "null" ],
             "description" : "Last Movement Type Code of prisoner",
             "example" : "CRT"
+          },
+          "lastMovementDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Date of the last movement of the prisoner",
+            "example" : "2023-05-01"
           }
         },
         "required" : [ "firstName", "gender", "inOutStatus", "lastName", "prisonerNumber", "status" ]
@@ -11107,6 +11907,11 @@
             "format" : "int32",
             "description" : "No cell allocated"
           },
+          "numOvernights" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Prisoners currently on overnight leave"
+          },
           "totals" : {
             "$ref" : "#/components/schemas/LocationRollCount",
             "description" : "Totals"
@@ -11119,7 +11924,7 @@
             }
           }
         },
-        "required" : [ "locations", "numArrivedToday", "numCurrentPopulation", "numInReception", "numNoCellAllocated", "numOutToday", "numStillToArrive", "numUnlockRollToday", "prisonId", "totals" ]
+        "required" : [ "locations", "numArrivedToday", "numCurrentPopulation", "numInReception", "numNoCellAllocated", "numOutToday", "numOvernights", "numStillToArrive", "numUnlockRollToday", "prisonId", "totals" ]
       },
       "ResidentialLocationRollCount" : {
         "type" : "object",
@@ -11190,55 +11995,6 @@
           }
         },
         "required" : [ "certified", "fullLocationPath", "key", "locationCode", "locationId", "locationType", "overcrowded", "overcrowdedBy", "rollCount" ]
-      },
-      "LocationSummary" : {
-        "type" : "object",
-        "description" : "Location Hierarchy Summary",
-        "properties" : {
-          "id" : {
-            "type" : [ "string", "null" ],
-            "format" : "uuid",
-            "description" : "ID of location",
-            "example" : "c73e8ad1-191b-42b8-bfce-2550cc858dab"
-          },
-          "prisonId" : {
-            "type" : "string",
-            "description" : "Prison ID where the location is situated",
-            "example" : "MDI",
-            "maxLength" : 5,
-            "minLength" : 3,
-            "pattern" : "^[A-Z]{2}I|ZZGHI$"
-          },
-          "code" : {
-            "type" : "string",
-            "description" : "Code of the location",
-            "example" : "001",
-            "minLength" : 1
-          },
-          "type" : {
-            "type" : "string",
-            "description" : "Location type",
-            "enum" : [ "WING", "SPUR", "LANDING", "CELL", "ROOM", "HOLDING_AREA", "MOVEMENT_AREA", "RESIDENTIAL_UNIT", "EXTERNAL_GROUNDS", "HOLDING_CELL", "MEDICAL", "GROUP", "OFFICE", "ADMINISTRATION_AREA", "BOOTH", "BOX", "RETURN_TO_UNIT", "CLASSROOM", "TRAINING_AREA", "TRAINING_ROOM", "EXERCISE_AREA", "AREA", "SPORTS", "WORKSHOP", "INSIDE_PARTY", "OUTSIDE_PARTY", "FAITH_AREA", "ADJUDICATION_ROOM", "APPOINTMENTS", "VISITS", "VIDEO_LINK", "ASSOCIATION", "INTERNAL_GROUNDS", "INTERVIEW", "LOCATION", "POSITION", "SHELF", "STORE", "TABLE" ],
-            "example" : "WING"
-          },
-          "localName" : {
-            "type" : [ "string", "null" ],
-            "description" : "Alternative description to display for location",
-            "example" : "Wing A"
-          },
-          "pathHierarchy" : {
-            "type" : [ "string", "null" ],
-            "description" : "Full path of the location within the prison",
-            "example" : "A-1-001"
-          },
-          "level" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "Current Level within hierarchy, starts at 1, e.g Wing = 1",
-            "examples" : [ 1, 2, 3 ]
-          }
-        },
-        "required" : [ "code", "level", "pathHierarchy", "prisonId", "type" ]
       },
       "PrisonCellRollCount" : {
         "type" : "object",
@@ -11325,14 +12081,14 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "unpaged" : {
-            "type" : "boolean"
-          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
           },
           "paged" : {
+            "type" : "boolean"
+          },
+          "unpaged" : {
             "type" : "boolean"
           }
         }
@@ -11839,6 +12595,76 @@
           }
         },
         "required" : [ "description", "key", "values" ]
+      },
+      "PendingApprovalLocationDto" : {
+        "type" : "object",
+        "description" : "A location with a pending certification approval request, including its parent",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The id of the location with the pending approval request",
+            "example" : "2475f250-434a-4257-afe7-b911f1773a4d"
+          },
+          "key" : {
+            "type" : "string",
+            "description" : "The business key of the location with the pending approval request",
+            "example" : "LEI-B-1-001"
+          },
+          "localName" : {
+            "type" : [ "string", "null" ],
+            "description" : "The local name of the location with the pending approval request, if any",
+            "example" : "B-1-001"
+          },
+          "locationType" : {
+            "type" : "string",
+            "description" : "The type of the location with the pending approval request",
+            "enum" : [ "WING", "SPUR", "LANDING", "CELL", "ROOM", "HOLDING_AREA", "MOVEMENT_AREA", "RESIDENTIAL_UNIT", "EXTERNAL_GROUNDS", "HOLDING_CELL", "MEDICAL", "GROUP", "OFFICE", "ADMINISTRATION_AREA", "BOOTH", "BOX", "RETURN_TO_UNIT", "CLASSROOM", "TRAINING_AREA", "TRAINING_ROOM", "EXERCISE_AREA", "AREA", "SPORTS", "WORKSHOP", "INSIDE_PARTY", "OUTSIDE_PARTY", "FAITH_AREA", "ADJUDICATION_ROOM", "APPOINTMENTS", "VISITS", "VIDEO_LINK", "ASSOCIATION", "INTERNAL_GROUNDS", "INTERVIEW", "LOCATION", "POSITION", "SHELF", "STORE", "TABLE" ],
+            "example" : "CELL"
+          },
+          "parentId" : {
+            "type" : [ "string", "null" ],
+            "format" : "uuid",
+            "description" : "The id of the parent of the location with the pending approval request",
+            "example" : "0199e835-9eb8-7183-ab7e-f79149e5c1f8"
+          },
+          "parentKey" : {
+            "type" : [ "string", "null" ],
+            "description" : "The business key of the parent location",
+            "example" : "LEI-B-1"
+          },
+          "parentLocalName" : {
+            "type" : [ "string", "null" ],
+            "description" : "The local name of the parent location, if any",
+            "example" : "Landing B-1"
+          },
+          "parentLocationType" : {
+            "type" : [ "string", "null" ],
+            "description" : "The type of the parent location",
+            "enum" : [ "WING", "SPUR", "LANDING", "CELL", "ROOM", "HOLDING_AREA", "MOVEMENT_AREA", "RESIDENTIAL_UNIT", "EXTERNAL_GROUNDS", "HOLDING_CELL", "MEDICAL", "GROUP", "OFFICE", "ADMINISTRATION_AREA", "BOOTH", "BOX", "RETURN_TO_UNIT", "CLASSROOM", "TRAINING_AREA", "TRAINING_ROOM", "EXERCISE_AREA", "AREA", "SPORTS", "WORKSHOP", "INSIDE_PARTY", "OUTSIDE_PARTY", "FAITH_AREA", "ADJUDICATION_ROOM", "APPOINTMENTS", "VISITS", "VIDEO_LINK", "ASSOCIATION", "INTERNAL_GROUNDS", "INTERVIEW", "LOCATION", "POSITION", "SHELF", "STORE", "TABLE" ],
+            "example" : "LANDING"
+          }
+        },
+        "required" : [ "id", "key", "locationType" ]
+      },
+      "PendingApprovalsBelowDto" : {
+        "type" : "object",
+        "description" : "Pending certification approval requests on locations below a given location",
+        "properties" : {
+          "hasPendingBelow" : {
+            "type" : "boolean",
+            "description" : "True if any location below the requested location has a pending certification approval request",
+            "example" : true
+          },
+          "pendingLocations" : {
+            "type" : "array",
+            "description" : "The locations below the requested location that have a pending certification approval request",
+            "items" : {
+              "$ref" : "#/components/schemas/PendingApprovalLocationDto"
+            }
+          }
+        },
+        "required" : [ "hasPendingBelow", "pendingLocations" ]
       },
       "CellCertificateDashboardDto" : {
         "type" : "object",
