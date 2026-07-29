@@ -202,7 +202,6 @@ class CorePersonReconciliationService(
           n.current != cpr.current -> "$i-current:nomis=${n.current}, cpr=${cpr.current}"
           n.createUsername != cpr.createUsername -> "$i-createUser:nomis=${n.createUsername}, cpr=${cpr.createUsername}"
           n.createDatetime.notEqualsIgnoringNanos(cpr.createDatetime) -> "$i-createDatetime:nomis=${n.createDatetime}, cpr=${cpr.createDatetime}"
-          n.modifyUsername != cpr.modifyUsername -> "$i-modifyUser:nomis=${n.modifyUsername}, cpr=${cpr.modifyUsername}"
           n.modifyDatetime.notEqualsIgnoringNanos(cpr.modifyDatetime) -> "$i-modifyDatetime:nomis=${n.modifyDatetime}, cpr=${cpr.modifyDatetime}"
           else -> null
         }
