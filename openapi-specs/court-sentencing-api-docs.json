@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-07-24.2242.3cd302e"
+    "version" : "2026-07-28.2252.6c7779f"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -7142,7 +7142,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:28.245088578"
+            "example" : "07:44:26.0587271"
           },
           "outcomeDispositionCode" : {
             "type" : [ "string", "null" ]
@@ -7277,7 +7277,10 @@
             "format" : "date"
           },
           "homeOfficeReferenceNumber" : {
-            "type" : [ "string", "null" ]
+            "type" : [ "string", "null" ],
+            "maxLength" : 16,
+            "minLength" : 5,
+            "pattern" : "^[A-Za-z0-9/]+$"
           },
           "noLongerOfInterestReason" : {
             "type" : [ "string", "null" ],
@@ -7517,7 +7520,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:28.245088578"
+            "example" : "07:44:26.0587271"
           },
           "courtCode" : {
             "type" : "string"
@@ -9223,6 +9226,23 @@
         },
         "required" : [ "courtCaseReference", "hearingDate", "hearingId", "hearingType" ]
       },
+      "ThingToDo" : {
+        "type" : "object",
+        "properties" : {
+          "type" : {
+            "type" : "string",
+            "enum" : [ "NEW_REMAND_WARRANT", "NEW_SENTENCING_WARRANT" ]
+          },
+          "hearingThingsToDoData" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/HearingThingsToDoData"
+            }, {
+              "type" : "null"
+            } ]
+          }
+        },
+        "required" : [ "type" ]
+      },
       "ThingsToDo" : {
         "type" : "object",
         "properties" : {
@@ -9232,16 +9252,8 @@
           "thingsToDo" : {
             "type" : "array",
             "items" : {
-              "type" : "string",
-              "enum" : [ "NEW_REMAND_WARRANT", "NEW_SENTENCING_WARRANT" ]
+              "$ref" : "#/components/schemas/ThingToDo"
             }
-          },
-          "hearingThingsToDoData" : {
-            "oneOf" : [ {
-              "$ref" : "#/components/schemas/HearingThingsToDoData"
-            }, {
-              "type" : "null"
-            } ]
           }
         },
         "required" : [ "prisonerId", "thingsToDo" ]
@@ -10354,7 +10366,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:28.245088578"
+            "example" : "07:44:26.0587271"
           },
           "courtCode" : {
             "type" : "string"
@@ -11042,7 +11054,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:44:28.245088578"
+            "example" : "07:44:26.0587271"
           },
           "nomisOutcomeCode" : {
             "type" : [ "string", "null" ]
@@ -11121,7 +11133,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:28.245088578"
+            "example" : "07:44:26.0587271"
           },
           "courtId" : {
             "type" : "string"
@@ -11273,7 +11285,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:44:28.245088578"
+            "example" : "07:44:26.0587271"
           },
           "charges" : {
             "type" : "array",
@@ -11310,7 +11322,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:28.245088578"
+            "example" : "07:44:26.0587271"
           },
           "courtId" : {
             "type" : "string"
@@ -11597,14 +11609,14 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
-          "pageNumber" : {
+          "pageSize" : {
             "type" : "integer",
             "format" : "int32"
           },
           "paged" : {
             "type" : "boolean"
           },
-          "pageSize" : {
+          "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
           },
@@ -11907,7 +11919,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:28.245088578"
+            "example" : "07:44:26.0587271"
           },
           "courtCode" : {
             "type" : [ "string", "null" ]
