@@ -82,7 +82,7 @@ class PrisonerBalanceReconciliationService(
     val dpsAccounts = dpsApiService.getPrisonerAccounts(nomisAccounts.prisonNumber)
     val nomisFields = BalanceFields(
       prisonNumber = nomisAccounts.prisonNumber,
-      accounts = nomisAccounts.accounts.filter { it.balance != BigDecimal.ZERO }
+      accounts = nomisAccounts.accounts.filter { it.balance.compareTo(BigDecimal.ZERO) != 0 }
         .map {
           AccountFields(
             accountCode = it.accountCode.toInt(),
@@ -92,7 +92,7 @@ class PrisonerBalanceReconciliationService(
     )
     val dpsFields = BalanceFields(
       prisonNumber = nomisAccounts.prisonNumber,
-      accounts = dpsAccounts.filter { it.value.totalBalance != BigDecimal.ZERO }
+      accounts = dpsAccounts.filter { it.value.totalBalance.compareTo(BigDecimal.ZERO) != 0 }
         .map {
           AccountFields(
             accountCode = it.key.toInt(),
