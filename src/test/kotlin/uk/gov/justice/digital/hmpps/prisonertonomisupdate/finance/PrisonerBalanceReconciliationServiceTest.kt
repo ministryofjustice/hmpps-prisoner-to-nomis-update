@@ -264,7 +264,7 @@ fun dpsAccount(accountCode: Int = 1001, totalBalance: BigDecimal = BigDecimal.va
 
 private fun dpsZeroAccount(accountCode: Int = 1001) = dpsAccount(
   accountCode = accountCode,
-  totalBalance = BigDecimal.ZERO,
+  totalBalance = BigDecimal.valueOf(0.00),
   holdBalance = BigDecimal.ZERO,
 )
 
@@ -276,7 +276,7 @@ fun nomisPrisonerAccounts(accountCode: Long = 1001, balance: BigDecimal = BigDec
 
 private fun nomisZeroAccount(accountCode: Long = 1001) = AggregatedAccountDto(
   accountCode = accountCode,
-  balance = BigDecimal.ZERO,
+  balance = BigDecimal.valueOf(0),
 )
 
 private fun nomisAccount(accountCode: Long = 1001, balance: BigDecimal = BigDecimal.valueOf(1.5)) = AggregatedAccountDto(
