@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-07-21.959.ba1c5be"
+    "version" : "2026-07-29.974.295cc0c"
   },
   "servers" : [ {
     "url" : "https://prisoner-finance-sync-api-dev.hmpps.service.justice.gov.uk/",
@@ -1253,24 +1253,24 @@
         } ]
       }
     },
-    "/audit/history/{requestId}" : {
+    "/audit/history/{payloadId}" : {
       "get" : {
         "tags" : [ "Audit" ],
         "summary" : "Get Payloads Details",
         "description" : "Get the full payload details (including the JSON body) for a specific request ID.",
         "operationId" : "getPayloadByRequestId",
         "parameters" : [ {
-          "name" : "requestId",
+          "name" : "payloadId",
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string",
-            "format" : "uuid"
+            "type" : "integer",
+            "format" : "int64"
           }
         } ],
         "responses" : {
           "200" : {
-            "description" : "Returns the Payload matching the requestId provided.",
+            "description" : "Returns the Payload matching the payloadId provided.",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -1280,7 +1280,7 @@
             }
           },
           "400" : {
-            "description" : "Bad request - invalid input data.",
+            "description" : "Bad request - invalid payloadId.",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -1310,7 +1310,7 @@
             }
           },
           "404" : {
-            "description" : "Not Found - No Payload found with requestId provided",
+            "description" : "Not Found - No Payload found with payloadId provided",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -2282,6 +2282,10 @@
           },
           "body" : {
             "type" : "string"
+          },
+          "id" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int64"
           }
         },
         "required" : [ "body", "requestId", "synchronizedTransactionId", "timestamp", "transactionType" ]
