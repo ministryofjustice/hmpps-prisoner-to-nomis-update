@@ -1198,7 +1198,6 @@ class CourtSchedulerReconciliationIntTest(
           ReconciliationCourtEvent(
             courtEvent = CourtEvent(
               dpsId = courtEventId,
-              prisonCodeAtTimeOfScheduling = "BXI",
               agyLocId = "LEEDMC",
               start = yesterday,
               courtEventType = "CRT",
