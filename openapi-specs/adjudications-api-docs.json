@@ -12,7 +12,7 @@
       "name" : "MIT",
       "url" : "https://opensource.org/license/mit-0"
     },
-    "version" : "2026-07-24.509.8731a62"
+    "version" : "2026-07-30.520.c07b530"
   },
   "servers" : [ {
     "url" : "/",
@@ -7943,6 +7943,10 @@
           "agencyId" : {
             "type" : "string",
             "description" : "agency id of hearing"
+          },
+          "representative" : {
+            "type" : [ "string", "null" ],
+            "description" : "Name of the prisoner's representative at the hearing, where recorded"
           }
         },
         "required" : [ "agencyId", "dateTimeOfHearing", "locationUuid", "oicHearingType" ]
@@ -8206,6 +8210,11 @@
             "type" : [ "string", "null" ],
             "description" : "optional refer to gov reason",
             "enum" : [ "REVIEW_FOR_REFER_POLICE", "GOV_INQUIRY", "OTHER" ]
+          },
+          "oicHearingId" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int64",
+            "description" : "NOMIS OIC hearing id associated with the outcome, where recorded"
           },
           "canRemove" : {
             "type" : "boolean",
@@ -8664,6 +8673,12 @@
             "type" : "string",
             "description" : "The username of the person who added this record",
             "example" : "ABC12D"
+          },
+          "repairCost" : {
+            "type" : [ "number", "null" ],
+            "format" : "double",
+            "description" : "Cost of repairing the damage, where recorded",
+            "example" : 12.5
           }
         },
         "required" : [ "code", "details", "reporter" ]
@@ -8732,6 +8747,10 @@
             "type" : "string",
             "description" : "The username of the person who added this record",
             "example" : "ABC12D"
+          },
+          "comment" : {
+            "type" : [ "string", "null" ],
+            "description" : "Optional comment about the witness or their evidence"
           }
         },
         "required" : [ "code", "firstName", "lastName", "reporter" ]
@@ -10136,15 +10155,15 @@
             "type" : "integer",
             "format" : "int64"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
           "pageSize" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paged" : {
+            "type" : "boolean"
           },
           "pageNumber" : {
             "type" : "integer",
