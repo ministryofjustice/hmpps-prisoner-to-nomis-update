@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-07-28.1789.69c1266"
+    "version" : "2026-07-30.1815.a07993d"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -28271,7 +28271,7 @@
           "sanctionType" : {
             "type" : "string",
             "description" : "The type of award",
-            "enum" : [ "ADA", "CAUTION", "CC", "EXTRA_WORK", "EXTW", "FORFEIT", "OTHER", "REMACT", "REMWIN", "STOP_EARN", "STOP_PCT", "PP" ],
+            "enum" : [ "ADA", "CAUTION", "CC", "EXTRA_WORK", "EXTW", "FORFEIT", "OTHER", "REMACT", "REMWIN", "STOP_EARN", "STOP_PCT", "PP", "LOSS_VISITS", "RESTR_VISITS" ],
             "example" : "CAUTION"
           },
           "sanctionStatus" : {
@@ -33206,12 +33206,12 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paged" : {
+            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
