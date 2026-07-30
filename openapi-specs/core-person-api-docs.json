@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-07-28.4391.834a0f4"
+    "version" : "2026-07-29.4413.a06ac53"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -198,16 +198,6 @@
           "required" : true
         },
         "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/PrisonReligionSaveResponse"
-                }
-              }
-            }
-          },
           "204" : {
             "description" : "No Content"
           }
@@ -1132,30 +1122,6 @@
         },
         "required" : [ "modifyDateTime", "modifyUserId" ]
       },
-      "PrisonReligionMapping" : {
-        "type" : "object",
-        "properties" : {
-          "nomisReligionId" : {
-            "type" : "string"
-          },
-          "cprReligionId" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "cprReligionId", "nomisReligionId" ]
-      },
-      "PrisonReligionSaveResponse" : {
-        "type" : "object",
-        "properties" : {
-          "prisonNumber" : {
-            "type" : "string"
-          },
-          "religionMappings" : {
-            "$ref" : "#/components/schemas/PrisonReligionMapping"
-          }
-        },
-        "required" : [ "prisonNumber", "religionMappings" ]
-      },
       "PrisonSexualOrientation" : {
         "type" : "object",
         "properties" : {
@@ -1507,6 +1473,30 @@
           }
         },
         "required" : [ "cprAddressId", "crn" ]
+      },
+      "PrisonReligionMapping" : {
+        "type" : "object",
+        "properties" : {
+          "nomisReligionId" : {
+            "type" : "string"
+          },
+          "cprReligionId" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "cprReligionId", "nomisReligionId" ]
+      },
+      "PrisonReligionSaveResponse" : {
+        "type" : "object",
+        "properties" : {
+          "prisonNumber" : {
+            "type" : "string"
+          },
+          "religionMappings" : {
+            "$ref" : "#/components/schemas/PrisonReligionMapping"
+          }
+        },
+        "required" : [ "prisonNumber", "religionMappings" ]
       },
       "DlqMessage" : {
         "type" : "object",
