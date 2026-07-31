@@ -32,6 +32,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.ReconciliationNextCourtAppearance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.ReconciliationPeriodLength
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.ReconciliationSentence
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingApiExtension.Companion.courtSentencingApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingApiExtension.Companion.reconciliationCharge
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingApiExtension.Companion.reconciliationChargeWithoutSentence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingApiExtension.Companion.reconciliationCourtAppearance
@@ -60,6 +61,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtEventChargeResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtEventResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtOrderResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCourtAppearanceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceTermResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenceResponse
@@ -108,7 +110,7 @@ private const val NOMIS_TERM_SEQ = 4L
 private const val SENTENCE_TERM_TYPE = "IMP"
 
 class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
-  private val courtSentencingDpsApi = CourtSentencingApiExtension.courtSentencingApi
+  private val courtSentencingDpsApi = courtSentencingApi
 
   @Autowired
   private lateinit var courtSentencingNomisApi: CourtSentencingNomisApiMockServer
@@ -160,7 +162,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
           id = DPS_COURT_CASE_ID,
           nomisCourtCaseId = NOMIS_COURT_CASE_ID,
         )
-        CourtSentencingApiExtension.courtSentencingApi.stubGetCourtCaseForReconciliation(
+        courtSentencingApi.stubGetCourtCaseForReconciliation(
           DPS_COURT_CASE_ID,
           dpsCourtCaseResponse(
             active = true,
@@ -246,7 +248,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
           id = NOMIS_COURT_CASE_ID,
           dpsCourtCaseId = DPS_COURT_CASE_ID,
         )
-        CourtSentencingApiExtension.courtSentencingApi.stubGetCourtCaseForReconciliation(
+        courtSentencingApi.stubGetCourtCaseForReconciliation(
           DPS_COURT_CASE_ID,
           dpsCourtCaseResponse(
             active = true,
@@ -390,7 +392,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setUp() {
-        CourtSentencingApiExtension.courtSentencingApi.stubGetCourtChargeByAppearance(
+        courtSentencingApi.stubGetCourtChargeByAppearance(
           DPS_COURT_CHARGE_ID,
           offenderNo = OFFENDER_NO,
           caseID = DPS_COURT_CASE_ID,
@@ -425,7 +427,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will callback back to court sentencing service to get more details`() {
-        CourtSentencingApiExtension.courtSentencingApi.verify(WireMock.getRequestedFor(urlEqualTo("/legacy/court-appearance/${DPS_COURT_APPEARANCE_ID}/charge/${DPS_COURT_CHARGE_ID}")))
+        courtSentencingApi.verify(WireMock.getRequestedFor(urlEqualTo("/legacy/court-appearance/${DPS_COURT_APPEARANCE_ID}/charge/${DPS_COURT_CHARGE_ID}")))
       }
 
       @Test
@@ -1173,7 +1175,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setUp() {
-        CourtSentencingApiExtension.courtSentencingApi.stubGetSentence(
+        courtSentencingApi.stubGetSentence(
           sentenceId = DPS_SENTENCE_ID,
           offenderNo = OFFENDER_NO,
           caseID = DPS_COURT_CASE_ID,
@@ -1212,7 +1214,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will callback back to court sentencing service to get more details`() {
         waitForAnyProcessingToComplete(2)
-        CourtSentencingApiExtension.courtSentencingApi.verify(WireMock.getRequestedFor(urlEqualTo("/legacy/sentence/${DPS_SENTENCE_ID}")))
+        courtSentencingApi.verify(WireMock.getRequestedFor(urlEqualTo("/legacy/sentence/${DPS_SENTENCE_ID}")))
       }
 
       @Test
@@ -1299,7 +1301,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setUp() {
-        CourtSentencingApiExtension.courtSentencingApi.stubGetPeriodLength(
+        courtSentencingApi.stubGetPeriodLength(
           sentenceId = DPS_SENTENCE_ID,
           offenderNo = OFFENDER_NO,
           periodLengthId = DPS_PERIOD_LENGTH_ID,
@@ -1339,7 +1341,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will callback back to court sentencing service to get more details`() {
         waitForAnyProcessingToComplete(2)
-        CourtSentencingApiExtension.courtSentencingApi.verify(WireMock.getRequestedFor(urlEqualTo("/legacy/period-length/${DPS_PERIOD_LENGTH_ID}")))
+        courtSentencingApi.verify(WireMock.getRequestedFor(urlEqualTo("/legacy/period-length/${DPS_PERIOD_LENGTH_ID}")))
       }
 
       @Test
@@ -1427,7 +1429,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setUp() {
-        CourtSentencingApiExtension.courtSentencingApi.stubGetPeriodLength(
+        courtSentencingApi.stubGetPeriodLength(
           sentenceId = DPS_SENTENCE_ID,
           offenderNo = OFFENDER_NO,
           periodLengthId = DPS_PERIOD_LENGTH_ID,
@@ -1472,7 +1474,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will callback back to court sentencing service to get more details`() {
-        CourtSentencingApiExtension.courtSentencingApi.verify(WireMock.getRequestedFor(urlEqualTo("/legacy/period-length/${DPS_PERIOD_LENGTH_ID}")))
+        courtSentencingApi.verify(WireMock.getRequestedFor(urlEqualTo("/legacy/period-length/${DPS_PERIOD_LENGTH_ID}")))
       }
 
       @Test
@@ -1556,7 +1558,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setUp() {
-        CourtSentencingApiExtension.courtSentencingApi.stubGetSentence(
+        courtSentencingApi.stubGetSentence(
           sentenceId = DPS_SENTENCE_ID,
           offenderNo = OFFENDER_NO,
           caseID = DPS_COURT_CASE_ID,
@@ -1594,7 +1596,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will callback back to court sentencing service to get more details`() {
         waitForAnyProcessingToComplete(2)
-        CourtSentencingApiExtension.courtSentencingApi.verify(WireMock.getRequestedFor(urlEqualTo("/legacy/sentence/${DPS_SENTENCE_ID}")))
+        courtSentencingApi.verify(WireMock.getRequestedFor(urlEqualTo("/legacy/sentence/${DPS_SENTENCE_ID}")))
       }
 
       @Test
@@ -1678,7 +1680,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setUp() {
-        CourtSentencingApiExtension.courtSentencingApi.stubGetCourtChargeByAppearance(
+        courtSentencingApi.stubGetCourtChargeByAppearance(
           courtAppearanceId = DPS_COURT_APPEARANCE_ID,
           offenderNo = OFFENDER_NO,
           caseID = DPS_COURT_CASE_ID,
@@ -1715,7 +1717,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will callback back to court sentencing service to get more details`() {
         waitForAnyProcessingToComplete(2)
-        CourtSentencingApiExtension.courtSentencingApi.verify(WireMock.getRequestedFor(urlEqualTo("/legacy/court-appearance/${DPS_COURT_APPEARANCE_ID}/charge/${DPS_COURT_CHARGE_ID}")))
+        courtSentencingApi.verify(WireMock.getRequestedFor(urlEqualTo("/legacy/court-appearance/${DPS_COURT_APPEARANCE_ID}/charge/${DPS_COURT_CHARGE_ID}")))
       }
 
       @Test
@@ -1799,7 +1801,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setUp() {
-        CourtSentencingApiExtension.courtSentencingApi.stubCourtAppearanceGetWitOneCharge(
+        courtSentencingApi.stubCourtAppearanceGetWitOneCharge(
           courtAppearanceId = DPS_COURT_APPEARANCE_ID,
           offenderNo = OFFENDER_NO,
           courtCaseId = DPS_COURT_CASE_ID,
@@ -1837,7 +1839,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will callback back to court sentencing service to get more details`() {
-        CourtSentencingApiExtension.courtSentencingApi.verify(WireMock.getRequestedFor(urlEqualTo("/legacy/court-appearance/${DPS_COURT_APPEARANCE_ID}")))
+        courtSentencingApi.verify(WireMock.getRequestedFor(urlEqualTo("/legacy/court-appearance/${DPS_COURT_APPEARANCE_ID}")))
       }
 
       @Test
@@ -1857,6 +1859,114 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will call nomis api to update the appearance`() {
         nomisApi.verify(putRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/$NOMIS_COURT_CASE_ID/court-appearances/$NOMIS_COURT_APPEARANCE_ID")))
+      }
+    }
+  }
+
+  @DisplayName("POST /prisoners/{offenderNo}/court-sentencing/dps-court-case/{courtCaseId}/dps-appearance/{appearanceId}/repair")
+  @Nested
+  inner class AppearanceCreatedRepair {
+
+    @Nested
+    inner class Security {
+      @Test
+      fun `access forbidden when no role`() {
+        webTestClient.post().uri("/prisoners/$OFFENDER_NO/court-sentencing/dps-court-case/$DPS_COURT_CASE_ID/dps-appearance/$DPS_COURT_APPEARANCE_ID/repair")
+          .headers(setAuthorisation(roles = listOf()))
+          .contentType(MediaType.APPLICATION_JSON)
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access forbidden with wrong role`() {
+        webTestClient.post().uri("/prisoners/$OFFENDER_NO/court-sentencing/dps-court-case/$DPS_COURT_CASE_ID/dps-appearance/$DPS_COURT_APPEARANCE_ID/repair")
+          .headers(setAuthorisation(roles = listOf("BANANAS")))
+          .contentType(MediaType.APPLICATION_JSON)
+          .body(
+            BodyInserters.fromValue(
+              CourtChargeRequest(
+                offenderNo = OFFENDER_NO,
+                dpsChargeId = DPS_COURT_CHARGE_ID,
+                dpsCaseId = DPS_COURT_CASE_ID,
+              ),
+            ),
+          )
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access unauthorised with no auth token`() {
+        webTestClient.post().uri("/prisoners/$OFFENDER_NO/court-sentencing/dps-court-case/$DPS_COURT_CASE_ID/dps-appearance/$DPS_COURT_APPEARANCE_ID/repair")
+          .contentType(MediaType.APPLICATION_JSON)
+          .body(
+            BodyInserters.fromValue(
+              CourtChargeRequest(
+                offenderNo = OFFENDER_NO,
+                dpsChargeId = DPS_COURT_CHARGE_ID,
+                dpsCaseId = DPS_COURT_CASE_ID,
+              ),
+            ),
+          )
+          .exchange()
+          .expectStatus().isUnauthorized
+      }
+    }
+
+    @Nested
+    inner class HappyPath {
+
+      @BeforeEach
+      fun setUp() {
+        courtSentencingApi.stubCourtAppearanceGetWitOneCharge(
+          DPS_COURT_CASE_ID,
+          offenderNo = OFFENDER_NO,
+          courtAppearanceId = DPS_COURT_APPEARANCE_ID,
+          courtCharge1Id = DPS_COURT_CHARGE_ID,
+        )
+        courtSentencingMappingApi.stubGetCourtCaseMappingGivenDpsId(
+          id = DPS_COURT_CASE_ID,
+          nomisCourtCaseId = NOMIS_COURT_CASE_ID,
+        )
+
+        courtSentencingMappingApi.stubGetCourtAppearanceMappingGivenDpsIdWithError(DPS_COURT_APPEARANCE_ID, 404)
+
+        courtSentencingNomisApi.stubCourtAppearanceCreate(
+          OFFENDER_NO,
+          NOMIS_COURT_CASE_ID,
+          CreateCourtAppearanceResponse(id = NOMIS_COURT_APPEARANCE_ID, courtEventChargesIds = emptyList()),
+        )
+
+        courtSentencingMappingApi.stubUpdateAndCreateMappings()
+        courtSentencingMappingApi.stubGetCourtChargeMappingGivenDpsId(DPS_COURT_CHARGE_ID, NOMIS_COURT_CHARGE_ID)
+
+        webTestClient.post().uri("/prisoners/$OFFENDER_NO/court-sentencing/dps-court-case/$DPS_COURT_CASE_ID/dps-appearance/$DPS_COURT_APPEARANCE_ID/repair")
+          .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_TO_NOMIS__UPDATE__RW")))
+          .contentType(MediaType.APPLICATION_JSON)
+          .exchange()
+          .expectStatus().isCreated
+
+        waitForAnyProcessingToComplete(2)
+      }
+
+      @Test
+      fun `will callback back to court sentencing service to get more details`() {
+        courtSentencingApi.verify(WireMock.getRequestedFor(urlEqualTo("/legacy/court-appearance/${DPS_COURT_APPEARANCE_ID}")))
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        verify(telemetryClient).trackEvent(
+          eq("court-sentencing-repair-appearance-created"),
+          any(),
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will call nomis api to update the appearance`() {
+        nomisApi.verify(postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/$NOMIS_COURT_CASE_ID/court-appearances")))
       }
     }
   }
