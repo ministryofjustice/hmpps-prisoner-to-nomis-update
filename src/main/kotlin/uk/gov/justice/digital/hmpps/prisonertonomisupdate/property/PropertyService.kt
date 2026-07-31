@@ -40,6 +40,7 @@ class PropertyService(
               PropertyContainerMappingDto(
                 dpsPropertyContainerId = event.additionalInformation.dpsId,
                 nomisPropertyContainerId = propertyContainerId,
+                bookingId = bookingId,
                 offenderNo = event.prisonerNumber,
                 mappingType = PropertyContainerMappingDto.MappingType.DPS_CREATED,
               )
