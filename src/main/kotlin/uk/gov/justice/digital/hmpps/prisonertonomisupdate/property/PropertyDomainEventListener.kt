@@ -56,35 +56,3 @@ data class PropertyDomainAdditionalInformation(
   val nomisPropertyContainerId: Long? = null,
   val changedFields: List<String>? = null,
 )
-/*
-Event type	Topic	Keys and values
-prison-property.container.created	Domain
-version	1.0
-description	A prisoner property container was changed in DPS
-detailUrl
-occurredAt	2026-07-20T15:01:33.671335777Z
-prisonerNumber	G2536GG
-source	DPS
-additionalInformation	{dpsId=019f800b-ef66-759a-b25e-cc546ef8429b}
-* */
-
-/*
-prison-property.container.updated	Domain
-version	1.0
-description	A prisoner property container was changed in DPS
-detailUrl
-occurredAt	2026-07-20T15:08:21.213612057Z
-prisonerNumber	G2536GG
-source	DPS
-additionalInformation	{dpsId=019f800b-ef66-759a-b25e-cc546ef8429b, changedFields=[sealNumber, proposedDisposalDate]}
- */
-/*
-prison-property.container.created	Domain
-version	1.0
-description	A prisoner property container was synchronised from NOMIS
-detailUrl
-occurredAt	2026-07-20T13:17:39.918894495Z
-prisonerNumber	G9958GO
-source	NOMIS
-additionalInformation	{dpsId=019f7fac-d0bc-760c-a81e-1170e919c412, nomisPropertyContainerId=610858.0}
- */
