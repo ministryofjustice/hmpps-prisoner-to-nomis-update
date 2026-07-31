@@ -103,11 +103,9 @@ generic-service:
     - name: core-person-recon
       type: CORE_PERSON_FULL_RECON
       schedule: "30 6 * * MON"
-      suspend: true
     - name: core-person-ac-recon
       type: COREPERSON_ACTIVE_RECON
       schedule: "30 6 * * TUE,WED,THU,FRI"
-      suspend: true
     - name: court-case-recon
       type: COURT_CASE_PRISONER_RECON
       schedule: "0 19 * * SAT"

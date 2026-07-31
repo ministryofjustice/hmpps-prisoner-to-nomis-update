@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Of
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
+import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.Objects
@@ -202,7 +203,7 @@ class CorePersonReconciliationService(
           n.current != cpr.current -> "$i-current:nomis=${n.current}, cpr=${cpr.current}"
           n.createUsername != cpr.createUsername -> "$i-createUser:nomis=${n.createUsername}, cpr=${cpr.createUsername}"
           n.createDatetime.notEqualsIgnoringNanos(cpr.createDatetime) -> "$i-createDatetime:nomis=${n.createDatetime}, cpr=${cpr.createDatetime}"
-          n.modifyDatetime.notEqualsIgnoringNanos(cpr.modifyDatetime) -> "$i-modifyDatetime:nomis=${n.modifyDatetime}, cpr=${cpr.modifyDatetime}"
+          !datesEqualToWithin(n.modifyDatetime, cpr.modifyDatetime, Duration.ofMinutes(1)) -> "$i-modifyDatetime:nomis=${n.modifyDatetime}, cpr=${cpr.modifyDatetime}"
           else -> null
         }
       }
@@ -210,6 +211,12 @@ class CorePersonReconciliationService(
         ?.joinToString(separator = ",")
         ?.apply { differences[fieldName] = this }
     }
+  }
+
+  private fun datesEqualToWithin(first: LocalDateTime?, second: LocalDateTime?, withIn: Duration) = when {
+    first == null && second == null -> true
+    (first != null && second == null) || (first == null && second != null) -> false
+    else -> Duration.between(first, second).abs() <= withIn
   }
 
   private fun appendDifference(
