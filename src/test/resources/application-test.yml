@@ -31,6 +31,7 @@ api.base.url:
   core.person: http://localhost:8103
   officialvisits: http://localhost:8104
   staff: http://localhost:8106
+  property: http://localhost:8107
 
 hmpps.sqs:
   defaultErrorVisibilityTimeout: 0
@@ -295,6 +296,17 @@ hmpps.sqs:
         ]}
       dlqMaxReceiveCount: 1
       errorVisibilityTimeout: 0
+    property:
+      queueName: "property-${random.uuid}"
+      dlqName: "property-dlq-${random.uuid}"
+      subscribeTopicId: domainevents
+      subscribeFilter: >-
+        { "eventType":[
+          "prison-property.container.created",
+          "prison-property.container.updated"
+        ]}
+      dlqMaxReceiveCount: 2
+      visibilityTimeout: 120
     organisations:
       queueName: "organisations-${random.uuid}"
       dlqName: "organisations-dlq-${random.uuid}"

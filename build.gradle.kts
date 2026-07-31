@@ -236,6 +236,11 @@ val models = listOf(
     url = "https://personal-relationships-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
   ),
   ModelConfiguration(
+    name = "property",
+    packageName = "property",
+    url = "https://prisoner-property-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
+  ),
+  ModelConfiguration(
     name = "sentencing-adjustments",
     packageName = "sentencing.adjustments",
     url = "https://adjustments-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
