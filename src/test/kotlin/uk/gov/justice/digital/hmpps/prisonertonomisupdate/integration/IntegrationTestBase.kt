@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapDpsA
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.property.PropertyDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.staff.StaffDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visitbalances.VisitBalanceDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.ActivitiesApiExtension
@@ -61,6 +62,7 @@ import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
   NonAssociationsApiExtension::class,
   OfficialVisitsDpsApiExtension::class,
   OrganisationsDpsApiExtension::class,
+  PropertyDpsApiExtension::class,
   SentencingAdjustmentsApiExtension::class,
   StaffDpsApiExtension::class,
   TapDpsApiExtension::class,

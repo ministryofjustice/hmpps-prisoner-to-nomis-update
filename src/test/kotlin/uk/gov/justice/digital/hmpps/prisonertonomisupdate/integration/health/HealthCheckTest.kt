@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapDpsA
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.property.PropertyDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.staff.StaffDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visitbalances.VisitBalanceDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.ActivitiesApiExtension
@@ -130,7 +131,7 @@ class HealthCheckTest : IntegrationTestBase() {
     NonAssociationsApiExtension.nonAssociationsApiServer.stubHealthPing(status)
     OfficialVisitsDpsApiExtension.dpsOfficialVisitsServer.stubHealthPing(status)
     OrganisationsDpsApiExtension.dpsOrganisationsServer.stubHealthPing(status)
-    PropertyDpsApiExtension.dpsPropertyServer.stubHealthPing(status)
+    PropertyDpsApiExtension.propertyDpsApi.stubHealthPing(status)
     SentencingAdjustmentsApiExtension.sentencingAdjustmentsApi.stubHealthPing(status)
     StaffDpsApiExtension.dpsStaffServer.stubHealthPing(status)
     TapDpsApiExtension.tapDpsApiServer.stubHealthPing(status)

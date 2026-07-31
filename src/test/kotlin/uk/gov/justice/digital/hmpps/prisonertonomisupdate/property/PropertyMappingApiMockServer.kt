@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ErrorResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.NomisDpsLocationMapping
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PropertyContainerMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 
@@ -43,6 +44,18 @@ class PropertyMappingApiMockServer(private val jsonMapper: JsonMapper) {
           .withHeader("Content-Type", "application/json")
           .withStatus(status.value())
           .withBody(jsonMapper.writeValueAsString(error)),
+      ),
+    )
+  }
+
+  fun stubGetLocationByDpsId(dpsLocationId: String, nomisLocationId: Long) {
+    mappingServer.stubFor(
+      get(urlPathMatching("/api/locations/dps/$dpsLocationId")).willReturn(
+        okJson(
+          jsonMapper.writeValueAsString(
+            NomisDpsLocationMapping(dpsLocationId, nomisLocationId),
+          ),
+        ),
       ),
     )
   }

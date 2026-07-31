@@ -1,3 +1,5 @@
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate.property
+
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import org.assertj.core.api.Assertions.assertThat
@@ -11,19 +13,19 @@ import org.mockito.kotlin.check
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
+import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.NOMIS_BOOKING_ID
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.property.PropertyDomainAdditionalInformation
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.property.PropertyDomainEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.property.PropertyDpsApiExtension.Companion.jsonMapper
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.property.PropertyMappingApiMockServer
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.property.PropertyNomisApiMockServer
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.property.PropertyDpsApiExtension.Companion.propertyDpsApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.withRequestBodyJsonPath
 import java.util.UUID
 
 private val OFFENDER_NO = "A1234KT"
 private val DPS_ID = UUID.randomUUID().toString()
+private val DPS_LOCATION_ID = UUID.randomUUID().toString()
 private val NOMIS_ID = 123456789L
+private val NOMIS_LOCATION_ID = 1234567890L
 private val BOOKING_ID = 123456L
 
 class PropertyToNomisIntTest : SqsIntegrationTestBase() {
@@ -69,15 +71,27 @@ class PropertyToNomisIntTest : SqsIntegrationTestBase() {
 
         @BeforeEach
         fun setup() {
-          propertyNomisApiMockServer.stubPostProperty(NOMIS_ID)
+          propertyNomisApiMockServer.stubPostProperty(NOMIS_ID, BOOKING_ID)
+          propertyDpsApi.stubGetProperty(dpsProperty(UUID.fromString(DPS_ID), UUID.fromString(DPS_LOCATION_ID)))
           propertyMappingApiMockServer.stubPostMapping()
+          propertyMappingApiMockServer.stubGetLocationByDpsId(DPS_LOCATION_ID, NOMIS_LOCATION_ID)
           publishCreatePropertyDomainEvent()
           waitForAnyProcessingToComplete()
         }
 
         @Test
-        fun `will create the Property in NOMIS`() {
-          propertyNomisApiMockServer.verify(1, postRequestedFor(anyUrl()))
+        fun `will correctly create the Property in NOMIS`() {
+          propertyNomisApiMockServer.verify(
+            1,
+            postRequestedFor(anyUrl())
+              .withRequestBodyJsonPath("$.offenderNo", OFFENDER_NO)
+              .withRequestBodyJsonPath("$.prisonId", "MDI")
+              .withRequestBodyJsonPath("$.active", true)
+              .withRequestBodyJsonPath("$.sealMark", "SEAL1234")
+              .withRequestBodyJsonPath("$.containerCode", "BULK")
+              .withRequestBodyJsonPath("$.internalLocationId", NOMIS_LOCATION_ID)
+              .withRequestBodyJsonPath("$.proposedDisposalDate", "2026-03-04"),
+          )
         }
 
         @Test
@@ -90,11 +104,12 @@ class PropertyToNomisIntTest : SqsIntegrationTestBase() {
           verify(telemetryClient).trackEvent(
             eq("property-create-success"),
             check {
-              assertThat(it).containsEntry("dpsPropertyId", DPS_ID)
-              assertThat(it).containsEntry("nomisPropertyId", "$NOMIS_ID")
+              assertThat(it).containsEntry("dpsPropertyContainerId", DPS_ID)
+              assertThat(it).containsEntry("nomisPropertyContainerId", "$NOMIS_ID")
+              assertThat(it).containsEntry("locationId", "$NOMIS_LOCATION_ID")
               assertThat(it).containsEntry("offenderNo", OFFENDER_NO)
+              assertThat(it).containsEntry("bookingId", "$BOOKING_ID")
               assertThat(it).containsEntry("mappingType", "DPS_CREATED")
-              assertThat(it).containsEntry("bookingId", "$NOMIS_BOOKING_ID")
             },
             isNull(),
           )
@@ -105,12 +120,12 @@ class PropertyToNomisIntTest : SqsIntegrationTestBase() {
 
   private fun publishCreatePropertyDomainEvent(
     offenderNo: String = OFFENDER_NO,
-    dpsId: String = UUID.randomUUID().toString(),
-    nomisBookingId: Long = BOOKING_ID,
+    dpsId: String = DPS_ID,
     source: String = "DPS",
   ) {
+    val eventType = "prison-property.container.created"
     val event = PropertyDomainEvent(
-      eventType = "prison-property.container.created",
+      eventType = eventType,
       version = 1,
       description = "A prisoner property container was changed in DPS",
       detailUrl = null,
@@ -126,6 +141,12 @@ class PropertyToNomisIntTest : SqsIntegrationTestBase() {
     awsSnsClient.publish(
       PublishRequest.builder().topicArn(topicArn)
         .message(jsonMapper.writeValueAsString(event))
+        .messageAttributes(
+          mapOf(
+            "eventType" to MessageAttributeValue.builder().dataType("String")
+              .stringValue(eventType).build(),
+          ),
+        )
         .build(),
     ).get()
   }

@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.property
 
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.health.MappingApiHealth
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PropertyContainerMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PropertyContainerCode
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PropertyContainerCreateRequest
@@ -18,7 +17,6 @@ class PropertyService(
   private val propertyMappingService: PropertyMappingService,
   private val propertyRetryQueueService: PropertyRetryQueueService,
   private val telemetryClient: TelemetryClient,
-  private val mappingApi: MappingApiHealth,
 ) : CreateMappingRetryable {
   suspend fun created(event: PropertyDomainEvent) {
     val telemetry = event.asTelemetry()
@@ -51,6 +49,8 @@ class PropertyService(
         }
         saveMapping { propertyMappingService.create(it) }
       }
+    } else {
+      telemetryClient.trackEvent("property-create-ignored", telemetry, null)
     }
   }
 
@@ -79,9 +79,9 @@ class PropertyService(
 }
 
 fun PropertyDomainEvent.asTelemetry() = mutableMapOf(
-  "changedFields" to additionalInformation.changedFields.toString(),
-  "dpsId" to additionalInformation.dpsId,
+  "dpsPropertyContainerId" to additionalInformation.dpsId,
   "offenderNo" to prisonerNumber,
+  "changedFields" to additionalInformation.changedFields.toString(),
   "source" to source.toString(),
 )
 

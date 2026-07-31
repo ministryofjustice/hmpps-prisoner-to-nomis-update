@@ -14,8 +14,10 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExten
 class PropertyNomisApiMockServer(private val jsonMapper: JsonMapper) {
   fun stubPostProperty(
     propertyId: Long,
+    bookingId: Long,
     property: CreatePropertyResponse = CreatePropertyResponse(
       propertyContainerId = propertyId,
+      bookingId = bookingId,
     ),
   ) {
     nomisApi.stubFor(
@@ -31,8 +33,3 @@ class PropertyNomisApiMockServer(private val jsonMapper: JsonMapper) {
   fun verify(pattern: RequestPatternBuilder) = nomisApi.verify(pattern)
   fun verify(count: Int, pattern: RequestPatternBuilder) = nomisApi.verify(count, pattern)
 }
-
-fun propertyResponse(propertyId: Long) = CreatePropertyResponse(
-  propertyContainerId = propertyId,
-  bookingId = 12345678,
-)
