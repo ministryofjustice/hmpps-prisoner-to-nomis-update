@@ -1,3 +1,5 @@
+@file:Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
+
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson
 
 import com.microsoft.applicationinsights.TelemetryClient
@@ -19,6 +21,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Of
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
+import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.Objects
@@ -39,6 +42,12 @@ class CorePersonReconciliationService(
   private companion object {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
     private const val TELEMETRY_CORE_PERSON_PREFIX = "coreperson-reports-reconciliation"
+
+    private val excludedOffenderNos = CorePersonReconciliationService::class.java
+      .getResource("/excludedCorePersonReconciliationBookingId.txt")
+      .readText()
+      .split(",")
+      .mapNotNull { it.trim().toLongOrNull() }
   }
 
   suspend fun generateReconciliationReport(activeOnly: Boolean) {
@@ -135,19 +144,42 @@ class CorePersonReconciliationService(
     appendDifference(nomisCorePerson.religion, cprCorePerson.religion, differences, "religion")
     appendReligionsDifference(nomisCorePerson.religions, cprCorePerson.religions, differences, "religions")
 
-    return differences.takeIf { it.isNotEmpty() }?.let { MismatchCorePerson(prisonNumber = prisonerId.offenderNo, differences = it) }?.also { mismatch ->
-      log.info("CorePerson mismatch found {}", mismatch)
-      telemetryClient.trackEvent(
-        "$TELEMETRY_CORE_PERSON_PREFIX-mismatch",
-        telemetryOf(
-          "prisonNumber" to mismatch.prisonNumber,
-        ).also { telemetry ->
-          // only put the first 5 differences into telemetry
-          telemetry["differences5"] = differences.keys.asSequence().take(5).joinToString()
-          // booking will be 0 if reconciliation is run for a single prisoner, in which case ignore
-          prisonerId.bookingId.takeIf { it != 0L }?.let { telemetry["bookingId"] = it }
-        },
-      )
+    val excluded = excludedOffenderNos.contains(prisonerId.bookingId)
+    return if (!excluded) {
+      differences.takeIf { it.isNotEmpty() }
+        ?.let { MismatchCorePerson(prisonNumber = prisonerId.offenderNo, differences = it) }?.also { mismatch ->
+          log.info("CorePerson mismatch found {}", mismatch)
+          telemetryClient.trackEvent(
+            "$TELEMETRY_CORE_PERSON_PREFIX-mismatch",
+            telemetryOf(
+              "prisonNumber" to mismatch.prisonNumber,
+            ).also { telemetry ->
+              // only put the first 5 differences into telemetry
+              telemetry["differences5"] = differences.keys.asSequence().take(5).joinToString()
+              // booking will be 0 if reconciliation is run for a single prisoner, in which case ignore
+              prisonerId.bookingId.takeIf { it != 0L }?.let { telemetry["bookingId"] = it }
+            },
+          )
+        }
+    } else {
+      if (differences.isEmpty()) {
+        telemetryClient.trackEvent(
+          "$TELEMETRY_CORE_PERSON_PREFIX-excluded-offender-resolved",
+          mapOf(
+            "reason" to ("No reconciliation mismatches found for excluded bookingId ${prisonerId.bookingId}. Remove from exclusion file."),
+          ),
+          null,
+        )
+      } else {
+        telemetryClient.trackEvent(
+          "$TELEMETRY_CORE_PERSON_PREFIX-excluded-offender",
+          mapOf(
+            "reason" to ("Excluding reconciliation mismatches for bookingId ${prisonerId.bookingId}"),
+          ),
+          null,
+        )
+      }
+      null
     }
   }
 
@@ -171,8 +203,7 @@ class CorePersonReconciliationService(
           n.current != cpr.current -> "$i-current:nomis=${n.current}, cpr=${cpr.current}"
           n.createUsername != cpr.createUsername -> "$i-createUser:nomis=${n.createUsername}, cpr=${cpr.createUsername}"
           n.createDatetime.notEqualsIgnoringNanos(cpr.createDatetime) -> "$i-createDatetime:nomis=${n.createDatetime}, cpr=${cpr.createDatetime}"
-          n.modifyUsername != cpr.modifyUsername -> "$i-modifyUser:nomis=${n.modifyUsername}, cpr=${cpr.modifyUsername}"
-          n.modifyDatetime.notEqualsIgnoringNanos(cpr.modifyDatetime) -> "$i-modifyDatetime:nomis=${n.modifyDatetime}, cpr=${cpr.modifyDatetime}"
+          !datesEqualToWithin(n.modifyDatetime, cpr.modifyDatetime, Duration.ofMinutes(1)) -> "$i-modifyDatetime:nomis=${n.modifyDatetime}, cpr=${cpr.modifyDatetime}"
           else -> null
         }
       }
@@ -180,6 +211,12 @@ class CorePersonReconciliationService(
         ?.joinToString(separator = ",")
         ?.apply { differences[fieldName] = this }
     }
+  }
+
+  private fun datesEqualToWithin(first: LocalDateTime?, second: LocalDateTime?, withIn: Duration) = when {
+    first == null && second == null -> true
+    (first != null && second == null) || (first == null && second != null) -> false
+    else -> Duration.between(first, second).abs() <= withIn
   }
 
   private fun appendDifference(

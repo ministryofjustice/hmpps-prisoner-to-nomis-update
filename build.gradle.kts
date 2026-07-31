@@ -11,7 +11,7 @@ import kotlin.io.path.pathString
 import kotlin.io.path.Path as KotlinPath
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.1"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.2"
   kotlin("plugin.spring") version "2.4.10"
   id("org.openapi.generator") version "7.23.0"
 }
@@ -34,9 +34,6 @@ dependencies {
   val springDocVersion = ":3.0.2"
   implementation("org.springdoc:springdoc-openapi-starter-webflux-ui$springDocVersion")
   implementation("org.springdoc:springdoc-openapi-starter-common$springDocVersion")
-  constraints {
-    implementation("org.webjars:swagger-ui:5.32.2")
-  }
   implementation("org.springframework.boot:spring-boot-jackson2")
 
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:7.4.0")

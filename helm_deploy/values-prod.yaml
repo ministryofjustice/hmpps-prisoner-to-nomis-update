@@ -60,6 +60,7 @@ generic-service:
     FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION-ADDRESS-PHONE_DELETED: false
     REPORTS_CONTACT-PERSON_PRISONER-CONTACT_RECONCILIATION_PAGE-SIZE: 10
     REPORTS_CONTACT-PERSON_PERSON-CONTACT_RECONCILIATION_PAGE-SIZE: 30
+    FEATURE_COURT-SCHEDULER_IGNORE-ALL-SENTENCING-EVENTS: false
 
   # The name has max length of 43 chars (Cronjob name max length is 52 chars, including prefix "to-nomis-")
   # The type must exist in enum BatchType
@@ -102,6 +103,12 @@ generic-service:
     - name: con-per-prf-det-recon
       type: CONTACT_PERSON_PROFILE_DETAILS_RECON
       schedule: "30 3 * * *"
+    - name: core-person-recon
+      type: CORE_PERSON_FULL_RECON
+      schedule: "30 6 * * MON"
+    - name: core-person-ac-recon
+      type: COREPERSON_ACTIVE_RECON
+      schedule: "30 6 * * TUE,WED,THU,FRI"
     - name: court-case-recon
       type: COURT_CASE_PRISONER_RECON
       schedule: "0 19 * * SAT"
@@ -148,7 +155,6 @@ generic-service:
     - name: prisoner-balance-recon
       type: PRISONER_BALANCE_RECON
       schedule: "30 3 * * *"
-      suspend: true
     - name: prisner-contact-recon
       type: PRISONER_CONTACT_RECON
       schedule: "50 3 * * *"

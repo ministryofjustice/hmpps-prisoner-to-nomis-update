@@ -77,7 +77,7 @@ class CorePersonReconciliationIntTest(
 
     @Test
     fun `should report differences`() = runTest {
-      stubGetCorePerson()
+      stubGetCorePerson(prisonNumber = "A1234BC")
       cprApi.stubGetCorePerson(prisonNumber = "A1234BC", corePersonDto(religion = "ZORO"))
 
       service.checkCorePersonMatch("A1234BC").also {
@@ -95,6 +95,46 @@ class CorePersonReconciliationIntTest(
             mapOf(
               "prisonNumber" to "A1234BC",
               "differences5" to "religion, religions",
+            ),
+          )
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `should report exclusions`() = runTest {
+      stubGetCorePerson(prisonNumber = "A1234BC")
+      cprApi.stubGetCorePerson(prisonNumber = "A1234BC", corePersonDto(religion = "ZORO"))
+
+      service.checkCorePersonMatch(PrisonerIds(1234567, "A1234BC"))
+
+      verify(telemetryClient).trackEvent(
+        eq("$TELEMETRY_PREFIX-excluded-offender"),
+        check {
+          assertThat(it).containsExactlyInAnyOrderEntriesOf(
+            mapOf(
+              "reason" to ("Excluding reconciliation mismatches for bookingId 1234567"),
+            ),
+          )
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `should report when exclusion is no longer required`() = runTest {
+      stubGetCorePerson(prisonNumber = "A1234BC", religion = "ZORO")
+      cprApi.stubGetCorePerson(prisonNumber = "A1234BC", corePersonDto(religion = "ZORO"))
+
+      service.checkCorePersonMatch(PrisonerIds(1234567, "A1234BC"))
+
+      verify(telemetryClient).trackEvent(
+        eq("$TELEMETRY_PREFIX-excluded-offender-resolved"),
+        check {
+          assertThat(it).containsExactlyInAnyOrderEntriesOf(
+            mapOf(
+              "reason" to ("No reconciliation mismatches found for excluded bookingId 1234567. Remove from exclusion file."),
             ),
           )
         },

@@ -1127,6 +1127,10 @@ private fun Type.toNomisSanctionType(): HearingResultAwardRequest.SanctionType =
   Type.DAMAGES_OWED -> HearingResultAwardRequest.SanctionType.OTHER
 
   Type.PAYBACK -> HearingResultAwardRequest.SanctionType.PP
+
+  Type.RESTRICTION_OF_SOCIAL_VISITS -> HearingResultAwardRequest.SanctionType.RESTR_VISITS
+
+  Type.LOSS_OF_SOCIAL_VISITS -> HearingResultAwardRequest.SanctionType.LOSS_VISITS
 }
 
 private fun HearingDto.toNomisUpdateHearing(nomisInternalLocationId: Long): UpdateHearingRequest = UpdateHearingRequest(

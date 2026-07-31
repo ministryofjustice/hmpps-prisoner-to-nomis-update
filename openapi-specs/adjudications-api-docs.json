@@ -12,7 +12,7 @@
       "name" : "MIT",
       "url" : "https://opensource.org/license/mit-0"
     },
-    "version" : "2026-04-29.360.0feedc0"
+    "version" : "2026-07-30.520.c07b530"
   },
   "servers" : [ {
     "url" : "/",
@@ -4912,6 +4912,94 @@
         "example" : "MDI"
       } ]
     },
+    "/subject-access-request/template" : {
+      "get" : {
+        "tags" : [ "Subject Access Request" ],
+        "operationId" : "getServiceTemplate",
+        "responses" : {
+          "200" : {
+            "description" : "Request successfully processed - return template file content",
+            "content" : {
+              "plain/text" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Unexpected error occurred",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "default" : {
+            "description" : "Unexpected error",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "406" : {
+            "description" : "Not able to process the request because the header “Accept” does not match with any of the content types this endpoint can handle",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "Too many requests",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "parameters" : [ {
+        "name" : "Active-Caseload",
+        "in" : "header",
+        "description" : "Current Caseload for request, to be used when making calls to a specific report",
+        "required" : false,
+        "schema" : {
+          "type" : "string"
+        },
+        "example" : "MDI"
+      } ]
+    },
     "/reported-adjudications/{chargeNumber}/v2" : {
       "get" : {
         "tags" : [ "20. Adjudication Management" ],
@@ -5547,7 +5635,7 @@
           "required" : true,
           "schema" : {
             "type" : "string",
-            "enum" : [ "PRIVILEGE", "EARNINGS", "CONFINEMENT", "REMOVAL_ACTIVITY", "EXCLUSION_WORK", "EXTRA_WORK", "REMOVAL_WING", "ADDITIONAL_DAYS", "PROSPECTIVE_DAYS", "CAUTION", "DAMAGES_OWED", "PAYBACK" ]
+            "enum" : [ "PRIVILEGE", "EARNINGS", "CONFINEMENT", "REMOVAL_ACTIVITY", "EXCLUSION_WORK", "EXTRA_WORK", "REMOVAL_WING", "ADDITIONAL_DAYS", "PROSPECTIVE_DAYS", "CAUTION", "DAMAGES_OWED", "PAYBACK", "RESTRICTION_OF_SOCIAL_VISITS", "LOSS_OF_SOCIAL_VISITS" ]
           }
         }, {
           "name" : "chargeNumber",
@@ -7855,6 +7943,10 @@
           "agencyId" : {
             "type" : "string",
             "description" : "agency id of hearing"
+          },
+          "representative" : {
+            "type" : [ "string", "null" ],
+            "description" : "Name of the prisoner's representative at the hearing, where recorded"
           }
         },
         "required" : [ "agencyId", "dateTimeOfHearing", "locationUuid", "oicHearingType" ]
@@ -8119,6 +8211,11 @@
             "description" : "optional refer to gov reason",
             "enum" : [ "REVIEW_FOR_REFER_POLICE", "GOV_INQUIRY", "OTHER" ]
           },
+          "oicHearingId" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int64",
+            "description" : "NOMIS OIC hearing id associated with the outcome, where recorded"
+          },
           "canRemove" : {
             "type" : "boolean",
             "description" : "flag to indicate if the outcome can be removed"
@@ -8194,7 +8291,11 @@
           "type" : {
             "type" : "string",
             "description" : "punishment type",
-            "enum" : [ "PRIVILEGE", "EARNINGS", "CONFINEMENT", "REMOVAL_ACTIVITY", "EXCLUSION_WORK", "EXTRA_WORK", "REMOVAL_WING", "ADDITIONAL_DAYS", "PROSPECTIVE_DAYS", "CAUTION", "DAMAGES_OWED", "PAYBACK" ]
+            "enum" : [ "PRIVILEGE", "EARNINGS", "CONFINEMENT", "REMOVAL_ACTIVITY", "EXCLUSION_WORK", "EXTRA_WORK", "REMOVAL_WING", "ADDITIONAL_DAYS", "PROSPECTIVE_DAYS", "CAUTION", "DAMAGES_OWED", "PAYBACK", "RESTRICTION_OF_SOCIAL_VISITS", "LOSS_OF_SOCIAL_VISITS" ]
+          },
+          "hasChildUnder18" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "whether the prisoner has a child under 18; required for social visits punishments"
           },
           "typeDescription" : {
             "type" : [ "string", "null" ],
@@ -8572,6 +8673,12 @@
             "type" : "string",
             "description" : "The username of the person who added this record",
             "example" : "ABC12D"
+          },
+          "repairCost" : {
+            "type" : [ "number", "null" ],
+            "format" : "double",
+            "description" : "Cost of repairing the damage, where recorded",
+            "example" : 12.5
           }
         },
         "required" : [ "code", "details", "reporter" ]
@@ -8640,6 +8747,10 @@
             "type" : "string",
             "description" : "The username of the person who added this record",
             "example" : "ABC12D"
+          },
+          "comment" : {
+            "type" : [ "string", "null" ],
+            "description" : "Optional comment about the witness or their evidence"
           }
         },
         "required" : [ "code", "firstName", "lastName", "reporter" ]
@@ -8682,7 +8793,11 @@
           "type" : {
             "type" : "string",
             "description" : "punishment type",
-            "enum" : [ "PRIVILEGE", "EARNINGS", "CONFINEMENT", "REMOVAL_ACTIVITY", "EXCLUSION_WORK", "EXTRA_WORK", "REMOVAL_WING", "ADDITIONAL_DAYS", "PROSPECTIVE_DAYS", "CAUTION", "DAMAGES_OWED", "PAYBACK" ]
+            "enum" : [ "PRIVILEGE", "EARNINGS", "CONFINEMENT", "REMOVAL_ACTIVITY", "EXCLUSION_WORK", "EXTRA_WORK", "REMOVAL_WING", "ADDITIONAL_DAYS", "PROSPECTIVE_DAYS", "CAUTION", "DAMAGES_OWED", "PAYBACK", "RESTRICTION_OF_SOCIAL_VISITS", "LOSS_OF_SOCIAL_VISITS" ]
+          },
+          "hasChildUnder18" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "whether the prisoner has a child under 18; required for social visits punishments"
           },
           "privilegeType" : {
             "type" : [ "string", "null" ],
@@ -8711,7 +8826,7 @@
           "endDate" : {
             "type" : [ "string", "null" ],
             "format" : "date",
-            "description" : "punishment end date, required if punishment is not suspended"
+            "description" : "punishment end date, required if punishment is not suspended; for social visits punishments the API calculates this from startDate and duration, so it may be omitted, and any supplied value must match"
           },
           "suspendedUntil" : {
             "type" : [ "string", "null" ],
@@ -9789,16 +9904,38 @@
             "description" : "The url to be used to download the attachment file"
           },
           "filesize" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "The size of the attachment file in bytes"
           },
           "filename" : {
             "type" : "string",
             "description" : "The filename of attachment file"
+          },
+          "headers" : {
+            "type" : [ "array", "null" ],
+            "description" : "The additional headers to use when calling the url for fetching this attachment",
+            "items" : {
+              "$ref" : "#/components/schemas/AttachmentHeader"
+            }
           }
         },
-        "required" : [ "attachmentNumber", "contentType", "filename", "filesize", "name", "url" ]
+        "required" : [ "attachmentNumber", "contentType", "filename", "name", "url" ]
+      },
+      "AttachmentHeader" : {
+        "type" : "object",
+        "additionalProperties" : false,
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "description" : "The name of the header"
+          },
+          "value" : {
+            "type" : "string",
+            "description" : "The value of the header"
+          }
+        },
+        "required" : [ "name", "value" ]
       },
       "HmppsSubjectAccessRequestContent" : {
         "type" : "object",
@@ -9989,14 +10126,14 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
-          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -10025,15 +10162,15 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "unpaged" : {
-            "type" : "boolean"
-          },
           "paged" : {
             "type" : "boolean"
           },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "unpaged" : {
+            "type" : "boolean"
           }
         }
       },
@@ -10138,7 +10275,7 @@
           "punishmentType" : {
             "type" : "string",
             "description" : "punishment type",
-            "enum" : [ "PRIVILEGE", "EARNINGS", "CONFINEMENT", "REMOVAL_ACTIVITY", "EXCLUSION_WORK", "EXTRA_WORK", "REMOVAL_WING", "ADDITIONAL_DAYS", "PROSPECTIVE_DAYS", "CAUTION", "DAMAGES_OWED", "PAYBACK" ]
+            "enum" : [ "PRIVILEGE", "EARNINGS", "CONFINEMENT", "REMOVAL_ACTIVITY", "EXCLUSION_WORK", "EXTRA_WORK", "REMOVAL_WING", "ADDITIONAL_DAYS", "PROSPECTIVE_DAYS", "CAUTION", "DAMAGES_OWED", "PAYBACK", "RESTRICTION_OF_SOCIAL_VISITS", "LOSS_OF_SOCIAL_VISITS" ]
           },
           "privilegeType" : {
             "type" : [ "string", "null" ],
@@ -10397,14 +10534,14 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
-          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",

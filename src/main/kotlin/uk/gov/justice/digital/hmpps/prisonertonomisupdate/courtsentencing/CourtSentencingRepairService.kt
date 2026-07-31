@@ -306,12 +306,43 @@ class CourtSentencingRepairService(
           courtCaseId = courtCaseId,
           courtAppearanceId = courtAppearanceId,
           source = "DPS",
+          isOnFutureCourtAppearance = false,
         ),
       ),
     )
 
     telemetryClient.trackEvent(
       "court-sentencing-repair-appearance-updated",
+      mapOf(
+        "offenderNo" to offenderNo,
+        "dpsCourtCaseId" to courtCaseId,
+        "dpsCourtAppearanceId" to courtAppearanceId,
+      ),
+      null,
+    )
+  }
+  suspend fun synchroniseAppearanceCreateToNomis(offenderNo: String, courtCaseId: String, courtAppearanceId: String) {
+    courtSentencingService.createCourtAppearance(
+      createEvent = CourtSentencingService.CourtAppearanceCreatedEvent(
+        personReference = PersonReferenceList(
+          identifiers = listOf(
+            PersonReference(
+              type = "NOMS",
+              value = offenderNo,
+            ),
+          ),
+        ),
+        additionalInformation = CourtSentencingService.CourtAppearanceAdditionalInformation(
+          courtCaseId = courtCaseId,
+          courtAppearanceId = courtAppearanceId,
+          source = "DPS",
+          isOnFutureCourtAppearance = false,
+        ),
+      ),
+    )
+
+    telemetryClient.trackEvent(
+      "court-sentencing-repair-appearance-created",
       mapOf(
         "offenderNo" to offenderNo,
         "dpsCourtCaseId" to courtCaseId,

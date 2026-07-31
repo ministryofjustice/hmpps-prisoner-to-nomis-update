@@ -79,7 +79,6 @@ class CourtSchedulerDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       externalReference: String? = "some-ext-ref-urn",
     ) = CourtEvent(
       dpsId = id,
-      prisonCodeAtTimeOfScheduling = "BXI",
       agyLocId = court,
       start = startTime,
       courtEventType = "CRT",

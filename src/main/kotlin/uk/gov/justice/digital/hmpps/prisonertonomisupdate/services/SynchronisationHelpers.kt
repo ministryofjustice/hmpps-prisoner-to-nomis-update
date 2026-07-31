@@ -8,6 +8,7 @@ import org.openapitools.client.infrastructure.RequestConfig
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.core.ParameterizedTypeReference
+import org.springframework.http.HttpStatus
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import org.springframework.web.reactive.function.client.bodyToMono
@@ -49,6 +50,13 @@ class SynchroniseBuilder<MAPPING_DTO>(
             telemetryClient?.let { client ->
               it.message?.let { message -> eventTelemetry = eventTelemetry + ("reason" to message) }
               client.trackEvent("$name-create-awaiting-parent", eventTelemetry)
+            }
+          }
+
+          is AwaitDependentStateRetry -> {
+            telemetryClient?.let { client ->
+              it.message?.let { message -> eventTelemetry = eventTelemetry + ("reason" to message) }
+              client.trackEvent("$name-create-awaiting-dependent-state", eventTelemetry)
             }
           }
 
@@ -172,6 +180,7 @@ interface TelemetryEnabled {
 }
 
 class AwaitParentEntityRetry(message: String) : ParentEntityNotFoundRetry(message)
+class AwaitDependentStateRetry(message: String) : RuntimeException(message)
 
 inline fun <T> TelemetryEnabled.track(name: String, telemetry: MutableMap<String, String>, transform: () -> T): T {
   try {
@@ -181,6 +190,14 @@ inline fun <T> TelemetryEnabled.track(name: String, telemetry: MutableMap<String
   } catch (e: AwaitParentEntityRetry) {
     telemetry["reason"] = e.message.toString()
     telemetryClient.trackEvent("$name-awaiting-parent", telemetry)
+    throw e
+  } catch (e: AwaitParentEntityRetry) {
+    telemetry["reason"] = e.message.toString()
+    telemetryClient.trackEvent("$name-awaiting-parent", telemetry)
+    throw e
+  } catch (e: AwaitDependentStateRetry) {
+    telemetry["reason"] = e.message.toString()
+    telemetryClient.trackEvent("$name-awaiting-dependent-state", telemetry)
     throw e
   } catch (e: Exception) {
     telemetry["error"] = e.message.toString()
@@ -199,6 +216,13 @@ fun Map<String, Any>.valuesAsStrings(): Map<String, String> = this.entries.assoc
 suspend fun <T> tryFetchParent(message: String = "Expected parent entity not found, retrying", get: suspend () -> T?): T = get() ?: throw AwaitParentEntityRetry(
   message,
 )
+suspend fun <T> tryUpdate(message: String = "Expected dependent state not yet correct, retrying", update: suspend () -> T): T = runCatching { update() }.getOrElse {
+  if (it is WebClientResponseException && it.statusCode.value() == HttpStatus.FAILED_DEPENDENCY.value()) {
+    throw AwaitDependentStateRetry("$message: ${it.responseBodyAsString}")
+  } else {
+    throw it
+  }
+}
 
 suspend inline fun <reified T : Any, reified E : Any> WebClient.ResponseSpec.awaitSuccessOrDuplicate(): SuccessOrDuplicate<T, E> = this.bodyToMono<T>()
   .map { SuccessOrDuplicate<T, E>(successResponse = it) }

@@ -101,7 +101,7 @@ class PrisonerBalanceReconciliationServiceTest {
     }
 
     @Test
-    fun `will ignore DPS accounts with a zero balance with mismatch`() = runTest {
+    fun `will ignore DPS accounts with a zero balance when mismatch`() = runTest {
       stubBalanceReconciliation(
         nomisPrisonerAccounts(),
         dpsAccount(totalBalance = BigDecimal.TEN) + dpsZeroAccount(1002) + dpsZeroAccount(1003),
@@ -110,6 +110,30 @@ class PrisonerBalanceReconciliationServiceTest {
       assertThat(service.checkPrisonerBalance(OFFENDER_ID)?.differences).isEqualTo(
         listOf(
           Difference(property = "prisoner-balances.accounts[0].balance: account code 1001", dps = BigDecimal.TEN, nomis = BigDecimal.valueOf(1.5)),
+        ),
+      )
+    }
+
+    @Test
+    fun `will ignore Nomis accounts with a zero balance to show no mismatch`() = runTest {
+      stubBalanceReconciliation(
+        nomisPrisonerAccounts().copy(accounts = listOf(nomisAccount(), nomisZeroAccount(1002), nomisZeroAccount(1003))),
+        dpsAccount(),
+      )
+
+      assertThat(service.checkPrisonerBalance(OFFENDER_ID)).isNull()
+    }
+
+    @Test
+    fun `will ignore Nomis accounts with a zero balance when mismatch`() = runTest {
+      stubBalanceReconciliation(
+        nomisPrisonerAccounts().copy(accounts = listOf(nomisAccount(balance = BigDecimal.TEN), nomisZeroAccount(1002), nomisZeroAccount(1003))),
+        dpsAccount(),
+      )
+
+      assertThat(service.checkPrisonerBalance(OFFENDER_ID)?.differences).isEqualTo(
+        listOf(
+          Difference(property = "prisoner-balances.accounts[0].balance: account code 1001", dps = BigDecimal.valueOf(1.5), nomis = BigDecimal.TEN),
         ),
       )
     }
@@ -240,17 +264,22 @@ fun dpsAccount(accountCode: Int = 1001, totalBalance: BigDecimal = BigDecimal.va
 
 private fun dpsZeroAccount(accountCode: Int = 1001) = dpsAccount(
   accountCode = accountCode,
-  totalBalance = BigDecimal.ZERO,
+  totalBalance = BigDecimal.valueOf(0.00),
   holdBalance = BigDecimal.ZERO,
 )
 
-fun nomisPrisonerAccounts(accountCode: Long = 1001) = PrisonerAggregatedAccountsDto(
+fun nomisPrisonerAccounts(accountCode: Long = 1001, balance: BigDecimal = BigDecimal.valueOf(1.5)) = PrisonerAggregatedAccountsDto(
   rootOffenderId = OFFENDER_ID,
   prisonNumber = OFFENDER_NO,
-  accounts = listOf(nomisAccount(accountCode)),
+  accounts = listOf(nomisAccount(accountCode, balance)),
 )
 
-private fun nomisAccount(accountCode: Long = 1001) = AggregatedAccountDto(
+private fun nomisZeroAccount(accountCode: Long = 1001) = AggregatedAccountDto(
   accountCode = accountCode,
-  balance = BigDecimal.valueOf(1.5),
+  balance = BigDecimal.valueOf(0),
+)
+
+private fun nomisAccount(accountCode: Long = 1001, balance: BigDecimal = BigDecimal.valueOf(1.5)) = AggregatedAccountDto(
+  accountCode = accountCode,
+  balance = balance,
 )

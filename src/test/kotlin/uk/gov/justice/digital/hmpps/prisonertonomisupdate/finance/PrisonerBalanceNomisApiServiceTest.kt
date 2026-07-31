@@ -86,7 +86,7 @@ class PrisonerBalanceNomisApiServiceTest {
   }
 
   @Nested
-  @DisplayName("GET /finance/prisoners/rootOffenderId/{rootOffenderId}/balance")
+  @DisplayName("GET /finance/prisoners/rootOffenderId/{rootOffenderId}/balance-details")
   inner class GetPrisonerAccountDetails {
 
     private val sampleDto = PrisonerBalanceDto(
@@ -120,7 +120,7 @@ class PrisonerBalanceNomisApiServiceTest {
       apiService.getPrisonerAccountDetails(35L)
 
       mockServer.verify(
-        getRequestedFor(urlPathEqualTo("/finance/prisoners/rootOffenderId/35/balance")),
+        getRequestedFor(urlPathEqualTo("/finance/prisoners/rootOffenderId/35/balance-details")),
       )
     }
 
@@ -197,7 +197,7 @@ class PrisonerBalanceNomisApiServiceTest {
 
     @Test
     fun `will pass oath2 token to service`() = runTest {
-      apiService.getPrisonerAccounts(35L)
+      apiService.getPrisonerAccountsToReconcile(35L)
 
       mockServer.verify(
         getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
@@ -208,7 +208,7 @@ class PrisonerBalanceNomisApiServiceTest {
     fun `will call the get endpoint`() = runTest {
       mockServer.stubGetPrisonerAccounts(35L, sampleDto)
 
-      apiService.getPrisonerAccounts(35L)
+      apiService.getPrisonerAccountsToReconcile(35L)
 
       mockServer.verify(
         getRequestedFor(urlPathEqualTo("/finance/prisoners/rootOffenderId/35/balance/reconcile")),
@@ -219,7 +219,7 @@ class PrisonerBalanceNomisApiServiceTest {
     fun `will return data`() = runTest {
       mockServer.stubGetPrisonerAccounts(35L, sampleDto)
 
-      val data = apiService.getPrisonerAccounts(35L)
+      val data = apiService.getPrisonerAccountsToReconcile(35L)
 
       assertThat(data).isEqualTo(sampleDto)
     }

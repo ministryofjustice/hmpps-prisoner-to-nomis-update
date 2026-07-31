@@ -78,20 +78,21 @@ class PrisonerBalanceReconciliationService(
   )
 
   internal suspend fun checkPrisonerBalance(rootOffenderId: Long): MismatchPrisonerBalance? = runCatching {
-    val nomisAccounts = financeNomisApiService.getPrisonerAccounts(rootOffenderId)
+    val nomisAccounts = financeNomisApiService.getPrisonerAccountsToReconcile(rootOffenderId)
     val dpsAccounts = dpsApiService.getPrisonerAccounts(nomisAccounts.prisonNumber)
     val nomisFields = BalanceFields(
       prisonNumber = nomisAccounts.prisonNumber,
-      accounts = nomisAccounts.accounts.map {
-        AccountFields(
-          accountCode = it.accountCode.toInt(),
-          balance = it.balance,
-        )
-      },
+      accounts = nomisAccounts.accounts.filter { it.balance.compareTo(BigDecimal.ZERO) != 0 }
+        .map {
+          AccountFields(
+            accountCode = it.accountCode.toInt(),
+            balance = it.balance,
+          )
+        },
     )
     val dpsFields = BalanceFields(
       prisonNumber = nomisAccounts.prisonNumber,
-      accounts = dpsAccounts.filter { it.value.totalBalance != BigDecimal.ZERO }
+      accounts = dpsAccounts.filter { it.value.totalBalance.compareTo(BigDecimal.ZERO) != 0 }
         .map {
           AccountFields(
             accountCode = it.key.toInt(),
