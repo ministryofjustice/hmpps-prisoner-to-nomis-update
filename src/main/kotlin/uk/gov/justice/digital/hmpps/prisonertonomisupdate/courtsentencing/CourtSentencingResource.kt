@@ -8,12 +8,14 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
@@ -443,6 +445,47 @@ class CourtSentencingResource(
     @PathVariable
     appearanceId: String,
   ) = courtSentencingRepairService.resynchroniseAppearanceUpdateToNomis(
+    offenderNo = offenderNo,
+    courtCaseId = courtCaseId,
+    courtAppearanceId = appearanceId,
+  )
+
+  @ResponseStatus(code = HttpStatus.CREATED)
+  @PostMapping("/prisoners/{offenderNo}/court-sentencing/dps-court-case/{courtCaseId}/dps-appearance/{appearanceId}/repair")
+  @Operation(
+    summary = "Synchronises an appearance for an appearance from DPS to NOMIS",
+    description = "Used when an appearance with an existing mapping needs synchronising to nomis, so emergency use only. Mappings should not exist. Requires ROLE_PRISONER_TO_NOMIS__UPDATE__RW",
+    responses = [
+      ApiResponse(
+        responseCode = "201",
+        description = "repair successful",
+        content = [
+          Content(
+            mediaType = "application/json",
+            schema = Schema(implementation = CourtCaseRepairResponse::class),
+          ),
+        ],
+      ),
+      ApiResponse(
+        responseCode = "401",
+        description = "Unauthorized to access this endpoint",
+      ),
+      ApiResponse(
+        responseCode = "403",
+        description = "Incorrect permissions to call endpoint",
+      ),
+    ],
+  )
+  suspend fun repairAppearanceCreateToNomis(
+    @PathVariable
+    offenderNo: String,
+    @Schema(description = "The DPS ID of the related court case")
+    @PathVariable
+    courtCaseId: String,
+    @Schema(description = "The DPS ID of the appearance to be resynchronised")
+    @PathVariable
+    appearanceId: String,
+  ) = courtSentencingRepairService.synchroniseAppearanceCreateToNomis(
     offenderNo = offenderNo,
     courtCaseId = courtCaseId,
     courtAppearanceId = appearanceId,
