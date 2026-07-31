@@ -154,7 +154,6 @@ generic-service:
     - name: prisoner-balance-recon
       type: PRISONER_BALANCE_RECON
       schedule: "30 3 * * *"
-      suspend: true
     - name: prisner-contact-recon
       type: PRISONER_CONTACT_RECON
       schedule: "50 3 * * *"
