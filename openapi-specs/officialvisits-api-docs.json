@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-07-15.1032.df7ebb6"
+    "version" : "2026-07-31.1051.7c72a00"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -5986,8 +5986,19 @@
             "description" : "The recipient email address to send the notification to",
             "items" : {
               "type" : "string"
-            },
-            "minItems" : 1
+            }
+          },
+          "videoLinkUrl" : {
+            "type" : [ "string", "null" ],
+            "description" : "This could be a PCVL number, a full URL, or some locally-recognised shorthand for the room link.",
+            "maxLength" : 150,
+            "minLength" : 0
+          },
+          "notes" : {
+            "type" : [ "string", "null" ],
+            "description" : "Some personalised email notes about the visit.",
+            "maxLength" : 240,
+            "minLength" : 0
           }
         },
         "required" : [ "emailAddresses", "notificationType" ]
