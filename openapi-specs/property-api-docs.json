@@ -7,7 +7,7 @@
       "name" : "Move a prisoner Team",
       "email" : "Moveaprisoner-gg@justice.gov.uk"
     },
-    "version" : "2026-07-20.168.a3d37e2"
+    "version" : "2026-08-03.199.912c860"
   },
   "servers" : [ {
     "url" : "/",
@@ -693,7 +693,7 @@
       "post" : {
         "tags" : [ "Property containers" ],
         "summary" : "Create a new property container",
-        "description" : "Requires role ROLE_PRISONER_PROPERTY__RW. If `previousSealNumber` matches a container the prisoner has due for transfer out at another prison, that container is reconciled as the property arriving here on transfer: it is linked to the new record and deactivated (transferred).",
+        "description" : "Requires role ROLE_PRISONER_PROPERTY__RW. When `previousSealNumber` is given it must match a container the prisoner has at another prison that is either still in storage there or already transferred out and not yet logged anywhere (ignoring case and surrounding whitespace); that container is reconciled as the property arriving here on transfer - linked to the new record and deactivated (transferred) - and both histories record the seal they were matched to. A previous seal that matches nothing is rejected with 400 rather than ignored, so a mistyped seal cannot leave two records for the same property.",
         "operationId" : "create",
         "requestBody" : {
           "content" : {
@@ -717,7 +717,7 @@
             }
           },
           "400" : {
-            "description" : "Invalid request",
+            "description" : "Invalid request, or `previousSealNumber` matched no property held for this person at another establishment (errorCode PREVIOUS_SEAL_NUMBER_NOT_FOUND)",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -1484,7 +1484,7 @@
       "get" : {
         "tags" : [ "Property containers" ],
         "summary" : "Get the property containers held in a prison, paged and grouped by prisoner",
-        "description" : "Requires role ROLE_PRISONER_PROPERTY__RO. Returns the establishment-wide property list as a page of prisoners (each with all their matching containers), so a prisoner's containers are never split across a page boundary - the page total is the number of matching prisoners. Each container is enriched with the prisoner name (prisoner-search), prison name (prison-register) and location description (locations-inside-prison-api). Optionally filtered by a free-text query (prisoner number, seal number or storage location), prisoner number, seal number, container type(s), status and storage location. With no status filter, containers that have left active storage (disposed, returned, transferred, combined) are hidden; pass a status filter, or includeRemoved=true to also surface removed/returned/disposed containers. Set dueForTransferIn=true to additionally surface property held at another prison that is due to be transferred in to this establishment (its owner was received here). Use the standard page, size and sort query parameters for pagination.",
+        "description" : "Requires role ROLE_PRISONER_PROPERTY__RO. Returns the establishment-wide property list as a page of prisoners (each with all their matching containers), so a prisoner's containers are never split across a page boundary - the page total is the number of matching prisoners. Each container is enriched with the prisoner name (prisoner-search), prison name (prison-register) and location description (locations-inside-prison-api). Optionally filtered by a free-text query (prisoner number, seal number or storage location), prisoner number, seal number, container type(s), status and storage location. With no status filter, containers that have left active storage (disposed, returned, transferred, combined) are hidden; pass a status filter, or includeRemoved=true to also surface removed/returned/disposed containers. Set dueForTransferIn=true to additionally surface property held at another prison that is needed here - either its owner is now at this establishment, or it has been sent here and not yet logged. Use the standard page, size and sort query parameters for pagination.",
         "operationId" : "getByPrisonId",
         "parameters" : [ {
           "name" : "prisonId",
@@ -1581,7 +1581,7 @@
         }, {
           "name" : "dueForTransferIn",
           "in" : "query",
-          "description" : "Also include property held at another prison that is due to be transferred in to this establishment (its owner was received here). Additive to the held-here list; when it is the only status selection, only incoming property is returned.",
+          "description" : "Also include property held at another prison that is needed here: either its owner is now at this establishment (so the property has to follow them, whether or not the move was ever recorded against the container), or it has been transferred here and not yet logged. Additive to the held-here list; when it is the only status selection, only incoming property is returned. Falls back to the destinations recorded on the containers alone if the establishment's population cannot be resolved.",
           "required" : false,
           "schema" : {
             "type" : "boolean",
@@ -2338,7 +2338,7 @@
           },
           "previousSealNumber" : {
             "type" : [ "string", "null" ],
-            "description" : "If this container is arriving on transfer from another establishment, the seal it was recorded under there (its 'due for transfer out' seal). Used to link to and deactivate that record so no ghost record is left behind. Leave blank for genuinely new property.",
+            "description" : "If this container is arriving on transfer from another establishment, the seal it was recorded under there. Matches any container the person has at another prison that is either still in storage there, or already transferred out and not yet logged anywhere - so neither a sending prison that never flags transfers, nor one that named a different destination, prevents the match. Matched ignoring case and surrounding whitespace. The matched record is linked to this one and deactivated (TRANSFERRED), and both histories name the other's seal. Rejected with 400 (errorCode PREVIOUS_SEAL_NUMBER_NOT_FOUND) if it matches nothing, so a mistyped seal cannot silently leave two records for one box. Leave blank for genuinely new property.",
             "example" : "SN8842K1"
           },
           "internalLocationId" : {
@@ -2542,12 +2542,12 @@
           "relatedContainerId" : {
             "type" : [ "string", "null" ],
             "format" : "uuid",
-            "description" : "Id of a related container, for combine events",
+            "description" : "Id of a container this event relates to: the container this one was combined into, or the matching record at the other establishment when property arriving on transfer was matched to its previous seal",
             "example" : "33333333-3333-3333-3333-333333333333"
           },
           "relatedContainerSealNumber" : {
             "type" : [ "string", "null" ],
-            "description" : "Seal number of the related container, for combine events - the container this one was combined into",
+            "description" : "Seal number of the related container as at this event: the container this one was combined into, or - for property matched on arrival from another establishment - the seal the other record holds. On the arriving container that is the previous seal; on the sending container it is the new one",
             "example" : "SN991234"
           }
         },
@@ -2604,6 +2604,11 @@
             "description" : "Whether the container is currently held in the prisoner's current prison. False flags property left behind at a prison the prisoner has moved on from",
             "example" : true
           },
+          "receivingPrisonId" : {
+            "type" : [ "string", "null" ],
+            "description" : "Id of the prison this container is due to arrive at, when it is incoming there: either due for transfer out (owner has moved but property is still at its holding prison) or transferred out but not yet logged at the destination (awaiting). Null once reconciled or when not incoming",
+            "example" : "MDI"
+          },
           "containerType" : {
             "type" : "string",
             "description" : "Type of container",
@@ -2617,7 +2622,7 @@
           },
           "currentStatus" : {
             "type" : "string",
-            "description" : "Current status, derived from the most recent event",
+            "description" : "Current status. Derived from the container's history and, for a container still in storage, from where its owner now is: property for someone released or being released imminently reads DUE_FOR_RETURN, property at a prison they have left reads DUE_FOR_TRANSFER_OUT, and a disposal date that has arisen takes precedence over both. Identical on the person and establishment views.",
             "enum" : [ "STORED", "DUE_FOR_TRANSFER_OUT", "DUE_FOR_RETURN", "DISPOSAL_REQUIRED", "DISPOSED", "RETURNED", "TRANSFER", "COMBINED", "CREATED_IN_ERROR", "REMOVED" ],
             "example" : "STORED"
           },
@@ -2822,12 +2827,12 @@
           "relatedContainerId" : {
             "type" : [ "string", "null" ],
             "format" : "uuid",
-            "description" : "Id of a related container, for combine events",
+            "description" : "Id of a container this event relates to: the container this one was combined into, or the matching record at the other establishment when property arriving on transfer was matched to its previous seal",
             "example" : "33333333-3333-3333-3333-333333333333"
           },
           "relatedContainerSealNumber" : {
             "type" : [ "string", "null" ],
-            "description" : "Seal number of the related container, for combine events - the container this one was combined into",
+            "description" : "Seal number of the related container as at this event: the container this one was combined into, or - for property matched on arrival from another establishment - the seal the other record holds. On the arriving container that is the previous seal; on the sending container it is the new one",
             "example" : "SN991234"
           },
           "containerId" : {
@@ -2921,12 +2926,12 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paged" : {
+            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -3012,7 +3017,7 @@
           "dueToBeReturned" : {
             "type" : "integer",
             "format" : "int32",
-            "description" : "Number of containers due to be returned (flagged after the prisoner's release)",
+            "description" : "Number of containers due to be returned: those flagged after the prisoner's release, plus stored containers whose owner has a confirmed release date within a day",
             "example" : 36
           },
           "dueToBeDisposed" : {
