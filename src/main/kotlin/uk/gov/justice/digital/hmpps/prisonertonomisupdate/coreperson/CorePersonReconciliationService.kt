@@ -43,7 +43,7 @@ class CorePersonReconciliationService(
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
     private const val TELEMETRY_CORE_PERSON_PREFIX = "coreperson-reports-reconciliation"
 
-    private val excludedOffenderNos = CorePersonReconciliationService::class.java
+    private val excludedBookingIds = CorePersonReconciliationService::class.java
       .getResource("/excludedCorePersonReconciliationBookingId.txt")
       .readText()
       .split(",")
@@ -144,7 +144,7 @@ class CorePersonReconciliationService(
     appendDifference(nomisCorePerson.religion, cprCorePerson.religion, differences, "religion")
     appendReligionsDifference(nomisCorePerson.religions, cprCorePerson.religions, differences, "religions")
 
-    val excluded = excludedOffenderNos.contains(prisonerId.bookingId)
+    val excluded = excludedBookingIds.contains(prisonerId.bookingId)
     return if (!excluded) {
       differences.takeIf { it.isNotEmpty() }
         ?.let { MismatchCorePerson(prisonNumber = prisonerId.offenderNo, differences = it) }?.also { mismatch ->
