@@ -13,6 +13,7 @@
 !**/MaintainIncentiveReviewsApi.kt
 !**/IncentiveLevelsApi.kt
 !**/PrisonIncentiveLevelsApi.kt
+!**/BookingSwitchRepairResult.kt
 !**/CreateIncentiveReviewRequest.kt
 !**/ErrorResponse.kt
 !**/IncentiveLevel.kt

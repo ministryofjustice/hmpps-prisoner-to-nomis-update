@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-06-03.406.20894df"
+    "version" : "2026-08-03.454.fdf1333"
   },
   "servers" : [ {
     "url" : "/",
@@ -925,6 +925,82 @@
           },
           "403" : {
             "description" : "Incorrect permissions to use this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/incentive-reviews/prisoner/{prisonerNumber}/repair-booking-switch" : {
+      "post" : {
+        "tags" : [ "Maintain incentive reviews" ],
+        "summary" : "Repairs a prisoner left on the wrong incentive level after NOMIS switched their booking",
+        "description" : "When a recall is mistakenly admitted onto a new booking and NOMIS staff correct it by re-admitting the prisoner onto their earlier booking, the default-level review written against the mistaken booking stays current and masks the level held on the reinstated booking. This does what the `READMISSION_SWITCH_BOOKING` event now does, for prisoners affected before it was handled or for whom the event was missed, and publishes `incentives.iep-review.updated` so downstream services resync. Safe to re-run: a prisoner who needs no repair is left untouched. Requires INCENTIVE_REVIEWS role and write scope.",
+        "operationId" : "repairAfterBookingSwitch",
+        "parameters" : [ {
+          "name" : "prisonerNumber",
+          "in" : "path",
+          "description" : "Prisoner Number",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prisoner Number",
+            "example" : "A1234AB",
+            "pattern" : "^[A-Z0-9]{7}$"
+          },
+          "example" : "A1234AB"
+        }, {
+          "name" : "dry-run",
+          "in" : "query",
+          "description" : "Report what would change without writing anything or publishing any events",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false,
+            "description" : "Report what would change without writing anything or publishing any events",
+            "example" : "false",
+            "pattern" : "^true|false$"
+          },
+          "example" : false
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Repair attempted; the response body reports what was changed, if anything",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BookingSwitchRepairResult"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Incorrect permissions to use this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Prisoner not found",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -1907,6 +1983,63 @@
           }
         },
         "required" : [ "active", "code", "name", "required" ]
+      },
+      "BookingSwitchRepairResult" : {
+        "type" : "object",
+        "description" : "Outcome of repairing a prisoner whose incentive level was left on a booking that NOMIS has since switched away from",
+        "properties" : {
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "Prisoner number",
+            "example" : "A1234BC"
+          },
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The booking prisoner-search reports the prisoner is on — the one their level is reinstated to",
+            "example" : 1234567
+          },
+          "outcome" : {
+            "type" : "string",
+            "description" : "What was done",
+            "enum" : [ "REPAIRED", "NOTHING_TO_DO" ]
+          },
+          "dryRun" : {
+            "type" : "boolean",
+            "description" : "Whether this was a dry run, in which case nothing was written",
+            "example" : false
+          },
+          "levelCodeBefore" : {
+            "type" : [ "string", "null" ],
+            "description" : "The prisoner's current incentive level before the repair",
+            "example" : "STD"
+          },
+          "levelCodeAfter" : {
+            "type" : [ "string", "null" ],
+            "description" : "The prisoner's current incentive level after the repair; for a dry run, what it would become",
+            "example" : "ENH"
+          },
+          "reviewIdsStoodDown" : {
+            "type" : "array",
+            "description" : "Ids of the reviews on the mistaken booking that are no longer current",
+            "example" : [ 2345 ],
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          },
+          "reviewIdReinstated" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int64",
+            "description" : "Id of the review on the reinstated booking that was made current again, if any",
+            "example" : 1234
+          },
+          "message" : {
+            "type" : "string",
+            "description" : "Human-readable summary, useful when nothing was changed"
+          }
+        },
+        "required" : [ "bookingId", "dryRun", "message", "outcome", "prisonerNumber", "reviewIdsStoodDown" ]
       },
       "CreateIncentiveReviewRequest" : {
         "type" : "object",
