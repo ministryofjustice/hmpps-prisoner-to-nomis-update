@@ -11,11 +11,9 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiExtension.Companion.dpsFinanceServer
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.GeneralLedgerBalanceDetailsList
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SubAccountBalanceForReconciliation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
-import java.util.UUID
 
 @SpringAPIServiceTest
 @Import(
@@ -57,34 +55,6 @@ class FinanceDpsApiServiceTest {
   }
 
   @Nested
-  inner class GetPrisonTransaction {
-    val transactionId: UUID = UUID.randomUUID()
-
-    @Test
-    internal fun `will pass oath2 token to endpoint`() = runTest {
-      dpsFinanceServer.stubGetPrisonTransaction(transactionId.toString())
-
-      apiService.getPrisonTransaction(transactionId)
-
-      dpsFinanceServer.verify(
-        getRequestedFor(anyUrl())
-          .withHeader("Authorization", equalTo("Bearer ABCDE")),
-      )
-    }
-
-    @Test
-    fun `will call the GET endpoint`() = runTest {
-      dpsFinanceServer.stubGetPrisonTransaction(transactionId.toString())
-
-      apiService.getPrisonTransaction(transactionId)
-
-      dpsFinanceServer.verify(
-        getRequestedFor(urlPathEqualTo("/sync/general-ledger-transactions/$transactionId")),
-      )
-    }
-  }
-
-  @Nested
   inner class ReconcilePrisonerAccounts {
     val prisonerNo = "A1234AA"
     val sampleResponse = emptyMap<String, SubAccountBalanceForReconciliation>()
@@ -117,44 +87,6 @@ class FinanceDpsApiServiceTest {
       dpsFinanceServer.stubGetPrisonerAccounts(prisonerNo, sampleResponse)
 
       val data = apiService.getPrisonerAccounts(prisonerNo)
-
-      assertThat(data).isEqualTo(sampleResponse)
-    }
-  }
-
-  @Nested
-  inner class ReconcilePrisonAccounts {
-    val prisonId = "LEI"
-    val sampleResponse = GeneralLedgerBalanceDetailsList(items = emptyList())
-
-    @Test
-    internal fun `will pass oath2 token to endpoint`() = runTest {
-      dpsFinanceServer.stubGetPrisonBalance(prisonId, sampleResponse)
-
-      apiService.getPrisonAccounts(prisonId)
-
-      dpsFinanceServer.verify(
-        getRequestedFor(anyUrl())
-          .withHeader("Authorization", equalTo("Bearer ABCDE")),
-      )
-    }
-
-    @Test
-    fun `will call the GET endpoint`() = runTest {
-      dpsFinanceServer.stubGetPrisonBalance(prisonId, sampleResponse)
-
-      apiService.getPrisonAccounts(prisonId)
-
-      dpsFinanceServer.verify(
-        getRequestedFor(urlPathEqualTo("/reconcile/general-ledger-balances/$prisonId")),
-      )
-    }
-
-    @Test
-    fun `will return data`() = runTest {
-      dpsFinanceServer.stubGetPrisonBalance(prisonId, sampleResponse)
-
-      val data = apiService.getPrisonAccounts(prisonId)
 
       assertThat(data).isEqualTo(sampleResponse)
     }

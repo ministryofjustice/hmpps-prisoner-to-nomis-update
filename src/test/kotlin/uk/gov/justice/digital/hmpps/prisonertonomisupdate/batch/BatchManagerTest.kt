@@ -37,8 +37,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PERSON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PRISONER_BALANCE_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PRISONER_CONTACT_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PRISONER_RESTRICTION_RECON
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PRISON_BALANCE_RECON
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PRISON_TRANSACTIONS_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PURGE_ACTIVITY_DLQ
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.SENTENCING_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.SUSPENDED_ALLOCATION_RECON
@@ -47,8 +45,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.CaseNotesRec
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.CSIPReconciliationService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.PrisonBalanceReconciliationService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.PrisonTransactionReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.PrisonerBalanceReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.PrisonerTransactionReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives.IncentivesReconciliationService
@@ -96,8 +92,6 @@ class BatchManagerTest {
   private val officialVisitsAllMissingFromNOMISReconciliationService = mock<OfficialVisitsAllMissingFromNOMISReconciliationService>()
   private val officialVisitsActiveScheduledReconciliationService = mock<OfficialVisitsActiveScheduledReconciliationService>()
   private val organisationsReconciliationService = mock<OrganisationsReconciliationService>()
-  private val prisonBalanceReconciliationService = mock<PrisonBalanceReconciliationService>()
-  private val prisonTransactionsReconciliationService = mock<PrisonTransactionReconciliationService>()
   private val prisonerTransactionsReconciliationService = mock<PrisonerTransactionReconciliationService>()
   private val prisonerBalanceReconciliationService = mock<PrisonerBalanceReconciliationService>()
   private val prisonerRestrictionsReconciliationService = mock<PrisonerRestrictionsReconciliationService>()
@@ -351,32 +345,12 @@ class BatchManagerTest {
   }
 
   @Test
-  fun `should call the prison balance reconciliation service`() = runTest {
-    val batchManager = batchManager(PRISON_BALANCE_RECON)
-
-    batchManager.onApplicationEvent(event)
-
-    verify(prisonBalanceReconciliationService).generateReconciliationReport()
-    verify(context).close()
-  }
-
-  @Test
   fun `should call the prisoner balance reconciliation service`() = runTest {
     val batchManager = batchManager(PRISONER_BALANCE_RECON)
 
     batchManager.onApplicationEvent(event)
 
     verify(prisonerBalanceReconciliationService).generatePrisonerBalanceReconciliationReportBatch()
-    verify(context).close()
-  }
-
-  @Test
-  fun `should call the prison transactions reconciliation service`() = runTest {
-    val batchManager = batchManager(PRISON_TRANSACTIONS_RECON)
-
-    batchManager.onApplicationEvent(event)
-
-    verify(prisonTransactionsReconciliationService).generateReconciliationReport()
     verify(context).close()
   }
 
@@ -524,8 +498,6 @@ class BatchManagerTest {
     officialVisitsAllMissingFromNOMISReconciliationService = officialVisitsAllMissingFromNOMISReconciliationService,
     officialVisitsActiveScheduledReconciliationService = officialVisitsActiveScheduledReconciliationService,
     organisationReconciliationService = organisationsReconciliationService,
-    prisonBalanceReconciliationService = prisonBalanceReconciliationService,
-    prisonTransactionsReconciliationService = prisonTransactionsReconciliationService,
     prisonerTransactionsReconciliationService = prisonerTransactionsReconciliationService,
     prisonerBalanceReconciliationService = prisonerBalanceReconciliationService,
     prisonerRestrictionsReconciliationService = prisonerRestrictionsReconciliationService,

@@ -259,7 +259,6 @@ class PrisonerBalanceReconciliationResourceIntTest(
             rootOffenderId = OFFENDER_ID,
           ),
         )
-        dpsFinanceServer.stubGetPrisonBalance()
       }
 
       @Test
