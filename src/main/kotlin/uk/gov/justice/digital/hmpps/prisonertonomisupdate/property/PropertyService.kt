@@ -5,9 +5,11 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PropertyContainerMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PropertyContainerCode
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PropertyContainerCreateRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PropertyContainerUpdateRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.property.model.PropertyContainerDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.trackEvent
 import java.util.UUID
 
 @Service
@@ -20,7 +22,7 @@ class PropertyService(
 ) : CreateMappingRetryable {
   suspend fun created(event: PropertyDomainEvent) {
     val telemetry = event.asTelemetry()
-    if (event.source == "DPS") {
+    if (event.originatedInDps()) {
       synchronise {
         name = "property"
         telemetryClient = this@PropertyService.telemetryClient
@@ -32,7 +34,7 @@ class PropertyService(
         }
         transform {
           propertyDpsApiService.getProperty(UUID.fromString(event.additionalInformation.dpsId)).run {
-            val request = toNomisRequest()
+            val request = toNomisCreateRequest()
 
             eventTelemetry += "locationId" to request.internalLocationId.toString()
 
@@ -55,14 +57,40 @@ class PropertyService(
   }
 
   suspend fun updated(event: PropertyDomainEvent) {
-    TODO("Not yet implemented")
+    val telemetry = event.asTelemetry()
+    if (event.originatedInDps() && event.supportedFieldUpdated()) {
+      try {
+        val dpsId = event.additionalInformation.dpsId
+        val dpsData = propertyDpsApiService.getProperty(UUID.fromString(dpsId))
+        val mapping = propertyMappingService.getMappingByDpsId(dpsId)
+        val nomisId = mapping.nomisPropertyContainerId
+        telemetry += "nomisPropertyContainerId" to nomisId.toString()
+
+        propertyNomisApiService.updateProperty(nomisId, dpsData.toNomisUpdateRequest())
+
+        telemetryClient.trackEvent("property-update-success", telemetry)
+      } catch (e: Exception) {
+        telemetry += "error" to (e.message ?: "unknown")
+        telemetryClient.trackEvent("property-update-failed", telemetry)
+        throw e
+      }
+    } else {
+      telemetryClient.trackEvent("property-update-ignored", telemetry, null)
+    }
   }
+
+  suspend fun PropertyContainerDto.toNomisUpdateRequest() = PropertyContainerUpdateRequest(
+    sealMark = currentSealNumber ?: "not sealed", // TODO
+    containerCode = toNomisContainerCode(),
+    internalLocationId = toNomisLocation(),
+    proposedDisposalDate = proposedDisposalDate,
+  )
 
   override suspend fun retryCreateMapping(message: String) {
     TODO("Not yet implemented")
   }
 
-  private suspend fun PropertyContainerDto.toNomisRequest() = PropertyContainerCreateRequest(
+  private suspend fun PropertyContainerDto.toNomisCreateRequest() = PropertyContainerCreateRequest(
     offenderNo = prisonerNumber,
     prisonId = prisonId,
     active = true,
@@ -77,6 +105,19 @@ class PropertyService(
       propertyMappingService.getNomisLocation(currentLocation.toString()).nomisLocationId
     }
 }
+
+private val supportedFields = setOf(
+  "currentSealNumber",
+  "currentLocation",
+  "containerType",
+  "currentLocationType",
+  "proposedDisposalDate",
+)
+
+private fun PropertyDomainEvent.supportedFieldUpdated(): Boolean = additionalInformation
+  .changedFields?.let { supportedFields.intersect(it.toSet()).isNotEmpty() } == true
+
+private fun PropertyDomainEvent.originatedInDps(): Boolean = source == "DPS"
 
 fun PropertyDomainEvent.asTelemetry() = mutableMapOf(
   "dpsPropertyContainerId" to additionalInformation.dpsId,

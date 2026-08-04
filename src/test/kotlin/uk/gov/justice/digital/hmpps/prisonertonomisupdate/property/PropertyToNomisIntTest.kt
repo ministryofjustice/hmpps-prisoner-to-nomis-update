@@ -2,13 +2,13 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.property
 
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.eq
-import org.mockito.kotlin.any
 import org.mockito.kotlin.check
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.verify
@@ -16,17 +16,18 @@ import org.springframework.beans.factory.annotation.Autowired
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PropertyContainerMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.property.PropertyDpsApiExtension.Companion.jsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.property.PropertyDpsApiExtension.Companion.propertyDpsApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.withRequestBodyJsonPath
 import java.util.UUID
 
-private val OFFENDER_NO = "A1234KT"
-private val DPS_ID = UUID.randomUUID().toString()
-private val DPS_LOCATION_ID = UUID.randomUUID().toString()
-private val NOMIS_ID = 123456789L
-private val NOMIS_LOCATION_ID = 1234567890L
-private val BOOKING_ID = 123456L
+private const val OFFENDER_NO = "A1234KT"
+private const val DPS_ID = "12345678-1234-1234-1234-123456789012"
+private const val DPS_LOCATION_ID = "12345678-1234-1234-1234-123456789013"
+private const val NOMIS_ID = 123456789L
+private const val NOMIS_LOCATION_ID = 1234567890L
+private const val BOOKING_ID = 123456L
 
 class PropertyToNomisIntTest : SqsIntegrationTestBase() {
 
@@ -44,7 +45,7 @@ class PropertyToNomisIntTest : SqsIntegrationTestBase() {
     inner class WhenNomisCreated {
       @BeforeEach
       fun setup() {
-        publishCreatePropertyDomainEvent(source = "NOMIS")
+        publishPropertyDomainEvent("prison-property.container.created", source = "NOMIS")
         waitForAnyProcessingToComplete()
       }
 
@@ -52,7 +53,11 @@ class PropertyToNomisIntTest : SqsIntegrationTestBase() {
       fun `will send telemetry event showing it ignored the create`() {
         verify(telemetryClient).trackEvent(
           eq("property-create-ignored"),
-          any(),
+          check {
+            assertThat(it).containsEntry("dpsPropertyContainerId", DPS_ID)
+            assertThat(it).containsEntry("offenderNo", OFFENDER_NO)
+            assertThat(it).containsEntry("source", "NOMIS")
+          },
           isNull(),
         )
       }
@@ -75,7 +80,7 @@ class PropertyToNomisIntTest : SqsIntegrationTestBase() {
           propertyDpsApi.stubGetProperty(dpsProperty(UUID.fromString(DPS_ID), UUID.fromString(DPS_LOCATION_ID)))
           propertyMappingApiMockServer.stubPostMapping()
           propertyMappingApiMockServer.stubGetLocationByDpsId(DPS_LOCATION_ID, NOMIS_LOCATION_ID)
-          publishCreatePropertyDomainEvent()
+          publishPropertyDomainEvent("prison-property.container.created")
           waitForAnyProcessingToComplete()
         }
 
@@ -118,12 +123,127 @@ class PropertyToNomisIntTest : SqsIntegrationTestBase() {
     }
   }
 
-  private fun publishCreatePropertyDomainEvent(
+  @Nested
+  @DisplayName("prison-property.container.updated")
+  inner class PropertyUpdated {
+    @Nested
+    @DisplayName("when NOMIS is the origin of a Property update")
+    inner class WhenNomisUpdated {
+      @BeforeEach
+      fun setup() {
+        publishPropertyDomainEvent("prison-property.container.updated", source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing it ignored the update`() {
+        verify(telemetryClient).trackEvent(
+          eq("property-update-ignored"),
+          check {
+            assertThat(it).containsEntry("dpsPropertyContainerId", DPS_ID)
+            assertThat(it).containsEntry("offenderNo", OFFENDER_NO)
+            assertThat(it).containsEntry("source", "NOMIS")
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will not try to update the Property in NOMIS`() {
+        propertyNomisApiMockServer.verify(0, putRequestedFor(anyUrl()))
+      }
+    }
+
+    @Nested
+    @DisplayName("when no Nomis-mapped field was updated")
+    inner class WhenNoRelevantFieldUpdated {
+      @BeforeEach
+      fun setup() {
+        publishPropertyDomainEvent("prison-property.container.updated", source = "DPS", changedFields = listOf("otherField"))
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing it ignored the update`() {
+        verify(telemetryClient).trackEvent(
+          eq("property-update-ignored"),
+          check {
+            assertThat(it).containsEntry("dpsPropertyContainerId", DPS_ID)
+            assertThat(it).containsEntry("offenderNo", OFFENDER_NO)
+            assertThat(it).containsEntry("source", "DPS")
+            assertThat(it).containsEntry("changedFields", "[otherField]")
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will not try to update the Property in NOMIS`() {
+        propertyNomisApiMockServer.verify(0, putRequestedFor(anyUrl()))
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of a Property update")
+    inner class WhenDpsUpdated {
+      @Nested
+      inner class HappyPath {
+
+        @BeforeEach
+        fun setup() {
+          propertyDpsApi.stubGetProperty(dpsProperty(UUID.fromString(DPS_ID), UUID.fromString(DPS_LOCATION_ID)))
+          propertyMappingApiMockServer.stubGetByDpsId(
+            DPS_ID,
+            PropertyContainerMappingDto(
+              nomisPropertyContainerId = NOMIS_ID,
+              dpsPropertyContainerId = DPS_ID,
+              bookingId = BOOKING_ID,
+              offenderNo = OFFENDER_NO,
+              mappingType = PropertyContainerMappingDto.MappingType.DPS_CREATED,
+            ),
+          )
+          propertyMappingApiMockServer.stubGetLocationByDpsId(DPS_LOCATION_ID, NOMIS_LOCATION_ID)
+          propertyNomisApiMockServer.stubPutProperty(NOMIS_ID)
+          publishPropertyDomainEvent("prison-property.container.updated", changedFields = listOf("currentSealNumber"))
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will correctly update the Property in NOMIS`() {
+          propertyNomisApiMockServer.verify(
+            putRequestedFor(anyUrl())
+              .withRequestBodyJsonPath("$.sealMark", "SEAL1234")
+              .withRequestBodyJsonPath("$.containerCode", "BULK")
+              .withRequestBodyJsonPath("$.internalLocationId", NOMIS_LOCATION_ID)
+              .withRequestBodyJsonPath("$.proposedDisposalDate", "2026-03-04"),
+          )
+        }
+
+        @Test
+        fun `will send telemetry event showing the update`() {
+          verify(telemetryClient).trackEvent(
+            eq("property-update-success"),
+            check {
+              assertThat(it).containsEntry("dpsPropertyContainerId", DPS_ID)
+              assertThat(it).containsEntry("nomisPropertyContainerId", "$NOMIS_ID")
+              assertThat(it).containsEntry("offenderNo", OFFENDER_NO)
+              assertThat(it).containsEntry("source", "DPS")
+              assertThat(it).containsEntry("changedFields", "[currentSealNumber]")
+            },
+            isNull(),
+          )
+        }
+      }
+    }
+  }
+
+  private fun publishPropertyDomainEvent(
+    eventType: String,
     offenderNo: String = OFFENDER_NO,
     dpsId: String = DPS_ID,
     source: String = "DPS",
+    changedFields: List<String>? = null,
   ) {
-    val eventType = "prison-property.container.created"
     val event = PropertyDomainEvent(
       eventType = eventType,
       version = 1,
@@ -135,7 +255,7 @@ class PropertyToNomisIntTest : SqsIntegrationTestBase() {
       additionalInformation = PropertyDomainAdditionalInformation(
         dpsId = dpsId,
         nomisPropertyContainerId = null,
-        changedFields = null,
+        changedFields = changedFields,
       ),
     )
     awsSnsClient.publish(

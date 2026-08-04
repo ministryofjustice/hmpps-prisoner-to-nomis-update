@@ -2,6 +2,8 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.property
 
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.post
+import com.github.tomakehurst.wiremock.client.WireMock.put
+import com.github.tomakehurst.wiremock.client.WireMock.status
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.springframework.http.HttpStatus
@@ -15,7 +17,7 @@ class PropertyNomisApiMockServer(private val jsonMapper: JsonMapper) {
   fun stubPostProperty(
     propertyId: Long,
     bookingId: Long,
-    property: CreatePropertyResponse = CreatePropertyResponse(
+    response: CreatePropertyResponse = CreatePropertyResponse(
       propertyContainerId = propertyId,
       bookingId = bookingId,
     ),
@@ -25,8 +27,14 @@ class PropertyNomisApiMockServer(private val jsonMapper: JsonMapper) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.CREATED.value())
-          .withBody(jsonMapper.writeValueAsString(property)),
+          .withBody(jsonMapper.writeValueAsString(response)),
       ),
+    )
+  }
+
+  fun stubPutProperty(propertyId: Long, status: Int = 200) {
+    nomisApi.stubFor(
+      put(urlEqualTo("/property-containers/$propertyId")).willReturn(status(status)),
     )
   }
 
