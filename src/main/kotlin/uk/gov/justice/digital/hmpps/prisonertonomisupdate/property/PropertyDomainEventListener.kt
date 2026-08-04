@@ -56,3 +56,6 @@ data class PropertyDomainAdditionalInformation(
   val nomisPropertyContainerId: Long? = null,
   val changedFields: List<String>? = null,
 )
+
+// "Message" : "{\"eventType\":\"prison-property.container.updated\",\"version\":1,\"description\":\"A prisoner property container was changed in DPS\",\"detailUrl\":null,\"occurredAt\":\"2026-07-30T10:38:27.418477578Z\",
+// \"prisonerNumber\":\"G0442GA\",\"source\":\"DPS\",\"additionalInformation\":{\"dpsId\":\"019fb292-0229-716f-abd7-3edb724f72a2\",\"changedFields\":[\"removalOutcome\"]}}",
