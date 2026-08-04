@@ -2019,6 +2019,106 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             assertThat(it["nomisChargeId"]).isEqualTo(NOMIS_COURT_CHARGE_ID.toString())
             assertThat(it["nomisOutcomeCode"]).isEqualTo(COURT_CHARGE_1_RESULT_CODE)
             assertThat(it["nomisOffenceCode"]).isEqualTo(COURT_CHARGE_1_OFFENCE_CODE)
+            assertThat(it["isOnFutureAppearance"]).isEqualTo("false")
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will call nomis api to update the Charge`() {
+        waitForAnyProcessingToComplete()
+        courtSentencingNomisApi.verify(
+          putRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/$NOMIS_COURT_CASE_ID_FOR_CREATION/court-appearances/$NOMIS_COURT_APPEARANCE_ID/charges/$NOMIS_COURT_CHARGE_ID"))
+            .withRequestBody(
+              matchingJsonPath(
+                "offenceCode",
+                equalTo(COURT_CHARGE_1_OFFENCE_CODE),
+              ),
+            )
+            .withRequestBody(
+              matchingJsonPath(
+                "offenceEndDate",
+                equalTo(COURT_CHARGE_1_OFFENCE_END_DATE),
+              ),
+            )
+            .withRequestBody(
+              matchingJsonPath(
+                "offenceDate",
+                equalTo(COURT_CHARGE_1_OFFENCE_DATE),
+              ),
+            )
+            .withRequestBody(
+              matchingJsonPath(
+                "futureAppearance",
+                equalTo("false"),
+              ),
+            )
+            .withRequestBody(
+              matchingJsonPath(
+                "resultCode1",
+                equalTo(COURT_CHARGE_1_RESULT_CODE),
+              ),
+            ),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenCourtChargeHasBeenUpdatedInDPSOnFutureAppearance {
+      @BeforeEach
+      fun setUp() {
+        courtSentencingApi.stubGetCourtChargeByAppearance(
+          courtChargeId = DPS_COURT_CHARGE_ID,
+          courtAppearanceId = DPS_COURT_APPEARANCE_ID,
+          offenderNo = OFFENDER_NO,
+          caseID = COURT_CASE_ID_FOR_CREATION,
+        )
+        courtSentencingNomisApi.stubCourtChargeUpdate(
+          offenderChargeId = NOMIS_COURT_CHARGE_ID,
+          offenderNo = OFFENDER_NO,
+          courtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
+          courtAppearanceId = NOMIS_COURT_APPEARANCE_ID,
+        )
+        courtSentencingMappingApi.stubGetCourtCaseMappingGivenDpsId(
+          id = COURT_CASE_ID_FOR_CREATION,
+          nomisCourtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
+        )
+
+        courtSentencingMappingApi.stubGetCourtAppearanceMappingGivenDpsId(
+          id = DPS_COURT_APPEARANCE_ID,
+          nomisCourtAppearanceId = NOMIS_COURT_APPEARANCE_ID,
+        )
+
+        courtSentencingMappingApi.stubGetCourtChargeMappingGivenDpsId(
+          id = DPS_COURT_CHARGE_ID,
+          nomisCourtChargeId = NOMIS_COURT_CHARGE_ID,
+        )
+
+        publishUpdatedCourtChargeDomainEvent(futureAppearance = true)
+      }
+
+      @Test
+      fun `will callback back to court sentencing service to get more details`() {
+        waitForAnyProcessingToComplete()
+        courtSentencingApi.verify(getRequestedFor(urlEqualTo("/legacy/court-appearance/${DPS_COURT_APPEARANCE_ID}/charge/${DPS_COURT_CHARGE_ID}")))
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        waitForAnyProcessingToComplete()
+
+        verify(telemetryClient).trackEvent(
+          eq("charge-updated-success"),
+          check {
+            assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["dpsChargeId"]).isEqualTo(DPS_COURT_CHARGE_ID)
+            assertThat(it["nomisChargeId"]).isEqualTo(NOMIS_COURT_CHARGE_ID.toString())
+            assertThat(it["nomisOutcomeCode"]).isEqualTo(COURT_CHARGE_1_RESULT_CODE)
+            assertThat(it["nomisOffenceCode"]).isEqualTo(COURT_CHARGE_1_OFFENCE_CODE)
+            assertThat(it["isOnFutureAppearance"]).isEqualTo("true")
           },
           isNull(),
         )
@@ -2051,6 +2151,12 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
               matchingJsonPath(
                 "resultCode1",
                 equalTo(COURT_CHARGE_1_RESULT_CODE),
+              ),
+            )
+            .withRequestBody(
+              matchingJsonPath(
+                "futureAppearance",
+                equalTo("true"),
               ),
             ),
         )
@@ -3368,6 +3474,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             assertThat(it["mappingType"]).isEqualTo(SentenceTermMappingDto.MappingType.DPS_CREATED.toString())
             assertThat(it["nomisBookingId"]).isEqualTo(NOMIS_BOOKING_ID.toString())
             assertThat(it["nomisSentenceSeq"]).isEqualTo(NOMIS_SENTENCE_SEQ.toString())
+            assertThat(it["termCode"]).isEqualTo("TERM")
           },
           isNull(),
         )
@@ -5565,7 +5672,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     ).get()
   }
 
-  private fun publishUpdatedCourtChargeDomainEvent(source: String = "DPS") {
+  private fun publishUpdatedCourtChargeDomainEvent(source: String = "DPS", futureAppearance: Boolean = false) {
     val eventType = "charge.updated"
     awsSnsClient.publish(
       PublishRequest.builder().topicArn(topicArn)
@@ -5577,6 +5684,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             offenderNo = OFFENDER_NO,
             eventType = eventType,
             source = source,
+            isOnFutureCourtAppearance = futureAppearance,
           ),
         )
         .messageAttributes(
@@ -5872,7 +5980,8 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     offenderNo: String,
     eventType: String,
     source: String = "DPS",
-  ) = """{"eventType":"$eventType", "additionalInformation": {"courtChargeId":"$courtChargeId", "courtCaseId":"$courtCaseId", ${courtAppearanceId?.let { """"courtAppearanceId":"$it",""" } ?: ""} "source": "$source"}, "personReference": {"identifiers":[{"type":"NOMS", "value":"$offenderNo"}]}}"""
+    isOnFutureCourtAppearance: Boolean = false,
+  ) = """{"eventType":"$eventType", "additionalInformation": {"courtChargeId":"$courtChargeId", "courtCaseId":"$courtCaseId", ${courtAppearanceId?.let { """"courtAppearanceId":"$it",""" } ?: ""} "source": "$source", "isOnFutureCourtAppearance": $isOnFutureCourtAppearance}, "personReference": {"identifiers":[{"type":"NOMS", "value":"$offenderNo"}]}}"""
 
   fun sentenceMessagePayload(
     courtCaseId: String,
