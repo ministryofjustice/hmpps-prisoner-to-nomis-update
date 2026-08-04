@@ -8,8 +8,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Pr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PropertyContainerUpdateRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.property.model.PropertyContainerDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.TelemetryEnabled
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.trackEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.track
 import java.util.UUID
 
 @Service
@@ -18,8 +19,9 @@ class PropertyService(
   private val propertyNomisApiService: PropertyNomisApiService,
   private val propertyMappingService: PropertyMappingService,
   private val propertyRetryQueueService: PropertyRetryQueueService,
-  private val telemetryClient: TelemetryClient,
-) : CreateMappingRetryable {
+  override val telemetryClient: TelemetryClient,
+) : CreateMappingRetryable,
+  TelemetryEnabled {
   suspend fun created(event: PropertyDomainEvent) {
     val telemetry = event.asTelemetry()
     if (event.originatedInDps()) {
@@ -59,7 +61,7 @@ class PropertyService(
   suspend fun updated(event: PropertyDomainEvent) {
     val telemetry = event.asTelemetry()
     if (event.originatedInDps() && event.supportedFieldUpdated()) {
-      try {
+      track("property-update", telemetry) {
         val dpsId = event.additionalInformation.dpsId
         val dpsData = propertyDpsApiService.getProperty(UUID.fromString(dpsId))
         val mapping = propertyMappingService.getMappingByDpsId(dpsId)
@@ -67,12 +69,6 @@ class PropertyService(
         telemetry += "nomisPropertyContainerId" to nomisId.toString()
 
         propertyNomisApiService.updateProperty(nomisId, dpsData.toNomisUpdateRequest())
-
-        telemetryClient.trackEvent("property-update-success", telemetry)
-      } catch (e: Exception) {
-        telemetry += "error" to (e.message ?: "unknown")
-        telemetryClient.trackEvent("property-update-failed", telemetry)
-        throw e
       }
     } else {
       telemetryClient.trackEvent("property-update-ignored", telemetry, null)
@@ -107,10 +103,9 @@ class PropertyService(
 }
 
 private val supportedFields = setOf(
-  "currentSealNumber",
-  "currentLocation",
+  "sealNumber",
+  "location",
   "containerType",
-  "currentLocationType",
   "proposedDisposalDate",
 )
 
@@ -137,5 +132,6 @@ private fun PropertyContainerDto.toNomisContainerCode(): PropertyContainerCode =
       PropertyContainerDto.ContainerType.VALUABLES -> PropertyContainerCode.VALU
       PropertyContainerDto.ContainerType.CONFISCATED -> PropertyContainerCode.CO
     }
+
   null -> PropertyContainerCode.BULK
 }

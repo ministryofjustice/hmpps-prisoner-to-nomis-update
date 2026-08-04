@@ -204,7 +204,7 @@ class PropertyToNomisIntTest : SqsIntegrationTestBase() {
           )
           propertyMappingApiMockServer.stubGetLocationByDpsId(DPS_LOCATION_ID, NOMIS_LOCATION_ID)
           propertyNomisApiMockServer.stubPutProperty(NOMIS_ID)
-          publishPropertyDomainEvent("prison-property.container.updated", changedFields = listOf("currentSealNumber"))
+          publishPropertyDomainEvent("prison-property.container.updated", changedFields = listOf("sealNumber"))
           waitForAnyProcessingToComplete()
         }
 
@@ -228,7 +228,7 @@ class PropertyToNomisIntTest : SqsIntegrationTestBase() {
               assertThat(it).containsEntry("nomisPropertyContainerId", "$NOMIS_ID")
               assertThat(it).containsEntry("offenderNo", OFFENDER_NO)
               assertThat(it).containsEntry("source", "DPS")
-              assertThat(it).containsEntry("changedFields", "[currentSealNumber]")
+              assertThat(it).containsEntry("changedFields", "[sealNumber]")
             },
             isNull(),
           )
