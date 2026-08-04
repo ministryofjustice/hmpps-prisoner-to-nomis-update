@@ -189,6 +189,9 @@ generic-service:
       schedule: "45 2 * * *"
 
 generic-prometheus-alerts:
+  sqsOldestAlertQueueNames:
+    - "syscon-devs-prod-hmpps_prisoner_to_nomis_activity_queue"
+
   sqsNumberAlertQueueMappings:
     visits:
       - "syscon-devs-prod-hmpps_prisoner_to_nomis_visit_queue"
@@ -197,7 +200,6 @@ generic-prometheus-alerts:
       - "syscon-devs-prod-hmpps_prisoner_to_nomis_incentive_queue"
       - "syscon-devs-prod-hmpps_prisoner_to_nomis_incentive_dlq"
     activities:
-      - "syscon-devs-prod-hmpps_prisoner_to_nomis_activity_queue"
       - "syscon-devs-prod-hmpps_prisoner_to_nomis_activity_dlq"
     appointments:
       - "syscon-devs-prod-hmpps_prisoner_to_nomis_appointment_queue"
