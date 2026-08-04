@@ -438,6 +438,7 @@ class CourtSentencingService(
     val source = createEvent.additionalInformation.source
     val courtCaseId = createEvent.additionalInformation.courtCaseId
     val courtAppearanceId = createEvent.additionalInformation.courtAppearanceId
+    val futureCourtAppearance = createEvent.additionalInformation.isOnFutureCourtAppearance
     val offenderNo: String = eventOffenderNo(createEvent.personReference)
     val telemetryMap = createEvent.asTelemetry()
     if (isDpsCreated(source)) {
@@ -471,7 +472,7 @@ class CourtSentencingService(
             nomisApiService.createCourtCharge(
               offenderNo,
               courtCaseMapping.nomisCourtCaseId,
-              charge.toNomisCourtCharge(),
+              charge.toNomisCourtCharge(isOnFutureCourtAppearance = futureCourtAppearance),
             )
 
           CourtChargeMappingDto(
@@ -499,13 +500,13 @@ class CourtSentencingService(
     val source = createEvent.additionalInformation.source
     val courtCaseId = createEvent.additionalInformation.courtCaseId
     val courtAppearanceId = createEvent.additionalInformation.courtAppearanceId!!
+    val futureCourtAppearance = createEvent.additionalInformation.isOnFutureCourtAppearance
     val offenderNo: String = eventOffenderNo(createEvent.personReference)
     val telemetryMap = createEvent.asTelemetry()
     if (isDpsCreated(source)) {
       track("charge-updated", telemetryMap) {
         courtSentencingApiService.getCourtChargeByAppearanceOrNull(appearanceId = courtAppearanceId, chargeId = chargeId)
           ?.also { dpsCharge ->
-
             val courtCaseMapping = retrieveParentCaseMapping(courtCaseId)
             telemetryMap["nomisCourtCaseId"] = courtCaseMapping.nomisCourtCaseId.toString()
 
@@ -515,7 +516,7 @@ class CourtSentencingService(
             val chargeMapping = retrieveParentChargeMapping(chargeId)
             telemetryMap["nomisChargeId"] = chargeMapping.nomisCourtChargeId.toString()
 
-            val nomisCourtCharge = dpsCharge.toNomisCourtCharge()
+            val nomisCourtCharge = dpsCharge.toNomisCourtCharge(isOnFutureCourtAppearance = futureCourtAppearance)
             telemetryMap["nomisOutcomeCode"] = nomisCourtCharge.resultCode1 ?: "null"
             telemetryMap["nomisOffenceCode"] = nomisCourtCharge.offenceCode
             nomisApiService.updateCourtCharge(
@@ -949,7 +950,10 @@ class CourtSentencingService(
           telemetryMap["nomisBookingId"] = sentenceMapping.nomisBookingId.toString()
           val dpsPeriodLength =
             courtSentencingApiService.getPeriodLength(dpsTermId)
-              .also { telemetryMap["dpsTermId"] = it.periodLengthUuid.toString() }
+              .also {
+                telemetryMap["dpsTermId"] = it.periodLengthUuid.toString()
+                telemetryMap["termCode"] = it.sentenceTermCode
+              }
           val nomisSentenceTermResponse =
             nomisApiService.createSentenceTerm(
               offenderNo,
@@ -1350,6 +1354,7 @@ class CourtSentencingService(
           telemetryMap["nomisSentenceSeq"] = sentenceTermMapping.nomisSentenceSequence.toString()
           telemetryMap["nomisTermSeq"] = sentenceTermMapping.nomisTermSequence.toString()
           telemetryMap["nomisBookingId"] = sentenceTermMapping.nomisBookingId.toString()
+          telemetryMap["termCode"] = dpsPeriodLength.sentenceTermCode
 
           nomisApiService.updateSentenceTerm(
             offenderNo = offenderNo,
@@ -1529,6 +1534,7 @@ class CourtSentencingService(
     val courtAppearanceId: String?,
     val source: String,
     val courtCaseId: String,
+    val isOnFutureCourtAppearance: Boolean,
   )
 
   data class SentenceAdditionalInformation(
@@ -1713,11 +1719,12 @@ fun LegacyCourtAppearance.toNomisCourtAppearance(
   futureAppearance = isOnFutureCourtAppearance,
 )
 
-fun LegacyCharge.toNomisCourtCharge(): OffenderChargeRequest = OffenderChargeRequest(
+fun LegacyCharge.toNomisCourtCharge(isOnFutureCourtAppearance: Boolean): OffenderChargeRequest = OffenderChargeRequest(
   offenceCode = this.offenceCode,
   offenceDate = this.offenceStartDate,
   offenceEndDate = this.offenceEndDate,
   resultCode1 = this.nomisOutcomeCode,
+  futureAppearance = isOnFutureCourtAppearance,
 )
 
 fun LegacyCharge.toNomisCourtEventCharge(nomisChargeId: Long): CourtEventChargeRequest = CourtEventChargeRequest(
@@ -1983,6 +1990,7 @@ fun CourtSentencingService.CourtAppearanceCreatedEvent.asTelemetry() = mutableMa
 fun CourtSentencingService.CourtChargeCreatedEvent.asTelemetry() = mutableMapOf(
   "dpsChargeId" to additionalInformation.courtChargeId,
   "dpsCourtCaseId" to additionalInformation.courtCaseId,
+  "isOnFutureAppearance" to additionalInformation.isOnFutureCourtAppearance.toString(),
   "dpsCourtAppearanceId" to (additionalInformation.courtAppearanceId ?: "null"),
   "offenderNo" to eventOffenderNo(personReference),
 )
