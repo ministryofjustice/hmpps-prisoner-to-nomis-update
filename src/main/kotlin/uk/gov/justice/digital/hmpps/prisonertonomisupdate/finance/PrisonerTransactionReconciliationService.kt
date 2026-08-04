@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.GeneralLedgerEntry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.OffenderTransaction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SyncOffenderTransactionResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationErrorPageResult
@@ -16,6 +17,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.Reconciliation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationSuccessPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.generateReconciliationReport
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.GeneralLedgerTransactionDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTransactionDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
 import java.math.BigDecimal
@@ -190,6 +192,20 @@ data class PrisonerTransactionEntry(
   val prisonEntries: List<TransactionEntry>,
 )
 
+data class TransactionEntry(
+  val accountCode: Int,
+  val postingType: String,
+  val amount: BigDecimal,
+  val entrySequence: Int,
+)
+
+fun GeneralLedgerTransactionDto.toTransactionEntry() = TransactionEntry(
+  accountCode = accountCode,
+  postingType = postingType.value,
+  amount = amount.setScale(2, RoundingMode.HALF_UP),
+  entrySequence = generalLedgerEntrySequence,
+)
+
 // Nomis
 fun List<OffenderTransactionDto>.toPrisonerTransactionSummary(): PrisonerTransactionSummary {
   val first = first()
@@ -215,12 +231,20 @@ fun SyncOffenderTransactionResponse.toPrisonerTransactionSummary() = PrisonerTra
   entryDateTime = transactionTimestamp,
   entries = transactions.map { it.toPrisonerTransactionEntry() }.sortedBy { it.transactionSequence },
 )
+
 fun OffenderTransaction.toPrisonerTransactionEntry() = PrisonerTransactionEntry(
   transactionSequence = entrySequence,
   subAccountType = subAccountType,
   postingType = postingType.value,
   amount = amount.setScale(2, RoundingMode.HALF_UP),
   prisonEntries = generalLedgerEntries.map { it.toTransactionEntry() }.sortedBy { it.entrySequence },
+)
+
+fun GeneralLedgerEntry.toTransactionEntry() = TransactionEntry(
+  accountCode = code,
+  postingType = postingType.value,
+  amount = amount.setScale(2, RoundingMode.HALF_UP),
+  entrySequence = this.entrySequence,
 )
 
 sealed interface DpsTransactionResult

@@ -6,13 +6,10 @@ import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.api.NOMISSyncApi
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.GeneralLedgerBalanceDetailsList
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SubAccountBalanceForReconciliation
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SyncGeneralLedgerTransactionResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SyncOffenderTransactionResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
-import java.util.UUID
 
 @Service
 class FinanceDpsApiService(
@@ -25,18 +22,9 @@ class FinanceDpsApiService(
 
   private val syncApi = NOMISSyncApi(webClient)
 
-  suspend fun getPrisonAccounts(prisonId: String): GeneralLedgerBalanceDetailsList = syncApi
-    .listGeneralLedgerBalances(prisonId)
-    .retryWhen(backoffSpec)
-    .awaitSingle()
-
   suspend fun getPrisonerAccounts(prisonNumber: String): Map<String, SubAccountBalanceForReconciliation> = syncApi
     .listPrisonerSubaccountBalances(prisonNumber)
     .retryWhen(backoffSpec)
-    .awaitSingle()
-
-  suspend fun getPrisonTransaction(id: UUID): SyncGeneralLedgerTransactionResponse = syncApi
-    .getGeneralLedgerTransactionById(id)
     .awaitSingle()
 
   suspend fun getPrisonerTransactionOrNull(nomisTransactionId: Long): SyncOffenderTransactionResponse? = syncApi.getTransactionReconciliationById(nomisTransactionId)
