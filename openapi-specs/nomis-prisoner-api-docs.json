@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-07-30.1815.a07993d"
+    "version" : "2026-08-04.1829.78317de"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -14780,6 +14780,69 @@
         }
       }
     },
+    "/transactions/range/{entryDate}" : {
+      "get" : {
+        "tags" : [ "prisoner-transactions-resource" ],
+        "summary" : "Determine the minimum and maximum transaction Ids for a given entry date",
+        "description" : "Retrieves Ids for the minimum and maximum transaction Ids for the entry date.\n      Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "findPrisonerTransactionsMinMaxForDate",
+        "parameters" : [ {
+          "name" : "entryDate",
+          "in" : "path",
+          "description" : "Transactions that were created on the given date",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Transactions that were created on the given date",
+            "example" : "2024-11-03"
+          },
+          "example" : "2024-11-03"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Transaction Information Returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TransactionIdRange"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Transaction does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/transactions/prison/{prisonId}" : {
       "get" : {
         "tags" : [ "prison-transactions-resource" ],
@@ -15098,6 +15161,92 @@
                   "items" : {
                     "$ref" : "#/components/schemas/GeneralLedgerTransactionDto"
                   }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Transaction does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/transactions/from/{lastTransactionId}/to/{maxTransactionId}" : {
+      "get" : {
+        "tags" : [ "prisoner-transactions-resource" ],
+        "summary" : "Get a page of prisoner transaction Ids starting from an id onwards but not exceeding the maximum transaction Id",
+        "description" : "Retrieves transactions to be iterated over using last transaction Id (excluding that transactionId) up to (and including) the maximum transaction Id.\n      Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "findPrisonerTransactionsIdsInRange",
+        "parameters" : [ {
+          "name" : "lastTransactionId",
+          "in" : "path",
+          "description" : "Prisoner transactions starting after this id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Prisoner transactions starting after this id",
+            "example" : 1555999
+          },
+          "example" : 1555999
+        }, {
+          "name" : "maxTransactionId",
+          "in" : "path",
+          "description" : "Maximum transaction id to return",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Maximum transaction id to return",
+            "example" : 1557000
+          },
+          "example" : 1557000
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "description" : "Number of prisoner transaction ids to get",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 20,
+            "description" : "Number of prisoner transaction ids to get"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Transaction Information Returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonerTransactionIdsPage"
                 }
               }
             }
@@ -25245,7 +25394,7 @@
             "description" : "Date the container will be disposed of"
           }
         },
-        "required" : [ "containerCode", "sealMark" ]
+        "required" : [ "containerCode" ]
       },
       "UpdateVisitBalanceRequest" : {
         "type" : "object",
@@ -28964,7 +29113,7 @@
             "description" : "Date the container will be disposed of"
           }
         },
-        "required" : [ "active", "containerCode", "offenderNo", "prisonId", "sealMark" ]
+        "required" : [ "active", "containerCode", "offenderNo", "prisonId" ]
       },
       "CreateVisitBalanceAdjustmentRequest" : {
         "type" : "object",
@@ -33206,12 +33355,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "paged" : {
+            "type" : "boolean"
+          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "paged" : {
-            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -33633,6 +33782,28 @@
           }
         },
         "required" : [ "amount", "caseloadId", "createdAt", "createdBy", "createdByDisplayName", "description", "entryDate", "generalLedgerTransactions", "offenderId", "offenderNo", "postingType", "subAccountType", "transactionEntrySequence", "transactionId", "type" ]
+      },
+      "TransactionIdRange" : {
+        "type" : "object",
+        "description" : "Min and Max transaction ids on a specific date",
+        "properties" : {
+          "date" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The entry date for the transactions"
+          },
+          "minTransactionId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The minimum transaction id on the entry date"
+          },
+          "maxTransactionId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The maximum transaction id on the entry date"
+          }
+        },
+        "required" : [ "date", "maxTransactionId", "minTransactionId" ]
       },
       "PrisonerTransactionIdResponse" : {
         "type" : "object",

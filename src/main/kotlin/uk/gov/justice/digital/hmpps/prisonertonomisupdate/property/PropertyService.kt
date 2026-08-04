@@ -80,7 +80,7 @@ class PropertyService(
   }
 
   suspend fun PropertyContainerDto.toNomisUpdateRequest() = PropertyContainerUpdateRequest(
-    sealMark = currentSealNumber ?: "not sealed", // TODO
+    sealMark = currentSealNumber,
     containerCode = toNomisContainerCode(),
     internalLocationId = toNomisLocation(),
     proposedDisposalDate = proposedDisposalDate,
@@ -133,10 +133,9 @@ private fun PropertyContainerDto.toNomisContainerCode(): PropertyContainerCode =
   PropertyContainerDto.CurrentLocationType.INTERNAL ->
     when (this.containerType) {
       PropertyContainerDto.ContainerType.STANDARD -> PropertyContainerCode.BULK
-      PropertyContainerDto.ContainerType.EXCESS -> PropertyContainerCode.DES // TODO
+      PropertyContainerDto.ContainerType.EXCESS -> PropertyContainerCode.BRA
       PropertyContainerDto.ContainerType.VALUABLES -> PropertyContainerCode.VALU
       PropertyContainerDto.ContainerType.CONFISCATED -> PropertyContainerCode.CO
     }
-
-  null -> PropertyContainerCode.BULK // TODO
+  null -> PropertyContainerCode.BULK
 }
