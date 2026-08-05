@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-07-31.1051.7c72a00"
+    "version" : "2026-08-04.1060.9084a73"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -1754,6 +1754,69 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/PagedModelOfficialVisitSummarySearchResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/official-visit/non-association-check/prison/{prisonCode}" : {
+      "post" : {
+        "tags" : [ "Non-associations" ],
+        "summary" : "Endpoint to check whether a prisoner's non-associates already have an official visit.",
+        "description" : "Returns the official visits of any of the prisoner's open non-associations that are scheduled at the same prison on the same date as the visit being checked. When the start and end times are supplied, only the visits overlapping them are returned. Returns an empty list when the prisoner has no open non-associations, or when none of them have a matching visit.\n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISITS_ADMIN\n* ROLE_OFFICIAL_VISITS__RW",
+        "operationId" : "getNonAssociationVisits",
+        "parameters" : [ {
+          "name" : "prisonCode",
+          "in" : "path",
+          "description" : "The prison code",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "MDI"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/NonAssociationCheckRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "The official visits of any non-associates on the given date, empty if there are none",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/NonAssociationVisitResponse"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -5917,6 +5980,94 @@
           }
         },
         "required" : [ "prisonCode", "prisonerNumber" ]
+      },
+      "NonAssociationCheckRequest" : {
+        "type" : "object",
+        "description" : "The request with the details of the visit to check",
+        "properties" : {
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The prisoner number (NOMIS ID) of the prisoner being visited",
+            "example" : "A1234AA",
+            "maxLength" : 7,
+            "minLength" : 0
+          },
+          "visitDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The date of the visit being checked",
+            "example" : "2026-04-03"
+          },
+          "startTime" : {
+            "type" : [ "string", "null" ],
+            "description" : "The start time of the visit being checked. Optional, but must be supplied with the end time. When the times are supplied only visits overlapping them are returned",
+            "example" : "10:00"
+          },
+          "endTime" : {
+            "type" : [ "string", "null" ],
+            "description" : "The end time of the visit being checked. Optional, but must be supplied with the start time. When the times are supplied only visits overlapping them are returned",
+            "example" : "11:00"
+          }
+        },
+        "required" : [ "prisonerNumber", "visitDate" ]
+      },
+      "NonAssociationVisitResponse" : {
+        "type" : "object",
+        "properties" : {
+          "prisonCode" : {
+            "type" : "string",
+            "description" : "The prison code the non-associate's official visit is at",
+            "example" : "MDI"
+          },
+          "officialVisitId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The unique identifier of the non-associate's official visit",
+            "example" : 23232323
+          },
+          "visitDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The date of the non-associate's official visit",
+            "example" : "2026-03-02"
+          },
+          "startTime" : {
+            "type" : "string",
+            "description" : "The start time of the non-associate's official visit",
+            "example" : "10:00"
+          },
+          "endTime" : {
+            "type" : "string",
+            "description" : "The end time of the non-associate's official visit",
+            "example" : "11:00"
+          },
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The prisoner number (NOMIS ID) of the non-associate",
+            "example" : "A1232DD"
+          },
+          "dpsLocationId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS location identifier of the non-associate's official visit"
+          },
+          "locationDescription" : {
+            "type" : "string",
+            "description" : "The description of the prison location the non-associate's official visit is in",
+            "example" : "Legal visits room 8"
+          },
+          "firstName" : {
+            "type" : "string",
+            "description" : "The first name of the non-associate",
+            "example" : "Steve"
+          },
+          "lastName" : {
+            "type" : "string",
+            "description" : "The last name of the non-associate",
+            "example" : "Smith"
+          }
+        },
+        "required" : [ "dpsLocationId", "endTime", "firstName", "lastName", "locationDescription", "officialVisitId", "prisonCode", "prisonerNumber", "startTime", "visitDate" ]
       },
       "NotifyCallbackNotificationRequest" : {
         "type" : "object",
