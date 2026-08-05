@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegra
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PropertyContainerMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.property.PropertyDpsApiExtension.Companion.jsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.property.PropertyDpsApiExtension.Companion.propertyDpsApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.property.model.PropertyContainerDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.withRequestBodyJsonPath
 import java.util.UUID
 
@@ -186,24 +187,28 @@ class PropertyToNomisIntTest : SqsIntegrationTestBase() {
     @Nested
     @DisplayName("when DPS is the origin of a Property update")
     inner class WhenDpsUpdated {
+      @BeforeEach
+      fun setup() {
+        propertyMappingApiMockServer.stubGetByDpsId(
+          DPS_ID,
+          PropertyContainerMappingDto(
+            nomisPropertyContainerId = NOMIS_ID,
+            dpsPropertyContainerId = DPS_ID,
+            bookingId = BOOKING_ID,
+            offenderNo = OFFENDER_NO,
+            mappingType = PropertyContainerMappingDto.MappingType.DPS_CREATED,
+          ),
+        )
+        propertyMappingApiMockServer.stubGetLocationByDpsId(DPS_LOCATION_ID, NOMIS_LOCATION_ID)
+        propertyNomisApiMockServer.stubPutProperty(NOMIS_ID)
+      }
+
       @Nested
       inner class HappyPath {
-
         @BeforeEach
         fun setup() {
-          propertyDpsApi.stubGetProperty(dpsProperty(UUID.fromString(DPS_ID), UUID.fromString(DPS_LOCATION_ID)))
-          propertyMappingApiMockServer.stubGetByDpsId(
-            DPS_ID,
-            PropertyContainerMappingDto(
-              nomisPropertyContainerId = NOMIS_ID,
-              dpsPropertyContainerId = DPS_ID,
-              bookingId = BOOKING_ID,
-              offenderNo = OFFENDER_NO,
-              mappingType = PropertyContainerMappingDto.MappingType.DPS_CREATED,
-            ),
-          )
-          propertyMappingApiMockServer.stubGetLocationByDpsId(DPS_LOCATION_ID, NOMIS_LOCATION_ID)
-          propertyNomisApiMockServer.stubPutProperty(NOMIS_ID)
+          propertyDpsApi.stubGetProperty(dpsProperty(UUID.fromString(DPS_ID), UUID.fromString(DPS_LOCATION_ID), null))
+
           publishPropertyDomainEvent("prison-property.container.updated", changedFields = listOf("sealNumber"))
           waitForAnyProcessingToComplete()
         }
@@ -215,7 +220,9 @@ class PropertyToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBodyJsonPath("$.sealMark", "SEAL1234")
               .withRequestBodyJsonPath("$.containerCode", "BULK")
               .withRequestBodyJsonPath("$.internalLocationId", NOMIS_LOCATION_ID)
-              .withRequestBodyJsonPath("$.proposedDisposalDate", "2026-03-04"),
+              .withRequestBodyJsonPath("$.proposedDisposalDate", "2026-03-04")
+              .withRequestBodyJsonPath("$.active", "true")
+              .withRequestBodyJsonPath("$.expiryDate", "2026-01-02"),
           )
         }
 
@@ -231,6 +238,30 @@ class PropertyToNomisIntTest : SqsIntegrationTestBase() {
               assertThat(it).containsEntry("changedFields", "[sealNumber]")
             },
             isNull(),
+          )
+        }
+      }
+
+      @Nested
+      inner class HappyPathPropertyClosed {
+        @BeforeEach
+        fun setup() {
+          propertyDpsApi.stubGetProperty(dpsProperty(UUID.fromString(DPS_ID), UUID.fromString(DPS_LOCATION_ID), PropertyContainerDto.RemovalOutcome.DISPOSED))
+
+          publishPropertyDomainEvent("prison-property.container.updated", changedFields = listOf("sealNumber"))
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will correctly update the Property in NOMIS`() {
+          propertyNomisApiMockServer.verify(
+            putRequestedFor(anyUrl())
+              .withRequestBodyJsonPath("$.sealMark", "SEAL1234")
+              .withRequestBodyJsonPath("$.containerCode", "BULK")
+              .withRequestBodyJsonPath("$.internalLocationId", NOMIS_LOCATION_ID)
+              .withRequestBodyJsonPath("$.proposedDisposalDate", "2026-03-04")
+              .withRequestBodyJsonPath("$.active", "false")
+              .withRequestBodyJsonPath("$.expiryDate", "2026-01-02"),
           )
         }
       }

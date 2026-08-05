@@ -80,6 +80,8 @@ class PropertyService(
     containerCode = toNomisContainerCode(),
     internalLocationId = toNomisLocation(),
     proposedDisposalDate = proposedDisposalDate,
+    active = removalOutcome == null,
+    expiryDate = removalDate,
   )
 
   override suspend fun retryCreateMapping(message: String) {
@@ -107,6 +109,7 @@ private val supportedFields = setOf(
   "location",
   "containerType",
   "proposedDisposalDate",
+  "removalOutcome",
 )
 
 private fun PropertyDomainEvent.supportedFieldUpdated(): Boolean = additionalInformation
