@@ -54,7 +54,7 @@ internal class CorePersonDomainEventsListenerTest(@Autowired private val jsonMap
 
         verify(religionService).religionCreated(
           check { it ->
-            assertThat(it.cprReligionId.toString()).isEqualTo("e312a74d-ca98-4fbc-b212-608bc41558e7")
+            assertThat(it.additionalInformation.cprReligionId.toString()).isEqualTo("e312a74d-ca98-4fbc-b212-608bc41558e7")
             assertThat(it.personReference.identifiers.first { it.type == "NOMS" }.value).isEqualTo("A1234BC")
           },
         )

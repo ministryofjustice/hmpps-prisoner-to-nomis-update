@@ -60,7 +60,7 @@ fun religionCreatedMessage(prisonNumber: String, cprReligionId: String) = """
         "MessageId": "48e8a79a-0f43-4338-bbd4-b0d745f1f8ec", 
         "Token": null, 
         "TopicArn": "arn:aws:sns:eu-west-2:000000000000:hmpps-domain-events", 
-        "Message": "{\"eventType\":\"core-person-record.prison.religion.created\", \"cprReligionId\":\"$cprReligionId\",\"personReference\": {\"identifiers\":[{\"type\":\"NOMS\", \"value\":\"$prisonNumber\"}]}}",
+        "Message": "{\"eventType\":\"core-person-record.prison.religion.created\", \"additionalInformation\": { \"cprReligionId\":\"$cprReligionId\" },\"personReference\": {\"identifiers\":[{\"type\":\"NOMS\", \"value\":\"$prisonNumber\"}]}}",
         "SubscribeURL": null, 
         "Timestamp": "2021-03-05T11:23:56.031Z", 
         "SignatureVersion": "1", 

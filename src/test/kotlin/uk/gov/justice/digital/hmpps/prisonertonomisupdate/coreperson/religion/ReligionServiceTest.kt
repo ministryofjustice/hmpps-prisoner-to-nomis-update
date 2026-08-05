@@ -33,8 +33,8 @@ internal class ReligionServiceTest(@Autowired jsonMapper: JsonMapper) {
       religionService.religionCreated(
         ReligionService.ReligionEvent(
           "core-person-record.prison.religion.created",
-          cprReligionId,
-          PersonReferenceList(listOf(PersonReference("NOMS", prisonNumber))),
+          ReligionService.CprReligionCreatedInfo(cprReligionId),
+          PersonReferenceList(listOf(PersonReference("prisonNumber", prisonNumber))),
         ),
       )
 

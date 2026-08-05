@@ -16,8 +16,8 @@ class ReligionService(private val telemetryClient: TelemetryClient) {
 
   suspend fun religionCreated(event: ReligionEvent) {
     val prisonNumber =
-      event.personReference.identifiers.first { it.type == "NOMS" }.value
-    val cprReligionId = event.cprReligionId
+      event.personReference.identifiers.first { it.type == "prisonNumber" }.value
+    val cprReligionId = event.additionalInformation.cprReligionId
     val telemetryMap = mutableMapOf(
       "prisonNumber" to prisonNumber,
       "cprReligionId" to cprReligionId,
@@ -28,7 +28,8 @@ class ReligionService(private val telemetryClient: TelemetryClient) {
 
   data class ReligionEvent(
     val eventType: String,
-    val cprReligionId: UUID,
+    val additionalInformation: CprReligionCreatedInfo,
     val personReference: PersonReferenceList,
   )
+  data class CprReligionCreatedInfo(val cprReligionId: UUID)
 }
