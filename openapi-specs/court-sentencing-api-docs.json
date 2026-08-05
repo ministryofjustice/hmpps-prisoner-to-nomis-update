@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-07-31.2268.06ad93d"
+    "version" : "2026-08-04.2278.14617d7"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -4410,7 +4410,7 @@
       "get" : {
         "tags" : [ "recall-controller" ],
         "summary" : "Search recalls for a person by period of custody",
-        "description" : "Filter by bookingId (current period of custody) unless includeAllPeriods is true, when all recalls are returned with the current period listed first.",
+        "description" : "Filter by bookingId (current period of custody) unless includeAllPeriods is true, when all recalls are returned with the current period listed first. NOMIS recalls are grouped.",
         "operationId" : "searchRecallsByPrisonerId",
         "parameters" : [ {
           "name" : "prisonerId",
@@ -7142,7 +7142,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:33.534598046"
+            "example" : "07:44:25.916137174"
           },
           "outcomeDispositionCode" : {
             "type" : [ "string", "null" ]
@@ -7520,7 +7520,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:33.534598046"
+            "example" : "07:44:25.916137174"
           },
           "courtCode" : {
             "type" : "string"
@@ -9826,6 +9826,9 @@
             "type" : "string",
             "enum" : [ "NOMIS", "DPS" ]
           },
+          "postedDate" : {
+            "type" : [ "string", "null" ]
+          },
           "courtCases" : {
             "type" : "array",
             "items" : {
@@ -9957,7 +9960,8 @@
           },
           "prisonerRecallTotal" : {
             "type" : "integer",
-            "format" : "int64"
+            "format" : "int32",
+            "description" : "Total number of recalls for the prisoner after NOMIS grouping"
           }
         },
         "required" : [ "prisonerRecallTotal", "recalls" ]
@@ -10366,7 +10370,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:33.534598046"
+            "example" : "07:44:25.916137174"
           },
           "courtCode" : {
             "type" : "string"
@@ -11054,7 +11058,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:44:33.534598046"
+            "example" : "07:44:25.916137174"
           },
           "nomisOutcomeCode" : {
             "type" : [ "string", "null" ]
@@ -11133,7 +11137,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:33.534598046"
+            "example" : "07:44:25.916137174"
           },
           "courtId" : {
             "type" : "string"
@@ -11285,7 +11289,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:44:33.534598046"
+            "example" : "07:44:25.916137174"
           },
           "charges" : {
             "type" : "array",
@@ -11322,7 +11326,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:33.534598046"
+            "example" : "07:44:25.916137174"
           },
           "courtId" : {
             "type" : "string"
@@ -11609,19 +11613,19 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
-          "pageNumber" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
           "pageSize" : {
             "type" : "integer",
             "format" : "int32"
           },
           "unpaged" : {
             "type" : "boolean"
+          },
+          "paged" : {
+            "type" : "boolean"
+          },
+          "pageNumber" : {
+            "type" : "integer",
+            "format" : "int32"
           }
         }
       },
@@ -11919,7 +11923,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:33.534598046"
+            "example" : "07:44:25.916137174"
           },
           "courtCode" : {
             "type" : [ "string", "null" ]
