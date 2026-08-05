@@ -74,7 +74,7 @@ class PropertyDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   }
 }
 
-fun dpsProperty(id: UUID = UUID.randomUUID(), locationId: UUID = UUID.randomUUID()) = PropertyContainerDto(
+fun dpsProperty(id: UUID = UUID.randomUUID(), locationId: UUID = UUID.randomUUID(), removalOutcome: PropertyContainerDto.RemovalOutcome? = null) = PropertyContainerDto(
   id = id,
   prisonerNumber = "A1234KT",
   prisonId = "MDI",
@@ -86,6 +86,6 @@ fun dpsProperty(id: UUID = UUID.randomUUID(), locationId: UUID = UUID.randomUUID
   currentLocation = locationId,
   currentLocationType = PropertyContainerDto.CurrentLocationType.INTERNAL,
   proposedDisposalDate = LocalDate.parse("2026-03-04"),
-  removalOutcome = PropertyContainerDto.RemovalOutcome.TRANSFERRED,
+  removalOutcome = removalOutcome,
   removalDate = LocalDate.parse("2026-01-02"),
 )
