@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-05-22.459.1ca0c13"
+    "version" : "2026-08-04.653.0907e5a"
   },
   "servers" : [ {
     "url" : "https://csip-api-dev.hmpps.service.justice.gov.uk",
@@ -40,6 +40,9 @@
   }, {
     "name" : "2. Referral Controller",
     "description" : "Endpoints for Referral and Contributory Factor operations"
+  }, {
+    "name" : "10. Suggested Case Notes Controller",
+    "description" : "Endpoints for suggested case notes"
   }, {
     "name" : "5. Decision And Actions Controller",
     "description" : "Endpoints for Decision And Actions operations"
@@ -418,6 +421,74 @@
           },
           "409" : {
             "description" : "The CSIP referral associated with this identifier already has a decision and actions",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/suggestedCaseNotes/{prisonerNumber}" : {
+      "post" : {
+        "tags" : [ "10. Suggested Case Notes Controller" ],
+        "summary" : "Retrieve suggested case notes for a prisoner",
+        "description" : "Returns suggested case notes for the given prisoner and behaviour type.",
+        "operationId" : "suggestedCaseNotes",
+        "parameters" : [ {
+          "name" : "prisonerNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SuggestedCaseNotesRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Suggested case notes returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SuggestedCaseNotesResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -2295,6 +2366,7 @@
             "minLength" : 0
           },
           "referral" : {
+            "description" : "The referral that results in the creation of this CSIP record.",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/SyncReferralRequest"
             }, {
@@ -3085,6 +3157,7 @@
             "description" : "The referral that results in the creation of this CSIP record."
           },
           "plan" : {
+            "description" : "The CSIP Plan of this CSIP record.",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/Plan"
             }, {
@@ -3107,6 +3180,7 @@
             "description" : "The conclusion of the referral and reasons for the outcome decision."
           },
           "outcome" : {
+            "description" : "The outcome decision for the referral.",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/ReferenceData"
             }, {
@@ -3114,6 +3188,7 @@
             } ]
           },
           "signedOffByRole" : {
+            "description" : "The role of the person making the outcome decision.",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/ReferenceData"
             }, {
@@ -3406,6 +3481,7 @@
             "description" : "Name or names of assaulted members of staff if any."
           },
           "incidentInvolvement" : {
+            "description" : "The type of involvement the person had in the incident",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/ReferenceData"
             }, {
@@ -3454,6 +3530,7 @@
             }
           },
           "investigation" : {
+            "description" : "The investigation on the incident that motivated the CSIP referral.",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/Investigation"
             }, {
@@ -3461,6 +3538,7 @@
             } ]
           },
           "saferCustodyScreeningOutcome" : {
+            "description" : "The Safer Custody Screening Outcome for the CSIP referral.",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/SaferCustodyScreeningOutcome"
             }, {
@@ -3468,6 +3546,7 @@
             } ]
           },
           "decisionAndActions" : {
+            "description" : "The Decision and Actions for the CSIP referral.",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/DecisionAndActions"
             }, {
@@ -3676,6 +3755,71 @@
           }
         },
         "required" : [ "actions", "outcomeTypeCode" ]
+      },
+      "SuggestedCaseNotesRequest" : {
+        "type" : "object",
+        "properties" : {
+          "referralId" : {
+            "type" : "string"
+          },
+          "behaviourType" : {
+            "type" : "string",
+            "enum" : [ "risks_and_triggers", "usual_behaviour_presentation", "protective_factors" ]
+          },
+          "sortField" : {
+            "type" : "string"
+          },
+          "sortOrder" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "behaviourType", "referralId", "sortField", "sortOrder" ]
+      },
+      "SuggestedCaseNote" : {
+        "type" : "object",
+        "description" : "A single suggested case note",
+        "properties" : {
+          "relevance" : {
+            "type" : "string"
+          },
+          "case_note_id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "annotated_case_note" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "annotated_case_note", "case_note_id", "relevance" ]
+      },
+      "SuggestedCaseNotesResponse" : {
+        "type" : "object",
+        "description" : "Suggested case notes response",
+        "properties" : {
+          "prisonerNumber" : {
+            "type" : "string"
+          },
+          "referralId" : {
+            "type" : "string"
+          },
+          "behaviourType" : {
+            "type" : "string",
+            "enum" : [ "risks_and_triggers", "usual_behaviour_presentation", "protective_factors" ]
+          },
+          "sortField" : {
+            "type" : "string"
+          },
+          "sortOrder" : {
+            "type" : "string"
+          },
+          "suggestedCaseNotes" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SuggestedCaseNote"
+            }
+          }
+        },
+        "required" : [ "behaviourType", "prisonerNumber", "referralId", "sortField", "sortOrder", "suggestedCaseNotes" ]
       },
       "CreateContributoryFactorRequest" : {
         "type" : "object",
@@ -4075,6 +4219,7 @@
             "minLength" : 0
           },
           "referral" : {
+            "description" : "The referral that results in the creation of this CSIP record.",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/UpdateReferralRequest"
             }, {
