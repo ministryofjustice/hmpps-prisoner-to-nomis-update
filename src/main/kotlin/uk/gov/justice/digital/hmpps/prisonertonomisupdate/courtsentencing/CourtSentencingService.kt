@@ -850,7 +850,11 @@ class CourtSentencingService(
 
           val dpsSentence =
             courtSentencingApiService.getSentence(dpsSentenceId)
-              .also { telemetryMap["dpsChargeId"] = it.chargeLifetimeUuid.toString() }
+              .also {
+                telemetryMap["dpsChargeId"] = it.chargeLifetimeUuid.toString()
+                telemetryMap["dpsSentenceCategory"] = it.sentenceCategory
+                telemetryMap["dpsSentenceCalcType"] = it.sentenceCalcType
+              }
 
           val courtAppearanceMapping = tryFetchParent(message = "Missing DPS Appearance: $dpsAppearanceId") {
             courtCaseMappingService.getMappingGivenCourtAppearanceIdOrNull(dpsCourtAppearanceId = dpsAppearanceId)
@@ -1008,6 +1012,8 @@ class CourtSentencingService(
     if (isDpsCreated(source)) {
       track("sentence-updated", telemetryMap) {
         courtSentencingApiService.getSentenceOrNull(sentenceId)?.also { dpsSentence ->
+          telemetryMap["dpsSentenceCategory"] = dpsSentence.sentenceCategory
+          telemetryMap["dpsSentenceCalcType"] = dpsSentence.sentenceCalcType
           val sentenceMapping = retrieveParentSentenceMapping(sentenceId)
           telemetryMap["nomisSentenceSeq"] = sentenceMapping.nomisSentenceSequence.toString()
           telemetryMap["nomisBookingId"] = sentenceMapping.nomisBookingId.toString()
