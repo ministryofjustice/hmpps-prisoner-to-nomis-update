@@ -1,6 +1,13 @@
 hmpps.sqs:
   provider: localstack
   queues:
+    coreperson:
+      queueName: hmpps_prisoner_to_nomis_coreperson_queue
+      dlqName: hmpps_prisoner_to_nomis_coreperson_dlq
+      subscribeTopicId: domainevents
+      subscribeFilter: >-
+        { "eventType":[
+        "core-person-record.prison.religion.created"]}
     visit:
       queueName: hmpps_prisoner_to_nomis_visit_queue
       dlqName: hmpps_prisoner_to_nomis_visit_dlq
