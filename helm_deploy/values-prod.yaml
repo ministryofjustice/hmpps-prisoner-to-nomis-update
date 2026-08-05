@@ -193,6 +193,9 @@ generic-prometheus-alerts:
     - "syscon-devs-prod-hmpps_prisoner_to_nomis_activity_queue"
 
   sqsNumberAlertQueueMappings:
+    coreperson:
+      - "syscon-devs-prod-hmpps_prisoner_to_nomis_coreperson_queue"
+      - "syscon-devs-prod-hmpps_prisoner_to_nomis_coreperson_dlq"
     visits:
       - "syscon-devs-prod-hmpps_prisoner_to_nomis_visit_queue"
       - "syscon-devs-prod-hmpps_prisoner_to_nomis_visit_dlq"

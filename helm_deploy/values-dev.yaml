@@ -108,6 +108,9 @@ generic-prometheus-alerts:
   businessHoursOnly: true
   alertSeverity: syscon-nonprod
   sqsNumberAlertQueueMappings:
+    coreperson:
+      - "syscon-devs-dev-hmpps_prisoner_to_nomis_coreperson_queue"
+      - "syscon-devs-dev-hmpps_prisoner_to_nomis_coreperson_dlq"
     visits:
       - "syscon-devs-dev-hmpps_prisoner_to_nomis_visit_queue"
       - "syscon-devs-dev-hmpps_prisoner_to_nomis_visit_dlq"

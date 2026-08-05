@@ -109,6 +109,10 @@ generic-service:
       HMPPS_SQS_QUEUES_VISIT_QUEUE_NAME: "sqs_queue_name"
     domain-events-sqs-nomis-update-visit-dlq:
       HMPPS_SQS_QUEUES_VISIT_DLQ_NAME: "sqs_queue_name"
+    domain-events-sqs-nomis-update-coreperson:
+      HMPPS_SQS_QUEUES_COREPERSON_QUEUE_NAME: "sqs_queue_name"
+    domain-events-sqs-nomis-update-coreperson-dlq:
+      HMPPS_SQS_QUEUES_COREPERSON_DLQ_NAME: "sqs_queue_name"
     domain-events-sqs-nomis-update-incentive:
       HMPPS_SQS_QUEUES_INCENTIVE_QUEUE_NAME: "sqs_queue_name"
     domain-events-sqs-nomis-update-incentive-dlq:

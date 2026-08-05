@@ -37,6 +37,15 @@ hmpps.sqs:
   defaultErrorVisibilityTimeout: 0
   provider: localstack
   queues:
+    coreperson:
+      queueName: "coreperson-${random.uuid}"
+      dlqName: "coreperson-dlq-${random.uuid}"
+      subscribeTopicId: domainevents
+      subscribeFilter: >-
+        { "eventType":[
+        "core-person-record.prison.religion.created"]}
+      dlqMaxReceiveCount: 1
+      visibilityTimeout: 120
     visit:
       queueName: "visit-${random.uuid}"
       dlqName: "visit-dlq-${random.uuid}"
