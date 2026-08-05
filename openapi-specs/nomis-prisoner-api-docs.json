@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-08-04.1831.076e490"
+    "version" : "2026-08-05.1850.aab4a0d"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -25392,9 +25392,19 @@
             "type" : "string",
             "format" : "date",
             "description" : "Date the container will be disposed of"
+          },
+          "active" : {
+            "type" : "boolean",
+            "description" : "Whether the container is active"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Date the container is no longer active",
+            "example" : "2027-01-01"
           }
         },
-        "required" : [ "containerCode" ]
+        "required" : [ "active", "containerCode" ]
       },
       "UpdateVisitBalanceRequest" : {
         "type" : "object",
@@ -29105,7 +29115,8 @@
           "expiryDate" : {
             "type" : "string",
             "format" : "date",
-            "description" : "Date the container is no longer active"
+            "description" : "Date the container is no longer active",
+            "example" : "2027-01-01"
           },
           "proposedDisposalDate" : {
             "type" : "string",
@@ -33355,12 +33366,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "paged" : {
+            "type" : "boolean"
+          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "paged" : {
-            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
