@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-08-05.1850.aab4a0d"
+    "version" : "2026-08-05.1859.bed38c8"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -19544,6 +19544,80 @@
         }
       }
     },
+    "/movements/{offenderNo}/transfers/schedule/out/{eventId}" : {
+      "get" : {
+        "tags" : [ "transfer-schedule-resource" ],
+        "summary" : "Get a specific transfer schedule out for an offender",
+        "description" : "Get a specific transfer schedule out for an offender by event ID. Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getTransferScheduleOut",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender number (NOMS ID)",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender number (NOMS ID)",
+            "example" : "A1234BC"
+          },
+          "example" : "A1234BC"
+        }, {
+          "name" : "eventId",
+          "in" : "path",
+          "description" : "Event ID",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Event ID",
+            "example" : 123
+          },
+          "example" : 123
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Offender transfer schedule out returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TransferScheduleOut"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Offender or transfer schedule not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/movements/{offenderNo}/taps" : {
       "get" : {
         "tags" : [ "offender-taps-resource" ],
@@ -33366,12 +33440,12 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paged" : {
+            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -37115,6 +37189,121 @@
             "type" : "boolean"
           }
         }
+      },
+      "TransferScheduleOut" : {
+        "type" : "object",
+        "description" : "Transfer schedule out response",
+        "properties" : {
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Booking ID"
+          },
+          "eventId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Event ID"
+          },
+          "startTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Start time"
+          },
+          "eventSubType" : {
+            "type" : "string",
+            "description" : "Event sub type, aka movement reason"
+          },
+          "eventStatus" : {
+            "type" : "string",
+            "description" : "Event status"
+          },
+          "comment" : {
+            "type" : "string",
+            "description" : "Comment"
+          },
+          "hiddenComment" : {
+            "type" : "string",
+            "description" : "Hidden Comment"
+          },
+          "fromPrison" : {
+            "type" : "string",
+            "description" : "From prison"
+          },
+          "toPrison" : {
+            "type" : "string",
+            "description" : "To prison"
+          },
+          "cancellationReasonCode" : {
+            "type" : "string",
+            "description" : "Cancellation reason"
+          },
+          "escortCode" : {
+            "type" : "string",
+            "description" : "Escort code"
+          },
+          "waitlist" : {
+            "$ref" : "#/components/schemas/TransferScheduleWaitlist",
+            "description" : "The waitlist"
+          },
+          "audit" : {
+            "$ref" : "#/components/schemas/NomisAudit",
+            "description" : "Audit data associated with the schedule"
+          },
+          "userActiveCaseloadId" : {
+            "type" : "string",
+            "description" : "Audit user's active caseload ID (modified user else create user)"
+          }
+        },
+        "required" : [ "audit", "bookingId", "eventId", "eventStatus", "eventSubType", "fromPrison" ]
+      },
+      "TransferScheduleWaitlist" : {
+        "type" : "object",
+        "description" : "Transfer schedule waitlist",
+        "properties" : {
+          "requestDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Requested date"
+          },
+          "status" : {
+            "type" : "string",
+            "description" : "Waitlist status"
+          },
+          "statusDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The date the status was changed"
+          },
+          "priority" : {
+            "type" : "string",
+            "description" : "The transfer priority"
+          },
+          "approved" : {
+            "type" : "boolean",
+            "description" : "Is the transfer approved?"
+          },
+          "approvedUserName" : {
+            "type" : "string",
+            "description" : "Approved by user"
+          },
+          "cancellationReasonCode" : {
+            "type" : "string",
+            "description" : "Cancellation reason"
+          },
+          "comment" : {
+            "type" : "string",
+            "description" : "Comment"
+          },
+          "audit" : {
+            "$ref" : "#/components/schemas/NomisAudit",
+            "description" : "Audit data associated with the schedule"
+          },
+          "userActiveCaseloadId" : {
+            "type" : "string",
+            "description" : "Audit user's active caseload ID (modified user else create user)"
+          }
+        },
+        "required" : [ "approved", "audit", "priority", "requestDate", "status", "statusDate" ]
       },
       "BookingTap" : {
         "type" : "object",
