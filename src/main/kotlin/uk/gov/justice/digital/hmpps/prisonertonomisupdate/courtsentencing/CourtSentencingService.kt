@@ -186,7 +186,7 @@ class CourtSentencingService(
   private fun isDpsCreated(source: String) = source != CreatingSystem.NOMIS.name
 
   // also includes adding any charges that are associated with the appearance
-  suspend fun createCourtAppearance(createEvent: CourtAppearanceCreatedEvent) {
+  suspend fun createCourtAppearance(createEvent: CourtAppearanceCreatedEvent, forceClone: Boolean = false) {
     val dpsCourtCaseId = createEvent.additionalInformation.courtCaseId
     val source = createEvent.additionalInformation.source
     val dpsCourtAppearanceId = createEvent.additionalInformation.courtAppearanceId
@@ -232,6 +232,7 @@ class CourtSentencingService(
               courtAppearance.toNomisCourtAppearance(
                 courtEventChargesWithOutcomes = courtEventChargesToUpdateWithOutcomes,
                 isOnFutureCourtAppearance = createEvent.additionalInformation.isOnFutureCourtAppearance,
+                forceClone = forceClone,
               ),
             )
           }.also { response ->
@@ -1700,6 +1701,7 @@ fun LegacyCourtCase.toNomisUpdateCourtCase(): UpdateCourtCaseRequest = UpdateCou
 fun LegacyCourtAppearance.toNomisCourtAppearance(
   courtEventChargesWithOutcomes: List<CourtEventChargeRequest>,
   isOnFutureCourtAppearance: Boolean,
+  forceClone: Boolean = false,
 ): CourtAppearanceRequest = CourtAppearanceRequest(
   eventDateTime = LocalDateTime.of(
     this.appearanceDate,
@@ -1723,6 +1725,7 @@ fun LegacyCourtAppearance.toNomisCourtAppearance(
   nextCourtId = this.nextCourtAppearance?.courtId,
   comment = this.comments,
   futureAppearance = isOnFutureCourtAppearance,
+  forceClone = forceClone,
 )
 
 fun LegacyCharge.toNomisCourtCharge(isOnFutureCourtAppearance: Boolean): OffenderChargeRequest = OffenderChargeRequest(

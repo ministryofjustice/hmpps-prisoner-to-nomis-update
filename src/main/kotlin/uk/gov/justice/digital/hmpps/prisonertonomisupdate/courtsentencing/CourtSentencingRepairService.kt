@@ -323,7 +323,7 @@ class CourtSentencingRepairService(
       null,
     )
   }
-  suspend fun synchroniseAppearanceCreateToNomis(offenderNo: String, courtCaseId: String, courtAppearanceId: String) {
+  suspend fun synchroniseAppearanceCreateToNomis(offenderNo: String, courtCaseId: String, courtAppearanceId: String, forceClone: Boolean) {
     courtSentencingService.createCourtAppearance(
       createEvent = CourtSentencingService.CourtAppearanceCreatedEvent(
         personReference = PersonReferenceList(
@@ -338,9 +338,10 @@ class CourtSentencingRepairService(
           courtCaseId = courtCaseId,
           courtAppearanceId = courtAppearanceId,
           source = "DPS",
-          isOnFutureCourtAppearance = false,
+          isOnFutureCourtAppearance = forceClone,
         ),
       ),
+      forceClone = forceClone,
     )
 
     telemetryClient.trackEvent(
