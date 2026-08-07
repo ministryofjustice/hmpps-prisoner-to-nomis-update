@@ -474,7 +474,7 @@ class CourtSentencingService(
             nomisApiService.createCourtCharge(
               offenderNo,
               courtCaseMapping.nomisCourtCaseId,
-              charge.toNomisCourtCharge(isOnFutureCourtAppearance = futureCourtAppearance),
+              charge.toNomisCourtCharge(isOnFutureCourtAppearance = futureCourtAppearance == true),
             )
 
           CourtChargeMappingDto(
@@ -518,7 +518,7 @@ class CourtSentencingService(
             val chargeMapping = retrieveParentChargeMapping(chargeId)
             telemetryMap["nomisChargeId"] = chargeMapping.nomisCourtChargeId.toString()
 
-            val nomisCourtCharge = dpsCharge.toNomisCourtCharge(isOnFutureCourtAppearance = futureCourtAppearance)
+            val nomisCourtCharge = dpsCharge.toNomisCourtCharge(isOnFutureCourtAppearance = futureCourtAppearance == true)
             telemetryMap["nomisOutcomeCode"] = nomisCourtCharge.resultCode1 ?: "null"
             telemetryMap["nomisOffenceCode"] = nomisCourtCharge.offenceCode
             nomisApiService.updateCourtCharge(
@@ -1542,7 +1542,7 @@ class CourtSentencingService(
     val courtAppearanceId: String?,
     val source: String,
     val courtCaseId: String,
-    val isOnFutureCourtAppearance: Boolean,
+    val isOnFutureCourtAppearance: Boolean? = false,
   )
 
   data class SentenceAdditionalInformation(
