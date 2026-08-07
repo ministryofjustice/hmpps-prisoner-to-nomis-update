@@ -1943,7 +1943,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
         courtSentencingMappingApi.stubUpdateAndCreateMappings()
         courtSentencingMappingApi.stubGetCourtChargeMappingGivenDpsId(DPS_COURT_CHARGE_ID, NOMIS_COURT_CHARGE_ID)
 
-        webTestClient.post().uri("/prisoners/$OFFENDER_NO/court-sentencing/dps-court-case/$DPS_COURT_CASE_ID/dps-appearance/$DPS_COURT_APPEARANCE_ID/repair?force-clone=true")
+        webTestClient.post().uri("/prisoners/$OFFENDER_NO/court-sentencing/dps-court-case/$DPS_COURT_CASE_ID/dps-appearance/$DPS_COURT_APPEARANCE_ID/repair?force-prevent-clone=true")
           .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_TO_NOMIS__UPDATE__RW")))
           .contentType(MediaType.APPLICATION_JSON)
           .exchange()
@@ -1970,8 +1970,8 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
       fun `will call nomis api to create the appearance`() {
         nomisApi.verify(
           postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/$NOMIS_COURT_CASE_ID/court-appearances"))
-            .withRequestBody(matchingJsonPath("forceClone", equalTo("true")))
-            .withRequestBody(matchingJsonPath("futureAppearance", equalTo("true"))),
+            .withRequestBody(matchingJsonPath("forcePreventClone", equalTo("true")))
+            .withRequestBody(matchingJsonPath("futureAppearance", equalTo("false"))),
         )
       }
     }
