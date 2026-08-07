@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing
 
 import com.github.tomakehurst.wiremock.client.WireMock
+import com.github.tomakehurst.wiremock.client.WireMock.equalTo
+import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
@@ -1941,7 +1943,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
         courtSentencingMappingApi.stubUpdateAndCreateMappings()
         courtSentencingMappingApi.stubGetCourtChargeMappingGivenDpsId(DPS_COURT_CHARGE_ID, NOMIS_COURT_CHARGE_ID)
 
-        webTestClient.post().uri("/prisoners/$OFFENDER_NO/court-sentencing/dps-court-case/$DPS_COURT_CASE_ID/dps-appearance/$DPS_COURT_APPEARANCE_ID/repair")
+        webTestClient.post().uri("/prisoners/$OFFENDER_NO/court-sentencing/dps-court-case/$DPS_COURT_CASE_ID/dps-appearance/$DPS_COURT_APPEARANCE_ID/repair?force-clone=true")
           .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_TO_NOMIS__UPDATE__RW")))
           .contentType(MediaType.APPLICATION_JSON)
           .exchange()
@@ -1965,8 +1967,12 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
       }
 
       @Test
-      fun `will call nomis api to update the appearance`() {
-        nomisApi.verify(postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/$NOMIS_COURT_CASE_ID/court-appearances")))
+      fun `will call nomis api to create the appearance`() {
+        nomisApi.verify(
+          postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/$NOMIS_COURT_CASE_ID/court-appearances"))
+            .withRequestBody(matchingJsonPath("forceClone", equalTo("true")))
+            .withRequestBody(matchingJsonPath("futureAppearance", equalTo("true"))),
+        )
       }
     }
   }
