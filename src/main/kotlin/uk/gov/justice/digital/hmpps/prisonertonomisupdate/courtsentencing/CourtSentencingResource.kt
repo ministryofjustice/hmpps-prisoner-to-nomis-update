@@ -489,11 +489,15 @@ class CourtSentencingResource(
     @RequestParam(defaultValue = "false", required = false, name = "force-clone")
     @Schema(description = "Force clone of case when on old booking, used for future dated appearance only")
     forceClone: Boolean,
+    @RequestParam(defaultValue = "false", required = false, name = "force-prevent-clone")
+    @Schema(description = "Prevent clone of case when on old booking")
+    forcePreventClone: Boolean,
   ) = courtSentencingRepairService.synchroniseAppearanceCreateToNomis(
     offenderNo = offenderNo,
     courtCaseId = courtCaseId,
     courtAppearanceId = appearanceId,
     forceClone = forceClone,
+    forcePreventClone = forcePreventClone,
   )
 }
 
