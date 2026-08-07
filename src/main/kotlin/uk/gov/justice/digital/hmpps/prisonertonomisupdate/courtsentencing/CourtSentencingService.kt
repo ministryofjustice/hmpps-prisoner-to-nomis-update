@@ -440,7 +440,7 @@ class CourtSentencingService(
     val source = createEvent.additionalInformation.source
     val courtCaseId = createEvent.additionalInformation.courtCaseId
     val courtAppearanceId = createEvent.additionalInformation.courtAppearanceId
-    val futureCourtAppearance = createEvent.additionalInformation.isOnFutureCourtAppearance
+    val futureCourtAppearance = createEvent.additionalInformation.isOnFutureAppearance == true
     val offenderNo: String = eventOffenderNo(createEvent.personReference)
     val telemetryMap = createEvent.asTelemetry()
     if (isDpsCreated(source)) {
@@ -502,7 +502,7 @@ class CourtSentencingService(
     val source = createEvent.additionalInformation.source
     val courtCaseId = createEvent.additionalInformation.courtCaseId
     val courtAppearanceId = createEvent.additionalInformation.courtAppearanceId!!
-    val futureCourtAppearance = createEvent.additionalInformation.isOnFutureCourtAppearance
+    val futureCourtAppearance = createEvent.additionalInformation.isOnFutureAppearance == true
     val offenderNo: String = eventOffenderNo(createEvent.personReference)
     val telemetryMap = createEvent.asTelemetry()
     if (isDpsCreated(source)) {
@@ -1542,7 +1542,7 @@ class CourtSentencingService(
     val courtAppearanceId: String?,
     val source: String,
     val courtCaseId: String,
-    val isOnFutureCourtAppearance: Boolean? = false,
+    val isOnFutureAppearance: Boolean? = false,
   )
 
   data class SentenceAdditionalInformation(
@@ -2002,7 +2002,7 @@ fun CourtSentencingService.CourtAppearanceCreatedEvent.asTelemetry() = mutableMa
 fun CourtSentencingService.CourtChargeCreatedEvent.asTelemetry() = mutableMapOf(
   "dpsChargeId" to additionalInformation.courtChargeId,
   "dpsCourtCaseId" to additionalInformation.courtCaseId,
-  "isOnFutureAppearance" to additionalInformation.isOnFutureCourtAppearance.toString(),
+  "isOnFutureAppearance" to (additionalInformation.isOnFutureAppearance == true).toString(),
   "dpsCourtAppearanceId" to (additionalInformation.courtAppearanceId ?: "null"),
   "offenderNo" to eventOffenderNo(personReference),
 )

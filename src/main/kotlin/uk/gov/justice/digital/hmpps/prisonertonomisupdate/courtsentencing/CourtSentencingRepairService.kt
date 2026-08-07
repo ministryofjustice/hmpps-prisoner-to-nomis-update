@@ -143,7 +143,7 @@ class CourtSentencingRepairService(
           courtAppearanceId = courtAppearanceId,
           courtChargeId = chargeId,
           source = "DPS",
-          isOnFutureCourtAppearance = false,
+          isOnFutureAppearance = false,
         ),
       ),
     )
@@ -276,7 +276,7 @@ class CourtSentencingRepairService(
           courtAppearanceId = courtAppearanceId,
           courtChargeId = chargeId,
           source = "DPS",
-          isOnFutureCourtAppearance = false,
+          isOnFutureAppearance = false,
         ),
       ),
     )
