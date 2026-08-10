@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-08-07.1868.2005d6c"
+    "version" : "2026-08-07.1885.bb3dc5b"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -19618,6 +19618,92 @@
         }
       }
     },
+    "/movements/{offenderNo}/transfer/movement/out/{bookingId}/{movementSeq}" : {
+      "get" : {
+        "tags" : [ "transfer-movement-resource" ],
+        "summary" : "Get a specific transfer movement out for an offender",
+        "description" : "Get a specific transfer movement out for an offender by booking ID and movement sequence. Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getTransferMovementOut",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender number (NOMS ID)",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender number (NOMS ID)",
+            "example" : "A1234BC"
+          },
+          "example" : "A1234BC"
+        }, {
+          "name" : "bookingId",
+          "in" : "path",
+          "description" : "Booking ID",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Booking ID",
+            "example" : 123
+          },
+          "example" : 123
+        }, {
+          "name" : "movementSeq",
+          "in" : "path",
+          "description" : "Movement Sequence",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Movement Sequence",
+            "example" : 1
+          },
+          "example" : 1
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Transfer movement out returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TransferMovementOut"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Offender or transfer movement out not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/movements/{offenderNo}/taps" : {
       "get" : {
         "tags" : [ "offender-taps-resource" ],
@@ -37310,6 +37396,66 @@
           }
         },
         "required" : [ "approved", "audit", "priority", "requestDate", "status", "statusDate" ]
+      },
+      "TransferMovementOut" : {
+        "type" : "object",
+        "description" : "Transfer Movement Out",
+        "properties" : {
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Booking ID"
+          },
+          "sequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Movement sequence"
+          },
+          "eventId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Schedule out ID on the movement - this will be populated even if the transfer schedule no longer exists"
+          },
+          "transferScheduleOutId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Transfer schedule out event ID. Empty for unscheduled or orphaned movements."
+          },
+          "movementTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Movement time"
+          },
+          "movementReason" : {
+            "type" : "string",
+            "description" : "Movement reason"
+          },
+          "escort" : {
+            "type" : "string",
+            "description" : "Escort"
+          },
+          "fromPrison" : {
+            "type" : "string",
+            "description" : "From prison"
+          },
+          "toPrison" : {
+            "type" : "string",
+            "description" : "To prison"
+          },
+          "active" : {
+            "type" : "boolean",
+            "description" : "Active flag"
+          },
+          "commentText" : {
+            "type" : "string",
+            "description" : "Comment text"
+          },
+          "audit" : {
+            "$ref" : "#/components/schemas/NomisAudit",
+            "description" : "Audit data associated with the records"
+          }
+        },
+        "required" : [ "active", "audit", "bookingId", "fromPrison", "movementReason", "movementTime", "sequence", "toPrison" ]
       },
       "BookingTap" : {
         "type" : "object",

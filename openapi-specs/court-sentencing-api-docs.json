@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-08-06.2309.cb031a3"
+    "version" : "2026-08-07.2321.00283f4"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -7210,7 +7210,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:29.321627657"
+            "example" : "07:44:31.599052999"
           },
           "outcomeDispositionCode" : {
             "type" : [ "string", "null" ]
@@ -7588,7 +7588,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:29.321627657"
+            "example" : "07:44:31.599052999"
           },
           "courtCode" : {
             "type" : "string"
@@ -9274,42 +9274,47 @@
         "type" : "object",
         "properties" : {
           "hearingId" : {
-            "type" : [ "string", "null" ],
+            "type" : "string",
             "format" : "uuid",
             "description" : "The ID of the hearing for this thing to do"
           },
           "courtCaseReference" : {
-            "type" : [ "string", "null" ],
+            "type" : "string",
             "description" : "The case reference of the hearing for this thing to do"
           },
           "hearingDate" : {
-            "type" : [ "string", "null" ],
+            "type" : "string",
             "format" : "date",
             "description" : "The date of the hearing for this thing to do"
           },
           "hearingType" : {
-            "type" : [ "string", "null" ],
+            "type" : "string",
             "description" : "The type of the hearing for this thing to do"
+          },
+          "warrantType" : {
+            "type" : "string",
+            "description" : "The type of the hearing for this thing to do",
+            "enum" : [ "REMAND", "SENTENCING" ]
+          },
+          "courtCaseUuid" : {
+            "type" : [ "string", "null" ],
+            "description" : "The ID of the existing court case for this warrant"
           }
         },
-        "required" : [ "courtCaseReference", "hearingDate", "hearingId", "hearingType" ]
+        "required" : [ "courtCaseReference", "hearingDate", "hearingId", "hearingType", "warrantType" ]
       },
       "ThingToDo" : {
         "type" : "object",
         "properties" : {
           "type" : {
             "type" : "string",
-            "enum" : [ "NEW_REMAND_WARRANT", "NEW_SENTENCING_WARRANT" ]
+            "enum" : [ "NEW_WARRANT" ]
           },
           "hearingThingsToDoData" : {
-            "oneOf" : [ {
-              "$ref" : "#/components/schemas/HearingThingsToDoData"
-            }, {
-              "type" : "null"
-            } ]
+            "$ref" : "#/components/schemas/HearingThingsToDoData"
           }
         },
-        "required" : [ "type" ]
+        "required" : [ "hearingThingsToDoData", "type" ]
       },
       "ThingsToDo" : {
         "type" : "object",
@@ -10468,7 +10473,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:29.321627657"
+            "example" : "07:44:31.599052999"
           },
           "courtCode" : {
             "type" : "string"
@@ -11156,7 +11161,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:44:29.321627657"
+            "example" : "07:44:31.599052999"
           },
           "nomisOutcomeCode" : {
             "type" : [ "string", "null" ]
@@ -11235,7 +11240,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:29.321627657"
+            "example" : "07:44:31.599052999"
           },
           "courtId" : {
             "type" : "string"
@@ -11387,7 +11392,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:44:29.321627657"
+            "example" : "07:44:31.599052999"
           },
           "charges" : {
             "type" : "array",
@@ -11424,7 +11429,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:29.321627657"
+            "example" : "07:44:31.599052999"
           },
           "courtId" : {
             "type" : "string"
@@ -12021,7 +12026,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:29.321627657"
+            "example" : "07:44:31.599052999"
           },
           "courtCode" : {
             "type" : [ "string", "null" ]
