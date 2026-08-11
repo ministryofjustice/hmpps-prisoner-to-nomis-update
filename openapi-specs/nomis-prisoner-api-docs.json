@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-08-10.1887.1742837"
+    "version" : "2026-08-11.1895.0a67a0c"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -22149,7 +22149,7 @@
     "/finance/prisoners/ids" : {
       "get" : {
         "tags" : [ "prisoner-balance-resource" ],
-        "summary" : "Gets the rootOffenderIds for all prisoners with a non-negative trust account balance",
+        "summary" : "Gets the rootOffenderIds for all prisoners with a non-zero trust account balance",
         "description" : "Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
         "operationId" : "getPrisonerBalanceIdentifiers",
         "parameters" : [ {
@@ -22235,7 +22235,7 @@
     "/finance/prisoners/ids/all-from-id" : {
       "get" : {
         "tags" : [ "prisoner-balance-resource" ],
-        "summary" : "Gets the rootOffenderIds for all prisoners with a non-negative trust account balance",
+        "summary" : "Gets the rootOffenderIds for all prisoners with a non-zero trust account balance",
         "description" : "Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
         "operationId" : "getPrisonerBalanceIdentifiersFromId",
         "parameters" : [ {
@@ -22283,6 +22283,153 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/RootOffenderIdsWithLast"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint when role NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/finance/prisoners/ids-in-range" : {
+      "get" : {
+        "tags" : [ "prisoner-balance-resource" ],
+        "summary" : "Gets every prisoner root offender id with a trust account balance in range.",
+        "description" : "Returns a list of root offender ids greater than the specified fromRootOffenderId and less than or equal to the\n      specified toRootOffenderId. Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
+        "operationId" : "getPrisonerBalanceIdentifiersInRange",
+        "parameters" : [ {
+          "name" : "fromRootOffenderId",
+          "in" : "query",
+          "description" : "Return prisoners with root offender id greater than this value.",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Return prisoners with root offender id greater than this value."
+          }
+        }, {
+          "name" : "toRootOffenderId",
+          "in" : "query",
+          "description" : "Return prisoners with root offender id less than or equal to this value.",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Return prisoners with root offender id less than or equal to this value."
+          }
+        }, {
+          "name" : "prisonId",
+          "in" : "query",
+          "description" : "Prison ids to filter by",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "description" : "Prison ids to filter by",
+            "items" : {
+              "type" : "string",
+              "description" : "Prison ids to filter by"
+            }
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "list of root offender ids",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "integer",
+                    "format" : "int64"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint when role NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/finance/prisoners/id-ranges" : {
+      "get" : {
+        "tags" : [ "prisoner-balance-resource" ],
+        "summary" : "Gets the rootOffenderId ranges for all prisoners with a non-zero trust account balance",
+        "description" : "Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
+        "operationId" : "getPrisonerBalanceIdentifierRanges",
+        "parameters" : [ {
+          "name" : "pageSize",
+          "in" : "query",
+          "description" : "Number of offender ids per range",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 2000,
+            "description" : "Number of offender ids per range",
+            "minimum" : 1
+          }
+        }, {
+          "name" : "prisonId",
+          "in" : "query",
+          "description" : "Prison ids to filter by",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "description" : "Prison ids to filter by",
+            "items" : {
+              "type" : "string",
+              "description" : "Prison ids to filter by"
+            }
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "list of root offender id ranges",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/RootOffenderIdRange"
+                  }
                 }
               }
             }
@@ -30683,12 +30830,6 @@
             "description" : "Status, active, inactive or provisional",
             "enum" : [ "I", "A", "P" ]
           },
-          "assessmentStaffId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Staff id of user that created the CSRA",
-            "example" : 123456
-          },
           "committeeCode" : {
             "$ref" : "#/components/schemas/AssessmentCommittee",
             "description" : "The assessment committee code (reference code in domain 'ASSESS_COMM')"
@@ -30752,7 +30893,7 @@
             "description" : "Approval Comment text"
           }
         },
-        "required" : [ "assessmentDate", "assessmentStaffId", "calculatedLevel", "createdBy", "createdDateTime", "score", "status", "type" ]
+        "required" : [ "assessmentDate", "calculatedLevel", "createdBy", "createdDateTime", "status", "type" ]
       },
       "EvaluationResultCode" : {
         "type" : "string",
@@ -35228,7 +35369,7 @@
             }
           }
         },
-        "required" : [ "assessmentDate", "assessmentStaffId", "bookingId", "createdBy", "createdDateTime", "score", "sections", "sequence", "status", "type" ]
+        "required" : [ "assessmentDate", "assessmentStaffId", "bookingId", "createdBy", "createdDateTime", "sections", "sequence", "status", "type" ]
       },
       "CsraQuestionDto" : {
         "type" : "object",
