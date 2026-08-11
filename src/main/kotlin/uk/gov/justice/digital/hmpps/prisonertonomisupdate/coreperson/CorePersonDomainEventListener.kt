@@ -16,6 +16,7 @@ class CorePersonDomainEventListener(
   jsonMapper: JsonMapper,
   eventFeatureSwitch: EventFeatureSwitch,
   private val religionService: ReligionService,
+  private val corePersonMergeService: CorePersonMergeService,
   telemetryClient: TelemetryClient,
 ) : DomainEventListenerNoMapping(
   jsonMapper = jsonMapper,
@@ -34,6 +35,7 @@ class CorePersonDomainEventListener(
   ): CompletableFuture<Void?> = onDomainEvent(rawMessage) { eventType, message ->
     when (eventType) {
       "core-person-record.prison.religion.created" -> religionService.religionCreated(message.fromJson())
+      "core-person-record.prison.merged" -> corePersonMergeService.mergePerson(message.fromJson())
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }
   }

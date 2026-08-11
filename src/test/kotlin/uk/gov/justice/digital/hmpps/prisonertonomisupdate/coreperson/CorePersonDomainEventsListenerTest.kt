@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.json.JsonTest
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.religion.ReligionService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.corePersonMergeMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.religionCreatedMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.EventFeatureSwitch
 
@@ -27,6 +28,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.EventFeature
 internal class CorePersonDomainEventsListenerTest(@Autowired private val jsonMapper: JsonMapper) {
   private val religionService: ReligionService = mock()
   private val eventFeatureSwitch: EventFeatureSwitch = mock()
+  private val corePersonMergeService: CorePersonMergeService = mock()
   private val telemetryClient: TelemetryClient = mock()
 
   private val listener =
@@ -34,6 +36,7 @@ internal class CorePersonDomainEventsListenerTest(@Autowired private val jsonMap
       jsonMapper,
       eventFeatureSwitch,
       religionService,
+      corePersonMergeService,
       telemetryClient,
     )
 
@@ -47,7 +50,7 @@ internal class CorePersonDomainEventsListenerTest(@Autowired private val jsonMap
       }
 
       @Test
-      internal fun `will call service with create religion data`() = runTest {
+      internal fun `will call religion service with create religion data`() = runTest {
         listener.onMessage(
           rawMessage = religionCreatedMessage("A1234BC", "e312a74d-ca98-4fbc-b212-608bc41558e7"),
         ).join()
@@ -55,7 +58,20 @@ internal class CorePersonDomainEventsListenerTest(@Autowired private val jsonMap
         verify(religionService).religionCreated(
           check { it ->
             assertThat(it.additionalInformation.cprReligionId.toString()).isEqualTo("e312a74d-ca98-4fbc-b212-608bc41558e7")
-            assertThat(it.personReference.identifiers.first { it.type == "NOMS" }.value).isEqualTo("A1234BC")
+            assertThat(it.personReference.identifiers.first { it.type == "prisonNumber" }.value).isEqualTo("A1234BC")
+          },
+        )
+      }
+
+      @Test
+      internal fun `will call core person merge service with create religion data`() = runTest {
+        listener.onMessage(
+          rawMessage = corePersonMergeMessage("A1234BC"),
+        ).join()
+
+        verify(corePersonMergeService).mergePerson(
+          check {
+            assertThat(it.personReferenceTo.identifiers.first { it.type == "prisonNumber" }.value).isEqualTo("A1234BC")
           },
         )
       }
@@ -71,10 +87,14 @@ internal class CorePersonDomainEventsListenerTest(@Autowired private val jsonMap
       @Test
       internal fun `will not call service`() {
         listener.onMessage(
-          rawMessage = religionCreatedMessage("TODO", "TODO"),
+          rawMessage = religionCreatedMessage("A1234BC", "e312a74d-ca98-4fbc-b212-608bc41558e7"),
+        ).join()
+        listener.onMessage(
+          rawMessage = corePersonMergeMessage("A1234BC"),
         ).join()
 
         verifyNoInteractions(religionService)
+        verifyNoInteractions(corePersonMergeService)
       }
     }
   }
