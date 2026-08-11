@@ -4,15 +4,20 @@ import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import org.assertj.core.api.Assertions.assertThat
+import org.awaitility.kotlin.await
+import org.awaitility.kotlin.untilAsserted
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.mockito.ArgumentMatchers.anyMap
 import org.mockito.ArgumentMatchers.eq
 import org.mockito.kotlin.check
 import org.mockito.kotlin.isNull
+import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.HttpStatus
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
@@ -117,6 +122,102 @@ class PropertyToNomisIntTest : SqsIntegrationTestBase() {
               assertThat(it).containsEntry("bookingId", "$BOOKING_ID")
               assertThat(it).containsEntry("mappingType", "DPS_CREATED")
             },
+            isNull(),
+          )
+        }
+      }
+
+      @Nested
+      inner class ErrorScenarios {
+
+        @BeforeEach
+        fun setup() {
+          propertyNomisApiMockServer.stubPostProperty(NOMIS_ID, BOOKING_ID)
+          propertyDpsApi.stubGetProperty(dpsProperty(UUID.fromString(DPS_ID), UUID.fromString(DPS_LOCATION_ID)))
+          propertyMappingApiMockServer.stubGetLocationByDpsId(DPS_LOCATION_ID, NOMIS_LOCATION_ID)
+        }
+
+        @Test
+        fun `mapping temporary error`() {
+          propertyMappingApiMockServer.stubPostMappingFollowedBySuccess(HttpStatus.SERVICE_UNAVAILABLE)
+          publishPropertyDomainEvent("prison-property.container.created")
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("property-create-mapping-retry"),
+              check {
+                assertThat(it).containsEntry("dpsPropertyContainerId", DPS_ID)
+                assertThat(it).containsEntry("nomisPropertyContainerId", "$NOMIS_ID")
+                assertThat(it).containsEntry("locationId", "$NOMIS_LOCATION_ID")
+                assertThat(it).containsEntry("offenderNo", OFFENDER_NO)
+                assertThat(it).containsEntry("bookingId", "$BOOKING_ID")
+                assertThat(it).containsEntry("mappingType", "DPS_CREATED")
+              },
+              isNull(),
+            )
+            verify(telemetryClient).trackEvent(
+              eq("property-mapping-create-failed"),
+              check {
+                assertThat(it).containsEntry("dpsPropertyContainerId", DPS_ID)
+                assertThat(it).containsEntry("nomisPropertyContainerId", "$NOMIS_ID")
+                assertThat(it).containsEntry("locationId", "$NOMIS_LOCATION_ID")
+                assertThat(it).containsEntry("offenderNo", OFFENDER_NO)
+                assertThat(it).containsEntry("bookingId", "$BOOKING_ID")
+                assertThat(it).containsEntry("mappingType", "DPS_CREATED")
+                assertThat(it).containsEntry("reason", "503 Service Unavailable from POST http://localhost:8084/mapping/property")
+              },
+              isNull(),
+            )
+            verify(telemetryClient).trackEvent(
+              eq("property-mapping-create-success"),
+              check {
+                assertThat(it).containsEntry("dpsPropertyContainerId", DPS_ID)
+                assertThat(it).containsEntry("nomisPropertyContainerId", "$NOMIS_ID")
+                assertThat(it).containsEntry("locationId", "$NOMIS_LOCATION_ID")
+                assertThat(it).containsEntry("offenderNo", OFFENDER_NO)
+                assertThat(it).containsEntry("bookingId", "$BOOKING_ID")
+                assertThat(it).containsEntry("mappingType", "DPS_CREATED")
+              },
+              isNull(),
+            )
+            propertyMappingApiMockServer.verify(2, postRequestedFor(anyUrl()))
+          }
+        }
+
+        @Test
+        fun `mapping permanent error`() {
+          propertyMappingApiMockServer.stubPostMapping(HttpStatus.SERVICE_UNAVAILABLE)
+          publishPropertyDomainEvent("prison-property.container.created")
+          await untilAsserted {
+            propertyMappingApiMockServer.verify(3, postRequestedFor(anyUrl()))
+            verify(telemetryClient).trackEvent(
+              eq("property-create-mapping-retry"),
+              check {
+                assertThat(it).containsEntry("dpsPropertyContainerId", DPS_ID)
+                assertThat(it).containsEntry("nomisPropertyContainerId", "$NOMIS_ID")
+                assertThat(it).containsEntry("locationId", "$NOMIS_LOCATION_ID")
+                assertThat(it).containsEntry("offenderNo", OFFENDER_NO)
+                assertThat(it).containsEntry("bookingId", "$BOOKING_ID")
+                assertThat(it).containsEntry("mappingType", "DPS_CREATED")
+              },
+              isNull(),
+            )
+            verify(telemetryClient).trackEvent(
+              eq("property-mapping-create-failed"),
+              check {
+                assertThat(it).containsEntry("dpsPropertyContainerId", DPS_ID)
+                assertThat(it).containsEntry("nomisPropertyContainerId", "$NOMIS_ID")
+                assertThat(it).containsEntry("locationId", "$NOMIS_LOCATION_ID")
+                assertThat(it).containsEntry("offenderNo", OFFENDER_NO)
+                assertThat(it).containsEntry("bookingId", "$BOOKING_ID")
+                assertThat(it).containsEntry("mappingType", "DPS_CREATED")
+                assertThat(it).containsEntry("reason", "503 Service Unavailable from POST http://localhost:8084/mapping/property")
+              },
+              isNull(),
+            )
+          }
+          verify(telemetryClient, never()).trackEvent(
+            eq("property-mapping-create-success"),
+            anyMap(),
             isNull(),
           )
         }
