@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-05-14.195.48ac91f"
+    "version" : "2026-08-07.276.13b0756"
   },
   "servers" : [ {
     "url" : "/",
@@ -11146,6 +11146,7 @@
             "example" : "1980-01-01"
           },
           "relationship" : {
+            "description" : "A description of the relationship if the contact should be linked to a prisoner",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/ContactRelationship"
             }, {
@@ -12499,6 +12500,7 @@
             "example" : "A1234BC"
           },
           "current" : {
+            "description" : "Current number of children details",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/NumberOfChildrenDetailsRequest"
             }, {
@@ -12598,6 +12600,7 @@
             "example" : "A1234BC"
           },
           "current" : {
+            "description" : "Current domestic status details",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/DomesticStatusDetailsRequest"
             }, {
@@ -12661,6 +12664,7 @@
             "example" : 123
           },
           "type" : {
+            "description" : "Address type coded value (from reference data)",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/CodedValue"
             }, {
@@ -12693,6 +12697,7 @@
             "example" : "BD12 8RD"
           },
           "city" : {
+            "description" : "City - code and description (from reference data)",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/CodedValue"
             }, {
@@ -12700,6 +12705,7 @@
             } ]
           },
           "county" : {
+            "description" : "County - code and description (from reference data)",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/CodedValue"
             }, {
@@ -12707,6 +12713,7 @@
             } ]
           },
           "country" : {
+            "description" : "Country - code and description (from reference data)",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/CodedValue"
             }, {
@@ -12820,6 +12827,7 @@
             "example" : "1980-01-01"
           },
           "gender" : {
+            "description" : "The gender of the contact",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/CodedValue"
             }, {
@@ -12827,6 +12835,7 @@
             } ]
           },
           "title" : {
+            "description" : "The title of the contact, if any",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/CodedValue"
             }, {
@@ -12834,6 +12843,7 @@
             } ]
           },
           "language" : {
+            "description" : "The main language spoken by this contact",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/CodedValue"
             }, {
@@ -12845,6 +12855,7 @@
             "description" : "Interpreter required"
           },
           "domesticStatus" : {
+            "description" : "The domestic status coded value",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/CodedValue"
             }, {
@@ -13655,6 +13666,7 @@
             "minLength" : 0
           },
           "relationship" : {
+            "description" : "A description of the relationship if the contact should be linked to a prisoner",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/ContactRelationship"
             }, {
@@ -13958,6 +13970,7 @@
             "description" : "The details of a contact as an individual"
           },
           "createdRelationship" : {
+            "description" : "Describes the prisoner contact relationship if one was created with the contact",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/PrisonerContactRelationshipDetails"
             }, {
@@ -14440,22 +14453,22 @@
           "isEmergencyContact" : {
             "type" : "string",
             "description" : "Whether they are the emergency contact for the prisoner",
-            "example" : "true"
+            "example" : true
           },
           "isApprovedVisitor" : {
             "type" : "string",
             "description" : "Whether they are approved to visit the prisoner",
-            "example" : "true"
+            "example" : true
           },
           "isNextOfKin" : {
             "type" : "string",
             "description" : "Whether they are the next of kin for the prisoner",
-            "example" : "true"
+            "example" : true
           },
           "isRelationshipActive" : {
             "type" : "string",
             "description" : "Whether the relationship is active",
-            "example" : "true"
+            "example" : true
           },
           "comments" : {
             "type" : [ "string", "null" ],
@@ -14473,7 +14486,7 @@
           "isStaff" : {
             "type" : "string",
             "description" : "Whether the contact is a staff member",
-            "example" : "false"
+            "example" : false
           },
           "domesticStatusCode" : {
             "type" : [ "string", "null" ],
@@ -14483,7 +14496,7 @@
           "interpreterRequired" : {
             "type" : "string",
             "description" : "Whether an interpreter is required",
-            "example" : "false"
+            "example" : false
           },
           "languageCode" : {
             "type" : [ "string", "null" ],
@@ -14708,7 +14721,7 @@
           "primaryAddress" : {
             "type" : "string",
             "description" : "True if this is the primary address otherwise false",
-            "example" : "true"
+            "example" : true
           },
           "flat" : {
             "type" : [ "string", "null" ],
@@ -14769,12 +14782,12 @@
           "verified" : {
             "type" : "string",
             "description" : "Whether the address has been verified by postcode lookup",
-            "example" : "false"
+            "example" : false
           },
           "mailFlag" : {
             "type" : "string",
             "description" : "Whether the address can be used for mailing",
-            "example" : "false"
+            "example" : false
           },
           "startDate" : {
             "type" : [ "string", "null" ],
@@ -14789,7 +14802,7 @@
           "noFixedAddress" : {
             "type" : "string",
             "description" : "Flag to indicate this address should be considered as no fixed address",
-            "example" : "false"
+            "example" : false
           },
           "comments" : {
             "type" : [ "string", "null" ],
