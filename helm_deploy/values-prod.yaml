@@ -32,8 +32,7 @@ generic-service:
     API_BASE_URL_PERSONAL_RELATIONSHIPS: https://personal-relationships-api.hmpps.service.justice.gov.uk
     API_BASE_URL_PROPERTY: https://prisoner-property-api.hmpps.service.justice.gov.uk
     API_BASE_URL_SENTENCE_ADJUSTMENTS: https://adjustments-api.hmpps.service.justice.gov.uk
-    # currently set to self for a mock API until real API is ready
-    API_BASE_URL_STAFF: https://prisoner-to-nomis-update.hmpps.service.justice.gov.uk
+    API_BASE_URL_STAFF: https://prison-users-api.prison.service.justice.gov.uk
     API_BASE_URL_VISITS: https://visit-scheduler.prison.service.justice.gov.uk
     API_BASE_URL_VISIT_BALANCE: https://hmpps-visit-allocation-api.prison.service.justice.gov.uk
     REPORTS_SENTENCING_RECONCILIATION_ALL_PRISONERS: true
