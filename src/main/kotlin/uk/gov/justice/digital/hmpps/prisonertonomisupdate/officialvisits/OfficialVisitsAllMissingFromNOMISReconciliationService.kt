@@ -65,11 +65,11 @@ class OfficialVisitsAllMissingFromNOMISReconciliationService(
       threadCount = threadCount,
       pageSize = pageSize,
       checkMatch = ::checkNomisVisitExists,
-      nextPage = ::getNextNomisVisitIdsForPage,
+      nextPage = ::getNextDPSVisitIdsForPage,
     )
   }
 
-  private suspend fun getNextNomisVisitIdsForPage(pageNumber: Long): ReconciliationPageResult<Long> = runCatching {
+  private suspend fun getNextDPSVisitIdsForPage(pageNumber: Long): ReconciliationPageResult<Long> = runCatching {
     dpsApiService.getOfficialVisitIds(pageNumber = pageNumber.toInt(), pageSize = pageSize)
   }
     .onFailure {
