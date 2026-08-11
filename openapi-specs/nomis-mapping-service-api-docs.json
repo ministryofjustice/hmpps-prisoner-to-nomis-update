@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-08-06.694.7aaef0f"
+    "version" : "2026-08-10.724.4f0266b"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -2436,6 +2436,60 @@
         "responses" : {
           "201" : {
             "description" : "Transfer schedule mapping created",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "The mapping already exists.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/transfer-scheduler/movement" : {
+      "post" : {
+        "tags" : [ "transfer-movement-resource" ],
+        "summary" : "Creates a mapping for a single transfer movement",
+        "description" : "Creates a mapping for a single transfer movement. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "createTransferMovementMapping",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/TransferMovementMappingDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Transfer movement mapping created",
             "content" : { }
           },
           "401" : {
@@ -23280,6 +23334,41 @@
         },
         "required" : [ "bookingId", "dpsTransferScheduleId", "mappingType", "nomisEventId", "prisonerNumber" ]
       },
+      "TransferMovementMappingDto" : {
+        "type" : "object",
+        "description" : "Mapping for a single transfer movement",
+        "properties" : {
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The NOMIS offender number",
+            "example" : "A1234BC"
+          },
+          "nomisBookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS ID of the booking",
+            "example" : 12345
+          },
+          "nomisMovementSeq" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The NOMIS movement sequence number",
+            "example" : 3
+          },
+          "dpsTransferMovementId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS transfer movement id"
+          },
+          "mappingType" : {
+            "type" : "string",
+            "description" : "The source of the mapping",
+            "enum" : [ "MIGRATED", "NOMIS_CREATED", "DPS_CREATED" ],
+            "example" : "NOMIS_CREATED"
+          }
+        },
+        "required" : [ "dpsTransferMovementId", "mappingType", "nomisBookingId", "nomisMovementSeq", "prisonerNumber" ]
+      },
       "TapApplicationMappingDto" : {
         "type" : "object",
         "description" : "Mappings for a single temporary absence application",
@@ -25679,12 +25768,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "paged" : {
+            "type" : "boolean"
+          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "paged" : {
-            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
