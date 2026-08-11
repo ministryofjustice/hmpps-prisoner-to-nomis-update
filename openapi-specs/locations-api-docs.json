@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-07-27.1016.0cce370"
+    "version" : "2026-08-10.1035.0d86ac4"
   },
   "servers" : [ {
     "url" : "/",
@@ -3392,8 +3392,8 @@
       },
       "post" : {
         "tags" : [ "Non-residential functions" ],
-        "summary" : "Create a new property storage location for a prison",
-        "description" : "Creates a top-level BOX location with an auto-generated code and a PROPERTY usage carrying the given capacity. Requires role MANAGE_PROPERTY_LOCATIONS and write scope",
+        "summary" : "Create a property storage location for a prison, or reinstate one that was removed",
+        "description" : "Creates a top-level BOX location with an auto-generated code and a PROPERTY usage carrying the given capacity. Removing a property location only drops its PROPERTY usage, so where a location of this name had its designation removed it is reinstated with the given capacity - keeping its id, code and history - and 200 is returned instead of 201. Requires role MANAGE_PROPERTY_LOCATIONS and write scope",
         "operationId" : "createPropertyLocation",
         "parameters" : [ {
           "name" : "prisonId",
@@ -3421,6 +3421,16 @@
           "required" : true
         },
         "responses" : {
+          "200" : {
+            "description" : "Returns the property location that was reinstated",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PropertyLocationDto"
+                }
+              }
+            }
+          },
           "201" : {
             "description" : "Returns the created property location",
             "content" : {
@@ -8493,21 +8503,24 @@
             "format" : "int32",
             "description" : "Max capacity of the cell",
             "example" : 2,
-            "maximum" : 99
+            "maximum" : 99,
+            "minimum" : 0
           },
           "workingCapacity" : {
             "type" : "integer",
             "format" : "int32",
             "description" : "Working capacity of the cell",
             "example" : 1,
-            "maximum" : 99
+            "maximum" : 99,
+            "minimum" : 0
           },
           "certifiedNormalAccommodation" : {
             "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "CNA of the cell",
             "example" : 2,
-            "maximum" : 99
+            "maximum" : 99,
+            "minimum" : 0
           }
         },
         "required" : [ "maxCapacity", "workingCapacity" ]
@@ -8734,6 +8747,7 @@
             "example" : "Demolished"
           },
           "capacity" : {
+            "description" : "Capacity details of the location",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/Capacity"
             }, {
@@ -8741,6 +8755,7 @@
             } ]
           },
           "pendingChanges" : {
+            "description" : "Pending changes of draft or pending approval location",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/PendingChangeDto"
             }, {
@@ -8912,6 +8927,7 @@
             "example" : "Cell damaged"
           },
           "currentCellCertificate" : {
+            "description" : "Cells only, the current certificate data",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/CellCertificateLocationDto"
             }, {
@@ -8925,6 +8941,7 @@
             "example" : "57718979-573c-433a-9e51-2d83f887c11c"
           },
           "parentLocation" : {
+            "description" : "Parent Location",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/Location"
             }, {
@@ -9299,21 +9316,24 @@
             "format" : "int32",
             "description" : "Baseline CNA",
             "example" : 1,
-            "maximum" : 99
+            "maximum" : 99,
+            "minimum" : 0
           },
           "maxCapacity" : {
             "type" : "integer",
             "format" : "int32",
             "description" : "Maximum capacity",
             "example" : 2,
-            "maximum" : 99
+            "maximum" : 99,
+            "minimum" : 0
           },
           "workingCapacity" : {
             "type" : "integer",
             "format" : "int32",
             "description" : "Working capacity",
             "example" : 1,
-            "maximum" : 99
+            "maximum" : 99,
+            "minimum" : 0
           },
           "usedForTypes" : {
             "type" : [ "array", "null" ],
@@ -9397,21 +9417,24 @@
             "format" : "int32",
             "description" : "Max capacity of the cell",
             "example" : 2,
-            "maximum" : 99
+            "maximum" : 99,
+            "minimum" : 0
           },
           "workingCapacity" : {
             "type" : "integer",
             "format" : "int32",
             "description" : "Working capacity of the cell",
             "example" : 1,
-            "maximum" : 99
+            "maximum" : 99,
+            "minimum" : 0
           },
           "certifiedNormalAccommodation" : {
             "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "CNA of the cell",
             "example" : 2,
-            "maximum" : 99
+            "maximum" : 99,
+            "minimum" : 0
           }
         },
         "required" : [ "maxCapacity", "workingCapacity" ]
@@ -9796,7 +9819,8 @@
             "format" : "int32",
             "default" : 0,
             "description" : "CNA value",
-            "maximum" : 99
+            "maximum" : 99,
+            "minimum" : 0
           },
           "maxCapacity" : {
             "type" : "integer",
@@ -9804,7 +9828,8 @@
             "default" : 0,
             "description" : "Max capacity of the location",
             "example" : 2,
-            "maximum" : 99
+            "maximum" : 99,
+            "minimum" : 0
           },
           "workingCapacity" : {
             "type" : "integer",
@@ -9812,7 +9837,8 @@
             "default" : 0,
             "description" : "Working capacity of the location",
             "example" : 2,
-            "maximum" : 99
+            "maximum" : 99,
+            "minimum" : 0
           },
           "specialistCellTypes" : {
             "type" : [ "array", "null" ],
@@ -9874,6 +9900,12 @@
             "example" : true
           },
           "capacity" : {
+            "description" : "New capacity of the location, if null the old values are used",
+            "example" : {
+              "workingCapacity" : 1,
+              "maxCapacity" : 2,
+              "certifiedNormalAccommodation" : 2
+            },
             "oneOf" : [ {
               "$ref" : "#/components/schemas/Capacity"
             }, {
@@ -9999,21 +10031,24 @@
             "format" : "int32",
             "description" : "Max capacity of the location",
             "example" : 2,
-            "maximum" : 99
+            "maximum" : 99,
+            "minimum" : 0
           },
           "workingCapacity" : {
             "type" : "integer",
             "format" : "int32",
             "description" : "Working capacity of the location",
             "example" : 2,
-            "maximum" : 99
+            "maximum" : 99,
+            "minimum" : 0
           },
           "certifiedNormalAccommodation" : {
             "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Indicates the capacity of the certified location (cell)",
             "example" : 1,
-            "maximum" : 99
+            "maximum" : 99,
+            "minimum" : 0
           },
           "cellMark" : {
             "type" : [ "string", "null" ],
@@ -10638,6 +10673,11 @@
         "description" : "Cell reactivation details",
         "properties" : {
           "capacity" : {
+            "description" : "New capacity of the location, if null the old values are used",
+            "example" : {
+              "workingCapacity" : 1,
+              "maxCapacity" : 2
+            },
             "oneOf" : [ {
               "$ref" : "#/components/schemas/Capacity"
             }, {
@@ -10817,6 +10857,7 @@
             "example" : "2475f250-434a-4257-afe7-b911f1773a4e"
           },
           "capacity" : {
+            "description" : "Capacity details of the location",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/Capacity"
             }, {
@@ -10921,6 +10962,7 @@
             "description" : "When set to true DO NOT SYNC the working capacity"
           },
           "capacity" : {
+            "description" : "Capacity details of the location",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/Capacity"
             }, {
@@ -11129,6 +11171,7 @@
             "example" : "MDI-B-1"
           },
           "capacity" : {
+            "description" : "Capacity of the residential location",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/Capacity"
             }, {
@@ -11302,6 +11345,7 @@
             "description" : "Parent location under which the structure and/or cells should be created, if not specified then will add to the top level of the prison, is specified but no `newLevelAboveCells` is specified then cells will be created under this location"
           },
           "newLevelAboveCells" : {
+            "description" : "The location to create above the cells, this is normally a landing or spur, if the location where cells should be created under already exists then leave null",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/LevelAboveCells"
             }, {
@@ -12024,13 +12068,13 @@
       "PageLegacyLocation" : {
         "type" : "object",
         "properties" : {
-          "totalElements" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
           "totalPages" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "size" : {
             "type" : "integer",
@@ -12046,21 +12090,21 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
           },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
           },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "empty" : {
             "type" : "boolean"
@@ -12227,6 +12271,7 @@
             "description" : "Total number of non-structural locations  e.g. cells and rooms"
           },
           "currentCertificate" : {
+            "description" : "Current approved certificate",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/CellCertificateDto"
             }, {
@@ -12241,6 +12286,7 @@
         "description" : "Residential Summary",
         "properties" : {
           "prisonSummary" : {
+            "description" : "Prison summary for top level view",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/PrisonSummary"
             }, {
@@ -12273,6 +12319,7 @@
             }
           },
           "parentLocation" : {
+            "description" : "The current parent location (e.g Wing or Landing) details",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/Location"
             }, {
@@ -12390,13 +12437,13 @@
       "PageNonResidentialLocationDTO" : {
         "type" : "object",
         "properties" : {
-          "totalElements" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
           "totalPages" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "size" : {
             "type" : "integer",
@@ -12412,21 +12459,21 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
           },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
           },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "empty" : {
             "type" : "boolean"
