@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Pr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerAggregatedAccountsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerBalanceDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerBalanceSummaryDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RootOffenderIdRange
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RootOffenderIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import java.math.BigDecimal
@@ -35,6 +36,24 @@ class FinanceNomisApiMockServer(private val jsonMapper: JsonMapper) {
     nomisApi.stubFor(
       get(urlPathEqualTo("/finance/prisoners/ids/all-from-id"))
         .willReturn(status(status)),
+    )
+  }
+
+  fun stubGetPrisonerBalanceIdentifiersInRange(fromRootOffenderId: Long = 0L, toRootOffenderId: Long = 20L) {
+    val content: List<Long> = (fromRootOffenderId + 1..toRootOffenderId).toList()
+    nomisApi.stubFor(
+      get(urlPathEqualTo("/finance/prisoners/ids-in-range"))
+        .willReturn(okJson(jsonMapper.writeValueAsString(content))),
+    )
+  }
+
+  fun stubGetPrisonerBalanceIdentifierRanges(pageSize: Long = 10, totalElements: Long = 20) {
+    val content: List<RootOffenderIdRange> = (0..(totalElements / pageSize))
+      .zipWithNext()
+      .map { RootOffenderIdRange(it.first * pageSize, it.second * pageSize) }
+    nomisApi.stubFor(
+      get(urlPathEqualTo("/finance/prisoners/id-ranges"))
+        .willReturn(okJson(jsonMapper.writeValueAsString(content))),
     )
   }
 
