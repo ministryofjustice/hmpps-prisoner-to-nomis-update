@@ -105,7 +105,7 @@ class PrisonerBalanceNomisApiServiceTest {
 
     @Test
     fun `will call the get endpoint`() = runTest {
-      mockServer.stubGetPrisonerBalanceIdentifiersInRange()
+      mockServer.stubGetPrisonerBalanceIdentifiersInRange(5, 100)
 
       apiService.getPrisonerBalanceIdentifiersInRange(
         fromRootOffenderId = 5,

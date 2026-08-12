@@ -21,7 +21,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.Reconciliation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AggregatedAccountDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerAggregatedAccountsDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RootOffenderIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import java.math.BigDecimal
@@ -200,42 +199,36 @@ class PrisonerBalanceReconciliationServiceTest {
   inner class GetPrisonerIdsForPage {
     @Test
     fun `will return id list`() = runTest {
-      financeNomisApi.stubGetPrisonerBalanceIdentifiersFromId(
-        RootOffenderIdsWithLast(
-          rootOffenderIds = listOf(5, 6, 7, 8),
-          lastOffenderId = 8L,
-        ),
+      financeNomisApi.stubGetPrisonerBalanceIdentifiersInRange(
+        fromRootOffenderId = 4,
+        toRootOffenderId = 8,
       )
-      val actual = service.getPrisonerIdsForPage(OFFENDER_ID)
+      val actual = service.getOffenderIdsInRange(4, 8)
 
       assertThat(actual).isInstanceOf(ReconciliationSuccessPageResult::class.java)
       actual as ReconciliationSuccessPageResult
       assertThat(actual.ids).isEqualTo(listOf(5L, 6L, 7L, 8L))
-      assertThat(actual.last).isEqualTo(8L)
     }
 
     @Test
     fun `will return id list when filtering by prison`() = runTest {
-      financeNomisApi.stubGetPrisonerBalanceIdentifiersFromId(
-        RootOffenderIdsWithLast(
-          rootOffenderIds = listOf(10000, 10001, 10002, 10003),
-          lastOffenderId = 10003L,
-        ),
+      financeNomisApi.stubGetPrisonerBalanceIdentifiersInRange(
+        fromRootOffenderId = 4,
+        toRootOffenderId = 8,
       )
 
-      val actual = service.getPrisonerIdsForPage(0, filterPrisonIds = listOf("MDI"))
+      val actual = service.getOffenderIdsInRange(4, 8, filterPrisonIds = listOf("MDI"))
 
       assertThat(actual).isInstanceOf(ReconciliationSuccessPageResult::class.java)
       actual as ReconciliationSuccessPageResult
-      assertThat(actual.ids).isEqualTo(listOf(10000L, 10001L, 10002L, 10003L))
-      assertThat(actual.last).isEqualTo(10003L)
+      assertThat(actual.ids).isEqualTo(listOf(5L, 6L, 7L, 8L))
     }
 
     @Test
     fun `will report telemetry on error`() = runTest {
-      financeNomisApi.stubGetPrisonerBalanceIdentifiersFromIdError()
+      financeNomisApi.stubGetPrisonerBalanceIdentifiersInRange(4, 8, status = 500)
 
-      val actual = service.getPrisonerIdsForPage(OFFENDER_ID)
+      val actual = service.getOffenderIdsInRange(4, 8)
 
       assertThat(actual).isInstanceOf(ReconciliationErrorPageResult::class.java)
       actual as ReconciliationErrorPageResult
@@ -244,7 +237,8 @@ class PrisonerBalanceReconciliationServiceTest {
       verify(telemetryClient).trackEvent(
         eq("prisoner-balance-reports-reconciliation-mismatch-page-error"),
         check {
-          assertThat(it).containsEntry("lastOffenderId", OFFENDER_ID.toString())
+          assertThat(it).containsEntry("fromRootOffenderId", "4")
+          assertThat(it).containsEntry("toRootOffenderId", "8")
           assertThat(it).containsKey("error")
           assertThat(it["error"]).startsWith("500 Internal Server Error from GET")
         },

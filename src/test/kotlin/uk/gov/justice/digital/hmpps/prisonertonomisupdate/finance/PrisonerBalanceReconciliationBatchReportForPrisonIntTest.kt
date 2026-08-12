@@ -20,7 +20,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SubAccountBalanceForReconciliation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerAggregatedAccountsDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RootOffenderIdsWithLast
 
 @TestPropertySource(
   properties = [
@@ -40,27 +39,21 @@ class PrisonerBalanceReconciliationBatchReportForPrisonIntTest(
     @BeforeEach
     fun setUp() {
       reset(telemetryClient)
-      financeNomisApi.stubGetPrisonerBalanceIdentifiersFromId(
-        RootOffenderIdsWithLast(
-          rootOffenderIds = listOf(10000, 10001, 10002),
-          lastOffenderId = 10002L,
-        ),
+      financeNomisApi.stubGetPrisonerBalanceIdentifierRanges(
+        pageSize = 10,
+        totalElements = 20,
       )
-      stubBalances(
-        10000L,
-        nomisPrisonerAccounts().copy(prisonNumber = "A0001NN"),
-        dpsAccount(),
+      financeNomisApi.stubGetPrisonerBalanceIdentifiersInRange(
+        fromRootOffenderId = 0,
+        toRootOffenderId = 10,
       )
-      stubBalances(
-        10001L,
-        nomisPrisonerAccounts().copy(prisonNumber = "A0002NN"),
-        dpsAccount(),
+      financeNomisApi.stubGetPrisonerBalanceIdentifiersInRange(
+        fromRootOffenderId = 10,
+        toRootOffenderId = 20,
       )
-      stubBalances(
-        10002L,
-        nomisPrisonerAccounts().copy(prisonNumber = "A0003NN"),
-        dpsAccount(),
-      )
+      for (i in 1..20) {
+        stubBalances(i.toLong(), nomisPrisonerAccounts().copy(prisonNumber = "A000${i}NN"), dpsAccount())
+      }
     }
 
     @Test
@@ -83,8 +76,8 @@ class PrisonerBalanceReconciliationBatchReportForPrisonIntTest(
       verify(telemetryClient).trackEvent(
         eq("prisoner-balance-reports-reconciliation-report"),
         check {
-          assertThat(it).containsEntry("balance-count", "3")
-          assertThat(it).containsEntry("page-count", "1")
+          assertThat(it).containsEntry("balance-count", "20")
+          assertThat(it).containsEntry("page-count", "2")
           assertThat(it).containsEntry("mismatch-count", "0")
           assertThat(it).containsEntry("success", "true")
           assertThat(it).containsEntry("filter-prison", "MDI")
@@ -107,8 +100,8 @@ class PrisonerBalanceReconciliationBatchReportForPrisonIntTest(
       verify(telemetryClient).trackEvent(
         eq("prisoner-balance-reports-reconciliation-report"),
         check {
-          assertThat(it).containsEntry("balance-count", "3")
-          assertThat(it).containsEntry("page-count", "1")
+          assertThat(it).containsEntry("balance-count", "20")
+          assertThat(it).containsEntry("page-count", "2")
           assertThat(it).containsEntry("mismatch-count", "1")
           assertThat(it).containsEntry("success", "true")
           assertThat(it).containsEntry("filter-prison", "MDI")

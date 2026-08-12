@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance
 
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.okJson
 import com.github.tomakehurst.wiremock.client.WireMock.status
@@ -39,11 +40,17 @@ class FinanceNomisApiMockServer(private val jsonMapper: JsonMapper) {
     )
   }
 
-  fun stubGetPrisonerBalanceIdentifiersInRange(fromRootOffenderId: Long = 0L, toRootOffenderId: Long = 20L) {
+  fun stubGetPrisonerBalanceIdentifiersInRange(
+    fromRootOffenderId: Long = 0L,
+    toRootOffenderId: Long = 20L,
+    status: Int = 200,
+  ) {
     val content: List<Long> = (fromRootOffenderId + 1..toRootOffenderId).toList()
     nomisApi.stubFor(
       get(urlPathEqualTo("/finance/prisoners/ids-in-range"))
-        .willReturn(okJson(jsonMapper.writeValueAsString(content))),
+        .withQueryParam("fromRootOffenderId", equalTo(fromRootOffenderId.toString()))
+        .withQueryParam("toRootOffenderId", equalTo(toRootOffenderId.toString()))
+        .willReturn(if (status == 200) okJson(jsonMapper.writeValueAsString(content)) else status(status)),
     )
   }
 
