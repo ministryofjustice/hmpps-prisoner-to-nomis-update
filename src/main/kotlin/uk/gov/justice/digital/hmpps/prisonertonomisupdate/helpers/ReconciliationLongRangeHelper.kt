@@ -28,14 +28,14 @@ import java.util.concurrent.atomic.AtomicInteger
 suspend fun <T, M> generateRangesReconciliationReport(
   threadCount: Int,
   checkMatch: suspend (T) -> M?,
-  idRanges: List<RootOffenderIdRange>,
+  idRanges: suspend () -> List<RootOffenderIdRange>,
   idsInRange: suspend (RootOffenderIdRange) -> ReconciliationPageResult<T>,
 ): ReconciliationResult<M> = coroutineScope {
   val itemsCount = AtomicInteger(0)
   val pagesCount = AtomicInteger(0)
 
   val mismatchesChannel = Channel<M>(capacity = UNLIMITED)
-  val channel = produceIds(idRanges, pagesCount = pagesCount, threadCount = threadCount) { idRange -> idsInRange(idRange) }
+  val channel = produceIds(idRanges(), pagesCount = pagesCount, threadCount = threadCount) { idRange -> idsInRange(idRange) }
 
   val jobs = (1L..threadCount).map {
     launch {

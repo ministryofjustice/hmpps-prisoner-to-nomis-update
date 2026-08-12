@@ -328,26 +328,25 @@ class PrisonerBalanceReconciliationResourceIntTest(
     inner class HappyPath {
       @BeforeEach
       fun setup() {
+        financeNomisApi.stubGetPrisonerBalanceIdentifierRanges(
+          pageSize = 1,
+          totalElements = 3,
+        )
+        financeNomisApi.stubGetPrisonerBalanceIdentifiersInRange(
+          fromRootOffenderId = 0,
+          toRootOffenderId = 1,
+        )
         financeNomisApi.stubGetPrisonerBalanceIdentifiersInRange(
           fromRootOffenderId = 1,
+          toRootOffenderId = 2,
+        )
+        financeNomisApi.stubGetPrisonerBalanceIdentifiersInRange(
+          fromRootOffenderId = 2,
           toRootOffenderId = 3,
         )
-
-        stubBalances(
-          1,
-          nomisPrisonerAccounts().copy(prisonNumber = "A0001NN"),
-          dpsAccount(),
-        )
-        stubBalances(
-          2,
-          nomisPrisonerAccounts().copy(prisonNumber = "A0002NN"),
-          dpsAccount(),
-        )
-        stubBalances(
-          3,
-          nomisPrisonerAccounts().copy(prisonNumber = "A0003NN"),
-          dpsAccount(),
-        )
+        for (i in 1..3) {
+          stubBalances(i.toLong(), nomisPrisonerAccounts().copy(prisonNumber = "A000${i}NN"), dpsAccount())
+        }
       }
 
       @Test

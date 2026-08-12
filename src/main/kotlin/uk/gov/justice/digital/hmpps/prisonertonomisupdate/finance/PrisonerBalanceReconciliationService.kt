@@ -12,7 +12,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.Reconciliation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationSuccessPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.generateRangesReconciliationReport
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RootOffenderIdRange
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import java.math.BigDecimal
 
@@ -73,15 +72,12 @@ class PrisonerBalanceReconciliationService(
       }
   }
 
-  private suspend fun generatePrisonerBalanceReconciliationReport(filterPrisonId: List<String>?): ReconciliationResult<MismatchPrisonerBalance> {
-    val idRanges: List<RootOffenderIdRange> = financeNomisApiService.getPrisonerBalanceIdentifierRanges(pageSize, prisonIds = filterPrisonId)
-    return generateRangesReconciliationReport(
-      threadCount = threadCount,
-      checkMatch = ::checkPrisonerBalance,
-      idRanges = idRanges,
-      idsInRange = { range -> this.getOffenderIdsInRange(range.fromRootOffenderId, range.toRootOffenderId, filterPrisonId) },
-    )
-  }
+  private suspend fun generatePrisonerBalanceReconciliationReport(filterPrisonId: List<String>?): ReconciliationResult<MismatchPrisonerBalance> = generateRangesReconciliationReport(
+    threadCount = threadCount,
+    checkMatch = ::checkPrisonerBalance,
+    idRanges = { financeNomisApiService.getPrisonerBalanceIdentifierRanges(pageSize, prisonIds = filterPrisonId) },
+    idsInRange = { range -> this.getOffenderIdsInRange(range.fromRootOffenderId, range.toRootOffenderId, filterPrisonId) },
+  )
 
   internal suspend fun checkPrisonerBalance(rootOffenderId: Long): MismatchPrisonerBalance? = runCatching {
     val nomisAccounts = financeNomisApiService.getPrisonerAccountsToReconcile(rootOffenderId)
@@ -109,7 +105,7 @@ class PrisonerBalanceReconciliationService(
 
     val differenceList = compareObjects(dpsFields, nomisFields, "prisoner-balances")
 
-    log.info("$rootOffenderId compared\n$dpsFields with\n$nomisFields with result\n$differenceList")
+    // log.info("$rootOffenderId compared\n$dpsFields with\n$nomisFields with result\n$differenceList")
 
     if (differenceList.isNotEmpty()) {
       // log.info("Differences: ${objectMapper.writeValueAsString(differenceList)}")
