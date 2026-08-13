@@ -156,7 +156,7 @@ val models = listOf(
   ModelConfiguration(
     name = "csra",
     packageName = "csra",
-    testPackageName = "csra",
+    // testPackageName = "csra",
     url = "https://cell-sharing-risk-assessment-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
   ),
   ModelConfiguration(
