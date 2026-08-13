@@ -43,7 +43,7 @@ class CsraDomainEventListener(
 
 data class CsraDomainEvent(
   val eventType: String,
-  val version: Int,
+  val version: String,
   val description: String? = null,
   val occurredAt: String,
   val additionalInformation: CsraDomainAdditionalInformation,
