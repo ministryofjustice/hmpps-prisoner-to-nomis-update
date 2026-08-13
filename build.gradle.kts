@@ -154,6 +154,12 @@ val models = listOf(
     models = "CaseNote,CaseNoteAmendment",
   ),
   ModelConfiguration(
+    name = "csra",
+    packageName = "csra",
+    // testPackageName = "csra",
+    url = "https://cell-sharing-risk-assessment-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
+  ),
+  ModelConfiguration(
     name = "core-person",
     packageName = "coreperson",
     url = "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk/v3/api-docs",

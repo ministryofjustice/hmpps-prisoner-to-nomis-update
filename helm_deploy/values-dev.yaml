@@ -21,6 +21,7 @@ generic-service:
     API_BASE_URL_CORE_PERSON: https://hmpps-person-record-dev.hmpps.service.justice.gov.uk
     API_BASE_URL_COURT_SENTENCING: https://remand-and-sentencing-api-dev.hmpps.service.justice.gov.uk
     API_BASE_URL_CSIP: https://csip-api-dev.hmpps.service.justice.gov.uk
+    API_BASE_URL_CSRA: https://cell-sharing-risk-assessment-api-dev.hmpps.service.justice.gov.uk
     API_BASE_URL_FINANCE: https://prisoner-finance-sync-api-dev.hmpps.service.justice.gov.uk
     API_BASE_URL_INCENTIVES: https://incentives-api-dev.hmpps.service.justice.gov.uk
     API_BASE_URL_INCIDENTS: https://incident-reporting-api-dev.hmpps.service.justice.gov.uk
@@ -38,6 +39,8 @@ generic-service:
     API_BASE_URL_VISIT_BALANCE: https://hmpps-visit-allocation-api-dev.prison.service.justice.gov.uk
     FEATURE_EVENT_PRISON-PROPERTY_CONTAINER_CREATED: true
     FEATURE_EVENT_PRISON-PROPERTY_CONTAINER_UPDATED: true
+    FEATURE_EVENT_CELL_SHARING_RISK_ASSESSMENT_CREATED: true
+    FEATURE_EVENT_CELL_SHARING_RISK_ASSESSMENT_AMENDED: true
     FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION_CREATED: false
     FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION_UPDATED: false
     FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION_DELETED: false
@@ -154,6 +157,9 @@ generic-prometheus-alerts:
     property:
       - "syscon-devs-dev-hmpps_prisoner_to_nomis_property_queue"
       - "syscon-devs-dev-hmpps_prisoner_to_nomis_property_dlq"
+    csra:
+      - "syscon-devs-dev-hmpps_prisoner_to_nomis_csra_queue"
+      - "syscon-devs-dev-hmpps_prisoner_to_nomis_csra_dlq"
     organisations:
       - "syscon-devs-dev-hmpps_prisoner_to_nomis_organisations_queue"
       - "syscon-devs-dev-hmpps_prisoner_to_nomis_organisations_dlq"

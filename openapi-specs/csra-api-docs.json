@@ -1,0 +1,3123 @@
+{
+  "openapi" : "3.1.0",
+  "info" : {
+    "title" : "HMPPS Cell Sharing Risk Assessment API",
+    "description" : "API for viewing and managing CSRA reviews for prisoners",
+    "contact" : {
+      "name" : "HMPPS Digital",
+      "email" : "feedback@digital.justice.gov.uk"
+    },
+    "version" : "2026-08-10.387.87a9a7e"
+  },
+  "servers" : [ {
+    "url" : "/",
+    "description" : "Current url"
+  } ],
+  "security" : [ {
+    "bearer-jwt" : [ "read", "write" ]
+  } ],
+  "tags" : [ {
+    "name" : "CSRA Assessment",
+    "description" : "Creates and completes new-model initial CSRA assessments for prisoners"
+  }, {
+    "name" : "Active agencies",
+    "description" : "Controls which prisons have the CSRA service switched on in DPS"
+  }, {
+    "name" : "CSRA Review",
+    "description" : "Returns CSRA reviews for prisoners"
+  }, {
+    "name" : "NOMIS Migration & Sync",
+    "description" : "Endpoints for migrating and synchronising CSRA data from NOMIS"
+  }, {
+    "name" : "hmpps-queue-resource-async",
+    "description" : "Endpoints that are to be used by administrators only for managing SQS queues. All endpoints require the <b>QUEUE_ADMIN</b> role further information can be found in the <a href=\"https://github.com/ministryofjustice/hmpps-spring-boot-sqs\">hmpps-spring-boot-sqs</a> project"
+  } ],
+  "paths" : {
+    "/queue-admin/retry-dlq/{dlqName}" : {
+      "put" : {
+        "tags" : [ "hmpps-queue-resource" ],
+        "operationId" : "retryDlq",
+        "parameters" : [ {
+          "name" : "dlqName",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RetryDlqResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/queue-admin/retry-all-dlqs" : {
+      "put" : {
+        "tags" : [ "hmpps-queue-resource" ],
+        "operationId" : "retryAllDlqs",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/RetryDlqResult"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/queue-admin/purge-queue/{queueName}" : {
+      "put" : {
+        "tags" : [ "hmpps-queue-resource" ],
+        "operationId" : "purgeQueue",
+        "parameters" : [ {
+          "name" : "queueName",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PurgeQueueResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/csra-review/prisoner/{prisonerNumber}/assessment/{assessmentId}/provisional" : {
+      "put" : {
+        "tags" : [ "CSRA Assessment" ],
+        "summary" : "Submits the provisional (Day 1) stage of an initial CSRA assessment",
+        "description" : "Records the provisional answers and rating, setting the prisoner's interim CSRA result. Requires role ROLE_CSRA_REVIEW__RW",
+        "operationId" : "submitProvisional",
+        "parameters" : [ {
+          "name" : "prisonerNumber",
+          "in" : "path",
+          "description" : "The prisoner number",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "A1234BC"
+        }, {
+          "name" : "assessmentId",
+          "in" : "path",
+          "description" : "The assessment id returned when the assessment was started",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CsraAssessmentStageRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "The provisional stage was recorded",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CsraCurrentRating"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid request, or the rating conflicts with a mandatory high-risk offence trigger",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the ROLE_CSRA_REVIEW__RW role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "No such assessment for this prisoner",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/csra-review/prisoner/{prisonerNumber}/assessment/{assessmentId}/final" : {
+      "put" : {
+        "tags" : [ "CSRA Assessment" ],
+        "summary" : "Submits the final (Day 2) stage of an initial CSRA assessment",
+        "description" : "Records the final answers and rating, setting the prisoner's final CSRA result and, for a high-risk rating, the next review date. Requires role ROLE_CSRA_REVIEW__RW",
+        "operationId" : "submitFinal",
+        "parameters" : [ {
+          "name" : "prisonerNumber",
+          "in" : "path",
+          "description" : "The prisoner number",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "A1234BC"
+        }, {
+          "name" : "assessmentId",
+          "in" : "path",
+          "description" : "The assessment id returned when the assessment was started",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CsraAssessmentStageRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "The final stage was recorded",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CsraCurrentRating"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid request, or the rating conflicts with a mandatory high-risk offence trigger",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the ROLE_CSRA_REVIEW__RW role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "No such assessment for this prisoner",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/active-agencies/{agencyId}" : {
+      "put" : {
+        "tags" : [ "Active agencies" ],
+        "summary" : "Switch the CSRA service on or off for an agency",
+        "description" : "Switches the CSRA service on or off in DPS for a prison. Idempotent. Requires role PRISONER_CSRA__ADMIN.",
+        "operationId" : "setActiveAgency",
+        "parameters" : [ {
+          "name" : "agencyId",
+          "in" : "path",
+          "description" : "The agency (prison) id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "The agency (prison) id",
+            "example" : "MDI"
+          },
+          "example" : "MDI"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SetActiveAgencyRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "The agency's new state",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AgencyStatus"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the PRISONER_CSRA__ADMIN role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/nomis-sync/sync/{prisonerNumber}" : {
+      "post" : {
+        "tags" : [ "NOMIS Migration & Sync" ],
+        "summary" : "Synchronise a single CSRA review from NOMIS",
+        "description" : "Upserts a single CSRA review changed in NOMIS. Returns 201 when created, 200 when updated. Requires role PRISONER_CSRA__SYNC__RW.",
+        "operationId" : "sync",
+        "parameters" : [ {
+          "name" : "prisonerNumber",
+          "in" : "path",
+          "description" : "The prisoner number (NOMIS offender number)",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "The prisoner number (NOMIS offender number)",
+            "example" : "A1234BC"
+          },
+          "example" : "A1234BC"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CsraSyncRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "CSRA review updated",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncResult"
+                }
+              }
+            }
+          },
+          "201" : {
+            "description" : "CSRA review created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncResult"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the PRISONER_CSRA__SYNC__RW role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/nomis-sync/migrate/{prisonerNumber}" : {
+      "post" : {
+        "tags" : [ "NOMIS Migration & Sync" ],
+        "summary" : "Migrate all CSRA reviews for a prisoner from NOMIS",
+        "description" : "Receives all of a prisoner's CSRA reviews from NOMIS and returns the assigned CSRA ids. Requires role PRISONER_CSRA__SYNC__RW.",
+        "operationId" : "migrate",
+        "parameters" : [ {
+          "name" : "prisonerNumber",
+          "in" : "path",
+          "description" : "The prisoner number (NOMIS offender number)",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "The prisoner number (NOMIS offender number)",
+            "example" : "A1234BC"
+          },
+          "example" : "A1234BC"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "array",
+                "items" : {
+                  "$ref" : "#/components/schemas/NomisCsraReview"
+                }
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "CSRA reviews migrated",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/CsraMigrationResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the PRISONER_CSRA__SYNC__RW role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/csra-review/prisoner/{prisonerNumber}/assessment" : {
+      "post" : {
+        "tags" : [ "CSRA Assessment" ],
+        "summary" : "Starts a new initial CSRA assessment",
+        "description" : "Creates a draft assessment for the prisoner and records who started it and where. Returns the new assessment's id, which identifies it for the provisional and final stages, along with the prisoner's current rating — which is unchanged by starting an assessment and so may refer to an earlier review. The prison is required: it is what puts the draft on that prison's assessments-in-progress worklist. Returns 409 if an assessment is already in progress. Requires role ROLE_CSRA_REVIEW__RW",
+        "operationId" : "startAssessment",
+        "parameters" : [ {
+          "name" : "prisonerNumber",
+          "in" : "path",
+          "description" : "The prisoner number",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "A1234BC"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CsraAssessmentStartRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "The draft assessment was started",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CsraAssessmentStarted"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid request — no prison supplied",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the ROLE_CSRA_REVIEW__RW role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "An assessment is already in progress for this prisoner",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/queue-admin/get-dlq-messages/{dlqName}" : {
+      "get" : {
+        "tags" : [ "hmpps-queue-resource" ],
+        "operationId" : "getDlqMessages",
+        "parameters" : [ {
+          "name" : "dlqName",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "maxMessages",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 100
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/GetDlqResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/csra-review/{id}" : {
+      "get" : {
+        "tags" : [ "CSRA Review" ],
+        "summary" : "Returns CSRA review for this ID",
+        "description" : "Returns a single review with its full detail. For a review migrated from NOMIS this includes a legacy block carrying the question/answer set captured at migration, the committee and approval data, and the level NOMIS itself displays. The legacy block is absent for a review created in DPS, and its presence is how a consumer tells the two apart. Requires role ROLE_CSRA_REVIEW__R",
+        "operationId" : "getCsraReview",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "CSRA Review ID",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "CSRA Review ID",
+            "example" : "de91dfa7-821f-4552-a427-bf2f32eafeb0"
+          },
+          "example" : "de91dfa7-821f-4552-a427-bf2f32eafeb0"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns CSRA Review Information",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CsraReviewDetail"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the ROLE_CSRA_REVIEW__R role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Data not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/csra-review/prisoner/{prisonerNumber}/history" : {
+      "get" : {
+        "tags" : [ "CSRA Review" ],
+        "summary" : "Returns a prisoner's CSRA history",
+        "description" : "A filtered, paginated list of a prisoner's recorded CSRAs (both new-model and legacy NOMIS-migrated), plus whole-history summary counts. Returns an empty list and zeroed summary when the prisoner has no CSRAs. Requires role ROLE_CSRA_REVIEW__R",
+        "operationId" : "getCsraHistory",
+        "parameters" : [ {
+          "name" : "prisonerNumber",
+          "in" : "path",
+          "description" : "The prisoner number",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "A1234BC"
+        }, {
+          "name" : "page",
+          "in" : "query",
+          "description" : "Zero-based page number",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          },
+          "example" : 0
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "description" : "Page size",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 20
+          },
+          "example" : 20
+        }, {
+          "name" : "fromDate",
+          "in" : "query",
+          "description" : "Only include CSRAs recorded on or after this date (inclusive)",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "example" : "2024-01-01"
+        }, {
+          "name" : "toDate",
+          "in" : "query",
+          "description" : "Only include CSRAs recorded on or before this date (inclusive)",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "example" : "2025-12-31"
+        }, {
+          "name" : "establishments",
+          "in" : "query",
+          "description" : "Only include CSRAs recorded at these prisons",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "example" : "LEI"
+        }, {
+          "name" : "ratings",
+          "in" : "query",
+          "description" : "Only include CSRAs in these rating buckets",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "description" : "A coarse CSRA rating bucket for filtering and summary counts",
+              "enum" : [ "HIGH", "STANDARD" ]
+            }
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns the prisoner's CSRA history",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CsraReviewHistory"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the ROLE_CSRA_REVIEW__R role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/csra-review/prisoner/{prisonerNumber}/current-rating" : {
+      "get" : {
+        "tags" : [ "CSRA Review" ],
+        "summary" : "Returns a prisoner's current CSRA rating",
+        "description" : "The prisoner's current CSRA rating and its state (no rating / in progress / provisional / complete), plus the supporting comments, high-risk risk-to & vulnerability detail, and next review date. Returns a NO_RATING result rather than a 404 when the prisoner has no CSRA. Requires role ROLE_CSRA_REVIEW__R",
+        "operationId" : "getCurrentRating",
+        "parameters" : [ {
+          "name" : "prisonerNumber",
+          "in" : "path",
+          "description" : "The prisoner number",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "A1234BC"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns the prisoner's current CSRA rating",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CsraCurrentRating"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the ROLE_CSRA_REVIEW__R role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/csra-review/prison/{prisonId}/reviews-in-progress" : {
+      "get" : {
+        "tags" : [ "CSRA Review" ],
+        "summary" : "Returns a prison's in-progress CSRA reviews",
+        "description" : "The 'reviews in progress' worklist: prisoners with a cell sharing risk review started but not yet completed. Requires role ROLE_CSRA_REVIEW__R",
+        "operationId" : "getReviewsInProgress",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "description" : "The prison id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "LEI"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns the in-progress reviews",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CsraReviewsInProgress"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the ROLE_CSRA_REVIEW__R role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/csra-review/prison/{prisonId}/recent-arrivals" : {
+      "get" : {
+        "tags" : [ "CSRA Review" ],
+        "summary" : "Returns prisoners who recently arrived at a prison",
+        "description" : "Prisoners who arrived at the prison in the last N days (default 3) and are still in the establishment, grouped into a section per calendar day, most recent day first. Every day in the window is returned even when nobody arrived on it. Admissions, transfers in and returns from court or temporary absence all count as arrivals. Arrivals come from prison-api movements; anyone no longer in the establishment is excluded via the prisoner-search roll, which also supplies each prisoner's name and current location. One row per prisoner per day (their latest arrival that day). Requires role ROLE_CSRA_REVIEW__R",
+        "operationId" : "getRecentArrivals",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "description" : "The prison id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "LEI"
+        }, {
+          "name" : "days",
+          "in" : "query",
+          "description" : "The number of days back to include (inclusive of today)",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 3,
+            "minimum" : 1
+          },
+          "example" : 3
+        }, {
+          "name" : "arrivalTypes",
+          "in" : "query",
+          "description" : "Only include these arrival types. Omit for all arrivals; multiple types match any of them. The per-type counts are unaffected by this filter",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "description" : "The type of arrival into a prison",
+              "enum" : [ "NEW_ADMISSION", "TRANSFER_IN", "COURT_RETURN", "TEMPORARY_ABSENCE_RETURN" ]
+            }
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns the recent arrivals",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CsraRecentArrivals"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the ROLE_CSRA_REVIEW__R role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/csra-review/prison/{prisonId}/rating-summary" : {
+      "get" : {
+        "tags" : [ "CSRA Review" ],
+        "summary" : "Returns CSRA rating counts for a prison's current roll",
+        "description" : "The counts behind the CSRA homepage tiles: prisoners with no rating, high risk, and standard risk, across everyone currently in the prison (roll from prisoner-search). Each prisoner is counted by their current rating (their latest review). Requires role ROLE_CSRA_REVIEW__R",
+        "operationId" : "getPrisonRatingSummary",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "description" : "The prison id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "LEI"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns the prison's CSRA rating counts",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CsraPrisonRatingSummary"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the ROLE_CSRA_REVIEW__R role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/csra-review/prison/{prisonId}/prisoners" : {
+      "get" : {
+        "tags" : [ "CSRA Review" ],
+        "summary" : "Returns a prison's current prisoners with their CSRA rating",
+        "description" : "The 'CSRA ratings for all prisoners' list: a paged, filterable, sortable table of everyone currently in the prison (roll from prisoner-search) with their current CSRA rating (their latest review). Prisoners with no CSRA record, or whose latest review has no saved rating, appear with a null rating (No rating). Requires role ROLE_CSRA_REVIEW__R",
+        "operationId" : "getPrisonPrisoners",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "description" : "The prison id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "LEI"
+        }, {
+          "name" : "page",
+          "in" : "query",
+          "description" : "Zero-based page number",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          },
+          "example" : 0
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "description" : "Page size",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 25
+          },
+          "example" : 25
+        }, {
+          "name" : "sort",
+          "in" : "query",
+          "description" : "Column to sort by",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "NAME",
+            "description" : "The column to sort the prison prisoner list by",
+            "enum" : [ "NAME", "ASSESSMENT_TYPE", "ASSESSED_ON", "RATING" ]
+          }
+        }, {
+          "name" : "direction",
+          "in" : "query",
+          "description" : "Sort direction",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "ASC",
+            "description" : "Sort direction",
+            "enum" : [ "ASC", "DESC" ]
+          }
+        }, {
+          "name" : "ratings",
+          "in" : "query",
+          "description" : "Only include prisoners with these current ratings (NO_RATING matches prisoners with no rating)",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "description" : "A CSRA rating value for filtering the prison prisoner list; NO_RATING matches prisoners with no current rating",
+              "enum" : [ "NO_RATING", "STANDARD", "HIGH", "HIGH_GENERAL", "HIGH_SPECIFIC" ]
+            }
+          }
+        }, {
+          "name" : "assessmentTypes",
+          "in" : "query",
+          "description" : "Only include prisoners whose current rating came from these assessment types",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "description" : "The coarse CSRA assessment type: an initial assessment or a review",
+              "enum" : [ "ASSESSMENT", "REVIEW" ]
+            }
+          }
+        }, {
+          "name" : "fromDate",
+          "in" : "query",
+          "description" : "Only include prisoners assessed on or after this date (inclusive)",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "example" : "2026-01-01"
+        }, {
+          "name" : "toDate",
+          "in" : "query",
+          "description" : "Only include prisoners assessed on or before this date (inclusive)",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "example" : "2026-12-31"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns the page of prisoners",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CsraPrisonPrisonerList"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the ROLE_CSRA_REVIEW__R role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/csra-review/prison/{prisonId}/high-risk-due-for-review" : {
+      "get" : {
+        "tags" : [ "CSRA Review" ],
+        "summary" : "Returns a prison's high risk prisoners due for a cell sharing risk review",
+        "description" : "Everyone currently in the prison whose current CSRA rating is high-risk (High, High – general, High – general (interim), or High – specific) and who has a scheduled next review date. Each row carries the review due date, the rating type, and whether the current rating came from an assessment or a review (for the 'Last assessed'/'Last reviewed' line). Overdue is derived on the client from the due date. Not paginated. The response also lists the rating types present across the establishment for the dynamic filter. Requires role ROLE_CSRA_REVIEW__R",
+        "operationId" : "getHighRiskDueForReview",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "description" : "The prison id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "LEI"
+        }, {
+          "name" : "ratingTypes",
+          "in" : "query",
+          "description" : "Only include prisoners with these high-risk rating types",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "description" : "A high-risk CSRA rating type for the due-for-review worklist and its filter",
+              "enum" : [ "HIGH", "HIGH_GENERAL", "HIGH_GENERAL_INTERIM", "HIGH_SPECIFIC" ]
+            }
+          }
+        }, {
+          "name" : "reviewDateFrom",
+          "in" : "query",
+          "description" : "Only include reviews due on or after this date (inclusive)",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "example" : "2026-01-01"
+        }, {
+          "name" : "reviewDateTo",
+          "in" : "query",
+          "description" : "Only include reviews due on or before this date (inclusive)",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "example" : "2026-12-31"
+        }, {
+          "name" : "sort",
+          "in" : "query",
+          "description" : "Column to sort by",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "REVIEW_DUE_BY",
+            "description" : "The column to sort the high-risk due-for-review list by",
+            "enum" : [ "REVIEW_DUE_BY", "NAME" ]
+          }
+        }, {
+          "name" : "direction",
+          "in" : "query",
+          "description" : "Sort direction",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "ASC",
+            "description" : "Sort direction",
+            "enum" : [ "ASC", "DESC" ]
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns the high risk prisoners due for review",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CsraHighRiskDueForReview"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the ROLE_CSRA_REVIEW__R role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/csra-review/prison/{prisonId}/assessments-in-progress" : {
+      "get" : {
+        "tags" : [ "CSRA Review" ],
+        "summary" : "Returns a prison's in-progress CSRA initial assessments",
+        "description" : "The 'assessments in progress' worklist, split into assessments started with no rating entered yet and assessments with a provisional rating awaiting a final rating. Requires role ROLE_CSRA_REVIEW__R",
+        "operationId" : "getAssessmentsInProgress",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "description" : "The prison id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "LEI"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns the in-progress assessments",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CsraAssessmentsInProgress"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the ROLE_CSRA_REVIEW__R role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/active-agencies" : {
+      "get" : {
+        "tags" : [ "Active agencies" ],
+        "summary" : "List the agencies the CSRA service is switched on for",
+        "description" : "Returns the ids of the prisons using CSRA in DPS. The same list is published unauthenticated on /info as activeAgencies. Requires role PRISONER_CSRA__ADMIN.",
+        "operationId" : "getActiveAgencies",
+        "responses" : {
+          "200" : {
+            "description" : "The active agency ids",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the PRISONER_CSRA__ADMIN role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/active-agencies/all" : {
+      "get" : {
+        "tags" : [ "Active agencies" ],
+        "summary" : "List every prison with whether the CSRA service is switched on",
+        "description" : "Returns every operational prison, plus any already switched on, for the rollout admin screen. Requires role PRISONER_CSRA__ADMIN.",
+        "operationId" : "getAllAgencies",
+        "responses" : {
+          "200" : {
+            "description" : "The prisons and their current state",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/AgencyStatus"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the PRISONER_CSRA__ADMIN role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "RetryDlqResult" : {
+        "type" : "object",
+        "properties" : {
+          "messagesFoundCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "messagesFoundCount" ]
+      },
+      "PurgeQueueResult" : {
+        "type" : "object",
+        "properties" : {
+          "messagesFoundCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "messagesFoundCount" ]
+      },
+      "ErrorResponse" : {
+        "type" : "object",
+        "properties" : {
+          "status" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "errorCode" : {
+            "type" : [ "string", "null" ]
+          },
+          "userMessage" : {
+            "type" : [ "string", "null" ]
+          },
+          "developerMessage" : {
+            "type" : [ "string", "null" ]
+          },
+          "moreInfo" : {
+            "type" : [ "string", "null" ]
+          }
+        },
+        "required" : [ "status" ]
+      },
+      "CsraAssessmentStageRequest" : {
+        "type" : "object",
+        "description" : "The answers and rating confirmed for one stage of an initial CSRA assessment",
+        "properties" : {
+          "rating" : {
+            "type" : "string",
+            "description" : "The rating being confirmed for this stage",
+            "enum" : [ "HIGH", "HIGH_GENERAL", "HIGH_SPECIFIC", "STANDARD" ],
+            "example" : "STANDARD"
+          },
+          "prisonId" : {
+            "type" : "string",
+            "description" : "The prison the assessment is being made at",
+            "example" : "LEI",
+            "minLength" : 1
+          },
+          "assessmentComment" : {
+            "type" : "string",
+            "description" : "The assessment comment explaining the outcome",
+            "example" : "PNC checked. No issues found.",
+            "minLength" : 1
+          },
+          "dpsChecked" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Whether DPS adjudications were checked"
+          },
+          "perChecked" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Whether the Person Escort Record (PER) was checked"
+          },
+          "warrantChecked" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Whether the warrant was checked"
+          },
+          "pncChecked" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Whether PNC was checked"
+          },
+          "offenceMurderManslaughter" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Evidence of murder, manslaughter or a life-threatening assault on another prisoner (mandatory high-risk trigger)"
+          },
+          "offenceAssistingSuicide" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Evidence of assisting a suicide in custody (mandatory high-risk trigger)"
+          },
+          "offenceSexualAssault" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Evidence of sexual assault of a same-sex adult victim (mandatory high-risk trigger)"
+          },
+          "offenceRepeatedViolence" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Evidence of repeated violence in custody"
+          },
+          "offencePrejudiceMotivated" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Evidence of offending or behaviour motivated by prejudice"
+          },
+          "offenceArson" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Evidence of arson or fire setting"
+          },
+          "offenceKidnapHostage" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Evidence of kidnap, hostage taking or false imprisonment"
+          },
+          "offenceEvidence" : {
+            "type" : "array",
+            "description" : "The evidence behind each offence answered Yes — where it was found and what it was. At most one entry per offence.",
+            "items" : {
+              "$ref" : "#/components/schemas/CsraOffenceEvidence"
+            }
+          },
+          "officerSpokeToPrisoner" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Whether an officer has had a conversation with the prisoner about sharing a cell"
+          },
+          "likelyToHarmCellmate" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Whether the prisoner is likely to cause harm to a cellmate"
+          },
+          "likelyToHarmCellmateDetail" : {
+            "type" : [ "string", "null" ],
+            "description" : "Details of the risk, captured when likelyToHarmCellmate is true",
+            "example" : "Has threatened previous cellmates."
+          },
+          "significantlyVulnerable" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Whether the prisoner is significantly vulnerable to assault by others"
+          },
+          "significantlyVulnerableDetail" : {
+            "type" : [ "string", "null" ],
+            "description" : "Details of the risk, captured when significantlyVulnerable is true",
+            "example" : "Prisoner says they have autism and struggles with social interactions."
+          },
+          "causeForConcernSharing" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Whether observed behaviour gives cause for concern about sharing a cell"
+          },
+          "causeForConcernSharingDetail" : {
+            "type" : [ "string", "null" ],
+            "description" : "Details of the risk, captured when causeForConcernSharing is true",
+            "example" : "Aggressive towards staff on the wing."
+          },
+          "otherHighRiskIndicators" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Whether there are any other indicators the prisoner is high risk"
+          },
+          "otherHighRiskIndicatorsDetail" : {
+            "type" : [ "string", "null" ],
+            "description" : "Details of the risk, captured when otherHighRiskIndicators is true",
+            "example" : "Intelligence report received from the security team."
+          },
+          "seenByHealthcare" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Whether the prisoner has been seen by healthcare"
+          },
+          "healthcareIncreasedRisk" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Whether healthcare identified signs of increased risk"
+          },
+          "healthcareIncreasedRiskDetail" : {
+            "type" : [ "string", "null" ],
+            "description" : "A brief summary of why healthcare consider the prisoner an increased risk, captured when healthcareIncreasedRisk is true",
+            "example" : "Diagnosed autism; shared accommodation likely to cause significant distress."
+          },
+          "riskTo" : {
+            "type" : "array",
+            "description" : "For a high-risk rating, who the prisoner is a risk to",
+            "items" : {
+              "$ref" : "#/components/schemas/CsraRiskToDetail"
+            }
+          },
+          "vulnerabilities" : {
+            "type" : "array",
+            "description" : "For a high-risk rating, the groups the prisoner is vulnerable due to",
+            "items" : {
+              "$ref" : "#/components/schemas/CsraVulnerabilityDetail"
+            }
+          }
+        },
+        "required" : [ "assessmentComment", "offenceEvidence", "prisonId", "rating", "riskTo", "vulnerabilities" ]
+      },
+      "CsraOffenceEvidence" : {
+        "type" : "object",
+        "description" : "The evidence behind a Yes to an offence question",
+        "properties" : {
+          "offence" : {
+            "type" : "string",
+            "description" : "The offence question this evidence relates to",
+            "enum" : [ "MURDER_MANSLAUGHTER", "ASSISTING_SUICIDE", "SEXUAL_ASSAULT", "REPEATED_VIOLENCE", "PREJUDICE_MOTIVATED", "ARSON", "KIDNAP_HOSTAGE" ],
+            "example" : "MURDER_MANSLAUGHTER"
+          },
+          "sources" : {
+            "type" : "array",
+            "description" : "Where the evidence was found. Include OTHER to name a source in otherSourceDetail.",
+            "example" : [ "PNC", "DPS" ],
+            "items" : {
+              "type" : "string",
+              "description" : "Where the evidence for an offence answer was found",
+              "enum" : [ "PNC", "WARRANT", "DPS", "PER", "OTHER" ]
+            },
+            "uniqueItems" : true
+          },
+          "otherSourceDetail" : {
+            "type" : [ "string", "null" ],
+            "description" : "Names the source when OTHER is selected",
+            "example" : "Police intelligence report"
+          },
+          "details" : {
+            "type" : [ "string", "null" ],
+            "description" : "Free text describing the evidence found",
+            "example" : "Convicted of manslaughter of a fellow prisoner in 2019."
+          }
+        },
+        "required" : [ "offence", "sources" ]
+      },
+      "CsraRiskToDetail" : {
+        "type" : "object",
+        "description" : "A group the prisoner is a risk to, with optional free-text detail",
+        "properties" : {
+          "category" : {
+            "type" : "string",
+            "description" : "The risk-to category",
+            "enum" : [ "DIFFERENT_ETHNICITY", "DIFFERENT_RELIGION", "DISABLED", "GANG_MEMBERS", "SEXUAL_MINORITY", "OLD_PEOPLE", "SPECIFIC_PERSONS", "TRANSGENDER", "OTHER", "NONE" ],
+            "example" : "DIFFERENT_ETHNICITY"
+          },
+          "details" : {
+            "type" : [ "string", "null" ],
+            "description" : "Optional free text describing the risk",
+            "example" : "Racist towards other ethnicities."
+          }
+        },
+        "required" : [ "category" ]
+      },
+      "CsraVulnerabilityDetail" : {
+        "type" : "object",
+        "description" : "A group the prisoner is vulnerable due to, with optional free-text detail",
+        "properties" : {
+          "category" : {
+            "type" : "string",
+            "description" : "The vulnerability category",
+            "enum" : [ "DISABLED", "SEXUAL_MINORITY", "MENTAL_HEALTH", "NEURODIVERSITY", "OFFENCE_TYPE", "OLD_PEOPLE", "TRANSGENDER", "OTHER", "NONE" ],
+            "example" : "NEURODIVERSITY"
+          },
+          "details" : {
+            "type" : [ "string", "null" ],
+            "description" : "Optional free text describing the vulnerability",
+            "example" : "Autistic."
+          }
+        },
+        "required" : [ "category" ]
+      },
+      "CsraCurrentRating" : {
+        "type" : "object",
+        "description" : "A prisoner's current CSRA rating and its supporting detail",
+        "properties" : {
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The prisoner number",
+            "example" : "A1234BC"
+          },
+          "status" : {
+            "type" : "string",
+            "description" : "The state of the current rating",
+            "enum" : [ "NO_RATING", "IN_PROGRESS", "PROVISIONAL", "COMPLETE" ]
+          },
+          "rating" : {
+            "type" : [ "string", "null" ],
+            "description" : "The current rating (final if complete, otherwise the provisional/interim rating). Absent when there is no rating yet.",
+            "enum" : [ "HIGH", "HIGH_GENERAL", "HIGH_SPECIFIC", "STANDARD" ],
+            "example" : "STANDARD"
+          },
+          "provisional" : {
+            "type" : "boolean",
+            "description" : "Whether the current rating is provisional (a final rating has not yet been confirmed)",
+            "example" : false
+          },
+          "reviewId" : {
+            "type" : [ "string", "null" ],
+            "format" : "uuid",
+            "description" : "The id of the review that produced the current rating, if any",
+            "example" : "de91dfa7-821f-4552-a427-bf2f32eafeb0"
+          },
+          "prisonId" : {
+            "type" : [ "string", "null" ],
+            "description" : "The prison the current assessment/review took place at",
+            "example" : "LEI"
+          },
+          "assessmentComment" : {
+            "type" : [ "string", "null" ],
+            "description" : "The final assessment comment (or, for a migrated legacy review, its review comment)",
+            "example" : "PNC checked. No issues found."
+          },
+          "provisionalAssessmentComment" : {
+            "type" : [ "string", "null" ],
+            "description" : "The provisional (Day 1) assessment comment, when the assessment was captured over two stages",
+            "example" : "PNC not checked on day 1. No evidence of increased risk."
+          },
+          "riskTo" : {
+            "type" : "array",
+            "description" : "For a high-risk-specific rating, who the prisoner is a risk to",
+            "items" : {
+              "$ref" : "#/components/schemas/CsraRiskToDetail"
+            }
+          },
+          "vulnerabilities" : {
+            "type" : "array",
+            "description" : "For a high-risk-specific rating, the groups the prisoner is vulnerable due to",
+            "items" : {
+              "$ref" : "#/components/schemas/CsraVulnerabilityDetail"
+            }
+          },
+          "provisionalDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "The date the provisional (Day 1) rating was given, if any",
+            "example" : "2026-06-30"
+          },
+          "finalDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "The date the final rating was given, if any",
+            "example" : "2026-07-01"
+          },
+          "nextReviewDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "The date the prisoner's next review is due, if any",
+            "example" : "2027-05-06"
+          },
+          "startedBy" : {
+            "type" : [ "string", "null" ],
+            "description" : "The username that started the current assessment",
+            "example" : "BPONDS"
+          },
+          "startedAt" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "When the current assessment was started",
+            "example" : "2026-06-26T11:20:00"
+          },
+          "type" : {
+            "type" : [ "string", "null" ],
+            "description" : "Whether the rating came from an assessment or a review. Absent when there is no rating.",
+            "enum" : [ "FULL", "HEALTH", "LOCATE", "RATING", "RECEPTION", "REVIEW", "CSRA_INITIAL_REVIEW", "CSRA_REVIEW" ],
+            "example" : "CSRA_INITIAL_REVIEW"
+          },
+          "inProgress" : {
+            "description" : "The assessment or review currently in progress, if any. Absent when nothing is in progress.",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CsraInProgressReview"
+            }, {
+              "type" : "null"
+            } ]
+          }
+        },
+        "required" : [ "prisonerNumber", "provisional", "riskTo", "status", "vulnerabilities" ]
+      },
+      "CsraInProgressReview" : {
+        "type" : "object",
+        "description" : "An assessment or review in progress, reported alongside the current rating",
+        "properties" : {
+          "reviewId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The id of the in-progress assessment or review. Point 'Continue' and 'Cancel' at this.",
+            "example" : "de91dfa7-821f-4552-a427-bf2f32eafeb0"
+          },
+          "type" : {
+            "type" : "string",
+            "description" : "Whether this is an assessment or a review — the card is captioned accordingly",
+            "enum" : [ "FULL", "HEALTH", "LOCATE", "RATING", "RECEPTION", "REVIEW", "CSRA_INITIAL_REVIEW", "CSRA_REVIEW" ],
+            "example" : "CSRA_INITIAL_REVIEW"
+          },
+          "startedBy" : {
+            "type" : [ "string", "null" ],
+            "description" : "The username that started it",
+            "example" : "BPONDS"
+          },
+          "startedAt" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "When it was started",
+            "example" : "2026-06-26T11:20:00"
+          },
+          "prisonId" : {
+            "type" : [ "string", "null" ],
+            "description" : "The prison it was started at",
+            "example" : "LEI"
+          }
+        },
+        "required" : [ "reviewId", "type" ]
+      },
+      "SetActiveAgencyRequest" : {
+        "type" : "object",
+        "description" : "Switch the CSRA service on or off in DPS for an agency (prison)",
+        "properties" : {
+          "active" : {
+            "type" : "boolean",
+            "description" : "Whether the CSRA service should be switched on for this agency",
+            "example" : true
+          }
+        },
+        "required" : [ "active" ]
+      },
+      "AgencyStatus" : {
+        "type" : "object",
+        "description" : "A prison (agency) and whether the CSRA service is switched on for it in DPS",
+        "properties" : {
+          "agencyId" : {
+            "type" : "string",
+            "description" : "Agency (prison) id",
+            "example" : "MDI"
+          },
+          "name" : {
+            "type" : "string",
+            "description" : "Agency (prison) name",
+            "example" : "Moorland (HMP & YOI)"
+          },
+          "active" : {
+            "type" : "boolean",
+            "description" : "Whether the CSRA service is switched on for this agency in DPS",
+            "example" : true
+          }
+        },
+        "required" : [ "active", "agencyId", "name" ]
+      },
+      "CsraAssessmentType" : {
+        "type" : "string",
+        "description" : "CSRA assessment type as configured in the NOMIS ASSESSMENTS table",
+        "enum" : [ "CSRF", "CSRH", "CSRDO", "CSR", "CSR1", "CSRREV" ]
+      },
+      "CsraCommitteeCode" : {
+        "type" : "string",
+        "description" : "Assessment committee code (NOMIS reference domain ASSESS_COMM)",
+        "enum" : [ "GOV", "MED", "OCA", "RECP", "REVIEW", "SECSTATE", "SECUR" ]
+      },
+      "CsraEvaluationResultCode" : {
+        "type" : "string",
+        "description" : "Approved or rejected indicator",
+        "enum" : [ "APP", "REJ" ]
+      },
+      "CsraLevel" : {
+        "type" : "string",
+        "description" : "A CSRA level (used for calculated, review and approved levels)",
+        "enum" : [ "STANDARD", "PEND", "LOW", "MED", "HI" ]
+      },
+      "CsraQuestionDto" : {
+        "type" : "object",
+        "description" : "A question and its responses within a CSRA review section",
+        "properties" : {
+          "code" : {
+            "type" : "string",
+            "description" : "Question code",
+            "minLength" : 1
+          },
+          "description" : {
+            "type" : [ "string", "null" ],
+            "description" : "Question description"
+          },
+          "responses" : {
+            "type" : "array",
+            "description" : "Responses to this question",
+            "items" : {
+              "$ref" : "#/components/schemas/CsraResponseDto"
+            }
+          }
+        },
+        "required" : [ "code", "responses" ]
+      },
+      "CsraResponseDto" : {
+        "type" : "object",
+        "description" : "A single response to a CSRA question",
+        "properties" : {
+          "code" : {
+            "type" : "string",
+            "description" : "Response code",
+            "minLength" : 1
+          },
+          "answer" : {
+            "type" : [ "string", "null" ],
+            "description" : "Free-text answer"
+          },
+          "comment" : {
+            "type" : [ "string", "null" ],
+            "description" : "Comment text"
+          }
+        },
+        "required" : [ "code" ]
+      },
+      "CsraReviewDetailDto" : {
+        "type" : "object",
+        "description" : "A section of question and answer details within a CSRA review",
+        "properties" : {
+          "code" : {
+            "type" : "string",
+            "description" : "Section code",
+            "minLength" : 1
+          },
+          "description" : {
+            "type" : [ "string", "null" ],
+            "description" : "Section description"
+          },
+          "questions" : {
+            "type" : "array",
+            "description" : "Questions within this section",
+            "items" : {
+              "$ref" : "#/components/schemas/CsraQuestionDto"
+            }
+          }
+        },
+        "required" : [ "code", "questions" ]
+      },
+      "CsraStatus" : {
+        "type" : "string",
+        "description" : "CSRA status: I = inactive, A = active, P = provisional",
+        "enum" : [ "I", "A", "P" ]
+      },
+      "CsraSyncRequest" : {
+        "type" : "object",
+        "description" : "Request to synchronise a single CSRA review from NOMIS",
+        "properties" : {
+          "csraReviewId" : {
+            "type" : [ "string", "null" ],
+            "format" : "uuid",
+            "description" : "The DPS id of the review, present when it already exists in DPS",
+            "example" : "8f5c2f4e-1c6b-4f5a-9c1e-2b3a4d5e6f7a"
+          },
+          "review" : {
+            "$ref" : "#/components/schemas/NomisCsraReview",
+            "description" : "The CSRA review in legacy NOMIS format"
+          }
+        },
+        "required" : [ "review" ]
+      },
+      "NomisCsraReview" : {
+        "type" : "object",
+        "description" : "A single CSRA review in the legacy NOMIS format",
+        "properties" : {
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The booking id of the CSRA in Nomis - the first part of its id",
+            "example" : 4123456
+          },
+          "nomisSequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The sequence number of the CSRA in Nomis - the second part of its id",
+            "example" : 4
+          },
+          "assessmentPrisonId" : {
+            "type" : [ "string", "null" ],
+            "description" : "Prison where the assessment took place (NOMIS agencyId). Not currently populated by NOMIS.",
+            "example" : "LEI"
+          },
+          "assessmentDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Date the CSRA was created",
+            "example" : "2025-11-22"
+          },
+          "assessmentType" : {
+            "$ref" : "#/components/schemas/CsraAssessmentType",
+            "description" : "CSRA assessment type",
+            "example" : "CSR"
+          },
+          "calculatedLevel" : {
+            "description" : "The calculated CSRA level",
+            "example" : "STANDARD",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CsraLevel"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "score" : {
+            "type" : "number",
+            "description" : "Score",
+            "example" : 1000
+          },
+          "status" : {
+            "$ref" : "#/components/schemas/CsraStatus",
+            "description" : "Status: active, inactive or provisional",
+            "example" : "A"
+          },
+          "committeeCode" : {
+            "description" : "The assessment committee code",
+            "example" : "REVIEW",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CsraCommitteeCode"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "nextReviewDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Next review date",
+            "example" : "2026-05-22"
+          },
+          "comment" : {
+            "type" : [ "string", "null" ],
+            "description" : "Comment text"
+          },
+          "placementPrisonId" : {
+            "type" : [ "string", "null" ],
+            "description" : "A prison to be transferred to",
+            "example" : "LEI"
+          },
+          "createdDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Timestamp for when the CSRA was created",
+            "example" : "2025-12-06T12:34:56"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "The user who created the CSRA",
+            "example" : "NQP56Y",
+            "minLength" : 1
+          },
+          "reviewLevel" : {
+            "description" : "The review CSRA level",
+            "example" : "STANDARD",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CsraLevel"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "approvedLevel" : {
+            "description" : "The approved CSRA level",
+            "example" : "STANDARD",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CsraLevel"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "evaluationDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Evaluation or approval date",
+            "example" : "2025-12-08"
+          },
+          "evaluationResultCode" : {
+            "description" : "Approved or rejected indicator",
+            "example" : "APP",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CsraEvaluationResultCode"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "reviewCommitteeCode" : {
+            "description" : "The review/approval committee code",
+            "example" : "REVIEW",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CsraCommitteeCode"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "reviewCommitteeComment" : {
+            "type" : [ "string", "null" ],
+            "description" : "Approval committee comment text"
+          },
+          "reviewPlacementPrisonId" : {
+            "type" : [ "string", "null" ],
+            "description" : "A prison to be transferred to (from the review/approval)",
+            "example" : "LEI"
+          },
+          "reviewComment" : {
+            "type" : [ "string", "null" ],
+            "description" : "Review/approval comment text"
+          },
+          "reviewDetails" : {
+            "type" : "array",
+            "description" : "Question and answer details by section",
+            "items" : {
+              "$ref" : "#/components/schemas/CsraReviewDetailDto"
+            }
+          }
+        },
+        "required" : [ "assessmentDate", "assessmentType", "bookingId", "createdBy", "createdDateTime", "nomisSequence", "reviewDetails", "score", "status" ]
+      },
+      "SyncResult" : {
+        "type" : "object",
+        "description" : "Result of synchronising a single CSRA review",
+        "properties" : {
+          "csraReviewId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS id of the synchronised review",
+            "example" : "8f5c2f4e-1c6b-4f5a-9c1e-2b3a4d5e6f7a"
+          },
+          "created" : {
+            "type" : "boolean",
+            "description" : "True if the review was created, false if it was updated",
+            "example" : true
+          }
+        },
+        "required" : [ "created", "csraReviewId" ]
+      },
+      "CsraMigrationResponse" : {
+        "type" : "object",
+        "description" : "Migrate response linking the created UUID with the Nomis id",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The unique id of the CSRA review",
+            "example" : "de91dfa7-821f-4552-a427-bf2f32eafeb0"
+          },
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The booking id of the CSRA in Nomis - the first part of its id",
+            "example" : 4123456
+          },
+          "nomisSequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The sequence number of the CSRA in Nomis - the second part of its id",
+            "example" : 4
+          }
+        },
+        "required" : [ "bookingId", "id", "nomisSequence" ]
+      },
+      "CsraAssessmentStarted" : {
+        "type" : "object",
+        "description" : "The assessment that was started, alongside the prisoner's current rating",
+        "properties" : {
+          "assessmentId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The id of the assessment just started. Use this to submit the provisional and final stages.",
+            "example" : "de91dfa7-821f-4552-a427-bf2f32eafeb0"
+          },
+          "currentRating" : {
+            "$ref" : "#/components/schemas/CsraCurrentRating",
+            "description" : "The prisoner's current CSRA rating, which is unaffected by starting a new assessment and so may refer to an earlier review"
+          }
+        },
+        "required" : [ "assessmentId", "currentRating" ]
+      },
+      "CsraAssessmentStartRequest" : {
+        "type" : "object",
+        "description" : "What is needed to start an initial CSRA assessment",
+        "properties" : {
+          "prisonId" : {
+            "type" : "string",
+            "description" : "The prison the assessment is being started at",
+            "example" : "LEI",
+            "minLength" : 1
+          }
+        },
+        "required" : [ "prisonId" ]
+      },
+      "DlqMessage" : {
+        "type" : "object",
+        "properties" : {
+          "body" : {
+            "type" : "object",
+            "additionalProperties" : { }
+          },
+          "messageId" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "body", "messageId" ]
+      },
+      "GetDlqResult" : {
+        "type" : "object",
+        "properties" : {
+          "messagesFoundCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "messagesReturnedCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "messages" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/DlqMessage"
+            }
+          }
+        },
+        "required" : [ "messages", "messagesFoundCount", "messagesReturnedCount" ]
+      },
+      "CsraCommittee" : {
+        "type" : "object",
+        "description" : "A NOMIS committee, with the wording NOMIS displays for it",
+        "properties" : {
+          "code" : {
+            "type" : "string",
+            "description" : "The NOMIS committee code",
+            "enum" : [ "GOV", "MED", "OCA", "RECP", "REVIEW", "SECSTATE", "SECUR" ],
+            "example" : "REVIEW"
+          },
+          "name" : {
+            "type" : "string",
+            "description" : "The committee's display name",
+            "example" : "Review Board"
+          }
+        },
+        "required" : [ "code", "name" ]
+      },
+      "CsraLegacyReviewDetail" : {
+        "type" : "object",
+        "description" : "The legacy NOMIS detail for a migrated review, including its questions and answers",
+        "properties" : {
+          "level" : {
+            "type" : [ "string", "null" ],
+            "description" : "The raw NOMIS level this review resolved to. Renders legacy 'Low risk'/'Medium risk' records, which both collapse to STANDARD in the review's result.",
+            "enum" : [ "STANDARD", "PEND", "LOW", "MED", "HI" ],
+            "example" : "LOW"
+          },
+          "approvalStatus" : {
+            "type" : [ "string", "null" ],
+            "description" : "What became of the review at approval. Absent when it never went through approval, which is the common case.",
+            "enum" : [ "APPROVED", "NOT_APPROVED" ]
+          },
+          "calculatedResult" : {
+            "type" : [ "string", "null" ],
+            "description" : "The level NOMIS calculated from the answers given",
+            "enum" : [ "STANDARD", "PEND", "LOW", "MED", "HI" ],
+            "example" : "STANDARD"
+          },
+          "approvedResult" : {
+            "type" : [ "string", "null" ],
+            "description" : "The level approved for this review — NOMIS's reviewed level, which is what it displays as the approved result",
+            "enum" : [ "STANDARD", "PEND", "LOW", "MED", "HI" ],
+            "example" : "STANDARD"
+          },
+          "assessmentComment" : {
+            "type" : [ "string", "null" ],
+            "description" : "The assessment comment recorded in NOMIS"
+          },
+          "approvalCommitteeComment" : {
+            "type" : [ "string", "null" ],
+            "description" : "The approval committee's comment. This is the comment the legacy screens label 'Approval comments'."
+          },
+          "approvalComment" : {
+            "type" : [ "string", "null" ],
+            "description" : "The review level comment recorded in NOMIS. Not shown on the legacy screens; prefer approvalCommitteeComment."
+          },
+          "approvalDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Date the review was evaluated or approved in NOMIS",
+            "example" : "2013-07-14"
+          },
+          "assessmentCommittee" : {
+            "description" : "The committee that carried out the assessment",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CsraCommittee"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "approvalCommittee" : {
+            "description" : "The committee that approved the review",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CsraCommittee"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "nextReviewDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "The next review date NOMIS recorded on this review. Null for records migrated before we stored it per review.",
+            "example" : "2014-07-14"
+          },
+          "questions" : {
+            "type" : "array",
+            "description" : "The questions asked and the answers given, in the order NOMIS supplied them. Note this is not necessarily the order the legacy NOMIS screens display, which sorts by a question sequence we do not receive.",
+            "items" : {
+              "$ref" : "#/components/schemas/CsraReviewQuestion"
+            }
+          }
+        },
+        "required" : [ "questions" ]
+      },
+      "CsraReviewDetail" : {
+        "type" : "object",
+        "description" : "A CSRA review with the detail needed to render its full record",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The unique id of the CSRA review",
+            "example" : "de91dfa7-821f-4552-a427-bf2f32eafeb0"
+          },
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The prisoner number the review belongs to",
+            "example" : "A1234BC"
+          },
+          "prisonId" : {
+            "type" : [ "string", "null" ],
+            "description" : "The prison the assessment took place at (may be absent for older records)",
+            "example" : "LEI"
+          },
+          "prisonName" : {
+            "type" : [ "string", "null" ],
+            "description" : "The name of the prison the assessment took place at, falling back to the id when it is not a known prison",
+            "example" : "Leeds (HMP)"
+          },
+          "assessmentDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The date the assessment was started",
+            "example" : "2025-11-22"
+          },
+          "type" : {
+            "type" : "string",
+            "description" : "The type of assessment",
+            "enum" : [ "FULL", "HEALTH", "LOCATE", "RATING", "RECEPTION", "REVIEW", "CSRA_INITIAL_REVIEW", "CSRA_REVIEW" ],
+            "example" : "CSRA_INITIAL_REVIEW"
+          },
+          "interimResult" : {
+            "type" : [ "string", "null" ],
+            "description" : "The interim result, issued when the review cannot be completed on the first day",
+            "enum" : [ "HIGH", "HIGH_GENERAL", "HIGH_SPECIFIC", "STANDARD" ],
+            "example" : "STANDARD"
+          },
+          "interimResultDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "The date the interim result was given",
+            "example" : "2025-11-22"
+          },
+          "finalResult" : {
+            "type" : [ "string", "null" ],
+            "description" : "The final result of the review",
+            "enum" : [ "HIGH", "HIGH_GENERAL", "HIGH_SPECIFIC", "STANDARD" ],
+            "example" : "HIGH"
+          },
+          "finalResultDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "The date the final result was given",
+            "example" : "2025-11-24"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "When the review was created. For a migrated review this is NOMIS's own creation timestamp.",
+            "example" : "2025-11-22T12:34:56"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "The username that created the review. For a migrated review this is the NOMIS assessor.",
+            "example" : "NQP56Y"
+          },
+          "lastModifiedAt" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "When the review was last updated",
+            "example" : "2025-11-24T09:00:00"
+          },
+          "lastModifiedBy" : {
+            "type" : [ "string", "null" ],
+            "description" : "The username that last updated the review",
+            "example" : "NQP56Y"
+          },
+          "legacy" : {
+            "description" : "The legacy NOMIS detail. Present only for a migrated review; its presence is what identifies the review as legacy.",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CsraLegacyReviewDetail"
+            }, {
+              "type" : "null"
+            } ]
+          }
+        },
+        "required" : [ "assessmentDate", "createdAt", "createdBy", "id", "prisonerNumber", "type" ]
+      },
+      "CsraReviewQuestion" : {
+        "type" : "object",
+        "description" : "A question asked in a legacy NOMIS CSRA review and the answer given",
+        "properties" : {
+          "question" : {
+            "type" : "string",
+            "description" : "The question as recorded in NOMIS, falling back to its code where NOMIS supplied no text",
+            "example" : "Select Risk Rating"
+          },
+          "answer" : {
+            "type" : [ "string", "null" ],
+            "description" : "The answer given. Absent where the question was not answered.",
+            "example" : "Standard (No immediate risk of severe violence but risk may need to be reviewed)"
+          },
+          "additionalAnswers" : {
+            "type" : "array",
+            "description" : "Any further answers, where more than one was given to the same question",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        },
+        "required" : [ "additionalAnswers", "question" ]
+      },
+      "CsraEstablishment" : {
+        "type" : "object",
+        "description" : "An establishment the prisoner has a CSRA at",
+        "properties" : {
+          "prisonId" : {
+            "type" : "string",
+            "description" : "The prison id (the establishment filter key)",
+            "example" : "LEI"
+          },
+          "prisonName" : {
+            "type" : "string",
+            "description" : "The prison name, resolved from prison-register (falls back to the id)",
+            "example" : "Leeds (HMP)"
+          }
+        },
+        "required" : [ "prisonId", "prisonName" ]
+      },
+      "CsraLegacyDetail" : {
+        "type" : "object",
+        "description" : "Legacy NOMIS detail for a migrated review. Present only on rows that came from NOMIS; when present, prefer its comments over the row's resolved reviewComment.",
+        "properties" : {
+          "level" : {
+            "type" : [ "string", "null" ],
+            "description" : "The raw NOMIS level this review resolved to. Renders legacy 'Low risk'/'Medium risk' rows, which both collapse to STANDARD in the row's rating.",
+            "enum" : [ "STANDARD", "PEND", "LOW", "MED", "HI" ],
+            "example" : "LOW"
+          },
+          "assessmentComment" : {
+            "type" : [ "string", "null" ],
+            "description" : "The assessment comment recorded in NOMIS"
+          },
+          "assessmentDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Date the assessment was recorded in NOMIS",
+            "example" : "2013-07-14"
+          },
+          "approvalStatus" : {
+            "type" : [ "string", "null" ],
+            "description" : "What became of the review at approval. Absent when it never went through approval, which is the common case.",
+            "enum" : [ "APPROVED", "NOT_APPROVED" ]
+          },
+          "approvalComment" : {
+            "type" : [ "string", "null" ],
+            "description" : "The approval comment recorded in NOMIS"
+          },
+          "approvalCommitteeComment" : {
+            "type" : [ "string", "null" ],
+            "description" : "The approval committee's comment recorded in NOMIS"
+          },
+          "approvalDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Date the review was evaluated or approved in NOMIS",
+            "example" : "2013-07-14"
+          }
+        },
+        "required" : [ "assessmentDate" ]
+      },
+      "CsraReviewHistory" : {
+        "type" : "object",
+        "description" : "A prisoner's CSRA history: whole-history summary counts plus a filtered, paginated list of reviews",
+        "properties" : {
+          "summary" : {
+            "$ref" : "#/components/schemas/CsraReviewHistorySummary",
+            "description" : "Summary counts over the prisoner's whole CSRA history (unaffected by list filters)"
+          },
+          "content" : {
+            "type" : "array",
+            "description" : "The page of CSRA reviews matching the requested filters",
+            "items" : {
+              "$ref" : "#/components/schemas/CsraReviewSummary"
+            }
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The zero-based page number returned",
+            "example" : 0
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The page size requested",
+            "example" : 20
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Total number of reviews matching the filters",
+            "example" : 13
+          },
+          "totalPages" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Total number of pages for the filtered result",
+            "example" : 2
+          }
+        },
+        "required" : [ "content", "page", "size", "summary", "totalElements", "totalPages" ]
+      },
+      "CsraReviewHistorySummary" : {
+        "type" : "object",
+        "description" : "Summary counts over a prisoner's whole CSRA history",
+        "properties" : {
+          "totalCsras" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Total number of recorded CSRAs",
+            "example" : 13
+          },
+          "highCount" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Number of CSRAs with a high-risk rating (legacy High, or new general/specific)",
+            "example" : 2
+          },
+          "standardCount" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Number of CSRAs with a standard rating",
+            "example" : 11
+          },
+          "firstAssessmentDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "The date of the earliest recorded CSRA",
+            "example" : "2011-06-01"
+          },
+          "lastAssessmentDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "The date of the most recent recorded CSRA",
+            "example" : "2025-10-11"
+          },
+          "lastHighDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "The date of the most recent high-risk CSRA",
+            "example" : "2013-07-14"
+          },
+          "establishments" : {
+            "type" : "array",
+            "description" : "The distinct establishments the prisoner has CSRAs at, for the establishment filter (name-sorted)",
+            "items" : {
+              "$ref" : "#/components/schemas/CsraEstablishment"
+            }
+          }
+        },
+        "required" : [ "establishments", "highCount", "standardCount", "totalCsras" ]
+      },
+      "CsraReviewSummary" : {
+        "type" : "object",
+        "description" : "A single CSRA review in a prisoner's history",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The unique id of the CSRA review",
+            "example" : "de91dfa7-821f-4552-a427-bf2f32eafeb0"
+          },
+          "type" : {
+            "type" : "string",
+            "description" : "The type of assessment",
+            "enum" : [ "FULL", "HEALTH", "LOCATE", "RATING", "RECEPTION", "REVIEW", "CSRA_INITIAL_REVIEW", "CSRA_REVIEW" ],
+            "example" : "REVIEW"
+          },
+          "rating" : {
+            "type" : "string",
+            "description" : "The recorded rating (final result if present, otherwise the interim result)",
+            "enum" : [ "HIGH", "HIGH_GENERAL", "HIGH_SPECIFIC", "STANDARD" ],
+            "example" : "STANDARD"
+          },
+          "reviewComment" : {
+            "type" : [ "string", "null" ],
+            "description" : "The review/assessment comment, if any. Where `legacy` is present, prefer its assessmentComment and approvalComment — NOMIS records the two separately and this field resolves them to one.",
+            "example" : "PNC checked. No issues found."
+          },
+          "prisonId" : {
+            "type" : [ "string", "null" ],
+            "description" : "The prison the CSRA was recorded at",
+            "example" : "LEI"
+          },
+          "prisonName" : {
+            "type" : [ "string", "null" ],
+            "description" : "The name of the prison the CSRA was recorded at, falling back to the id if it cannot be resolved",
+            "example" : "Leeds (HMP)"
+          },
+          "recordedDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The date the rating was recorded",
+            "example" : "2025-10-11"
+          },
+          "legacy" : {
+            "description" : "Legacy NOMIS detail. Present only on reviews migrated from NOMIS, so its presence identifies the row as legacy.",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CsraLegacyDetail"
+            }, {
+              "type" : "null"
+            } ]
+          }
+        },
+        "required" : [ "id", "rating", "recordedDate", "type" ]
+      },
+      "CsraReviewInProgressRow" : {
+        "type" : "object",
+        "description" : "A cell sharing risk review in progress",
+        "properties" : {
+          "reviewId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The CSRA review id (for continuing or cancelling the review)",
+            "example" : "de91dfa7-821f-4552-a427-bf2f32eafeb0"
+          },
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The prisoner number",
+            "example" : "A9354JF"
+          },
+          "firstName" : {
+            "type" : [ "string", "null" ],
+            "description" : "The prisoner's first name",
+            "example" : "Simon"
+          },
+          "lastName" : {
+            "type" : [ "string", "null" ],
+            "description" : "The prisoner's last name",
+            "example" : "Kettleby"
+          },
+          "startedOn" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The date the review was started",
+            "example" : "2026-07-03"
+          },
+          "startedBy" : {
+            "type" : "string",
+            "description" : "The username of who started the review",
+            "example" : "SCARTER"
+          }
+        },
+        "required" : [ "prisonerNumber", "reviewId", "startedBy", "startedOn" ]
+      },
+      "CsraReviewsInProgress" : {
+        "type" : "object",
+        "description" : "A prison's in-progress CSRA reviews",
+        "properties" : {
+          "content" : {
+            "type" : "array",
+            "description" : "The reviews currently in progress",
+            "items" : {
+              "$ref" : "#/components/schemas/CsraReviewInProgressRow"
+            }
+          },
+          "totalResults" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The number of reviews in progress",
+            "example" : 3
+          }
+        },
+        "required" : [ "content", "totalResults" ]
+      },
+      "CsraArrivalDay" : {
+        "type" : "object",
+        "description" : "One calendar day of the window, with the arrivals on that day",
+        "properties" : {
+          "date" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The day",
+            "example" : "2026-07-09"
+          },
+          "arrivals" : {
+            "type" : "array",
+            "description" : "The arrivals on this day matching the filter, latest first; empty when nobody arrived",
+            "items" : {
+              "$ref" : "#/components/schemas/CsraArrivalRow"
+            }
+          }
+        },
+        "required" : [ "arrivals", "date" ]
+      },
+      "CsraArrivalRow" : {
+        "type" : "object",
+        "description" : "A prisoner who arrived at the prison",
+        "properties" : {
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The prisoner number",
+            "example" : "A5197BD"
+          },
+          "firstName" : {
+            "type" : [ "string", "null" ],
+            "description" : "The prisoner's first name",
+            "example" : "Daniel"
+          },
+          "lastName" : {
+            "type" : [ "string", "null" ],
+            "description" : "The prisoner's last name",
+            "example" : "Havers"
+          },
+          "dateOfBirth" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "The prisoner's date of birth",
+            "example" : "1972-02-03"
+          },
+          "arrivalType" : {
+            "type" : "string",
+            "description" : "The type of arrival",
+            "enum" : [ "NEW_ADMISSION", "TRANSFER_IN", "COURT_RETURN", "TEMPORARY_ABSENCE_RETURN" ],
+            "example" : "NEW_ADMISSION"
+          },
+          "arrivedAt" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "When the prisoner arrived",
+            "example" : "2026-07-09T14:03:00"
+          },
+          "location" : {
+            "type" : [ "string", "null" ],
+            "description" : "Where the prisoner is now — a cell, or a location code such as RECP for reception. This is their current location, not where they were put on arrival",
+            "example" : "C-2-005"
+          }
+        },
+        "required" : [ "arrivalType", "arrivedAt", "prisonerNumber" ]
+      },
+      "CsraRecentArrivals" : {
+        "type" : "object",
+        "description" : "Prisoners who have arrived at a prison within the recent window and are still in the establishment",
+        "properties" : {
+          "days" : {
+            "type" : "array",
+            "description" : "One section per calendar day in the window, most recent day first. Every day is present even when nobody arrived on it, so the screen can show its per-day empty state",
+            "items" : {
+              "$ref" : "#/components/schemas/CsraArrivalDay"
+            }
+          },
+          "totalResults" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The number of arrivals matching the filter across the whole window. Zero means no arrivals matched, which is what drives the filtered empty state",
+            "example" : 10
+          },
+          "arrivalTypeCounts" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "integer",
+              "format" : "int32"
+            },
+            "description" : "Count of arrivals per type across the whole window (unaffected by the filter), for the filter checkbox counts; every type is always present (zero when none)"
+          },
+          "fromDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The first day of the window (inclusive)",
+            "example" : "2026-07-07"
+          },
+          "toDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The last day of the window (inclusive, today)",
+            "example" : "2026-07-09"
+          }
+        },
+        "required" : [ "arrivalTypeCounts", "days", "fromDate", "toDate", "totalResults" ]
+      },
+      "CsraPrisonRatingSummary" : {
+        "type" : "object",
+        "description" : "CSRA rating counts across a prison's current roll",
+        "properties" : {
+          "prisonId" : {
+            "type" : "string",
+            "description" : "The prison id",
+            "example" : "LEI"
+          },
+          "total" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The number of prisoners currently in the prison (the roll size)",
+            "example" : 1015
+          },
+          "noRating" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Prisoners with no current CSRA rating: no CSRA record, or a latest assessment/review with no rating saved yet",
+            "example" : 3
+          },
+          "highRisk" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Prisoners whose current rating is high risk (any of High, High – general, High – specific)",
+            "example" : 217
+          },
+          "standardRisk" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Prisoners whose current rating is standard risk",
+            "example" : 795
+          }
+        },
+        "required" : [ "highRisk", "noRating", "prisonId", "standardRisk", "total" ]
+      },
+      "CsraPrisonPrisoner" : {
+        "type" : "object",
+        "description" : "A prison's current prisoner with their current CSRA rating",
+        "properties" : {
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The prisoner number",
+            "example" : "A1234BC"
+          },
+          "firstName" : {
+            "type" : [ "string", "null" ],
+            "description" : "The prisoner's first name",
+            "example" : "Matthew"
+          },
+          "lastName" : {
+            "type" : [ "string", "null" ],
+            "description" : "The prisoner's last name",
+            "example" : "Doyle"
+          },
+          "rating" : {
+            "type" : [ "string", "null" ],
+            "description" : "The current rating (final if present, otherwise interim); null means no rating",
+            "enum" : [ "HIGH", "HIGH_GENERAL", "HIGH_SPECIFIC", "STANDARD" ],
+            "example" : "STANDARD"
+          },
+          "provisional" : {
+            "type" : "boolean",
+            "description" : "Whether the current rating is provisional (a Day 1 interim rating not yet finalised)",
+            "example" : false
+          },
+          "assessmentType" : {
+            "type" : [ "string", "null" ],
+            "description" : "The type of the assessment that produced the current rating; null when no rating",
+            "enum" : [ "ASSESSMENT", "REVIEW" ],
+            "example" : "ASSESSMENT"
+          },
+          "assessedOn" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "The date the current rating was recorded; null when no rating",
+            "example" : "2026-03-05"
+          }
+        },
+        "required" : [ "prisonerNumber", "provisional" ]
+      },
+      "CsraPrisonPrisonerList" : {
+        "type" : "object",
+        "description" : "A paged list of a prison's current prisoners with their CSRA rating",
+        "properties" : {
+          "content" : {
+            "type" : "array",
+            "description" : "The page of prisoners matching the requested filters and sort",
+            "items" : {
+              "$ref" : "#/components/schemas/CsraPrisonPrisoner"
+            }
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The zero-based page number returned",
+            "example" : 0
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The page size requested",
+            "example" : 25
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Total number of prisoners matching the filters",
+            "example" : 1015
+          },
+          "totalPages" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Total number of pages for the filtered result",
+            "example" : 41
+          }
+        },
+        "required" : [ "content", "page", "size", "totalElements", "totalPages" ]
+      },
+      "CsraHighRiskDueForReview" : {
+        "type" : "object",
+        "description" : "High risk prisoners in a prison who have a cell sharing risk review scheduled",
+        "properties" : {
+          "content" : {
+            "type" : "array",
+            "description" : "The prisoners due for review, filtered and sorted; not paginated",
+            "items" : {
+              "$ref" : "#/components/schemas/CsraHighRiskReviewRow"
+            }
+          },
+          "totalResults" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The number of prisoners in the (filtered) result",
+            "example" : 11
+          },
+          "availableRatingTypes" : {
+            "type" : "array",
+            "description" : "The distinct high-risk rating types present across the whole establishment's due list (unaffected by filters), for the dynamic rating-type filter checkboxes",
+            "items" : {
+              "type" : "string",
+              "description" : "A high-risk CSRA rating type for the due-for-review worklist and its filter",
+              "enum" : [ "HIGH", "HIGH_GENERAL", "HIGH_GENERAL_INTERIM", "HIGH_SPECIFIC" ]
+            }
+          }
+        },
+        "required" : [ "availableRatingTypes", "content", "totalResults" ]
+      },
+      "CsraHighRiskReviewRow" : {
+        "type" : "object",
+        "description" : "A high risk prisoner due for a cell sharing risk review",
+        "properties" : {
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The prisoner number",
+            "example" : "A1234BC"
+          },
+          "firstName" : {
+            "type" : [ "string", "null" ],
+            "description" : "The prisoner's first name",
+            "example" : "Callum"
+          },
+          "lastName" : {
+            "type" : [ "string", "null" ],
+            "description" : "The prisoner's last name",
+            "example" : "Reid"
+          },
+          "reviewDueBy" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The date the next cell sharing risk review is due",
+            "example" : "2026-06-29"
+          },
+          "ratingType" : {
+            "type" : "string",
+            "description" : "The current high-risk rating type",
+            "enum" : [ "HIGH", "HIGH_GENERAL", "HIGH_GENERAL_INTERIM", "HIGH_SPECIFIC" ],
+            "example" : "HIGH_GENERAL"
+          },
+          "rating" : {
+            "type" : "string",
+            "description" : "The current rating value",
+            "enum" : [ "HIGH", "HIGH_GENERAL", "HIGH_SPECIFIC", "STANDARD" ],
+            "example" : "HIGH_GENERAL"
+          },
+          "provisional" : {
+            "type" : "boolean",
+            "description" : "Whether the current rating is provisional (an interim Day 1 rating)",
+            "example" : false
+          },
+          "lastRatingSource" : {
+            "type" : "string",
+            "description" : "Whether the current rating was reached via an assessment or a review (drives 'Last assessed' vs 'Last reviewed')",
+            "enum" : [ "ASSESSMENT", "REVIEW" ],
+            "example" : "REVIEW"
+          },
+          "lastRatingDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The date the current rating was recorded (the 'Last assessed'/'Last reviewed' date)",
+            "example" : "2025-06-24"
+          }
+        },
+        "required" : [ "lastRatingDate", "lastRatingSource", "prisonerNumber", "provisional", "rating", "ratingType", "reviewDueBy" ]
+      },
+      "CsraAssessmentStartedRow" : {
+        "type" : "object",
+        "description" : "An in-progress assessment that has been started but has no rating entered",
+        "properties" : {
+          "reviewId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The CSRA review id (for continuing the assessment)",
+            "example" : "de91dfa7-821f-4552-a427-bf2f32eafeb0"
+          },
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The prisoner number",
+            "example" : "A9354JF"
+          },
+          "firstName" : {
+            "type" : [ "string", "null" ],
+            "description" : "The prisoner's first name",
+            "example" : "Simon"
+          },
+          "lastName" : {
+            "type" : [ "string", "null" ],
+            "description" : "The prisoner's last name",
+            "example" : "Kettleby"
+          },
+          "startedOn" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The date the assessment was started",
+            "example" : "2026-07-06"
+          },
+          "startedBy" : {
+            "type" : "string",
+            "description" : "The username of who started the assessment",
+            "example" : "JBLOGGS"
+          }
+        },
+        "required" : [ "prisonerNumber", "reviewId", "startedBy", "startedOn" ]
+      },
+      "CsraAssessmentsInProgress" : {
+        "type" : "object",
+        "description" : "A prison's in-progress CSRA initial assessments, split by whether a provisional rating has been entered",
+        "properties" : {
+          "assessmentStarted" : {
+            "type" : "array",
+            "description" : "Assessments started but with no rating entered yet",
+            "items" : {
+              "$ref" : "#/components/schemas/CsraAssessmentStartedRow"
+            }
+          },
+          "provisionalRatingEntered" : {
+            "type" : "array",
+            "description" : "Assessments with a provisional rating entered, awaiting a final rating",
+            "items" : {
+              "$ref" : "#/components/schemas/CsraProvisionalRatingRow"
+            }
+          }
+        },
+        "required" : [ "assessmentStarted", "provisionalRatingEntered" ]
+      },
+      "CsraProvisionalRatingRow" : {
+        "type" : "object",
+        "description" : "An in-progress assessment with a provisional rating entered",
+        "properties" : {
+          "reviewId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The CSRA review id (for continuing the assessment)",
+            "example" : "de91dfa7-821f-4552-a427-bf2f32eafeb0"
+          },
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The prisoner number",
+            "example" : "A5197BD"
+          },
+          "firstName" : {
+            "type" : [ "string", "null" ],
+            "description" : "The prisoner's first name",
+            "example" : "Daniel"
+          },
+          "lastName" : {
+            "type" : [ "string", "null" ],
+            "description" : "The prisoner's last name",
+            "example" : "Havers"
+          },
+          "assessedOn" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The date the provisional rating was given",
+            "example" : "2026-07-06"
+          },
+          "assessedBy" : {
+            "type" : "string",
+            "description" : "The username of who gave the provisional rating",
+            "example" : "MSTANLEY"
+          },
+          "rating" : {
+            "type" : "string",
+            "description" : "The provisional rating",
+            "enum" : [ "HIGH", "HIGH_GENERAL", "HIGH_SPECIFIC", "STANDARD" ],
+            "example" : "HIGH_SPECIFIC"
+          }
+        },
+        "required" : [ "assessedBy", "assessedOn", "prisonerNumber", "rating", "reviewId" ]
+      }
+    },
+    "securitySchemes" : {
+      "bearer-jwt" : {
+        "type" : "http",
+        "description" : "An HMPPS Auth access token.",
+        "name" : "Authorization",
+        "in" : "header",
+        "scheme" : "bearer",
+        "bearerFormat" : "JWT"
+      }
+    }
+  }
+}

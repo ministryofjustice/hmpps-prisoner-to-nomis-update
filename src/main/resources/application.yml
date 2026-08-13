@@ -67,6 +67,11 @@ spring:
             client-id: ${csip.client.id}
             client-secret: ${csip.client.secret}
             authorization-grant-type: client_credentials
+          csra-api:
+            provider: hmpps-auth
+            client-id: ${csra.client.id}
+            client-secret: ${csra.client.secret}
+            authorization-grant-type: client_credentials
           finance-api:
             provider: hmpps-auth
             client-id: ${finance.client.id}

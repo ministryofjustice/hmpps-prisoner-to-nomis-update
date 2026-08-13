@@ -186,6 +186,15 @@ hmpps.sqs:
           "prison-property.container.created",
           "prison-property.container.updated"
         ]}
+    csra:
+      queueName: hmpps_prisoner_to_nomis_csra_queue
+      dlqName: hmpps_prisoner_to_nomis_csra_dlq
+      subscribeTopicId: domainevents
+      subscribeFilter: >-
+        { "eventType":[
+          "cell.sharing.risk.assessment.created",
+          "cell.sharing.risk.assessment.amended"
+        ]}
     organisations:
       queueName: hmpps_prisoner_to_nomis_organisations_queue
       dlqName: hmpps_prisoner_to_nomis_organisations_dlq
