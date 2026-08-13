@@ -24,7 +24,7 @@ class AgencyRegistersDpsApiServiceTest {
   @Nested
   inner class GetCourt {
     @Test
-    internal fun `will pass oath2 token to endpoint`() = runTest {
+    internal fun `will pass oauth2 token to endpoint`() = runTest {
       agencyRegistersApi.stubGetCourt("SHEFCC")
 
       apiService.getCourt("SHEFCC")
