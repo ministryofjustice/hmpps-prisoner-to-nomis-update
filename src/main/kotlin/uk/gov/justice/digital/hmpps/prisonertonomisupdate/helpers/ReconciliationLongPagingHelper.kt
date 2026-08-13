@@ -7,6 +7,7 @@ import kotlinx.coroutines.channels.Channel.Factory.UNLIMITED
 import kotlinx.coroutines.channels.produce
 import kotlinx.coroutines.channels.toList
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -64,7 +65,7 @@ suspend fun <T, M> generateReconciliationReport(
   }
   launch {
     // when all jobs finished (there are no more items to process), we can shut down the mismatch channel and return the results
-    jobs.forEach { it.join() }
+    jobs.joinAll()
     mismatchesChannel.close()
   }
 

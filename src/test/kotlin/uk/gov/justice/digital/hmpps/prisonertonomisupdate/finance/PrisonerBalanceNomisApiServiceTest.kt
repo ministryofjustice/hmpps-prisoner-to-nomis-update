@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Pr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerAggregatedAccountsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerBalanceDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerBalanceSummaryDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RootOffenderIdRange
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RootOffenderIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import java.math.BigDecimal
@@ -82,6 +83,106 @@ class PrisonerBalanceNomisApiServiceTest {
 
         assertThat(apiService.getPrisonerBalanceIdentifiersFromId(12345678L, null)).isEqualTo(rootOffenderIdsWithLast)
       }
+    }
+  }
+
+  @Nested
+  @DisplayName("GET /finance/prisoners/ids-in-range")
+  inner class GetPrisonerBalanceIdentifiersInRange {
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubGetPrisonerBalanceIdentifiersInRange()
+
+      apiService.getPrisonerBalanceIdentifiersInRange(
+        fromRootOffenderId = 0,
+        toRootOffenderId = 20,
+      )
+
+      mockServer.verify(
+        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the get endpoint`() = runTest {
+      mockServer.stubGetPrisonerBalanceIdentifiersInRange()
+
+      apiService.getPrisonerBalanceIdentifiersInRange(
+        fromRootOffenderId = 5,
+        toRootOffenderId = 100,
+      )
+
+      mockServer.verify(
+        getRequestedFor(urlPathEqualTo("/finance/prisoners/ids-in-range"))
+          .withQueryParam("fromRootOffenderId", equalTo("5"))
+          .withQueryParam("toRootOffenderId", equalTo("100")),
+      )
+    }
+
+    @Test
+    fun `can pass prisonIds to filter by`() = runTest {
+      mockServer.stubGetPrisonerBalanceIdentifiersInRange()
+
+      apiService.getPrisonerBalanceIdentifiersInRange(
+        fromRootOffenderId = 0,
+        toRootOffenderId = 20,
+        prisonIds = listOf("MDI", "LEI"),
+      )
+
+      mockServer.verify(
+        getRequestedFor(urlPathEqualTo("/finance/prisoners/ids-in-range"))
+          .withQueryParam("fromRootOffenderId", equalTo("0"))
+          .withQueryParam("toRootOffenderId", equalTo("20"))
+          .withQueryParam("prisonId", havingExactly("LEI", "MDI")),
+      )
+    }
+
+    @Test
+    fun `will return ids`() = runTest {
+      mockServer.stubGetPrisonerBalanceIdentifiersInRange()
+
+      val ranges = apiService.getPrisonerBalanceIdentifiersInRange(0L, 20L)
+      assertThat(ranges).hasSize(20)
+      assertThat(ranges[0]).isEqualTo(1)
+      assertThat(ranges[19]).isEqualTo(20)
+    }
+  }
+
+  @Nested
+  @DisplayName("GET /finance/prisoners/id-ranges")
+  inner class GetPrisonerBalanceIdentifierRanges {
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubGetPrisonerBalanceIdentifierRanges(pageSize = 10)
+
+      apiService.getPrisonerBalanceIdentifierRanges(pageSize = 10)
+
+      mockServer.verify(
+        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the get endpoint with page size and prison ids`() = runTest {
+      mockServer.stubGetPrisonerBalanceIdentifierRanges(pageSize = 5)
+
+      apiService.getPrisonerBalanceIdentifierRanges(pageSize = 5, prisonIds = listOf("MDI", "LEI"))
+
+      mockServer.verify(
+        getRequestedFor(urlPathEqualTo("/finance/prisoners/id-ranges"))
+          .withQueryParam("pageSize", equalTo("5"))
+          .withQueryParam("prisonId", havingExactly("LEI", "MDI")),
+      )
+    }
+
+    @Test
+    fun `will return ranges`() = runTest {
+      mockServer.stubGetPrisonerBalanceIdentifierRanges(pageSize = 10, totalElements = 20)
+
+      val ranges = apiService.getPrisonerBalanceIdentifierRanges(pageSize = 10)
+      assertThat(ranges).hasSize(2)
+      assertThat(ranges[0]).isEqualTo(RootOffenderIdRange(0, 10))
+      assertThat(ranges[1]).isEqualTo(RootOffenderIdRange(10, 20))
     }
   }
 

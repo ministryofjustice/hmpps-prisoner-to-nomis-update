@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Pr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerAggregatedAccountsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerBalanceDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerBalanceSummaryDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RootOffenderIdRange
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RootOffenderIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 
@@ -59,6 +60,23 @@ class FinanceNomisApiService(
   // Not currently used - TODO check and remove if not required
   suspend fun getPrisonerAccountSummary(rootOffenderId: Long): PrisonerBalanceSummaryDto = prisonerBalanceApi
     .getPrisonerAccountSummary(rootOffenderId)
+    .retryWhen(backoffSpec)
+    .awaitSingle()
+
+  suspend fun getPrisonerBalanceIdentifiersInRange(
+    fromRootOffenderId: Long,
+    toRootOffenderId: Long,
+    prisonIds: List<String>? = null,
+  ): List<Long> = prisonerBalanceApi
+    .getPrisonerBalanceIdentifiersInRange(fromRootOffenderId, toRootOffenderId, prisonIds)
+    .retryWhen(backoffSpec)
+    .awaitSingle()
+
+  suspend fun getPrisonerBalanceIdentifierRanges(
+    pageSize: Int? = 2000,
+    prisonIds: List<String>? = null,
+  ): List<RootOffenderIdRange> = prisonerBalanceApi
+    .getPrisonerBalanceIdentifierRanges(pageSize, prisonIds)
     .retryWhen(backoffSpec)
     .awaitSingle()
 }
