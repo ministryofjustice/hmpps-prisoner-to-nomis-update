@@ -150,13 +150,11 @@ private fun PropertyContainerDto.toNomisContainerCode(): PropertyContainerCode =
   this.currentLocationType
 ) {
   PropertyContainerDto.CurrentLocationType.BRANSTON -> PropertyContainerCode.BRA
-  PropertyContainerDto.CurrentLocationType.INTERNAL ->
+  PropertyContainerDto.CurrentLocationType.INTERNAL, null ->
     when (this.containerType) {
       PropertyContainerDto.ContainerType.STANDARD -> PropertyContainerCode.BULK
       PropertyContainerDto.ContainerType.EXCESS -> PropertyContainerCode.BRA
       PropertyContainerDto.ContainerType.VALUABLES -> PropertyContainerCode.VALU
       PropertyContainerDto.ContainerType.CONFISCATED -> PropertyContainerCode.CO
     }
-
-  null -> PropertyContainerCode.BULK
 }
