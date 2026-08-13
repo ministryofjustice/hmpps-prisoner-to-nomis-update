@@ -5,11 +5,13 @@ import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import kotlinx.coroutines.test.runTest
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
+import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension.Companion.agencyRegistersApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
@@ -44,6 +46,20 @@ class AgencyRegistersDpsApiServiceTest {
       agencyRegistersApi.verify(
         getRequestedFor(urlPathEqualTo("/courts/id/SHEFCC")),
       )
+    }
+
+    @Test
+    fun `will return agency from the endpoint`() = runTest {
+      agencyRegistersApi.stubGetCourt("SHEFCC")
+
+      assertThat(apiService.getCourt("SHEFCC")).isNotNull
+    }
+
+    @Test
+    fun `will return null from the endpoint when not found`() = runTest {
+      agencyRegistersApi.stubGetCourt("SHEFCC", errorHttpStatus = HttpStatus.NOT_FOUND)
+
+      assertThat(apiService.getCourt("SHEFCC")).isNull()
     }
   }
 }

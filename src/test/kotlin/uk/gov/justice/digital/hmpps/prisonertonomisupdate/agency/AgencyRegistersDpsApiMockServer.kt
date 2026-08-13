@@ -3,12 +3,12 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
-import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
+import org.springframework.http.HttpStatus
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension.Companion.courtDto
@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agencyregisters.model.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agencyregisters.model.AgencyPhoneDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agencyregisters.model.CodeDescription
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agencyregisters.model.CourtDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agencyregisters.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.getRequestBody
 
 class AgencyRegistersDpsApiExtension :
@@ -100,11 +101,21 @@ class AgencyRegistersDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubGetCourt(agencyId: String, response: CourtDto = courtDto()) {
     stubFor(
-      post("/courts/id/$agencyId").willReturn(
+      get("/courts/id/$agencyId").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(jsonMapper.writeValueAsString(response))
           .withStatus(200),
+      ),
+    )
+  }
+  fun stubGetCourt(agencyId: String, errorHttpStatus: HttpStatus) {
+    stubFor(
+      get("/courts/id/$agencyId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(jsonMapper.writeValueAsString(ErrorResponse(status = errorHttpStatus.value())))
+          .withStatus(errorHttpStatus.value()),
       ),
     )
   }
