@@ -37,6 +37,7 @@ generic-service:
     API_BASE_URL_STAFF: https://prison-users-api-dev.prison.service.justice.gov.uk
     API_BASE_URL_VISITS: https://visit-scheduler-dev.prison.service.justice.gov.uk
     API_BASE_URL_VISIT_BALANCE: https://hmpps-visit-allocation-api-dev.prison.service.justice.gov.uk
+    API_BASE_URL_AGENCYREGISTERS: https://prison-register-dev.hmpps.service.justice.gov.uk
     FEATURE_EVENT_PRISON-PROPERTY_CONTAINER_CREATED: true
     FEATURE_EVENT_PRISON-PROPERTY_CONTAINER_UPDATED: true
     FEATURE_EVENT_CELL_SHARING_RISK_ASSESSMENT_CREATED: true

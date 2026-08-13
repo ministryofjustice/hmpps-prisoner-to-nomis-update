@@ -1,0 +1,2683 @@
+{
+  "openapi" : "3.1.0",
+  "info" : {
+    "title" : "Prison Register service",
+    "description" : "A service that provides HMPPS Prison Information",
+    "contact" : {
+      "name" : "HMPPS Digital Studio",
+      "email" : "feedback@digital.justice.gov.uk"
+    },
+    "version" : "2026-08-13.389.e8620f6"
+  },
+  "servers" : [ {
+    "url" : "https://prison-register-dev.hmpps.service.justice.gov.uk",
+    "description" : "Generated server url"
+  } ],
+  "paths" : {
+    "/secure/prisons/id/{prisonId}/department/contact-details" : {
+      "get" : {
+        "tags" : [ "prison-contact-details-resource" ],
+        "summary" : "Get a prison department's contact details",
+        "operationId" : "getContactDetails",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "description" : "Prison ID",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prison ID",
+            "example" : "MDI",
+            "maxLength" : 12,
+            "minLength" : 2
+          },
+          "example" : "MDI"
+        }, {
+          "name" : "departmentType",
+          "in" : "query",
+          "description" : "Department type",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Department type",
+            "enum" : [ "PRISON", "SOCIAL_VISIT", "VIDEOLINK_CONFERENCING_CENTRE", "OFFENDER_MANAGEMENT_UNIT" ],
+            "example" : "SOCIAL_VISIT"
+          },
+          "example" : "SOCIAL_VISIT"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns the departments contact details",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ContactDetailsDto"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Client error - invalid prisonId or similar",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "The prison does not have contact details for this department",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put" : {
+        "tags" : [ "prison-contact-details-resource" ],
+        "summary" : "Change a prison department's contact details",
+        "operationId" : "updateContactDetails",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "description" : "Prison ID",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prison ID",
+            "example" : "MDI",
+            "maxLength" : 12,
+            "minLength" : 2
+          },
+          "example" : "MDI"
+        }, {
+          "name" : "removeIfNull",
+          "in" : "query",
+          "description" : "if true individual contact details are removed if null",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : true,
+            "description" : "if true individual contact details are removed if null",
+            "example" : true
+          },
+          "example" : true
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ContactDetailsDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "The Contact details have been updated",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ContactDetailsDto"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Client error - invalid prisonId, contact details, media type or similar",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "The given prison or contact details for this prison cannot be found.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "MAINTAIN_REF_DATA" : [ "write" ]
+        }, {
+          "MAINTAIN_PRISON_DATA" : [ "write" ]
+        } ]
+      },
+      "post" : {
+        "tags" : [ "prison-contact-details-resource" ],
+        "summary" : "Create a prison department's contact details",
+        "operationId" : "createContactDetails",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "description" : "Prison ID",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prison ID",
+            "example" : "MDI",
+            "maxLength" : 12,
+            "minLength" : 2
+          },
+          "example" : "MDI"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ContactDetailsDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Contact details have been created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ContactDetailsDto"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Client error - invalid prisonId, contact details, media type or similar",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "The prison does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "MAINTAIN_REF_DATA" : [ "write" ]
+        }, {
+          "MAINTAIN_PRISON_DATA" : [ "write" ]
+        } ]
+      },
+      "delete" : {
+        "tags" : [ "prison-contact-details-resource" ],
+        "summary" : "Remove a prison department's contact details",
+        "operationId" : "deletePhoneNumber",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "description" : "Prison ID",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prison ID",
+            "example" : "MDI",
+            "maxLength" : 12,
+            "minLength" : 2
+          },
+          "example" : "MDI"
+        }, {
+          "name" : "departmentType",
+          "in" : "query",
+          "description" : "Department type",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "default" : true,
+            "description" : "Department type",
+            "enum" : [ "PRISON", "SOCIAL_VISIT", "VIDEOLINK_CONFERENCING_CENTRE", "OFFENDER_MANAGEMENT_UNIT" ],
+            "example" : "SOCIAL_VISIT"
+          },
+          "example" : "SOCIAL_VISIT"
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "The contact details were removed",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "string",
+                  "enum" : [ "100 CONTINUE", "101 SWITCHING_PROTOCOLS", "102 PROCESSING", "103 EARLY_HINTS", "200 OK", "201 CREATED", "202 ACCEPTED", "203 NON_AUTHORITATIVE_INFORMATION", "204 NO_CONTENT", "205 RESET_CONTENT", "206 PARTIAL_CONTENT", "207 MULTI_STATUS", "208 ALREADY_REPORTED", "226 IM_USED", "300 MULTIPLE_CHOICES", "301 MOVED_PERMANENTLY", "302 FOUND", "303 SEE_OTHER", "304 NOT_MODIFIED", "307 TEMPORARY_REDIRECT", "308 PERMANENT_REDIRECT", "400 BAD_REQUEST", "401 UNAUTHORIZED", "402 PAYMENT_REQUIRED", "403 FORBIDDEN", "404 NOT_FOUND", "405 METHOD_NOT_ALLOWED", "406 NOT_ACCEPTABLE", "407 PROXY_AUTHENTICATION_REQUIRED", "408 REQUEST_TIMEOUT", "409 CONFLICT", "410 GONE", "411 LENGTH_REQUIRED", "412 PRECONDITION_FAILED", "413 CONTENT_TOO_LARGE", "413 PAYLOAD_TOO_LARGE", "414 URI_TOO_LONG", "415 UNSUPPORTED_MEDIA_TYPE", "416 REQUESTED_RANGE_NOT_SATISFIABLE", "417 EXPECTATION_FAILED", "418 I_AM_A_TEAPOT", "421 MISDIRECTED_REQUEST", "422 UNPROCESSABLE_CONTENT", "422 UNPROCESSABLE_ENTITY", "423 LOCKED", "424 FAILED_DEPENDENCY", "425 TOO_EARLY", "426 UPGRADE_REQUIRED", "428 PRECONDITION_REQUIRED", "429 TOO_MANY_REQUESTS", "431 REQUEST_HEADER_FIELDS_TOO_LARGE", "451 UNAVAILABLE_FOR_LEGAL_REASONS", "500 INTERNAL_SERVER_ERROR", "501 NOT_IMPLEMENTED", "502 BAD_GATEWAY", "503 SERVICE_UNAVAILABLE", "504 GATEWAY_TIMEOUT", "505 HTTP_VERSION_NOT_SUPPORTED", "506 VARIANT_ALSO_NEGOTIATES", "507 INSUFFICIENT_STORAGE", "508 LOOP_DETECTED", "509 BANDWIDTH_LIMIT_EXCEEDED", "510 NOT_EXTENDED", "511 NETWORK_AUTHENTICATION_REQUIRED" ]
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Client error - invalid prisonId or similar",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "The contact details for this prison cannot be found.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "MAINTAIN_REF_DATA" : [ "write" ]
+        }, {
+          "MAINTAIN_PRISON_DATA" : [ "write" ]
+        } ]
+      }
+    },
+    "/prison-maintenance/id/{prisonId}" : {
+      "put" : {
+        "tags" : [ "prison-maintenance-resource" ],
+        "summary" : "Update specified prison details",
+        "description" : "Updates prison information, role required is MAINTAIN_REF_DATA or MAINTAIN_PRISON_DATA",
+        "operationId" : "updatePrison",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "description" : "Prison Id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prison Id",
+            "example" : "MDI",
+            "maxLength" : 6,
+            "minLength" : 3
+          },
+          "example" : "MDI"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdatePrisonDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Prison Information Updated",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonDto"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Information request to update prison",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Incorrect permissions to make prison update",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Prison ID not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "MAINTAIN_REF_DATA" : [ "write" ]
+        }, {
+          "MAINTAIN_PRISON_DATA" : [ "write" ]
+        } ]
+      }
+    },
+    "/prison-maintenance/id/{prisonId}/welsh-address/{addressId}" : {
+      "put" : {
+        "tags" : [ "prison-address-maintenance-resource" ],
+        "operationId" : "updateWelshAddress",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "description" : "Prison Id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prison Id",
+            "example" : "MDI",
+            "maxLength" : 6,
+            "minLength" : 3
+          },
+          "example" : "MDI"
+        }, {
+          "name" : "addressId",
+          "in" : "path",
+          "description" : "Address Id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Address Id",
+            "example" : 234231
+          },
+          "example" : 234231
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateWelshAddressDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AddressDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prison-maintenance/id/{prisonId}/address/{addressId}" : {
+      "put" : {
+        "tags" : [ "prison-address-maintenance-resource" ],
+        "summary" : "Update specified address details",
+        "description" : "Updates address information, role required is MAINTAIN_REF_DATA or MAINTAIN_PRISON_DATA",
+        "operationId" : "updateAddress",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "description" : "Prison Id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prison Id",
+            "example" : "MDI",
+            "maxLength" : 6,
+            "minLength" : 3
+          },
+          "example" : "MDI"
+        }, {
+          "name" : "addressId",
+          "in" : "path",
+          "description" : "Address Id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Address Id",
+            "example" : 234231
+          },
+          "example" : 234231
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateAddressDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Address Information Updated",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AddressDto"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Information request to update address",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Incorrect permissions to make address update",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Address Id not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "MAINTAIN_REF_DATA" : [ "write" ]
+        }, {
+          "MAINTAIN_PRISON_DATA" : [ "write" ]
+        } ]
+      },
+      "delete" : {
+        "tags" : [ "prison-address-maintenance-resource" ],
+        "summary" : "Delete specified address for specified Prison",
+        "description" : "Deletes address information for a Prison, role required is MAINTAIN_REF_DATA or MAINTAIN_PRISON_DATA",
+        "operationId" : "deleteAddress",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "description" : "Prison Id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prison Id",
+            "example" : "MDI",
+            "maxLength" : 6,
+            "minLength" : 3
+          },
+          "example" : "MDI"
+        }, {
+          "name" : "addressId",
+          "in" : "path",
+          "description" : "Address Id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Address Id",
+            "example" : 234231
+          },
+          "example" : 234231
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Address Information Deleted"
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Incorrect permissions to make address update",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Address Id not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "MAINTAIN_REF_DATA" : [ "write" ]
+        }, {
+          "MAINTAIN_PRISON_DATA" : [ "write" ]
+        } ]
+      }
+    },
+    "/prisons/prisonsByIds" : {
+      "post" : {
+        "tags" : [ "prison-resource" ],
+        "summary" : "Get prisons by IDs",
+        "description" : "Get prisons based on their IDs",
+        "operationId" : "getPrisonsByIds",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PrisonRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Successful operation",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/PrisonDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prison-maintenance" : {
+      "post" : {
+        "tags" : [ "prison-maintenance-resource" ],
+        "summary" : "Adds a new prison",
+        "description" : "Adds new prison information, role required is MAINTAIN_REF_DATA or MAINTAIN_PRISON_DATA",
+        "operationId" : "insertPrison",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/InsertPrisonDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Prison Information Inserted",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonDto"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Information request to add prison",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Incorrect permissions to make prison insert",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "MAINTAIN_REF_DATA" : [ "write" ]
+        }, {
+          "MAINTAIN_PRISON_DATA" : [ "write" ]
+        } ]
+      }
+    },
+    "/prison-maintenance/id/{prisonId}/address" : {
+      "post" : {
+        "tags" : [ "prison-address-maintenance-resource" ],
+        "summary" : "Add Address to existing Prison",
+        "description" : "Adds an additional Address to an existing Prison, role required is MAINTAIN_REF_DATA or MAINTAIN_PRISON_DATA",
+        "operationId" : "addAddress",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "description" : "Prison Id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prison Id",
+            "example" : "MDI",
+            "maxLength" : 6,
+            "minLength" : 3
+          },
+          "example" : "MDI"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateAddressDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "New Address added to Prison",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AddressDto"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Information request to update address",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Incorrect permissions to add Prison address",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Prison Id not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "MAINTAIN_REF_DATA" : [ "write" ]
+        }, {
+          "MAINTAIN_PRISON_DATA" : [ "write" ]
+        } ]
+      }
+    },
+    "/legacy/sync/agency/id/{agencyId}" : {
+      "post" : {
+        "tags" : [ "legacy-sync-resource" ],
+        "summary" : "Creates or updates an agency of any type",
+        "description" : "Used for synchronising data from NOMIS. This creates an agency, or updates it if it already exists. Role required is ROLE_HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
+        "operationId" : "createOrUpdateAgency",
+        "parameters" : [ {
+          "name" : "agencyId",
+          "in" : "path",
+          "description" : "NOMIS Agency Id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "NOMIS Agency Id",
+            "example" : "SHEFCC",
+            "maxLength" : 6,
+            "minLength" : 3
+          },
+          "example" : "SHEFCC"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/LegacyAgencyDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Agency created or updated",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LegacyAgencyResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Information request to create or update agency",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LegacyAgencyResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Incorrect permissions to add or update agency",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/legacy/migrate/agency/id/{agencyId}" : {
+      "post" : {
+        "tags" : [ "legacy-sync-resource" ],
+        "summary" : "Migrates an agency of any type",
+        "description" : "Used for migrating data from NOMIS. This creates an agency, or updates it if it already exists. Role required is ROLE_HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
+        "operationId" : "migrateAgency",
+        "parameters" : [ {
+          "name" : "agencyId",
+          "in" : "path",
+          "description" : "NOMIS Agency Id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "NOMIS Agency Id",
+            "example" : "SHEFCC",
+            "maxLength" : 6,
+            "minLength" : 3
+          },
+          "example" : "SHEFCC"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/LegacyAgencyDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Agency created or updated",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LegacyAgencyResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Information request to create or update agency",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LegacyAgencyResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Incorrect permissions to add or update agency",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/probation-offices/id/{probationOfficeId}" : {
+      "get" : {
+        "tags" : [ "probation-office-resource" ],
+        "summary" : "Get specified probation office",
+        "description" : "Information on a specific probation office",
+        "operationId" : "getProbationOfficeFromId",
+        "parameters" : [ {
+          "name" : "probationOfficeId",
+          "in" : "path",
+          "description" : "Probation Office ID",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Probation Office ID",
+            "example" : "SHEFPB",
+            "maxLength" : 6,
+            "minLength" : 3
+          },
+          "example" : "SHEFPB"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Successful Operation",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProbationOfficeDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prisons" : {
+      "get" : {
+        "tags" : [ "prison-resource" ],
+        "summary" : "Get all prisons",
+        "description" : "All prisons",
+        "operationId" : "getPrisons",
+        "responses" : {
+          "200" : {
+            "description" : "Successful Operation",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/PrisonDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prisons/search" : {
+      "get" : {
+        "tags" : [ "prison-resource" ],
+        "summary" : "Get prisons from active and text search",
+        "description" : "All prisons",
+        "operationId" : "getPrisonsBySearchFilter",
+        "parameters" : [ {
+          "name" : "active",
+          "in" : "query",
+          "description" : "Active",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          },
+          "example" : true
+        }, {
+          "name" : "lthse",
+          "in" : "query",
+          "description" : "Long Term High Security Estate",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          },
+          "example" : true
+        }, {
+          "name" : "textSearch",
+          "in" : "query",
+          "description" : "Text search",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "Sheffield"
+        }, {
+          "name" : "genders",
+          "in" : "query",
+          "description" : "Genders to filter by",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "MALE", "FEMALE" ]
+            }
+          },
+          "example" : "MALE, FEMALE"
+        }, {
+          "name" : "prisonTypeCodes",
+          "in" : "query",
+          "description" : "Prison type codes to filter by",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "HMP", "YOI", "IRC", "STC", "YCS" ]
+            }
+          },
+          "example" : "HMP, YOI"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Successful Operation",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/PrisonDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prisons/names" : {
+      "get" : {
+        "tags" : [ "prison-resource" ],
+        "summary" : "Get prison name(s)",
+        "description" : "prison id and full name",
+        "operationId" : "getPrisonNames",
+        "parameters" : [ {
+          "name" : "active",
+          "in" : "query",
+          "description" : "If active is not set, return all prisons, otherwise return only the active or inactive ones based on the value",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          },
+          "example" : true
+        }, {
+          "name" : "prison_id",
+          "in" : "query",
+          "description" : "If parameter prisonId is not set, return the names of all prisons, otherwise return only the one corresponding to the prisonId code.  Filtering on active still applies",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "WDI"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Successful Operation",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/PrisonNameDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prisons/id/{prisonId}" : {
+      "get" : {
+        "tags" : [ "prison-resource" ],
+        "summary" : "Get specified prison",
+        "description" : "Information on a specific prison",
+        "operationId" : "getPrisonFromId",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "description" : "Prison ID",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prison ID",
+            "example" : "MDI",
+            "maxLength" : 6,
+            "minLength" : 3
+          },
+          "example" : "MDI"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Successful Operation",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prisons/id/{prisonId}/address/{addressId}" : {
+      "get" : {
+        "tags" : [ "prison-resource" ],
+        "summary" : "Get specified prison",
+        "description" : "Information on a specific prison address",
+        "operationId" : "getAddressFromId",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "description" : "Prison ID",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prison ID",
+            "example" : "MDI",
+            "maxLength" : 6,
+            "minLength" : 3
+          },
+          "example" : "MDI"
+        }, {
+          "name" : "addressId",
+          "in" : "path",
+          "description" : "Address Id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Address Id",
+            "example" : 234231
+          },
+          "example" : 234231
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Successful Operation",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AddressDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/police-custody-suites/id/{policeCustodySuiteId}" : {
+      "get" : {
+        "tags" : [ "police-custody-suite-resource" ],
+        "summary" : "Get specified police custody suite",
+        "description" : "Information on a specific police custody suite",
+        "operationId" : "getPoliceCustodySuiteFromId",
+        "parameters" : [ {
+          "name" : "policeCustodySuiteId",
+          "in" : "path",
+          "description" : "Police Custody Suite ID",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Police Custody Suite ID",
+            "example" : "SHFPCS",
+            "maxLength" : 6,
+            "minLength" : 3
+          },
+          "example" : "SHFPCS"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Successful Operation",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PoliceCustodySuiteDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/hospitals/id/{hospitalId}" : {
+      "get" : {
+        "tags" : [ "hospital-resource" ],
+        "summary" : "Get specified hospital",
+        "description" : "Information on a specific hospital",
+        "operationId" : "getHospitalFromId",
+        "parameters" : [ {
+          "name" : "hospitalId",
+          "in" : "path",
+          "description" : "Hospital ID",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Hospital ID",
+            "example" : "SHEFCC",
+            "maxLength" : 6,
+            "minLength" : 3
+          },
+          "example" : "SHEFCC"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Successful Operation",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/HospitalDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/courts/id/{courtId}" : {
+      "get" : {
+        "tags" : [ "court-resource" ],
+        "summary" : "Get specified court",
+        "description" : "Information on a specific court",
+        "operationId" : "getCourtFromId",
+        "parameters" : [ {
+          "name" : "courtId",
+          "in" : "path",
+          "description" : "Court ID",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Court ID",
+            "example" : "SHEFCC",
+            "maxLength" : 6,
+            "minLength" : 3
+          },
+          "example" : "SHEFCC"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Successful Operation",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CourtDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/approved-premises/id/{approvedPremiseId}" : {
+      "get" : {
+        "tags" : [ "approved-premise-resource" ],
+        "summary" : "Get specified approved premise",
+        "description" : "Information on a specific approved premise",
+        "operationId" : "getApprovedPremiseFromId",
+        "parameters" : [ {
+          "name" : "approvedPremiseId",
+          "in" : "path",
+          "description" : "Approved Premise ID",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Approved Premise ID",
+            "example" : "SHEFAP",
+            "maxLength" : 6,
+            "minLength" : 3
+          },
+          "example" : "SHEFAP"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Successful Operation",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApprovedPremiseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agencies/id/{agencyId}" : {
+      "get" : {
+        "tags" : [ "agency-resource" ],
+        "summary" : "Get specified agency",
+        "description" : "Information on a specific agency",
+        "operationId" : "getAgencyFromId",
+        "parameters" : [ {
+          "name" : "agencyId",
+          "in" : "path",
+          "description" : "Agency ID",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Agency ID",
+            "example" : "SHEFCC",
+            "maxLength" : 6,
+            "minLength" : 3
+          },
+          "example" : "SHEFCC"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Successful Operation",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AgencyDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "ContactDetailsDto" : {
+        "type" : "object",
+        "description" : "Contact information for a prison department",
+        "properties" : {
+          "type" : {
+            "type" : "string",
+            "description" : "Department Type",
+            "enum" : [ "PRISON", "SOCIAL_VISIT", "VIDEOLINK_CONFERENCING_CENTRE", "OFFENDER_MANAGEMENT_UNIT" ],
+            "example" : "SOCIAL_VISIT or PRISON"
+          },
+          "emailAddress" : {
+            "type" : [ "string", "null" ],
+            "format" : "email",
+            "description" : "email address",
+            "example" : "example@example.com"
+          },
+          "phoneNumber" : {
+            "type" : [ "string", "null" ],
+            "description" : "Phone Number",
+            "example" : "01234567890"
+          },
+          "webAddress" : {
+            "type" : [ "string", "null" ],
+            "description" : "Web address",
+            "example" : "https://www.example.co.uk"
+          }
+        },
+        "required" : [ "type" ]
+      },
+      "ErrorResponse" : {
+        "type" : "object",
+        "properties" : {
+          "status" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "errorCode" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int32"
+          },
+          "userMessage" : {
+            "type" : [ "string", "null" ]
+          },
+          "developerMessage" : {
+            "type" : [ "string", "null" ]
+          },
+          "moreInfo" : {
+            "type" : [ "string", "null" ]
+          }
+        },
+        "required" : [ "status" ]
+      },
+      "UpdatePrisonDto" : {
+        "type" : "object",
+        "description" : "Prison Update Record",
+        "properties" : {
+          "prisonName" : {
+            "type" : "string",
+            "description" : "Name of the prison",
+            "example" : "HMP Moorland",
+            "maxLength" : 40,
+            "minLength" : 3
+          },
+          "prisonNameInWelsh" : {
+            "type" : [ "string", "null" ],
+            "description" : "Welsh name of the prison",
+            "example" : "Carchar Brynbuga",
+            "maxLength" : 80,
+            "minLength" : 3
+          },
+          "active" : {
+            "type" : "boolean",
+            "description" : "Whether the prison is still active"
+          },
+          "male" : {
+            "type" : "boolean",
+            "description" : "If this is a male prison"
+          },
+          "female" : {
+            "type" : "boolean",
+            "description" : "If this is a female prison"
+          },
+          "contracted" : {
+            "type" : "boolean",
+            "description" : "If this is a contracted prison"
+          },
+          "lthse" : {
+            "type" : "boolean",
+            "description" : "If this prison is part of the long term high security estate"
+          },
+          "prisonTypes" : {
+            "type" : "array",
+            "description" : "Set of types for this prison",
+            "example" : [ "HMP" ],
+            "items" : {
+              "type" : "string",
+              "enum" : [ "HMP", "YOI", "IRC", "STC", "YCS" ]
+            },
+            "uniqueItems" : true
+          },
+          "categories" : {
+            "type" : "array",
+            "description" : "Set of categories for this prison",
+            "example" : [ "A" ],
+            "items" : {
+              "type" : "string",
+              "enum" : [ "A", "B", "C", "D", "OPEN", "CLOSED" ]
+            },
+            "uniqueItems" : true
+          }
+        },
+        "required" : [ "active", "categories", "contracted", "female", "lthse", "male", "prisonName", "prisonTypes" ]
+      },
+      "AddressDto" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Unique ID of the address",
+            "example" : 10000
+          },
+          "addressLine1" : {
+            "type" : [ "string", "null" ],
+            "description" : "Address line 1",
+            "example" : "Bawtry Road"
+          },
+          "addressLine2" : {
+            "type" : [ "string", "null" ],
+            "description" : "Address line 2",
+            "example" : "Hatfield Woodhouse"
+          },
+          "town" : {
+            "type" : "string",
+            "description" : "Village/Town/City",
+            "example" : "Doncaster"
+          },
+          "county" : {
+            "type" : [ "string", "null" ],
+            "description" : "County",
+            "example" : "South Yorkshire"
+          },
+          "postcode" : {
+            "type" : "string",
+            "description" : "Postcode",
+            "example" : "DN7 6BW"
+          },
+          "country" : {
+            "type" : "string",
+            "description" : "Country",
+            "example" : "England"
+          },
+          "addressLine1InWelsh" : {
+            "type" : [ "string", "null" ],
+            "description" : "Address line 1 in Welsh",
+            "example" : "Coed-y-Paen"
+          },
+          "addressLine2InWelsh" : {
+            "type" : [ "string", "null" ],
+            "description" : "Address line 2 in Welsh",
+            "example" : "Hatfield Woodhouse"
+          },
+          "townInWelsh" : {
+            "type" : [ "string", "null" ],
+            "description" : "Village/Town/City in Welsh",
+            "example" : "Pont-y-pŵl"
+          },
+          "countyInWelsh" : {
+            "type" : [ "string", "null" ],
+            "description" : "County in Welsh",
+            "example" : "Sir Fynwy"
+          },
+          "countryInWelsh" : {
+            "type" : [ "string", "null" ],
+            "description" : "Country in Welsh",
+            "example" : "Cymru"
+          }
+        },
+        "required" : [ "country", "id", "postcode", "town" ]
+      },
+      "PrisonDto" : {
+        "type" : "object",
+        "description" : "Prison Information",
+        "properties" : {
+          "prisonId" : {
+            "type" : "string",
+            "description" : "Prison ID",
+            "example" : "MDI"
+          },
+          "prisonName" : {
+            "type" : "string",
+            "description" : "Name of the prison",
+            "example" : "Moorland HMP"
+          },
+          "prisonNameInWelsh" : {
+            "type" : [ "string", "null" ],
+            "description" : "Name of the prison in Welsh",
+            "example" : "Carchar Brynbuga"
+          },
+          "active" : {
+            "type" : "boolean",
+            "description" : "Whether the prison is still active"
+          },
+          "male" : {
+            "type" : "boolean",
+            "description" : "Whether the prison has male prisoners"
+          },
+          "female" : {
+            "type" : "boolean",
+            "description" : "Whether the prison has female prisoners"
+          },
+          "contracted" : {
+            "type" : "boolean",
+            "description" : "Whether the prison is contracted"
+          },
+          "lthse" : {
+            "type" : "boolean",
+            "description" : "Whether the prison is part of long term high security estate"
+          },
+          "types" : {
+            "type" : "array",
+            "description" : "List of types for this prison",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonTypeDto"
+            }
+          },
+          "categories" : {
+            "type" : "array",
+            "description" : "List of the categories for this prison",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "A", "B", "C", "D", "OPEN", "CLOSED" ]
+            },
+            "uniqueItems" : true
+          },
+          "addresses" : {
+            "type" : "array",
+            "description" : "List of address for this prison",
+            "items" : {
+              "$ref" : "#/components/schemas/AddressDto"
+            }
+          },
+          "operators" : {
+            "type" : "array",
+            "description" : "List of operators for this prison",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonOperatorDto"
+            }
+          }
+        },
+        "required" : [ "active", "addresses", "categories", "contracted", "female", "lthse", "male", "operators", "prisonId", "prisonName", "types" ]
+      },
+      "PrisonOperatorDto" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "description" : "Prison operator name",
+            "example" : "PSP, G4S"
+          }
+        },
+        "required" : [ "name" ]
+      },
+      "PrisonTypeDto" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string",
+            "description" : "Prison type code",
+            "enum" : [ "HMP", "YOI", "IRC", "STC", "YCS" ],
+            "example" : "HMP"
+          },
+          "description" : {
+            "type" : "string",
+            "description" : "Prison type description",
+            "example" : "His Majesty’s Prison"
+          }
+        },
+        "required" : [ "code", "description" ]
+      },
+      "UpdateWelshAddressDto" : {
+        "type" : "object",
+        "description" : "Welsh Address Update Record",
+        "properties" : {
+          "addressLine1InWelsh" : {
+            "type" : [ "string", "null" ],
+            "description" : "Address line 1 in Welsh",
+            "example" : "Bawtry Road",
+            "maxLength" : 80,
+            "minLength" : 0
+          },
+          "addressLine2InWelsh" : {
+            "type" : [ "string", "null" ],
+            "description" : "Address line 2 in Welsh",
+            "example" : "Hatfield Woodhouse",
+            "maxLength" : 80,
+            "minLength" : 0
+          },
+          "townInWelsh" : {
+            "type" : [ "string", "null" ],
+            "description" : "Village/Town/City in Welsh",
+            "example" : "Brynbuga",
+            "maxLength" : 80,
+            "minLength" : 0
+          },
+          "countyInWelsh" : {
+            "type" : [ "string", "null" ],
+            "description" : "County in Welsh",
+            "example" : "Sir Fynwy",
+            "maxLength" : 80,
+            "minLength" : 0
+          },
+          "countryInWelsh" : {
+            "type" : [ "string", "null" ],
+            "description" : "Country in Welsh",
+            "example" : "Cymru",
+            "maxLength" : 16,
+            "minLength" : 0
+          }
+        }
+      },
+      "UpdateAddressDto" : {
+        "type" : "object",
+        "description" : "Address Update Record",
+        "properties" : {
+          "addressLine1" : {
+            "type" : [ "string", "null" ],
+            "description" : "Address line 1",
+            "example" : "Bawtry Road",
+            "maxLength" : 80,
+            "minLength" : 0
+          },
+          "addressLine2" : {
+            "type" : [ "string", "null" ],
+            "description" : "Address line 2",
+            "example" : "Hatfield Woodhouse",
+            "maxLength" : 80,
+            "minLength" : 0
+          },
+          "town" : {
+            "type" : "string",
+            "description" : "Village/Town/City",
+            "example" : "Doncaster",
+            "maxLength" : 80,
+            "minLength" : 0
+          },
+          "county" : {
+            "type" : [ "string", "null" ],
+            "description" : "County",
+            "example" : "South Yorkshire",
+            "maxLength" : 80,
+            "minLength" : 0
+          },
+          "postcode" : {
+            "type" : "string",
+            "description" : "Postcode",
+            "example" : "DN7 6BW",
+            "maxLength" : 8,
+            "minLength" : 0
+          },
+          "country" : {
+            "type" : "string",
+            "description" : "Country",
+            "example" : "England",
+            "maxLength" : 16,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "country", "postcode", "town" ]
+      },
+      "PrisonRequest" : {
+        "type" : "object",
+        "properties" : {
+          "prisonIds" : {
+            "type" : [ "array", "null" ],
+            "description" : "List of prison ids",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        },
+        "required" : [ "prisonIds" ]
+      },
+      "InsertPrisonDto" : {
+        "type" : "object",
+        "description" : "Prison Insert Record",
+        "properties" : {
+          "prisonId" : {
+            "type" : "string",
+            "description" : "Prison Id",
+            "example" : "MDI",
+            "maxLength" : 6,
+            "minLength" : 3
+          },
+          "prisonName" : {
+            "type" : "string",
+            "description" : "Name of the prison",
+            "example" : "HMP Moorland",
+            "maxLength" : 40,
+            "minLength" : 3
+          },
+          "prisonNameInWelsh" : {
+            "type" : [ "string", "null" ],
+            "description" : "Welsh name of the prison",
+            "example" : "Carchar Brynbuga",
+            "maxLength" : 80,
+            "minLength" : 3
+          },
+          "active" : {
+            "type" : "boolean",
+            "description" : "Whether the prison is still active"
+          },
+          "male" : {
+            "type" : "boolean",
+            "description" : "If this is a male prison"
+          },
+          "female" : {
+            "type" : "boolean",
+            "description" : "If this is a female prison"
+          },
+          "contracted" : {
+            "type" : "boolean",
+            "description" : "If this is a contracted prison"
+          },
+          "lthse" : {
+            "type" : "boolean",
+            "description" : "If this prison is part of the long term high security estate"
+          },
+          "prisonTypes" : {
+            "type" : "array",
+            "description" : "Set of types for this prison",
+            "example" : "HMP",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "HMP", "YOI", "IRC", "STC", "YCS" ]
+            },
+            "uniqueItems" : true
+          },
+          "addresses" : {
+            "type" : "array",
+            "description" : "List of addresses for this prison",
+            "items" : {
+              "$ref" : "#/components/schemas/UpdateAddressDto"
+            }
+          },
+          "categories" : {
+            "type" : "array",
+            "description" : "Set of categories for this prison",
+            "example" : [ "A" ],
+            "items" : {
+              "type" : "string",
+              "enum" : [ "A", "B", "C", "D", "OPEN", "CLOSED" ]
+            },
+            "uniqueItems" : true
+          }
+        },
+        "required" : [ "active", "addresses", "categories", "contracted", "female", "lthse", "male", "prisonId", "prisonName", "prisonTypes" ]
+      },
+      "LegacyAgencyAddressDto" : {
+        "type" : "object",
+        "properties" : {
+          "addressLine1" : {
+            "type" : [ "string", "null" ],
+            "description" : "Address line 1",
+            "example" : "Bawtry Road"
+          },
+          "addressLine2" : {
+            "type" : [ "string", "null" ],
+            "description" : "Address line 2",
+            "example" : "Hatfield Woodhouse"
+          },
+          "town" : {
+            "type" : [ "string", "null" ],
+            "description" : "Village/Town/City",
+            "example" : "Doncaster"
+          },
+          "county" : {
+            "type" : [ "string", "null" ],
+            "description" : "County",
+            "example" : "South Yorkshire"
+          },
+          "postcode" : {
+            "type" : [ "string", "null" ],
+            "description" : "Postcode",
+            "example" : "DN7 6BW"
+          },
+          "country" : {
+            "type" : [ "string", "null" ],
+            "description" : "Country",
+            "example" : "England"
+          }
+        }
+      },
+      "LegacyAgencyDto" : {
+        "type" : "object",
+        "description" : "Agency Information",
+        "properties" : {
+          "agencyType" : {
+            "$ref" : "#/components/schemas/LegacyAgencyType",
+            "description" : "Agency Type",
+            "example" : "COURT"
+          },
+          "name" : {
+            "type" : "string",
+            "description" : "Name",
+            "example" : "N Staffs Youth Court - Newcastle"
+          },
+          "description" : {
+            "type" : [ "string", "null" ],
+            "description" : "Description",
+            "example" : "North Staffordshire Youth Court - Newcastle under Lyme"
+          },
+          "active" : {
+            "type" : "boolean",
+            "description" : "Whether still active"
+          },
+          "inactiveDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Date made inactive",
+            "example" : "2023-12-31"
+          },
+          "cjitCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "CJIT Code",
+            "example" : "123456789"
+          },
+          "areaCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "Area Code",
+            "example" : "NW"
+          },
+          "regionCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "Region Code",
+            "example" : "YOHUM"
+          },
+          "geographicalAreaCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "Geographic Region code",
+            "example" : "WYORKS"
+          },
+          "payrollRegionCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "Prisoner Payroll Region code",
+            "example" : "HS"
+          },
+          "localAuthorityCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "Local Authority code",
+            "example" : "00CG"
+          },
+          "courtTypeCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "Court Type code",
+            "example" : "CC"
+          },
+          "accessibleAccess" : {
+            "type" : [ "string", "null" ],
+            "description" : "Accessible Access",
+            "enum" : [ "NONE", "ACCESSIBLE", "BY_ARRANGEMENT_ONLY", "WHEELCHAIR_ACCESS" ],
+            "example" : "ACCESSIBLE"
+          },
+          "contact" : {
+            "type" : [ "string", "null" ],
+            "description" : "Contact",
+            "example" : "John Smith"
+          },
+          "addresses" : {
+            "type" : "array",
+            "description" : "addresses",
+            "items" : {
+              "$ref" : "#/components/schemas/LegacyAgencyAddressDto"
+            }
+          },
+          "emailAddresses" : {
+            "type" : "array",
+            "description" : "emailAddresses",
+            "items" : {
+              "$ref" : "#/components/schemas/LegacyAgencyEmailDto"
+            }
+          },
+          "phoneNumbers" : {
+            "type" : "array",
+            "description" : "phoneNumbers",
+            "items" : {
+              "$ref" : "#/components/schemas/LegacyAgencyPhoneDto"
+            }
+          }
+        },
+        "required" : [ "active", "addresses", "agencyType", "emailAddresses", "name", "phoneNumbers" ]
+      },
+      "LegacyAgencyEmailDto" : {
+        "type" : "object",
+        "properties" : {
+          "address" : {
+            "type" : "string",
+            "description" : "Email address",
+            "example" : "example@example.com"
+          }
+        },
+        "required" : [ "address" ]
+      },
+      "LegacyAgencyPhoneDto" : {
+        "type" : "object",
+        "properties" : {
+          "number" : {
+            "type" : "string",
+            "description" : "Phone number",
+            "example" : "0114 555 9898"
+          }
+        },
+        "required" : [ "number" ]
+      },
+      "LegacyAgencyType" : {
+        "type" : "string",
+        "enum" : [ "PRISON", "COURT", "HOSPITAL", "SECURE_HOSPITAL", "PROBATION_OFFICE", "POLICE_CUSTODY_SUITE", "APPROVED_PREMISE", "AIRPORT", "PROBATION_CRC", "FOREIGN_NATIONAL_PRISON", "VOLUNTARY_HOSTEL", "IMMIGRATION_DETENTION_CENTRE", "OUTSIDE", "PECS", "PSYCHIATRIC_CARE", "CHILDREN_SECURE_HOME", "SECURE_TRAINING_CENTRE", "YOT" ]
+      },
+      "LegacyAgencyResponse" : {
+        "type" : "object",
+        "properties" : {
+          "updated" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "updated" ]
+      },
+      "AgencyAddressDto" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Unique ID of the address",
+            "example" : 10000
+          },
+          "addressLine1" : {
+            "type" : [ "string", "null" ],
+            "description" : "Address line 1",
+            "example" : "Bawtry Road"
+          },
+          "addressLine2" : {
+            "type" : [ "string", "null" ],
+            "description" : "Address line 2",
+            "example" : "Hatfield Woodhouse"
+          },
+          "town" : {
+            "type" : [ "string", "null" ],
+            "description" : "Village/Town/City",
+            "example" : "Doncaster"
+          },
+          "county" : {
+            "type" : [ "string", "null" ],
+            "description" : "County",
+            "example" : "South Yorkshire"
+          },
+          "postcode" : {
+            "type" : [ "string", "null" ],
+            "description" : "Postcode",
+            "example" : "DN7 6BW"
+          },
+          "country" : {
+            "type" : [ "string", "null" ],
+            "description" : "Country",
+            "example" : "England"
+          }
+        },
+        "required" : [ "id" ]
+      },
+      "AgencyEmailDto" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Unique ID of the email address",
+            "example" : 10000
+          },
+          "address" : {
+            "type" : [ "string", "null" ],
+            "description" : "Email address",
+            "example" : "example@example.com"
+          }
+        },
+        "required" : [ "id" ]
+      },
+      "AgencyPhoneDto" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Unique ID of the phone number",
+            "example" : 10000
+          },
+          "number" : {
+            "type" : [ "string", "null" ],
+            "description" : "Phone number",
+            "example" : "0114 555 9898"
+          }
+        },
+        "required" : [ "id" ]
+      },
+      "CodeDescription" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "code", "description" ]
+      },
+      "ProbationOfficeDto" : {
+        "type" : "object",
+        "description" : "Probation Office Information",
+        "properties" : {
+          "probationOfficeId" : {
+            "type" : "string",
+            "description" : "Probation Office ID",
+            "example" : "SHEFPB"
+          },
+          "probationOfficeName" : {
+            "type" : "string",
+            "description" : "Name",
+            "example" : "Sheffield Probation Office"
+          },
+          "description" : {
+            "type" : [ "string", "null" ],
+            "description" : "Description",
+            "example" : "Sheffield City Centre Probation Office"
+          },
+          "active" : {
+            "type" : "boolean",
+            "description" : "Whether still active"
+          },
+          "accessibleAccess" : {
+            "type" : [ "string", "null" ],
+            "description" : "Accessible access",
+            "example" : "ACCESSIBLE"
+          },
+          "inactiveDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Date made inactive",
+            "example" : "2023-12-31"
+          },
+          "cjitCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "CJIT Code",
+            "example" : "123456789"
+          },
+          "area" : {
+            "description" : "Area",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "region" : {
+            "description" : "Region",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "geographicalArea" : {
+            "description" : "Geographical Area",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "localAuthority" : {
+            "description" : "Local Authority",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "addresses" : {
+            "type" : "array",
+            "description" : "addresses",
+            "items" : {
+              "$ref" : "#/components/schemas/AgencyAddressDto"
+            }
+          },
+          "emailAddresses" : {
+            "type" : "array",
+            "description" : "emailAddresses",
+            "items" : {
+              "$ref" : "#/components/schemas/AgencyEmailDto"
+            }
+          },
+          "phoneNumbers" : {
+            "type" : "array",
+            "description" : "phoneNumbers",
+            "items" : {
+              "$ref" : "#/components/schemas/AgencyPhoneDto"
+            }
+          }
+        },
+        "required" : [ "active", "addresses", "emailAddresses", "phoneNumbers", "probationOfficeId", "probationOfficeName" ]
+      },
+      "PrisonNameDto" : {
+        "type" : "object",
+        "description" : "Full name of prison with id",
+        "properties" : {
+          "prisonId" : {
+            "type" : "string",
+            "description" : "Prison ID",
+            "example" : "MDI"
+          },
+          "prisonName" : {
+            "type" : "string",
+            "description" : "Name of the prison",
+            "example" : "Moorland HMP"
+          },
+          "prisonNameInWelsh" : {
+            "type" : [ "string", "null" ],
+            "description" : "Name of the prison in Welsh",
+            "example" : "Carchar Brynbuga"
+          }
+        },
+        "required" : [ "prisonId", "prisonName" ]
+      },
+      "PoliceCustodySuiteDto" : {
+        "type" : "object",
+        "description" : "Police Custody Suite Information",
+        "properties" : {
+          "policeCustodySuiteId" : {
+            "type" : "string",
+            "description" : "Police Custody Suite ID",
+            "example" : "SHFPCS"
+          },
+          "policeCustodySuiteName" : {
+            "type" : "string",
+            "description" : "Name",
+            "example" : "Sheffield Police Custody Suite"
+          },
+          "description" : {
+            "type" : [ "string", "null" ],
+            "description" : "Description",
+            "example" : "Sheffield City Centre Police Custody Suite"
+          },
+          "active" : {
+            "type" : "boolean",
+            "description" : "Whether still active"
+          },
+          "inactiveDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date"
+          },
+          "cjitCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "CJIT Code",
+            "example" : "123456789"
+          },
+          "area" : {
+            "description" : "Area",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "region" : {
+            "description" : "Region",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "geographicalArea" : {
+            "description" : "Geographical Area",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "localAuthority" : {
+            "description" : "Local Authority",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "addresses" : {
+            "type" : "array",
+            "description" : "addresses",
+            "items" : {
+              "$ref" : "#/components/schemas/AgencyAddressDto"
+            }
+          },
+          "emailAddresses" : {
+            "type" : "array",
+            "description" : "emailAddresses",
+            "items" : {
+              "$ref" : "#/components/schemas/AgencyEmailDto"
+            }
+          },
+          "phoneNumbers" : {
+            "type" : "array",
+            "description" : "phoneNumbers",
+            "items" : {
+              "$ref" : "#/components/schemas/AgencyPhoneDto"
+            }
+          }
+        },
+        "required" : [ "active", "addresses", "emailAddresses", "phoneNumbers", "policeCustodySuiteId", "policeCustodySuiteName" ]
+      },
+      "HospitalDto" : {
+        "type" : "object",
+        "description" : "Hospital Information",
+        "properties" : {
+          "hospitalId" : {
+            "type" : "string",
+            "description" : "Hospital ID",
+            "example" : "NWCLYC"
+          },
+          "hospitalName" : {
+            "type" : "string",
+            "description" : "Name",
+            "example" : "N Staffs Youth Hospital - Newcastle"
+          },
+          "description" : {
+            "type" : [ "string", "null" ],
+            "description" : "Description",
+            "example" : "North Staffordshire Youth Hospital - Newcastle under Lyme"
+          },
+          "active" : {
+            "type" : "boolean",
+            "description" : "Whether still active"
+          },
+          "inactiveDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Date made inactive",
+            "example" : "2023-12-31"
+          },
+          "cjitCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "CJIT Code",
+            "example" : "123456789"
+          },
+          "area" : {
+            "description" : "Area",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "region" : {
+            "description" : "Region",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "geographicalArea" : {
+            "description" : "Geographic Region",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "localAuthority" : {
+            "description" : "Local Authority",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "payrollRegion" : {
+            "description" : "Prisoner Payroll Region",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "highSecurity" : {
+            "type" : "boolean",
+            "description" : "Is high security restricted hospital"
+          },
+          "addresses" : {
+            "type" : "array",
+            "description" : "addresses",
+            "items" : {
+              "$ref" : "#/components/schemas/AgencyAddressDto"
+            }
+          },
+          "phoneNumbers" : {
+            "type" : "array",
+            "description" : "phoneNumbers",
+            "items" : {
+              "$ref" : "#/components/schemas/AgencyPhoneDto"
+            }
+          }
+        },
+        "required" : [ "active", "addresses", "highSecurity", "hospitalId", "hospitalName", "phoneNumbers" ]
+      },
+      "CourtDto" : {
+        "type" : "object",
+        "description" : "Court Information",
+        "properties" : {
+          "courtId" : {
+            "type" : "string",
+            "description" : "Court ID",
+            "example" : "NWCLYC"
+          },
+          "courtName" : {
+            "type" : "string",
+            "description" : "Name",
+            "example" : "N Staffs Youth Court - Newcastle"
+          },
+          "description" : {
+            "type" : [ "string", "null" ],
+            "description" : "Description",
+            "example" : "North Staffordshire Youth Court - Newcastle under Lyme"
+          },
+          "active" : {
+            "type" : "boolean",
+            "description" : "Whether still active"
+          },
+          "inactiveDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Date made inactive",
+            "example" : "2023-12-31"
+          },
+          "cjitCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "CJIT Code",
+            "example" : "123456789"
+          },
+          "area" : {
+            "description" : "Area",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "region" : {
+            "description" : "Region",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "courtType" : {
+            "description" : "courtType",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "addresses" : {
+            "type" : "array",
+            "description" : "addresses",
+            "items" : {
+              "$ref" : "#/components/schemas/AgencyAddressDto"
+            }
+          },
+          "emailAddresses" : {
+            "type" : "array",
+            "description" : "emailAddresses",
+            "items" : {
+              "$ref" : "#/components/schemas/AgencyEmailDto"
+            }
+          },
+          "phoneNumbers" : {
+            "type" : "array",
+            "description" : "phoneNumbers",
+            "items" : {
+              "$ref" : "#/components/schemas/AgencyPhoneDto"
+            }
+          }
+        },
+        "required" : [ "active", "addresses", "courtId", "courtName", "emailAddresses", "phoneNumbers" ]
+      },
+      "ApprovedPremiseDto" : {
+        "type" : "object",
+        "description" : "Approved Premise Information",
+        "properties" : {
+          "approvedPremiseId" : {
+            "type" : "string",
+            "description" : "Approved Premise ID",
+            "example" : "SHEFAP"
+          },
+          "approvedPremiseName" : {
+            "type" : "string",
+            "description" : "Name",
+            "example" : "Sheffield Approved Premise"
+          },
+          "description" : {
+            "type" : [ "string", "null" ],
+            "description" : "Description",
+            "example" : "Sheffield City Centre Approved Premise"
+          },
+          "contact" : {
+            "type" : [ "string", "null" ],
+            "description" : "Contact",
+            "example" : "John Smith"
+          },
+          "active" : {
+            "type" : "boolean",
+            "description" : "Whether still active"
+          },
+          "accessibleAccess" : {
+            "type" : [ "string", "null" ],
+            "description" : "Accessible access",
+            "example" : "ACCESSIBLE"
+          },
+          "inactiveDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Date made inactive",
+            "example" : "2023-12-31"
+          },
+          "cjitCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "CJIT Code",
+            "example" : "123456789"
+          },
+          "area" : {
+            "description" : "Area",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "region" : {
+            "description" : "Region",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "geographicalArea" : {
+            "description" : "Geographical Area",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "localAuthority" : {
+            "description" : "Local Authority",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "addresses" : {
+            "type" : "array",
+            "description" : "addresses",
+            "items" : {
+              "$ref" : "#/components/schemas/AgencyAddressDto"
+            }
+          },
+          "emailAddresses" : {
+            "type" : "array",
+            "description" : "emailAddresses",
+            "items" : {
+              "$ref" : "#/components/schemas/AgencyEmailDto"
+            }
+          },
+          "phoneNumbers" : {
+            "type" : "array",
+            "description" : "phoneNumbers",
+            "items" : {
+              "$ref" : "#/components/schemas/AgencyPhoneDto"
+            }
+          }
+        },
+        "required" : [ "active", "addresses", "approvedPremiseId", "approvedPremiseName", "emailAddresses", "phoneNumbers" ]
+      },
+      "AgencyDto" : {
+        "type" : "object",
+        "description" : "Agency Information",
+        "properties" : {
+          "agencyId" : {
+            "type" : "string",
+            "description" : "Agency ID",
+            "example" : "SHEFCC"
+          },
+          "agencyName" : {
+            "type" : "string",
+            "description" : "Name",
+            "example" : "Sheffield Agency"
+          },
+          "description" : {
+            "type" : [ "string", "null" ],
+            "description" : "Description",
+            "example" : "Sheffield City Centre Agency"
+          },
+          "active" : {
+            "type" : "boolean",
+            "description" : "Whether still active"
+          },
+          "accessibleAccess" : {
+            "type" : [ "string", "null" ],
+            "description" : "Accessible access",
+            "example" : "ACCESSIBLE"
+          },
+          "agencyType" : {
+            "type" : "string",
+            "description" : "Agency type",
+            "example" : "PROBATION_CRC"
+          },
+          "inactiveDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Date made inactive",
+            "example" : "2023-12-31"
+          },
+          "cjitCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "CJIT Code",
+            "example" : "123456789"
+          },
+          "area" : {
+            "description" : "Area",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "region" : {
+            "description" : "Region",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "geographicalArea" : {
+            "description" : "Geographical Area",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "payrollRegion" : {
+            "description" : "Payroll Region",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "localAuthority" : {
+            "description" : "Local Authority",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "addresses" : {
+            "type" : "array",
+            "description" : "addresses",
+            "items" : {
+              "$ref" : "#/components/schemas/AgencyAddressDto"
+            }
+          },
+          "emailAddresses" : {
+            "type" : "array",
+            "description" : "emailAddresses",
+            "items" : {
+              "$ref" : "#/components/schemas/AgencyEmailDto"
+            }
+          },
+          "phoneNumbers" : {
+            "type" : "array",
+            "description" : "phoneNumbers",
+            "items" : {
+              "$ref" : "#/components/schemas/AgencyPhoneDto"
+            }
+          }
+        },
+        "required" : [ "active", "addresses", "agencyId", "agencyName", "agencyType", "emailAddresses", "phoneNumbers" ]
+      }
+    }
+  }
+}
