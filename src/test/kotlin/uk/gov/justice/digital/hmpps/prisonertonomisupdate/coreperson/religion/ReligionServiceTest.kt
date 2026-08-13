@@ -5,6 +5,7 @@ import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.mockito.kotlin.any
 import org.mockito.kotlin.check
 import org.mockito.kotlin.eq
@@ -145,6 +146,29 @@ internal class ReligionServiceTest(@Autowired jsonMapper: JsonMapper) {
       religionService.mergeReligions(prisonNumber)
 
       verify(corePersonNomisApiService, never()).mergeReligions(any(), any())
+    }
+
+    @Test
+    fun `should throw if there is a missing mapping`() = runTest {
+      val prisonNumber = "A1234BC"
+      whenever(corePersonCprApiService.getCorePerson(prisonNumber)).thenReturn(
+        personRecord(
+          prisonNumber,
+          listOf(
+            prisonReligion(
+              religionCode = BAHA,
+              startDate = LocalDateTime.of(2024, 4, 12, 0, 0).toLocalDate(),
+            ),
+          ),
+        ),
+      )
+
+      whenever(mapping.getByCprIds(any())).thenReturn(
+        emptyList(),
+      )
+
+      // Method under test
+      assertThrows<IllegalStateException> { religionService.mergeReligions(prisonNumber) }
     }
   }
 

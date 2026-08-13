@@ -10,7 +10,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonN
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PersonReferenceList
 import java.util.*
 import kotlin.collections.first
-import kotlin.collections.mapNotNull
 import kotlin.collections.orEmpty
 
 @Service
@@ -42,15 +41,11 @@ class ReligionService(
     )
     val toPerson = corePersonCprApiService.getCorePerson(toPrisonNumber)
     val cprReligions = toPerson?.religionHistory.orEmpty()
-    val cprReligionIds = cprReligions.mapNotNull { it.cprReligionId }
-
+    val cprReligionIds = cprReligions.map { it.cprReligionId!! }
     val mappings = mapping.getByCprIds(cprReligionIds)
     val missingMappings = cprReligionIds.toSet() - mappings.map { it.cprId }.toSet()
     if (missingMappings.isNotEmpty()) {
-      telemetryClient.trackEvent(
-        "cpr-person-merged-missing-religion-mapping",
-        telemetryMap + mapOf("missingCprReligionIds" to missingMappings.joinToString(",")),
-      )
+      throw IllegalStateException("Missing religion mappings for cpr religion ids: ${missingMappings.joinToString(", ")}")
     }
     val nomisIdsToReligions =
       mappings.map { outer -> outer.nomisId to cprReligions.first { it.cprReligionId == outer.cprId } }
