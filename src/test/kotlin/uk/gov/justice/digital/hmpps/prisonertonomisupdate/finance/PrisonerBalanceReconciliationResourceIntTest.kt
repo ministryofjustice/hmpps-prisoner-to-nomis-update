@@ -61,9 +61,7 @@ class PrisonerBalanceReconciliationResourceIntTest(
       prisonerBalanceReconciliationService.generatePrisonerBalanceReconciliationReportBatch()
 
       verify(telemetryClient).trackEvent(
-        eq("prisoner-balance-reports-reconciliation-requested"),
-        any(),
-        isNull(),
+        eq("prisoner-balance-reports-reconciliation-requested")
       )
 
       awaitReportFinished()
@@ -80,7 +78,6 @@ class PrisonerBalanceReconciliationResourceIntTest(
           assertThat(it).containsEntry("page-count", "2")
           assertThat(it).containsEntry("mismatch-count", "0")
           assertThat(it).containsEntry("success", "true")
-          assertThat(it).containsEntry("filter-prison", "")
         },
         isNull(),
       )
@@ -104,7 +101,6 @@ class PrisonerBalanceReconciliationResourceIntTest(
           assertThat(it).containsEntry("page-count", "2")
           assertThat(it).containsEntry("mismatch-count", "1")
           assertThat(it).containsEntry("success", "true")
-          assertThat(it).containsEntry("filter-prison", "")
         },
         isNull(),
       )
@@ -291,101 +287,6 @@ class PrisonerBalanceReconciliationResourceIntTest(
           .expectBody().isEmpty
 
         verifyNoInteractions(telemetryClient)
-      }
-    }
-  }
-
-  @DisplayName("Reconcile prisoners in a single prison")
-  @Nested
-  inner class ManualPrisonerBalancesReconciliationReportSinglePrison {
-    @Nested
-    inner class Security {
-      @Test
-      fun `access forbidden when no role`() {
-        webTestClient.get().uri("/prisoner-balance/reconciliation/prison/ASI")
-          .headers(setAuthorisation(roles = listOf()))
-          .exchange()
-          .expectStatus().isForbidden
-      }
-
-      @Test
-      fun `access forbidden with wrong role`() {
-        webTestClient.get().uri("/prisoner-balance/reconciliation/prison/ASI")
-          .headers(setAuthorisation(roles = listOf("BANANAS")))
-          .exchange()
-          .expectStatus().isForbidden
-      }
-
-      @Test
-      fun `access unauthorised with no auth token`() {
-        webTestClient.get().uri("/prisoner-balance/reconciliation/prison/ASI")
-          .exchange()
-          .expectStatus().isUnauthorized
-      }
-    }
-
-    @Nested
-    inner class HappyPath {
-      @BeforeEach
-      fun setup() {
-        financeNomisApi.stubGetPrisonerBalanceIdentifierRanges(
-          pageSize = 1,
-          totalElements = 3,
-        )
-        financeNomisApi.stubGetPrisonerBalanceIdentifiersInRange(
-          fromRootOffenderId = 0,
-          toRootOffenderId = 1,
-        )
-        financeNomisApi.stubGetPrisonerBalanceIdentifiersInRange(
-          fromRootOffenderId = 1,
-          toRootOffenderId = 2,
-        )
-        financeNomisApi.stubGetPrisonerBalanceIdentifiersInRange(
-          fromRootOffenderId = 2,
-          toRootOffenderId = 3,
-        )
-        for (i in 1..3) {
-          stubBalances(i.toLong(), nomisPrisonerAccounts().copy(prisonNumber = "A000${i}NN"), dpsAccount())
-        }
-      }
-
-      @Test
-      fun `will output a mismatch when there is a difference in the DPS record`() = runTest {
-        stubBalances(
-          2,
-          nomisPrisonerAccounts().copy(prisonNumber = "A0002NN").copy(accounts = emptyList()),
-          dpsAccount(),
-        )
-
-        val result = webTestClient.get()
-          .uri("/prisoner-balance/reconciliation/prison/ASI")
-          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody(object : ParameterizedTypeReference<ReconciliationResult<MismatchPrisonerBalance>>() {})
-          .returnResult()
-          .responseBody!!
-
-        assertThat(result.mismatches).hasSize(1)
-        val first = result.mismatches.first()
-        assertThat(first.nomis.accounts).isEmpty()
-        assertThat(first.dps.accounts.first().balance).isEqualTo(BigDecimal("1.5"))
-        assertThat(first.dps.accounts.first().accountCode).isEqualTo(1001)
-        assertThat(first.differences.first().property).isEqualTo("prisoner-balances.accounts")
-        assertThat(first.differences.first().nomis).isEqualTo(0)
-        assertThat(first.differences.first().dps).isEqualTo(1)
-
-        await untilAsserted {
-          verify(telemetryClient).trackEvent(
-            eq("prisoner-balance-reports-reconciliation-mismatch"),
-            check {
-              assertThat(it["prisoner"]).isEqualTo("A0002NN")
-              assertThat(it["prisoner-balances.accounts"]).isEqualTo("Difference(property=prisoner-balances.accounts, dps=1, nomis=0, id=null)")
-            },
-            isNull(),
-          )
-        }
       }
     }
   }

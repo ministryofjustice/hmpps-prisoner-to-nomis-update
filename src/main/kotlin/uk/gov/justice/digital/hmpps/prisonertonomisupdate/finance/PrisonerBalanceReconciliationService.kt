@@ -21,9 +21,8 @@ class PrisonerBalanceReconciliationService(
   private val financeNomisApiService: FinanceNomisApiService,
   private val nomisApiService: NomisApiService,
   private val dpsApiService: FinanceDpsApiService,
-  @Value("\${reports.prisoner.balance.reconciliation.page-size:1000}") private val pageSize: Int = 1000,
-  @Value("\${reports.prisoner.balance.reconciliation.thread-count:10}") private val threadCount: Int = 10,
-  @Value("\${reports.prisoner.balance.reconciliation.filter-prison:#{null}}") private val filterPrison: String?,
+  @Value($$"${reports.prisoner.balance.reconciliation.page-size:1000}") private val pageSize: Int = 1000,
+  @Value($$"${reports.prisoner.balance.reconciliation.thread-count:10}") private val threadCount: Int = 10,
 ) {
   private companion object {
     private const val TELEMETRY_PRISONER_PREFIX = "prisoner-balance-reports-reconciliation"
@@ -39,15 +38,10 @@ class PrisonerBalanceReconciliationService(
     // rootOffenderId is nullable but there are no nulls in the table in prod
   }
 
-  suspend fun manualCheckSinglePrisonBalances(filterPrisonId: String): ReconciliationResult<MismatchPrisonerBalance> = generatePrisonerBalanceReconciliationReport(listOf(filterPrisonId))
-
   suspend fun generatePrisonerBalanceReconciliationReportBatch() {
-    telemetryClient.trackEvent(
-      "$TELEMETRY_PRISONER_PREFIX-requested",
-      if (filterPrison != null) mapOf("filter-prison" to filterPrison) else emptyMap(),
-    )
+    telemetryClient.trackEvent("$TELEMETRY_PRISONER_PREFIX-requested")
 
-    runCatching { generatePrisonerBalanceReconciliationReport(filterPrison?.split(",")) }
+    runCatching { generatePrisonerBalanceReconciliationReport() }
       .onSuccess {
         telemetryClient.trackEvent(
           "$TELEMETRY_PRISONER_PREFIX-report",
@@ -56,7 +50,6 @@ class PrisonerBalanceReconciliationService(
             "page-count" to it.pagesChecked.toString(),
             "mismatch-count" to it.mismatches.size.toString(),
             "success" to "true",
-            "filter-prison" to (filterPrison ?: ""),
           ), // + it.mismatches, // .asMap(),
         )
       }
@@ -72,11 +65,11 @@ class PrisonerBalanceReconciliationService(
       }
   }
 
-  private suspend fun generatePrisonerBalanceReconciliationReport(filterPrisonId: List<String>?): ReconciliationResult<MismatchPrisonerBalance> = generateRangesReconciliationReport(
+  private suspend fun generatePrisonerBalanceReconciliationReport(): ReconciliationResult<MismatchPrisonerBalance> = generateRangesReconciliationReport(
     threadCount = threadCount,
     checkMatch = ::checkPrisonerBalance,
-    idRanges = { financeNomisApiService.getPrisonerBalanceIdentifierRanges(pageSize, prisonIds = filterPrisonId) },
-    idsInRange = { range -> this.getOffenderIdsInRange(range.fromRootOffenderId, range.toRootOffenderId, filterPrisonId) },
+    idRanges = { financeNomisApiService.getPrisonerBalanceIdentifierRanges(pageSize) },
+    idsInRange = { range -> this.getOffenderIdsInRange(range.fromRootOffenderId, range.toRootOffenderId) },
   )
 
   internal suspend fun checkPrisonerBalance(rootOffenderId: Long): MismatchPrisonerBalance? = runCatching {
@@ -183,17 +176,15 @@ class PrisonerBalanceReconciliationService(
   internal suspend fun getOffenderIdsInRange(
     fromRootOffenderId: Long,
     toRootOffenderId: Long,
-    filterPrisonIds: List<String>? = null,
   ): ReconciliationPageResult<Long> = runCatching {
     financeNomisApiService.getPrisonerBalanceIdentifiersInRange(
       fromRootOffenderId = fromRootOffenderId,
       toRootOffenderId = toRootOffenderId,
-      prisonIds = filterPrisonIds,
     )
   }.fold(
     onSuccess = { ids ->
       ReconciliationSuccessPageResult(ids = ids, last = 0)
-        .also { it -> log.info("Page requested from fromRootOffenderId: $fromRootOffenderId, toRootOffenderId: $toRootOffenderId, with ${it.ids.size} prisoners") }
+        .also { log.info("Page requested from fromRootOffenderId: $fromRootOffenderId, toRootOffenderId: $toRootOffenderId, with ${it.ids.size} prisoners") }
     },
     onFailure = {
       telemetryClient.trackEvent(
