@@ -23,7 +23,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.Reconciliation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerAggregatedAccountsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerDetails
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RootOffenderIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import java.math.BigDecimal
 
@@ -40,28 +39,21 @@ class PrisonerBalanceReconciliationResourceIntTest(
     @BeforeEach
     fun setUp() {
       reset(telemetryClient)
-      financeNomisApi.stubGetPrisonerBalanceIdentifiersFromId(
-        response = RootOffenderIdsWithLast(
-          lastOffenderId = 3,
-          rootOffenderIds = (1..3L).toList(),
-        ),
+      financeNomisApi.stubGetPrisonerBalanceIdentifierRanges(
+        pageSize = 10,
+        totalElements = 20,
       )
-
-      stubBalances(
-        1,
-        nomisPrisonerAccounts().copy(prisonNumber = "A0001NN"),
-        dpsAccount(),
+      financeNomisApi.stubGetPrisonerBalanceIdentifiersInRange(
+        fromRootOffenderId = 0,
+        toRootOffenderId = 10,
       )
-      stubBalances(
-        2,
-        nomisPrisonerAccounts().copy(prisonNumber = "A0002NN"),
-        dpsAccount(),
+      financeNomisApi.stubGetPrisonerBalanceIdentifiersInRange(
+        fromRootOffenderId = 10,
+        toRootOffenderId = 20,
       )
-      stubBalances(
-        3,
-        nomisPrisonerAccounts().copy(prisonNumber = "A0003NN"),
-        dpsAccount(),
-      )
+      for (i in 1..20) {
+        stubBalances(i.toLong(), nomisPrisonerAccounts().copy(prisonNumber = "A000${i}NN"), dpsAccount())
+      }
     }
 
     @Test
@@ -84,8 +76,8 @@ class PrisonerBalanceReconciliationResourceIntTest(
       verify(telemetryClient).trackEvent(
         eq("prisoner-balance-reports-reconciliation-report"),
         check {
-          assertThat(it).containsEntry("balance-count", "3")
-          assertThat(it).containsEntry("page-count", "1")
+          assertThat(it).containsEntry("balance-count", "20")
+          assertThat(it).containsEntry("page-count", "2")
           assertThat(it).containsEntry("mismatch-count", "0")
           assertThat(it).containsEntry("success", "true")
           assertThat(it).containsEntry("filter-prison", "")
@@ -108,8 +100,8 @@ class PrisonerBalanceReconciliationResourceIntTest(
       verify(telemetryClient).trackEvent(
         eq("prisoner-balance-reports-reconciliation-report"),
         check {
-          assertThat(it).containsEntry("balance-count", "3")
-          assertThat(it).containsEntry("page-count", "1")
+          assertThat(it).containsEntry("balance-count", "20")
+          assertThat(it).containsEntry("page-count", "2")
           assertThat(it).containsEntry("mismatch-count", "1")
           assertThat(it).containsEntry("success", "true")
           assertThat(it).containsEntry("filter-prison", "")
@@ -336,28 +328,25 @@ class PrisonerBalanceReconciliationResourceIntTest(
     inner class HappyPath {
       @BeforeEach
       fun setup() {
-        financeNomisApi.stubGetPrisonerBalanceIdentifiersFromId(
-          RootOffenderIdsWithLast(
-            rootOffenderIds = listOf(1, 2, 3),
-            lastOffenderId = 3L,
-          ),
+        financeNomisApi.stubGetPrisonerBalanceIdentifierRanges(
+          pageSize = 1,
+          totalElements = 3,
         )
-
-        stubBalances(
-          1,
-          nomisPrisonerAccounts().copy(prisonNumber = "A0001NN"),
-          dpsAccount(),
+        financeNomisApi.stubGetPrisonerBalanceIdentifiersInRange(
+          fromRootOffenderId = 0,
+          toRootOffenderId = 1,
         )
-        stubBalances(
-          2,
-          nomisPrisonerAccounts().copy(prisonNumber = "A0002NN"),
-          dpsAccount(),
+        financeNomisApi.stubGetPrisonerBalanceIdentifiersInRange(
+          fromRootOffenderId = 1,
+          toRootOffenderId = 2,
         )
-        stubBalances(
-          3,
-          nomisPrisonerAccounts().copy(prisonNumber = "A0003NN"),
-          dpsAccount(),
+        financeNomisApi.stubGetPrisonerBalanceIdentifiersInRange(
+          fromRootOffenderId = 2,
+          toRootOffenderId = 3,
         )
+        for (i in 1..3) {
+          stubBalances(i.toLong(), nomisPrisonerAccounts().copy(prisonNumber = "A000${i}NN"), dpsAccount())
+        }
       }
 
       @Test
