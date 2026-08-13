@@ -16,15 +16,12 @@ import org.mockito.kotlin.reset
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.core.ParameterizedTypeReference
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiExtension.Companion.dpsFinanceServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SubAccountBalanceForReconciliation
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerAggregatedAccountsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
-import java.math.BigDecimal
 
 class PrisonerBalanceReconciliationResourceIntTest(
   @Autowired private val prisonerBalanceReconciliationService: PrisonerBalanceReconciliationService,
@@ -61,7 +58,7 @@ class PrisonerBalanceReconciliationResourceIntTest(
       prisonerBalanceReconciliationService.generatePrisonerBalanceReconciliationReportBatch()
 
       verify(telemetryClient).trackEvent(
-        eq("prisoner-balance-reports-reconciliation-requested")
+        eq("prisoner-balance-reports-reconciliation-requested"),
       )
 
       awaitReportFinished()
