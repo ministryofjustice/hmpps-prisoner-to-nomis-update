@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-08-11.1895.0a67a0c"
+    "version" : "2026-08-13.1912.ccee1d5"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -18354,6 +18354,15 @@
             "type" : "integer",
             "format" : "int64"
           }
+        }, {
+          "name" : "active",
+          "in" : "query",
+          "description" : "When true only return active prisoners currently in prison else all prisoners are returned.",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
         } ],
         "responses" : {
           "200" : {
@@ -18407,6 +18416,15 @@
             "type" : "integer",
             "format" : "int32",
             "default" : 1000
+          }
+        }, {
+          "name" : "active",
+          "in" : "query",
+          "description" : "When true only return active prisoners currently in prison else all prisoners are returned.",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
           }
         } ],
         "responses" : {
@@ -24335,8 +24353,8 @@
     "/agency/{agencyId}" : {
       "get" : {
         "tags" : [ "agency-resource" ],
-        "summary" : "Gets details of a agency",
-        "description" : "Requires ROLE_NOMIS_AGENCYER_API__SYNCHRONISATION__RW",
+        "summary" : "Gets details of an agency",
+        "description" : "Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
         "operationId" : "getAgency",
         "parameters" : [ {
           "name" : "agencyId",
@@ -24383,6 +24401,63 @@
           },
           "404" : {
             "description" : "Agency not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agency/ids/all" : {
+      "get" : {
+        "tags" : [ "agency-resource" ],
+        "summary" : "Gets a list of all agency ids",
+        "description" : "Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getAllAgencies",
+        "parameters" : [ {
+          "name" : "excludeType",
+          "in" : "query",
+          "description" : "Agency types to exclude",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "description" : "Agency types to exclude",
+            "example" : "INST",
+            "items" : {
+              "type" : "string",
+              "description" : "Agency types to exclude",
+              "example" : "INST"
+            }
+          },
+          "example" : "INST"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Agency ids",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AgencyIdsResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -33673,12 +33748,12 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paged" : {
+            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -41941,6 +42016,32 @@
           }
         },
         "required" : [ "active", "addresses", "agencyId", "description", "emailAddresses", "localAuthorities", "phones", "type", "updateAllowed" ]
+      },
+      "AgencyId" : {
+        "type" : "object",
+        "description" : "A response to get agency id",
+        "properties" : {
+          "agencyId" : {
+            "type" : "string",
+            "description" : "The agency id",
+            "example" : "LCSY02"
+          }
+        },
+        "required" : [ "agencyId" ]
+      },
+      "AgencyIdsResponse" : {
+        "type" : "object",
+        "description" : "A response to get agency ids",
+        "properties" : {
+          "agencyIds" : {
+            "type" : "array",
+            "description" : "The agency ids",
+            "items" : {
+              "$ref" : "#/components/schemas/AgencyId"
+            }
+          }
+        },
+        "required" : [ "agencyIds" ]
       },
       "AgencyDetails" : {
         "type" : "object",

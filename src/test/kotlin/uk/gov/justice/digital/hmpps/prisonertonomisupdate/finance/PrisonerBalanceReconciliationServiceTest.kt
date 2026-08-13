@@ -211,20 +211,6 @@ class PrisonerBalanceReconciliationServiceTest {
     }
 
     @Test
-    fun `will return id list when filtering by prison`() = runTest {
-      financeNomisApi.stubGetPrisonerBalanceIdentifiersInRange(
-        fromRootOffenderId = 4,
-        toRootOffenderId = 8,
-      )
-
-      val actual = service.getOffenderIdsInRange(4, 8, filterPrisonIds = listOf("MDI"))
-
-      assertThat(actual).isInstanceOf(ReconciliationSuccessPageResult::class.java)
-      actual as ReconciliationSuccessPageResult
-      assertThat(actual.ids).isEqualTo(listOf(5L, 6L, 7L, 8L))
-    }
-
-    @Test
     fun `will report telemetry on error`() = runTest {
       financeNomisApi.stubGetPrisonerBalanceIdentifiersInRange(4, 8, status = 500)
 

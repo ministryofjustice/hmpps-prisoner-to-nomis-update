@@ -163,15 +163,15 @@ class PrisonerBalanceNomisApiServiceTest {
     }
 
     @Test
-    fun `will call the get endpoint with page size and prison ids`() = runTest {
+    fun `will call the get endpoint with page size`() = runTest {
       mockServer.stubGetPrisonerBalanceIdentifierRanges(pageSize = 5)
 
-      apiService.getPrisonerBalanceIdentifierRanges(pageSize = 5, prisonIds = listOf("MDI", "LEI"))
+      apiService.getPrisonerBalanceIdentifierRanges(pageSize = 5)
 
       mockServer.verify(
-        getRequestedFor(urlPathEqualTo("/finance/prisoners/id-ranges"))
-          .withQueryParam("pageSize", equalTo("5"))
-          .withQueryParam("prisonId", havingExactly("LEI", "MDI")),
+        getRequestedFor(urlPathEqualTo("/prisoners/id-ranges"))
+          .withQueryParam("size", equalTo("5"))
+          .withQueryParam("active", equalTo("false")),
       )
     }
 

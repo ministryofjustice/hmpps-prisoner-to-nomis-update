@@ -59,7 +59,7 @@ class FinanceNomisApiMockServer(private val jsonMapper: JsonMapper) {
       .zipWithNext()
       .map { RootOffenderIdRange(it.first * pageSize, it.second * pageSize) }
     nomisApi.stubFor(
-      get(urlPathEqualTo("/finance/prisoners/id-ranges"))
+      get(urlPathEqualTo("/prisoners/id-ranges"))
         .willReturn(okJson(jsonMapper.writeValueAsString(content))),
     )
   }

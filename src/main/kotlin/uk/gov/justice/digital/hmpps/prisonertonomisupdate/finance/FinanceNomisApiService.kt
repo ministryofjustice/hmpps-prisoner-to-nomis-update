@@ -7,6 +7,7 @@ import org.springframework.web.reactive.function.client.WebClient
 import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.PrisonBalanceResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.PrisonerBalanceResourceApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.PrisonersResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonBalanceDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerAggregatedAccountsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerBalanceDto
@@ -26,6 +27,7 @@ class FinanceNomisApiService(
 
   private val prisonBalanceApi = PrisonBalanceResourceApi(webClient)
   private val prisonerBalanceApi = PrisonerBalanceResourceApi(webClient)
+  private val prisonersResourceApi = PrisonersResourceApi(webClient)
 
   suspend fun getPrisonBalanceIds(): List<String> = prisonBalanceApi
     .getPrisonIds()
@@ -74,9 +76,8 @@ class FinanceNomisApiService(
 
   suspend fun getPrisonerBalanceIdentifierRanges(
     pageSize: Int? = 2000,
-    prisonIds: List<String>? = null,
-  ): List<RootOffenderIdRange> = prisonerBalanceApi
-    .getPrisonerBalanceIdentifierRanges(pageSize, prisonIds)
+  ): List<RootOffenderIdRange> = prisonersResourceApi
+    .getAllPrisonersIdRanges(pageSize)
     .retryWhen(backoffSpec)
     .awaitSingle()
 }
