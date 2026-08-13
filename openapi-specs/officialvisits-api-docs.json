@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-08-04.1060.9084a73"
+    "version" : "2026-08-12.1074.c1e51f7"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -4071,6 +4071,8 @@
             "example" : true
           },
           "searchTypeCode" : {
+            "description" : "The prisoner search type code. Maps to the same reference code values in both NOMIS and DPS.",
+            "example" : "RUB_A",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/SearchLevelType"
             }, {
@@ -4078,6 +4080,8 @@
             } ]
           },
           "visitCompletionCode" : {
+            "description" : "The DPS visit completion code. Default is null/not set if not provided.",
+            "example" : "NORMAL",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/VisitCompletionType"
             }, {
@@ -4183,6 +4187,8 @@
             "example" : "SCHEDULED"
           },
           "completionCode" : {
+            "description" : "The visit completion code",
+            "example" : "NORMAL",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/VisitCompletionType"
             }, {
@@ -4207,6 +4213,8 @@
             "example" : "IN_PERSON"
           },
           "prisonerAttendance" : {
+            "description" : "Whether the prisoner attended or not",
+            "example" : "ATTENDED",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/AttendanceType"
             }, {
@@ -4214,6 +4222,8 @@
             } ]
           },
           "searchType" : {
+            "description" : "The prisoner search type",
+            "example" : "FULL",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/SearchLevelType"
             }, {
@@ -4300,6 +4310,8 @@
             "example" : "Smith"
           },
           "relationshipType" : {
+            "description" : "The relationship type for this visitor (OFFICIAL or SOCIAL)",
+            "example" : "OFFICIAL",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/RelationshipType"
             }, {
@@ -4312,6 +4324,8 @@
             "example" : "POM"
           },
           "attendanceCode" : {
+            "description" : "The visitor attendance code, either ABSENT, ATTENDED or null if not recorded.",
+            "example" : "ABSENT",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/AttendanceType"
             }, {
@@ -4410,6 +4424,8 @@
             "example" : "Harris"
           },
           "relationshipTypeCode" : {
+            "description" : "The relationship type OFFICIAL or SOCIAL. Default is null if not known.",
+            "example" : "OFFICIAL",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/RelationshipType"
             }, {
@@ -4437,6 +4453,8 @@
             "example" : "Some comments"
           },
           "attendanceCode" : {
+            "description" : "The visitor attendance code (ATTENDED or ABSENT). A null indicates no attendance was added.",
+            "example" : "ATTENDED",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/AttendanceType"
             }, {
@@ -4499,6 +4517,8 @@
             "description" : "Official Visitor ID - only required for updates and should be 0 when creating official visitors"
           },
           "visitorTypeCode" : {
+            "description" : "The visitor type code (CONTACT, OPV, PRISONER)",
+            "example" : "CONTACT",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/VisitorType"
             }, {
@@ -4541,6 +4561,7 @@
             "minLength" : 0
           },
           "visitorEquipment" : {
+            "description" : "Details of any equipment the visitor will bring to the visit.",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/VisitorEquipment"
             }, {
@@ -4630,17 +4651,20 @@
           "maxAdults" : {
             "type" : [ "integer", "null" ],
             "format" : "int32",
-            "description" : "Maximum adults allowed in the visit slot"
+            "description" : "Maximum adults allowed in the visit slot",
+            "minimum" : 0
           },
           "maxGroups" : {
             "type" : [ "integer", "null" ],
             "format" : "int32",
-            "description" : "Maximum groups allowed in the visit slot"
+            "description" : "Maximum groups allowed in the visit slot",
+            "minimum" : 0
           },
           "maxVideo" : {
             "type" : [ "integer", "null" ],
             "format" : "int32",
-            "description" : "Maximum video sessions allowed in the visit slot"
+            "description" : "Maximum video sessions allowed in the visit slot",
+            "minimum" : 0
           }
         }
       },
@@ -4989,6 +5013,8 @@
             "example" : "SCHEDULED"
           },
           "visitTypeCode" : {
+            "description" : "The DPS visit type code. For sync'd NOMIS visits this will default to type UNKNOWN. Other values are IN_PERSON, VIDEO, or TELEPHONE.",
+            "example" : "UNKNOWN",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/VisitType"
             }, {
@@ -5001,6 +5027,8 @@
             "example" : "This is a comment"
           },
           "searchTypeCode" : {
+            "description" : "The prisoner search type code. Maps to the same reference code values in both NOMIS and DPS.",
+            "example" : "RUB_A",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/SearchLevelType"
             }, {
@@ -5008,6 +5036,8 @@
             } ]
           },
           "visitCompletionCode" : {
+            "description" : "The DPS visit completion code. Default is null/not set if not provided.",
+            "example" : "NORMAL",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/VisitCompletionType"
             }, {
@@ -5087,6 +5117,8 @@
             "example" : "Harris"
           },
           "relationshipTypeCode" : {
+            "description" : "The relationship type OFFICIAL or SOCIAL. Default is null if not known.",
+            "example" : "OFFICIAL",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/RelationshipType"
             }, {
@@ -5114,6 +5146,8 @@
             "example" : "Some comments"
           },
           "attendanceCode" : {
+            "description" : "The visitor attendance code (ATTENDED or ABSENT). A null indicates no attendance was added.",
+            "example" : "ATTENDED",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/AttendanceType"
             }, {
@@ -5202,6 +5236,8 @@
             "example" : "SCHEDULED"
           },
           "visitTypeCode" : {
+            "description" : "The DPS visit type code. For migrated NOMIS visits this will default to type UNKNOWN. Other values are IN_PERSON, VIDEO, or TELEPHONE.",
+            "example" : "UNKNOWN",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/VisitType"
             }, {
@@ -5214,6 +5250,8 @@
             "example" : "This is a comment"
           },
           "searchTypeCode" : {
+            "description" : "The prisoner search type code. Maps to the same reference code values in both NOMIS and DPS.",
+            "example" : "RUB_A",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/SearchLevelType"
             }, {
@@ -5221,6 +5259,8 @@
             } ]
           },
           "visitCompletionCode" : {
+            "description" : "The DPS visit completion code. Default is NORMAL if not supplied.",
+            "example" : "NORMAL",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/VisitCompletionType"
             }, {
@@ -5301,6 +5341,8 @@
             "example" : "Harris"
           },
           "relationshipTypeCode" : {
+            "description" : "The relationship type OFFICIAL or SOCIAL. Default is null if not known.",
+            "example" : "OFFICIAL",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/RelationshipType"
             }, {
@@ -5328,6 +5370,8 @@
             "example" : "Some comments"
           },
           "attendanceCode" : {
+            "description" : "The visitor attendance code (ATTENDED or ABSENT). A null indicates no attendance was added.",
+            "example" : "ATTENDED",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/AttendanceType"
             }, {
@@ -5494,6 +5538,8 @@
             "minLength" : 0
           },
           "searchTypeCode" : {
+            "description" : "Search type code relates to the search that will be done on the prisoner after the visit",
+            "example" : "FULL",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/SearchLevelType"
             }, {
@@ -5848,6 +5894,8 @@
             "example" : 2
           },
           "completionCode" : {
+            "description" : "The official visit completion type",
+            "example" : "VISITOR_CANCELLED",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/VisitCompletionType"
             }, {
@@ -6531,17 +6579,20 @@
           "maxAdults" : {
             "type" : [ "integer", "null" ],
             "format" : "int32",
-            "description" : "Maximum adults allowed in the visit slot"
+            "description" : "Maximum adults allowed in the visit slot",
+            "minimum" : 0
           },
           "maxGroups" : {
             "type" : [ "integer", "null" ],
             "format" : "int32",
-            "description" : "Maximum groups allowed in the visit slot"
+            "description" : "Maximum groups allowed in the visit slot",
+            "minimum" : 0
           },
           "maxVideo" : {
             "type" : [ "integer", "null" ],
             "format" : "int32",
-            "description" : "Maximum video sessions allowed in the visit slot"
+            "description" : "Maximum video sessions allowed in the visit slot",
+            "minimum" : 0
           }
         },
         "required" : [ "dpsLocationId" ]
@@ -7269,6 +7320,7 @@
             "description" : "The Official visit - visitor concern notes"
           },
           "completionCode" : {
+            "description" : "The Official visit completion type",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/VisitCompletionType"
             }, {
@@ -7284,6 +7336,7 @@
             "description" : "The Official visit creation description"
           },
           "searchTypeCode" : {
+            "description" : "The Official visit Search Level type",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/SearchLevelType"
             }, {
@@ -7320,6 +7373,7 @@
             }
           },
           "prisonerVisited" : {
+            "description" : "The Prisoner Information",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/PrisonerVisitedDetails"
             }, {
@@ -7365,6 +7419,7 @@
             "description" : "The prisoner contact id"
           },
           "relationshipTypeCode" : {
+            "description" : "The Official visitor relationship type code",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/RelationshipType"
             }, {
@@ -7396,6 +7451,7 @@
             "description" : "The Official visitor visitor notes"
           },
           "attendanceCode" : {
+            "description" : "The Official visitor attendance type",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/AttendanceType"
             }, {
@@ -7430,6 +7486,7 @@
             "description" : "The Official visitor offender visit visitor id"
           },
           "visitorEquipment" : {
+            "description" : "Equipment the visitor may bring",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/VisitorEquipment"
             }, {
