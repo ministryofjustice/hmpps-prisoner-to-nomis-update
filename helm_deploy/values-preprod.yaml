@@ -37,6 +37,7 @@ generic-service:
     API_BASE_URL_STAFF: https://prisoner-to-nomis-update-preprod.hmpps.service.justice.gov.uk
     API_BASE_URL_VISITS: https://visit-scheduler-preprod.prison.service.justice.gov.uk
     API_BASE_URL_VISIT_BALANCE: https://hmpps-visit-allocation-api-preprod.prison.service.justice.gov.uk
+    API_BASE_URL_AGENCYREGISTERS: https://prison-register-preprod.hmpps.service.justice.gov.uk
     REPORTS_SENTENCING_RECONCILIATION_ALL_PRISONERS: true
     FEATURE_EVENT_PRISON-PROPERTY_CONTAINER_CREATED: false
     FEATURE_EVENT_PRISON-PROPERTY_CONTAINER_UPDATED: false

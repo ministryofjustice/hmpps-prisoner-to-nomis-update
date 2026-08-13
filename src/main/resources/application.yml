@@ -147,6 +147,11 @@ spring:
             client-id: ${visit.balance.client.id}
             client-secret: ${visit.balance.client.secret}
             authorization-grant-type: client_credentials
+          agency-registers-api:
+            provider: hmpps-auth
+            client-id: ${agencyregisters.client.id}
+            client-secret: ${agencyregisters.client.secret}
+            authorization-grant-type: client_credentials
         provider:
           hmpps-auth:
             token-uri: ${api.base.url.hmpps-auth}/oauth/token

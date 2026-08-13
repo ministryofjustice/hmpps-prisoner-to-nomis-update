@@ -25,6 +25,7 @@ api.base.url:
   staff: http://localhost:8080
   visit.balance: http://localhost:8080
   visits: http://localhost:8080
+  agencyregisters: http://localhost:8080
 
 springdoc:
   api-docs:
