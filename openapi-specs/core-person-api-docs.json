@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-08-10.4568.bdde10a"
+    "version" : "2026-08-12.4582.9967787"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -2116,6 +2116,9 @@
           },
           "createUserId" : {
             "type" : "string"
+          },
+          "cprReligionId" : {
+            "type" : [ "string", "null" ]
           }
         },
         "required" : [ "changeReasonKnown", "createDateTime", "createUserId", "current", "religionCode", "startDate" ]
