@@ -24,7 +24,6 @@ class CorePersonDomainEventListener(
   telemetryClient = telemetryClient,
   domain = "coreperson",
 ) {
-
   private companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
