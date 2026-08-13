@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-08-11.2336.a8a3559"
+    "version" : "2026-08-12.2341.46ada71"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -5473,6 +5473,54 @@
         }
       }
     },
+    "/immigration-detention/person/{prisonerId}/exists" : {
+      "get" : {
+        "tags" : [ "immigration-detention-controller" ],
+        "summary" : "Check if this is an immigration detention prisoner",
+        "description" : "Returns true if the prisoner has an immigration detention record or nomis flagged immigration detention record",
+        "operationId" : "isImmigrationDetentionPrisoner",
+        "parameters" : [ {
+          "name" : "prisonerId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns true or false",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "boolean"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "boolean"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/immigration-detention/court-appearance/{courtAppearanceUuid}" : {
       "get" : {
         "tags" : [ "immigration-detention-controller" ],
@@ -7210,7 +7258,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:32.520588193"
+            "example" : "07:44:30.376048278"
           },
           "outcomeDispositionCode" : {
             "type" : [ "string", "null" ]
@@ -7581,7 +7629,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:32.520588193"
+            "example" : "07:44:30.376048278"
           },
           "courtCode" : {
             "type" : "string"
@@ -10461,7 +10509,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:32.520588193"
+            "example" : "07:44:30.376048278"
           },
           "courtCode" : {
             "type" : "string"
@@ -11149,7 +11197,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:44:32.520588193"
+            "example" : "07:44:30.376048278"
           },
           "nomisOutcomeCode" : {
             "type" : [ "string", "null" ]
@@ -11228,7 +11276,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:32.520588193"
+            "example" : "07:44:30.376048278"
           },
           "courtId" : {
             "type" : "string"
@@ -11380,7 +11428,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:44:32.520588193"
+            "example" : "07:44:30.376048278"
           },
           "charges" : {
             "type" : "array",
@@ -11417,7 +11465,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:32.520588193"
+            "example" : "07:44:30.376048278"
           },
           "courtId" : {
             "type" : "string"
@@ -11704,12 +11752,12 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
+          "paged" : {
+            "type" : "boolean"
+          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "paged" : {
-            "type" : "boolean"
           },
           "pageSize" : {
             "type" : "integer",
@@ -12007,7 +12055,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:32.520588193"
+            "example" : "07:44:30.376048278"
           },
           "courtCode" : {
             "type" : [ "string", "null" ]
