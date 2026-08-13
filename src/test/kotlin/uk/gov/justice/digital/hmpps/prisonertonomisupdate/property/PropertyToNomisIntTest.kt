@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.property
 
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
+import com.github.tomakehurst.wiremock.client.WireMock.equalToJson
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import org.assertj.core.api.Assertions.assertThat
@@ -99,7 +100,7 @@ class PropertyToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBodyJsonPath("$.prisonId", "MDI")
               .withRequestBodyJsonPath("$.active", true)
               .withRequestBodyJsonPath("$.sealMark", "SEAL1234")
-              .withRequestBodyJsonPath("$.containerCode", "BULK")
+              .withRequestBodyJsonPath("$.containerCode", "VALU")
               .withRequestBodyJsonPath("$.internalLocationId", NOMIS_LOCATION_ID)
               .withRequestBodyJsonPath("$.proposedDisposalDate", "2026-03-04"),
           )
@@ -319,7 +320,7 @@ class PropertyToNomisIntTest : SqsIntegrationTestBase() {
           propertyNomisApiMockServer.verify(
             putRequestedFor(anyUrl())
               .withRequestBodyJsonPath("$.sealMark", "SEAL1234")
-              .withRequestBodyJsonPath("$.containerCode", "BULK")
+              .withRequestBodyJsonPath("$.containerCode", "VALU")
               .withRequestBodyJsonPath("$.internalLocationId", NOMIS_LOCATION_ID)
               .withRequestBodyJsonPath("$.proposedDisposalDate", "2026-03-04")
               .withRequestBodyJsonPath("$.active", "true")
@@ -344,7 +345,7 @@ class PropertyToNomisIntTest : SqsIntegrationTestBase() {
       }
 
       @Nested
-      inner class HappyPathPropertyClosed {
+      inner class HappyPathPropertyRemoved {
         @BeforeEach
         fun setup() {
           propertyDpsApi.stubGetProperty(dpsProperty(UUID.fromString(DPS_ID), UUID.fromString(DPS_LOCATION_ID), PropertyContainerDto.RemovalOutcome.DISPOSED))
@@ -357,12 +358,19 @@ class PropertyToNomisIntTest : SqsIntegrationTestBase() {
         fun `will correctly update the Property in NOMIS`() {
           propertyNomisApiMockServer.verify(
             putRequestedFor(anyUrl())
-              .withRequestBodyJsonPath("$.sealMark", "SEAL1234")
-              .withRequestBodyJsonPath("$.containerCode", "BULK")
-              .withRequestBodyJsonPath("$.internalLocationId", NOMIS_LOCATION_ID)
-              .withRequestBodyJsonPath("$.proposedDisposalDate", "2026-03-04")
-              .withRequestBodyJsonPath("$.active", "false")
-              .withRequestBodyJsonPath("$.expiryDate", "2026-01-02"),
+              .withRequestBody(
+                equalToJson(
+                  """{
+                     "internalLocationId": null,
+                     "containerCode": "VALU",
+                     "active":false,
+                     "sealMark":"SEAL1234",
+                     "proposedDisposalDate":"2026-03-04",
+                     "expiryDate":"2026-01-02"
+                  }
+                  """,
+                ),
+              ),
           )
         }
       }
