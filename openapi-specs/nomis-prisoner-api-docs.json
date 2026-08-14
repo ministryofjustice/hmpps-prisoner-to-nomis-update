@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-08-13.1912.ccee1d5"
+    "version" : "2026-08-14.1919.592bf29"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -13207,6 +13207,71 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/core-person/{prisonNumber}/merge" : {
+      "post" : {
+        "tags" : [ "core-person-resource" ],
+        "summary" : "Update the offender by prison number as a result of a merge",
+        "description" : "Updates the offender information as a result of a merge. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "updateOffenderByPrisonNumberAfterMerge",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "description" : "Prison number aka noms id / offender id display",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prison number aka noms id / offender id display",
+            "example" : "A1234BC"
+          },
+          "example" : "A1234BC"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CorePersonMergeRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Offender does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "204" : {
+            "description" : "No Content"
           }
         }
       }
@@ -27104,6 +27169,11 @@
             "type" : "integer",
             "format" : "int64",
             "description" : "Movement application ID"
+          },
+          "deletedEventId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Deleted schedule ID"
           }
         },
         "required" : [ "bookingId", "tapApplicationId" ]
@@ -33252,6 +33322,39 @@
         },
         "required" : [ "isServices", "mailAddress", "noFixedAddress", "primaryAddress", "startDate" ]
       },
+      "CorePersonMergeRequest" : {
+        "type" : "object",
+        "description" : "Update request for offender merge",
+        "properties" : {
+          "religions" : {
+            "type" : "array",
+            "description" : "List of religions to be updated for the offender after a merge",
+            "items" : {
+              "$ref" : "#/components/schemas/CorePersonReligionRequest"
+            }
+          }
+        },
+        "required" : [ "religions" ]
+      },
+      "CorePersonReligionRequest" : {
+        "type" : "object",
+        "description" : "Update request for offender belief merge",
+        "properties" : {
+          "beliefId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Offender belief id",
+            "example" : 1123456
+          },
+          "endDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Date the belief ended",
+            "example" : "2024-12-12"
+          }
+        },
+        "required" : [ "beliefId" ]
+      },
       "CreateAppointmentRequest" : {
         "type" : "object",
         "description" : "Offender individual schedule creation request",
@@ -33748,12 +33851,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "paged" : {
+            "type" : "boolean"
+          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "paged" : {
-            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
