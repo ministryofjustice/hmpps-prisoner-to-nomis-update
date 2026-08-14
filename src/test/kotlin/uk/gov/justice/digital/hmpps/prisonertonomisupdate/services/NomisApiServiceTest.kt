@@ -1529,7 +1529,7 @@ internal class NomisApiServiceTest {
 
     @Test
     internal fun `will pass params to service`() = runTest {
-      nomisApi.stubGetAllPrisonersInRange()
+      nomisApi.stubGetAllPrisonersInRange(5, 100)
 
       nomisApiService.getAllPrisonersInRange(
         fromRootOffenderId = 5,
@@ -1544,11 +1544,11 @@ internal class NomisApiServiceTest {
     }
 
     @Test
-    fun `will return a range of prisoners ids`() = runTest {
-      nomisApi.stubGetAllPrisonersInRange(fromRootOffenderId = 1, toRootOffenderId = 10, firstOffenderNo = "A0001BC")
+    fun `will return a range of prisoners ids - range is greater than fromRootOffenderId`() = runTest {
+      nomisApi.stubGetAllPrisonersInRange(fromRootOffenderId = 0, toRootOffenderId = 10, firstOffenderNo = "A0001BC")
 
       val prisonerIds = nomisApiService.getAllPrisonersInRange(
-        fromRootOffenderId = 1,
+        fromRootOffenderId = 0,
         toRootOffenderId = 10,
       )
 

@@ -28,7 +28,7 @@ class PrisonerBalanceReconciliationResourceIntTest(
 ) : IntegrationTestBase() {
 
   @Autowired
-  private lateinit var financeNomisApi: FinanceNomisApiMockServer
+  private lateinit var financeNomisApi: PrisonerBalanceNomisApiMockServer
 
   @DisplayName("Prisoner balances reconciliation report")
   @Nested
@@ -36,20 +36,23 @@ class PrisonerBalanceReconciliationResourceIntTest(
     @BeforeEach
     fun setUp() {
       reset(telemetryClient)
-      financeNomisApi.stubGetPrisonerBalanceIdentifierRanges(
+      nomisApi.stubGetAllPrisonersIdRanges(
         pageSize = 10,
         totalElements = 20,
       )
-      financeNomisApi.stubGetPrisonerBalanceIdentifiersInRange(
+      nomisApi.stubGetAllPrisonersInRange(
         fromRootOffenderId = 0,
         toRootOffenderId = 10,
+        firstOffenderNo = "A0001NN",
       )
-      financeNomisApi.stubGetPrisonerBalanceIdentifiersInRange(
+      nomisApi.stubGetAllPrisonersInRange(
         fromRootOffenderId = 10,
         toRootOffenderId = 20,
+        firstOffenderNo = "A0001NN",
       )
       for (i in 1..20) {
-        stubBalances(i.toLong(), nomisPrisonerAccounts().copy(prisonNumber = "A000${i}NN"), dpsAccount())
+        val prisonNumber = "A0001NN".replace("0001", "$i".padStart(4, '0'))
+        stubBalances(i.toLong(), nomisPrisonerAccounts().copy(prisonNumber = prisonNumber), dpsAccount())
       }
     }
 
@@ -232,7 +235,7 @@ class PrisonerBalanceReconciliationResourceIntTest(
     inner class HappyPath {
       @BeforeEach
       fun setup() {
-        financeNomisApi.stubGetPrisonBalance()
+        financeNomisApi.stubGetPrisonerAccounts(OFFENDER_ID, nomisPrisonerAccounts())
         nomisApi.stubGetPrisonerDetails(
           OFFENDER_NO,
           PrisonerDetails(

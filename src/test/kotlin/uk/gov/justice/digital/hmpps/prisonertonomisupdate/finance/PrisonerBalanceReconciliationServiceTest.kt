@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Ag
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerAggregatedAccountsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 import java.math.BigDecimal
 import java.time.LocalDateTime
 import kotlin.collections.mapOf
@@ -35,7 +36,7 @@ const val OFFENDER_ID = 123456789000L
   PrisonerBalanceReconciliationService::class,
   FinanceNomisApiService::class,
   FinanceDpsApiService::class,
-  FinanceNomisApiMockServer::class,
+  PrisonerBalanceNomisApiMockServer::class,
   NomisApiService::class,
   FinanceDpsApiMockServer::class,
   RetryApiService::class,
@@ -47,9 +48,11 @@ class PrisonerBalanceReconciliationServiceTest {
   lateinit var telemetryClient: TelemetryClient
 
   @Autowired
-  private lateinit var financeNomisApi: FinanceNomisApiMockServer
+  private lateinit var financeNomisApi: PrisonerBalanceNomisApiMockServer
 
   private val dpsApi = FinanceDpsApiExtension.dpsFinanceServer
+
+  private val nomisApi = NomisApiExtension.nomisApi
 
   @Autowired
   private lateinit var service: PrisonerBalanceReconciliationService
@@ -199,7 +202,7 @@ class PrisonerBalanceReconciliationServiceTest {
   inner class GetPrisonerIdsForPage {
     @Test
     fun `will return id list`() = runTest {
-      financeNomisApi.stubGetPrisonerBalanceIdentifiersInRange(
+      nomisApi.stubGetAllPrisonersInRange(
         fromRootOffenderId = 4,
         toRootOffenderId = 8,
       )
@@ -212,7 +215,7 @@ class PrisonerBalanceReconciliationServiceTest {
 
     @Test
     fun `will report telemetry on error`() = runTest {
-      financeNomisApi.stubGetPrisonerBalanceIdentifiersInRange(4, 8, status = 500)
+      nomisApi.stubGetAllPrisonersInRangeWithError(500)
 
       val actual = service.getOffenderIdsInRange(4, 8)
 
