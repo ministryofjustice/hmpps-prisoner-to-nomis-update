@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps
 
 import com.github.tomakehurst.wiremock.client.WireMock.absent
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
+import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.equalToDateTime
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
@@ -625,7 +626,8 @@ class TapAuthorisationIntTest : SqsIntegrationTestBase() {
         fun setUp() {
           mappingApi.stubGetTapApplicationMapping(dpsId = dpsId, nomisApplicationId = nomisId)
           dpsApi.stubGetTapAuthorisation(dpsId, response = dpsApi.tapAuthorisation(id = dpsId, occurrenceCount = 1, statusCode = "PAUSED"))
-          nomisApi.stubUpsertTapApplication(prisonerNumber, upsertTapApplicationResponse())
+          nomisApi.stubUpsertTapApplication(prisonerNumber, upsertTapApplicationResponse(deletedEventId = 123))
+          mappingApi.stubDeleteTapScheduleMapping(123)
 
           publishAuthorisationDomainEvent(dpsId, prisonerNumber, "DPS", "person.temporary-absence-authorisation.paused")
           waitForAnyProcessingToComplete()
@@ -645,6 +647,13 @@ class TapAuthorisationIntTest : SqsIntegrationTestBase() {
           nomisApi.verify(
             putRequestedFor(urlPathEqualTo("/movements/A1234BC/taps/application"))
               .withRequestBodyJsonPath("applicationStatus", "PEN"),
+          )
+        }
+
+        @Test
+        fun `will delete the schedule mapping`() {
+          mappingApi.verify(
+            deleteRequestedFor(urlPathEqualTo("/mapping/taps/schedule/nomis-id/123")),
           )
         }
       }

@@ -76,6 +76,12 @@ class TapAuthorisationService(
       )
         .also { telemetryMap["bookingId"] = it.bookingId.toString() }
         .also { telemetryMap["nomisApplicationId"] = it.tapApplicationId.toString() }
+        .also {
+          if (it.deletedEventId != null) {
+            mappingApiService.deleteTapScheduleMapping(it.deletedEventId)
+            telemetryMap["deletedEventId"] = it.deletedEventId.toString()
+          }
+        }
 
       if (existingMapping == null) {
         TapApplicationMappingDto(
