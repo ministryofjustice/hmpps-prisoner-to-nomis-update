@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps
 
 import com.github.tomakehurst.wiremock.client.CountMatchingStrategy
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import com.github.tomakehurst.wiremock.client.WireMock.delete
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.put
@@ -162,6 +163,26 @@ class TapMappingApiMockServer(private val jsonMapper: JsonMapper) {
   fun stubGetTapScheduleMapping(dpsId: UUID = UUID.randomUUID(), status: HttpStatus, error: ErrorResponse = ErrorResponse(status = status.value())) {
     mappingServer.stubFor(
       get(urlPathMatching("/mapping/taps/schedule/dps-id/$dpsId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(status.value())
+          .withBody(jsonMapper.writeValueAsString(error)),
+      ),
+    )
+  }
+
+  fun stubDeleteTapScheduleMapping(nomisEventId: Long) {
+    mappingServer.stubFor(
+      delete("/mapping/taps/schedule/nomis-id/$nomisEventId").willReturn(
+        aResponse()
+          .withStatus(204),
+      ),
+    )
+  }
+
+  fun stubDeleteTapScheduleMapping(status: HttpStatus, error: ErrorResponse = ErrorResponse(status = status.value())) {
+    mappingServer.stubFor(
+      delete(urlPathMatching("/mapping/taps/schedule/nomis-id/.*")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(status.value())

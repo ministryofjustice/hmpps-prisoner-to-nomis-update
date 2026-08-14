@@ -3,10 +3,12 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.absent
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
+import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.not
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
@@ -437,6 +439,40 @@ class TapMappingApiServiceTest {
 
       assertThrows<WebClientResponseException.InternalServerError> {
         apiService.createTapMovementMapping(tapMovementMapping())
+      }
+    }
+  }
+
+  @Nested
+  inner class DeleteTapMappings {
+    @Test
+    internal fun `should pass oath2 token to service`() = runTest {
+      mappingApi.stubDeleteTapScheduleMapping(123L)
+
+      apiService.deleteTapScheduleMapping(123L)
+
+      mappingApi.verify(
+        deleteRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `should pass id to service`() = runTest {
+      mappingApi.stubDeleteTapScheduleMapping(123L)
+
+      apiService.deleteTapScheduleMapping(123L)
+
+      mappingApi.verify(
+        deleteRequestedFor(urlPathEqualTo("/mapping/taps/schedule/nomis-id/123")),
+      )
+    }
+
+    @Test
+    fun `should throw if API calls fail`() = runTest {
+      mappingApi.stubDeleteTapScheduleMapping(status = HttpStatus.INTERNAL_SERVER_ERROR)
+
+      assertThrows<WebClientResponseException.InternalServerError> {
+        apiService.deleteTapScheduleMapping(123L)
       }
     }
   }

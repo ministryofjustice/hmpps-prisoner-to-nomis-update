@@ -47,6 +47,8 @@ class TapMappingApiService(
     .getTapScheduleMappingByDpsId(dpsId)
     .awaitBodyOrNullForNotFound()
 
+  suspend fun deleteTapScheduleMapping(eventId: Long) = scheduleApi.deleteTapScheduleMappingByNomisId(eventId).awaitSingle()
+
   suspend fun createTapMovementMapping(mapping: TapMovementMappingDto) = movementApi
     .prepare(movementApi.createTapMovementMappingRequestConfig(mapping))
     .retrieve()
