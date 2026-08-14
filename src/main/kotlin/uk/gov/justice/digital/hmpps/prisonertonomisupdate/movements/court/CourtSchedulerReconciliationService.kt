@@ -112,6 +112,8 @@ class CourtSchedulerReconciliationService(
     return mismatchedEntities + mismatchedScheduleDetails + mismatchedMovementDetails
   }
 
+  private class NomisToDpsScheduleIdMapping(val nomisId: Long, val dpsId: UUID)
+
   private fun findMismatchedEntities(
     offenderNo: String,
     nomisMovements: OffenderCourtMovementsResponse,
@@ -120,6 +122,7 @@ class CourtSchedulerReconciliationService(
     sentencingMappings: Map<Long, String>,
   ): List<MismatchedPrisonerCourtMovementIds> {
     val mismatches = mutableListOf<MismatchedPrisonerCourtMovementIds>()
+    val allScheduleMappings = combinedScheduleMappings(dpsMovements, movementMappings, sentencingMappings)
 
     // Check for scheduled court events existing only in 1 system
     val nomisCourtEventIds = nomisMovements.bookings.flatMap { it.courtSchedules.map { it.eventId } }
@@ -131,8 +134,8 @@ class CourtSchedulerReconciliationService(
           type = MismatchedPrisonerCourtMovementIds.Type.SCHEDULE,
           nomisCount = nomisCourtEventIds.size,
           dpsCount = dpsCourtEventIds.size,
-          unexpectedNomisIds = movementMappings.unexpectedNomisCourtEvents(nomisCourtEventIds, dpsCourtEventIds).toString(),
-          unexpectedDpsIds = movementMappings.unexpectedDpsCourtEvents(dpsCourtEventIds, nomisCourtEventIds).toString(),
+          unexpectedNomisIds = allScheduleMappings.unexpectedNomisCourtEvents(nomisCourtEventIds, dpsCourtEventIds).toString(),
+          unexpectedDpsIds = allScheduleMappings.unexpectedDpsCourtEvents(dpsCourtEventIds, nomisCourtEventIds).toString(),
         ),
       )
     }
@@ -289,6 +292,30 @@ class CourtSchedulerReconciliationService(
     }
 
     return mismatches.toList()
+  }
+
+  // Combine court scheduler mappings with sentencing mappings
+  private fun combinedScheduleMappings(
+    dpsMovements: ReconciliationResponse,
+    movementMappings: CourtSchedulerPrisonerMappingIdsDto,
+    sentencingMappings: Map<Long, String>,
+  ): List<NomisToDpsScheduleIdMapping> = buildList {
+    // Add all court scheduler mappings
+    movementMappings.schedules.forEach {
+      add(NomisToDpsScheduleIdMapping(it.nomisEventId, it.dpsCourtAppearanceId))
+    }
+
+    // collect all court scheduler IDs with the sentencing reference
+    class DpsIdToExtRef(val dpsId: UUID, val extRef: String)
+    val dpsIdsWithExtRefs = dpsMovements.courtEvents
+      .filter { it.courtEvent.externalReferenceUrn != null }
+      .map { DpsIdToExtRef(it.courtEvent.dpsId!!, it.courtEvent.externalReferenceUrn!!) }
+
+    // Add all sentencing mappings
+    sentencingMappings.forEach { sentencingMapping ->
+      dpsIdsWithExtRefs.firstOrNull { it.extRef.contains(sentencingMapping.value) }
+        ?.also { add(NomisToDpsScheduleIdMapping(sentencingMapping.key, it.dpsId)) }
+    }
   }
 
   private suspend fun findMismatchedCourtScheduleDetails(
@@ -496,18 +523,18 @@ class CourtSchedulerReconciliationService(
     return mismatches.toList()
   }
 
-  private fun CourtSchedulerPrisonerMappingIdsDto.unexpectedNomisCourtEvents(
+  private fun List<NomisToDpsScheduleIdMapping>.unexpectedNomisCourtEvents(
     nomisCourtEventIds: List<Long>,
     dpsCourtEventIds: List<UUID>,
   ) = findMissing(nomisCourtEventIds, dpsCourtEventIds) { eventId ->
-    schedules.find { it.nomisEventId == eventId }?.dpsCourtAppearanceId
+    find { it.nomisId == eventId }?.dpsId
   }
 
-  private fun CourtSchedulerPrisonerMappingIdsDto.unexpectedDpsCourtEvents(
+  private fun List<NomisToDpsScheduleIdMapping>.unexpectedDpsCourtEvents(
     dpsCourtEventIds: List<UUID>,
     nomisCourtEventIds: List<Long>,
   ) = findMissing(dpsCourtEventIds, nomisCourtEventIds) { courtAppearanceId ->
-    schedules.find { it.dpsCourtAppearanceId == courtAppearanceId }?.nomisEventId
+    find { it.dpsId == courtAppearanceId }?.nomisId
   }
 
   private fun CourtSchedulerPrisonerMappingIdsDto.unexpectedNomisMovements(
