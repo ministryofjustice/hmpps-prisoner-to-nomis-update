@@ -11,6 +11,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.ok
 import com.github.tomakehurst.wiremock.client.WireMock.okJson
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.put
+import com.github.tomakehurst.wiremock.client.WireMock.status
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import com.github.tomakehurst.wiremock.stubbing.Scenario
@@ -2336,22 +2337,38 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetAllPrisonersInRange(fromRootOffenderId: Long = 1L, toRootOffenderId: Long = 20L, firstOffenderNo: String = "A0001KT") {
-    val content: List<PrisonNumberAndRootOffenderId> = (fromRootOffenderId..toRootOffenderId).map {
+  fun stubGetAllPrisonersInRange(fromRootOffenderId: Long = 0L, toRootOffenderId: Long = 20L, firstOffenderNo: String = "A0001KT") {
+    // n.b. does not return the first item
+    val content: List<PrisonNumberAndRootOffenderId> = (fromRootOffenderId + 1..toRootOffenderId).map {
       PrisonNumberAndRootOffenderId(
         rootOffenderId = it,
         prisonNumber = firstOffenderNo.replace("0001", "$it".padStart(4, '0')),
       )
     }
     nomisApi.stubFor(
-      get(urlPathEqualTo("/prisoners/ids-in-range")).willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withStatus(HttpStatus.OK.value())
-          .withBody(
-            jsonMapper.writeValueAsString(content),
-          ),
-      ),
+      get(urlPathEqualTo("/prisoners/ids-in-range"))
+        .withQueryParam("fromRootOffenderId", equalTo(fromRootOffenderId.toString()))
+        .withQueryParam("toRootOffenderId", equalTo(toRootOffenderId.toString()))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.OK.value())
+            .withBody(
+              jsonMapper.writeValueAsString(content),
+            ),
+        ),
+    )
+  }
+
+  fun stubGetAllPrisonersInRangeWithError(responseCode: Int) {
+    stubFor(
+      get(urlPathEqualTo("/prisoners/ids-in-range"))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(responseCode)
+            .withBody("""{"message":"Error"}"""),
+        ),
     )
   }
 

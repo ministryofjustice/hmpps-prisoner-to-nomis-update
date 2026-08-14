@@ -5,15 +5,8 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.util.context.Context
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.PrisonBalanceResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.PrisonerBalanceResourceApi
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.PrisonersResourceApi
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonBalanceDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerAggregatedAccountsDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerBalanceDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerBalanceSummaryDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RootOffenderIdRange
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RootOffenderIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 
 @Service
@@ -25,59 +18,10 @@ class FinanceNomisApiService(
     Context.of("api", "FinanceNomisApiService"),
   )
 
-  private val prisonBalanceApi = PrisonBalanceResourceApi(webClient)
   private val prisonerBalanceApi = PrisonerBalanceResourceApi(webClient)
-  private val prisonersResourceApi = PrisonersResourceApi(webClient)
-
-  suspend fun getPrisonBalanceIds(): List<String> = prisonBalanceApi
-    .getPrisonIds()
-    .retryWhen(backoffSpec)
-    .awaitSingle()
-
-  suspend fun getPrisonBalance(prisonId: String): PrisonBalanceDto = prisonBalanceApi
-    .getPrisonBalance(prisonId)
-    .retryWhen(backoffSpec)
-    .awaitSingle()
-
-  suspend fun getPrisonerBalanceIdentifiersFromId(
-    rootOffenderId: Long?,
-    pageSize: Int?,
-    prisonIds: List<String>? = null,
-  ): RootOffenderIdsWithLast = prisonerBalanceApi
-    .getPrisonerBalanceIdentifiersFromId(rootOffenderId, pageSize, prisonIds)
-    .retryWhen(backoffSpec)
-    .awaitSingle()
 
   suspend fun getPrisonerAccountsToReconcile(rootOffenderId: Long): PrisonerAggregatedAccountsDto = prisonerBalanceApi
     .getAggregatedAccountsForId(rootOffenderId)
-    .retryWhen(backoffSpec)
-    .awaitSingle()
-
-  // Not currently used - TODO check and remove if not required
-  suspend fun getPrisonerAccountDetails(rootOffenderId: Long, excludeZeroBalances: Boolean = false): PrisonerBalanceDto = prisonerBalanceApi
-    .getPrisonerAccountDetails(rootOffenderId, excludeZeroBalances)
-    .retryWhen(backoffSpec)
-    .awaitSingle()
-
-  // Not currently used - TODO check and remove if not required
-  suspend fun getPrisonerAccountSummary(rootOffenderId: Long): PrisonerBalanceSummaryDto = prisonerBalanceApi
-    .getPrisonerAccountSummary(rootOffenderId)
-    .retryWhen(backoffSpec)
-    .awaitSingle()
-
-  suspend fun getPrisonerBalanceIdentifiersInRange(
-    fromRootOffenderId: Long,
-    toRootOffenderId: Long,
-    prisonIds: List<String>? = null,
-  ): List<Long> = prisonerBalanceApi
-    .getPrisonerBalanceIdentifiersInRange(fromRootOffenderId, toRootOffenderId, prisonIds)
-    .retryWhen(backoffSpec)
-    .awaitSingle()
-
-  suspend fun getPrisonerBalanceIdentifierRanges(
-    pageSize: Int? = 2000,
-  ): List<RootOffenderIdRange> = prisonersResourceApi
-    .getAllPrisonersIdRanges(pageSize)
     .retryWhen(backoffSpec)
     .awaitSingle()
 }

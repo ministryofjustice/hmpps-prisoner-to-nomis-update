@@ -50,7 +50,7 @@ class PrisonerBalanceReconciliationService(
             "page-count" to it.pagesChecked.toString(),
             "mismatch-count" to it.mismatches.size.toString(),
             "success" to "true",
-          ), // + it.mismatches, // .asMap(),
+          ),
         )
       }
       .onFailure {
@@ -68,7 +68,7 @@ class PrisonerBalanceReconciliationService(
   private suspend fun generatePrisonerBalanceReconciliationReport(): ReconciliationResult<MismatchPrisonerBalance> = generateRangesReconciliationReport(
     threadCount = threadCount,
     checkMatch = ::checkPrisonerBalance,
-    idRanges = { financeNomisApiService.getPrisonerBalanceIdentifierRanges(pageSize) },
+    idRanges = { nomisApiService.getAllPrisonersIdRanges(pageSize.toLong()) },
     idsInRange = { range -> this.getOffenderIdsInRange(range.fromRootOffenderId, range.toRootOffenderId) },
   )
 
@@ -177,13 +177,13 @@ class PrisonerBalanceReconciliationService(
     fromRootOffenderId: Long,
     toRootOffenderId: Long,
   ): ReconciliationPageResult<Long> = runCatching {
-    financeNomisApiService.getPrisonerBalanceIdentifiersInRange(
+    nomisApiService.getAllPrisonersInRange(
       fromRootOffenderId = fromRootOffenderId,
       toRootOffenderId = toRootOffenderId,
     )
   }.fold(
     onSuccess = { ids ->
-      ReconciliationSuccessPageResult(ids = ids, last = 0)
+      ReconciliationSuccessPageResult(ids = ids.map { it.rootOffenderId }, last = 0)
         .also { log.info("Page requested from fromRootOffenderId: $fromRootOffenderId, toRootOffenderId: $toRootOffenderId, with ${it.ids.size} prisoners") }
     },
     onFailure = {
