@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-08-12.4582.9967787"
+    "version" : "2026-08-13.4624.ad0066a"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -28,9 +28,9 @@
   "paths" : {
     "/syscon-sync/person/{prisonNumber}/religion/{cprReligionId}" : {
       "get" : {
-        "tags" : [ "Prison" ],
+        "tags" : [ "Syscon Sync" ],
         "description" : "Get prison religion record by Prison Number. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
-        "operationId" : "getPrisonReligionSyscon",
+        "operationId" : "getPrisonReligion",
         "parameters" : [ {
           "name" : "prisonNumber",
           "in" : "path",
@@ -63,9 +63,9 @@
         } ]
       },
       "put" : {
-        "tags" : [ "Prison" ],
+        "tags" : [ "Syscon Sync" ],
         "description" : "Update prison religion record by Prison Number. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
-        "operationId" : "updatePrisonReligionSyscon",
+        "operationId" : "updatePrisonReligion",
         "parameters" : [ {
           "name" : "prisonNumber",
           "in" : "path",
@@ -207,81 +207,6 @@
         } ]
       }
     },
-    "/person/prison/{prisonNumber}/religion/{cprReligionId}" : {
-      "get" : {
-        "tags" : [ "Prison" ],
-        "description" : "Get prison religion record by Prison Number. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
-        "operationId" : "getPrisonReligion",
-        "parameters" : [ {
-          "name" : "prisonNumber",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "cprReligionId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/PrisonReligionReadResponse"
-                }
-              }
-            }
-          }
-        },
-        "security" : [ {
-          "api-role" : [ ]
-        } ]
-      },
-      "put" : {
-        "tags" : [ "Prison" ],
-        "description" : "Update prison religion record by Prison Number. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
-        "operationId" : "updatePrisonReligion",
-        "parameters" : [ {
-          "name" : "prisonNumber",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "cprReligionId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/PrisonReligionUpdateRequest"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "204" : {
-            "description" : "No Content"
-          }
-        },
-        "security" : [ {
-          "api-role" : [ ]
-        } ]
-      }
-    },
     "/syscon-sync/sexual-orientation/{prisonNumber}" : {
       "post" : {
         "tags" : [ "Syscon Sync" ],
@@ -359,9 +284,9 @@
     },
     "/syscon-sync/person/{prisonNumber}/religion" : {
       "post" : {
-        "tags" : [ "Prison" ],
+        "tags" : [ "Syscon Sync" ],
         "description" : "Save prison religion record by Prison Number. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
-        "operationId" : "savePrisonReligionSyscon",
+        "operationId" : "savePrisonReligion",
         "parameters" : [ {
           "name" : "prisonNumber",
           "in" : "path",
@@ -390,6 +315,39 @@
                 }
               }
             }
+          }
+        },
+        "security" : [ {
+          "api-role" : [ ]
+        } ]
+      }
+    },
+    "/syscon-sync/person/{prisonNumber}/merge" : {
+      "post" : {
+        "tags" : [ "Syscon Sync" ],
+        "description" : "Processes a prisoner merge record by Prison Number. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
+        "operationId" : "processPrisonMerge",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PrisonMerge"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
           }
         },
         "security" : [ {
@@ -569,46 +527,6 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ProbationCreateAddressResponse"
-                }
-              }
-            }
-          }
-        },
-        "security" : [ {
-          "api-role" : [ ]
-        } ]
-      }
-    },
-    "/person/prison/{prisonNumber}/religion" : {
-      "post" : {
-        "tags" : [ "Prison" ],
-        "description" : "Save prison religion record by Prison Number. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
-        "operationId" : "savePrisonReligion",
-        "parameters" : [ {
-          "name" : "prisonNumber",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/PrisonReligionHistory"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "201" : {
-            "description" : "Created",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/PrisonReligionSaveResponse"
                 }
               }
             }
@@ -1418,6 +1336,17 @@
           }
         },
         "required" : [ "prisonNumber", "religionMappings" ]
+      },
+      "PrisonMerge" : {
+        "type" : "object",
+        "properties" : {
+          "fromPrisonNumber" : {
+            "type" : "string",
+            "description" : "The prison number of the person being merged from",
+            "example" : "A1234BC"
+          }
+        },
+        "required" : [ "fromPrisonNumber" ]
       },
       "PrisonNationality" : {
         "type" : "object",
