@@ -11,6 +11,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.ok
 import com.github.tomakehurst.wiremock.client.WireMock.okJson
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.put
+import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import com.github.tomakehurst.wiremock.matching.UrlPattern
@@ -20,8 +21,10 @@ import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
+import org.springframework.http.HttpStatus
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import tools.jackson.databind.json.JsonMapper
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ReligionMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.jsonMapper
 
@@ -1342,6 +1345,30 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
         .whenScenarioStateIs("Cause create Success")
         .willReturn(created())
         .willSetStateTo(STARTED),
+    )
+  }
+
+  fun stubGetReligionMappings(mappings: List<ReligionMappingDto>) {
+    val response = "[" +
+      mappings.joinToString {
+        """
+      {
+        "cprId": "${it.cprId}",
+        "nomisId": ${it.nomisId},
+        "nomisPrisonNumber": "${it.nomisPrisonNumber}",
+        "mappingType": "MIGRATED"
+      }        
+        """.trimIndent()
+      } + "]"
+    mappingServer.stubFor(
+      get(urlPathEqualTo("/mapping/religion/cpr-ids"))
+        .withQueryParam("ids", WireMock.havingExactly(*mappings.map { it.cprId }.toTypedArray()))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.OK.value())
+            .withBody(response),
+        ),
     )
   }
 }
