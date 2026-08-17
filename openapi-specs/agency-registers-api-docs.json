@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-08-13.389.e8620f6"
+    "version" : "2026-08-14.393.ccb9dcb"
   },
   "servers" : [ {
     "url" : "https://prison-register-dev.hmpps.service.justice.gov.uk",
@@ -1905,6 +1905,11 @@
             "description" : "Area Code",
             "example" : "NW"
           },
+          "subareaCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "Subarea Code",
+            "example" : "SHEFF"
+          },
           "regionCode" : {
             "type" : [ "string", "null" ],
             "description" : "Region Code",
@@ -2129,6 +2134,14 @@
           },
           "area" : {
             "description" : "Area",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "subarea" : {
+            "description" : "Subarea",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/CodeDescription"
             }, {
