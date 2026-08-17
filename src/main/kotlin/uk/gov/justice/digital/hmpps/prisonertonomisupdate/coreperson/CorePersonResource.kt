@@ -74,7 +74,7 @@ class CorePersonResource(
   ) = reconciliationService.checkCorePersonMatch(prisonNumber)
 
   @PreAuthorize("hasRole('PRISONER_TO_NOMIS__UPDATE__RW')")
-  @PostMapping("/core-person/prisoner/{prisonNumber}/merge")
+  @PostMapping("/core-person/prisoner/{prisonNumberTo}/merge")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @Operation(
     summary = "Temporary endpoint to merge a prisoner",
