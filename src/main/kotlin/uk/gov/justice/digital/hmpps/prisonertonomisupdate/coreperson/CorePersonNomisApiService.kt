@@ -1,12 +1,13 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson
 
+import kotlinx.coroutines.reactor.awaitSingleOrNull
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.util.context.Context
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonReligion
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.CorePersonResourceApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CorePersonMergeRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderBelief
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 
@@ -26,7 +27,11 @@ class CorePersonNomisApiService(
     .retrieve()
     .awaitBodyOrNullForNotFound(retrySpec = backoffSpec)
 
-  fun mergeReligions(toPrisonNumber: String, nomisIdsToReligions: List<Pair<Long, PrisonReligion>>) {
-    // TODO add an endpoint in the nomis prisoner api to update the religions and then make this take its signature.
+  suspend fun mergeReligions(toPrisonNumber: String, corePersonMergeRequest: CorePersonMergeRequest) {
+    api.updateOffenderByPrisonNumberAfterMerge(
+      prisonNumber = toPrisonNumber,
+      corePersonMergeRequest = corePersonMergeRequest,
+    )
+      .awaitSingleOrNull()
   }
 }

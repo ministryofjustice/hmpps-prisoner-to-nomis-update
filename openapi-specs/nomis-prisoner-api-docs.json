@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-08-14.1919.592bf29"
+    "version" : "2026-08-17.1921.f8f6a48"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -37772,6 +37772,10 @@
           "audit" : {
             "$ref" : "#/components/schemas/NomisAudit",
             "description" : "Audit data associated with the records"
+          },
+          "userActiveCaseloadId" : {
+            "type" : "string",
+            "description" : "Audit user's active caseload ID (modified user else create user)"
           }
         },
         "required" : [ "active", "audit", "bookingId", "fromPrison", "movementReason", "movementTime", "sequence", "toPrison" ]
