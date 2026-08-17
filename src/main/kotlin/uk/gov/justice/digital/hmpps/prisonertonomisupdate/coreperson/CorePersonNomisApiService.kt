@@ -31,7 +31,6 @@ class CorePersonNomisApiService(
     api.updateOffenderByPrisonNumberAfterMerge(
       prisonNumber = toPrisonNumber,
       corePersonMergeRequest = corePersonMergeRequest,
-    )
-      .awaitSingleOrNull()
+    ).awaitSingleOrNull()
   }
 }
