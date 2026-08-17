@@ -9,14 +9,19 @@ import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonMergeService.MergePersonEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PersonReference
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PersonReferenceList
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
 @RestController
 @Tag(name = "Core Person Update Resource")
 class CorePersonResource(
   private val reconciliationService: CorePersonReconciliationService,
+  private val corePersonMergeService: CorePersonMergeService,
 ) {
 
   @PreAuthorize("hasRole('PRISONER_TO_NOMIS__UPDATE__RW')")
@@ -67,4 +72,54 @@ class CorePersonResource(
     @Schema(description = "Prison number aka noms id / offender id display", example = "A1234BC")
     @PathVariable prisonNumber: String,
   ) = reconciliationService.checkCorePersonMatch(prisonNumber)
+
+  @PreAuthorize("hasRole('PRISONER_TO_NOMIS__UPDATE__RW')")
+  @PostMapping("/core-person/prisoner/{prisonNumber}/merge")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  @Operation(
+    summary = "Temporary endpoint to merge a prisoner",
+    description = """After a prisoner merge in core person record, obtain the definitive prisoner details and write back to nomis.
+      Requires PRISONER_TO_NOMIS__UPDATE__RW""",
+    responses = [
+      ApiResponse(
+        responseCode = "401",
+        description = "Unauthorized to access this endpoint",
+        content = [
+          Content(
+            mediaType = "application/json",
+            schema = Schema(implementation = ErrorResponse::class),
+          ),
+        ],
+      ),
+      ApiResponse(
+        responseCode = "403",
+        description = "Forbidden to access this endpoint. Requires PRISONER_TO_NOMIS__UPDATE__RW",
+        content = [
+          Content(
+            mediaType = "application/json",
+            schema = Schema(implementation = ErrorResponse::class),
+          ),
+        ],
+      ),
+    ],
+  )
+  // TODO temporary endpoint to call into the merge a prisoner functionality, to be removed once cpr is raising events.
+  suspend fun updateOffenderByPrisonNumberAfterMerge(
+    @Schema(description = "Prison number aka noms id / offender id display", example = "A1234BC")
+    @PathVariable prisonNumberTo: String,
+  ) {
+    corePersonMergeService.mergePerson(
+      event = MergePersonEvent(
+        eventType = "core-person-record.prison.merged",
+        personReferenceTo = PersonReferenceList(
+          identifiers = listOf(
+            PersonReference(
+              type = "prisonNumber",
+              value = prisonNumberTo,
+            ),
+          ),
+        ),
+      ),
+    )
+  }
 }
