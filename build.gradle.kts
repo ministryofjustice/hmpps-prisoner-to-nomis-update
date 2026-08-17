@@ -11,7 +11,7 @@ import kotlin.io.path.pathString
 import kotlin.io.path.Path as KotlinPath
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.4"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.5"
   kotlin("plugin.spring") version "2.4.10"
   id("org.openapi.generator") version "7.23.0"
 }
@@ -63,6 +63,10 @@ dependencies {
 
 kotlin {
   jvmToolchain(25)
+  compilerOptions {
+    freeCompilerArgs.add("-Xcollection-literals")
+    jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_25)
+  }
 }
 
 @CacheableTask
@@ -279,7 +283,6 @@ val models = listOf(
 tasks {
   withType<KotlinCompile> {
     dependsOn(models.map { it.toBuildModelTaskName() })
-    compilerOptions.jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_25
   }
   withType<KtLintCheckTask> {
     mustRunAfter(models.map { it.toBuildModelTaskName() })
