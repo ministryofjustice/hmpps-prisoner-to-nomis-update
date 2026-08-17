@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-08-10.387.87a9a7e"
+    "version" : "2026-08-14.394.f053c8f"
   },
   "servers" : [ {
     "url" : "/",
@@ -2662,7 +2662,7 @@
           "startedOn" : {
             "type" : "string",
             "format" : "date",
-            "description" : "The date the review was started",
+            "description" : "The date the review was started (when the reviewer began it)",
             "example" : "2026-07-03"
           },
           "startedBy" : {
@@ -3031,7 +3031,7 @@
           "startedOn" : {
             "type" : "string",
             "format" : "date",
-            "description" : "The date the assessment was started",
+            "description" : "The date the assessment was started (when the assessor began it)",
             "example" : "2026-07-06"
           },
           "startedBy" : {

@@ -7,7 +7,7 @@
       "name" : "Move a prisoner Team",
       "email" : "Moveaprisoner-gg@justice.gov.uk"
     },
-    "version" : "2026-08-06.210.825152a"
+    "version" : "2026-08-16.244.c5ca633"
   },
   "servers" : [ {
     "url" : "/",
@@ -2533,6 +2533,12 @@
             "enum" : [ "STANDARD", "EXCESS", "VALUABLES", "CONFISCATED" ],
             "example" : "STANDARD"
           },
+          "previousContainerType" : {
+            "type" : [ "string", "null" ],
+            "description" : "The container's type immediately before this event, so a type change can be described as \"changed from X to Y\". Derived at read time from the preceding event's snapshot, so it is null when there is no earlier event, and null when the two agree - which is the case for events predating the snapshot column, whose backfill gave every event the container's then-current type",
+            "enum" : [ "STANDARD", "EXCESS", "VALUABLES", "CONFISCATED" ],
+            "example" : "EXCESS"
+          },
           "eventDate" : {
             "type" : [ "string", "null" ],
             "format" : "date",
@@ -2843,24 +2849,30 @@
           },
           "containerType" : {
             "type" : [ "string", "null" ],
-            "description" : "Type of the container, for the item's expandable details; null for prisoner movements",
+            "description" : "The container's type as at this event, for the item's expandable details; null for prisoner movements",
             "enum" : [ "STANDARD", "EXCESS", "VALUABLES", "CONFISCATED" ],
             "example" : "STANDARD"
           },
+          "previousContainerType" : {
+            "type" : [ "string", "null" ],
+            "description" : "The container's type immediately before this event, so a type change can be described as \"changed from X to Y\". Null when there is no earlier event, and null when the two agree - which is the case for events predating the snapshot column",
+            "enum" : [ "STANDARD", "EXCESS", "VALUABLES", "CONFISCATED" ],
+            "example" : "EXCESS"
+          },
           "containerSealNumber" : {
             "type" : [ "string", "null" ],
-            "description" : "The container's current seal number, for the item's expandable details",
+            "description" : "The container's seal number as at this event, for the item's expandable details",
             "example" : "SN880032"
           },
           "containerStatus" : {
             "type" : [ "string", "null" ],
-            "description" : "The container's current status, for the item's expandable details",
+            "description" : "The container's status as at this event, for the item's expandable details",
             "enum" : [ "STORED", "DUE_FOR_TRANSFER_OUT", "DUE_FOR_RETURN", "DISPOSAL_REQUIRED", "DISPOSED", "RETURNED", "TRANSFER", "COMBINED", "CREATED_IN_ERROR", "REMOVED" ],
             "example" : "STORED"
           },
           "containerLocationDescription" : {
             "type" : [ "string", "null" ],
-            "description" : "Human-friendly description of the container's current location, for the item's expandable details",
+            "description" : "Human-friendly description of the container's location as at this event, for the item's expandable details",
             "example" : "Reception Property Store"
           }
         },
@@ -2919,22 +2931,22 @@
             "type" : "integer",
             "format" : "int64"
           },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
-          },
-          "pageSize" : {
+          "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
           },
           "paged" : {
             "type" : "boolean"
           },
-          "pageNumber" : {
-            "type" : "integer",
-            "format" : "int32"
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
           },
           "unpaged" : {
             "type" : "boolean"
+          },
+          "pageSize" : {
+            "type" : "integer",
+            "format" : "int32"
           }
         }
       },
@@ -2984,10 +2996,10 @@
           "empty" : {
             "type" : "boolean"
           },
-          "sorted" : {
+          "unsorted" : {
             "type" : "boolean"
           },
-          "unsorted" : {
+          "sorted" : {
             "type" : "boolean"
           }
         }
