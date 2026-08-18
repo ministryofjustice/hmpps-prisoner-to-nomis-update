@@ -173,7 +173,7 @@ class PrisonerBalanceAllReconciliationResourceIntTest(
           .jsonPath("differences[0].nomis").isEqualTo(0)
 
         verify(telemetryClient).trackEvent(
-          eq("prisoner-balance-reports-reconciliation-mismatch"),
+          eq("prisoner-balance-all-reports-reconciliation-mismatch"),
           check {
             assertThat(it["prisoner"]).isEqualTo(OFFENDER_NO)
             assertThat(it["prisoner-balances.accounts"]).isEqualTo("Difference(property=prisoner-balances.accounts, dps=1, nomis=0, id=null)")

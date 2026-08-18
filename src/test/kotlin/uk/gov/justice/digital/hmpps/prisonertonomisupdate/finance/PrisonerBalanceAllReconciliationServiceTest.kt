@@ -224,7 +224,7 @@ class PrisonerBalanceAllReconciliationServiceTest {
       assertThat(actual.error).isInstanceOf(WebClientResponseException.InternalServerError::class.java)
 
       verify(telemetryClient).trackEvent(
-        eq("prisoner-balance-reports-reconciliation-mismatch-page-error"),
+        eq("prisoner-balance-all-reports-reconciliation-mismatch-page-error"),
         check {
           assertThat(it).containsEntry("fromRootOffenderId", "4")
           assertThat(it).containsEntry("toRootOffenderId", "8")
