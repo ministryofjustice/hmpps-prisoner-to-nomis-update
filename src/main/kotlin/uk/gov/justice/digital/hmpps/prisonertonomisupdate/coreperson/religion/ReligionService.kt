@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonCprApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonNomisApiService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CorePersonMergeRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CorePersonReligionRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PersonReferenceList
 import java.util.*
 import kotlin.collections.first
@@ -47,10 +49,12 @@ class ReligionService(
     if (missingMappings.isNotEmpty()) {
       throw IllegalStateException("Missing religion mappings for cpr religion ids: ${missingMappings.joinToString(", ")}")
     }
-    val nomisIdsToReligions =
-      mappings.map { outer -> outer.nomisId to cprReligions.first { it.cprReligionId == outer.cprId } }
-    if (nomisIdsToReligions.isNotEmpty()) {
-      corePersonNomisApiService.mergeReligions(toPrisonNumber, nomisIdsToReligions)
+    val corePersonReligionRequests =
+      mappings.map { outer ->
+        CorePersonReligionRequest(outer.nomisId, cprReligions.first { it.cprReligionId == outer.cprId }.endDate)
+      }
+    if (corePersonReligionRequests.isNotEmpty()) {
+      corePersonNomisApiService.mergeReligions(toPrisonNumber, CorePersonMergeRequest(corePersonReligionRequests))
     }
     telemetryClient.trackEvent("cpr-religions-merged-success", telemetryMap)
   }

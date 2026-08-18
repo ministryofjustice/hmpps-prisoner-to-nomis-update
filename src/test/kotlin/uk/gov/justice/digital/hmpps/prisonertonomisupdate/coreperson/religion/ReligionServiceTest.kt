@@ -115,10 +115,10 @@ internal class ReligionServiceTest(@Autowired jsonMapper: JsonMapper) {
       verify(corePersonNomisApiService).mergeReligions(
         eq("A1234BC"),
         check {
-          assertThat(it[0].first).isEqualTo(10000L)
-          assertThat(it[0].second).isEqualTo(cprReligions[0])
-          assertThat(it[1].first).isEqualTo(10001L)
-          assertThat(it[1].second).isEqualTo(cprReligions[1])
+          assertThat(it.religions[0].beliefId).isEqualTo(10000L)
+          assertThat(it.religions[0].endDate).isEqualTo(cprReligions[0].endDate)
+          assertThat(it.religions[1].beliefId).isEqualTo(10001L)
+          assertThat(it.religions[1].endDate).isEqualTo(cprReligions[1].endDate)
         },
       )
 
