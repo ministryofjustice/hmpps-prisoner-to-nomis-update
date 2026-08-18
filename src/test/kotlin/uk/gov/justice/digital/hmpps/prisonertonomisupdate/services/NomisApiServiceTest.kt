@@ -1534,7 +1534,7 @@ internal class NomisApiServiceTest {
       nomisApiService.getAllPrisonersInRange(
         fromRootOffenderId = 5,
         toRootOffenderId = 100,
-        activeOnly = false
+        activeOnly = false,
       )
 
       nomisApi.verify(
@@ -1581,7 +1581,7 @@ internal class NomisApiServiceTest {
 
       nomisApiService.getAllPrisonersIdRanges(
         pageSize = 5,
-        activeOnly = false
+        activeOnly = false,
       )
 
       nomisApi.verify(
