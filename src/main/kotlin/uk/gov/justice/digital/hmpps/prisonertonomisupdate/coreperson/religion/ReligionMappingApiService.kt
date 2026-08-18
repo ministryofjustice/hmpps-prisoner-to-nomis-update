@@ -17,7 +17,7 @@ class ReligionMappingApiService(
   private val religionResourceApi = ReligionResourceApi(webClient)
 
   private val backoffSpec = retryApiService.getBackoffSpec().withRetryContext(
-    Context.of("api", "TransactionNomisApiService"),
+    Context.of("api", "ReligionMappingApiService"),
   )
 
   suspend fun getByCprIds(crpReligionIds: List<String>): List<ReligionMappingDto> = religionResourceApi.getReligionMappingsByCprIds(crpReligionIds).awaitBodyWithRetry(retrySpec = backoffSpec)
