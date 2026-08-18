@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
@@ -12,52 +13,64 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import org.springframework.http.HttpStatus
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension.Companion.agencyRegistersApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 
-@ExtendWith(AgencyRegistersDpsApiExtension::class)
+@ExtendWith(NomisApiExtension::class)
 @SpringAPIServiceTest
-@Import(AgencyRegistersDpsApiService::class, AgencyConfiguration::class, RetryApiService::class)
-class AgencyRegistersDpsApiServiceTest {
+@Import(AgencyNomisApiService::class, AgencyConfiguration::class, AgencyNomisApiMockServer::class, RetryApiService::class)
+class AgencyNomisApiServiceTest {
   @Autowired
-  private lateinit var apiService: AgencyRegistersDpsApiService
+  private lateinit var apiService: AgencyNomisApiService
+
+  @Autowired
+  private lateinit var mockServer: AgencyNomisApiMockServer
 
   @Nested
   inner class GetAgency {
     @Test
     internal fun `will pass oauth2 token to endpoint`() = runTest {
-      agencyRegistersApi.stubGetAgency("SHEFCC")
+      mockServer.stubGetAgency(
+        agencyId = "SHEFCC",
+      )
 
-      apiService.getAgency("SHEFCC")
+      apiService.getAgency(
+        agencyId = "SHEFCC",
+      )
 
-      agencyRegistersApi.verify(
+      mockServer.verify(
         getRequestedFor(anyUrl())
           .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
 
     @Test
-    fun `will call the endpoint`() = runTest {
-      agencyRegistersApi.stubGetAgency("SHEFCC")
+    fun `will call the get agency endpoint`() = runTest {
+      mockServer.stubGetAgency(
+        agencyId = "SHEFCC",
+      )
 
-      apiService.getAgency("SHEFCC")
-
-      agencyRegistersApi.verify(
-        getRequestedFor(urlPathEqualTo("/legacy/reconciliation/SHEFCC")),
+      apiService.getAgency(
+        agencyId = "SHEFCC",
+      )
+      mockServer.verify(
+        getRequestedFor(urlPathEqualTo("/agency/SHEFCC")),
       )
     }
 
     @Test
     fun `will return agency from the endpoint`() = runTest {
-      agencyRegistersApi.stubGetAgency("SHEFCC")
+      mockServer.stubGetAgency(
+        agencyId = "SHEFCC",
+      )
 
       assertThat(apiService.getAgency("SHEFCC")).isNotNull
     }
 
     @Test
     fun `will return null from the endpoint when not found`() = runTest {
-      agencyRegistersApi.stubGetAgency("SHEFCC", errorHttpStatus = HttpStatus.NOT_FOUND)
+      mockServer.stubGetAgency("SHEFCC", errorHttpStatus = HttpStatus.NOT_FOUND)
 
       assertThat(apiService.getAgency("SHEFCC")).isNull()
     }
@@ -67,24 +80,24 @@ class AgencyRegistersDpsApiServiceTest {
   inner class GetAgencyIds {
     @Test
     internal fun `will pass oauth2 token to endpoint`() = runTest {
-      agencyRegistersApi.stubGetAgencyIds()
+      mockServer.stubGetAgencyIds()
 
       apiService.getAgencyIds()
 
-      agencyRegistersApi.verify(
+      mockServer.verify(
         getRequestedFor(anyUrl())
           .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
 
     @Test
-    fun `will call the endpoint`() = runTest {
-      agencyRegistersApi.stubGetAgencyIds()
+    fun `will call the get agency ids endpoint but exclude prisons`() = runTest {
+      mockServer.stubGetAgencyIds()
 
       apiService.getAgencyIds()
 
-      agencyRegistersApi.verify(
-        getRequestedFor(urlPathEqualTo("/legacy/reconciliation/ids/all")),
+      mockServer.verify(
+        getRequestedFor(urlEqualTo("/agency/ids/all?excludeType=INST")),
       )
     }
   }

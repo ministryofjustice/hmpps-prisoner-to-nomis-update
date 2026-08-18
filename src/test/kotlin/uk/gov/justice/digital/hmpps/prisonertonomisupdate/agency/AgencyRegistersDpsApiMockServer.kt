@@ -11,14 +11,17 @@ import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import tools.jackson.databind.json.JsonMapper
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension.Companion.courtDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension.Companion.agencyIdsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension.Companion.jsonMapper
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agencyregisters.model.AgencyAddressDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agencyregisters.model.AgencyEmailDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agencyregisters.model.AgencyPhoneDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agencyregisters.model.CodeDescription
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agencyregisters.model.CourtDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension.Companion.legacyAgencyDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agencyregisters.model.AgencyId
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agencyregisters.model.AgencyIdsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agencyregisters.model.ErrorResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agencyregisters.model.LegacyAgencyAddressDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agencyregisters.model.LegacyAgencyDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agencyregisters.model.LegacyAgencyEmailDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agencyregisters.model.LegacyAgencyPhoneDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agencyregisters.model.LegacyAgencyType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.getRequestBody
 
 class AgencyRegistersDpsApiExtension :
@@ -33,23 +36,28 @@ class AgencyRegistersDpsApiExtension :
 
     inline fun <reified T> getRequestBody(pattern: RequestPatternBuilder): T = agencyRegistersApi.getRequestBody(pattern, jsonMapper)
 
-    fun courtDto() = CourtDto(
-      courtId = "SHEFCC",
-      courtName = "Sheffield Crown Ct",
+    fun legacyAgencyDto() = LegacyAgencyDto(
+      name = "Sheffield Crown Ct",
       active = true,
-      addresses = listOf(agencyAddressDto()),
-      emailAddresses = listOf(agencyEmailDto()),
-      phoneNumbers = listOf(agencyPhoneDto()),
+      addresses = listOf(legacyAgencyAddressDto()),
+      emailAddresses = listOf(legacyAgencyEmailDto()),
+      phoneNumbers = listOf(legacyAgencyPhoneDto()),
       description = "Sheffield Crown Court",
       inactiveDate = null,
       cjitCode = "C00SH00",
-      area = CodeDescription("52", "South Yorkshire"),
-      region = CodeDescription("YOHUM", "Yorkshire and Humber"),
-      courtType = CodeDescription("CC", "Crown Court"),
+      areaCode = "52",
+      regionCode = "YOHUM",
+      courtTypeCode = "CC",
+      agencyType = LegacyAgencyType.COURT,
+      subareaCode = "SHEFF",
+      geographicalAreaCode = "WYORKS",
+      payrollRegionCode = "TODO",
+      localAuthorityCode = "00CG",
+      accessibleAccess = LegacyAgencyDto.AccessibleAccess.WHEELCHAIR_ACCESS,
+      contact = "JANE SMITH",
     )
 
-    fun agencyAddressDto() = AgencyAddressDto(
-      id = 1,
+    fun legacyAgencyAddressDto() = LegacyAgencyAddressDto(
       addressLine1 = "Sheffield Combined Crt Centre, The Law Courts",
       addressLine2 = "50 West Bar",
       town = "Sheffield",
@@ -58,15 +66,16 @@ class AgencyRegistersDpsApiExtension :
       country = "England",
     )
 
-    fun agencyEmailDto() = AgencyEmailDto(
-      id = 1,
+    fun legacyAgencyEmailDto() = LegacyAgencyEmailDto(
       address = "sheffield.crown.court@test.com",
     )
 
-    fun agencyPhoneDto() = AgencyPhoneDto(
-      id = 1,
+    fun legacyAgencyPhoneDto() = LegacyAgencyPhoneDto(
       number = "0114 555 9898",
     )
+
+    fun agencyIdsResponse() = AgencyIdsResponse(agencyIds = listOf(agencyId()))
+    fun agencyId() = AgencyId("SHEFCC")
   }
 
   override fun beforeAll(context: ExtensionContext) {
@@ -99,9 +108,9 @@ class AgencyRegistersDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetCourt(agencyId: String, response: CourtDto = courtDto()) {
+  fun stubGetAgency(agencyId: String, response: LegacyAgencyDto = legacyAgencyDto()) {
     stubFor(
-      get("/courts/id/$agencyId").willReturn(
+      get("/legacy/reconciliation/$agencyId").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(jsonMapper.writeValueAsString(response))
@@ -109,13 +118,23 @@ class AgencyRegistersDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       ),
     )
   }
-  fun stubGetCourt(agencyId: String, errorHttpStatus: HttpStatus) {
+  fun stubGetAgency(agencyId: String, errorHttpStatus: HttpStatus) {
     stubFor(
-      get("/courts/id/$agencyId").willReturn(
+      get("/legacy/reconciliation/$agencyId").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(jsonMapper.writeValueAsString(ErrorResponse(status = errorHttpStatus.value())))
           .withStatus(errorHttpStatus.value()),
+      ),
+    )
+  }
+  fun stubGetAgencyIds(response: AgencyIdsResponse = agencyIdsResponse()) {
+    stubFor(
+      get("/legacy/reconciliation/ids/all").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(jsonMapper.writeValueAsString(response))
+          .withStatus(200),
       ),
     )
   }

@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-08-14.393.ccb9dcb"
+    "version" : "2026-08-18.414.8dc0227"
   },
   "servers" : [ {
     "url" : "https://prison-register-dev.hmpps.service.justice.gov.uk",
@@ -812,7 +812,7 @@
             "description" : "NOMIS Agency Id",
             "example" : "SHEFCC",
             "maxLength" : 6,
-            "minLength" : 3
+            "minLength" : 2
           },
           "example" : "SHEFCC"
         } ],
@@ -886,7 +886,7 @@
             "description" : "NOMIS Agency Id",
             "example" : "SHEFCC",
             "maxLength" : 6,
-            "minLength" : 3
+            "minLength" : 2
           },
           "example" : "SHEFCC"
         } ],
@@ -960,7 +960,7 @@
             "description" : "Probation Office ID",
             "example" : "SHEFPB",
             "maxLength" : 6,
-            "minLength" : 3
+            "minLength" : 2
           },
           "example" : "SHEFPB"
         } ],
@@ -1216,7 +1216,7 @@
             "description" : "Police Custody Suite ID",
             "example" : "SHFPCS",
             "maxLength" : 6,
-            "minLength" : 3
+            "minLength" : 2
           },
           "example" : "SHFPCS"
         } ],
@@ -1227,6 +1227,110 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/PoliceCustodySuiteDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/legacy/reconciliation/{agencyId}" : {
+      "get" : {
+        "tags" : [ "legacy-sync-resource" ],
+        "summary" : "Returns details of an agency of any type for reconciliation",
+        "description" : "Returns the details of any agency (court, hospital, probation office, approved premise, police custody suite, or generic agency) as a LegacyAgencyDto. Role required is ROLE_HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
+        "operationId" : "getAgencyDetails",
+        "parameters" : [ {
+          "name" : "agencyId",
+          "in" : "path",
+          "description" : "NOMIS Agency Id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "NOMIS Agency Id",
+            "example" : "SHEFCC",
+            "maxLength" : 6,
+            "minLength" : 2
+          },
+          "example" : "SHEFCC"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Agency details returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LegacyAgencyDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Incorrect permissions to retrieve agency details",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Agency not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/legacy/reconciliation/ids/all" : {
+      "get" : {
+        "tags" : [ "legacy-sync-resource" ],
+        "summary" : "Returns IDs of all non-prison agencies for reconciliation",
+        "description" : "Returns the IDs of all courts, hospitals, probation offices, approved premises, police custody suites, and generic agencies. Role required is ROLE_HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
+        "operationId" : "getAllAgencyIds",
+        "responses" : {
+          "200" : {
+            "description" : "Agency IDs returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AgencyIdsResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Incorrect permissions to retrieve agency IDs",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -1250,7 +1354,7 @@
             "description" : "Hospital ID",
             "example" : "SHEFCC",
             "maxLength" : 6,
-            "minLength" : 3
+            "minLength" : 2
           },
           "example" : "SHEFCC"
         } ],
@@ -1284,7 +1388,7 @@
             "description" : "Court ID",
             "example" : "SHEFCC",
             "maxLength" : 6,
-            "minLength" : 3
+            "minLength" : 2
           },
           "example" : "SHEFCC"
         } ],
@@ -1318,7 +1422,7 @@
             "description" : "Approved Premise ID",
             "example" : "SHEFAP",
             "maxLength" : 6,
-            "minLength" : 3
+            "minLength" : 2
           },
           "example" : "SHEFAP"
         } ],
@@ -1352,7 +1456,7 @@
             "description" : "Agency ID",
             "example" : "SHEFCC",
             "maxLength" : 6,
-            "minLength" : 3
+            "minLength" : 2
           },
           "example" : "SHEFCC"
         } ],
@@ -1363,6 +1467,39 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/AgencyDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/legacy/admin/sync/agency/all" : {
+      "delete" : {
+        "tags" : [ "legacy-sync-resource" ],
+        "summary" : "Deletes all non-prison agency data",
+        "description" : "Deletes all synchronized agency data except prisons. Role required is ROLE_HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
+        "operationId" : "deleteAllAgencies",
+        "responses" : {
+          "204" : {
+            "description" : "Agencies deleted"
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Incorrect permissions to delete agencies",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -2305,6 +2442,27 @@
           }
         },
         "required" : [ "active", "addresses", "emailAddresses", "phoneNumbers", "policeCustodySuiteId", "policeCustodySuiteName" ]
+      },
+      "AgencyId" : {
+        "type" : "object",
+        "properties" : {
+          "agencyId" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "agencyId" ]
+      },
+      "AgencyIdsResponse" : {
+        "type" : "object",
+        "properties" : {
+          "agencyIds" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AgencyId"
+            }
+          }
+        },
+        "required" : [ "agencyIds" ]
       },
       "HospitalDto" : {
         "type" : "object",
