@@ -33,7 +33,7 @@ const val OFFENDER_ID = 123456789000L
 
 @SpringAPIServiceTest
 @Import(
-  PrisonerBalanceReconciliationService::class,
+  PrisonerBalanceAllReconciliationService::class,
   FinanceNomisApiService::class,
   FinanceDpsApiService::class,
   PrisonerBalanceNomisApiMockServer::class,
@@ -42,7 +42,7 @@ const val OFFENDER_ID = 123456789000L
   RetryApiService::class,
   FinanceConfiguration::class,
 )
-class PrisonerBalanceReconciliationServiceTest {
+class PrisonerBalanceAllReconciliationServiceTest {
 
   @MockitoBean
   lateinit var telemetryClient: TelemetryClient
@@ -55,7 +55,7 @@ class PrisonerBalanceReconciliationServiceTest {
   private val nomisApi = NomisApiExtension.nomisApi
 
   @Autowired
-  private lateinit var service: PrisonerBalanceReconciliationService
+  private lateinit var service: PrisonerBalanceAllReconciliationService
 
   @BeforeEach
   fun setUp() {

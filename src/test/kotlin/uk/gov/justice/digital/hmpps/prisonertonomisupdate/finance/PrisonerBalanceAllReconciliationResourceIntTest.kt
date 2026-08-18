@@ -23,16 +23,16 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Pr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 
-class PrisonerBalanceReconciliationResourceIntTest(
-  @Autowired private val prisonerBalanceReconciliationService: PrisonerBalanceReconciliationService,
+class PrisonerBalanceAllReconciliationResourceIntTest(
+  @Autowired private val reconciliationService: PrisonerBalanceAllReconciliationService,
 ) : IntegrationTestBase() {
 
   @Autowired
   private lateinit var financeNomisApi: PrisonerBalanceNomisApiMockServer
 
-  @DisplayName("Prisoner balances reconciliation report")
+  @DisplayName("Prisoner balances all reconciliation report")
   @Nested
-  inner class GeneratePrisonerBalancesReconciliationReport {
+  inner class GenerateAllPrisonerBalancesReconciliationReport {
     @BeforeEach
     fun setUp() {
       reset(telemetryClient)
@@ -58,10 +58,10 @@ class PrisonerBalanceReconciliationResourceIntTest(
 
     @Test
     fun `will output report requested telemetry`() = runTest {
-      prisonerBalanceReconciliationService.generatePrisonerBalanceReconciliationReportBatch()
+      reconciliationService.generatePrisonerBalanceReconciliationReportBatch()
 
       verify(telemetryClient).trackEvent(
-        eq("prisoner-balance-reports-reconciliation-requested"),
+        eq("prisoner-balance-all-reports-reconciliation-requested"),
       )
 
       awaitReportFinished()
@@ -69,10 +69,10 @@ class PrisonerBalanceReconciliationResourceIntTest(
 
     @Test
     fun `will output report telemetry`() = runTest {
-      prisonerBalanceReconciliationService.generatePrisonerBalanceReconciliationReportBatch()
+      reconciliationService.generatePrisonerBalanceReconciliationReportBatch()
 
       verify(telemetryClient).trackEvent(
-        eq("prisoner-balance-reports-reconciliation-report"),
+        eq("prisoner-balance-all-reports-reconciliation-report"),
         check {
           assertThat(it).containsEntry("balance-count", "20")
           assertThat(it).containsEntry("page-count", "2")
@@ -92,10 +92,10 @@ class PrisonerBalanceReconciliationResourceIntTest(
         nomisPrisonerAccounts().copy(prisonNumber = "A0002NN"),
         emptyMap(),
       )
-      prisonerBalanceReconciliationService.generatePrisonerBalanceReconciliationReportBatch()
+      reconciliationService.generatePrisonerBalanceReconciliationReportBatch()
 
       verify(telemetryClient).trackEvent(
-        eq("prisoner-balance-reports-reconciliation-report"),
+        eq("prisoner-balance-all-reports-reconciliation-report"),
         check {
           assertThat(it).containsEntry("balance-count", "20")
           assertThat(it).containsEntry("page-count", "2")
@@ -111,7 +111,7 @@ class PrisonerBalanceReconciliationResourceIntTest(
     private fun awaitReportFinished() {
       await untilAsserted {
         verify(telemetryClient).trackEvent(
-          eq("prisoner-balance-reports-reconciliation-report"),
+          eq("prisoner-balance-all-reports-reconciliation-report"),
           any(),
           isNull(),
         )
