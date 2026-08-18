@@ -156,6 +156,10 @@ generic-service:
     - name: person-contact-recon
       type: PERSON_CONTACT_RECON
       schedule: "50 1 * * 6"
+    - name: prisoner-balance-active-recon
+      type: PRISONER_BALANCE_ACTIVE_RECON
+      schedule: "30 3 * * SUN,MON,TUE,WED,THU,FRI"
+      suspend: true
     - name: prisoner-balance-all-recon
       type: PRISONER_BALANCE_ALL_RECON
       schedule: "30 3 * * *"

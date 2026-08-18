@@ -1539,7 +1539,8 @@ internal class NomisApiServiceTest {
       nomisApi.verify(
         getRequestedFor(urlPathEqualTo("/prisoners/ids-in-range"))
           .withQueryParam("fromRootOffenderId", equalTo("5"))
-          .withQueryParam("toRootOffenderId", equalTo("100")),
+          .withQueryParam("toRootOffenderId", equalTo("100"))
+          .withQueryParam("active", equalTo("false")),
       )
     }
 
@@ -1559,7 +1560,7 @@ internal class NomisApiServiceTest {
   }
 
   @Nested
-  inner class GetAllPrisonersIsRanges {
+  inner class GetAllPrisonersIdRanges {
     @Test
     internal fun `will pass oath2 token to service`() = runTest {
       nomisApi.stubGetAllPrisonersIdRanges(pageSize = 10)
@@ -1583,7 +1584,9 @@ internal class NomisApiServiceTest {
 
       nomisApi.verify(
         getRequestedFor(urlPathEqualTo("/prisoners/id-ranges"))
-          .withQueryParam("size", equalTo("5")),
+          .withQueryParam("size", equalTo("5"))
+          .withQueryParam("active", equalTo("false")),
+
       )
     }
 

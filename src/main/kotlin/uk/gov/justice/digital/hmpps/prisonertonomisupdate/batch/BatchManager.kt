@@ -39,6 +39,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.OFFICI
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.OFFICIAL_VISIT_ALL_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.ORGANISATIONS_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PERSON_CONTACT_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PRISONER_BALANCE_ACTIVE_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PRISONER_BALANCE_ALL_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PRISONER_CONTACT_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PRISONER_RESTRICTION_RECON
@@ -55,7 +56,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.CaseNotesRec
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.CSIPReconciliationService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.PrisonerBalanceAllReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.PrisonerBalanceReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.PrisonerTransactionReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives.IncentivesReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.IncidentsReconciliationService
@@ -106,6 +107,7 @@ enum class BatchType {
   VISIT_SLOTS_RECON,
   ORGANISATIONS_RECON,
   PERSON_CONTACT_RECON,
+  PRISONER_BALANCE_ACTIVE_RECON,
   PRISONER_BALANCE_ALL_RECON,
   PRISONER_CONTACT_RECON,
   PRISONER_RESTRICTION_RECON,
@@ -145,7 +147,7 @@ class BatchManager(
   private val officialVisitsAllMissingFromNOMISReconciliationService: OfficialVisitsAllMissingFromNOMISReconciliationService,
   private val officialVisitsActiveScheduledReconciliationService: OfficialVisitsActiveScheduledReconciliationService,
   private val organisationReconciliationService: OrganisationsReconciliationService,
-  private val prisonerBalanceAllReconciliationService: PrisonerBalanceAllReconciliationService,
+  private val prisonerBalanceReconciliationService: PrisonerBalanceReconciliationService,
   private val prisonerRestrictionsReconciliationService: PrisonerRestrictionsReconciliationService,
   private val prisonerTransactionsReconciliationService: PrisonerTransactionReconciliationService,
   private val schedulesService: SchedulesService,
@@ -188,7 +190,8 @@ class BatchManager(
       OFFICIAL_VISIT_ACTIVE_SCH_RECON -> officialVisitsActiveScheduledReconciliationService.generateActiveScheduledVisitsReconciliationReportBatch()
       ORGANISATIONS_RECON -> organisationReconciliationService.generateOrganisationsReconciliationReport()
       PERSON_CONTACT_RECON -> contactPersonReconciliationService.generatePersonContactReconciliationReportBatch()
-      PRISONER_BALANCE_ALL_RECON -> prisonerBalanceAllReconciliationService.generatePrisonerBalanceReconciliationReportBatch()
+      PRISONER_BALANCE_ACTIVE_RECON -> prisonerBalanceReconciliationService.generateReconciliationReportBatch(activeOnly = true)
+      PRISONER_BALANCE_ALL_RECON -> prisonerBalanceReconciliationService.generateReconciliationReportBatch(activeOnly = false)
       PRISONER_CONTACT_RECON -> contactPersonReconciliationService.generatePrisonerContactReconciliationReportBatch()
       PRISONER_RESTRICTION_RECON -> prisonerRestrictionsReconciliationService.generatePrisonerRestrictionsReconciliationReportBatch()
       PRISONER_TRANSACTIONS_RECON -> prisonerTransactionsReconciliationService.generateReconciliationReportBatch()
