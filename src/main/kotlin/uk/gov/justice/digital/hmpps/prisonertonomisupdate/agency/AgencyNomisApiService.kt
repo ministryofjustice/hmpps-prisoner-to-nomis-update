@@ -24,5 +24,5 @@ class AgencyNomisApiService(
   private val api = AgencyResourceApi(webClient)
 
   suspend fun getAgency(agencyId: String): AgencyResponse? = api.prepare(api.getAgencyRequestConfig(agencyId)).retrieve().awaitBodyOrNullForNotFound(retrySpec)
-  suspend fun getAgencyIds(): AgencyIdsResponse = api.getAllAgencies(excludeType = listOf("INST")).awaitSingle()
+  suspend fun getAgencyIds(): AgencyIdsResponse = api.getAllAgencies(excludeType = listOf("INST")).retryWhen(retrySpec).awaitSingle()
 }
