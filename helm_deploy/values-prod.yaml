@@ -156,8 +156,8 @@ generic-service:
     - name: person-contact-recon
       type: PERSON_CONTACT_RECON
       schedule: "50 1 * * 6"
-    - name: prisoner-balance-recon
-      type: PRISONER_BALANCE_RECON
+    - name: prisoner-balance-all-recon
+      type: PRISONER_BALANCE_ALL_RECON
       schedule: "30 3 * * *"
     - name: prisner-contact-recon
       type: PRISONER_CONTACT_RECON

@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController
 @Tag(name = "Finance Update Resource")
 @PreAuthorize("hasRole('ROLE_PRISONER_TO_NOMIS__UPDATE__RW')")
 class PrisonerBalanceResource(
-  private val reconciliationService: PrisonerBalanceReconciliationService,
+  private val reconciliationService: PrisonerBalanceAllReconciliationService,
 ) {
   @GetMapping("/prisoner-balance/reconciliation/id/{rootOffenderId}")
   @Operation(

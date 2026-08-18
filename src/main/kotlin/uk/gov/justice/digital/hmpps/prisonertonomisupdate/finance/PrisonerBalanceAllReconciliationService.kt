@@ -16,7 +16,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiServi
 import java.math.BigDecimal
 
 @Service
-class PrisonerBalanceReconciliationService(
+class PrisonerBalanceAllReconciliationService(
   private val telemetryClient: TelemetryClient,
   private val financeNomisApiService: FinanceNomisApiService,
   private val nomisApiService: NomisApiService,
@@ -25,7 +25,7 @@ class PrisonerBalanceReconciliationService(
   @Value($$"${reports.prisoner.balance.reconciliation.thread-count:10}") private val threadCount: Int = 10,
 ) {
   private companion object {
-    private const val TELEMETRY_PRISONER_PREFIX = "prisoner-balance-reports-reconciliation"
+    private const val TELEMETRY_PRISONER_PREFIX = "prisoner-balance-all-reports-reconciliation"
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
