@@ -23,6 +23,7 @@ import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonReligion
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonReligion.ReligionCode
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonReligion.ReligionCode.BAHA
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.religion.ReligionMappingApiMockServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ReligionMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ReligionMappingDto.MappingType.MIGRATED
@@ -31,7 +32,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CorePersonReligionRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.NomisAudit
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderBelief
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiMockServer
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -39,11 +39,10 @@ import java.time.LocalDateTime
 @ExtendWith(MockitoExtension::class)
 class CorePersonResourceIntTest(
   @Autowired private val corePersonNomisApi: CorePersonNomisApiMockServer,
+  @Autowired private val mappingServer: ReligionMappingApiMockServer,
 ) : IntegrationTestBase() {
 
   private val corePersonCprApi = CorePersonCprApiExtension.corePersonCprApi
-
-  private val mappingServer = MappingExtension.mappingServer
 
   @Captor
   lateinit var telemetryCaptor: ArgumentCaptor<Map<String, String>>
