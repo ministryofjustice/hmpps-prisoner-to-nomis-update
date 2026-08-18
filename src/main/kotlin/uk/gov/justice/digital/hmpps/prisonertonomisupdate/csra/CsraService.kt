@@ -67,7 +67,9 @@ class CsraService(
   }
 
   suspend fun updated(event: CsraDomainEvent) {
-    TODO() // I dont think this is needed, as we don't update CSRA in DPS, only create.
+    val telemetry = event.asTelemetry()
+    // TODO: I dont think this is needed, as we don't update CSRA in DPS, only create.
+    telemetryClient.trackEvent("csra-update-ignored", telemetry, null)
   }
 
   override suspend fun retryCreateMapping(message: String) {
