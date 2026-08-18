@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.prisonerfromnomismigration.agency
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency
 
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get

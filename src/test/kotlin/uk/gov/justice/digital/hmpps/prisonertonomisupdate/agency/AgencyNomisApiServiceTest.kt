@@ -13,8 +13,6 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import org.springframework.http.HttpStatus
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyConfiguration
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension

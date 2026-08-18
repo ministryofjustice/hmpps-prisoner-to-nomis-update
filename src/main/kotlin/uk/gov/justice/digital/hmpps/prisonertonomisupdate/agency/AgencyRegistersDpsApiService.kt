@@ -22,5 +22,5 @@ class AgencyRegistersDpsApiService(
   private val api = LegacySyncResourceApi(webClient)
 
   suspend fun getAgency(agencyId: String): LegacyAgencyDto? = api.prepare(api.getAgencyDetailsRequestConfig(agencyId)).retrieve().awaitBodyOrNullForNotFound(retrySpec)
-  suspend fun getAgencyIds() = api.getAllAgencyIds().awaitSingle()
+  suspend fun getAgencyIds() = api.getAllAgencyIds().retryWhen(retrySpec).awaitSingle()
 }
