@@ -45,7 +45,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.CaseNotesRec
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.CSIPReconciliationService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.PrisonerBalanceAllReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.PrisonerBalanceReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.PrisonerTransactionReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives.IncentivesReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.IncidentsReconciliationService
@@ -93,7 +93,7 @@ class BatchManagerTest {
   private val officialVisitsActiveScheduledReconciliationService = mock<OfficialVisitsActiveScheduledReconciliationService>()
   private val organisationsReconciliationService = mock<OrganisationsReconciliationService>()
   private val prisonerTransactionsReconciliationService = mock<PrisonerTransactionReconciliationService>()
-  private val prisonerBalanceAllReconciliationService = mock<PrisonerBalanceAllReconciliationService>()
+  private val prisonerBalanceReconciliationService = mock<PrisonerBalanceReconciliationService>()
   private val prisonerRestrictionsReconciliationService = mock<PrisonerRestrictionsReconciliationService>()
   private val schedulesService = mock<SchedulesService>()
   private val sentencingReconciliationService = mock<SentencingReconciliationService>()
@@ -345,12 +345,22 @@ class BatchManagerTest {
   }
 
   @Test
-  fun `should call the prisoner balance reconciliation service`() = runTest {
+  fun `should call the prisoner balance active reconciliation service`() = runTest {
+    val batchManager = batchManager(BatchType.PRISONER_BALANCE_ACTIVE_RECON)
+
+    batchManager.onApplicationEvent(event)
+
+    verify(prisonerBalanceReconciliationService).generateReconciliationReportBatch(true)
+    verify(context).close()
+  }
+
+  @Test
+  fun `should call the prisoner balance all reconciliation service`() = runTest {
     val batchManager = batchManager(PRISONER_BALANCE_ALL_RECON)
 
     batchManager.onApplicationEvent(event)
 
-    verify(prisonerBalanceAllReconciliationService).generatePrisonerBalanceReconciliationReportBatch()
+    verify(prisonerBalanceReconciliationService).generateReconciliationReportBatch(false)
     verify(context).close()
   }
 
@@ -499,7 +509,7 @@ class BatchManagerTest {
     officialVisitsActiveScheduledReconciliationService = officialVisitsActiveScheduledReconciliationService,
     organisationReconciliationService = organisationsReconciliationService,
     prisonerTransactionsReconciliationService = prisonerTransactionsReconciliationService,
-    prisonerBalanceAllReconciliationService = prisonerBalanceAllReconciliationService,
+    prisonerBalanceReconciliationService = prisonerBalanceReconciliationService,
     prisonerRestrictionsReconciliationService = prisonerRestrictionsReconciliationService,
     schedulesService = schedulesService,
     staffReconciliationService = staffReconciliationService,

@@ -33,7 +33,7 @@ const val OFFENDER_ID = 123456789000L
 
 @SpringAPIServiceTest
 @Import(
-  PrisonerBalanceAllReconciliationService::class,
+  PrisonerBalanceReconciliationService::class,
   FinanceNomisApiService::class,
   FinanceDpsApiService::class,
   PrisonerBalanceNomisApiMockServer::class,
@@ -42,7 +42,7 @@ const val OFFENDER_ID = 123456789000L
   RetryApiService::class,
   FinanceConfiguration::class,
 )
-class PrisonerBalanceAllReconciliationServiceTest {
+class PrisonerBalanceReconciliationServiceTest {
 
   @MockitoBean
   lateinit var telemetryClient: TelemetryClient
@@ -55,7 +55,7 @@ class PrisonerBalanceAllReconciliationServiceTest {
   private val nomisApi = NomisApiExtension.nomisApi
 
   @Autowired
-  private lateinit var service: PrisonerBalanceAllReconciliationService
+  private lateinit var service: PrisonerBalanceReconciliationService
 
   @BeforeEach
   fun setUp() {
@@ -206,7 +206,7 @@ class PrisonerBalanceAllReconciliationServiceTest {
         fromRootOffenderId = 4,
         toRootOffenderId = 8,
       )
-      val actual = service.getOffenderIdsInRange(4, 8)
+      val actual = service.getOffenderIdsInRange(4, 8, activeOnly = false)
 
       assertThat(actual).isInstanceOf(ReconciliationSuccessPageResult::class.java)
       actual as ReconciliationSuccessPageResult
@@ -217,14 +217,14 @@ class PrisonerBalanceAllReconciliationServiceTest {
     fun `will report telemetry on error`() = runTest {
       nomisApi.stubGetAllPrisonersInRangeWithError(500)
 
-      val actual = service.getOffenderIdsInRange(4, 8)
+      val actual = service.getOffenderIdsInRange(4, 8, activeOnly = false)
 
       assertThat(actual).isInstanceOf(ReconciliationErrorPageResult::class.java)
       actual as ReconciliationErrorPageResult
       assertThat(actual.error).isInstanceOf(WebClientResponseException.InternalServerError::class.java)
 
       verify(telemetryClient).trackEvent(
-        eq("prisoner-balance-all-reports-reconciliation-mismatch-page-error"),
+        eq("prisoner-balance-reports-reconciliation-mismatch-page-error"),
         check {
           assertThat(it).containsEntry("fromRootOffenderId", "4")
           assertThat(it).containsEntry("toRootOffenderId", "8")

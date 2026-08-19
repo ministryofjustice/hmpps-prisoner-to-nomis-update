@@ -16,7 +16,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiServi
 import java.math.BigDecimal
 
 @Service
-class PrisonerBalanceAllReconciliationService(
+class PrisonerBalanceReconciliationService(
   private val telemetryClient: TelemetryClient,
   private val financeNomisApiService: FinanceNomisApiService,
   private val nomisApiService: NomisApiService,
@@ -25,7 +25,7 @@ class PrisonerBalanceAllReconciliationService(
   @Value($$"${reports.prisoner.balance.reconciliation.thread-count:10}") private val threadCount: Int = 10,
 ) {
   private companion object {
-    private const val TELEMETRY_PRISONER_PREFIX = "prisoner-balance-all-reports-reconciliation"
+    private const val TELEMETRY_PRISONER_PREFIX = "prisoner-balance-reports-reconciliation"
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
@@ -38,14 +38,18 @@ class PrisonerBalanceAllReconciliationService(
     // rootOffenderId is nullable but there are no nulls in the table in prod
   }
 
-  suspend fun generatePrisonerBalanceReconciliationReportBatch() {
-    telemetryClient.trackEvent("$TELEMETRY_PRISONER_PREFIX-requested")
+  suspend fun generateReconciliationReportBatch(activeOnly: Boolean) {
+    telemetryClient.trackEvent(
+      "$TELEMETRY_PRISONER_PREFIX-requested",
+      mapOf("activeOnly" to activeOnly.toString()),
+    )
 
-    runCatching { generatePrisonerBalanceReconciliationReport() }
+    runCatching { generateReconciliationReport(activeOnly) }
       .onSuccess {
         telemetryClient.trackEvent(
           "$TELEMETRY_PRISONER_PREFIX-report",
           mapOf(
+            "activeOnly" to activeOnly.toString(),
             "balance-count" to it.itemsChecked.toString(),
             "page-count" to it.pagesChecked.toString(),
             "mismatch-count" to it.mismatches.size.toString(),
@@ -65,11 +69,11 @@ class PrisonerBalanceAllReconciliationService(
       }
   }
 
-  private suspend fun generatePrisonerBalanceReconciliationReport(): ReconciliationResult<MismatchPrisonerBalance> = generateRangesReconciliationReport(
+  private suspend fun generateReconciliationReport(activeOnly: Boolean): ReconciliationResult<MismatchPrisonerBalance> = generateRangesReconciliationReport(
     threadCount = threadCount,
     checkMatch = ::checkPrisonerBalance,
-    idRanges = { nomisApiService.getAllPrisonersIdRanges(pageSize.toLong()) },
-    idsInRange = { range -> this.getOffenderIdsInRange(range.fromRootOffenderId, range.toRootOffenderId) },
+    idRanges = { nomisApiService.getAllPrisonersIdRanges(pageSize.toLong(), activeOnly) },
+    idsInRange = { range -> this.getOffenderIdsInRange(range.fromRootOffenderId, range.toRootOffenderId, activeOnly) },
   )
 
   internal suspend fun checkPrisonerBalance(rootOffenderId: Long): MismatchPrisonerBalance? = runCatching {
@@ -176,10 +180,12 @@ class PrisonerBalanceAllReconciliationService(
   internal suspend fun getOffenderIdsInRange(
     fromRootOffenderId: Long,
     toRootOffenderId: Long,
+    activeOnly: Boolean,
   ): ReconciliationPageResult<Long> = runCatching {
     nomisApiService.getAllPrisonersInRange(
       fromRootOffenderId = fromRootOffenderId,
       toRootOffenderId = toRootOffenderId,
+      activeOnly = activeOnly,
     )
   }.fold(
     onSuccess = { ids ->
