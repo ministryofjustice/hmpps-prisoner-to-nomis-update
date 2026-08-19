@@ -84,8 +84,8 @@ class CorePersonReconciliationServiceTest {
       ",2016-06-01T01:02:03,false",
       "2016-06-01T01:02:03,,false",
       "2016-06-01T01:02:03,2016-06-01T01:02:03,true",
-      "2016-06-01T01:02:03,2016-06-01T01:03:02,true",
-      "2016-06-01T01:02:03,2016-06-01T01:03:04,false",
+      "2016-06-01T01:02:03,2016-06-01T01:02:02,true",
+      "2016-06-01T01:02:03,2016-06-01T02:02:04,false",
     ],
   )
   inner class LocalDateTimeModifiedTests(private val nomisDate: LocalDateTime?, private val cprDate: LocalDateTime?, private val fieldsEquals: Boolean) {
