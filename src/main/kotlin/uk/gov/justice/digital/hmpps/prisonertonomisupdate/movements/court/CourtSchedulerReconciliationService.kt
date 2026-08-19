@@ -506,7 +506,7 @@ class CourtSchedulerReconciliationService(
     }
 
     // movement time must match
-    if (nomisTime != dpsTime) {
+    if (nomisTime != dpsTime && nomisTime != dpsTime.withSecond(0)) {
       mismatches.add(mismatch(MOVEMENT_TIME, "$nomisTime", "$dpsTime"))
     }
 
