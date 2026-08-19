@@ -1135,6 +1135,22 @@ class CourtSchedulerReconciliationIntTest(
       }
 
       @Test
+      fun `should NOT report different start time if only seconds are different`() = runTest {
+        stubDpsCourtEvent(movementOut = courtEventMovement(movementTime = today, id = dpsScheduledMovementOutId, directionCode = "OUT"))
+        stubNomisCourtEvent(movementOut = bookingCourtMovementOut(seq = 456).copy(movementTime = today.withSecond(0)))
+        stubMappings(NomisMovementId(12345, 456), dpsScheduledMovementOutId)
+
+        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+        awaitReportFinished()
+
+        verify(telemetryClient, never()).trackEvent(
+          eq("court-scheduler-reconciliation-mismatch"),
+          any(),
+          isNull(),
+        )
+      }
+
+      @Test
       fun `should report different reason`() = runTest {
         stubDpsCourtEvent(movementOut = courtEventMovement(movementReasonCode = "CA", id = dpsScheduledMovementOutId, directionCode = "OUT"))
         stubNomisCourtEvent(movementOut = bookingCourtMovementOut(seq = 456))
