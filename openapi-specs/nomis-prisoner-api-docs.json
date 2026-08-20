@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-08-17.1921.f8f6a48"
+    "version" : "2026-08-19.1939.2155496"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -16440,6 +16440,127 @@
         }
       }
     },
+    "/property-containers/ids-in-range" : {
+      "get" : {
+        "tags" : [ "property-resource" ],
+        "summary" : "Gets every id in range.",
+        "description" : "Returns a list of property container ids greater than the specified fromId and less than or equal to the\n      specified toId. Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
+        "operationId" : "getIdentifiersInRange",
+        "parameters" : [ {
+          "name" : "fromId",
+          "in" : "query",
+          "description" : "Return ids greater than this value.",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Return ids greater than this value."
+          }
+        }, {
+          "name" : "toId",
+          "in" : "query",
+          "description" : "Return ids less than or equal to this value.",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Return ids less than or equal to this value."
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "list of property container ids",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "integer",
+                    "format" : "int64"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint when role NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/property-containers/id-ranges" : {
+      "get" : {
+        "tags" : [ "property-resource" ],
+        "summary" : "get property container ids by page size",
+        "description" : "Retrieves a list of property container ids, spaced by the page size. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
+        "operationId" : "getPropertyContainerIdRanges",
+        "parameters" : [ {
+          "name" : "pageSize",
+          "in" : "query",
+          "description" : "Range size of ids to get",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 1000,
+            "minimum" : 1
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "List of ids are returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "integer",
+                    "format" : "int64"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint when role not present",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/profile-details/{bookingId}/sequence/{sequence}/type/{type}" : {
       "get" : {
         "tags" : [ "profile-details-resource" ],
@@ -19690,6 +19811,68 @@
           },
           "404" : {
             "description" : "Offender or transfer schedule not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/movements/{offenderNo}/transfer" : {
+      "get" : {
+        "tags" : [ "offender-transfer-movements-resource" ],
+        "summary" : "Get tansfer schedules and movements for an offender",
+        "description" : "Get transfer schedules and movements for an offender. This is used to migrate transfer movements to DPS and for reconciliation. Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getOffenderTransferMovements",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender number (NOMS ID)",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender number (NOMS ID)",
+            "example" : "A1234BC"
+          },
+          "example" : "A1234BC"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Offender transfer movements returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OffenderTransferMovementsResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Offender not found",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -23475,6 +23658,81 @@
           },
           "404" : {
             "description" : "Offender does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/core-person/{offenderId}/identifier/{sequenceNumber}" : {
+      "get" : {
+        "tags" : [ "core-person-resource" ],
+        "summary" : "Get an identifier by offender id and sequence number",
+        "description" : "Retrieves an offender identifier. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getIdentifier",
+        "parameters" : [ {
+          "name" : "offenderId",
+          "in" : "path",
+          "description" : "The offender id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The offender id",
+            "example" : 1234567
+          },
+          "example" : 1234567
+        }, {
+          "name" : "sequenceNumber",
+          "in" : "path",
+          "description" : "The sequence number",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The sequence number",
+            "example" : 3
+          },
+          "example" : 3
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Identifier returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Identifier"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Identifier or offender does not exist",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -33816,14 +34074,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -33851,12 +34109,12 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paged" : {
+            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -34937,14 +35195,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -35088,14 +35346,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -36594,14 +36852,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -36668,14 +36926,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -36732,14 +36990,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -37397,14 +37655,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -37580,14 +37838,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -37715,6 +37973,69 @@
           }
         },
         "required" : [ "approved", "audit", "priority", "requestDate", "status", "statusDate" ]
+      },
+      "BookingTransferMovements" : {
+        "type" : "object",
+        "description" : "Booking transfers",
+        "properties" : {
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Booking ID"
+          },
+          "activeBooking" : {
+            "type" : "boolean",
+            "description" : "Whether this is an active booking"
+          },
+          "latestBooking" : {
+            "type" : "boolean",
+            "description" : "Whether this is the latest booking"
+          },
+          "transferSchedules" : {
+            "type" : "array",
+            "description" : "List of transfer schedules",
+            "items" : {
+              "$ref" : "#/components/schemas/BookingTransferSchedule"
+            }
+          },
+          "unscheduledTransferMovements" : {
+            "type" : "array",
+            "description" : "Unscheduled transfer movements - those without a schedule",
+            "items" : {
+              "$ref" : "#/components/schemas/TransferMovementOut"
+            }
+          }
+        },
+        "required" : [ "activeBooking", "bookingId", "latestBooking", "transferSchedules", "unscheduledTransferMovements" ]
+      },
+      "BookingTransferSchedule" : {
+        "type" : "object",
+        "description" : "Booking transfer schedule and movement",
+        "properties" : {
+          "schedule" : {
+            "$ref" : "#/components/schemas/TransferScheduleOut",
+            "description" : "transfer schedule"
+          },
+          "movement" : {
+            "$ref" : "#/components/schemas/TransferMovementOut",
+            "description" : "transfer movement"
+          }
+        },
+        "required" : [ "schedule" ]
+      },
+      "OffenderTransferMovementsResponse" : {
+        "type" : "object",
+        "description" : "Offender transfer movements by booking, including schedules",
+        "properties" : {
+          "bookings" : {
+            "type" : "array",
+            "description" : "List of bookings with their transfer movements",
+            "items" : {
+              "$ref" : "#/components/schemas/BookingTransferMovements"
+            }
+          }
+        },
+        "required" : [ "bookings" ]
       },
       "TransferMovementOut" : {
         "type" : "object",
@@ -39489,14 +39810,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -40031,14 +40352,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -40141,14 +40462,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -40494,14 +40815,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -40800,14 +41121,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -41562,14 +41883,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -41859,14 +42180,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -42213,14 +42534,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -42511,14 +42832,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
