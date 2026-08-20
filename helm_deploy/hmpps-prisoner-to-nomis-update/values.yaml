@@ -59,6 +59,8 @@ generic-service:
       ACTIVITIES_CLIENT_SECRET: "ACTIVITIES_CLIENT_SECRET"
       ADJUDICATIONS_CLIENT_ID: "ADJUDICATIONS_CLIENT_ID"
       ADJUDICATIONS_CLIENT_SECRET: "ADJUDICATIONS_CLIENT_SECRET"
+      AGENCYREGISTERS_CLIENT_ID: "AGENCYREGISTERS_CLIENT_ID"
+      AGENCYREGISTERS_CLIENT_SECRET: "AGENCYREGISTERS_CLIENT_SECRET"
       ALERTS_CLIENT_ID: "ALERTS_CLIENT_ID"
       ALERTS_CLIENT_SECRET: "ALERTS_CLIENT_SECRET"
       API_CLIENT_ID: "API_CLIENT_ID"
@@ -187,6 +189,10 @@ generic-service:
       HMPPS_SQS_QUEUES_OFFICIALVISITS_QUEUE_NAME: "sqs_queue_name"
     domain-events-sqs-nomis-update-officialvisits-dlq:
       HMPPS_SQS_QUEUES_OFFICIALVISITS_DLQ_NAME: "sqs_queue_name"
+    domain-events-sqs-nomis-update-agencyregisters:
+      HMPPS_SQS_QUEUES_AGENCYREGISTERS_QUEUE_NAME: "sqs_queue_name"
+    domain-events-sqs-nomis-update-agencyregisters-dlq:
+      HMPPS_SQS_QUEUES_AGENCYREGISTERS_DLQ_NAME: "sqs_queue_name"
 
   allowlist:
     groups:

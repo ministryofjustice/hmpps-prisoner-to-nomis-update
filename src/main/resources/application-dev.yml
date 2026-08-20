@@ -8,6 +8,7 @@ api.base.url:
   # Set to ourselves until new service is ready
   activities: http://localhost:8080
   adjudications: http://localhost:8080
+  agency.registers: http://localhost:8080
   alerts: http://localhost:8080
   appointments: http://localhost:8080
   core.person: http://localhost:8080

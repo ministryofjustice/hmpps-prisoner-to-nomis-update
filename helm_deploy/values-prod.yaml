@@ -248,6 +248,9 @@ generic-prometheus-alerts:
     officialvisits:
       - "syscon-devs-prod-hmpps_prisoner_to_nomis_officialvisits_queue"
       - "syscon-devs-prod-hmpps_prisoner_to_nomis_officialvisits_dlq"
+    agencyregisters:
+      - "syscon-devs-prod-hmpps_prisoner_to_nomis_agencyregisters_queue"
+      - "syscon-devs-prod-hmpps_prisoner_to_nomis_agencyregisters_dlq"
     courtmovements:
       - "syscon-devs-prod-hmpps_prisoner_to_nomis_courtmovements_queue"
       - "syscon-devs-prod-hmpps_prisoner_to_nomis_courtmovements_dlq"
