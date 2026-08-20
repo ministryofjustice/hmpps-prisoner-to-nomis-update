@@ -418,6 +418,17 @@ hmpps.sqs:
       dlqMaxReceiveCount: 2
       visibilityTimeout: 120
       errorVisibilityTimeout: 0
+    agencyregisters:
+      queueName: "agencyregisters-${random.uuid}"
+      dlqName: "agencyregisters-dlq-${random.uuid}"
+      subscribeTopicId: domainevents
+      subscribeFilter: >-
+        { "eventType":[
+          "oagency.updated"
+        ]}
+      dlqMaxReceiveCount: 2
+      visibilityTimeout: 120
+      errorVisibilityTimeout: 0
   topics:
     domainevents:
       arn: arn:aws:sns:eu-west-2:000000000000:${random.uuid}

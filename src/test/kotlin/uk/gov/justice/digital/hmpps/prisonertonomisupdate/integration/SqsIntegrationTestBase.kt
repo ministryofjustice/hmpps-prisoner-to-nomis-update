@@ -160,6 +160,12 @@ abstract class SqsIntegrationTestBase : IntegrationTestBase() {
   internal val courtMovementsQueueUrl by lazy { courtMovementsQueue.queueUrl }
   internal val courtMovementsDlqUrl by lazy { courtMovementsQueue.dlqUrl }
 
+  internal val agencyRegistersQueue by lazy { hmppsQueueService.findByQueueId("agencyregisters") as HmppsQueue }
+  internal val agencyRegistersQueueClient by lazy { agencyRegistersQueue.sqsClient }
+  internal val agencyRegistersDlqClient by lazy { agencyRegistersQueue.sqsDlqClient }
+  internal val agencyRegistersQueueUrl by lazy { agencyRegistersQueue.queueUrl }
+  internal val agencyRegistersDlqUrl by lazy { agencyRegistersQueue.dlqUrl }
+
   @MockitoSpyBean
   internal lateinit var courtSchedulerFeature: CourtSchedulerFeatureSwitches
 
@@ -219,6 +225,9 @@ abstract class SqsIntegrationTestBase : IntegrationTestBase() {
 
     courtMovementsQueueClient.purgeQueue(courtMovementsQueueUrl).get()
     courtMovementsDlqClient?.purgeQueue(courtMovementsDlqUrl)?.get()
+
+    agencyRegistersQueueClient.purgeQueue(agencyRegistersQueueUrl).get()
+    agencyRegistersDlqClient?.purgeQueue(agencyRegistersDlqUrl)?.get()
 
     fromNomisCourtSentencingQueue.purgeQueue().get()
   }
