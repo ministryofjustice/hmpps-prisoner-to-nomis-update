@@ -37,11 +37,6 @@ spring:
             client-id: ${adjudications.client.id}
             client-secret: ${adjudications.client.secret}
             authorization-grant-type: client_credentials
-          agency-registers-api:
-            provider: hmpps-auth
-            client-id: ${agencyregisters.client.id}
-            client-secret: ${agencyregisters.client.secret}
-            authorization-grant-type: client_credentials
           alerts-api:
             provider: hmpps-auth
             client-id: ${alerts.client.id}

@@ -14,7 +14,7 @@ import java.time.Duration
 
 @Configuration
 class AgencyRegistersConfiguration(
-  @Value("\${api.base.url.agency.registers}") val apiBaseUri: String,
+  @Value("\${api.base.url.agencyregisters}") val apiBaseUri: String,
   @Value("\${api.health-timeout:2s}") val healthTimeout: Duration,
   @Value("\${api.timeout:90s}") val timeout: Duration,
 ) {
