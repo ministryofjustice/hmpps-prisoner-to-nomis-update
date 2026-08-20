@@ -1,5 +1,8 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance
 
+import com.github.tomakehurst.wiremock.client.WireMock.equalTo
+import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
@@ -16,108 +19,206 @@ import org.mockito.kotlin.reset
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.core.ParameterizedTypeReference
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiExtension.Companion.dpsFinanceServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SubAccountBalanceForReconciliation
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerAggregatedAccountsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerDetails
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RootOffenderIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
-import java.math.BigDecimal
 
 class PrisonerBalanceReconciliationResourceIntTest(
-  @Autowired private val prisonerBalanceReconciliationService: PrisonerBalanceReconciliationService,
+  @Autowired private val reconciliationService: PrisonerBalanceReconciliationService,
 ) : IntegrationTestBase() {
 
   @Autowired
-  private lateinit var financeNomisApi: FinanceNomisApiMockServer
+  private lateinit var financeNomisApi: PrisonerBalanceNomisApiMockServer
 
-  @DisplayName("Prisoner balances reconciliation report")
+  @DisplayName("Prisoner balances all reconciliation report")
   @Nested
-  inner class GeneratePrisonerBalancesReconciliationReport {
+  inner class GenerateAllPrisonerBalancesReconciliationReport {
     @BeforeEach
     fun setUp() {
       reset(telemetryClient)
-      financeNomisApi.stubGetPrisonerBalanceIdentifiersFromId(
-        response = RootOffenderIdsWithLast(
-          lastOffenderId = 3,
-          rootOffenderIds = (1..3L).toList(),
-        ),
+      nomisApi.stubGetAllPrisonersIdRanges(
+        pageSize = 10,
+        totalElements = 20,
       )
-
-      stubBalances(
-        1,
-        nomisPrisonerAccounts().copy(prisonNumber = "A0001NN"),
-        dpsAccount(),
+      nomisApi.stubGetAllPrisonersInRange(
+        fromRootOffenderId = 0,
+        toRootOffenderId = 10,
+        firstOffenderNo = "A0001NN",
       )
-      stubBalances(
-        2,
-        nomisPrisonerAccounts().copy(prisonNumber = "A0002NN"),
-        dpsAccount(),
+      nomisApi.stubGetAllPrisonersInRange(
+        fromRootOffenderId = 10,
+        toRootOffenderId = 20,
+        firstOffenderNo = "A0001NN",
       )
-      stubBalances(
-        3,
-        nomisPrisonerAccounts().copy(prisonNumber = "A0003NN"),
-        dpsAccount(),
-      )
+      for (i in 1..20) {
+        val prisonNumber = "A0001NN".replace("0001", "$i".padStart(4, '0'))
+        stubBalances(i.toLong(), nomisPrisonerAccounts().copy(prisonNumber = prisonNumber), dpsAccount())
+      }
     }
 
-    @Test
-    fun `will output report requested telemetry`() = runTest {
-      prisonerBalanceReconciliationService.generatePrisonerBalanceReconciliationReportBatch()
+    @Nested
+    inner class AllPrisoners {
 
-      verify(telemetryClient).trackEvent(
-        eq("prisoner-balance-reports-reconciliation-requested"),
-        any(),
-        isNull(),
-      )
+      @Test
+      fun `should pass active flag to Nomis id ranges`() = runTest {
+        reconciliationService.generateReconciliationReportBatch(false)
 
-      awaitReportFinished()
+        nomisApi.verify(
+          getRequestedFor(urlPathEqualTo("/prisoners/id-ranges"))
+            .withQueryParam("active", equalTo("false"))
+            .withQueryParam("size", equalTo("1000")),
+        )
+      }
+
+      @Test
+      fun `should pass active flag to Nomis ids in range`() = runTest {
+        reconciliationService.generateReconciliationReportBatch(false)
+
+        nomisApi.verify(
+          getRequestedFor(urlPathEqualTo("/prisoners/ids-in-range"))
+            .withQueryParam("active", equalTo("false")),
+        )
+      }
+
+      @Test
+      fun `will output report requested telemetry`() = runTest {
+        reconciliationService.generateReconciliationReportBatch(false)
+
+        verify(telemetryClient).trackEvent(
+          eq("prisoner-balance-reports-reconciliation-requested"),
+          check { assertThat(it).containsEntry("activeOnly", "false") },
+          isNull(),
+        )
+
+        awaitReportFinished()
+      }
+
+      @Test
+      fun `will output report telemetry`() = runTest {
+        reconciliationService.generateReconciliationReportBatch(false)
+
+        verify(telemetryClient).trackEvent(
+          eq("prisoner-balance-reports-reconciliation-report"),
+          check {
+            assertThat(it).containsEntry("activeOnly", "false")
+            assertThat(it).containsEntry("balance-count", "20")
+            assertThat(it).containsEntry("page-count", "2")
+            assertThat(it).containsEntry("mismatch-count", "0")
+            assertThat(it).containsEntry("success", "true")
+          },
+          isNull(),
+        )
+
+        awaitReportFinished()
+      }
+
+      @Test
+      fun `will output a mismatch when there is a difference in the DPS record`() = runTest {
+        stubBalances(
+          2,
+          nomisPrisonerAccounts().copy(prisonNumber = "A0002NN"),
+          emptyMap(),
+        )
+        reconciliationService.generateReconciliationReportBatch(false)
+
+        verify(telemetryClient).trackEvent(
+          eq("prisoner-balance-reports-reconciliation-report"),
+          check {
+            assertThat(it).containsEntry("activeOnly", "false")
+            assertThat(it).containsEntry("balance-count", "20")
+            assertThat(it).containsEntry("page-count", "2")
+            assertThat(it).containsEntry("mismatch-count", "1")
+            assertThat(it).containsEntry("success", "true")
+          },
+          isNull(),
+        )
+
+        awaitReportFinished()
+      }
     }
 
-    @Test
-    fun `will output report telemetry`() = runTest {
-      prisonerBalanceReconciliationService.generatePrisonerBalanceReconciliationReportBatch()
+    @Nested
+    inner class ActivePrisoners {
 
-      verify(telemetryClient).trackEvent(
-        eq("prisoner-balance-reports-reconciliation-report"),
-        check {
-          assertThat(it).containsEntry("balance-count", "3")
-          assertThat(it).containsEntry("page-count", "1")
-          assertThat(it).containsEntry("mismatch-count", "0")
-          assertThat(it).containsEntry("success", "true")
-          assertThat(it).containsEntry("filter-prison", "")
-        },
-        isNull(),
-      )
+      @Test
+      fun `should pass active flag to Nomis id ranges`() = runTest {
+        reconciliationService.generateReconciliationReportBatch(true)
 
-      awaitReportFinished()
-    }
+        nomisApi.verify(
+          getRequestedFor(urlPathEqualTo("/prisoners/id-ranges"))
+            .withQueryParam("active", equalTo("true"))
+            .withQueryParam("size", equalTo("1000")),
+        )
+      }
 
-    @Test
-    fun `will output a mismatch when there is a difference in the DPS record`() = runTest {
-      stubBalances(
-        2,
-        nomisPrisonerAccounts().copy(prisonNumber = "A0002NN"),
-        emptyMap(),
-      )
-      prisonerBalanceReconciliationService.generatePrisonerBalanceReconciliationReportBatch()
+      @Test
+      fun `should pass active flag to Nomis ids in range`() = runTest {
+        reconciliationService.generateReconciliationReportBatch(true)
 
-      verify(telemetryClient).trackEvent(
-        eq("prisoner-balance-reports-reconciliation-report"),
-        check {
-          assertThat(it).containsEntry("balance-count", "3")
-          assertThat(it).containsEntry("page-count", "1")
-          assertThat(it).containsEntry("mismatch-count", "1")
-          assertThat(it).containsEntry("success", "true")
-          assertThat(it).containsEntry("filter-prison", "")
-        },
-        isNull(),
-      )
+        nomisApi.verify(
+          getRequestedFor(urlPathEqualTo("/prisoners/ids-in-range"))
+            .withQueryParam("active", equalTo("true")),
+        )
+      }
 
-      awaitReportFinished()
+      @Test
+      fun `will output report requested telemetry`() = runTest {
+        reconciliationService.generateReconciliationReportBatch(true)
+
+        verify(telemetryClient).trackEvent(
+          eq("prisoner-balance-reports-reconciliation-requested"),
+          check { assertThat(it).containsEntry("activeOnly", "true") },
+          isNull(),
+        )
+
+        awaitReportFinished()
+      }
+
+      @Test
+      fun `will output report telemetry`() = runTest {
+        reconciliationService.generateReconciliationReportBatch(true)
+
+        verify(telemetryClient).trackEvent(
+          eq("prisoner-balance-reports-reconciliation-report"),
+          check {
+            assertThat(it).containsEntry("activeOnly", "true")
+            assertThat(it).containsEntry("balance-count", "20")
+            assertThat(it).containsEntry("page-count", "2")
+            assertThat(it).containsEntry("mismatch-count", "0")
+            assertThat(it).containsEntry("success", "true")
+          },
+          isNull(),
+        )
+
+        awaitReportFinished()
+      }
+
+      @Test
+      fun `will output a mismatch when there is a difference in the DPS record`() = runTest {
+        stubBalances(
+          2,
+          nomisPrisonerAccounts().copy(prisonNumber = "A0002NN"),
+          emptyMap(),
+        )
+        reconciliationService.generateReconciliationReportBatch(true)
+
+        verify(telemetryClient).trackEvent(
+          eq("prisoner-balance-reports-reconciliation-report"),
+          check {
+            assertThat(it).containsEntry("activeOnly", "true")
+            assertThat(it).containsEntry("balance-count", "20")
+            assertThat(it).containsEntry("page-count", "2")
+            assertThat(it).containsEntry("mismatch-count", "1")
+            assertThat(it).containsEntry("success", "true")
+          },
+          isNull(),
+        )
+
+        awaitReportFinished()
+      }
     }
 
     private fun awaitReportFinished() {
@@ -247,7 +348,7 @@ class PrisonerBalanceReconciliationResourceIntTest(
     inner class HappyPath {
       @BeforeEach
       fun setup() {
-        financeNomisApi.stubGetPrisonBalance()
+        financeNomisApi.stubGetPrisonerAccounts(OFFENDER_ID, nomisPrisonerAccounts())
         nomisApi.stubGetPrisonerDetails(
           OFFENDER_NO,
           PrisonerDetails(
@@ -299,104 +400,6 @@ class PrisonerBalanceReconciliationResourceIntTest(
           .expectBody().isEmpty
 
         verifyNoInteractions(telemetryClient)
-      }
-    }
-  }
-
-  @DisplayName("Reconcile prisoners in a single prison")
-  @Nested
-  inner class ManualPrisonerBalancesReconciliationReportSinglePrison {
-    @Nested
-    inner class Security {
-      @Test
-      fun `access forbidden when no role`() {
-        webTestClient.get().uri("/prisoner-balance/reconciliation/prison/ASI")
-          .headers(setAuthorisation(roles = listOf()))
-          .exchange()
-          .expectStatus().isForbidden
-      }
-
-      @Test
-      fun `access forbidden with wrong role`() {
-        webTestClient.get().uri("/prisoner-balance/reconciliation/prison/ASI")
-          .headers(setAuthorisation(roles = listOf("BANANAS")))
-          .exchange()
-          .expectStatus().isForbidden
-      }
-
-      @Test
-      fun `access unauthorised with no auth token`() {
-        webTestClient.get().uri("/prisoner-balance/reconciliation/prison/ASI")
-          .exchange()
-          .expectStatus().isUnauthorized
-      }
-    }
-
-    @Nested
-    inner class HappyPath {
-      @BeforeEach
-      fun setup() {
-        financeNomisApi.stubGetPrisonerBalanceIdentifiersFromId(
-          RootOffenderIdsWithLast(
-            rootOffenderIds = listOf(1, 2, 3),
-            lastOffenderId = 3L,
-          ),
-        )
-
-        stubBalances(
-          1,
-          nomisPrisonerAccounts().copy(prisonNumber = "A0001NN"),
-          dpsAccount(),
-        )
-        stubBalances(
-          2,
-          nomisPrisonerAccounts().copy(prisonNumber = "A0002NN"),
-          dpsAccount(),
-        )
-        stubBalances(
-          3,
-          nomisPrisonerAccounts().copy(prisonNumber = "A0003NN"),
-          dpsAccount(),
-        )
-      }
-
-      @Test
-      fun `will output a mismatch when there is a difference in the DPS record`() = runTest {
-        stubBalances(
-          2,
-          nomisPrisonerAccounts().copy(prisonNumber = "A0002NN").copy(accounts = emptyList()),
-          dpsAccount(),
-        )
-
-        val result = webTestClient.get()
-          .uri("/prisoner-balance/reconciliation/prison/ASI")
-          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody(object : ParameterizedTypeReference<ReconciliationResult<MismatchPrisonerBalance>>() {})
-          .returnResult()
-          .responseBody!!
-
-        assertThat(result.mismatches).hasSize(1)
-        val first = result.mismatches.first()
-        assertThat(first.nomis.accounts).isEmpty()
-        assertThat(first.dps.accounts.first().balance).isEqualTo(BigDecimal("1.5"))
-        assertThat(first.dps.accounts.first().accountCode).isEqualTo(1001)
-        assertThat(first.differences.first().property).isEqualTo("prisoner-balances.accounts")
-        assertThat(first.differences.first().nomis).isEqualTo(0)
-        assertThat(first.differences.first().dps).isEqualTo(1)
-
-        await untilAsserted {
-          verify(telemetryClient).trackEvent(
-            eq("prisoner-balance-reports-reconciliation-mismatch"),
-            check {
-              assertThat(it["prisoner"]).isEqualTo("A0002NN")
-              assertThat(it["prisoner-balances.accounts"]).isEqualTo("Difference(property=prisoner-balances.accounts, dps=1, nomis=0, id=null)")
-            },
-            isNull(),
-          )
-        }
       }
     }
   }

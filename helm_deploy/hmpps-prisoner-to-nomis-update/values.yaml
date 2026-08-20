@@ -75,6 +75,8 @@ generic-service:
       COURT_SENTENCING_CLIENT_SECRET: "COURT_SENTENCING_CLIENT_SECRET"
       CSIP_CLIENT_ID: "CSIP_CLIENT_ID"
       CSIP_CLIENT_SECRET: "CSIP_CLIENT_SECRET"
+      CSRA_CLIENT_ID: "CSRA_CLIENT_ID"
+      CSRA_CLIENT_SECRET: "CSRA_CLIENT_SECRET"
       EXT_MOVEMENTS_CLIENT_ID: "EXT_MOVEMENTS_CLIENT_ID"
       EXT_MOVEMENTS_CLIENT_SECRET: "EXT_MOVEMENTS_CLIENT_SECRET"
       FINANCE_CLIENT_ID: "FINANCE_CLIENT_ID"
@@ -107,10 +109,20 @@ generic-service:
       VISITS_CLIENT_SECRET: "VISITS_CLIENT_SECRET"
       OFFICIALVISITS_CLIENT_ID: "OFFICIALVISITS_CLIENT_ID"
       OFFICIALVISITS_CLIENT_SECRET: "OFFICIALVISITS_CLIENT_SECRET"
+      AGENCYREGISTERS_CLIENT_ID: "AGENCYREGISTERS_CLIENT_ID"
+      AGENCYREGISTERS_CLIENT_SECRET: "AGENCYREGISTERS_CLIENT_SECRET"
     domain-events-sqs-nomis-update-visit:
       HMPPS_SQS_QUEUES_VISIT_QUEUE_NAME: "sqs_queue_name"
     domain-events-sqs-nomis-update-visit-dlq:
       HMPPS_SQS_QUEUES_VISIT_DLQ_NAME: "sqs_queue_name"
+    domain-events-sqs-nomis-update-coreperson:
+      HMPPS_SQS_QUEUES_COREPERSON_QUEUE_NAME: "sqs_queue_name"
+    domain-events-sqs-nomis-update-coreperson-dlq:
+      HMPPS_SQS_QUEUES_COREPERSON_DLQ_NAME: "sqs_queue_name"
+    domain-events-sqs-nomis-update-csra:
+      HMPPS_SQS_QUEUES_CSRA_QUEUE_NAME: "sqs_queue_name"
+    domain-events-sqs-nomis-update-csra-dlq:
+      HMPPS_SQS_QUEUES_CSRA_DLQ_NAME: "sqs_queue_name"
     domain-events-sqs-nomis-update-incentive:
       HMPPS_SQS_QUEUES_INCENTIVE_QUEUE_NAME: "sqs_queue_name"
     domain-events-sqs-nomis-update-incentive-dlq:

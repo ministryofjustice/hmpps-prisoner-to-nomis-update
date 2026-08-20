@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-08-03.978.3d06fe1"
+    "version" : "2026-08-12.1007.07b5fe5"
   },
   "servers" : [ {
     "url" : "https://prisoner-finance-sync-api-dev.hmpps.service.justice.gov.uk/",
@@ -810,6 +810,10 @@
             "format" : "decimal",
             "description" : "The monetary amount of the general ledger entry.",
             "example" : 162.0
+          },
+          "offenderDisplayId" : {
+            "type" : [ "string", "null" ],
+            "description" : "The offender display ID relating to the GL Entry (posting)"
           }
         },
         "required" : [ "amount", "code", "entrySequence", "postingType" ]
@@ -1323,6 +1327,10 @@
             "type" : "string",
             "format" : "date-time"
           },
+          "legacyTransactionId" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int64"
+          },
           "requestId" : {
             "type" : "string",
             "format" : "uuid"
@@ -1336,10 +1344,6 @@
           "transactionTimestamp" : {
             "type" : [ "string", "null" ],
             "format" : "date-time"
-          },
-          "legacyTransactionId" : {
-            "type" : [ "integer", "null" ],
-            "format" : "int64"
           },
           "synchronizedTransactionId" : {
             "type" : "string",

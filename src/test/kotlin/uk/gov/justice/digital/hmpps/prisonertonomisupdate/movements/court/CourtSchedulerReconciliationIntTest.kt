@@ -576,6 +576,187 @@ class CourtSchedulerReconciliationIntTest(
         )
       }
     }
+
+    @Nested
+    inner class SentencingDetailsForExtraNomisAppearance {
+      val sentencingCourtAppearanceId = UUID.randomUUID()
+      val dpsAppearanceIdWithoutCourtCase = UUID.randomUUID()
+      val dpsAppearanceIdWithCourtCase = UUID.randomUUID()
+
+      @BeforeEach
+      fun `stub additional NOMIS entities and run report`() = runTest {
+        courtScheduleNomisApi.stubGetOffenderCourtMovements(
+          offenderNo = "A0001TZ",
+          response = offenderCourtMovementsResponse(
+            courtSchedules = listOf(
+              // There's an extra court scheduler appearance in NOMIS - to trigger the detail
+              bookingCourtSchedule(
+                eventId = 123,
+                courtCaseId = null,
+                courtMovementOut = null,
+                courtMovementIn = null,
+              ),
+              // The sentencing court appearance is not a mismatch - so it shouldn't appear in the mismatch details
+              bookingCourtSchedule(
+                eventId = 456,
+                courtCaseId = 123456,
+                courtMovementOut = null,
+                courtMovementIn = null,
+              ),
+            ),
+            unscheduledCourtMovementOuts = listOf(),
+            unscheduledCourtMovementIns = listOf(),
+          ),
+        )
+
+        // there's a mapping for the court scheduler appearance
+        mappingApi.stubGetCourtSchedulerPrisonerMappingIds(
+          prisonerNumber = "A0001KT",
+          idMappings = CourtSchedulerPrisonerMappingIdsDto(
+            prisonerNumber = "A0001KT",
+            schedules = listOf(
+              CourtScheduleMappingIdsDto(123, dpsAppearanceIdWithoutCourtCase),
+            ),
+            movements = listOf(),
+          ),
+        )
+
+        // there's a mapping for the sentencing appearance
+        courtSentencingMappingApi.stubGetAllCourtAppearanceByNomisIds(
+          mappings = listOf(
+            CourtAppearanceMappingDto(
+              nomisCourtAppearanceId = 456,
+              dpsCourtAppearanceId = sentencingCourtAppearanceId.toString(),
+            ),
+          ),
+        )
+
+        // Only the sentencing appearance exists in DPS
+        dpsApi.stubGetCourtSchedulerReconciliation(
+          personIdentifier = "A0001TZ",
+          response = reconciliation(
+            courtEvents = listOf(
+              ReconciliationCourtEvent(
+                courtEvent = courtEvent(id = dpsAppearanceIdWithCourtCase, externalReference = "$EXTERNAL_REF_PREFIX$sentencingCourtAppearanceId"),
+                movements = listOf(),
+              ),
+            ),
+            unscheduledMovements = listOf(),
+          ),
+        )
+      }
+
+      @Test
+      fun `should report extra NOMIS court event with correct details`() = runTest {
+        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+        awaitReportFinished()
+
+        verify(telemetryClient).trackEvent(
+          eq("court-scheduler-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "offenderNo" to "A0001TZ",
+              "type" to "SCHEDULE",
+              "nomisCount" to "2",
+              "dpsCount" to "1",
+              // there's no mention of the sentencing court appearance
+              "unexpected-nomis-ids" to "[123]",
+              "unexpected-dps-ids" to "[]",
+            ),
+          ),
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class SentencingDetailsForExtraDpsAppearance {
+      val sentencingCourtAppearanceId = UUID.randomUUID()
+      val dpsAppearanceIdWithoutCourtCase = UUID.randomUUID()
+      val dpsAppearanceIdWithCourtCase = UUID.randomUUID()
+
+      @BeforeEach
+      fun `stub additional NOMIS entities and run report`() = runTest {
+        courtScheduleNomisApi.stubGetOffenderCourtMovements(
+          offenderNo = "A0001TZ",
+          response = offenderCourtMovementsResponse(
+            courtSchedules = listOf(
+              // Only the sentencing appearance exists in NOMIS
+              bookingCourtSchedule(
+                eventId = 456,
+                courtCaseId = 123456,
+                courtMovementOut = null,
+                courtMovementIn = null,
+              ),
+            ),
+            unscheduledCourtMovementOuts = listOf(),
+            unscheduledCourtMovementIns = listOf(),
+          ),
+        )
+
+        // there's a mapping for the court scheduler appearance
+        mappingApi.stubGetCourtSchedulerPrisonerMappingIds(
+          prisonerNumber = "A0001KT",
+          idMappings = CourtSchedulerPrisonerMappingIdsDto(
+            prisonerNumber = "A0001KT",
+            schedules = listOf(
+              CourtScheduleMappingIdsDto(123, dpsAppearanceIdWithoutCourtCase),
+            ),
+            movements = listOf(),
+          ),
+        )
+
+        // there's a mapping for the sentencing appearance
+        courtSentencingMappingApi.stubGetAllCourtAppearanceByNomisIds(
+          mappings = listOf(
+            CourtAppearanceMappingDto(
+              nomisCourtAppearanceId = 456,
+              dpsCourtAppearanceId = sentencingCourtAppearanceId.toString(),
+            ),
+          ),
+        )
+
+        // Both appearances exist in DPS
+        dpsApi.stubGetCourtSchedulerReconciliation(
+          personIdentifier = "A0001TZ",
+          response = reconciliation(
+            courtEvents = listOf(
+              ReconciliationCourtEvent(
+                courtEvent = courtEvent(id = dpsAppearanceIdWithoutCourtCase, externalReference = null),
+                movements = listOf(),
+              ),
+              ReconciliationCourtEvent(
+                courtEvent = courtEvent(id = dpsAppearanceIdWithCourtCase, externalReference = "$EXTERNAL_REF_PREFIX$sentencingCourtAppearanceId"),
+                movements = listOf(),
+              ),
+            ),
+            unscheduledMovements = listOf(),
+          ),
+        )
+      }
+
+      @Test
+      fun `should report extra DPS court event with correct details`() = runTest {
+        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+        awaitReportFinished()
+
+        verify(telemetryClient).trackEvent(
+          eq("court-scheduler-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "offenderNo" to "A0001TZ",
+              "type" to "SCHEDULE",
+              "nomisCount" to "1",
+              "dpsCount" to "2",
+              // there's no mention of the sentencing court appearance as unexpected
+              "unexpected-nomis-ids" to "[]",
+              "unexpected-dps-ids" to "[$dpsAppearanceIdWithoutCourtCase]",
+            ),
+          ),
+          isNull(),
+        )
+      }
+    }
   }
 
   @Nested
@@ -949,6 +1130,22 @@ class CourtSchedulerReconciliationIntTest(
               "type" to "MOVEMENT_TIME",
             ),
           ),
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `should NOT report different start time if only seconds are different`() = runTest {
+        stubDpsCourtEvent(movementOut = courtEventMovement(movementTime = today, id = dpsScheduledMovementOutId, directionCode = "OUT"))
+        stubNomisCourtEvent(movementOut = bookingCourtMovementOut(seq = 456).copy(movementTime = today.withSecond(0)))
+        stubMappings(NomisMovementId(12345, 456), dpsScheduledMovementOutId)
+
+        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+        awaitReportFinished()
+
+        verify(telemetryClient, never()).trackEvent(
+          eq("court-scheduler-reconciliation-mismatch"),
+          any(),
           isNull(),
         )
       }

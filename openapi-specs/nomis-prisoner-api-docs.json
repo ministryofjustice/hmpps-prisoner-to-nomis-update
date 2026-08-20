@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-08-04.1829.78317de"
+    "version" : "2026-08-19.1939.2155496"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -13211,6 +13211,71 @@
         }
       }
     },
+    "/core-person/{prisonNumber}/merge" : {
+      "post" : {
+        "tags" : [ "core-person-resource" ],
+        "summary" : "Update the offender by prison number as a result of a merge",
+        "description" : "Updates the offender information as a result of a merge. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "updateOffenderByPrisonNumberAfterMerge",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "description" : "Prison number aka noms id / offender id display",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prison number aka noms id / offender id display",
+            "example" : "A1234BC"
+          },
+          "example" : "A1234BC"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CorePersonMergeRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Offender does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "204" : {
+            "description" : "No Content"
+          }
+        }
+      }
+    },
     "/appointments" : {
       "post" : {
         "tags" : [ "appointments-resource" ],
@@ -16375,6 +16440,127 @@
         }
       }
     },
+    "/property-containers/ids-in-range" : {
+      "get" : {
+        "tags" : [ "property-resource" ],
+        "summary" : "Gets every id in range.",
+        "description" : "Returns a list of property container ids greater than the specified fromId and less than or equal to the\n      specified toId. Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
+        "operationId" : "getIdentifiersInRange",
+        "parameters" : [ {
+          "name" : "fromId",
+          "in" : "query",
+          "description" : "Return ids greater than this value.",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Return ids greater than this value."
+          }
+        }, {
+          "name" : "toId",
+          "in" : "query",
+          "description" : "Return ids less than or equal to this value.",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Return ids less than or equal to this value."
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "list of property container ids",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "integer",
+                    "format" : "int64"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint when role NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/property-containers/id-ranges" : {
+      "get" : {
+        "tags" : [ "property-resource" ],
+        "summary" : "get property container ids by page size",
+        "description" : "Retrieves a list of property container ids, spaced by the page size. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
+        "operationId" : "getPropertyContainerIdRanges",
+        "parameters" : [ {
+          "name" : "pageSize",
+          "in" : "query",
+          "description" : "Range size of ids to get",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 1000,
+            "minimum" : 1
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "List of ids are returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "integer",
+                    "format" : "int64"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint when role not present",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/profile-details/{bookingId}/sequence/{sequence}/type/{type}" : {
       "get" : {
         "tags" : [ "profile-details-resource" ],
@@ -18354,6 +18540,15 @@
             "type" : "integer",
             "format" : "int64"
           }
+        }, {
+          "name" : "active",
+          "in" : "query",
+          "description" : "When true only return active prisoners currently in prison else all prisoners are returned.",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
         } ],
         "responses" : {
           "200" : {
@@ -18407,6 +18602,15 @@
             "type" : "integer",
             "format" : "int32",
             "default" : 1000
+          }
+        }, {
+          "name" : "active",
+          "in" : "query",
+          "description" : "When true only return active prisoners currently in prison else all prisoners are returned.",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
           }
         } ],
         "responses" : {
@@ -19533,6 +19737,228 @@
           },
           "403" : {
             "description" : "Forbidden, requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/movements/{offenderNo}/transfers/schedule/out/{eventId}" : {
+      "get" : {
+        "tags" : [ "transfer-schedule-resource" ],
+        "summary" : "Get a specific transfer schedule out for an offender",
+        "description" : "Get a specific transfer schedule out for an offender by event ID. Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getTransferScheduleOut",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender number (NOMS ID)",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender number (NOMS ID)",
+            "example" : "A1234BC"
+          },
+          "example" : "A1234BC"
+        }, {
+          "name" : "eventId",
+          "in" : "path",
+          "description" : "Event ID",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Event ID",
+            "example" : 123
+          },
+          "example" : 123
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Offender transfer schedule out returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TransferScheduleOut"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Offender or transfer schedule not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/movements/{offenderNo}/transfer" : {
+      "get" : {
+        "tags" : [ "offender-transfer-movements-resource" ],
+        "summary" : "Get tansfer schedules and movements for an offender",
+        "description" : "Get transfer schedules and movements for an offender. This is used to migrate transfer movements to DPS and for reconciliation. Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getOffenderTransferMovements",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender number (NOMS ID)",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender number (NOMS ID)",
+            "example" : "A1234BC"
+          },
+          "example" : "A1234BC"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Offender transfer movements returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OffenderTransferMovementsResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Offender not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/movements/{offenderNo}/transfer/movement/out/{bookingId}/{movementSeq}" : {
+      "get" : {
+        "tags" : [ "transfer-movement-resource" ],
+        "summary" : "Get a specific transfer movement out for an offender",
+        "description" : "Get a specific transfer movement out for an offender by booking ID and movement sequence. Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getTransferMovementOut",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender number (NOMS ID)",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender number (NOMS ID)",
+            "example" : "A1234BC"
+          },
+          "example" : "A1234BC"
+        }, {
+          "name" : "bookingId",
+          "in" : "path",
+          "description" : "Booking ID",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Booking ID",
+            "example" : 123
+          },
+          "example" : 123
+        }, {
+          "name" : "movementSeq",
+          "in" : "path",
+          "description" : "Movement Sequence",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Movement Sequence",
+            "example" : 1
+          },
+          "example" : 1
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Transfer movement out returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TransferMovementOut"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Offender or transfer movement out not found",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -21989,7 +22415,7 @@
     "/finance/prisoners/ids" : {
       "get" : {
         "tags" : [ "prisoner-balance-resource" ],
-        "summary" : "Gets the rootOffenderIds for all prisoners with a non-negative trust account balance",
+        "summary" : "Gets the rootOffenderIds for all prisoners with a non-zero trust account balance",
         "description" : "Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
         "operationId" : "getPrisonerBalanceIdentifiers",
         "parameters" : [ {
@@ -22075,7 +22501,7 @@
     "/finance/prisoners/ids/all-from-id" : {
       "get" : {
         "tags" : [ "prisoner-balance-resource" ],
-        "summary" : "Gets the rootOffenderIds for all prisoners with a non-negative trust account balance",
+        "summary" : "Gets the rootOffenderIds for all prisoners with a non-zero trust account balance",
         "description" : "Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
         "operationId" : "getPrisonerBalanceIdentifiersFromId",
         "parameters" : [ {
@@ -22123,6 +22549,153 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/RootOffenderIdsWithLast"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint when role NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/finance/prisoners/ids-in-range" : {
+      "get" : {
+        "tags" : [ "prisoner-balance-resource" ],
+        "summary" : "Gets every prisoner root offender id with a trust account balance in range.",
+        "description" : "Returns a list of root offender ids greater than the specified fromRootOffenderId and less than or equal to the\n      specified toRootOffenderId. Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
+        "operationId" : "getPrisonerBalanceIdentifiersInRange",
+        "parameters" : [ {
+          "name" : "fromRootOffenderId",
+          "in" : "query",
+          "description" : "Return prisoners with root offender id greater than this value.",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Return prisoners with root offender id greater than this value."
+          }
+        }, {
+          "name" : "toRootOffenderId",
+          "in" : "query",
+          "description" : "Return prisoners with root offender id less than or equal to this value.",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Return prisoners with root offender id less than or equal to this value."
+          }
+        }, {
+          "name" : "prisonId",
+          "in" : "query",
+          "description" : "Prison ids to filter by",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "description" : "Prison ids to filter by",
+            "items" : {
+              "type" : "string",
+              "description" : "Prison ids to filter by"
+            }
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "list of root offender ids",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "integer",
+                    "format" : "int64"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint when role NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/finance/prisoners/id-ranges" : {
+      "get" : {
+        "tags" : [ "prisoner-balance-resource" ],
+        "summary" : "Gets the rootOffenderId ranges for all prisoners with a non-zero trust account balance",
+        "description" : "Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
+        "operationId" : "getPrisonerBalanceIdentifierRanges",
+        "parameters" : [ {
+          "name" : "pageSize",
+          "in" : "query",
+          "description" : "Number of offender ids per range",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 2000,
+            "description" : "Number of offender ids per range",
+            "minimum" : 1
+          }
+        }, {
+          "name" : "prisonId",
+          "in" : "query",
+          "description" : "Prison ids to filter by",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "description" : "Prison ids to filter by",
+            "items" : {
+              "type" : "string",
+              "description" : "Prison ids to filter by"
+            }
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "list of root offender id ranges",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/RootOffenderIdRange"
+                  }
                 }
               }
             }
@@ -23096,6 +23669,81 @@
         }
       }
     },
+    "/core-person/{offenderId}/identifier/{sequenceNumber}" : {
+      "get" : {
+        "tags" : [ "core-person-resource" ],
+        "summary" : "Get an identifier by offender id and sequence number",
+        "description" : "Retrieves an offender identifier. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getIdentifier",
+        "parameters" : [ {
+          "name" : "offenderId",
+          "in" : "path",
+          "description" : "The offender id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The offender id",
+            "example" : 1234567
+          },
+          "example" : 1234567
+        }, {
+          "name" : "sequenceNumber",
+          "in" : "path",
+          "description" : "The sequence number",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The sequence number",
+            "example" : 3
+          },
+          "example" : 3
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Identifier returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Identifier"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Identifier or offender does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/contact/{contactId}" : {
       "get" : {
         "tags" : [ "contact-person-resource" ],
@@ -24028,8 +24676,8 @@
     "/agency/{agencyId}" : {
       "get" : {
         "tags" : [ "agency-resource" ],
-        "summary" : "Gets details of a agency",
-        "description" : "Requires ROLE_NOMIS_AGENCYER_API__SYNCHRONISATION__RW",
+        "summary" : "Gets details of an agency",
+        "description" : "Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
         "operationId" : "getAgency",
         "parameters" : [ {
           "name" : "agencyId",
@@ -24076,6 +24724,63 @@
           },
           "404" : {
             "description" : "Agency not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agency/ids/all" : {
+      "get" : {
+        "tags" : [ "agency-resource" ],
+        "summary" : "Gets a list of all agency ids",
+        "description" : "Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getAllAgencies",
+        "parameters" : [ {
+          "name" : "excludeType",
+          "in" : "query",
+          "description" : "Agency types to exclude",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "description" : "Agency types to exclude",
+            "example" : "INST",
+            "items" : {
+              "type" : "string",
+              "description" : "Agency types to exclude",
+              "example" : "INST"
+            }
+          },
+          "example" : "INST"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Agency ids",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AgencyIdsResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -25392,9 +26097,19 @@
             "type" : "string",
             "format" : "date",
             "description" : "Date the container will be disposed of"
+          },
+          "active" : {
+            "type" : "boolean",
+            "description" : "Whether the container is active"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Date the container is no longer active",
+            "example" : "2027-01-01"
           }
         },
-        "required" : [ "containerCode" ]
+        "required" : [ "active", "containerCode" ]
       },
       "UpdateVisitBalanceRequest" : {
         "type" : "object",
@@ -25508,6 +26223,12 @@
             "type" : "string"
           },
           "futureAppearance" : {
+            "type" : "boolean"
+          },
+          "forceClone" : {
+            "type" : "boolean"
+          },
+          "forcePreventClone" : {
             "type" : "boolean"
           }
         },
@@ -26706,6 +27427,11 @@
             "type" : "integer",
             "format" : "int64",
             "description" : "Movement application ID"
+          },
+          "deletedEventId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Deleted schedule ID"
           }
         },
         "required" : [ "bookingId", "tapApplicationId" ]
@@ -29105,7 +29831,8 @@
           "expiryDate" : {
             "type" : "string",
             "format" : "date",
-            "description" : "Date the container is no longer active"
+            "description" : "Date the container is no longer active",
+            "example" : "2027-01-01"
           },
           "proposedDisposalDate" : {
             "type" : "string",
@@ -30506,12 +31233,6 @@
             "description" : "Status, active, inactive or provisional",
             "enum" : [ "I", "A", "P" ]
           },
-          "assessmentStaffId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Staff id of user that created the CSRA",
-            "example" : 123456
-          },
           "committeeCode" : {
             "$ref" : "#/components/schemas/AssessmentCommittee",
             "description" : "The assessment committee code (reference code in domain 'ASSESS_COMM')"
@@ -30575,7 +31296,7 @@
             "description" : "Approval Comment text"
           }
         },
-        "required" : [ "assessmentDate", "assessmentStaffId", "calculatedLevel", "createdBy", "createdDateTime", "score", "status", "type" ]
+        "required" : [ "assessmentDate", "calculatedLevel", "createdBy", "createdDateTime", "status", "type" ]
       },
       "EvaluationResultCode" : {
         "type" : "string",
@@ -32859,6 +33580,39 @@
         },
         "required" : [ "isServices", "mailAddress", "noFixedAddress", "primaryAddress", "startDate" ]
       },
+      "CorePersonMergeRequest" : {
+        "type" : "object",
+        "description" : "Update request for offender merge",
+        "properties" : {
+          "religions" : {
+            "type" : "array",
+            "description" : "List of religions to be updated for the offender after a merge",
+            "items" : {
+              "$ref" : "#/components/schemas/CorePersonReligionRequest"
+            }
+          }
+        },
+        "required" : [ "religions" ]
+      },
+      "CorePersonReligionRequest" : {
+        "type" : "object",
+        "description" : "Update request for offender belief merge",
+        "properties" : {
+          "beliefId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Offender belief id",
+            "example" : 1123456
+          },
+          "endDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Date the belief ended",
+            "example" : "2024-12-12"
+          }
+        },
+        "required" : [ "beliefId" ]
+      },
       "CreateAppointmentRequest" : {
         "type" : "object",
         "description" : "Offender individual schedule creation request",
@@ -33320,14 +34074,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -33355,12 +34109,12 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paged" : {
+            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -34441,14 +35195,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -34592,14 +35346,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -35051,7 +35805,7 @@
             }
           }
         },
-        "required" : [ "assessmentDate", "assessmentStaffId", "bookingId", "createdBy", "createdDateTime", "score", "sections", "sequence", "status", "type" ]
+        "required" : [ "assessmentDate", "assessmentStaffId", "bookingId", "createdBy", "createdDateTime", "sections", "sequence", "status", "type" ]
       },
       "CsraQuestionDto" : {
         "type" : "object",
@@ -36098,14 +36852,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -36172,14 +36926,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -36236,14 +36990,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -36901,14 +37655,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -37084,14 +37838,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -37104,6 +37858,248 @@
             "type" : "boolean"
           }
         }
+      },
+      "TransferScheduleOut" : {
+        "type" : "object",
+        "description" : "Transfer schedule out response",
+        "properties" : {
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Booking ID"
+          },
+          "eventId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Event ID"
+          },
+          "startTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Start time"
+          },
+          "eventSubType" : {
+            "type" : "string",
+            "description" : "Event sub type, aka movement reason"
+          },
+          "eventStatus" : {
+            "type" : "string",
+            "description" : "Event status"
+          },
+          "comment" : {
+            "type" : "string",
+            "description" : "Comment"
+          },
+          "hiddenComment" : {
+            "type" : "string",
+            "description" : "Hidden Comment"
+          },
+          "fromPrison" : {
+            "type" : "string",
+            "description" : "From prison"
+          },
+          "toPrison" : {
+            "type" : "string",
+            "description" : "To prison"
+          },
+          "cancellationReasonCode" : {
+            "type" : "string",
+            "description" : "Cancellation reason"
+          },
+          "escortCode" : {
+            "type" : "string",
+            "description" : "Escort code"
+          },
+          "waitlist" : {
+            "$ref" : "#/components/schemas/TransferScheduleWaitlist",
+            "description" : "The waitlist"
+          },
+          "audit" : {
+            "$ref" : "#/components/schemas/NomisAudit",
+            "description" : "Audit data associated with the schedule"
+          },
+          "userActiveCaseloadId" : {
+            "type" : "string",
+            "description" : "Audit user's active caseload ID (modified user else create user)"
+          }
+        },
+        "required" : [ "audit", "bookingId", "eventId", "eventStatus", "eventSubType", "fromPrison" ]
+      },
+      "TransferScheduleWaitlist" : {
+        "type" : "object",
+        "description" : "Transfer schedule waitlist",
+        "properties" : {
+          "requestDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Requested date"
+          },
+          "status" : {
+            "type" : "string",
+            "description" : "Waitlist status"
+          },
+          "statusDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The date the status was changed"
+          },
+          "priority" : {
+            "type" : "string",
+            "description" : "The transfer priority"
+          },
+          "approved" : {
+            "type" : "boolean",
+            "description" : "Is the transfer approved?"
+          },
+          "approvedUserName" : {
+            "type" : "string",
+            "description" : "Approved by user"
+          },
+          "cancellationReasonCode" : {
+            "type" : "string",
+            "description" : "Cancellation reason"
+          },
+          "comment" : {
+            "type" : "string",
+            "description" : "Comment"
+          },
+          "audit" : {
+            "$ref" : "#/components/schemas/NomisAudit",
+            "description" : "Audit data associated with the schedule"
+          },
+          "userActiveCaseloadId" : {
+            "type" : "string",
+            "description" : "Audit user's active caseload ID (modified user else create user)"
+          }
+        },
+        "required" : [ "approved", "audit", "priority", "requestDate", "status", "statusDate" ]
+      },
+      "BookingTransferMovements" : {
+        "type" : "object",
+        "description" : "Booking transfers",
+        "properties" : {
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Booking ID"
+          },
+          "activeBooking" : {
+            "type" : "boolean",
+            "description" : "Whether this is an active booking"
+          },
+          "latestBooking" : {
+            "type" : "boolean",
+            "description" : "Whether this is the latest booking"
+          },
+          "transferSchedules" : {
+            "type" : "array",
+            "description" : "List of transfer schedules",
+            "items" : {
+              "$ref" : "#/components/schemas/BookingTransferSchedule"
+            }
+          },
+          "unscheduledTransferMovements" : {
+            "type" : "array",
+            "description" : "Unscheduled transfer movements - those without a schedule",
+            "items" : {
+              "$ref" : "#/components/schemas/TransferMovementOut"
+            }
+          }
+        },
+        "required" : [ "activeBooking", "bookingId", "latestBooking", "transferSchedules", "unscheduledTransferMovements" ]
+      },
+      "BookingTransferSchedule" : {
+        "type" : "object",
+        "description" : "Booking transfer schedule and movement",
+        "properties" : {
+          "schedule" : {
+            "$ref" : "#/components/schemas/TransferScheduleOut",
+            "description" : "transfer schedule"
+          },
+          "movement" : {
+            "$ref" : "#/components/schemas/TransferMovementOut",
+            "description" : "transfer movement"
+          }
+        },
+        "required" : [ "schedule" ]
+      },
+      "OffenderTransferMovementsResponse" : {
+        "type" : "object",
+        "description" : "Offender transfer movements by booking, including schedules",
+        "properties" : {
+          "bookings" : {
+            "type" : "array",
+            "description" : "List of bookings with their transfer movements",
+            "items" : {
+              "$ref" : "#/components/schemas/BookingTransferMovements"
+            }
+          }
+        },
+        "required" : [ "bookings" ]
+      },
+      "TransferMovementOut" : {
+        "type" : "object",
+        "description" : "Transfer Movement Out",
+        "properties" : {
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Booking ID"
+          },
+          "sequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Movement sequence"
+          },
+          "eventId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Schedule out ID on the movement - this will be populated even if the transfer schedule no longer exists"
+          },
+          "transferScheduleOutId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Transfer schedule out event ID. Empty for unscheduled or orphaned movements."
+          },
+          "movementTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Movement time"
+          },
+          "movementReason" : {
+            "type" : "string",
+            "description" : "Movement reason"
+          },
+          "escort" : {
+            "type" : "string",
+            "description" : "Escort"
+          },
+          "fromPrison" : {
+            "type" : "string",
+            "description" : "From prison"
+          },
+          "toPrison" : {
+            "type" : "string",
+            "description" : "To prison"
+          },
+          "active" : {
+            "type" : "boolean",
+            "description" : "Active flag"
+          },
+          "commentText" : {
+            "type" : "string",
+            "description" : "Comment text"
+          },
+          "audit" : {
+            "$ref" : "#/components/schemas/NomisAudit",
+            "description" : "Audit data associated with the records"
+          },
+          "userActiveCaseloadId" : {
+            "type" : "string",
+            "description" : "Audit user's active caseload ID (modified user else create user)"
+          }
+        },
+        "required" : [ "active", "audit", "bookingId", "fromPrison", "movementReason", "movementTime", "sequence", "toPrison" ]
       },
       "BookingTap" : {
         "type" : "object",
@@ -38814,14 +39810,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -39356,14 +40352,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -39466,14 +40462,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -39819,14 +40815,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -40125,14 +41121,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -40887,14 +41883,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -41184,14 +42180,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -41449,6 +42445,32 @@
         },
         "required" : [ "active", "addresses", "agencyId", "description", "emailAddresses", "localAuthorities", "phones", "type", "updateAllowed" ]
       },
+      "AgencyId" : {
+        "type" : "object",
+        "description" : "A response to get agency id",
+        "properties" : {
+          "agencyId" : {
+            "type" : "string",
+            "description" : "The agency id",
+            "example" : "LCSY02"
+          }
+        },
+        "required" : [ "agencyId" ]
+      },
+      "AgencyIdsResponse" : {
+        "type" : "object",
+        "description" : "A response to get agency ids",
+        "properties" : {
+          "agencyIds" : {
+            "type" : "array",
+            "description" : "The agency ids",
+            "items" : {
+              "$ref" : "#/components/schemas/AgencyId"
+            }
+          }
+        },
+        "required" : [ "agencyIds" ]
+      },
       "AgencyDetails" : {
         "type" : "object",
         "description" : "A agency",
@@ -41512,14 +42534,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -41810,14 +42832,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",

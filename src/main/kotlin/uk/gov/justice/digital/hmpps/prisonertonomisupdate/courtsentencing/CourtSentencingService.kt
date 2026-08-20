@@ -186,7 +186,7 @@ class CourtSentencingService(
   private fun isDpsCreated(source: String) = source != CreatingSystem.NOMIS.name
 
   // also includes adding any charges that are associated with the appearance
-  suspend fun createCourtAppearance(createEvent: CourtAppearanceCreatedEvent) {
+  suspend fun createCourtAppearance(createEvent: CourtAppearanceCreatedEvent, forceClone: Boolean = false, forcePreventClone: Boolean = false) {
     val dpsCourtCaseId = createEvent.additionalInformation.courtCaseId
     val source = createEvent.additionalInformation.source
     val dpsCourtAppearanceId = createEvent.additionalInformation.courtAppearanceId
@@ -232,6 +232,8 @@ class CourtSentencingService(
               courtAppearance.toNomisCourtAppearance(
                 courtEventChargesWithOutcomes = courtEventChargesToUpdateWithOutcomes,
                 isOnFutureCourtAppearance = createEvent.additionalInformation.isOnFutureCourtAppearance,
+                forceClone = forceClone,
+                forcePreventClone = forcePreventClone,
               ),
             )
           }.also { response ->
@@ -438,7 +440,7 @@ class CourtSentencingService(
     val source = createEvent.additionalInformation.source
     val courtCaseId = createEvent.additionalInformation.courtCaseId
     val courtAppearanceId = createEvent.additionalInformation.courtAppearanceId
-    val futureCourtAppearance = createEvent.additionalInformation.isOnFutureCourtAppearance
+    val futureCourtAppearance = createEvent.additionalInformation.isOnFutureAppearance == true
     val offenderNo: String = eventOffenderNo(createEvent.personReference)
     val telemetryMap = createEvent.asTelemetry()
     if (isDpsCreated(source)) {
@@ -472,7 +474,7 @@ class CourtSentencingService(
             nomisApiService.createCourtCharge(
               offenderNo,
               courtCaseMapping.nomisCourtCaseId,
-              charge.toNomisCourtCharge(isOnFutureCourtAppearance = futureCourtAppearance),
+              charge.toNomisCourtCharge(isOnFutureCourtAppearance = futureCourtAppearance == true),
             )
 
           CourtChargeMappingDto(
@@ -500,7 +502,7 @@ class CourtSentencingService(
     val source = createEvent.additionalInformation.source
     val courtCaseId = createEvent.additionalInformation.courtCaseId
     val courtAppearanceId = createEvent.additionalInformation.courtAppearanceId!!
-    val futureCourtAppearance = createEvent.additionalInformation.isOnFutureCourtAppearance
+    val futureCourtAppearance = createEvent.additionalInformation.isOnFutureAppearance == true
     val offenderNo: String = eventOffenderNo(createEvent.personReference)
     val telemetryMap = createEvent.asTelemetry()
     if (isDpsCreated(source)) {
@@ -516,7 +518,7 @@ class CourtSentencingService(
             val chargeMapping = retrieveParentChargeMapping(chargeId)
             telemetryMap["nomisChargeId"] = chargeMapping.nomisCourtChargeId.toString()
 
-            val nomisCourtCharge = dpsCharge.toNomisCourtCharge(isOnFutureCourtAppearance = futureCourtAppearance)
+            val nomisCourtCharge = dpsCharge.toNomisCourtCharge(isOnFutureCourtAppearance = futureCourtAppearance == true)
             telemetryMap["nomisOutcomeCode"] = nomisCourtCharge.resultCode1 ?: "null"
             telemetryMap["nomisOffenceCode"] = nomisCourtCharge.offenceCode
             nomisApiService.updateCourtCharge(
@@ -850,7 +852,11 @@ class CourtSentencingService(
 
           val dpsSentence =
             courtSentencingApiService.getSentence(dpsSentenceId)
-              .also { telemetryMap["dpsChargeId"] = it.chargeLifetimeUuid.toString() }
+              .also {
+                telemetryMap["dpsChargeId"] = it.chargeLifetimeUuid.toString()
+                telemetryMap["dpsSentenceCategory"] = it.sentenceCategory
+                telemetryMap["dpsSentenceCalcType"] = it.sentenceCalcType
+              }
 
           val courtAppearanceMapping = tryFetchParent(message = "Missing DPS Appearance: $dpsAppearanceId") {
             courtCaseMappingService.getMappingGivenCourtAppearanceIdOrNull(dpsCourtAppearanceId = dpsAppearanceId)
@@ -1008,6 +1014,8 @@ class CourtSentencingService(
     if (isDpsCreated(source)) {
       track("sentence-updated", telemetryMap) {
         courtSentencingApiService.getSentenceOrNull(sentenceId)?.also { dpsSentence ->
+          telemetryMap["dpsSentenceCategory"] = dpsSentence.sentenceCategory
+          telemetryMap["dpsSentenceCalcType"] = dpsSentence.sentenceCalcType
           val sentenceMapping = retrieveParentSentenceMapping(sentenceId)
           telemetryMap["nomisSentenceSeq"] = sentenceMapping.nomisSentenceSequence.toString()
           telemetryMap["nomisBookingId"] = sentenceMapping.nomisBookingId.toString()
@@ -1534,7 +1542,7 @@ class CourtSentencingService(
     val courtAppearanceId: String?,
     val source: String,
     val courtCaseId: String,
-    val isOnFutureCourtAppearance: Boolean,
+    val isOnFutureAppearance: Boolean? = false,
   )
 
   data class SentenceAdditionalInformation(
@@ -1694,6 +1702,8 @@ fun LegacyCourtCase.toNomisUpdateCourtCase(): UpdateCourtCaseRequest = UpdateCou
 fun LegacyCourtAppearance.toNomisCourtAppearance(
   courtEventChargesWithOutcomes: List<CourtEventChargeRequest>,
   isOnFutureCourtAppearance: Boolean,
+  forceClone: Boolean = false,
+  forcePreventClone: Boolean = false,
 ): CourtAppearanceRequest = CourtAppearanceRequest(
   eventDateTime = LocalDateTime.of(
     this.appearanceDate,
@@ -1717,6 +1727,8 @@ fun LegacyCourtAppearance.toNomisCourtAppearance(
   nextCourtId = this.nextCourtAppearance?.courtId,
   comment = this.comments,
   futureAppearance = isOnFutureCourtAppearance,
+  forceClone = forceClone,
+  forcePreventClone = forcePreventClone,
 )
 
 fun LegacyCharge.toNomisCourtCharge(isOnFutureCourtAppearance: Boolean): OffenderChargeRequest = OffenderChargeRequest(
@@ -1990,7 +2002,7 @@ fun CourtSentencingService.CourtAppearanceCreatedEvent.asTelemetry() = mutableMa
 fun CourtSentencingService.CourtChargeCreatedEvent.asTelemetry() = mutableMapOf(
   "dpsChargeId" to additionalInformation.courtChargeId,
   "dpsCourtCaseId" to additionalInformation.courtCaseId,
-  "isOnFutureAppearance" to additionalInformation.isOnFutureCourtAppearance.toString(),
+  "isOnFutureAppearance" to (additionalInformation.isOnFutureAppearance == true).toString(),
   "dpsCourtAppearanceId" to (additionalInformation.courtAppearanceId ?: "null"),
   "offenderNo" to eventOffenderNo(personReference),
 )

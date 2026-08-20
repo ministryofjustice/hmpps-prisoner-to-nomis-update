@@ -54,6 +54,34 @@ fun incentiveCreatedMessage(incentiveId: Long) = """
         "SigningCertURL": "https://sns.us-east-1.amazonaws.com/SimpleNotificationService-0000000000000000000000.pem"}      
 """.trimIndent()
 
+fun religionCreatedMessage(prisonNumber: String, cprReligionId: String) = """
+      {
+        "Type": "Notification", 
+        "MessageId": "48e8a79a-0f43-4338-bbd4-b0d745f1f8ec", 
+        "Token": null, 
+        "TopicArn": "arn:aws:sns:eu-west-2:000000000000:hmpps-domain-events", 
+        "Message": "{\"eventType\":\"core-person-record.prison.religion.created\", \"additionalInformation\": { \"cprReligionId\":\"$cprReligionId\" },\"personReference\": {\"identifiers\":[{\"type\":\"prisonNumber\", \"value\":\"$prisonNumber\"}]}}",
+        "SubscribeURL": null, 
+        "Timestamp": "2021-03-05T11:23:56.031Z", 
+        "SignatureVersion": "1", 
+        "Signature": "EXAMPLEpH+..", 
+        "SigningCertURL": "https://sns.us-east-1.amazonaws.com/SimpleNotificationService-0000000000000000000000.pem"}      
+""".trimIndent()
+
+fun corePersonMergeMessage(prisonNumber: String) = """
+      {
+        "Type": "Notification", 
+        "MessageId": "48e8a79a-0f43-4338-bbd4-b0d745f1f8ec", 
+        "Token": null, 
+        "TopicArn": "arn:aws:sns:eu-west-2:000000000000:hmpps-domain-events", 
+        "Message": "{\"eventType\":\"core-person-record.prison.merged\", \"personReferenceTo\": {\"identifiers\":[{\"type\":\"prisonNumber\", \"value\":\"$prisonNumber\"}]}}",
+        "SubscribeURL": null, 
+        "Timestamp": "2021-03-05T11:23:56.031Z", 
+        "SignatureVersion": "1", 
+        "Signature": "EXAMPLEpH+..", 
+        "SigningCertURL": "https://sns.us-east-1.amazonaws.com/SimpleNotificationService-0000000000000000000000.pem"}      
+""".trimIndent()
+
 fun incentiveRetryMessage() = """
       {
         "Type":"RETRY_CREATE_MAPPING",

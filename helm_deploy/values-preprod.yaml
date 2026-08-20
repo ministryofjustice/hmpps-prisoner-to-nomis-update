@@ -20,6 +20,7 @@ generic-service:
     API_BASE_URL_CORE_PERSON: https://hmpps-person-record-preprod.hmpps.service.justice.gov.uk
     API_BASE_URL_COURT_SENTENCING: https://remand-and-sentencing-api-preprod.hmpps.service.justice.gov.uk
     API_BASE_URL_CSIP: https://csip-api-preprod.hmpps.service.justice.gov.uk
+    API_BASE_URL_CSRA: https://cell-sharing-risk-assessment-api-preprod.hmpps.service.justice.gov.uk
     API_BASE_URL_FINANCE: https://prisoner-finance-sync-api-preprod.hmpps.service.justice.gov.uk
     API_BASE_URL_INCENTIVES: https://incentives-api-preprod.hmpps.service.justice.gov.uk
     API_BASE_URL_INCIDENTS: https://incident-reporting-api-preprod.hmpps.service.justice.gov.uk
@@ -36,9 +37,12 @@ generic-service:
     API_BASE_URL_STAFF: https://prisoner-to-nomis-update-preprod.hmpps.service.justice.gov.uk
     API_BASE_URL_VISITS: https://visit-scheduler-preprod.prison.service.justice.gov.uk
     API_BASE_URL_VISIT_BALANCE: https://hmpps-visit-allocation-api-preprod.prison.service.justice.gov.uk
+    API_BASE_URL_AGENCYREGISTERS: https://prison-register-preprod.hmpps.service.justice.gov.uk
     REPORTS_SENTENCING_RECONCILIATION_ALL_PRISONERS: true
     FEATURE_EVENT_PRISON-PROPERTY_CONTAINER_CREATED: false
     FEATURE_EVENT_PRISON-PROPERTY_CONTAINER_UPDATED: false
+    FEATURE_EVENT_CELL_SHARING_RISK_ASSESSMENT_CREATED: true
+    FEATURE_EVENT_CELL_SHARING_RISK_ASSESSMENT_AMENDED: true
     FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION_CREATED: false
     FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION_UPDATED: false
     FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION_DELETED: false
@@ -112,8 +116,12 @@ generic-service:
       type: OFFICIAL_VISIT_ACTIVE_SCH_RECON
       schedule: "30 2 * * *"
       suspend: true
-    - name: prisoner-balance-recon
-      type: PRISONER_BALANCE_RECON
+    - name: prisoner-balance-active-recon
+      type: PRISONER_BALANCE_ACTIVE_RECON
+      schedule: "15 3 * * *"
+      suspend: true
+    - name: prisoner-balance-all-recon
+      type: PRISONER_BALANCE_ALL_RECON
       schedule: "15 3 * * *"
       suspend: true
     - name: prisoner-transactions-recon
@@ -142,6 +150,9 @@ generic-prometheus-alerts:
   businessHoursOnly: true
   alertSeverity: syscon-nonprod
   sqsNumberAlertQueueMappings:
+    coreperson:
+      - "syscon-devs-preprod-hmpps_prisoner_to_nomis_coreperson_queue"
+      - "syscon-devs-preprod-hmpps_prisoner_to_nomis_coreperson_dlq"
     visits:
       - "syscon-devs-preprod-hmpps_prisoner_to_nomis_visit_queue"
       - "syscon-devs-preprod-hmpps_prisoner_to_nomis_visit_dlq"
@@ -186,6 +197,9 @@ generic-prometheus-alerts:
     property:
       - "syscon-devs-preprod-hmpps_prisoner_to_nomis_property_queue"
       - "syscon-devs-preprod-hmpps_prisoner_to_nomis_property_dlq"
+    csra:
+      - "syscon-devs-preprod-hmpps_prisoner_to_nomis_csra_queue"
+      - "syscon-devs-preprod-hmpps_prisoner_to_nomis_csra_dlq"
     organisations:
       - "syscon-devs-preprod-hmpps_prisoner_to_nomis_organisations_queue"
       - "syscon-devs-preprod-hmpps_prisoner_to_nomis_organisations_dlq"

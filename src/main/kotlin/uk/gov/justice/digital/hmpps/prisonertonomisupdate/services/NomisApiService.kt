@@ -169,12 +169,12 @@ class NomisApiService(
     .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/prisoners/ids/all-from-id", "offenderId", fromId)))
     .awaitSingle()
 
-  suspend fun getAllPrisonersInRange(fromRootOffenderId: Long, toRootOffenderId: Long) = prisonersApi
-    .getAllPrisonersInRange(fromRootOffenderId, toRootOffenderId)
+  suspend fun getAllPrisonersInRange(fromRootOffenderId: Long, toRootOffenderId: Long, activeOnly: Boolean? = null) = prisonersApi
+    .getAllPrisonersInRange(fromRootOffenderId, toRootOffenderId, activeOnly)
     .awaitSingle()
 
-  suspend fun getAllPrisonersIdRanges(pageSize: Long) = prisonersApi
-    .getAllPrisonersIdRanges(pageSize.toInt())
+  suspend fun getAllPrisonersIdRanges(pageSize: Long, activeOnly: Boolean? = null) = prisonersApi
+    .getAllPrisonersIdRanges(pageSize.toInt(), activeOnly)
     .awaitSingle()
 
   suspend fun getPrisonerDetails(offenderNo: String): PrisonerDetails? = prisonersApi

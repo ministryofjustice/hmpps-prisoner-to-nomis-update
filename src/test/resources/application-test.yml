@@ -32,11 +32,22 @@ api.base.url:
   officialvisits: http://localhost:8104
   staff: http://localhost:8106
   property: http://localhost:8107
+  csra: http://localhost:8108
+  agencyregisters: http://localhost:8109
 
 hmpps.sqs:
   defaultErrorVisibilityTimeout: 0
   provider: localstack
   queues:
+    coreperson:
+      queueName: "coreperson-${random.uuid}"
+      dlqName: "coreperson-dlq-${random.uuid}"
+      subscribeTopicId: domainevents
+      subscribeFilter: >-
+        { "eventType":[
+        "core-person-record.prison.religion.created"]}
+      dlqMaxReceiveCount: 1
+      visibilityTimeout: 120
     visit:
       queueName: "visit-${random.uuid}"
       dlqName: "visit-dlq-${random.uuid}"
@@ -304,6 +315,17 @@ hmpps.sqs:
         { "eventType":[
           "prison-property.container.created",
           "prison-property.container.updated"
+        ]}
+      dlqMaxReceiveCount: 2
+      visibilityTimeout: 120
+    csra:
+      queueName: "csra-${random.uuid}"
+      dlqName: "csra-dlq-${random.uuid}"
+      subscribeTopicId: domainevents
+      subscribeFilter: >-
+        { "eventType":[
+          "cell.sharing.risk.assessment.created",
+          "cell.sharing.risk.assessment.amended"
         ]}
       dlqMaxReceiveCount: 2
       visibilityTimeout: 120

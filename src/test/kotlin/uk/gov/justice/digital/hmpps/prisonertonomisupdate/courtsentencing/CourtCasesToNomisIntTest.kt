@@ -99,6 +99,8 @@ private const val OFFENDER_NO = "AB12345"
 private const val DONCASTER_COURT_CODE = "DRBYYC"
 private const val CASE_REFERENCE = "ABC4999"
 private const val APPEARANCE_VL = "VL"
+private const val DPS_SENTENCE_CATEGORY = "CAT"
+private const val DPS_CALC_TYPE = "CALC"
 
 class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
@@ -2355,6 +2357,8 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
             assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
             assertThat(it["dpsChargeId"]).isEqualTo(DPS_COURT_CHARGE_ID)
+            assertThat(it["dpsSentenceCategory"]).isEqualTo(DPS_SENTENCE_CATEGORY)
+            assertThat(it["dpsSentenceCalcType"]).isEqualTo(DPS_CALC_TYPE)
             assertThat(it["nomisChargeId"]).isEqualTo(NOMIS_COURT_CHARGE_ID.toString())
             assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
             assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
@@ -5684,7 +5688,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             offenderNo = OFFENDER_NO,
             eventType = eventType,
             source = source,
-            isOnFutureCourtAppearance = futureAppearance,
+            isOnFutureAppearance = futureAppearance,
           ),
         )
         .messageAttributes(
@@ -5980,8 +5984,8 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     offenderNo: String,
     eventType: String,
     source: String = "DPS",
-    isOnFutureCourtAppearance: Boolean = false,
-  ) = """{"eventType":"$eventType", "additionalInformation": {"courtChargeId":"$courtChargeId", "courtCaseId":"$courtCaseId", ${courtAppearanceId?.let { """"courtAppearanceId":"$it",""" } ?: ""} "source": "$source", "isOnFutureCourtAppearance": $isOnFutureCourtAppearance}, "personReference": {"identifiers":[{"type":"NOMS", "value":"$offenderNo"}]}}"""
+    isOnFutureAppearance: Boolean = false,
+  ) = """{"eventType":"$eventType", "additionalInformation": {"courtChargeId":"$courtChargeId", "courtCaseId":"$courtCaseId", ${courtAppearanceId?.let { """"courtAppearanceId":"$it",""" } ?: ""} "source": "$source", "isOnFutureAppearance": $isOnFutureAppearance}, "personReference": {"identifiers":[{"type":"NOMS", "value":"$offenderNo"}]}}"""
 
   fun sentenceMessagePayload(
     courtCaseId: String,

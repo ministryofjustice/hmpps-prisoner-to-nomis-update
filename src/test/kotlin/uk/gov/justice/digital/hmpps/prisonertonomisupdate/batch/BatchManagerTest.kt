@@ -34,7 +34,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.LOCATI
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.NON_ASSOCIATIONS_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.ORGANISATIONS_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PERSON_CONTACT_RECON
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PRISONER_BALANCE_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PRISONER_BALANCE_ALL_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PRISONER_CONTACT_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PRISONER_RESTRICTION_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PURGE_ACTIVITY_DLQ
@@ -345,12 +345,22 @@ class BatchManagerTest {
   }
 
   @Test
-  fun `should call the prisoner balance reconciliation service`() = runTest {
-    val batchManager = batchManager(PRISONER_BALANCE_RECON)
+  fun `should call the prisoner balance active reconciliation service`() = runTest {
+    val batchManager = batchManager(BatchType.PRISONER_BALANCE_ACTIVE_RECON)
 
     batchManager.onApplicationEvent(event)
 
-    verify(prisonerBalanceReconciliationService).generatePrisonerBalanceReconciliationReportBatch()
+    verify(prisonerBalanceReconciliationService).generateReconciliationReportBatch(true)
+    verify(context).close()
+  }
+
+  @Test
+  fun `should call the prisoner balance all reconciliation service`() = runTest {
+    val batchManager = batchManager(PRISONER_BALANCE_ALL_RECON)
+
+    batchManager.onApplicationEvent(event)
+
+    verify(prisonerBalanceReconciliationService).generateReconciliationReportBatch(false)
     verify(context).close()
   }
 

@@ -14,6 +14,7 @@ api.base.url:
   core.person: http://localhost:8080
   court.sentencing: http://localhost:8080
   csip: http://localhost:8080
+  csra: http://localhost:8080
   finance: http://localhost:8080
   incentives: http://localhost:8080
   incidents: http://localhost:8080
@@ -25,6 +26,7 @@ api.base.url:
   staff: http://localhost:8080
   visit.balance: http://localhost:8080
   visits: http://localhost:8080
+  agencyregisters: http://localhost:8080
 
 springdoc:
   api-docs:

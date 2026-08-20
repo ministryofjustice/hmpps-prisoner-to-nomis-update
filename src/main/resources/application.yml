@@ -72,6 +72,11 @@ spring:
             client-id: ${csip.client.id}
             client-secret: ${csip.client.secret}
             authorization-grant-type: client_credentials
+          csra-api:
+            provider: hmpps-auth
+            client-id: ${csra.client.id}
+            client-secret: ${csra.client.secret}
+            authorization-grant-type: client_credentials
           finance-api:
             provider: hmpps-auth
             client-id: ${finance.client.id}
@@ -146,6 +151,11 @@ spring:
             provider: hmpps-auth
             client-id: ${visit.balance.client.id}
             client-secret: ${visit.balance.client.secret}
+            authorization-grant-type: client_credentials
+          agency-registers-api:
+            provider: hmpps-auth
+            client-id: ${agencyregisters.client.id}
+            client-secret: ${agencyregisters.client.secret}
             authorization-grant-type: client_credentials
         provider:
           hmpps-auth:

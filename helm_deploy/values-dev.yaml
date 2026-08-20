@@ -21,6 +21,7 @@ generic-service:
     API_BASE_URL_CORE_PERSON: https://hmpps-person-record-dev.hmpps.service.justice.gov.uk
     API_BASE_URL_COURT_SENTENCING: https://remand-and-sentencing-api-dev.hmpps.service.justice.gov.uk
     API_BASE_URL_CSIP: https://csip-api-dev.hmpps.service.justice.gov.uk
+    API_BASE_URL_CSRA: https://cell-sharing-risk-assessment-api-dev.hmpps.service.justice.gov.uk
     API_BASE_URL_FINANCE: https://prisoner-finance-sync-api-dev.hmpps.service.justice.gov.uk
     API_BASE_URL_INCENTIVES: https://incentives-api-dev.hmpps.service.justice.gov.uk
     API_BASE_URL_INCIDENTS: https://incident-reporting-api-dev.hmpps.service.justice.gov.uk
@@ -33,12 +34,14 @@ generic-service:
     API_BASE_URL_PERSONAL_RELATIONSHIPS: https://personal-relationships-api-dev.hmpps.service.justice.gov.uk
     API_BASE_URL_PROPERTY: https://prisoner-property-api-dev.hmpps.service.justice.gov.uk
     API_BASE_URL_SENTENCE_ADJUSTMENTS: https://adjustments-api-dev.hmpps.service.justice.gov.uk
-    # currently set to self for a mock API until real API is ready
-    API_BASE_URL_STAFF: https://prisoner-to-nomis-update-dev.hmpps.service.justice.gov.uk
+    API_BASE_URL_STAFF: https://prison-users-api-dev.prison.service.justice.gov.uk
     API_BASE_URL_VISITS: https://visit-scheduler-dev.prison.service.justice.gov.uk
     API_BASE_URL_VISIT_BALANCE: https://hmpps-visit-allocation-api-dev.prison.service.justice.gov.uk
+    API_BASE_URL_AGENCYREGISTERS: https://prison-register-dev.hmpps.service.justice.gov.uk
     FEATURE_EVENT_PRISON-PROPERTY_CONTAINER_CREATED: true
     FEATURE_EVENT_PRISON-PROPERTY_CONTAINER_UPDATED: true
+    FEATURE_EVENT_CELL_SHARING_RISK_ASSESSMENT_CREATED: true
+    FEATURE_EVENT_CELL_SHARING_RISK_ASSESSMENT_AMENDED: true
     FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION_CREATED: false
     FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION_UPDATED: false
     FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION_DELETED: false
@@ -61,7 +64,6 @@ generic-service:
     REPORTS_CONTACT-PERSON_PRISONER-CONTACT_RECONCILIATION_PAGE-SIZE: 5
     REPORTS_CONTACT-PERSON_PERSON-CONTACT_RECONCILIATION_PAGE-SIZE: 10
     REPORTS_CORE-PERSON_RECONCILIATION_PAGE-SIZE: 10
-    REPORTS_PRISONER_BALANCE_RECONCILIATION_FILTER_PRISON: ASI,BWI,LEI
     SPRINGDOC_API-DOCS_ENABLED: "true"
     SPRINGDOC_SWAGGER-UI_ENABLED: "true"
     FEATURE_COURT-SCHEDULER_IGNORE-ALL-SENTENCING-EVENTS: true
@@ -87,8 +89,12 @@ generic-service:
       type: COURT_SCHEDULER_ALL_RECON
       schedule: "00 4 * * *"
       suspend: true
-    - name: prisoner-balance-recon
-      type: PRISONER_BALANCE_RECON
+    - name: prisoner-balance-active-recon
+      type: PRISONER_BALANCE_ACTIVE_RECON
+      schedule: "30 3 * * *"
+      suspend: true
+    - name: prisoner-balance-all-recon
+      type: PRISONER_BALANCE_ALL_RECON
       schedule: "30 3 * * *"
       suspend: true
     - name: prisoner-transactions-recon
@@ -108,6 +114,9 @@ generic-prometheus-alerts:
   businessHoursOnly: true
   alertSeverity: syscon-nonprod
   sqsNumberAlertQueueMappings:
+    coreperson:
+      - "syscon-devs-dev-hmpps_prisoner_to_nomis_coreperson_queue"
+      - "syscon-devs-dev-hmpps_prisoner_to_nomis_coreperson_dlq"
     visits:
       - "syscon-devs-dev-hmpps_prisoner_to_nomis_visit_queue"
       - "syscon-devs-dev-hmpps_prisoner_to_nomis_visit_dlq"
@@ -152,6 +161,9 @@ generic-prometheus-alerts:
     property:
       - "syscon-devs-dev-hmpps_prisoner_to_nomis_property_queue"
       - "syscon-devs-dev-hmpps_prisoner_to_nomis_property_dlq"
+    csra:
+      - "syscon-devs-dev-hmpps_prisoner_to_nomis_csra_queue"
+      - "syscon-devs-dev-hmpps_prisoner_to_nomis_csra_dlq"
     organisations:
       - "syscon-devs-dev-hmpps_prisoner_to_nomis_organisations_queue"
       - "syscon-devs-dev-hmpps_prisoner_to_nomis_organisations_dlq"

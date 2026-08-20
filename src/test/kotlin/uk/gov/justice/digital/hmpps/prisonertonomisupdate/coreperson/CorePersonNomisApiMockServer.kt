@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson
 
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
+import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.springframework.http.HttpStatus
@@ -38,6 +39,7 @@ class CorePersonNomisApiMockServer(private val jsonMapper: JsonMapper) {
       ),
     )
   }
+
   fun stubGetCorePersonReligions(
     prisonNumber: String = "AA1234A",
     response: List<OffenderBelief> = corePersonReligions(),
@@ -56,9 +58,20 @@ class CorePersonNomisApiMockServer(private val jsonMapper: JsonMapper) {
     )
   }
 
+  fun stubMergeCorePersonReligions(prisonNumber: String = "AA1234A") {
+    nomisApi.stubFor(
+      post(urlEqualTo("/core-person/$prisonNumber/merge")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.NO_CONTENT.value()),
+      ),
+    )
+  }
+
   fun verify(pattern: RequestPatternBuilder) = nomisApi.verify(pattern)
   fun verify(count: Int, pattern: RequestPatternBuilder) = nomisApi.verify(count, pattern)
 }
+
 fun corePerson(prisonNumber: String? = null, nationality: String? = null, religion: String? = null): CorePerson = CorePerson(
   prisonNumber = prisonNumber ?: "A1234KT",
   activeFlag = true,

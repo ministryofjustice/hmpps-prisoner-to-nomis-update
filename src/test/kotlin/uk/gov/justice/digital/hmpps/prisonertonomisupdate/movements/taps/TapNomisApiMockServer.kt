@@ -69,7 +69,7 @@ class TapNomisApiMockServer(private val jsonMapper: JsonMapper) {
       toAddresses = listOf(),
     )
 
-    fun upsertTapApplicationResponse() = UpsertTapApplicationResponse(12345, 56789)
+    fun upsertTapApplicationResponse(deletedEventId: Long? = null) = UpsertTapApplicationResponse(12345, 56789, deletedEventId)
 
     fun upsertTapScheduleOut() = UpsertTapScheduleOut(
       tapApplicationId = 56789,

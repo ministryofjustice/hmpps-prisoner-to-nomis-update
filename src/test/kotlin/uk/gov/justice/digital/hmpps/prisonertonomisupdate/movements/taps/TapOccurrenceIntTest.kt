@@ -638,6 +638,7 @@ class TapOccurrenceIntTest : SqsIntegrationTestBase() {
     fun setUp() {
       mappingApi.stubGetTapScheduleMapping(dpsId = dpsOccurrenceId, nomisEventId = nomisEventId, addressId = 54321)
       nomisApi.stubDeleteTapScheduleOut(prisonerNumber, nomisEventId)
+      mappingApi.stubDeleteTapScheduleMapping(nomisEventId)
     }
 
     private fun publishDeleteEvent(source: String = "DPS", completedTelemetry: String? = null) {
@@ -654,6 +655,15 @@ class TapOccurrenceIntTest : SqsIntegrationTestBase() {
       publishDeleteEvent()
 
       nomisApi.verify(deleteRequestedFor(urlEqualTo("/movements/$prisonerNumber/taps/schedule/out/$nomisEventId")))
+    }
+
+    @Test
+    fun `should delete the mapping`() {
+      publishDeleteEvent()
+
+      mappingApi.verify(
+        deleteRequestedFor(urlEqualTo("/mapping/taps/schedule/nomis-id/54321")),
+      )
     }
 
     @Test

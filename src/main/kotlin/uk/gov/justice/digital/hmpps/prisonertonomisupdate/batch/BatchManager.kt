@@ -39,7 +39,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.OFFICI
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.OFFICIAL_VISIT_ALL_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.ORGANISATIONS_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PERSON_CONTACT_RECON
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PRISONER_BALANCE_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PRISONER_BALANCE_ACTIVE_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PRISONER_BALANCE_ALL_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PRISONER_CONTACT_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PRISONER_RESTRICTION_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PRISONER_TRANSACTIONS_RECON
@@ -106,7 +107,8 @@ enum class BatchType {
   VISIT_SLOTS_RECON,
   ORGANISATIONS_RECON,
   PERSON_CONTACT_RECON,
-  PRISONER_BALANCE_RECON,
+  PRISONER_BALANCE_ACTIVE_RECON,
+  PRISONER_BALANCE_ALL_RECON,
   PRISONER_CONTACT_RECON,
   PRISONER_RESTRICTION_RECON,
   PRISONER_TRANSACTIONS_RECON,
@@ -188,7 +190,8 @@ class BatchManager(
       OFFICIAL_VISIT_ACTIVE_SCH_RECON -> officialVisitsActiveScheduledReconciliationService.generateActiveScheduledVisitsReconciliationReportBatch()
       ORGANISATIONS_RECON -> organisationReconciliationService.generateOrganisationsReconciliationReport()
       PERSON_CONTACT_RECON -> contactPersonReconciliationService.generatePersonContactReconciliationReportBatch()
-      PRISONER_BALANCE_RECON -> prisonerBalanceReconciliationService.generatePrisonerBalanceReconciliationReportBatch()
+      PRISONER_BALANCE_ACTIVE_RECON -> prisonerBalanceReconciliationService.generateReconciliationReportBatch(activeOnly = true)
+      PRISONER_BALANCE_ALL_RECON -> prisonerBalanceReconciliationService.generateReconciliationReportBatch(activeOnly = false)
       PRISONER_CONTACT_RECON -> contactPersonReconciliationService.generatePrisonerContactReconciliationReportBatch()
       PRISONER_RESTRICTION_RECON -> prisonerRestrictionsReconciliationService.generatePrisonerRestrictionsReconciliationReportBatch()
       PRISONER_TRANSACTIONS_RECON -> prisonerTransactionsReconciliationService.generateReconciliationReportBatch()

@@ -2,11 +2,14 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.property
 
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
+import tools.jackson.databind.json.JsonMapper
+import tools.jackson.module.kotlin.readValue
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PropertyContainerMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PropertyContainerCode
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PropertyContainerCreateRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PropertyContainerUpdateRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.property.model.PropertyContainerDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.TelemetryEnabled
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
@@ -20,6 +23,7 @@ class PropertyService(
   private val propertyMappingService: PropertyMappingService,
   private val propertyRetryQueueService: PropertyRetryQueueService,
   override val telemetryClient: TelemetryClient,
+  private val jsonMapper: JsonMapper,
 ) : CreateMappingRetryable,
   TelemetryEnabled {
   suspend fun created(event: PropertyDomainEvent) {
@@ -80,10 +84,28 @@ class PropertyService(
     containerCode = toNomisContainerCode(),
     internalLocationId = toNomisLocation(),
     proposedDisposalDate = proposedDisposalDate,
+    active = removalOutcome == null,
+    expiryDate = removalDate,
   )
 
   override suspend fun retryCreateMapping(message: String) {
-    TODO("Not yet implemented")
+    val (mapping, telemetryAttributes) = message.fromJson<CreateMappingRetryMessage<PropertyContainerMappingDto>>()
+    propertyMappingService.create(
+      PropertyContainerMappingDto(
+        dpsPropertyContainerId = mapping.dpsPropertyContainerId,
+        nomisPropertyContainerId = mapping.nomisPropertyContainerId,
+        bookingId = mapping.bookingId,
+        offenderNo = mapping.offenderNo,
+        mappingType = PropertyContainerMappingDto.MappingType.DPS_CREATED,
+      ),
+    )
+      .also {
+        telemetryClient.trackEvent(
+          "property-mapping-create-success",
+          telemetryAttributes,
+          null,
+        )
+      }
   }
 
   private suspend fun PropertyContainerDto.toNomisCreateRequest() = PropertyContainerCreateRequest(
@@ -100,6 +122,8 @@ class PropertyService(
     ?.let {
       propertyMappingService.getNomisLocation(currentLocation.toString()).nomisLocationId
     }
+
+  private inline fun <reified T> String.fromJson(): T = jsonMapper.readValue(this)
 }
 
 private val supportedFields = setOf(
@@ -107,6 +131,7 @@ private val supportedFields = setOf(
   "location",
   "containerType",
   "proposedDisposalDate",
+  "removalOutcome",
 )
 
 private fun PropertyDomainEvent.supportedFieldUpdated(): Boolean = additionalInformation
@@ -125,13 +150,11 @@ private fun PropertyContainerDto.toNomisContainerCode(): PropertyContainerCode =
   this.currentLocationType
 ) {
   PropertyContainerDto.CurrentLocationType.BRANSTON -> PropertyContainerCode.BRA
-  PropertyContainerDto.CurrentLocationType.INTERNAL ->
+  PropertyContainerDto.CurrentLocationType.INTERNAL, null ->
     when (this.containerType) {
       PropertyContainerDto.ContainerType.STANDARD -> PropertyContainerCode.BULK
       PropertyContainerDto.ContainerType.EXCESS -> PropertyContainerCode.BRA
       PropertyContainerDto.ContainerType.VALUABLES -> PropertyContainerCode.VALU
       PropertyContainerDto.ContainerType.CONFISCATED -> PropertyContainerCode.CO
     }
-
-  null -> PropertyContainerCode.BULK
 }

@@ -11,7 +11,7 @@ import kotlin.io.path.pathString
 import kotlin.io.path.Path as KotlinPath
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.2"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.5"
   kotlin("plugin.spring") version "2.4.10"
   id("org.openapi.generator") version "7.23.0"
 }
@@ -63,6 +63,10 @@ dependencies {
 
 kotlin {
   jvmToolchain(25)
+  compilerOptions {
+    freeCompilerArgs.add("-Xcollection-literals")
+    jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_25)
+  }
 }
 
 @CacheableTask
@@ -152,6 +156,12 @@ val models = listOf(
     packageName = "casenotes",
     url = "https://dev.offender-case-notes.service.justice.gov.uk/v3/api-docs",
     models = "CaseNote,CaseNoteAmendment",
+  ),
+  ModelConfiguration(
+    name = "csra",
+    packageName = "csra",
+    // testPackageName = "csra",
+    url = "https://cell-sharing-risk-assessment-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
   ),
   ModelConfiguration(
     name = "core-person",
@@ -273,7 +283,6 @@ val models = listOf(
 tasks {
   withType<KotlinCompile> {
     dependsOn(models.map { it.toBuildModelTaskName() })
-    compilerOptions.jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_25
   }
   withType<KtLintCheckTask> {
     mustRunAfter(models.map { it.toBuildModelTaskName() })

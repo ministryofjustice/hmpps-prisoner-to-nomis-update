@@ -112,6 +112,7 @@ class TapOccurrenceService(
         ?.also { telemetryMap["nomisEventId"] = it.nomisEventId.toString() }
         ?: throw TapOccurrenceSyncException("Cannot find scheduled movement mapping for $dpsOccurrenceId")
       nomisApiService.deleteTapScheduleOut(prisonerNumber, mapping.nomisEventId)
+      mappingApiService.deleteTapScheduleMapping(mapping.nomisEventId)
     }
   }
 

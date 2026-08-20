@@ -1529,26 +1529,28 @@ internal class NomisApiServiceTest {
 
     @Test
     internal fun `will pass params to service`() = runTest {
-      nomisApi.stubGetAllPrisonersInRange()
+      nomisApi.stubGetAllPrisonersInRange(5, 100)
 
       nomisApiService.getAllPrisonersInRange(
         fromRootOffenderId = 5,
         toRootOffenderId = 100,
+        activeOnly = false,
       )
 
       nomisApi.verify(
         getRequestedFor(urlPathEqualTo("/prisoners/ids-in-range"))
           .withQueryParam("fromRootOffenderId", equalTo("5"))
-          .withQueryParam("toRootOffenderId", equalTo("100")),
+          .withQueryParam("toRootOffenderId", equalTo("100"))
+          .withQueryParam("active", equalTo("false")),
       )
     }
 
     @Test
-    fun `will return a range of prisoners ids`() = runTest {
-      nomisApi.stubGetAllPrisonersInRange(fromRootOffenderId = 1, toRootOffenderId = 10, firstOffenderNo = "A0001BC")
+    fun `will return a range of prisoners ids - range is greater than fromRootOffenderId`() = runTest {
+      nomisApi.stubGetAllPrisonersInRange(fromRootOffenderId = 0, toRootOffenderId = 10, firstOffenderNo = "A0001BC")
 
       val prisonerIds = nomisApiService.getAllPrisonersInRange(
-        fromRootOffenderId = 1,
+        fromRootOffenderId = 0,
         toRootOffenderId = 10,
       )
 
@@ -1559,7 +1561,7 @@ internal class NomisApiServiceTest {
   }
 
   @Nested
-  inner class GetAllPrisonersIsRanges {
+  inner class GetAllPrisonersIdRanges {
     @Test
     internal fun `will pass oath2 token to service`() = runTest {
       nomisApi.stubGetAllPrisonersIdRanges(pageSize = 10)
@@ -1579,11 +1581,14 @@ internal class NomisApiServiceTest {
 
       nomisApiService.getAllPrisonersIdRanges(
         pageSize = 5,
+        activeOnly = false,
       )
 
       nomisApi.verify(
         getRequestedFor(urlPathEqualTo("/prisoners/id-ranges"))
-          .withQueryParam("size", equalTo("5")),
+          .withQueryParam("size", equalTo("5"))
+          .withQueryParam("active", equalTo("false")),
+
       )
     }
 

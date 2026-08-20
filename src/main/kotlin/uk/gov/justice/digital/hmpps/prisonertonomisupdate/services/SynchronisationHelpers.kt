@@ -61,7 +61,7 @@ class SynchroniseBuilder<MAPPING_DTO>(
           }
 
           else -> {
-            telemetryClient?.trackEvent("$name-create-$failureSuffix", eventTelemetry)
+            telemetryClient?.trackEvent("$name-create-$failureSuffix", eventTelemetry + ("reason" to (it.message ?: it.javaClass.name)))
           }
         }
         throw it
