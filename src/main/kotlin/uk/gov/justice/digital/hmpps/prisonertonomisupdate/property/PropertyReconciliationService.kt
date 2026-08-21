@@ -127,7 +127,7 @@ class PropertyReconciliationService(
     val dpsFields = PropertyContainerFields(
       id = dpsData.id.toString(),
       offenderNo = dpsData.prisonerNumber,
-      location = dpsData.currentLocation.toString(),
+      location = dpsData.currentLocation?.toString(),
       prison = dpsData.prisonId,
       active = dpsData.removalOutcome == null,
       sealMark = dpsData.currentSealNumber,
