@@ -46,6 +46,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PRISON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PRISONER_CONTACT_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PRISONER_RESTRICTION_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PRISONER_TRANSACTIONS_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PROPERTY_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PURGE_ACTIVITY_DLQ
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.SENTENCING_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.STAFF_RECON
@@ -76,6 +77,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.Organisa
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.PrisonerRestrictionsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.profiledetails.ContactPersonProfileDetailsReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.property.PropertyReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing.SentencingReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.staff.StaffReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visitbalances.VisitBalanceReconciliationService
@@ -114,6 +116,7 @@ enum class BatchType {
   PRISONER_CONTACT_RECON,
   PRISONER_RESTRICTION_RECON,
   PRISONER_TRANSACTIONS_RECON,
+  PROPERTY_RECON,
   PURGE_ACTIVITY_DLQ,
   SENTENCING_RECON,
   STAFF_RECON,
@@ -153,6 +156,7 @@ class BatchManager(
   private val prisonerBalanceReconciliationService: PrisonerBalanceReconciliationService,
   private val prisonerRestrictionsReconciliationService: PrisonerRestrictionsReconciliationService,
   private val prisonerTransactionsReconciliationService: PrisonerTransactionReconciliationService,
+  private val propertyReconciliationService: PropertyReconciliationService,
   private val schedulesService: SchedulesService,
   private val staffReconciliationService: StaffReconciliationService,
   private val sentencingReconciliationService: SentencingReconciliationService,
@@ -199,6 +203,7 @@ class BatchManager(
       PRISONER_CONTACT_RECON -> contactPersonReconciliationService.generatePrisonerContactReconciliationReportBatch()
       PRISONER_RESTRICTION_RECON -> prisonerRestrictionsReconciliationService.generatePrisonerRestrictionsReconciliationReportBatch()
       PRISONER_TRANSACTIONS_RECON -> prisonerTransactionsReconciliationService.generateReconciliationReportBatch()
+      PROPERTY_RECON -> propertyReconciliationService.generatePropertyReconciliationReportBatch()
       PURGE_ACTIVITY_DLQ -> purgeQueue(activitiesDlqName)
       SENTENCING_RECON -> sentencingReconciliationService.generateSentencingReconciliationReport()
       STAFF_RECON -> staffReconciliationService.generateReconciliationReportBatch()

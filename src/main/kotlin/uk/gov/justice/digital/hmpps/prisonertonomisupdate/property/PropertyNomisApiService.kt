@@ -8,6 +8,7 @@ import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.PropertyResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePropertyResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PropertyContainerCreateRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PropertyContainerGetResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PropertyContainerUpdateRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 
@@ -29,4 +30,16 @@ class PropertyNomisApiService(
   suspend fun updateProperty(id: Long, request: PropertyContainerUpdateRequest) {
     api.update(id, request).awaitSingle()
   }
+
+  suspend fun getPropertyContainer(id: Long): PropertyContainerGetResponse = api.get(id).awaitSingle()
+
+  suspend fun getIdRanges(pageSize: Int): List<Long> = api
+    .getPropertyContainerIdRanges(pageSize)
+    .retryWhen(retrySpec)
+    .awaitSingle()
+
+  suspend fun getIdentifiersInRange(startId: Long, endId: Long): List<Long> = api
+    .getIdentifiersInRange(startId, endId)
+    .retryWhen(retrySpec)
+    .awaitSingle()
 }

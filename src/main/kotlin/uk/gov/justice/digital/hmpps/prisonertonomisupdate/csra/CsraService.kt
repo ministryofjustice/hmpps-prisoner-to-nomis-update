@@ -69,6 +69,17 @@ class CsraService(
   suspend fun updated(event: CsraDomainEvent) {
     val telemetry = event.asTelemetry()
     // TODO: I dont think this is needed, as we don't update CSRA in DPS, only create.
+    //    if (event.originatedInDps()) {
+//      track("csra-update", telemetry) {
+//        val dpsId = event.additionalInformation.id!!
+//        val dpsData = csraDpsApiService.getCsraReview((dpsId))
+//        val mapping = csraMappingService.getMappingByDpsId(dpsId.toString())
+//        val nomisId = mapping.nomisBookingId, sequence
+//        telemetry += "nomisBookingId" to nomisId.toString()
+//
+//        csraNomisApiService.updateCsra(nomisId, dpsData.toNomisUpdateRequest())
+//      }
+//    } else {
     telemetryClient.trackEvent("csra-update-ignored", telemetry, null)
   }
 
@@ -92,17 +103,6 @@ class CsraService(
       }
   }
 
-  private fun CsraReviewDetail.toNomisCreateRequest() = CsraCreateDto(
-    assessmentDate = assessmentDate,
-    type = type.toNomisAssessmentType(),
-    calculatedLevel = finalResult?.toNomisLevel() ?: interimResult?.toNomisLevel() ?: AssessmentLevel.STANDARD,
-    // DPS does not hold a numeric CSRA score for a review, only a rating/level, so this is not populated
-    score = null,
-    status = if (finalResult != null) AssessmentStatusType.A else AssessmentStatusType.P,
-    createdDateTime = createdAt,
-    createdBy = createdBy,
-  )
-
   private inline fun <reified T> String.fromJson(): T = jsonMapper.readValue(this)
 }
 
@@ -113,6 +113,22 @@ fun CsraDomainEvent.asTelemetry() = mutableMapOf(
   "offenderNo" to additionalInformation.nomsNumber.toString(),
   "source" to additionalInformation.source.toString(),
 )
+
+private fun CsraReviewDetail.toNomisCreateRequest() = CsraCreateDto(
+  assessmentDate = assessmentDate,
+  type = type.toNomisAssessmentType(),
+  calculatedLevel = finalResult?.toNomisLevel() ?: interimResult?.toNomisLevel() ?: AssessmentLevel.STANDARD,
+  // DPS does not hold a numeric CSRA score for a review, only a rating/level, so this is not populated
+  score = null,
+  status = if (finalResult != null) AssessmentStatusType.A else AssessmentStatusType.P,
+  createdDateTime = createdAt,
+  createdBy = createdBy,
+)
+
+// private fun CsraReviewDetail.toNomisUpdateRequest() = CsraUpdateDto(
+//   reviewLevel = finalResult?.toNomisLevel(),
+//   status = if (finalResult != null) AssessmentStatusType.A else AssessmentStatusType.P,
+// )
 
 private fun CsraReviewDetail.Type.toNomisAssessmentType(): AssessmentType = when (this) {
   CsraReviewDetail.Type.FULL -> AssessmentType.CSRF

@@ -28,13 +28,13 @@ class PropertyMappingService(
     .createPropertyContainerMapping(propertyContainerMappingDto)
     .awaitSingle()
 
-  suspend fun getMappingByNomisId(nomisId: Long) = api
-    .getPropertyContainerMappingByNomisId(nomisId)
-    .awaitSingle()
+//  suspend fun getMappingByNomisId(nomisId: Long) = api
+//    .getPropertyContainerMappingByNomisId(nomisId)
+//    .awaitSingle()
 
   suspend fun getMappingByNomisIdOrNull(nomisId: Long) = api
     .getPropertyContainerMappingByNomisId(nomisId)
-    .awaitBodyOrNullForNotFound()
+    .awaitBodyOrNullForNotFound(retrySpec)
 
   suspend fun getMappingByDpsId(dpsId: String) = api
     .getPropertyContainerMappingByDpsId(dpsId)
