@@ -13,7 +13,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CorePerson
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.NomisAudit
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderBelief
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderNationality
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -72,22 +71,10 @@ class CorePersonNomisApiMockServer(private val jsonMapper: JsonMapper) {
   fun verify(count: Int, pattern: RequestPatternBuilder) = nomisApi.verify(count, pattern)
 }
 
-fun corePerson(prisonNumber: String? = null, nationality: String? = null, religion: String? = null): CorePerson = CorePerson(
+fun corePerson(prisonNumber: String? = null, religion: String? = null): CorePerson = CorePerson(
   prisonNumber = prisonNumber ?: "A1234KT",
   activeFlag = true,
   inOutStatus = "IN",
-  nationalities = if (nationality != null) {
-    listOf(
-      OffenderNationality(
-        bookingId = 1,
-        nationality = CodeDescription(code = nationality, description = "$nationality Description"),
-        latestBooking = true,
-        startDateTime = LocalDateTime.now().minusDays(1),
-      ),
-    )
-  } else {
-    null
-  },
   beliefs = if (religion != null) {
     listOf(
       OffenderBelief(
