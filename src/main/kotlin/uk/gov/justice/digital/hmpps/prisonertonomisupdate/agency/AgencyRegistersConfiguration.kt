@@ -16,18 +16,18 @@ import java.time.Duration
 class AgencyRegistersConfiguration(
   @Value("\${api.base.url.agencyregisters}") val apiBaseUri: String,
   @Value("\${api.health-timeout:2s}") val healthTimeout: Duration,
-  @Value("\${api.timeout:90s}") val timeout: Duration,
+  @Value("\${api.timeout:30s}") val timeout: Duration,
 ) {
 
   @Bean
-  fun agencyRegistersApiWebClient(
+  fun agencyApiHealthWebClient(builder: WebClient.Builder): WebClient = builder.reactiveHealthWebClient(apiBaseUri, healthTimeout)
+
+  @Bean
+  fun agencyApiWebClient(
     authorizedClientManager: ReactiveOAuth2AuthorizedClientManager,
     builder: WebClient.Builder,
   ): WebClient = builder.reactiveAuthorisedWebClient(authorizedClientManager, registrationId = "agency-registers-api", url = apiBaseUri, timeout)
 
-  @Bean
-  fun agencyRegistersApiHealthWebClient(builder: WebClient.Builder): WebClient = builder.reactiveHealthWebClient(apiBaseUri, healthTimeout)
-
-  @Component("agencyRegistersApi")
-  class AgencyRegistersApiHealth(@Qualifier("agencyRegistersApiHealthWebClient") webClient: WebClient) : ReactiveHealthPingCheck(webClient)
+  @Component("agencyApi")
+  class AgencyApiHealth(@Qualifier("agencyApiHealthWebClient") webClient: WebClient) : ReactiveHealthPingCheck(webClient)
 }
