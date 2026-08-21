@@ -12,9 +12,11 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.ActivitiesReconService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.SchedulesService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.AdjudicationsReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.AlertsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.appointments.AppointmentsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.ADJUDICATION_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.AGENCY_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.ALERT_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.ALLOCATION_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.APPOINTMENT_RECON
@@ -119,6 +121,7 @@ enum class BatchType {
   TAP_ALL_PRISONERS_RECON,
   TAP_ACTIVE_PRISONERS_RECON,
   VISIT_BALANCE_RECON,
+  AGENCY_RECON,
 }
 
 @ConditionalOnProperty(name = ["batch.enabled"], havingValue = "true")
@@ -157,6 +160,7 @@ class BatchManager(
   private val tapAllPrisonersReconciliationService: TapAllPrisonersReconciliationService,
   private val visitBalancesReconciliationService: VisitBalanceReconciliationService,
   private val visitSlotsReconciliationService: VisitSlotsReconciliationService,
+  private val agencyRegistersReconciliationService: AgencyRegistersReconciliationService,
 ) {
 
   @EventListener
@@ -203,6 +207,7 @@ class BatchManager(
       TAP_ALL_PRISONERS_RECON -> tapAllPrisonersReconciliationService.generateTapAllPrisonersReconciliationReportBatch()
       VISIT_BALANCE_RECON -> visitBalancesReconciliationService.generateReconciliationReport()
       VISIT_SLOTS_RECON -> visitSlotsReconciliationService.generateVisitSlotsReconciliationReportBatch()
+      AGENCY_RECON -> agencyRegistersReconciliationService.generateAgencyReconciliationReportBatch()
     }
   }
 
