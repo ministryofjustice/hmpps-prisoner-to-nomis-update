@@ -27,8 +27,8 @@ class PropertyDpsApiExtension :
   }
 
   override fun beforeAll(context: ExtensionContext) {
-    jsonMapper = (SpringExtension.getApplicationContext(context).getBean("jacksonJsonMapper") as JsonMapper)
     propertyDpsApi.start()
+    jsonMapper = (SpringExtension.getApplicationContext(context).getBean("jacksonJsonMapper") as JsonMapper)
   }
 
   override fun beforeEach(context: ExtensionContext) {
@@ -61,9 +61,9 @@ class PropertyDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     return this
   }
 
-  fun stubGetProperty(response: PropertyContainerDto = dpsProperty(), status: Int = 200) {
+  fun stubGetProperty(id: String, response: PropertyContainerDto = dpsProperty(), status: Int = 200) {
     stubFor(
-      get(urlMatching("/sync/property-containers/.+"))
+      get(urlMatching("/sync/property-containers/$id"))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")

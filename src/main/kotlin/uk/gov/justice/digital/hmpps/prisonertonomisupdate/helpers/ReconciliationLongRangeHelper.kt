@@ -9,6 +9,7 @@ import kotlinx.coroutines.channels.toList
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.IdRange
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RootOffenderIdRange
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -57,6 +58,18 @@ suspend fun <T, M> generateRangesReconciliationReport(
     pagesChecked = pagesCount.get(),
   )
 }
+
+suspend fun <T, M> generateIdRangesReconciliationReport(
+  threadCount: Int,
+  checkMatch: suspend (T) -> M?,
+  idRanges: suspend () -> List<IdRange>,
+  idsInRange: suspend (IdRange) -> ReconciliationPageResult<T>,
+) = generateRangesReconciliationReport(
+  threadCount = threadCount,
+  checkMatch = checkMatch,
+  idRanges = { idRanges().map { RootOffenderIdRange(it.fromId, it.toId) } },
+  idsInRange = { rootOffenderIdRange: RootOffenderIdRange -> idsInRange(IdRange(rootOffenderIdRange.fromRootOffenderId, rootOffenderIdRange.toRootOffenderId)) },
+)
 
 @OptIn(ExperimentalCoroutinesApi::class)
 private fun <T> CoroutineScope.produceIds(idRanges: List<RootOffenderIdRange>, pagesCount: AtomicInteger, threadCount: Int, idsInRange: suspend (RootOffenderIdRange) -> ReconciliationPageResult<T>) = produce(capacity = threadCount * 2) {

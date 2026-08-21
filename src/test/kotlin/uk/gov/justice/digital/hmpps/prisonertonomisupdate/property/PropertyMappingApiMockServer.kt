@@ -14,7 +14,6 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ErrorResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.NomisDpsLocationMapping
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PropertyContainerMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 
@@ -48,23 +47,31 @@ class PropertyMappingApiMockServer(private val jsonMapper: JsonMapper) {
     )
   }
 
-  fun stubGetLocationByDpsId(dpsLocationId: String, nomisLocationId: Long) {
+  fun stubGetByNomisId(
+    nomisId: Long,
+    mapping: PropertyContainerMappingDto,
+  ) {
     mappingServer.stubFor(
-      get(urlPathMatching("/api/locations/dps/$dpsLocationId")).willReturn(
-        okJson(
-          jsonMapper.writeValueAsString(
-            NomisDpsLocationMapping(dpsLocationId, nomisLocationId),
-          ),
-        ),
+      get(urlEqualTo("/mapping/property/nomis-id/$nomisId")).willReturn(
+        okJson(jsonMapper.writeValueAsString(mapping)),
+      ),
+    )
+  }
+
+  fun stubGetByNomisId(status: HttpStatus, error: ErrorResponse = ErrorResponse(status = status.value())) {
+    mappingServer.stubFor(
+      get(urlPathMatching("/mapping/property/nomis-id/.*")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(status.value())
+          .withBody(jsonMapper.writeValueAsString(error)),
       ),
     )
   }
 
   fun stubPostMapping() {
     mappingServer.stubFor(
-      post("/mapping/property").willReturn(
-        status(201),
-      ),
+      post("/mapping/property").willReturn(status(201)),
     )
   }
 

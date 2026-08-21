@@ -146,7 +146,7 @@ fun PropertyDomainEvent.asTelemetry() = mutableMapOf(
   "source" to source.toString(),
 )
 
-private fun PropertyContainerDto.toNomisContainerCode(): PropertyContainerCode = when (
+fun PropertyContainerDto.toNomisContainerCode(): PropertyContainerCode = when (
   this.currentLocationType
 ) {
   PropertyContainerDto.CurrentLocationType.BRANSTON -> PropertyContainerCode.BRA

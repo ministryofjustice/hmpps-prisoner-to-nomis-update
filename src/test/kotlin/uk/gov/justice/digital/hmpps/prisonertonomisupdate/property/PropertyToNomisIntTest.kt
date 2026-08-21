@@ -26,15 +26,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Pr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.property.PropertyDpsApiExtension.Companion.jsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.property.PropertyDpsApiExtension.Companion.propertyDpsApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.property.model.PropertyContainerDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.withRequestBodyJsonPath
 import java.util.UUID
-
-private const val OFFENDER_NO = "A1234KT"
-private const val DPS_ID = "12345678-1234-1234-1234-123456789012"
-private const val DPS_LOCATION_ID = "12345678-1234-1234-1234-123456789013"
-private const val NOMIS_ID = 123456789L
-private const val NOMIS_LOCATION_ID = 1234567890L
-private const val BOOKING_ID = 123456L
 
 class PropertyToNomisIntTest : SqsIntegrationTestBase() {
 
@@ -84,9 +78,17 @@ class PropertyToNomisIntTest : SqsIntegrationTestBase() {
         @BeforeEach
         fun setup() {
           propertyNomisApiMockServer.stubPostProperty(NOMIS_ID, BOOKING_ID)
-          propertyDpsApi.stubGetProperty(dpsProperty(UUID.fromString(DPS_ID), UUID.fromString(DPS_LOCATION_ID)))
+          propertyDpsApi.stubGetProperty(DPS_ID, dpsProperty(UUID.fromString(DPS_ID), UUID.fromString(DPS_LOCATION_ID)))
           propertyMappingApiMockServer.stubPostMapping()
-          propertyMappingApiMockServer.stubGetLocationByDpsId(DPS_LOCATION_ID, NOMIS_LOCATION_ID)
+          mappingServer.stubGetMappingGivenDpsLocationId(
+            DPS_LOCATION_ID,
+            """{
+            "dpsLocationId": "$DPS_LOCATION_ID",
+            "nomisLocationId": $NOMIS_LOCATION_ID,
+            "mappingType": "MIGRATED"
+          }
+          """,
+          )
           publishPropertyDomainEvent("prison-property.container.created")
           waitForAnyProcessingToComplete()
         }
@@ -134,8 +136,16 @@ class PropertyToNomisIntTest : SqsIntegrationTestBase() {
         @BeforeEach
         fun setup() {
           propertyNomisApiMockServer.stubPostProperty(NOMIS_ID, BOOKING_ID)
-          propertyDpsApi.stubGetProperty(dpsProperty(UUID.fromString(DPS_ID), UUID.fromString(DPS_LOCATION_ID)))
-          propertyMappingApiMockServer.stubGetLocationByDpsId(DPS_LOCATION_ID, NOMIS_LOCATION_ID)
+          propertyDpsApi.stubGetProperty(DPS_ID, dpsProperty(UUID.fromString(DPS_ID), UUID.fromString(DPS_LOCATION_ID)))
+          mappingServer.stubGetMappingGivenDpsLocationId(
+            DPS_LOCATION_ID,
+            """{
+            "dpsLocationId": "$DPS_LOCATION_ID",
+            "nomisLocationId": $NOMIS_LOCATION_ID,
+            "mappingType": "MIGRATED"
+          }
+          """,
+          )
         }
 
         @Test
@@ -301,7 +311,15 @@ class PropertyToNomisIntTest : SqsIntegrationTestBase() {
             mappingType = PropertyContainerMappingDto.MappingType.DPS_CREATED,
           ),
         )
-        propertyMappingApiMockServer.stubGetLocationByDpsId(DPS_LOCATION_ID, NOMIS_LOCATION_ID)
+        mappingServer.stubGetMappingGivenDpsLocationId(
+          DPS_LOCATION_ID,
+          """{
+            "dpsLocationId": "$DPS_LOCATION_ID",
+            "nomisLocationId": $NOMIS_LOCATION_ID,
+            "mappingType": "MIGRATED"
+          }
+          """,
+        )
         propertyNomisApiMockServer.stubPutProperty(NOMIS_ID)
       }
 
@@ -309,7 +327,7 @@ class PropertyToNomisIntTest : SqsIntegrationTestBase() {
       inner class HappyPath {
         @BeforeEach
         fun setup() {
-          propertyDpsApi.stubGetProperty(dpsProperty(UUID.fromString(DPS_ID), UUID.fromString(DPS_LOCATION_ID), null))
+          propertyDpsApi.stubGetProperty(DPS_ID, dpsProperty(UUID.fromString(DPS_ID), UUID.fromString(DPS_LOCATION_ID), null))
 
           publishPropertyDomainEvent("prison-property.container.updated", changedFields = listOf("sealNumber"))
           waitForAnyProcessingToComplete()
@@ -348,7 +366,7 @@ class PropertyToNomisIntTest : SqsIntegrationTestBase() {
       inner class HappyPathPropertyRemoved {
         @BeforeEach
         fun setup() {
-          propertyDpsApi.stubGetProperty(dpsProperty(UUID.fromString(DPS_ID), UUID.fromString(DPS_LOCATION_ID), PropertyContainerDto.RemovalOutcome.DISPOSED))
+          propertyDpsApi.stubGetProperty(DPS_ID, dpsProperty(UUID.fromString(DPS_ID), UUID.fromString(DPS_LOCATION_ID), PropertyContainerDto.RemovalOutcome.DISPOSED))
 
           publishPropertyDomainEvent("prison-property.container.updated", changedFields = listOf("sealNumber"))
           waitForAnyProcessingToComplete()
@@ -386,7 +404,7 @@ class PropertyToNomisIntTest : SqsIntegrationTestBase() {
   ) {
     val event = PropertyDomainEvent(
       eventType = eventType,
-      version = 1,
+      version = "1",
       description = "A prisoner property container was changed in DPS",
       detailUrl = null,
       occurredAt = "2026-07-01T00:00:00Z",
