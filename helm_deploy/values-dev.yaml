@@ -109,6 +109,10 @@ generic-service:
       type: VISIT_SLOTS_RECON
       schedule: "45 2 * * *"
       suspend: true
+    - name: agency-recon
+      type: AGENCY_RECON
+      schedule: "30 6 * * *"
+      suspend: true
 
 generic-prometheus-alerts:
   businessHoursOnly: true

@@ -15,6 +15,7 @@ import org.springframework.context.event.ContextRefreshedEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.ActivitiesReconService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.SchedulesService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.AdjudicationsReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.AlertsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.appointments.AppointmentsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.ADJUDICATION_RECON
@@ -102,6 +103,7 @@ class BatchManagerTest {
   private val tapAllPrisonersReconciliationService = mock<TapAllPrisonersReconciliationService>()
   private val visitBalanceReconciliationService = mock<VisitBalanceReconciliationService>()
   private val visitSlotsReconciliationService = mock<VisitSlotsReconciliationService>()
+  private val agencyRegistersReconciliationService = mock<AgencyRegistersReconciliationService>()
   private val activityDlqName = "activity-dlq-name"
   private val event = mock<ContextRefreshedEvent>()
   private val context = mock<ConfigurableApplicationContext>()
@@ -484,6 +486,16 @@ class BatchManagerTest {
     verify(context).close()
   }
 
+  @Test
+  fun `should call the agency registers reconciliation service`() = runTest {
+    val batchManager = batchManager(BatchType.AGENCY_RECON)
+
+    batchManager.onApplicationEvent(event)
+
+    verify(agencyRegistersReconciliationService).generateAgencyReconciliationReportBatch()
+    verify(context).close()
+  }
+
   private fun batchManager(batchType: BatchType) = BatchManager(
     batchType = batchType,
     activitiesDlqName = activityDlqName,
@@ -518,5 +530,6 @@ class BatchManagerTest {
     tapAllPrisonersReconciliationService = tapAllPrisonersReconciliationService,
     visitBalancesReconciliationService = visitBalanceReconciliationService,
     visitSlotsReconciliationService = visitSlotsReconciliationService,
+    agencyRegistersReconciliationService = agencyRegistersReconciliationService,
   )
 }
