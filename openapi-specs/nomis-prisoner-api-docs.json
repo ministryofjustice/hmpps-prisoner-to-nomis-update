@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-08-20.1960.ff67501"
+    "version" : "2026-08-24.1964.518a030"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -15352,7 +15352,7 @@
     "/staff/username/{username}" : {
       "get" : {
         "tags" : [ "staff-resource" ],
-        "summary" : "Get staff details by any of the staff's usernames",
+        "summary" : "Get staff details by any of the staff's username",
         "description" : "Gets staff details. Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
         "operationId" : "getStaffByUsername",
         "parameters" : [ {
@@ -15430,10 +15430,10 @@
         }
       }
     },
-    "/staff/ids" : {
+    "/staff/pagedIds" : {
       "get" : {
         "tags" : [ "staff-resource" ],
-        "summary" : "Get all staff Ids",
+        "summary" : "Get all staff Ids - DEPRECATED - use /ids instead",
         "description" : "Typically for a migration. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
         "operationId" : "getStaffIds",
         "parameters" : [ {
@@ -15492,6 +15492,77 @@
           },
           "403" : {
             "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/staff/ids" : {
+      "get" : {
+        "tags" : [ "staff-resource" ],
+        "summary" : "Gets every staff id between range.",
+        "description" : "Returns a list of staff ids for staff ids greater than the specified\n      fromStaffId and less than or equal to the specified toStaffId.\n      Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
+        "operationId" : "getAllStaffInRange",
+        "parameters" : [ {
+          "name" : "active",
+          "in" : "query",
+          "description" : "When true only return active staff (those with status \"ACTIVE\") else all staff are returned.",
+          "required" : true,
+          "schema" : {
+            "type" : "boolean"
+          }
+        }, {
+          "name" : "fromStaffId",
+          "in" : "query",
+          "description" : "Return staff with staff id greater than this value.",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "name" : "toStaffId",
+          "in" : "query",
+          "description" : "Return staff with staff id less than or equal to this value.",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "list of staff ids",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "integer",
+                    "format" : "int64"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint when role ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -15639,6 +15710,68 @@
           },
           "404" : {
             "description" : "Not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/staff/id-ranges" : {
+      "get" : {
+        "tags" : [ "staff-resource" ],
+        "summary" : "Gets every size staff ids for staff search.",
+        "description" : "Returns a list of staff id ranges for staff. Each list item has a from and to \n      staff id, with the number of staff between the from and to equal to the specified size. \n      Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
+        "operationId" : "getAllStaffIdRanges",
+        "parameters" : [ {
+          "name" : "active",
+          "in" : "query",
+          "description" : "When true only return active staff currently in prison else all staff are returned.",
+          "required" : true,
+          "schema" : {
+            "type" : "boolean"
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "description" : "Number of staff to get",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 1000
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "list of staff id ranges",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/StaffIdRange"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint when role NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -34300,12 +34433,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "paged" : {
+            "type" : "boolean"
+          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "paged" : {
-            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -34971,6 +35104,25 @@
           }
         },
         "required" : [ "ids" ]
+      },
+      "StaffIdRange" : {
+        "type" : "object",
+        "description" : "Staff ID range.",
+        "properties" : {
+          "fromStaffId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The lowest NOMIS staffId in the range",
+            "example" : 1234567
+          },
+          "toStaffId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The highest NOMIS staffId in the range",
+            "example" : 1234567
+          }
+        },
+        "required" : [ "fromStaffId", "toStaffId" ]
       },
       "SplashConditionDto" : {
         "type" : "object",
