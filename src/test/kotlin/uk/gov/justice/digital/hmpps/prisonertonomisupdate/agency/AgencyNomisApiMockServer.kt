@@ -39,8 +39,8 @@ class AgencyNomisApiMockServer(private val jsonMapper: JsonMapper) {
       disabilityAccessCode = "WHEEL",
       area = CodeDescription(code = "52", description = "South Yorkshire"),
       subArea = CodeDescription(code = "SHEFF", description = "Sheffield"),
-      region = CodeDescription(code = "YOHUM", description = "Yorkshire and Humberside"),
-      nomsRegion = null,
+      region = CodeDescription(code = "NEAST", description = "North East"),
+      nomsRegion = CodeDescription(code = "YOHUM", description = "Yorkshire and Humberside"),
       payrollRegion = CodeDescription(code = "YP", description = "Young People"),
       cjitCode = "C00SH00",
     )
