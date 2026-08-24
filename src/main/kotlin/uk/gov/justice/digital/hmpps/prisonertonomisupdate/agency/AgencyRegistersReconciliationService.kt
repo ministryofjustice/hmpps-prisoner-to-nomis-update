@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.Reconciliation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.logger
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AgencyResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
+import java.time.LocalDate
 import java.util.concurrent.atomic.AtomicInteger
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -78,7 +79,7 @@ class AgencyRegistersReconciliationService(
   }
 
   fun compare(nomisAgency: AgencyResponse, dpsAgency: LegacyAgencyDto): MismatchAgency? = when {
-    nomisAgency.asCoreDetails() != dpsAgency.asCoreDetails() -> MismatchAgency(nomisAgency.agencyId, "different-core-agency-details")
+    nomisAgency.asCoreDetails() != dpsAgency.asCoreDetails() -> MismatchAgency(nomisAgency.agencyId, "different-core-agency-details", nomis = nomisAgency.asCoreDetails().toString(), dps = dpsAgency.asCoreDetails().toString())
     else -> null
   }
 
@@ -125,14 +126,65 @@ class AgencyRegistersReconciliationService(
 data class MismatchAgency(
   val agencyId: String,
   val reason: String,
+  val nomis: String? = null,
+  val dps: String? = null,
 )
 
 data class AgencyCoreDetails(
   val name: String,
+  val longDescription: String?,
+  val active: Boolean,
+  val deactivationDate: LocalDate?,
+  val cjitCode: String?,
+  val areaCode: String?,
+  val subareaCode: String?,
+  val regionCode: String?,
+  val geographicalAreaCode: String?,
+  val payrollRegionCode: String?,
+  val courtTypeCode: String?,
+  val disabilityAccessCode: String?,
+  val contact: String?,
+  val localAuthorityCode: String?,
 )
 
-private fun AgencyResponse.asCoreDetails(): AgencyCoreDetails = AgencyCoreDetails(name = description)
-private fun LegacyAgencyDto.asCoreDetails(): AgencyCoreDetails = AgencyCoreDetails(name = name)
+private fun AgencyResponse.asCoreDetails(): AgencyCoreDetails = AgencyCoreDetails(
+  name = description,
+  longDescription = longDescription,
+  active = active,
+  deactivationDate = deactivationDate,
+  cjitCode = cjitCode,
+  areaCode = area?.code,
+  subareaCode = subArea?.code,
+  regionCode = region?.code,
+  geographicalAreaCode = district?.code,
+  payrollRegionCode = payrollRegion?.code,
+  courtTypeCode = courtType?.code,
+  disabilityAccessCode = when (disabilityAccessCode) {
+    "WHEEL" -> LegacyAgencyDto.AccessibleAccess.WHEELCHAIR_ACCESS.name
+    "Y", "Yes" -> LegacyAgencyDto.AccessibleAccess.ACCESSIBLE.name
+    "N", "No" -> LegacyAgencyDto.AccessibleAccess.NONE.name
+    "BA" -> LegacyAgencyDto.AccessibleAccess.BY_ARRANGEMENT_ONLY.name
+    else -> null
+  },
+  contact = contactName,
+  localAuthorityCode = localAuthorities.firstOrNull()?.code,
+)
+private fun LegacyAgencyDto.asCoreDetails(): AgencyCoreDetails = AgencyCoreDetails(
+  name = name,
+  longDescription = description,
+  active = active,
+  deactivationDate = inactiveDate,
+  cjitCode = cjitCode,
+  areaCode = areaCode,
+  subareaCode = subareaCode,
+  regionCode = regionCode,
+  geographicalAreaCode = geographicalAreaCode,
+  payrollRegionCode = payrollRegionCode,
+  courtTypeCode = courtTypeCode,
+  disabilityAccessCode = accessibleAccess?.name,
+  contact = contact,
+  localAuthorityCode = localAuthorityCode,
+)
 
 private fun List<MismatchAgency>.asMap(): Pair<String, String> = this
   .sortedBy { it.agencyId }.take(10).let { mismatch -> "agencyIds" to mismatch.joinToString { it.agencyId } }
