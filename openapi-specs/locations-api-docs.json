@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-08-10.1035.0d86ac4"
+    "version" : "2026-08-21.1050.417e025"
   },
   "servers" : [ {
     "url" : "/",
@@ -189,6 +189,236 @@
           },
           "403" : {
             "description" : "Missing required role. Requires the LOCATION_CONFIG_ADMIN role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prison-configuration/{prisonId}/notification-mailboxes/{notificationGroup}" : {
+      "get" : {
+        "tags" : [ "Prison Configuration" ],
+        "summary" : "Get notification mailbox email addresses for a prison",
+        "description" : "Requires role LOCATION_CONFIG_ADMIN",
+        "operationId" : "getNotificationMailbox",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "description" : "Prison ID",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prison ID",
+            "example" : "MDI",
+            "maxLength" : 5,
+            "minLength" : 3,
+            "pattern" : "^[A-Z]{2}I|ZZGHI$"
+          },
+          "example" : "MDI"
+        }, {
+          "name" : "notificationGroup",
+          "in" : "path",
+          "description" : "Notification group",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Notification group",
+            "enum" : [ "CERT_ADMIN", "CERT_VIEWER", "CERT_REVIEWER" ],
+            "example" : "CERT_ADMIN"
+          },
+          "example" : "CERT_ADMIN"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns notification mailbox",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonNotificationMailboxDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the LOCATION_CONFIG_ADMIN role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "No notification mailbox found for this prison and notification group",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put" : {
+        "tags" : [ "Prison Configuration" ],
+        "summary" : "Replace all notification mailbox email addresses for a prison",
+        "description" : "Overwrites any existing email addresses for this prison and notification group. Requires role LOCATION_CONFIG_ADMIN",
+        "operationId" : "replaceNotificationMailbox",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "description" : "Prison ID",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prison ID",
+            "example" : "MDI",
+            "maxLength" : 5,
+            "minLength" : 3,
+            "pattern" : "^[A-Z]{2}I|ZZGHI$"
+          },
+          "example" : "MDI"
+        }, {
+          "name" : "notificationGroup",
+          "in" : "path",
+          "description" : "Notification group",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Notification group",
+            "enum" : [ "CERT_ADMIN", "CERT_VIEWER", "CERT_REVIEWER" ],
+            "example" : "CERT_ADMIN"
+          },
+          "example" : "CERT_ADMIN"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateNotificationMailboxRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Returns updated notification mailbox",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonNotificationMailboxDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the LOCATION_CONFIG_ADMIN role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Prison not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "Prison Configuration" ],
+        "summary" : "Delete all notification mailbox email addresses for a prison",
+        "description" : "Requires role LOCATION_CONFIG_ADMIN",
+        "operationId" : "deleteNotificationMailbox",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "description" : "Prison ID",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prison ID",
+            "example" : "MDI",
+            "maxLength" : 5,
+            "minLength" : 3,
+            "pattern" : "^[A-Z]{2}I|ZZGHI$"
+          },
+          "example" : "MDI"
+        }, {
+          "name" : "notificationGroup",
+          "in" : "path",
+          "description" : "Notification group",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Notification group",
+            "enum" : [ "CERT_ADMIN", "CERT_VIEWER", "CERT_REVIEWER" ],
+            "example" : "CERT_ADMIN"
+          },
+          "example" : "CERT_ADMIN"
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Notification mailbox deleted"
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the LOCATION_CONFIG_ADMIN role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "No notification mailbox found for this prison and notification group",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -8494,6 +8724,47 @@
         },
         "required" : [ "certificationApprovalRequired", "includeSegregationInRollCount", "nonResiServiceActive", "prisonId", "resiLocationServiceActive" ]
       },
+      "UpdateNotificationMailboxRequest" : {
+        "type" : "object",
+        "description" : "Request to replace all email addresses for a prison notification mailbox",
+        "properties" : {
+          "emailAddresses" : {
+            "type" : "array",
+            "description" : "Email addresses to store, replacing any existing addresses for this prison and notification group",
+            "items" : {
+              "type" : "string"
+            },
+            "maxItems" : 2147483647,
+            "minItems" : 1
+          }
+        },
+        "required" : [ "emailAddresses" ]
+      },
+      "PrisonNotificationMailboxDto" : {
+        "type" : "object",
+        "description" : "Prison notification mailbox",
+        "properties" : {
+          "prisonId" : {
+            "type" : "string",
+            "description" : "Prison ID",
+            "example" : "MDI"
+          },
+          "notificationGroup" : {
+            "type" : "string",
+            "description" : "Notification group",
+            "enum" : [ "CERT_ADMIN", "CERT_VIEWER", "CERT_REVIEWER" ],
+            "example" : "CERT_ADMIN"
+          },
+          "emailAddresses" : {
+            "type" : "array",
+            "description" : "Email addresses registered for this prison and notification group",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        },
+        "required" : [ "emailAddresses", "notificationGroup", "prisonId" ]
+      },
       "Capacity" : {
         "type" : "object",
         "description" : "Capacity",
@@ -8644,7 +8915,7 @@
           "transactionType" : {
             "type" : [ "string", "null" ],
             "description" : "Transaction type",
-            "enum" : [ "LOCATION_CREATE", "LOCATION_CREATE_NON_RESI", "LOCATION_UPDATE", "LOCATION_UPDATE_NON_RESI", "SYNC", "SYNC_NON_RESIDENTIAL", "DELETE", "CAPACITY_CHANGE", "CELL_TYPE_CHANGES", "DEACTIVATION", "PERMANENT_DEACTIVATION", "REACTIVATION", "CELL_CONVERTION_TO_ROOM", "ROOM_CONVERTION_TO_CELL", "SIGNED_OP_CAP", "RESI_SERVICE_ACTIVATION", "NON_RESI_SERVICE_ACTIVATION", "INCLUDE_SEG_IN_ROLL_COUNT_ACTIVATION", "APPROVAL_PROCESS_ACTIVATION", "REQUEST_CERTIFICATION_APPROVAL", "APPROVE_CERTIFICATION_REQUEST", "REJECT_CERTIFICATION_REQUEST", "WITHDRAW_CERTIFICATION_REQUEST", "CERTIFICATE_BASELINE" ],
+            "enum" : [ "LOCATION_CREATE", "LOCATION_CREATE_NON_RESI", "LOCATION_UPDATE", "LOCATION_UPDATE_NON_RESI", "SYNC", "SYNC_NON_RESIDENTIAL", "DELETE", "CAPACITY_CHANGE", "CELL_TYPE_CHANGES", "DEACTIVATION", "PERMANENT_DEACTIVATION", "REACTIVATION", "CELL_CONVERTION_TO_ROOM", "ROOM_CONVERTION_TO_CELL", "SIGNED_OP_CAP", "RESI_SERVICE_ACTIVATION", "NON_RESI_SERVICE_ACTIVATION", "INCLUDE_SEG_IN_ROLL_COUNT_ACTIVATION", "APPROVAL_PROCESS_ACTIVATION", "REQUEST_CERTIFICATION_APPROVAL", "APPROVE_CERTIFICATION_REQUEST", "REJECT_CERTIFICATION_REQUEST", "WITHDRAW_CERTIFICATION_REQUEST", "CERTIFICATE_BASELINE", "NOTIFICATION_MAILBOX_UPDATE", "NOTIFICATION_MAILBOX_DELETE" ],
             "example" : "CAPACITY_CHANGE"
           },
           "attribute" : {
@@ -9148,7 +9419,7 @@
           "transactionType" : {
             "type" : "string",
             "description" : "Type of transaction",
-            "enum" : [ "LOCATION_CREATE", "LOCATION_CREATE_NON_RESI", "LOCATION_UPDATE", "LOCATION_UPDATE_NON_RESI", "SYNC", "SYNC_NON_RESIDENTIAL", "DELETE", "CAPACITY_CHANGE", "CELL_TYPE_CHANGES", "DEACTIVATION", "PERMANENT_DEACTIVATION", "REACTIVATION", "CELL_CONVERTION_TO_ROOM", "ROOM_CONVERTION_TO_CELL", "SIGNED_OP_CAP", "RESI_SERVICE_ACTIVATION", "NON_RESI_SERVICE_ACTIVATION", "INCLUDE_SEG_IN_ROLL_COUNT_ACTIVATION", "APPROVAL_PROCESS_ACTIVATION", "REQUEST_CERTIFICATION_APPROVAL", "APPROVE_CERTIFICATION_REQUEST", "REJECT_CERTIFICATION_REQUEST", "WITHDRAW_CERTIFICATION_REQUEST", "CERTIFICATE_BASELINE" ],
+            "enum" : [ "LOCATION_CREATE", "LOCATION_CREATE_NON_RESI", "LOCATION_UPDATE", "LOCATION_UPDATE_NON_RESI", "SYNC", "SYNC_NON_RESIDENTIAL", "DELETE", "CAPACITY_CHANGE", "CELL_TYPE_CHANGES", "DEACTIVATION", "PERMANENT_DEACTIVATION", "REACTIVATION", "CELL_CONVERTION_TO_ROOM", "ROOM_CONVERTION_TO_CELL", "SIGNED_OP_CAP", "RESI_SERVICE_ACTIVATION", "NON_RESI_SERVICE_ACTIVATION", "INCLUDE_SEG_IN_ROLL_COUNT_ACTIVATION", "APPROVAL_PROCESS_ACTIVATION", "REQUEST_CERTIFICATION_APPROVAL", "APPROVE_CERTIFICATION_REQUEST", "REJECT_CERTIFICATION_REQUEST", "WITHDRAW_CERTIFICATION_REQUEST", "CERTIFICATE_BASELINE", "NOTIFICATION_MAILBOX_UPDATE", "NOTIFICATION_MAILBOX_DELETE" ],
             "example" : "CAPACITY_CHANGE"
           },
           "prisonId" : {

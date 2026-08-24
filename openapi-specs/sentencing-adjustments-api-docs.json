@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-05-19.310.0772265"
+    "version" : "2026-08-20.393.54f8583"
   },
   "servers" : [ {
     "url" : "https://adjustments-api-dev.hmpps.service.justice.gov.uk",
@@ -1169,6 +1169,7 @@
             "description" : "The number of days of the adjustment"
           },
           "remand" : {
+            "description" : "The details of a remand adjustment",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/RemandDto"
             }, {
@@ -1176,6 +1177,7 @@
             } ]
           },
           "additionalDaysAwarded" : {
+            "description" : "The details of an additional days awarded adjustments (ADA)",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/AdditionalDaysAwardedDto"
             }, {
@@ -1183,6 +1185,7 @@
             } ]
           },
           "unlawfullyAtLarge" : {
+            "description" : "Additional details of a UAL adjustment",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/UnlawfullyAtLargeDto"
             }, {
@@ -1190,6 +1193,7 @@
             } ]
           },
           "lawfullyAtLarge" : {
+            "description" : "Additional info for a LAL adjustment",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/LawfullyAtLargeDto"
             }, {
@@ -1197,6 +1201,7 @@
             } ]
           },
           "specialRemission" : {
+            "description" : "Additional info for a Special Remission adjustment",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/SpecialRemissionDto"
             }, {
@@ -1204,6 +1209,7 @@
             } ]
           },
           "taggedBail" : {
+            "description" : "The details of a tagged-bail adjustment",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/TaggedBailDto"
             }, {
@@ -1211,6 +1217,7 @@
             } ]
           },
           "timeSpentInCustodyAbroad" : {
+            "description" : "The details of a time spent in custody abroad adjustment",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/TimeSpentInCustodyAbroadDto"
             }, {
@@ -1218,6 +1225,7 @@
             } ]
           },
           "timeSpentAsAnAppealApplicant" : {
+            "description" : "The details of a time spent as an appeal applicant adjustment",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/TimeSpentAsAnAppealApplicantDto"
             }, {
@@ -1578,6 +1586,7 @@
             }
           },
           "adaIntercept" : {
+            "description" : "Will be populated if there is a ADA_INTERCEPT in the thingsToDo",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/AdaIntercept"
             }, {
