@@ -51,7 +51,7 @@ class AgencyRegistersDpsApiExtension :
       agencyType = LegacyAgencyType.COURT,
       subareaCode = "SHEFF",
       geographicalAreaCode = "WYORKS",
-      payrollRegionCode = "TODO",
+      payrollRegionCode = "YP",
       localAuthorityCode = "00CG",
       accessibleAccess = LegacyAgencyDto.AccessibleAccess.WHEELCHAIR_ACCESS,
       contact = "JANE SMITH",
