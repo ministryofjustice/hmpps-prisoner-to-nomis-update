@@ -23,7 +23,7 @@ class AgencyNomisApiMockServer(private val jsonMapper: JsonMapper) {
 
     fun agencyResponse() = AgencyResponse(
       agencyId = "SHEFCC",
-      description = "Sheffield Crown Court",
+      description = "Sheffield Crown Ct",
       type = CodeDescription(code = "CRT", description = "Court"),
       active = true,
       updateAllowed = true,

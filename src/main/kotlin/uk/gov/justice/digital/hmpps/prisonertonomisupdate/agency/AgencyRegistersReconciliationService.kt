@@ -14,9 +14,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.slf4j.Logger
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.LegacyAgencyDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.logger
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AgencyResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -63,7 +65,7 @@ class AgencyRegistersReconciliationService(
     return when {
       nomisAgency == null -> MismatchAgency(agencyId, "Missing in NOMIS")
       dpsAgency == null -> MismatchAgency(agencyId, "Missing in DPS")
-      else -> null
+      else -> compare(nomisAgency, dpsAgency)
     }?.also {
       telemetryClient.trackEvent(
         "$TELEMETRY_PREFIX-mismatch",
@@ -73,6 +75,11 @@ class AgencyRegistersReconciliationService(
         ),
       )
     }
+  }
+
+  fun compare(nomisAgency: AgencyResponse, dpsAgency: LegacyAgencyDto): MismatchAgency? = when {
+    nomisAgency.asCoreDetails() != dpsAgency.asCoreDetails() -> MismatchAgency(nomisAgency.agencyId, "different-core-agency-details")
+    else -> null
   }
 
   suspend fun generateAgencyReconciliationReport(): ReconciliationResult<MismatchAgency> {
@@ -119,6 +126,13 @@ data class MismatchAgency(
   val agencyId: String,
   val reason: String,
 )
+
+data class AgencyCoreDetails(
+  val name: String,
+)
+
+private fun AgencyResponse.asCoreDetails(): AgencyCoreDetails = AgencyCoreDetails(name = description)
+private fun LegacyAgencyDto.asCoreDetails(): AgencyCoreDetails = AgencyCoreDetails(name = name)
 
 private fun List<MismatchAgency>.asMap(): Pair<String, String> = this
   .sortedBy { it.agencyId }.take(10).let { mismatch -> "agencyIds" to mismatch.joinToString { it.agencyId } }
