@@ -14,7 +14,9 @@ import reactor.core.publisher.Mono
 import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodilessEntityOrThrowOnConflict
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.api.NOMISDPSMappingLookupApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.LocationMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.NomisDpsLocationMapping
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import java.net.URI
 
@@ -25,6 +27,7 @@ class LocationsMappingService(
   @Value("\${hmpps.web-client.locations.backoff-millis:#{null}}") private val backoffMillis: Long?,
   retryApiService: RetryApiService,
 ) {
+  private val externalApi = NOMISDPSMappingLookupApi(webClient)
   private val backoffSpec = retryApiService.getBackoffSpec(maxRetryAttempts, backoffMillis)
 
   suspend fun createMapping(request: LocationMappingDto) {
@@ -78,4 +81,12 @@ class LocationsMappingService(
       .retrieve()
       .awaitBodilessEntity()
   }
+
+  suspend fun getLocationMappingUsingExternalApi(dpsLocationId: String): NomisDpsLocationMapping = externalApi
+    .getLocationMappingByDpsId(dpsLocationId)
+    .awaitSingle()
+
+  suspend fun getLocationMappingUsingExternalApi(nomisLocationId: Long): NomisDpsLocationMapping = externalApi
+    .getLocationMappingByNomisId(nomisLocationId)
+    .awaitSingle()
 }

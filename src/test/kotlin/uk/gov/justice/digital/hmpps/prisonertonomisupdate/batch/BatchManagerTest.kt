@@ -64,6 +64,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.Organisa
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.PrisonerRestrictionsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.profiledetails.ContactPersonProfileDetailsReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.property.PropertyReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing.SentencingReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.staff.StaffReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visitbalances.VisitBalanceReconciliationService
@@ -96,6 +97,7 @@ class BatchManagerTest {
   private val prisonerTransactionsReconciliationService = mock<PrisonerTransactionReconciliationService>()
   private val prisonerBalanceReconciliationService = mock<PrisonerBalanceReconciliationService>()
   private val prisonerRestrictionsReconciliationService = mock<PrisonerRestrictionsReconciliationService>()
+  private val propertyReconciliationService = mock<PropertyReconciliationService>()
   private val schedulesService = mock<SchedulesService>()
   private val sentencingReconciliationService = mock<SentencingReconciliationService>()
   private val staffReconciliationService = mock<StaffReconciliationService>()
@@ -523,6 +525,7 @@ class BatchManagerTest {
     prisonerTransactionsReconciliationService = prisonerTransactionsReconciliationService,
     prisonerBalanceReconciliationService = prisonerBalanceReconciliationService,
     prisonerRestrictionsReconciliationService = prisonerRestrictionsReconciliationService,
+    propertyReconciliationService = propertyReconciliationService,
     schedulesService = schedulesService,
     staffReconciliationService = staffReconciliationService,
     sentencingReconciliationService = sentencingReconciliationService,

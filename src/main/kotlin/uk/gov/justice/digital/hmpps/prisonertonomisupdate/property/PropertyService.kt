@@ -4,6 +4,7 @@ import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import tools.jackson.databind.json.JsonMapper
 import tools.jackson.module.kotlin.readValue
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.LocationsMappingService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PropertyContainerMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PropertyContainerCode
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PropertyContainerCreateRequest
@@ -21,6 +22,7 @@ class PropertyService(
   private val propertyDpsApiService: PropertyDpsApiService,
   private val propertyNomisApiService: PropertyNomisApiService,
   private val propertyMappingService: PropertyMappingService,
+  private val locationsMappingService: LocationsMappingService,
   private val propertyRetryQueueService: PropertyRetryQueueService,
   override val telemetryClient: TelemetryClient,
   private val jsonMapper: JsonMapper,
@@ -120,7 +122,7 @@ class PropertyService(
 
   private suspend fun PropertyContainerDto.toNomisLocation(): Long? = currentLocation
     ?.let {
-      propertyMappingService.getNomisLocation(currentLocation.toString()).nomisLocationId
+      locationsMappingService.getLocationMappingUsingExternalApi(currentLocation.toString()).nomisLocationId
     }
 
   private inline fun <reified T> String.fromJson(): T = jsonMapper.readValue(this)
@@ -146,7 +148,7 @@ fun PropertyDomainEvent.asTelemetry() = mutableMapOf(
   "source" to source.toString(),
 )
 
-private fun PropertyContainerDto.toNomisContainerCode(): PropertyContainerCode = when (
+fun PropertyContainerDto.toNomisContainerCode(): PropertyContainerCode = when (
   this.currentLocationType
 ) {
   PropertyContainerDto.CurrentLocationType.BRANSTON -> PropertyContainerCode.BRA
