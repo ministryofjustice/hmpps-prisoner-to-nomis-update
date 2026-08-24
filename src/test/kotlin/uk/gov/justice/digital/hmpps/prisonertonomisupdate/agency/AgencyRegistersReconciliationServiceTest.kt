@@ -6,6 +6,10 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.check
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.isNull
+import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import org.springframework.test.context.bean.override.mockito.MockitoBean
@@ -51,6 +55,30 @@ class AgencyRegistersReconciliationServiceTest {
       @Test
       fun `will return null`() = runTest {
         assertThat(service.checkMatch(agencyId)).isNull()
+      }
+    }
+
+    @Nested
+    inner class WhenDescriptionDoesNotMatch {
+      @BeforeEach
+      fun setUp() {
+        stubAgency(
+          agencyResponse().copy(description = "Sheffield Crown Court"),
+          legacyAgencyDto().copy(name = "Sheffield Big Court"),
+        )
+      }
+
+      @Test
+      fun `will report and return mismatch`() = runTest {
+        assertThat(service.checkMatch(agencyId)).isNotNull()
+        verify(telemetryClient).trackEvent(
+          eq("agency-reconciliation-mismatch"),
+          check {
+            assertThat(it["agencyId"]).isEqualTo(agencyId)
+            assertThat(it["reason"]).isEqualTo("different-core-agency-details")
+          },
+          isNull(),
+        )
       }
     }
 
