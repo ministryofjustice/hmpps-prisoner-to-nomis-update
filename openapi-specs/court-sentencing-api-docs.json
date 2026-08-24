@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-08-19.2356.2d3e7fc"
+    "version" : "2026-08-21.2365.ba603d3"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -7142,9 +7142,12 @@
           },
           "isOnFutureAppearance" : {
             "type" : [ "boolean", "null" ]
+          },
+          "isBreach" : {
+            "type" : [ "boolean", "null" ]
           }
         },
-        "required" : [ "eventType", "prisonerId" ]
+        "required" : [ "eventType", "isBreach", "prisonerId" ]
       },
       "LegacyLinkCase" : {
         "type" : "object",
@@ -7258,7 +7261,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:38.167898625"
+            "example" : "07:44:37.958466274"
           },
           "outcomeDispositionCode" : {
             "type" : [ "string", "null" ]
@@ -7629,7 +7632,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:38.167898625"
+            "example" : "07:44:37.958466274"
           },
           "courtCode" : {
             "type" : "string"
@@ -9564,9 +9567,13 @@
           },
           "hasRecall" : {
             "type" : "boolean"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "ACTIVE", "DUPLICATE", "DELETED", "MANY_CHARGES_DATA_FIX", "INACTIVE" ]
           }
         },
-        "required" : [ "hasRecall", "periodLengths", "sentenceServeType", "sentenceUuid" ]
+        "required" : [ "hasRecall", "periodLengths", "sentenceServeType", "sentenceUuid", "status" ]
       },
       "SentenceType" : {
         "type" : "object",
@@ -9665,9 +9672,13 @@
           },
           "charge" : {
             "$ref" : "#/components/schemas/SentenceDetailsCharge"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "ACTIVE", "DUPLICATE", "DELETED", "MANY_CHARGES_DATA_FIX", "INACTIVE" ]
           }
         },
-        "required" : [ "charge", "hasRecall", "periodLengths", "sentenceServeType", "sentenceUuid" ]
+        "required" : [ "charge", "hasRecall", "periodLengths", "sentenceServeType", "sentenceUuid", "status" ]
       },
       "SentenceDetailsCharge" : {
         "type" : "object",
@@ -10509,7 +10520,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:38.167898625"
+            "example" : "07:44:37.958466274"
           },
           "courtCode" : {
             "type" : "string"
@@ -11197,7 +11208,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:44:38.167898625"
+            "example" : "07:44:37.958466274"
           },
           "nomisOutcomeCode" : {
             "type" : [ "string", "null" ]
@@ -11276,7 +11287,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:38.167898625"
+            "example" : "07:44:37.958466274"
           },
           "courtId" : {
             "type" : "string"
@@ -11428,7 +11439,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:44:38.167898625"
+            "example" : "07:44:37.958466274"
           },
           "charges" : {
             "type" : "array",
@@ -11465,7 +11476,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:38.167898625"
+            "example" : "07:44:37.958466274"
           },
           "courtId" : {
             "type" : "string"
@@ -12055,7 +12066,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:38.167898625"
+            "example" : "07:44:37.958466274"
           },
           "courtCode" : {
             "type" : [ "string", "null" ]

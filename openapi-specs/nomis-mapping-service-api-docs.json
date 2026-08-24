@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-08-19.751.6c3b407"
+    "version" : "2026-08-20.762.26b8d49"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -5502,13 +5502,7 @@
         "responses" : {
           "201" : {
             "description" : "Mappings created",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ProfileMapping"
-                }
-              }
-            }
+            "content" : { }
           },
           "409" : {
             "description" : "Indicates a duplicate mapping has been rejected. If Error code = 1409 the body will return a DuplicateErrorResponse",
@@ -5543,6 +5537,120 @@
           "201" : {
             "description" : "Mappings created",
             "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Indicates a duplicate mapping has been rejected. If Error code = 1409 the body will return a DuplicateErrorResponse",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/core-person/identifier" : {
+      "post" : {
+        "tags" : [ "core-person-identifier-mapping-resource" ],
+        "summary" : "Creates offender identifier mappings for synchronisation",
+        "description" : "Creates offender identifier mappings for synchronisation between NOMIS ids and CPR ids. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "createOffenderIdentifierMapping",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/OffenderIdentifierMappingDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Mapping created",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Indicates a duplicate mapping has been rejected. If Error code = 1409 the body will return a DuplicateErrorResponse",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/core-person/alias" : {
+      "post" : {
+        "tags" : [ "core-person-alias-mapping-resource" ],
+        "summary" : "Creates offender alias mappings for synchronisation",
+        "description" : "Creates offender alias mappings for synchronisation between NOMIS ids and CPR ids. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "createOffenderAliasMapping",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/OffenderAliasMappingDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Mapping created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OffenderAliasMapping"
+                }
+              }
+            }
           },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
@@ -16672,6 +16780,200 @@
         }
       }
     },
+    "/mapping/core-person/identifier/nomis-offender-id/{nomisOffenderId}/nomis-identifier-sequence/{nomisIdentifierSequence}" : {
+      "get" : {
+        "tags" : [ "core-person-identifier-mapping-resource" ],
+        "summary" : "Get offender identifier mapping by nomis offender id and sequence",
+        "description" : "Retrieves the offender identifier mapping by NOMIS offender id and NOMIS identifier sequence. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "getOffenderIdentifierMappingByNomisId",
+        "parameters" : [ {
+          "name" : "nomisOffenderId",
+          "in" : "path",
+          "description" : "NOMIS offender id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS offender id",
+            "example" : 12345
+          },
+          "example" : 12345
+        }, {
+          "name" : "nomisIdentifierSequence",
+          "in" : "path",
+          "description" : "NOMIS identifier sequence",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "NOMIS identifier sequence",
+            "example" : 4
+          },
+          "example" : 4
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Offender identifier mapping data",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OffenderIdentifierMappingDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access this endpoint is forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Id does not exist in mapping table",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "core-person-identifier-mapping-resource" ],
+        "summary" : "Delete offender identifier mapping by nomis offender id and sequence",
+        "description" : "Delete the offender identifier mapping by NOMIS offender id and NOMIS identifier sequence. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "deleteOffenderIdentifierMappingByNomisId",
+        "parameters" : [ {
+          "name" : "nomisOffenderId",
+          "in" : "path",
+          "description" : "NOMIS offender id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS offender id",
+            "example" : 12345
+          },
+          "example" : 12345
+        }, {
+          "name" : "nomisIdentifierSequence",
+          "in" : "path",
+          "description" : "NOMIS identifier sequence",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "NOMIS identifier sequence",
+            "example" : 4
+          },
+          "example" : 4
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Offender identifier mapping deleted",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access this endpoint is forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/core-person/identifier/cpr-id/{cprOffenderIdentifierId}" : {
+      "get" : {
+        "tags" : [ "core-person-identifier-mapping-resource" ],
+        "summary" : "Get offender identifier mapping by cpr identifier id",
+        "description" : "Retrieves the offender identifier mapping by CPR identifier id. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "getOffenderIdentifierMappingByCprId",
+        "parameters" : [ {
+          "name" : "cprOffenderIdentifierId",
+          "in" : "path",
+          "description" : "CPR offender identifier id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "CPR offender identifier id",
+            "example" : 12345
+          },
+          "example" : 12345
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Offender identifier mapping data",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OffenderIdentifierMappingDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access this endpoint is forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Id does not exist in mapping table",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mapping/core-person/email/nomis-email-address-id/{nomisEmailAddressId}" : {
       "get" : {
         "tags" : [ "core-person-mapping-resource" ],
@@ -16760,6 +17062,176 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/CorePersonEmailAddressMappingDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access this endpoint is forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Id does not exist in mapping table",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/core-person/alias/nomis-offender-id/{nomisOffenderId}" : {
+      "get" : {
+        "tags" : [ "core-person-alias-mapping-resource" ],
+        "summary" : "Get offender alias mapping by nomis offender id",
+        "description" : "Retrieves the offender alias mapping by NOMIS offender id. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "getOffenderAliasMappingByNomisId",
+        "parameters" : [ {
+          "name" : "nomisOffenderId",
+          "in" : "path",
+          "description" : "NOMIS offender id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS offender id",
+            "example" : 12345
+          },
+          "example" : 12345
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Offender alias mapping data",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OffenderAliasMappingDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access this endpoint is forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Id does not exist in mapping table",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "core-person-alias-mapping-resource" ],
+        "summary" : "Delete offender alias mapping by nomis offender id",
+        "description" : "Delete the offender alias mapping by NOMIS offender id. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "deleteOffenderAliasMappingByNomisId",
+        "parameters" : [ {
+          "name" : "nomisOffenderId",
+          "in" : "path",
+          "description" : "NOMIS offender id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS offender id",
+            "example" : 12345
+          },
+          "example" : 12345
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Offender alias mapping deleted",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access this endpoint is forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/core-person/alias/cpr-id/{cprId}" : {
+      "get" : {
+        "tags" : [ "core-person-alias-mapping-resource" ],
+        "summary" : "Get offender alias mapping by cpr id",
+        "description" : "Retrieves the offender alias mapping by CPR id. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "getOffenderAliasMappingByCprId",
+        "parameters" : [ {
+          "name" : "cprId",
+          "in" : "path",
+          "description" : "CPR id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "CPR id",
+            "example" : 12345
+          },
+          "example" : 12345
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Offender alias mapping data",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OffenderAliasMappingDto"
                 }
               }
             }
@@ -25110,48 +25582,6 @@
         },
         "required" : [ "cprId", "mappingType", "nomisBookingId", "nomisPrisonNumber", "nomisProfileType" ]
       },
-      "ProfileMapping" : {
-        "type" : "object",
-        "properties" : {
-          "cprId" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "nomisBookingId" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "nomisProfileType" : {
-            "type" : "string"
-          },
-          "nomisPrisonNumber" : {
-            "type" : "string"
-          },
-          "label" : {
-            "type" : [ "string", "null" ]
-          },
-          "mappingType" : {
-            "type" : "string",
-            "enum" : [ "MIGRATED", "CPR_CREATED", "NOMIS_CREATED" ]
-          },
-          "new" : {
-            "type" : "boolean"
-          },
-          "whenCreated" : {
-            "type" : "string",
-            "example" : "2021-07-05T10:35:17",
-            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
-          },
-          "id" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "isNew" : {
-            "type" : "boolean"
-          }
-        },
-        "required" : [ "cprId", "id", "isNew", "mappingType", "new", "nomisBookingId", "nomisPrisonNumber", "nomisProfileType" ]
-      },
       "CorePersonMappingIdDto" : {
         "type" : "object",
         "description" : "NOMIS to CPR core person mapping IDs",
@@ -25257,6 +25687,116 @@
           }
         },
         "required" : [ "cprId", "nomisId" ]
+      },
+      "OffenderIdentifierMappingDto" : {
+        "type" : "object",
+        "properties" : {
+          "cprId" : {
+            "type" : "string",
+            "description" : "CPR id"
+          },
+          "nomisOffenderId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS offender id"
+          },
+          "nomisIdentifierSequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "NOMIS identifier sequence"
+          },
+          "nomisPrisonNumber" : {
+            "type" : "string",
+            "description" : "NOMIS prison number aka Offender number"
+          },
+          "label" : {
+            "type" : [ "string", "null" ],
+            "description" : "Label (a timestamp for migrated ids)"
+          },
+          "mappingType" : {
+            "type" : "string",
+            "description" : "Mapping type",
+            "enum" : [ "MIGRATED", "CPR_CREATED", "NOMIS_CREATED" ]
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "description" : "Date time the mapping was created",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          }
+        },
+        "required" : [ "cprId", "mappingType", "nomisIdentifierSequence", "nomisOffenderId", "nomisPrisonNumber" ]
+      },
+      "OffenderAliasMappingDto" : {
+        "type" : "object",
+        "properties" : {
+          "cprId" : {
+            "type" : "string",
+            "description" : "CPR id"
+          },
+          "nomisOffenderId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS offender id"
+          },
+          "nomisPrisonNumber" : {
+            "type" : "string",
+            "description" : "NOMIS prison number aka Offender number"
+          },
+          "label" : {
+            "type" : [ "string", "null" ],
+            "description" : "Label (a timestamp for migrated ids)"
+          },
+          "mappingType" : {
+            "type" : "string",
+            "description" : "Mapping type",
+            "enum" : [ "MIGRATED", "CPR_CREATED", "NOMIS_CREATED" ]
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "description" : "Date time the mapping was created",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          }
+        },
+        "required" : [ "cprId", "mappingType", "nomisOffenderId", "nomisPrisonNumber" ]
+      },
+      "OffenderAliasMapping" : {
+        "type" : "object",
+        "properties" : {
+          "cprId" : {
+            "type" : "string"
+          },
+          "nomisOffenderId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "nomisPrisonNumber" : {
+            "type" : "string"
+          },
+          "label" : {
+            "type" : [ "string", "null" ]
+          },
+          "mappingType" : {
+            "type" : "string",
+            "enum" : [ "MIGRATED", "CPR_CREATED", "NOMIS_CREATED" ]
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          },
+          "new" : {
+            "type" : "boolean"
+          },
+          "id" : {
+            "type" : "string"
+          },
+          "isNew" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "cprId", "id", "isNew", "mappingType", "new", "nomisOffenderId", "nomisPrisonNumber" ]
       },
       "ReligionMigrationMappingDto" : {
         "type" : "object",

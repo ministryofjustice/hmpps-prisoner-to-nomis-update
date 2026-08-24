@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-08-12.1074.c1e51f7"
+    "version" : "2026-08-20.1114.0e10013"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -2303,6 +2303,66 @@
                   "items" : {
                     "$ref" : "#/components/schemas/VisitBookedEntity"
                   }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/visit-review/prison/{prisonCode}/count" : {
+      "get" : {
+        "tags" : [ "Visit review" ],
+        "summary" : "Get the count of visits for review at a prison",
+        "description" : "Returns the number of scheduled, future or current, unacknowledged and unexpired visits for review.\n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISITS_ADMIN\n* ROLE_OFFICIAL_VISITS__R\n* ROLE_OFFICIAL_VISITS_RW",
+        "operationId" : "countVisitsForReview",
+        "parameters" : [ {
+          "name" : "prisonCode",
+          "in" : "path",
+          "description" : "The prison code",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "MDI"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Visits for review count",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/VisitsForReviewCountResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Official visit not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -6665,6 +6725,23 @@
           }
         },
         "required" : [ "dayCode", "dayDescription", "dpsLocationId", "endTime", "officialVisitId", "prisonCode", "prisonTimeSlotId", "prisonVisitSlotId", "prisonerNumber", "startTime", "visitDate", "visitTypeCode" ]
+      },
+      "VisitsForReviewCountResponse" : {
+        "type" : "object",
+        "properties" : {
+          "prisonCode" : {
+            "type" : "string",
+            "description" : "The prison code",
+            "example" : "MDI"
+          },
+          "visitsForReviewCount" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The number of visits for review",
+            "example" : 5
+          }
+        },
+        "required" : [ "prisonCode", "visitsForReviewCount" ]
       },
       "Attachment" : {
         "type" : "object",
