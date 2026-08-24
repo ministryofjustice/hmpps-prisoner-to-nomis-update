@@ -13,8 +13,14 @@ import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import org.springframework.test.context.bean.override.mockito.MockitoBean
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.agencyAddress
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.agencyEmailAddress
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.agencyPhoneNumber
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.agencyResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension.Companion.legacyAgencyAddressDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension.Companion.legacyAgencyDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension.Companion.legacyAgencyEmailDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension.Companion.legacyAgencyPhoneDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.LegacyAgencyDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AgencyResponse
@@ -390,6 +396,94 @@ class AgencyRegistersReconciliationServiceTest {
           check {
             assertThat(it["agencyId"]).isEqualTo(agencyId)
             assertThat(it["reason"]).isEqualTo("different-core-agency-details")
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenAddressDoesNotMatch {
+      @BeforeEach
+      fun setUp() {
+        stubAgency(
+          agencyResponse().copy(addresses = listOf(agencyAddress().copy(postcode = "S1 3GG"))),
+          legacyAgencyDto().copy(addresses = listOf(legacyAgencyAddressDto().copy(postcode = "S2 3GG"))),
+        )
+      }
+
+      @Test
+      fun `will report and return mismatch`() = runTest {
+        assertThat(service.checkMatch(agencyId)).isNotNull()
+        verify(telemetryClient).trackEvent(
+          eq("agency-reconciliation-mismatch"),
+          check {
+            assertThat(it["agencyId"]).isEqualTo(agencyId)
+            assertThat(it["reason"]).isEqualTo("different-address-agency-details")
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenAddressMoreOrLessMatch {
+      @BeforeEach
+      fun setUp() {
+        stubAgency(
+          agencyResponse().copy(addresses = listOf(agencyAddress().copy(flat = "High Court", premise = null, street = "The Law Courts", locality = "50 West Bar", postcode = "S3 8PH"))),
+          legacyAgencyDto().copy(addresses = listOf(legacyAgencyAddressDto().copy(addressLine1 = "High Court, The Law Courts", addressLine2 = "50 West Bar", postcode = "S3 8PH"))),
+        )
+      }
+
+      @Test
+      fun `will match`() = runTest {
+        assertThat(service.checkMatch(agencyId)).isNull()
+      }
+    }
+
+    @Nested
+    inner class WhenPhoneNumberDoesNotMatch {
+      @BeforeEach
+      fun setUp() {
+        stubAgency(
+          agencyResponse().copy(phones = listOf(agencyPhoneNumber().copy(number = "0114 555 9898"))),
+          legacyAgencyDto().copy(phoneNumbers = listOf(legacyAgencyPhoneDto().copy(number = "0114 555 1234"))),
+        )
+      }
+
+      @Test
+      fun `will report and return mismatch`() = runTest {
+        assertThat(service.checkMatch(agencyId)).isNotNull()
+        verify(telemetryClient).trackEvent(
+          eq("agency-reconciliation-mismatch"),
+          check {
+            assertThat(it["agencyId"]).isEqualTo(agencyId)
+            assertThat(it["reason"]).isEqualTo("different-phone-agency-details")
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenEmailAddressesDoesNotMatch {
+      @BeforeEach
+      fun setUp() {
+        stubAgency(
+          agencyResponse().copy(emailAddresses = listOf(agencyEmailAddress().copy(emailAddress = "sheffield.crown.court@test.com"))),
+          legacyAgencyDto().copy(emailAddresses = listOf(legacyAgencyEmailDto().copy(address = "sheffield.crown.court@different.com"))),
+        )
+      }
+
+      @Test
+      fun `will report and return mismatch`() = runTest {
+        assertThat(service.checkMatch(agencyId)).isNotNull()
+        verify(telemetryClient).trackEvent(
+          eq("agency-reconciliation-mismatch"),
+          check {
+            assertThat(it["agencyId"]).isEqualTo(agencyId)
+            assertThat(it["reason"]).isEqualTo("different-email-agency-details")
           },
           isNull(),
         )

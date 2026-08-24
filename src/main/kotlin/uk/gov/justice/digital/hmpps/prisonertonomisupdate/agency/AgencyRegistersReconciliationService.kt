@@ -80,6 +80,9 @@ class AgencyRegistersReconciliationService(
 
   fun compare(nomisAgency: AgencyResponse, dpsAgency: LegacyAgencyDto): MismatchAgency? = when {
     nomisAgency.asCoreDetails() != dpsAgency.asCoreDetails() -> MismatchAgency(nomisAgency.agencyId, "different-core-agency-details", nomis = nomisAgency.asCoreDetails().toString(), dps = dpsAgency.asCoreDetails().toString())
+    nomisAgency.addressesSorted() != dpsAgency.addressesSorted() -> MismatchAgency(nomisAgency.agencyId, "different-address-agency-details", nomis = nomisAgency.addressesSorted().toString(), dps = dpsAgency.addressesSorted().toString())
+    nomisAgency.phonesSorted() != dpsAgency.phonesSorted() -> MismatchAgency(nomisAgency.agencyId, "different-phone-agency-details", nomis = nomisAgency.phonesSorted().toString(), dps = dpsAgency.phonesSorted().toString())
+    nomisAgency.emailAddressesSorted() != dpsAgency.emailAddressesSorted() -> MismatchAgency(nomisAgency.agencyId, "different-email-agency-details", nomis = nomisAgency.emailAddressesSorted().toString(), dps = dpsAgency.emailAddressesSorted().toString())
     else -> null
   }
 
@@ -186,5 +189,14 @@ private fun LegacyAgencyDto.asCoreDetails(): AgencyCoreDetails = AgencyCoreDetai
   localAuthorityCode = localAuthorityCode,
 )
 
+private fun LegacyAgencyDto.addressesSorted(): List<String> = addresses.map { listOfNotNull(it.addressLine1, it.addressLine2, it.town, it.county, it.country, it.postcode?.cleanPostcode()).joinToString(", ") }.sorted()
+private fun LegacyAgencyDto.phonesSorted(): List<String> = this.phoneNumbers.map { it.number }.sorted()
+private fun LegacyAgencyDto.emailAddressesSorted(): List<String> = this.emailAddresses.map { it.address }.sorted()
+private fun AgencyResponse.addressesSorted(): List<String> = addresses.map { listOfNotNull(it.flat, it.premise, it.street, it.locality, it.city?.description, it.county?.description, it.country?.description, it.postcode?.cleanPostcode()).joinToString(", ") }.sorted()
+private fun AgencyResponse.phonesSorted(): List<String> = this.phones.map { it.number }.sorted()
+private fun AgencyResponse.emailAddressesSorted(): List<String> = this.emailAddresses.map { it.emailAddress }.sorted()
+
 private fun List<MismatchAgency>.asMap(): Pair<String, String> = this
   .sortedBy { it.agencyId }.take(10).let { mismatch -> "agencyIds" to mismatch.joinToString { it.agencyId } }
+
+private fun String.cleanPostcode(): String = replace("\\s".toRegex(), "").uppercase()

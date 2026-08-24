@@ -29,7 +29,7 @@ class AgencyNomisApiMockServer(private val jsonMapper: JsonMapper) {
       updateAllowed = true,
       localAuthorities = listOf(CodeDescription(code = "00CG", description = "Sheffield City Council")),
       addresses = listOf(agencyAddress()),
-      phones = listOf(),
+      phones = listOf(agencyPhoneNumber()),
       emailAddresses = listOf(agencyEmailAddress()),
       longDescription = "Sheffield Crown Court",
       district = CodeDescription(code = "WYORKS", description = "West Yorkshire"),
