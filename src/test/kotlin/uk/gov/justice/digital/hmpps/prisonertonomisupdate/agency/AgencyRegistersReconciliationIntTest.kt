@@ -15,11 +15,15 @@ import org.mockito.kotlin.isNull
 import org.mockito.kotlin.reset
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.agencyResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension.Companion.legacyAgencyDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.agencyId as nomisAgencyId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.agencyIdsResponse as nomisAgencyIdsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension.Companion.agencyId as dpsAgencyId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension.Companion.agencyIdsResponse as dpsAgencyIdsResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.AgencyIdsResponse as DpsAgencyIdsResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AgencyIdsResponse as NomisAgencyIdsResponse
 
 class AgencyRegistersReconciliationIntTest(
   @Autowired private val reconciliationService: AgencyRegistersReconciliationService,
@@ -34,8 +38,14 @@ class AgencyRegistersReconciliationIntTest(
     @BeforeEach
     fun setUp() {
       reset(telemetryClient)
-      nomisApi.stubGetAgencyIds(nomisAgencyIdsResponse().copy(agencyIds = [nomisAgencyId().copy(agencyId = "SHEFCC"), nomisAgencyId().copy(agencyId = "SHEFMC")]))
-      dpsApi.stubGetAgencyIds(dpsAgencyIdsResponse().copy(agencyIds = [dpsAgencyId().copy(agencyId = "SHEFCC"), dpsAgencyId().copy(agencyId = "SHEFMC"), dpsAgencyId().copy(agencyId = "SHEFYC")]))
+      nomisApi.stubGetAgencyIds(nomisAgencyIdsResponse("SHEFCC", "SHEFMC"))
+      dpsApi.stubGetAgencyIds(dpsAgencyIdsResponse("SHEFCC", "SHEFMC", "SHEFYC"))
+
+      nomisApi.stubGetAgency("SHEFCC", agencyResponse().copy(agencyId = "SHEFCC", description = "Sheffield Crown Court"))
+      nomisApi.stubGetAgency("SHEFMC", agencyResponse().copy(agencyId = "SHEFMC", description = "Sheffield Magistrates Court"))
+      dpsApi.stubGetAgency("SHEFCC", legacyAgencyDto().copy(description = "Sheffield Crown Court"))
+      dpsApi.stubGetAgency("SHEFMC", legacyAgencyDto().copy(description = "Sheffield Magistrates Court"))
+      dpsApi.stubGetAgency("SHEFYC", legacyAgencyDto().copy(description = "Sheffield Youth Court"))
     }
 
     @Test
@@ -59,24 +69,24 @@ class AgencyRegistersReconciliationIntTest(
       verify(telemetryClient).trackEvent(
         eq("agency-reconciliation-report"),
         check {
-          assertThat(it).containsEntry("mismatch-count", "0")
-          assertThat(it).containsEntry("agency-count", "0")
+          assertThat(it).containsEntry("mismatch-count", "1")
+          assertThat(it).containsEntry("agency-count", "3")
         },
         isNull(),
       )
     }
 
     @Test
-    fun `will output a mismatch of totals`() = runTest {
+    fun `will output a missing agency`() = runTest {
       reconciliationService.generateAgencyReconciliationReportBatch()
       awaitReportFinished()
 
       verify(telemetryClient).trackEvent(
-        eq("agency-reconciliation-mismatch-totals"),
+        eq("agency-reconciliation-mismatch"),
         eq(
           mapOf(
-            "nomisTotal" to "2",
-            "dpsTotal" to "3",
+            "agencyId" to "SHEFYC",
+            "reason" to "Missing in NOMIS",
           ),
         ),
         isNull(),
@@ -88,3 +98,6 @@ class AgencyRegistersReconciliationIntTest(
     }
   }
 }
+
+private fun dpsAgencyIdsResponse(vararg agencyIds: String): DpsAgencyIdsResponse = dpsAgencyIdsResponse().copy(agencyIds = agencyIds.map { dpsAgencyId().copy(agencyId = it) })
+private fun nomisAgencyIdsResponse(vararg agencyIds: String): NomisAgencyIdsResponse = nomisAgencyIdsResponse().copy(agencyIds = agencyIds.map { nomisAgencyId().copy(agencyId = it) })
