@@ -257,7 +257,7 @@ class AgencyRegistersReconciliationServiceTest {
       @BeforeEach
       fun setUp() {
         stubAgency(
-          agencyResponse().copy(region = CodeDescription(code = "NWEST", description = "North West")),
+          agencyResponse().copy(nomsRegion = CodeDescription(code = "NWEST", description = "North West")),
           legacyAgencyDto().copy(regionCode = "SEAST"),
         )
       }
@@ -281,7 +281,7 @@ class AgencyRegistersReconciliationServiceTest {
       @BeforeEach
       fun setUp() {
         stubAgency(
-          agencyResponse().copy(district = CodeDescription(code = "NYORKS", description = "North Yorkshire")),
+          agencyResponse().copy(region = CodeDescription(code = "NYORKS", description = "North Yorkshire")),
           legacyAgencyDto().copy(geographicalAreaCode = "SYORKS"),
         )
       }

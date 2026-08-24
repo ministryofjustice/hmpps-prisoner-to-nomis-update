@@ -50,7 +50,7 @@ class AgencyRegistersDpsApiExtension :
       courtTypeCode = "CC",
       agencyType = LegacyAgencyType.COURT,
       subareaCode = "SHEFF",
-      geographicalAreaCode = "WYORKS",
+      geographicalAreaCode = "NEAST",
       payrollRegionCode = "YP",
       localAuthorityCode = "00CG",
       accessibleAccess = LegacyAgencyDto.AccessibleAccess.WHEELCHAIR_ACCESS,
