@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiServi
 
 @ExtendWith(AgencyRegistersDpsApiExtension::class)
 @SpringAPIServiceTest
-@Import(AgencyRegistersDpsApiService::class, AgencyConfiguration::class, RetryApiService::class)
+@Import(AgencyRegistersDpsApiService::class, AgencyRegistersConfiguration::class, RetryApiService::class)
 class AgencyRegistersDpsApiServiceTest {
   @Autowired
   private lateinit var apiService: AgencyRegistersDpsApiService

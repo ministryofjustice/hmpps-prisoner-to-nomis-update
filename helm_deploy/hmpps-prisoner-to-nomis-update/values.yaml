@@ -199,6 +199,10 @@ generic-service:
       HMPPS_SQS_QUEUES_OFFICIALVISITS_QUEUE_NAME: "sqs_queue_name"
     domain-events-sqs-nomis-update-officialvisits-dlq:
       HMPPS_SQS_QUEUES_OFFICIALVISITS_DLQ_NAME: "sqs_queue_name"
+    domain-events-sqs-nomis-update-agencyregisters:
+      HMPPS_SQS_QUEUES_AGENCYREGISTERS_QUEUE_NAME: "sqs_queue_name"
+    domain-events-sqs-nomis-update-agencyregisters-dlq:
+      HMPPS_SQS_QUEUES_AGENCYREGISTERS_DLQ_NAME: "sqs_queue_name"
 
   allowlist:
     groups:

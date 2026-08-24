@@ -14,14 +14,14 @@ import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension.Companion.agencyIdsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension.Companion.jsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension.Companion.legacyAgencyDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agencyregisters.model.AgencyId
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agencyregisters.model.AgencyIdsResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agencyregisters.model.ErrorResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agencyregisters.model.LegacyAgencyAddressDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agencyregisters.model.LegacyAgencyDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agencyregisters.model.LegacyAgencyEmailDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agencyregisters.model.LegacyAgencyPhoneDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agencyregisters.model.LegacyAgencyType
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.AgencyId
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.AgencyIdsResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.ErrorResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.LegacyAgencyAddressDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.LegacyAgencyDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.LegacyAgencyEmailDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.LegacyAgencyPhoneDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.LegacyAgencyType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.getRequestBody
 
 class AgencyRegistersDpsApiExtension :

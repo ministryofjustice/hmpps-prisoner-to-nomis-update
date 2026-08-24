@@ -195,6 +195,10 @@ generic-service:
     - name: visit-slots-recon
       type: VISIT_SLOTS_RECON
       schedule: "45 2 * * *"
+    - name: agency-recon
+      type: AGENCY_RECON
+      schedule: "30 6 * * *"
+      suspend: true
 
 generic-prometheus-alerts:
   sqsOldestAlertQueueNames:
@@ -262,6 +266,9 @@ generic-prometheus-alerts:
     officialvisits:
       - "syscon-devs-prod-hmpps_prisoner_to_nomis_officialvisits_queue"
       - "syscon-devs-prod-hmpps_prisoner_to_nomis_officialvisits_dlq"
+    agencyregisters:
+      - "syscon-devs-prod-hmpps_prisoner_to_nomis_agencyregisters_queue"
+      - "syscon-devs-prod-hmpps_prisoner_to_nomis_agencyregisters_dlq"
     courtmovements:
       - "syscon-devs-prod-hmpps_prisoner_to_nomis_courtmovements_queue"
       - "syscon-devs-prod-hmpps_prisoner_to_nomis_courtmovements_dlq"

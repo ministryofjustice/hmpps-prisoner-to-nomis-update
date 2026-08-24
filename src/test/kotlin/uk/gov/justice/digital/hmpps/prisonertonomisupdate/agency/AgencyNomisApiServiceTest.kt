@@ -19,7 +19,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExten
 
 @ExtendWith(NomisApiExtension::class)
 @SpringAPIServiceTest
-@Import(AgencyNomisApiService::class, AgencyConfiguration::class, AgencyNomisApiMockServer::class, RetryApiService::class)
+@Import(AgencyNomisApiService::class, AgencyRegistersConfiguration::class, AgencyNomisApiMockServer::class, RetryApiService::class)
 class AgencyNomisApiServiceTest {
   @Autowired
   private lateinit var apiService: AgencyNomisApiService
