@@ -177,7 +177,7 @@ class PropertyReconciliationServiceTest {
       NOMIS_ID,
       PropertyContainerMappingDto(DPS_ID, NOMIS_ID, BOOKING_ID, OFFENDER_NO, PropertyContainerMappingDto.MappingType.MIGRATED),
     )
-    mappingServer.stubGetMappingGivenNomisLocationId(
+    mappingServer.stubGetMappingGivenNomisLocationIdUsingExternalApi(
       NOMIS_LOCATION_ID,
       """{
             "dpsLocationId": "$DPS_LOCATION_ID",

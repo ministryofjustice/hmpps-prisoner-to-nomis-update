@@ -80,7 +80,7 @@ class PropertyToNomisIntTest : SqsIntegrationTestBase() {
           propertyNomisApiMockServer.stubPostProperty(NOMIS_ID, BOOKING_ID)
           propertyDpsApi.stubGetProperty(DPS_ID, dpsProperty(UUID.fromString(DPS_ID), UUID.fromString(DPS_LOCATION_ID)))
           propertyMappingApiMockServer.stubPostMapping()
-          mappingServer.stubGetMappingGivenDpsLocationId(
+          mappingServer.stubGetMappingGivenDpsLocationIdUsingExternalApi(
             DPS_LOCATION_ID,
             """{
             "dpsLocationId": "$DPS_LOCATION_ID",
@@ -137,7 +137,7 @@ class PropertyToNomisIntTest : SqsIntegrationTestBase() {
         fun setup() {
           propertyNomisApiMockServer.stubPostProperty(NOMIS_ID, BOOKING_ID)
           propertyDpsApi.stubGetProperty(DPS_ID, dpsProperty(UUID.fromString(DPS_ID), UUID.fromString(DPS_LOCATION_ID)))
-          mappingServer.stubGetMappingGivenDpsLocationId(
+          mappingServer.stubGetMappingGivenDpsLocationIdUsingExternalApi(
             DPS_LOCATION_ID,
             """{
             "dpsLocationId": "$DPS_LOCATION_ID",
@@ -311,7 +311,7 @@ class PropertyToNomisIntTest : SqsIntegrationTestBase() {
             mappingType = PropertyContainerMappingDto.MappingType.DPS_CREATED,
           ),
         )
-        mappingServer.stubGetMappingGivenDpsLocationId(
+        mappingServer.stubGetMappingGivenDpsLocationIdUsingExternalApi(
           DPS_LOCATION_ID,
           """{
             "dpsLocationId": "$DPS_LOCATION_ID",

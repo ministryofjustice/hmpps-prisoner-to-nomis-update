@@ -76,7 +76,7 @@ class PropertyDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
 fun dpsProperty(id: UUID = UUID.randomUUID(), locationId: UUID = UUID.randomUUID(), removalOutcome: PropertyContainerDto.RemovalOutcome? = null) = PropertyContainerDto(
   id = id,
-  prisonerNumber = "A1234KT",
+  prisonerNumber = OFFENDER_NO,
   prisonId = "MDI",
   containerType = PropertyContainerDto.ContainerType.VALUABLES,
   currentStatus = PropertyContainerDto.CurrentStatus.COMBINED,

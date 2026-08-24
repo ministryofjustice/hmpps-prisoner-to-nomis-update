@@ -6,9 +6,7 @@ import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.api.NOMISDPSMappingLookupApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.api.PropertyContainerMappingResourceApi
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.NomisDpsLocationMapping
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PropertyContainerMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 
@@ -19,7 +17,6 @@ class PropertyMappingService(
   retryApiService: RetryApiService,
 ) {
   private val api = PropertyContainerMappingResourceApi(webClient)
-  private val externalApi = NOMISDPSMappingLookupApi(webClient)
   private val retrySpec = retryApiService.getBackoffSpec().withRetryContext(
     Context.of("api", "PropertyMappingService"),
   )
@@ -43,8 +40,4 @@ class PropertyMappingService(
   suspend fun getMappingByDpsIdOrNull(dpsId: String) = api
     .getPropertyContainerMappingByDpsId(dpsId)
     .awaitBodyOrNullForNotFound()
-
-  suspend fun getNomisLocation(dpsLocationId: String): NomisDpsLocationMapping = externalApi
-    .getLocationMappingByDpsId(dpsLocationId)
-    .awaitSingle()
 }

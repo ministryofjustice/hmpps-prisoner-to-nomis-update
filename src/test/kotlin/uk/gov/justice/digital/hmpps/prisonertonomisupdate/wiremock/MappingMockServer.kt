@@ -1344,4 +1344,16 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
         .willSetStateTo(STARTED),
     )
   }
+
+  fun stubGetMappingGivenDpsLocationIdUsingExternalApi(id: String, response: String) {
+    stubFor(
+      get("/api/locations/dps/$id").willReturn(okJson(response)),
+    )
+  }
+
+  fun stubGetMappingGivenNomisLocationIdUsingExternalApi(id: Long, response: String) {
+    stubFor(
+      get("/api/locations/nomis/$id").willReturn(okJson(response)),
+    )
+  }
 }

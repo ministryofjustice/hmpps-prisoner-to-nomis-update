@@ -9,7 +9,7 @@ import kotlinx.coroutines.channels.toList
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.IdRange
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.data.IdRange
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RootOffenderIdRange
 import java.util.concurrent.atomic.AtomicInteger
 

@@ -129,7 +129,7 @@ class PropertyReconciliationResourceIntTest : IntegrationTestBase() {
       nomisId,
       PropertyContainerMappingDto(dpsId, nomisId, BOOKING_ID, OFFENDER_NO, PropertyContainerMappingDto.MappingType.MIGRATED),
     )
-    mappingServer.stubGetMappingGivenNomisLocationId(
+    mappingServer.stubGetMappingGivenNomisLocationIdUsingExternalApi(
       NOMIS_LOCATION_ID,
       """{
           "dpsLocationId": "$DPS_LOCATION_ID",

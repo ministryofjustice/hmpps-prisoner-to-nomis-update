@@ -6,13 +6,13 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.data.IdRange
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationErrorPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationSuccessPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.generateIdRangesReconciliationReport
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.LocationsMappingService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.IdRange
 import java.time.LocalDate
 import java.util.UUID
 
@@ -78,7 +78,7 @@ class PropertyReconciliationService(
   internal suspend fun checkProperty(id: Long): MismatchProperty? = runCatching {
     val nomisData = propertyNomisApiService.getPropertyContainer(id)
 
-    val location = nomisData.internalLocationId?.let { locationsMappingService.getMappingGivenNomisId(it).dpsLocationId }
+    val location = nomisData.internalLocationId?.let { locationsMappingService.getLocationMappingUsingExternalApi(it).dpsLocationId }
 
     val nomisFields = PropertyContainerFields(
       id = nomisData.containerId.toString(),
