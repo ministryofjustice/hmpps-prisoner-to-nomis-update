@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-08-17.410.33e43d4"
+    "version" : "2026-08-20.428.3224ec6"
   },
   "servers" : [ {
     "url" : "/",
@@ -276,6 +276,105 @@
           },
           "404" : {
             "description" : "No such review for this prisoner",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/csra-review/prisoner/{prisonerNumber}/assessment/{assessmentId}/stage/{stage}/answers" : {
+      "put" : {
+        "tags" : [ "CSRA Assessment" ],
+        "summary" : "Partially saves answers for one stage without confirming a rating",
+        "description" : "Saves the current answer state for a stage without requiring a rating or assessment comment. Replaces the whole answer set for the stage so that a previously given answer can be cleared. Does not affect the prisoner's current CSRA rating, does not publish a domain event, and does not mark the stage as confirmed. Requires role ROLE_CSRA_REVIEW__RW",
+        "operationId" : "saveAnswers",
+        "parameters" : [ {
+          "name" : "prisonerNumber",
+          "in" : "path",
+          "description" : "The prisoner number",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "A1234BC"
+        }, {
+          "name" : "assessmentId",
+          "in" : "path",
+          "description" : "The assessment id returned when the assessment was started",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "stage",
+          "in" : "path",
+          "description" : "The stage to save answers for",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "A stage of a new CSRA assessment or review",
+            "enum" : [ "PROVISIONAL", "INTERIM", "FINAL" ]
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CsraAssessmentAnswersRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "The answers were saved",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CsraAssessmentDto"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid request — no prison supplied, or duplicate offence evidence entries",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the ROLE_CSRA_REVIEW__RW role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "No such assessment for this prisoner",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -1111,6 +1210,75 @@
           },
           "403" : {
             "description" : "Missing required role. Requires the ROLE_CSRA_REVIEW__R role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/csra-review/prisoner/{prisonerNumber}/assessment/{assessmentId}" : {
+      "get" : {
+        "tags" : [ "CSRA Assessment" ],
+        "summary" : "Returns the full answer set for an initial CSRA assessment",
+        "description" : "Returns the review's status and, for each stage that has been written to, the full answer set, enough to pre-fill every question page and the check-answers screen so an in-progress assessment can be resumed. The UI derives section-completion state from the answers. Requires role ROLE_CSRA_REVIEW__R",
+        "operationId" : "getAssessment",
+        "parameters" : [ {
+          "name" : "prisonerNumber",
+          "in" : "path",
+          "description" : "The prisoner number",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "A1234BC"
+        }, {
+          "name" : "assessmentId",
+          "in" : "path",
+          "description" : "The assessment id returned when the assessment was started",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "The assessment was found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CsraAssessmentDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the ROLE_CSRA_REVIEW__RW role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "No such assessment for this prisoner",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -2070,6 +2238,343 @@
         },
         "required" : [ "evidenceSources", "mdtChairName", "prisonId", "rating", "reviewComment", "reviewReason", "riskTo", "vulnerabilities" ]
       },
+      "CsraAssessmentDto" : {
+        "type" : "object",
+        "description" : "An initial CSRA assessment with the saved answers for each stage",
+        "properties" : {
+          "assessmentId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The assessment id"
+          },
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The prisoner number"
+          },
+          "prisonId" : {
+            "type" : [ "string", "null" ],
+            "description" : "The prison the assessment is currently associated with"
+          },
+          "status" : {
+            "type" : "string",
+            "description" : "The assessment lifecycle status",
+            "enum" : [ "IN_PROGRESS", "COMPLETE", "CLOSED", "ARCHIVED" ]
+          },
+          "startedBy" : {
+            "type" : "string",
+            "description" : "Username of the officer who started the assessment"
+          },
+          "startedAt" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "When the assessment was started"
+          },
+          "interimResult" : {
+            "type" : [ "string", "null" ],
+            "description" : "The interim (provisional Day 1) rating, if the provisional stage has been confirmed",
+            "enum" : [ "HIGH", "HIGH_GENERAL", "HIGH_SPECIFIC", "STANDARD" ]
+          },
+          "finalResult" : {
+            "type" : [ "string", "null" ],
+            "description" : "The final (Day 2) rating, if the final stage has been confirmed",
+            "enum" : [ "HIGH", "HIGH_GENERAL", "HIGH_SPECIFIC", "STANDARD" ]
+          },
+          "stages" : {
+            "type" : "array",
+            "description" : "The saved answer sets, one per stage that has been written to. Empty for a brand-new assessment.",
+            "items" : {
+              "$ref" : "#/components/schemas/CsraAssessmentStageAnswersDto"
+            }
+          }
+        },
+        "required" : [ "assessmentId", "prisonerNumber", "stages", "startedAt", "startedBy", "status" ]
+      },
+      "CsraAssessmentStageAnswersDto" : {
+        "type" : "object",
+        "description" : "The saved answers for one stage of an initial CSRA assessment",
+        "properties" : {
+          "stage" : {
+            "type" : "string",
+            "description" : "Which stage these answers belong to",
+            "enum" : [ "PROVISIONAL", "INTERIM", "FINAL" ]
+          },
+          "prisonId" : {
+            "type" : [ "string", "null" ],
+            "description" : "The prison this stage was captured at"
+          },
+          "lastSavedBy" : {
+            "type" : [ "string", "null" ],
+            "description" : "Username of the officer who last partially saved this stage, if any"
+          },
+          "lastSavedAt" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "When this stage was last partially saved, if ever"
+          },
+          "dpsChecked" : {
+            "type" : [ "boolean", "null" ]
+          },
+          "perChecked" : {
+            "type" : [ "boolean", "null" ]
+          },
+          "warrantChecked" : {
+            "type" : [ "boolean", "null" ]
+          },
+          "pncChecked" : {
+            "type" : [ "boolean", "null" ]
+          },
+          "offenceMurderManslaughter" : {
+            "type" : [ "boolean", "null" ]
+          },
+          "offenceAssistingSuicide" : {
+            "type" : [ "boolean", "null" ]
+          },
+          "offenceSexualAssault" : {
+            "type" : [ "boolean", "null" ]
+          },
+          "offenceRepeatedViolence" : {
+            "type" : [ "boolean", "null" ]
+          },
+          "offencePrejudiceMotivated" : {
+            "type" : [ "boolean", "null" ]
+          },
+          "offenceArson" : {
+            "type" : [ "boolean", "null" ]
+          },
+          "offenceKidnapHostage" : {
+            "type" : [ "boolean", "null" ]
+          },
+          "offenceEvidence" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CsraOffenceEvidence"
+            }
+          },
+          "officerSpokeToPrisoner" : {
+            "type" : [ "boolean", "null" ]
+          },
+          "likelyToHarmCellmate" : {
+            "type" : [ "boolean", "null" ]
+          },
+          "likelyToHarmCellmateDetail" : {
+            "type" : [ "string", "null" ]
+          },
+          "significantlyVulnerable" : {
+            "type" : [ "boolean", "null" ]
+          },
+          "significantlyVulnerableDetail" : {
+            "type" : [ "string", "null" ]
+          },
+          "causeForConcernSharing" : {
+            "type" : [ "boolean", "null" ]
+          },
+          "causeForConcernSharingDetail" : {
+            "type" : [ "string", "null" ]
+          },
+          "otherHighRiskIndicators" : {
+            "type" : [ "boolean", "null" ]
+          },
+          "otherHighRiskIndicatorsDetail" : {
+            "type" : [ "string", "null" ]
+          },
+          "seenByHealthcare" : {
+            "type" : [ "boolean", "null" ]
+          },
+          "healthcareIncreasedRisk" : {
+            "type" : [ "boolean", "null" ]
+          },
+          "healthcareIncreasedRiskDetail" : {
+            "type" : [ "string", "null" ]
+          },
+          "riskTo" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CsraRiskToDetail"
+            }
+          },
+          "vulnerabilities" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CsraVulnerabilityDetail"
+            }
+          },
+          "version" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "offenceEvidence", "riskTo", "stage", "version", "vulnerabilities" ]
+      },
+      "CsraOffenceEvidence" : {
+        "type" : "object",
+        "description" : "The evidence behind a Yes to an offence question",
+        "properties" : {
+          "offence" : {
+            "type" : "string",
+            "description" : "The offence question this evidence relates to",
+            "enum" : [ "MURDER_MANSLAUGHTER", "ASSISTING_SUICIDE", "SEXUAL_ASSAULT", "REPEATED_VIOLENCE", "PREJUDICE_MOTIVATED", "ARSON", "KIDNAP_HOSTAGE" ],
+            "example" : "MURDER_MANSLAUGHTER"
+          },
+          "sources" : {
+            "type" : "array",
+            "description" : "Where the evidence was found. Include OTHER to name a source in otherSourceDetail.",
+            "example" : [ "PNC", "DPS" ],
+            "items" : {
+              "type" : "string",
+              "description" : "Where the evidence for an offence answer was found",
+              "enum" : [ "PNC", "WARRANT", "DPS", "PER", "OTHER" ]
+            },
+            "uniqueItems" : true
+          },
+          "otherSourceDetail" : {
+            "type" : [ "string", "null" ],
+            "description" : "Names the source when OTHER is selected",
+            "example" : "Police intelligence report"
+          },
+          "details" : {
+            "type" : [ "string", "null" ],
+            "description" : "Free text describing the evidence found",
+            "example" : "Convicted of manslaughter of a fellow prisoner in 2019."
+          }
+        },
+        "required" : [ "offence", "sources" ]
+      },
+      "CsraAssessmentAnswersRequest" : {
+        "type" : "object",
+        "description" : "The current answers for one stage of an initial CSRA assessment, without a rating",
+        "properties" : {
+          "prisonId" : {
+            "type" : "string",
+            "description" : "The prison the assessment is being made at",
+            "example" : "LEI",
+            "minLength" : 1
+          },
+          "dpsChecked" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Whether DPS adjudications were checked"
+          },
+          "perChecked" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Whether the Person Escort Record (PER) was checked"
+          },
+          "warrantChecked" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Whether the warrant was checked"
+          },
+          "pncChecked" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Whether PNC was checked"
+          },
+          "offenceMurderManslaughter" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Evidence of murder, manslaughter or a life-threatening assault on another prisoner (mandatory high-risk trigger)"
+          },
+          "offenceAssistingSuicide" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Evidence of assisting a suicide in custody (mandatory high-risk trigger)"
+          },
+          "offenceSexualAssault" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Evidence of sexual assault of a same-sex adult victim (mandatory high-risk trigger)"
+          },
+          "offenceRepeatedViolence" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Evidence of repeated violence in custody"
+          },
+          "offencePrejudiceMotivated" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Evidence of offending or behaviour motivated by prejudice"
+          },
+          "offenceArson" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Evidence of arson or fire setting"
+          },
+          "offenceKidnapHostage" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Evidence of kidnap, hostage taking or false imprisonment"
+          },
+          "offenceEvidence" : {
+            "type" : "array",
+            "description" : "The evidence behind each offence answered Yes — where it was found and what it was. At most one entry per offence.",
+            "items" : {
+              "$ref" : "#/components/schemas/CsraOffenceEvidence"
+            }
+          },
+          "officerSpokeToPrisoner" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Whether an officer has had a conversation with the prisoner about sharing a cell"
+          },
+          "likelyToHarmCellmate" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Whether the prisoner is likely to cause harm to a cellmate"
+          },
+          "likelyToHarmCellmateDetail" : {
+            "type" : [ "string", "null" ],
+            "description" : "Details of the risk, captured when likelyToHarmCellmate is true",
+            "example" : "Has threatened previous cellmates."
+          },
+          "significantlyVulnerable" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Whether the prisoner is significantly vulnerable to assault by others"
+          },
+          "significantlyVulnerableDetail" : {
+            "type" : [ "string", "null" ],
+            "description" : "Details of the risk, captured when significantlyVulnerable is true",
+            "example" : "Prisoner says they have autism and struggles with social interactions."
+          },
+          "causeForConcernSharing" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Whether observed behaviour gives cause for concern about sharing a cell"
+          },
+          "causeForConcernSharingDetail" : {
+            "type" : [ "string", "null" ],
+            "description" : "Details of the risk, captured when causeForConcernSharing is true",
+            "example" : "Aggressive towards staff on the wing."
+          },
+          "otherHighRiskIndicators" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Whether there are any other indicators the prisoner is high risk"
+          },
+          "otherHighRiskIndicatorsDetail" : {
+            "type" : [ "string", "null" ],
+            "description" : "Details of the risk, captured when otherHighRiskIndicators is true",
+            "example" : "Intelligence report received from the security team."
+          },
+          "seenByHealthcare" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Whether the prisoner has been seen by healthcare"
+          },
+          "healthcareIncreasedRisk" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Whether healthcare identified signs of increased risk"
+          },
+          "healthcareIncreasedRiskDetail" : {
+            "type" : [ "string", "null" ],
+            "description" : "A brief summary of why healthcare consider the prisoner an increased risk, captured when healthcareIncreasedRisk is true",
+            "example" : "Diagnosed autism; shared accommodation likely to cause significant distress."
+          },
+          "riskTo" : {
+            "type" : "array",
+            "description" : "For a high-risk rating, who the prisoner is a risk to",
+            "items" : {
+              "$ref" : "#/components/schemas/CsraRiskToDetail"
+            }
+          },
+          "vulnerabilities" : {
+            "type" : "array",
+            "description" : "For a high-risk rating, the groups the prisoner is vulnerable due to",
+            "items" : {
+              "$ref" : "#/components/schemas/CsraVulnerabilityDetail"
+            }
+          },
+          "version" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The version of the assessment answers"
+          }
+        },
+        "required" : [ "offenceEvidence", "prisonId", "riskTo", "version", "vulnerabilities" ]
+      },
       "CsraAssessmentStageRequest" : {
         "type" : "object",
         "description" : "The answers and rating confirmed for one stage of an initial CSRA assessment",
@@ -2212,40 +2717,6 @@
           }
         },
         "required" : [ "assessmentComment", "offenceEvidence", "prisonId", "rating", "riskTo", "vulnerabilities" ]
-      },
-      "CsraOffenceEvidence" : {
-        "type" : "object",
-        "description" : "The evidence behind a Yes to an offence question",
-        "properties" : {
-          "offence" : {
-            "type" : "string",
-            "description" : "The offence question this evidence relates to",
-            "enum" : [ "MURDER_MANSLAUGHTER", "ASSISTING_SUICIDE", "SEXUAL_ASSAULT", "REPEATED_VIOLENCE", "PREJUDICE_MOTIVATED", "ARSON", "KIDNAP_HOSTAGE" ],
-            "example" : "MURDER_MANSLAUGHTER"
-          },
-          "sources" : {
-            "type" : "array",
-            "description" : "Where the evidence was found. Include OTHER to name a source in otherSourceDetail.",
-            "example" : [ "PNC", "DPS" ],
-            "items" : {
-              "type" : "string",
-              "description" : "Where the evidence for an offence answer was found",
-              "enum" : [ "PNC", "WARRANT", "DPS", "PER", "OTHER" ]
-            },
-            "uniqueItems" : true
-          },
-          "otherSourceDetail" : {
-            "type" : [ "string", "null" ],
-            "description" : "Names the source when OTHER is selected",
-            "example" : "Police intelligence report"
-          },
-          "details" : {
-            "type" : [ "string", "null" ],
-            "description" : "Free text describing the evidence found",
-            "example" : "Convicted of manslaughter of a fellow prisoner in 2019."
-          }
-        },
-        "required" : [ "offence", "sources" ]
       },
       "SetActiveAgencyRequest" : {
         "type" : "object",
