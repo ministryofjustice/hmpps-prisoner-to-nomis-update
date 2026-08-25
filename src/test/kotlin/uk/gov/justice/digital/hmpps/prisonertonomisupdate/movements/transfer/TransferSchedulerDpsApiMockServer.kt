@@ -51,10 +51,9 @@ class TransferSchedulerDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
     private val now = LocalDateTime.now()
     private val yesterday = now.minusDays(1)
-    private val tomorrow = now.plusDays(1)
 
-    fun reconciliation() = ReconciliationResponse(
-      transfers = listOf(
+    fun reconciliation(
+      transfers: List<ReconciliationTransfer> = listOf(
         ReconciliationTransfer(
           transfer = SyncTransfer(
             dpsId = UUID.randomUUID(),
@@ -65,10 +64,8 @@ class TransferSchedulerDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
           movement = transferMovement(),
         ),
       ),
-      unscheduledMovements = listOf(
-        transferMovement(),
-      ),
-    )
+      unscheduledMovements: List<SyncMovement> = listOf(transferMovement()),
+    ) = ReconciliationResponse(transfers, unscheduledMovements)
 
     fun transferWaitlist() = SyncWaitlist(
       requestDate = yesterday.toLocalDate(),

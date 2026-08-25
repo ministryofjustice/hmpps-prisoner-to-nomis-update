@@ -14,8 +14,17 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.Reconciliation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationSuccessPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.generateReconciliationReport
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.NomisMovementId
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.findMissing
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.MismatchedPrisonerTransferIds.Type.SCHEDULE
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.MismatchedPrisonerTransferIds.Type.SCHEDULED_MOVEMENT
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.MismatchedPrisonerTransferIds.Type.UNSCHEDULED_MOVEMENT
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TransferSchedulerPrisonerMappingIdsDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTransferMovementsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.transferscheduler.model.ReconciliationResponse
+import java.util.UUID
 
 @Service
 class TransferScheduleReconciliationService(
@@ -101,20 +110,146 @@ class TransferScheduleReconciliationService(
     )
   }.getOrNull()
 
-  suspend fun checkPrisonersMatch(offenderNo: String): List<MismatchedPrisoner> = withContext(Dispatchers.Unconfined) {
+  suspend fun checkPrisonersMatch(offenderNo: String): List<MismatchedPrisonerTransfer> = withContext(Dispatchers.Unconfined) {
     val nomisTransfers = async { nomisApi.getOffenderTransferMovementsOrNull(offenderNo) }
     val dpsTransfers = async { dpsApi.getTransferSchedulerReconciliation(offenderNo) }
     val mappings = async { mappingApi.getMappings(offenderNo) }
 
-    nomisTransfers.await()
-    dpsTransfers.await()
-    mappings.await()
+    checkPrisonersMatch(offenderNo, nomisTransfers.await(), dpsTransfers.await(), mappings.await())
+  }
 
-    listOf()
+  private fun checkPrisonersMatch(
+    offenderNo: String,
+    nomisTransfers: OffenderTransferMovementsResponse?,
+    dpsTransfers: ReconciliationResponse,
+    mappings: TransferSchedulerPrisonerMappingIdsDto,
+  ): List<MismatchedPrisonerTransfer> {
+    if (nomisTransfers == null) {
+      throw IllegalStateException("Cannot perform reconciliation for a prisoner that doesn't exist in NOMIS - has the prisoner been merged or deleted recently?")
+    }
+
+    val mismatchedEntities = findMismatchedEntities(offenderNo, nomisTransfers, dpsTransfers, mappings)
+    mismatchedEntities.forEach {
+      telemetryClient.trackEvent(
+        "$TELEMETRY_TRANSFER_SCHEDULER-mismatch",
+        mapOf(
+          "offenderNo" to offenderNo,
+          "type" to it.type,
+          "nomisCount" to it.nomisCount.toString(),
+          "dpsCount" to it.dpsCount.toString(),
+          "unexpected-nomis-ids" to it.unexpectedNomisIds,
+          "unexpected-dps-ids" to it.unexpectedDpsIds,
+        ),
+      )
+    }
+
+    return mismatchedEntities
+  }
+
+  private fun findMismatchedEntities(
+    offenderNo: String,
+    nomisTransfers: OffenderTransferMovementsResponse,
+    dpsTransfers: ReconciliationResponse,
+    mappings: TransferSchedulerPrisonerMappingIdsDto,
+  ): List<MismatchedPrisonerTransferIds> {
+    val mismatches = mutableListOf<MismatchedPrisonerTransferIds>()
+
+    // Check for schedules only in 1 system
+    val nomisScheduleIds = nomisTransfers.bookings.flatMap { it.transferSchedules }.map { it.schedule.eventId }
+    val dpsScheduleIds = dpsTransfers.transfers.map { it.transfer.dpsId!! }
+    if (nomisScheduleIds.size != dpsScheduleIds.size) {
+      mismatches.add(
+        MismatchedPrisonerTransferIds(
+          offenderNo = offenderNo,
+          type = SCHEDULE,
+          nomisCount = nomisScheduleIds.size,
+          dpsCount = dpsScheduleIds.size,
+          unexpectedNomisIds = mappings.unexpectedNomisSchedules(nomisScheduleIds, dpsScheduleIds).toString(),
+          unexpectedDpsIds = mappings.unexpectedDpsSchedules(dpsScheduleIds, nomisScheduleIds).toString(),
+        ),
+      )
+    }
+
+    // Check for scheduled movements only in 1 system
+    val nomisScheduledMovementIds = nomisTransfers.bookings.flatMap { it.transferSchedules }.mapNotNull { it.movement }.map { NomisMovementId(it.bookingId, it.sequence) }
+    val dpsScheduledMovementIds = dpsTransfers.transfers.mapNotNull { it.movement }.map { it.dpsId!! }
+    if (nomisScheduledMovementIds.size != dpsScheduledMovementIds.size) {
+      mismatches.add(
+        MismatchedPrisonerTransferIds(
+          offenderNo = offenderNo,
+          type = SCHEDULED_MOVEMENT,
+          nomisCount = nomisScheduledMovementIds.size,
+          dpsCount = dpsScheduledMovementIds.size,
+          unexpectedNomisIds = mappings.unexpectedNomisMovements(nomisScheduledMovementIds, dpsScheduledMovementIds).toString(),
+          unexpectedDpsIds = mappings.unexpectedDpsMovements(dpsScheduledMovementIds, nomisScheduledMovementIds).toString(),
+        ),
+      )
+    }
+
+    // Check for unscheduled movements only in 1 system
+    val nomisUnscheduledMovementIds = nomisTransfers.bookings.flatMap { it.unscheduledTransferMovements }.map { NomisMovementId(it.bookingId, it.sequence) }
+    val dpsUnscheduledMovementIds = dpsTransfers.unscheduledMovements.map { it.dpsId!! }
+    if (nomisUnscheduledMovementIds.size != dpsUnscheduledMovementIds.size) {
+      mismatches.add(
+        MismatchedPrisonerTransferIds(
+          offenderNo = offenderNo,
+          type = UNSCHEDULED_MOVEMENT,
+          nomisCount = nomisUnscheduledMovementIds.size,
+          dpsCount = dpsUnscheduledMovementIds.size,
+          unexpectedNomisIds = mappings.unexpectedNomisMovements(nomisUnscheduledMovementIds, dpsUnscheduledMovementIds).toString(),
+          unexpectedDpsIds = mappings.unexpectedDpsMovements(dpsUnscheduledMovementIds, nomisUnscheduledMovementIds).toString(),
+        ),
+      )
+    }
+
+    return mismatches
+  }
+
+  private fun TransferSchedulerPrisonerMappingIdsDto.unexpectedNomisSchedules(
+    nomisScheduleIds: List<Long>,
+    dpsScheduleIds: List<UUID>,
+  ) = findMissing(nomisScheduleIds, dpsScheduleIds) { nomisId ->
+    this.schedules.find { it.nomisEventId == nomisId }?.dpsTransferScheduleId
+  }
+
+  private fun TransferSchedulerPrisonerMappingIdsDto.unexpectedDpsSchedules(
+    dpsScheduleIds: List<UUID>,
+    nomisScheduleIds: List<Long>,
+  ) = findMissing(dpsScheduleIds, nomisScheduleIds) { dpsId ->
+    this.schedules.find { it.dpsTransferScheduleId == dpsId }?.nomisEventId
+  }
+
+  private fun TransferSchedulerPrisonerMappingIdsDto.unexpectedNomisMovements(
+    nomisMovementIds: List<NomisMovementId>,
+    dpsMovementIds: List<UUID>,
+  ) = findMissing(nomisMovementIds, dpsMovementIds) { nomisId ->
+    this.movements.find { it.nomisBookingId == nomisId.bookingId && it.nomisMovementSeq == nomisId.sequence }?.dpsTransferMovementId
+  }
+
+  private fun TransferSchedulerPrisonerMappingIdsDto.unexpectedDpsMovements(
+    dpsMovementIds: List<UUID>,
+    nomisMovementIds: List<NomisMovementId>,
+  ) = findMissing(dpsMovementIds, nomisMovementIds) { dpsId ->
+    this.movements.find { it.dpsTransferMovementId == dpsId }?.let { NomisMovementId(it.nomisBookingId, it.nomisMovementSeq) }
   }
 }
 
-class MismatchedPrisoner(
+abstract class MismatchedPrisonerTransfer(
   val offenderNo: String,
   val type: String,
 )
+
+class MismatchedPrisonerTransferIds(
+  offenderNo: String,
+  type: Type,
+  val nomisCount: Int,
+  val dpsCount: Int,
+  val unexpectedNomisIds: String,
+  val unexpectedDpsIds: String,
+) : MismatchedPrisonerTransfer(offenderNo, type.name) {
+  enum class Type {
+    SCHEDULE,
+    SCHEDULED_MOVEMENT,
+    UNSCHEDULED_MOVEMENT,
+  }
+}
