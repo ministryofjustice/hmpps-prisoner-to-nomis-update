@@ -16,7 +16,7 @@ import java.time.Duration
 class TransferSchedulerConfiguration(
   @Value("\${api.base.url.movements-transfer}") val transferSchedulerUrl: String,
   @Value("\${api.health-timeout:2s}") val healthTimeout: Duration,
-  @Value("\${api.movements-transfer-timeout:10s}") val timeout: Duration,
+  @Value("\${api.movements-court-timeout:10s}") val timeout: Duration,
 ) {
 
   @Bean
