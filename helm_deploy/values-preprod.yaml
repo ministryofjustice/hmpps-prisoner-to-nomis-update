@@ -27,6 +27,7 @@ generic-service:
     API_BASE_URL_LOCATIONS: https://locations-inside-prison-api-preprod.hmpps.service.justice.gov.uk
     API_BASE_URL_MOVEMENTS_COURT: https://court-appearance-scheduler-api-preprod.hmpps.service.justice.gov.uk
     API_BASE_URL_MOVEMENTS_TAPS: https://external-movements-api-preprod.hmpps.service.justice.gov.uk
+    API_BASE_URL_MOVEMENTS_TRANSFER: https://transfer-scheduler-api-preprod.hmpps.service.justice.gov.uk
     API_BASE_URL_NON_ASSOCIATIONS: https://non-associations-api-preprod.hmpps.service.justice.gov.uk
     API_BASE_URL_OFFICIALVISITS: https://official-visits-api-preprod.hmpps.service.justice.gov.uk
     API_BASE_URL_ORGANISATIONS: https://organisations-api-preprod.hmpps.service.justice.gov.uk
