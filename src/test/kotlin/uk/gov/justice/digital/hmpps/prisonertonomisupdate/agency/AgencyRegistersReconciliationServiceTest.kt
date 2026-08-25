@@ -443,6 +443,22 @@ class AgencyRegistersReconciliationServiceTest {
     }
 
     @Nested
+    inner class WhenAddressPostcodeMoreOrLessMatch {
+      @BeforeEach
+      fun setUp() {
+        stubAgency(
+          agencyResponse().copy(addresses = listOf(agencyAddress().copy(postcode = "LA13 JR "))),
+          legacyAgencyDto().copy(addresses = listOf(legacyAgencyAddressDto().copy(postcode = "LA1 3JR"))),
+        )
+      }
+
+      @Test
+      fun `will match`() = runTest {
+        assertThat(service.checkMatch(agencyId)).isNull()
+      }
+    }
+
+    @Nested
     inner class WhenPhoneNumberDoesNotMatch {
       @BeforeEach
       fun setUp() {
