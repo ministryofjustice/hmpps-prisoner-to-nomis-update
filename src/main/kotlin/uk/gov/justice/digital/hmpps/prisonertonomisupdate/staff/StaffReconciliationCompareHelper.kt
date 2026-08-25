@@ -10,6 +10,7 @@ const val DPS_CASELOAD = "NWEB"
 
 // TODO there is no source value (how row was updated - user/seq) - check if DPS want this
 data class StaffSummary(
+  val staffId: Long,
   val firstName: String,
   val lastName: String,
   val status: String,
@@ -28,9 +29,10 @@ data class StaffAccountSummary(
 
 // Nomis conversions
 fun StaffDetails.toStaff() = StaffSummary(
+  staffId = id,
   firstName = firstName,
   lastName = lastName,
-  status = status,
+  status = if (status == "ACTIVE") "ACTIVE" else "INACT",
   accounts = accounts.map { it.toStaffAccountSummary() }.sortedBy { it.username },
   emails = emailAddresses.map { it.email },
 )
@@ -46,6 +48,7 @@ fun StaffAccount.toStaffAccountSummary() = StaffAccountSummary(
 
 // DPS conversions
 fun PrisonUserReconciliationResponse.toStaff() = StaffSummary(
+  staffId = staffId,
   firstName = firstName,
   lastName = lastName,
   status = status.mapDps(),

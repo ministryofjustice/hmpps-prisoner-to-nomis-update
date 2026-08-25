@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.StaffMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.StaffDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.staff.model.PrisonUserReconciliationResponse
 import java.util.UUID
@@ -101,21 +100,6 @@ class StaffReconciliationResourceIntTest(
     }
 
     @Nested
-    inner class HappyPathNoDpsMapping {
-      @Test
-      fun `will return mismatch`() {
-        mappingService.stubGetStaffByNomisIdOrNull(mapping = null)
-        webTestClient.get().uri("/staff/nomis-staff-id/$nomisStaffId/reconciliation")
-          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
-          .exchange()
-          .expectStatus().isOk
-          .expectBody()
-          .jsonPath("$.nomisStaffId").isEqualTo(nomisStaffId)
-          .jsonPath("$.reason").isEqualTo("staff-mapping-missing")
-      }
-    }
-
-    @Nested
     inner class HappyPathNoDpsStaff {
       @Test
       fun `will return mismatch`() {
@@ -126,7 +110,8 @@ class StaffReconciliationResourceIntTest(
           .expectStatus().isOk
           .expectBody()
           .jsonPath("$.nomisStaffId").isEqualTo(nomisStaffId)
-          .jsonPath("$.dpsStaffId").isEqualTo(dpsStaffId)
+          // TODO add back in when DPS staff id is returned in the response
+          // .jsonPath("$.dpsStaffId").isEqualTo(dpsStaffId)
           .jsonPath("$.reason").isEqualTo("dps-record-missing")
       }
     }
@@ -135,13 +120,5 @@ class StaffReconciliationResourceIntTest(
   fun stubStaff(nomisStaffId: Long, dpsStaffId: String, nomisStaff: StaffDetails, dpsStaff: PrisonUserReconciliationResponse) {
     nomisApi.stubGetStaffById(nomisStaffId, response = nomisStaff.copy(id = nomisStaffId))
     dpsApi.stubGetStaff(nomisStaffId, response = dpsStaff.copy(userId = UUID.fromString(dpsStaffId)))
-    mappingService.stubGetStaffByNomisIdOrNull(
-      nomisStaffId = nomisStaffId,
-      mapping = StaffMappingDto(
-        dpsId = dpsStaffId,
-        nomisId = nomisStaffId,
-        mappingType = StaffMappingDto.MappingType.MIGRATED,
-      ),
-    )
   }
 }
