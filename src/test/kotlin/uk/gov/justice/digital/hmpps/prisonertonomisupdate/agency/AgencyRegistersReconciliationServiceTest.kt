@@ -467,11 +467,11 @@ class AgencyRegistersReconciliationServiceTest {
     }
 
     @Nested
-    inner class WhenPhoneNumberDoMatchWhenOnAddress {
+    inner class WhenPhoneNumberMatchWhenOnAddressAndGlobal {
       @BeforeEach
       fun setUp() {
         stubAgency(
-          agencyResponse().copy(phones = emptyList(), addresses = listOf(agencyAddress().copy(phoneNumbers = listOf(agencyPhoneNumber().copy(number = "0114 555 1234"))))),
+          agencyResponse().copy(phones = listOf(agencyPhoneNumber().copy(number = "0114 555 1234")), addresses = listOf(agencyAddress().copy(phoneNumbers = listOf(agencyPhoneNumber().copy(number = "0114 555 1234"))))),
           legacyAgencyDto().copy(phoneNumbers = listOf(legacyAgencyPhoneDto().copy(number = "0114 555 1234"))),
         )
       }
