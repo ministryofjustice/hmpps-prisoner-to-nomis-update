@@ -262,6 +262,11 @@ val models = listOf(
     hasProductionVersion = false,
   ),
   ModelConfiguration(
+    name = "transfer-scheduler",
+    packageName = "transferscheduler",
+    url = "https://transfer-scheduler-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
+  ),
+  ModelConfiguration(
     name = "visit-balance",
     packageName = "visit.balance",
     url = "https://hmpps-visit-allocation-api-dev.prison.service.justice.gov.uk/v3/api-docs",

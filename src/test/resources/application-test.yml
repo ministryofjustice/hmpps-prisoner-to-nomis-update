@@ -28,6 +28,7 @@ api.base.url:
   visit.balance: http://localhost:8101
   movements-court: http://localhost:8105
   movements-taps: http://localhost:8102
+  movements-transfer: http://localhost:8110
   core.person: http://localhost:8103
   officialvisits: http://localhost:8104
   staff: http://localhost:8106

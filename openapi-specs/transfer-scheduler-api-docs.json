@@ -1,0 +1,1984 @@
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "title" : "HMPPS Transfer Scheduler Api",
+    "contact" : {
+      "name" : "HMPPS Digital Studio",
+      "email" : "feedback@digital.justice.gov.uk"
+    },
+    "version" : "2026-08-25.241.7f27526"
+  },
+  "servers" : [ {
+    "url" : "https://transfer-scheduler-api-dev.hmpps.service.justice.gov.uk",
+    "description" : "Development"
+  }, {
+    "url" : "https://transfer-scheduler-api-preprod.hmpps.service.justice.gov.uk",
+    "description" : "Pre-Production"
+  }, {
+    "url" : "https://transfer-scheduler-api.hmpps.service.justice.gov.uk",
+    "description" : "Production"
+  }, {
+    "url" : "http://localhost:8080",
+    "description" : "Local"
+  } ],
+  "security" : [ {
+    "bearer-jwt" : [ "read", "write" ]
+  } ],
+  "tags" : [ {
+    "name" : "Integrations",
+    "description" : "DPS integration endpoints"
+  }, {
+    "name" : "UI",
+    "description" : "UI endpoints - not to be use by any other client"
+  }, {
+    "name" : "Sync",
+    "description" : "Legacy sync endpoints - not to be use by any other client"
+  } ],
+  "paths" : {
+    "/transfers/{id}" : {
+      "get" : {
+        "tags" : [ "UI" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_TRANSFERS__TRANSFER_SCHEDULER_UI",
+        "operationId" : "retrieveTransfer",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Transfer"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put" : {
+        "tags" : [ "UI" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_TRANSFERS__TRANSFER_SCHEDULER_UI",
+        "operationId" : "applyActions",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "CaseloadId",
+          "in" : "header",
+          "description" : "\n    Relevant caseload id for the client identity in context e.g. the active caseload id of the logged in user.\n    ",
+          "content" : {
+            "*/*" : {
+              "schema" : {
+                "type" : "string"
+              }
+            }
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/TransferActions"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AuditHistory"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sync/transfers/{personIdentifier}" : {
+      "put" : {
+        "tags" : [ "Sync" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_TRANSFERS__SYNC__RW",
+        "operationId" : "syncTransfer",
+        "parameters" : [ {
+          "name" : "personIdentifier",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SyncTransferRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ReferenceId"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sync/transfer-movements/{personIdentifier}" : {
+      "put" : {
+        "tags" : [ "Sync" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_TRANSFERS__SYNC__RW",
+        "operationId" : "syncMovement",
+        "parameters" : [ {
+          "name" : "personIdentifier",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SyncMovementRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ReferenceId"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/resync/transfers/{personIdentifier}" : {
+      "put" : {
+        "tags" : [ "Sync" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_TRANSFERS__SYNC__RW",
+        "operationId" : "resync",
+        "parameters" : [ {
+          "name" : "personIdentifier",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ResyncTransfersRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResyncResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/move/transfers" : {
+      "put" : {
+        "tags" : [ "Sync" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_TRANSFERS__SYNC__RW",
+        "operationId" : "moveTransfers",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/MoveTransfersRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        }
+      }
+    },
+    "/transfers/{personIdentifier}" : {
+      "post" : {
+        "tags" : [ "UI" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_TRANSFERS__TRANSFER_SCHEDULER_UI",
+        "operationId" : "initiateTransfer",
+        "parameters" : [ {
+          "name" : "personIdentifier",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "CaseloadId",
+          "in" : "header",
+          "description" : "\n    Relevant caseload id for the client identity in context e.g. the active caseload id of the logged in user.\n    ",
+          "content" : {
+            "*/*" : {
+              "schema" : {
+                "type" : "string"
+              }
+            }
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateTransferRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Transfer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/search/prisons/{prisonCode}/transfers" : {
+      "post" : {
+        "tags" : [ "UI" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_TRANSFERS__TRANSFER_SCHEDULER_UI",
+        "operationId" : "findTransfersForPrison",
+        "parameters" : [ {
+          "name" : "prisonCode",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "oneOf" : [ {
+                  "$ref" : "#/components/schemas/PlanningSearchRequest"
+                }, {
+                  "$ref" : "#/components/schemas/ScheduledSearchRequest"
+                } ]
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TransferSearchResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/search/people/clashes" : {
+      "post" : {
+        "tags" : [ "Integrations" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_SCHEDULES__CLASHES__RO",
+        "operationId" : "findTapClashes",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ClashRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ClashResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/transfers/{id}/history" : {
+      "get" : {
+        "tags" : [ "UI" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_TRANSFERS__TRANSFER_SCHEDULER_UI",
+        "operationId" : "retrieveHistory",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AuditHistory"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sync/transfers/{id}" : {
+      "get" : {
+        "tags" : [ "Sync" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_TRANSFERS__SYNC__RW",
+        "operationId" : "getTransfer",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncTransfer"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "Sync" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_TRANSFERS__SYNC__RW",
+        "operationId" : "deleteTransfer",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        }
+      }
+    },
+    "/sync/transfer-movements/{id}" : {
+      "get" : {
+        "tags" : [ "Sync" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_TRANSFERS__SYNC__RW",
+        "operationId" : "getMovement",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncMovement"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "Sync" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_TRANSFERS__SYNC__RW",
+        "operationId" : "deleteMovement",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        }
+      }
+    },
+    "/reference-data/{domain}" : {
+      "get" : {
+        "tags" : [ "UI" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_TRANSFERS__TRANSFER_SCHEDULER_UI",
+        "operationId" : "getDomain",
+        "parameters" : [ {
+          "name" : "domain",
+          "in" : "path",
+          "description" : "The reference data domain required. This is case insensitive.",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "transfer-logistics", "transfer-priority", "transfer-reason", "transfer-status" ]
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ReferenceDataResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reconciliation/transfers/{personIdentifier}" : {
+      "get" : {
+        "tags" : [ "Sync" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_TRANSFERS__SYNC__RW",
+        "operationId" : "reconcile",
+        "parameters" : [ {
+          "name" : "personIdentifier",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ReconciliationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/integrations/transfers/{id}" : {
+      "get" : {
+        "tags" : [ "Integrations" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_TRANSFER_SCHEDULER__TRANSFER__RO\n* ROLE_TRANSFER_SCHEDULER__TRANSFER__RW",
+        "operationId" : "getTransferForIntegration",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/IntegrationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "ApplyDestination" : {
+        "type" : "object",
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/TransferAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "destinationCode" : {
+              "type" : "string",
+              "nullable" : true
+            }
+          }
+        } ]
+      },
+      "ApplyLogistics" : {
+        "type" : "object",
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/TransferAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "logisticsCode" : {
+              "type" : "string",
+              "nullable" : true
+            }
+          }
+        } ]
+      },
+      "ApplyPlanComments" : {
+        "type" : "object",
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/TransferAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "comments" : {
+              "type" : "string",
+              "nullable" : true
+            }
+          }
+        } ]
+      },
+      "ApplyPriority" : {
+        "required" : [ "priorityCode" ],
+        "type" : "object",
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/TransferAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "priorityCode" : {
+              "type" : "string"
+            }
+          }
+        } ]
+      },
+      "ApplyReason" : {
+        "required" : [ "reasonCode" ],
+        "type" : "object",
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/TransferAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "reasonCode" : {
+              "type" : "string"
+            }
+          }
+        } ]
+      },
+      "ApplyRequestedOn" : {
+        "required" : [ "requestedOn" ],
+        "type" : "object",
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/TransferAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "requestedOn" : {
+              "type" : "string",
+              "format" : "date"
+            }
+          }
+        } ]
+      },
+      "ApplyScheduleComments" : {
+        "type" : "object",
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/TransferAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "comments" : {
+              "type" : "string",
+              "nullable" : true
+            }
+          }
+        } ]
+      },
+      "ApplyScheduleStart" : {
+        "required" : [ "start" ],
+        "type" : "object",
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/TransferAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "start" : {
+              "type" : "string",
+              "format" : "date-time"
+            }
+          }
+        } ]
+      },
+      "ApplyTransit" : {
+        "required" : [ "destinationCode", "logisticsCode", "occurredAt", "reasonCode", "request" ],
+        "type" : "object",
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/TransferAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "request" : {
+              "$ref" : "#/components/schemas/MovementRequest"
+            },
+            "legacyId" : {
+              "type" : "string",
+              "nullable" : true
+            },
+            "comments" : {
+              "type" : "string",
+              "nullable" : true
+            },
+            "occurredAt" : {
+              "type" : "string",
+              "format" : "date-time"
+            },
+            "destinationCode" : {
+              "type" : "string"
+            },
+            "reasonCode" : {
+              "type" : "string"
+            },
+            "logisticsCode" : {
+              "type" : "string"
+            }
+          }
+        } ]
+      },
+      "CancelTransfer" : {
+        "type" : "object",
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/TransferAction"
+        } ]
+      },
+      "CompleteTransfer" : {
+        "type" : "object",
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/TransferAction"
+        } ]
+      },
+      "ExpireTransfer" : {
+        "type" : "object",
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/TransferAction"
+        } ]
+      },
+      "MakeUnscheduled" : {
+        "type" : "object",
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/TransferAction"
+        } ]
+      },
+      "MovementRequest" : {
+        "required" : [ "destinationCode", "logisticsCode", "occurredAt", "reasonCode" ],
+        "type" : "object",
+        "properties" : {
+          "comments" : {
+            "type" : "string",
+            "nullable" : true
+          },
+          "occurredAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "destinationCode" : {
+            "type" : "string"
+          },
+          "reasonCode" : {
+            "type" : "string"
+          },
+          "logisticsCode" : {
+            "type" : "string"
+          }
+        }
+      },
+      "PlanTransfer" : {
+        "required" : [ "priorityCode", "requestedOn" ],
+        "type" : "object",
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/TransferAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "requestedOn" : {
+              "type" : "string",
+              "format" : "date"
+            },
+            "priorityCode" : {
+              "type" : "string"
+            },
+            "comments" : {
+              "type" : "string",
+              "nullable" : true
+            }
+          }
+        } ]
+      },
+      "ScheduleTransfer" : {
+        "required" : [ "start" ],
+        "type" : "object",
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/TransferAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "start" : {
+              "type" : "string",
+              "format" : "date-time"
+            },
+            "comments" : {
+              "type" : "string",
+              "nullable" : true
+            }
+          }
+        } ]
+      },
+      "TransferAction" : {
+        "required" : [ "type" ],
+        "type" : "object",
+        "properties" : {
+          "type" : {
+            "type" : "string"
+          }
+        },
+        "discriminator" : {
+          "propertyName" : "type"
+        }
+      },
+      "TransferActions" : {
+        "required" : [ "actions" ],
+        "type" : "object",
+        "properties" : {
+          "actions" : {
+            "type" : "array",
+            "items" : {
+              "oneOf" : [ {
+                "$ref" : "#/components/schemas/ApplyDestination"
+              }, {
+                "$ref" : "#/components/schemas/ApplyLogistics"
+              }, {
+                "$ref" : "#/components/schemas/ApplyPlanComments"
+              }, {
+                "$ref" : "#/components/schemas/ApplyPriority"
+              }, {
+                "$ref" : "#/components/schemas/ApplyReason"
+              }, {
+                "$ref" : "#/components/schemas/ApplyRequestedOn"
+              }, {
+                "$ref" : "#/components/schemas/ApplyScheduleComments"
+              }, {
+                "$ref" : "#/components/schemas/ApplyScheduleStart"
+              }, {
+                "$ref" : "#/components/schemas/ApplyTransit"
+              }, {
+                "$ref" : "#/components/schemas/CancelTransfer"
+              }, {
+                "$ref" : "#/components/schemas/CompleteTransfer"
+              }, {
+                "$ref" : "#/components/schemas/ExpireTransfer"
+              }, {
+                "$ref" : "#/components/schemas/MakeUnscheduled"
+              }, {
+                "$ref" : "#/components/schemas/PlanTransfer"
+              }, {
+                "$ref" : "#/components/schemas/ScheduleTransfer"
+              } ]
+            }
+          },
+          "reason" : {
+            "type" : "string",
+            "nullable" : true
+          }
+        }
+      },
+      "AuditHistory" : {
+        "required" : [ "content" ],
+        "type" : "object",
+        "properties" : {
+          "content" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AuditedAction"
+            }
+          }
+        }
+      },
+      "AuditedAction" : {
+        "required" : [ "changes", "domainEvents", "occurredAt", "user" ],
+        "type" : "object",
+        "properties" : {
+          "user" : {
+            "$ref" : "#/components/schemas/User"
+          },
+          "occurredAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "domainEvents" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "reason" : {
+            "type" : "string",
+            "nullable" : true
+          },
+          "changes" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Change"
+            }
+          }
+        }
+      },
+      "Change" : {
+        "required" : [ "propertyName" ],
+        "type" : "object",
+        "properties" : {
+          "propertyName" : {
+            "type" : "string"
+          },
+          "previous" : {
+            "type" : "object",
+            "nullable" : true,
+            "oneOf" : [ {
+              "type" : "string"
+            }, {
+              "type" : "integer",
+              "format" : "int64"
+            }, {
+              "type" : "number",
+              "format" : "double"
+            }, {
+              "type" : "boolean"
+            } ]
+          },
+          "change" : {
+            "type" : "object",
+            "nullable" : true,
+            "oneOf" : [ {
+              "type" : "string"
+            }, {
+              "type" : "integer",
+              "format" : "int64"
+            }, {
+              "type" : "number",
+              "format" : "double"
+            }, {
+              "type" : "boolean"
+            } ]
+          }
+        }
+      },
+      "User" : {
+        "required" : [ "name", "username" ],
+        "type" : "object",
+        "properties" : {
+          "username" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        }
+      },
+      "SyncSchedule" : {
+        "required" : [ "agyLocId", "eventStatus", "eventSubType" ],
+        "type" : "object",
+        "properties" : {
+          "start" : {
+            "type" : "string",
+            "format" : "date-time",
+            "nullable" : true
+          },
+          "eventSubType" : {
+            "type" : "string"
+          },
+          "eventStatus" : {
+            "type" : "string"
+          },
+          "commentText" : {
+            "type" : "string",
+            "nullable" : true
+          },
+          "hiddenCommentText" : {
+            "type" : "string",
+            "nullable" : true
+          },
+          "agyLocId" : {
+            "type" : "string"
+          },
+          "toAgyLocId" : {
+            "type" : "string",
+            "nullable" : true
+          },
+          "outcomeReasonCode" : {
+            "type" : "string",
+            "nullable" : true
+          },
+          "escortCode" : {
+            "type" : "string",
+            "nullable" : true
+          }
+        }
+      },
+      "SyncTransfer" : {
+        "required" : [ "schedule" ],
+        "type" : "object",
+        "properties" : {
+          "dpsId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "nullable" : true
+          },
+          "eventId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "nullable" : true
+          },
+          "waitlist" : {
+            "$ref" : "#/components/schemas/SyncWaitlist"
+          },
+          "schedule" : {
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/SyncSchedule"
+            } ]
+          }
+        }
+      },
+      "SyncTransferRequest" : {
+        "required" : [ "occurredAt", "syncUser", "transfer" ],
+        "type" : "object",
+        "properties" : {
+          "occurredAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "syncUser" : {
+            "$ref" : "#/components/schemas/SyncUser"
+          },
+          "transfer" : {
+            "$ref" : "#/components/schemas/SyncTransfer"
+          }
+        }
+      },
+      "SyncUser" : {
+        "required" : [ "username" ],
+        "type" : "object",
+        "properties" : {
+          "username" : {
+            "type" : "string"
+          },
+          "activeCaseloadId" : {
+            "type" : "string",
+            "nullable" : true
+          }
+        }
+      },
+      "SyncWaitlist" : {
+        "required" : [ "approved", "requestDate", "statusDate", "transferPriority", "waitListStatus" ],
+        "type" : "object",
+        "properties" : {
+          "requestDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "waitListStatus" : {
+            "type" : "string"
+          },
+          "statusDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "transferPriority" : {
+            "type" : "string"
+          },
+          "approved" : {
+            "type" : "boolean"
+          },
+          "approvedUsername" : {
+            "type" : "string",
+            "nullable" : true
+          },
+          "outcomeReasonCode" : {
+            "type" : "string",
+            "nullable" : true,
+            "enum" : [ "OIC", "ADMI", "TRANS" ]
+          },
+          "commentText1" : {
+            "type" : "string",
+            "nullable" : true
+          }
+        }
+      },
+      "ReferenceId" : {
+        "required" : [ "dpsId" ],
+        "type" : "object",
+        "properties" : {
+          "dpsId" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }
+      },
+      "SyncMovement" : {
+        "required" : [ "escortCode", "fromAgyLocId", "movementReasonCode", "occurredAt", "toAgyLocId" ],
+        "type" : "object",
+        "properties" : {
+          "dpsId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "nullable" : true
+          },
+          "dpsTransferId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "nullable" : true
+          },
+          "offenderBookId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "nullable" : true
+          },
+          "movementSeq" : {
+            "type" : "integer",
+            "format" : "int32",
+            "nullable" : true
+          },
+          "occurredAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "movementReasonCode" : {
+            "type" : "string"
+          },
+          "escortCode" : {
+            "type" : "string"
+          },
+          "fromAgyLocId" : {
+            "type" : "string"
+          },
+          "toAgyLocId" : {
+            "type" : "string"
+          },
+          "active" : {
+            "type" : "boolean",
+            "nullable" : true
+          },
+          "commentText" : {
+            "type" : "string"
+          }
+        }
+      },
+      "SyncMovementRequest" : {
+        "required" : [ "movement", "occurredAt", "syncUser" ],
+        "type" : "object",
+        "properties" : {
+          "occurredAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "syncUser" : {
+            "$ref" : "#/components/schemas/SyncUser"
+          },
+          "movement" : {
+            "$ref" : "#/components/schemas/SyncMovement"
+          }
+        }
+      },
+      "AtAndBy" : {
+        "required" : [ "at", "by" ],
+        "type" : "object",
+        "properties" : {
+          "at" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "by" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ResyncMovement" : {
+        "required" : [ "created", "movement" ],
+        "type" : "object",
+        "properties" : {
+          "movement" : {
+            "$ref" : "#/components/schemas/SyncMovement"
+          },
+          "created" : {
+            "$ref" : "#/components/schemas/AtAndBy"
+          },
+          "modified" : {
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/AtAndBy"
+            } ]
+          }
+        }
+      },
+      "ResyncTransfer" : {
+        "required" : [ "created", "transfer" ],
+        "type" : "object",
+        "properties" : {
+          "transfer" : {
+            "$ref" : "#/components/schemas/SyncTransfer"
+          },
+          "created" : {
+            "$ref" : "#/components/schemas/AtAndBy"
+          },
+          "modified" : {
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/AtAndBy"
+            } ]
+          },
+          "movement" : {
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/ResyncMovement"
+            } ]
+          }
+        }
+      },
+      "ResyncTransfersRequest" : {
+        "required" : [ "transfers", "unscheduledMovements" ],
+        "type" : "object",
+        "properties" : {
+          "transfers" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ResyncTransfer"
+            }
+          },
+          "unscheduledMovements" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ResyncMovement"
+            }
+          }
+        }
+      },
+      "ResyncResponse" : {
+        "required" : [ "transfers", "unscheduledMovements" ],
+        "type" : "object",
+        "properties" : {
+          "transfers" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/TransferMapping"
+            }
+          },
+          "unscheduledMovements" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/TransferMovementMapping"
+            }
+          }
+        }
+      },
+      "TransferMapping" : {
+        "required" : [ "dpsId", "eventId" ],
+        "type" : "object",
+        "properties" : {
+          "dpsId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "eventId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "movement" : {
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/TransferMovementMapping"
+            } ]
+          }
+        }
+      },
+      "TransferMovementMapping" : {
+        "required" : [ "dpsId", "movementSeq", "offenderBookId" ],
+        "type" : "object",
+        "properties" : {
+          "dpsId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "offenderBookId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "movementSeq" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
+      "MoveTransfersRequest" : {
+        "required" : [ "from", "to", "transferIds" ],
+        "type" : "object",
+        "properties" : {
+          "from" : {
+            "type" : "string"
+          },
+          "to" : {
+            "type" : "string"
+          },
+          "transferIds" : {
+            "uniqueItems" : true,
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        }
+      },
+      "CreatePlanRequest" : {
+        "required" : [ "priorityCode", "requestedOn" ],
+        "type" : "object",
+        "properties" : {
+          "requestedOn" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "priorityCode" : {
+            "type" : "string"
+          },
+          "comments" : {
+            "type" : "string",
+            "nullable" : true
+          }
+        }
+      },
+      "CreateScheduleRequest" : {
+        "required" : [ "start" ],
+        "type" : "object",
+        "properties" : {
+          "start" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "comments" : {
+            "type" : "string",
+            "nullable" : true
+          }
+        }
+      },
+      "CreateTransferRequest" : {
+        "required" : [ "reasonCode" ],
+        "type" : "object",
+        "properties" : {
+          "reasonCode" : {
+            "type" : "string"
+          },
+          "destinationCode" : {
+            "type" : "string",
+            "nullable" : true
+          },
+          "logisticsCode" : {
+            "type" : "string",
+            "nullable" : true
+          },
+          "plan" : {
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/CreatePlanRequest"
+            } ]
+          },
+          "schedule" : {
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/CreateScheduleRequest"
+            } ]
+          }
+        }
+      },
+      "CodedDescription" : {
+        "required" : [ "code", "description" ],
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          }
+        }
+      },
+      "Movement" : {
+        "required" : [ "destination", "logistics", "occurredAt", "reason" ],
+        "type" : "object",
+        "properties" : {
+          "occurredAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "destination" : {
+            "$ref" : "#/components/schemas/Prison"
+          },
+          "reason" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "logistics" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "comments" : {
+            "type" : "string",
+            "nullable" : true
+          }
+        }
+      },
+      "Person" : {
+        "required" : [ "firstName", "identifier", "lastName" ],
+        "type" : "object",
+        "properties" : {
+          "identifier" : {
+            "type" : "string"
+          },
+          "firstName" : {
+            "type" : "string"
+          },
+          "lastName" : {
+            "type" : "string"
+          }
+        }
+      },
+      "Plan" : {
+        "required" : [ "priority", "requestedOn" ],
+        "type" : "object",
+        "properties" : {
+          "requestedOn" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "priority" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "comments" : {
+            "type" : "string",
+            "nullable" : true
+          }
+        }
+      },
+      "Prison" : {
+        "required" : [ "code", "name" ],
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        }
+      },
+      "Schedule" : {
+        "required" : [ "start" ],
+        "type" : "object",
+        "properties" : {
+          "start" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "comments" : {
+            "type" : "string",
+            "nullable" : true
+          }
+        }
+      },
+      "Transfer" : {
+        "required" : [ "id", "person", "prison", "reason", "stage", "status" ],
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "person" : {
+            "$ref" : "#/components/schemas/Person"
+          },
+          "prison" : {
+            "$ref" : "#/components/schemas/Prison"
+          },
+          "status" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "reason" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "destination" : {
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/Prison"
+            } ]
+          },
+          "logistics" : {
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/CodedDescription"
+            } ]
+          },
+          "plan" : {
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/Plan"
+            } ]
+          },
+          "schedule" : {
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/Schedule"
+            } ]
+          },
+          "movement" : {
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/Movement"
+            } ]
+          },
+          "stage" : {
+            "type" : "string",
+            "enum" : [ "PLANNING", "SCHEDULED", "UNSCHEDULED" ]
+          }
+        }
+      },
+      "PlanningSearchRequest" : {
+        "required" : [ "page", "priorityCodes", "size", "sort", "stage", "startAndEndType" ],
+        "type" : "object",
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/PrisonTransferSearchRequest"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "startAndEndType" : {
+              "type" : "string",
+              "enum" : [ "REQUESTED_ON", "START" ]
+            },
+            "start" : {
+              "type" : "string",
+              "format" : "date",
+              "nullable" : true
+            },
+            "end" : {
+              "type" : "string",
+              "format" : "date",
+              "nullable" : true
+            },
+            "query" : {
+              "type" : "string",
+              "nullable" : true
+            },
+            "priorityCodes" : {
+              "uniqueItems" : true,
+              "type" : "array",
+              "items" : {
+                "type" : "string",
+                "enum" : [ "1", "2", "3" ]
+              }
+            }
+          }
+        } ]
+      },
+      "PrisonTransferSearchRequest" : {
+        "required" : [ "page", "size", "sort", "stage" ],
+        "type" : "object",
+        "properties" : {
+          "stage" : {
+            "type" : "string"
+          },
+          "destinationCodes" : {
+            "uniqueItems" : true,
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "logisticsCodes" : {
+            "uniqueItems" : true,
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "statusCodes" : {
+            "uniqueItems" : true,
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "PLANNING", "READY_TO_SCHEDULE", "SCHEDULED", "CANCELLED", "EXPIRED", "IN_TRANSIT", "COMPLETED" ]
+            }
+          },
+          "reasonCodes" : {
+            "uniqueItems" : true,
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "size" : {
+            "minimum" : 1,
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "sort" : {
+            "type" : "string"
+          },
+          "page" : {
+            "minimum" : 1,
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "end" : {
+            "type" : "string",
+            "format" : "date",
+            "nullable" : true
+          },
+          "start" : {
+            "type" : "string",
+            "format" : "date",
+            "nullable" : true
+          }
+        },
+        "discriminator" : {
+          "propertyName" : "stage",
+          "mapping" : {
+            "PLANNING" : "#/components/schemas/PlanningSearchRequest",
+            "SCHEDULED" : "#/components/schemas/ScheduledSearchRequest"
+          }
+        }
+      },
+      "ScheduledSearchRequest" : {
+        "required" : [ "end", "page", "size", "sort", "stage", "start" ],
+        "type" : "object",
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/PrisonTransferSearchRequest"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "query" : {
+              "type" : "string",
+              "nullable" : true
+            }
+          }
+        } ]
+      },
+      "PageMetadata" : {
+        "required" : [ "totalElements" ],
+        "type" : "object",
+        "properties" : {
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "TransferSearchResponse" : {
+        "required" : [ "content", "metadata" ],
+        "type" : "object",
+        "properties" : {
+          "content" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Transfer"
+            }
+          },
+          "metadata" : {
+            "$ref" : "#/components/schemas/PageMetadata"
+          }
+        }
+      },
+      "ClashPersonIdentifier" : {
+        "required" : [ "type", "value" ],
+        "type" : "object",
+        "properties" : {
+          "type" : {
+            "type" : "string",
+            "enum" : [ "PRISON_NUMBER" ]
+          },
+          "value" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ClashRange" : {
+        "required" : [ "end", "start" ],
+        "type" : "object",
+        "properties" : {
+          "start" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "end" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "ClashRequest" : {
+        "required" : [ "personIdentifiers", "ranges" ],
+        "type" : "object",
+        "properties" : {
+          "personIdentifiers" : {
+            "minItems" : 1,
+            "uniqueItems" : true,
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ClashPersonIdentifier"
+            }
+          },
+          "ranges" : {
+            "minItems" : 1,
+            "uniqueItems" : true,
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ClashRange"
+            }
+          }
+        }
+      },
+      "AdditionalInformation" : {
+        "required" : [ "prisonCode" ],
+        "type" : "object",
+        "properties" : {
+          "prisonCode" : {
+            "type" : "string"
+          }
+        }
+      },
+      "Clash" : {
+        "required" : [ "additionalInformation", "description", "end", "location", "start" ],
+        "type" : "object",
+        "properties" : {
+          "start" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "end" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "description" : {
+            "$ref" : "#/components/schemas/Description"
+          },
+          "location" : {
+            "$ref" : "#/components/schemas/Location"
+          },
+          "additionalInformation" : {
+            "$ref" : "#/components/schemas/AdditionalInformation"
+          }
+        }
+      },
+      "ClashOrigin" : {
+        "required" : [ "source" ],
+        "type" : "object",
+        "properties" : {
+          "source" : {
+            "$ref" : "#/components/schemas/ClashSource"
+          }
+        }
+      },
+      "ClashResponse" : {
+        "required" : [ "data", "origin" ],
+        "type" : "object",
+        "properties" : {
+          "origin" : {
+            "$ref" : "#/components/schemas/ClashOrigin"
+          },
+          "data" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PersonClashes"
+            }
+          }
+        }
+      },
+      "ClashSource" : {
+        "required" : [ "name", "productId" ],
+        "type" : "object",
+        "properties" : {
+          "productId" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        }
+      },
+      "Description" : {
+        "required" : [ "full", "short" ],
+        "type" : "object",
+        "properties" : {
+          "full" : {
+            "type" : "string"
+          },
+          "short" : {
+            "type" : "string"
+          }
+        }
+      },
+      "Location" : {
+        "required" : [ "description" ],
+        "type" : "object",
+        "properties" : {
+          "description" : {
+            "type" : "string"
+          }
+        }
+      },
+      "PersonClashes" : {
+        "required" : [ "clashes", "personIdentifier" ],
+        "type" : "object",
+        "properties" : {
+          "personIdentifier" : {
+            "$ref" : "#/components/schemas/ClashPersonIdentifier"
+          },
+          "clashes" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Clash"
+            }
+          }
+        }
+      },
+      "ReferenceDataResponse" : {
+        "required" : [ "domain", "items" ],
+        "type" : "object",
+        "properties" : {
+          "domain" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CodedDescription"
+            }
+          }
+        }
+      },
+      "ReconciliationResponse" : {
+        "required" : [ "transfers", "unscheduledMovements" ],
+        "type" : "object",
+        "properties" : {
+          "transfers" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ReconciliationTransfer"
+            }
+          },
+          "unscheduledMovements" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SyncMovement"
+            }
+          }
+        }
+      },
+      "ReconciliationTransfer" : {
+        "required" : [ "transfer" ],
+        "type" : "object",
+        "properties" : {
+          "transfer" : {
+            "$ref" : "#/components/schemas/SyncTransfer"
+          },
+          "movement" : {
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/SyncMovement"
+            } ]
+          }
+        }
+      },
+      "IntegrationMovement" : {
+        "required" : [ "occurredAt" ],
+        "type" : "object",
+        "properties" : {
+          "occurredAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "comments" : {
+            "type" : "string",
+            "nullable" : true
+          }
+        }
+      },
+      "IntegrationPlan" : {
+        "required" : [ "priority", "requestedOn" ],
+        "type" : "object",
+        "properties" : {
+          "requestedOn" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "priority" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "comments" : {
+            "type" : "string",
+            "nullable" : true
+          }
+        }
+      },
+      "IntegrationResponse" : {
+        "required" : [ "data" ],
+        "type" : "object",
+        "properties" : {
+          "data" : {
+            "$ref" : "#/components/schemas/IntegrationTransfer"
+          }
+        }
+      },
+      "IntegrationSchedule" : {
+        "required" : [ "start" ],
+        "type" : "object",
+        "properties" : {
+          "start" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "comments" : {
+            "type" : "string",
+            "nullable" : true
+          }
+        }
+      },
+      "IntegrationTransfer" : {
+        "required" : [ "id", "personIdentifier", "prisonCode", "reason", "status" ],
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "personIdentifier" : {
+            "type" : "string"
+          },
+          "prisonCode" : {
+            "type" : "string"
+          },
+          "status" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "reason" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "destinationCode" : {
+            "type" : "string",
+            "nullable" : true
+          },
+          "logistics" : {
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/CodedDescription"
+            } ]
+          },
+          "plan" : {
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/IntegrationPlan"
+            } ]
+          },
+          "schedule" : {
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/IntegrationSchedule"
+            } ]
+          },
+          "movement" : {
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/IntegrationMovement"
+            } ]
+          }
+        }
+      }
+    },
+    "securitySchemes" : {
+      "bearer-jwt" : {
+        "type" : "http",
+        "name" : "Authorization",
+        "in" : "header",
+        "scheme" : "bearer",
+        "bearerFormat" : "JWT"
+      }
+    }
+  }
+}
