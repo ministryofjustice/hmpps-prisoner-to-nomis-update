@@ -168,7 +168,7 @@ class PropertyReconciliationService(
     if (differenceList.isEmpty()) {
       return null
     }
-    log.info("Differences: $differenceList")
+    // log.info("Differences: $differenceList")
     telemetryClient.trackEvent(
       "$TELEMETRY_PREFIX-mismatch",
       mapOf(
@@ -236,13 +236,13 @@ private fun compareObjects(dpsObj: PropertyContainerFields?, nomisObj: PropertyC
   if (dpsObj.prison != nomisObj.prison) {
     differences.add(Difference("prisonId", dpsObj.prison, nomisObj.prison))
   }
-  if (dpsObj.location != nomisObj.location) {
-    differences.add(Difference("location", dpsObj.location, nomisObj.location))
-  }
   if (dpsObj.active != nomisObj.active) {
     differences.add(Difference("active", dpsObj.active, nomisObj.active))
   }
-  if (dpsObj.sealMark != nomisObj.sealMark) {
+  if (nomisObj.active && dpsObj.location != nomisObj.location) {
+    differences.add(Difference("location", dpsObj.location, nomisObj.location))
+  }
+  if (nomisObj.sealMark != null && dpsObj.sealMark != nomisObj.sealMark) {
     differences.add(Difference("sealMark", dpsObj.sealMark, nomisObj.sealMark))
   }
   if (dpsObj.containerCode != nomisObj.containerCode) {
@@ -251,7 +251,7 @@ private fun compareObjects(dpsObj: PropertyContainerFields?, nomisObj: PropertyC
   if (dpsObj.proposedDisposalDate != nomisObj.proposedDisposalDate) {
     differences.add(Difference("proposedDisposalDate", dpsObj.proposedDisposalDate, nomisObj.proposedDisposalDate))
   }
-  if (dpsObj.expiryDate != nomisObj.expiryDate) {
+  if (nomisObj.expiryDate != null && dpsObj.expiryDate != nomisObj.expiryDate) {
     differences.add(Difference("expiryDate", dpsObj.expiryDate, nomisObj.expiryDate))
   }
   return differences
