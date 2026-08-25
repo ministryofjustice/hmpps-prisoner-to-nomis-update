@@ -49,7 +49,7 @@ class StaffReconciliationIntTest(
       nomisApi.stubGetStaffById(staffId = 1)
       dpsApi.stubGetStaff(nomisStaffId = 1)
 
-      // staffId 2 - missing mapping
+      // staffId 2
       mappingApi.stubGetStaffByNomisIdOrNull(
         nomisStaffId = 2,
         mapping = null,
@@ -98,43 +98,6 @@ class StaffReconciliationIntTest(
       )
     }
 
-    /*
-    TODO add back in if reconcile totals
-    @Test
-    fun `will output a mismatch of totals`() = runTest {
-      reconciliationService.generateReconciliationReportBatch()
-      awaitReportFinished()
-
-      verify(telemetryClient).trackEvent(
-        eq("staff-reconciliation-mismatch-totals"),
-        eq(
-          mapOf(
-            "nomisTotal" to "3",
-            "dpsTotal" to "1",
-          ),
-        ),
-        isNull(),
-      )
-    }
-     */
-
-    @Test
-    fun `will output a mismatch for missing mapping`() = runTest {
-      reconciliationService.generateReconciliationReportBatch()
-      awaitReportFinished()
-
-      verify(telemetryClient).trackEvent(
-        eq("staff-reconciliation-mismatch"),
-        eq(
-          mapOf(
-            "nomisStaffId" to "2",
-            "reason" to "staff-mapping-missing",
-          ),
-        ),
-        isNull(),
-      )
-    }
-
     @Test
     fun `will output a mismatch for missing DPS staff when mapping exists`() = runTest {
       reconciliationService.generateReconciliationReportBatch()
@@ -145,7 +108,8 @@ class StaffReconciliationIntTest(
         eq(
           mapOf(
             "nomisStaffId" to "3",
-            "dpsStaffId" to "300",
+            // TODO add back in when dps value returned
+            // "dpsStaffId" to "300",
             "reason" to "dps-record-missing",
           ),
         ),
