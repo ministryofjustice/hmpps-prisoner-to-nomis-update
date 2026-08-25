@@ -41,7 +41,7 @@ fun StaffAccount.toStaffAccountSummary() = StaffAccountSummary(
   typeCode = typeCode,
   status = status,
   caseloads = caseloads.map { it.caseloadId }.sorted(),
-  dpsRoles = caseloads.firstOrNull { it.caseloadId == DPS_CASELOAD }?.roles?.map { it.code }.orEmpty(),
+  dpsRoles = caseloads.firstOrNull { it.caseloadId == DPS_CASELOAD }?.roles?.map { it.code }?.sorted().orEmpty(),
   lastLoggedIn = lastLoggedIn,
   activeCaseloadId = activeCaseloadId,
 )
