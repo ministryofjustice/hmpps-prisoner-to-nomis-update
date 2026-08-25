@@ -199,4 +199,4 @@ private fun AgencyResponse.emailAddressesSorted(): List<String> = this.emailAddr
 private fun List<MismatchAgency>.asMap(): Pair<String, String> = this
   .sortedBy { it.agencyId }.take(10).let { mismatch -> "agencyIds" to mismatch.joinToString { it.agencyId } }
 
-private fun String.cleanPostcode(): String = replace("\\s".toRegex(), "").uppercase()
+private fun String.cleanPostcode(): String = replace("\\s".toRegex(), "").replace("\u00A0", "").uppercase()
