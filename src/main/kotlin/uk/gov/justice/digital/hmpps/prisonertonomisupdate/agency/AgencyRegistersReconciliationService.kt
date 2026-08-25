@@ -193,7 +193,7 @@ private fun LegacyAgencyDto.addressesSorted(): List<String> = addresses.map { li
 private fun LegacyAgencyDto.phonesSorted(): List<String> = this.phoneNumbers.map { it.number }.sorted()
 private fun LegacyAgencyDto.emailAddressesSorted(): List<String> = this.emailAddresses.map { it.address }.sorted()
 private fun AgencyResponse.addressesSorted(): List<String> = addresses.map { listOfNotNull(it.flat, it.premise, it.street, it.locality, it.city?.description, it.county?.description, it.country?.description, it.postcode?.cleanPostcode()).joinToString(", ") }.sorted()
-private fun AgencyResponse.phonesSorted(): List<String> = this.phones.map { it.number }.sorted()
+private fun AgencyResponse.phonesSorted(): List<String> = (this.addresses.flatMap { it.phoneNumbers }.map { it.number } + this.phones.map { it.number }).sorted()
 private fun AgencyResponse.emailAddressesSorted(): List<String> = this.emailAddresses.map { it.emailAddress }.sorted()
 
 private fun List<MismatchAgency>.asMap(): Pair<String, String> = this

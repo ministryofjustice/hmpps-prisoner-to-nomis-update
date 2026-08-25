@@ -467,6 +467,22 @@ class AgencyRegistersReconciliationServiceTest {
     }
 
     @Nested
+    inner class WhenPhoneNumberDoMatchWhenOnAddress {
+      @BeforeEach
+      fun setUp() {
+        stubAgency(
+          agencyResponse().copy(phones = emptyList(), addresses = listOf(agencyAddress().copy(phoneNumbers = listOf(agencyPhoneNumber().copy(number = "0114 555 1234"))))),
+          legacyAgencyDto().copy(phoneNumbers = listOf(legacyAgencyPhoneDto().copy(number = "0114 555 1234"))),
+        )
+      }
+
+      @Test
+      fun `will not report mismatch`() = runTest {
+        assertThat(service.checkMatch(agencyId)).isNull()
+      }
+    }
+
+    @Nested
     inner class WhenEmailAddressesDoesNotMatch {
       @BeforeEach
       fun setUp() {
