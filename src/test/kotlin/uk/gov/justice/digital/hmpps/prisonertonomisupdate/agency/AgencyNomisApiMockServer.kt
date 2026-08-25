@@ -47,7 +47,7 @@ class AgencyNomisApiMockServer(private val jsonMapper: JsonMapper) {
 
     fun agencyAddress() = AgencyAddress(
       id = 1,
-      phoneNumbers = listOf(agencyPhoneNumber()),
+      phoneNumbers = listOf(agencyPhoneNumber().copy(number = "0114 555 9999")),
       validatedPAF = false,
       primaryAddress = true,
       mailAddress = true,

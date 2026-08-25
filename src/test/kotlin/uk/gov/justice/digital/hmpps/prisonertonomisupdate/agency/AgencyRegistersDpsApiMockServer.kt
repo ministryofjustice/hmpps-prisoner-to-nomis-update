@@ -41,7 +41,7 @@ class AgencyRegistersDpsApiExtension :
       active = true,
       addresses = listOf(legacyAgencyAddressDto()),
       emailAddresses = listOf(legacyAgencyEmailDto()),
-      phoneNumbers = listOf(legacyAgencyPhoneDto()),
+      phoneNumbers = listOf(legacyAgencyPhoneDto(), legacyAgencyPhoneDto().copy(number = "0114 555 9999")),
       description = "Sheffield Crown Court",
       inactiveDate = null,
       cjitCode = "C00SH00",
