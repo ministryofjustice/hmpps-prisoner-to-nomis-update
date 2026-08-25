@@ -7,8 +7,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
-import org.springframework.web.reactive.function.client.awaitBodilessEntity
-import org.springframework.web.reactive.function.client.awaitBody
 import org.springframework.web.reactive.function.client.bodyToMono
 import reactor.core.publisher.Mono
 import reactor.util.context.Context
@@ -60,26 +58,8 @@ class LocationsMappingService(
       .retrieve()
       .bodyToMono<LocationMappingDto>()
       .onErrorResume(WebClientResponseException.NotFound::class.java) { Mono.empty() }
-      .retryWhen(backoffSpec.withRetryContext(Context.of("api", "mapping-api", "url", url.path)))
+      .retryWhen(backoffSpec.withRetryContext(Context.of("api", "locations-mapping-api", "url", url.path)))
       .awaitSingleOrNull()
-  }
-
-  suspend fun getMappingGivenNomisId(id: Long): LocationMappingDto = webClient.get()
-    .uri("/mapping/locations/nomis/{id}", id)
-    .retrieve()
-    .bodyToMono(LocationMappingDto::class.java)
-    .awaitSingle()
-
-  suspend fun getAllMappings(): List<LocationMappingDto> = webClient.get()
-    .uri("/mapping/locations")
-    .retrieve()
-    .awaitBody()
-
-  suspend fun deleteMapping(dpsId: String) {
-    webClient.delete()
-      .uri("/mapping/locations/dps/{dpsId}", dpsId)
-      .retrieve()
-      .awaitBodilessEntity()
   }
 
   suspend fun getLocationMappingUsingExternalApi(dpsLocationId: String): NomisDpsLocationMapping = externalApi
@@ -88,5 +68,6 @@ class LocationsMappingService(
 
   suspend fun getLocationMappingUsingExternalApi(nomisLocationId: Long): NomisDpsLocationMapping = externalApi
     .getLocationMappingByNomisId(nomisLocationId)
+    .retryWhen(backoffSpec.withRetryContext(Context.of("api", "locations-mapping-api")))
     .awaitSingle()
 }

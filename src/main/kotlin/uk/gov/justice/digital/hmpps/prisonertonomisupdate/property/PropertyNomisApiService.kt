@@ -31,7 +31,10 @@ class PropertyNomisApiService(
     api.update(id, request).awaitSingle()
   }
 
-  suspend fun getPropertyContainer(id: Long): PropertyContainerGetResponse = api.get(id).awaitSingle()
+  suspend fun getPropertyContainer(id: Long): PropertyContainerGetResponse = api
+    .get(id)
+    .retryWhen(retrySpec)
+    .awaitSingle()
 
   suspend fun getIdRanges(pageSize: Int): List<Long> = api
     .getPropertyContainerIdRanges(pageSize)
