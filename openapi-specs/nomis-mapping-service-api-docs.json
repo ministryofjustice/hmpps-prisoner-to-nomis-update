@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-08-20.762.26b8d49"
+    "version" : "2026-08-21.766.9fc9feb"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -25620,73 +25620,56 @@
             "$ref" : "#/components/schemas/CorePersonMappingIdDto",
             "description" : "Core Person mapping"
           },
-          "addressMappings" : {
+          "aliases" : {
             "type" : "array",
-            "description" : "Core Person address mappings",
+            "description" : "Core Person alias mappings",
             "items" : {
-              "$ref" : "#/components/schemas/CorePersonSimpleMappingIdDto"
+              "$ref" : "#/components/schemas/OffenderAliasMappingDto"
             }
           },
-          "phoneMappings" : {
+          "identifiers" : {
             "type" : "array",
-            "description" : "Core Person phone mappings",
+            "description" : "Core Person identifier mappings",
             "items" : {
-              "$ref" : "#/components/schemas/CorePersonPhoneMappingIdDto"
-            }
-          },
-          "emailMappings" : {
-            "type" : "array",
-            "description" : "Core Person email mappings",
-            "items" : {
-              "$ref" : "#/components/schemas/CorePersonSimpleMappingIdDto"
-            }
-          },
-          "profileMappings" : {
-            "type" : "array",
-            "description" : "Core Person profile mappings",
-            "items" : {
-              "$ref" : "#/components/schemas/ProfileMappingIdDto"
+              "$ref" : "#/components/schemas/OffenderIdentifierMappingDto"
             }
           }
         },
-        "required" : [ "addressMappings", "emailMappings", "mappingType", "personMapping", "phoneMappings", "profileMappings" ]
+        "required" : [ "aliases", "identifiers", "mappingType", "personMapping" ]
       },
-      "CorePersonPhoneMappingIdDto" : {
+      "OffenderAliasMappingDto" : {
         "type" : "object",
-        "description" : "NOMIS to CPR phone mapping IDs",
-        "properties" : {
-          "nomisId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "NOMIS id"
-          },
-          "cprId" : {
-            "type" : "string",
-            "description" : "CPR id"
-          },
-          "cprPhoneType" : {
-            "type" : "string",
-            "description" : "CPR phone type",
-            "enum" : [ "ADDRESS", "CORE_PERSON" ]
-          }
-        },
-        "required" : [ "cprId", "cprPhoneType", "nomisId" ]
-      },
-      "CorePersonSimpleMappingIdDto" : {
-        "type" : "object",
-        "description" : "NOMIS to CPR simple mapping IDs",
         "properties" : {
           "cprId" : {
             "type" : "string",
             "description" : "CPR id"
           },
-          "nomisId" : {
+          "nomisOffenderId" : {
             "type" : "integer",
             "format" : "int64",
-            "description" : "NOMIS id"
+            "description" : "NOMIS offender id"
+          },
+          "nomisPrisonNumber" : {
+            "type" : "string",
+            "description" : "NOMIS prison number aka Offender number"
+          },
+          "label" : {
+            "type" : [ "string", "null" ],
+            "description" : "Label (a timestamp for migrated ids)"
+          },
+          "mappingType" : {
+            "type" : "string",
+            "description" : "Mapping type",
+            "enum" : [ "MIGRATED", "CPR_CREATED", "NOMIS_CREATED" ]
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "description" : "Date time the mapping was created",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
         },
-        "required" : [ "cprId", "nomisId" ]
+        "required" : [ "cprId", "mappingType", "nomisOffenderId", "nomisPrisonNumber" ]
       },
       "OffenderIdentifierMappingDto" : {
         "type" : "object",
@@ -25726,40 +25709,6 @@
           }
         },
         "required" : [ "cprId", "mappingType", "nomisIdentifierSequence", "nomisOffenderId", "nomisPrisonNumber" ]
-      },
-      "OffenderAliasMappingDto" : {
-        "type" : "object",
-        "properties" : {
-          "cprId" : {
-            "type" : "string",
-            "description" : "CPR id"
-          },
-          "nomisOffenderId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "NOMIS offender id"
-          },
-          "nomisPrisonNumber" : {
-            "type" : "string",
-            "description" : "NOMIS prison number aka Offender number"
-          },
-          "label" : {
-            "type" : [ "string", "null" ],
-            "description" : "Label (a timestamp for migrated ids)"
-          },
-          "mappingType" : {
-            "type" : "string",
-            "description" : "Mapping type",
-            "enum" : [ "MIGRATED", "CPR_CREATED", "NOMIS_CREATED" ]
-          },
-          "whenCreated" : {
-            "type" : "string",
-            "description" : "Date time the mapping was created",
-            "example" : "2021-07-05T10:35:17",
-            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
-          }
-        },
-        "required" : [ "cprId", "mappingType", "nomisOffenderId", "nomisPrisonNumber" ]
       },
       "OffenderAliasMapping" : {
         "type" : "object",
@@ -26710,12 +26659,12 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paged" : {
+            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
