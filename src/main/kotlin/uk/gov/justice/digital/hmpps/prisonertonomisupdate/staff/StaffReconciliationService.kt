@@ -23,7 +23,6 @@ class StaffReconciliationService(
   private val telemetryClient: TelemetryClient,
   private val nomisApiService: StaffNomisApiService,
   private val dpsApiService: StaffDpsApiService,
-  private val mappingService: StaffMappingService,
   @param:Value($$"${reports.staff.reconciliation.page-size}") private val pageSize: Int = 30,
 ) {
   internal companion object {
@@ -106,7 +105,8 @@ class StaffReconciliationService(
           "$TELEMETRY_STAFF_PREFIX-mismatch",
           mapOf(
             "nomisStaffId" to nomisStaffId.toString(),
-            "dpsStaffId" to dpsResult.dpsStaffId,
+            // TODO add back in when dps value returned
+            // "dpsStaffId" to dpsResult.dpsStaffId,
             "reason" to "dps-record-missing",
           ),
         )
@@ -143,16 +143,11 @@ class StaffReconciliationService(
   private suspend fun nomisStaffToPossibleDpsStaff(nomisStaffId: Long): Pair<StaffDetails, DpsStaffResult> = withContext(Dispatchers.Unconfined) {
     async { nomisApiService.getStaffDetails(nomisStaffId) } to
       async {
-        val mapping = mappingService.getStaffByNomisIdOrNull(nomisStaffId)
-        if (mapping != null) {
-          val dpsStaff = dpsApiService.getStaffOrNull(mapping.nomisId)
-          if (dpsStaff == null) {
-            NoStaff(mapping.dpsId)
-          } else {
-            Staff(dpsStaff)
-          }
+        val dpsStaff = dpsApiService.getStaffOrNull(nomisStaffId)
+        if (dpsStaff == null) {
+          NoStaff(nomisStaffId.toString())
         } else {
-          NoMapping()
+          Staff(dpsStaff)
         }
       }
   }.awaitBoth()

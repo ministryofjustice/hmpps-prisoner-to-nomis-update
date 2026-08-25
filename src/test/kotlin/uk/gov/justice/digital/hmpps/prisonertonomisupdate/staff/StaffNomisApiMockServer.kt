@@ -100,38 +100,37 @@ fun nomisStaffDetails(staffId: Long = 1234) = StaffDetails(
   firstName = "JOHN",
   lastName = "SMITH",
   status = "ACTIVE",
-  emailAddresses = listOf(
-    StaffEmail(emailAddressId = 3456, email = "john.smith@justice.gov.uk", audit = audit()),
-  ),
+  emailAddresses = listOf(StaffEmail(emailAddressId = 3456, email = "john.smith@justice.gov.uk", audit = audit())),
   audit = audit(),
-  accounts = listOf(
-    StaffAccount(
-      username = "JOHNSMITH_ADM",
-      sourceCode = "USER",
-      status = "OPEN",
-      typeCode = "ADMIN",
-      activeCaseloadId = "MDI",
-      lastLoggedIn = LocalDateTime.parse("2026-03-17T12:30:00"),
-      caseloads = listOf(
-        CaseloadResponse(
-          caseloadId = "LEI",
-          roles = emptyList(),
-          audit = audit(),
-        ),
-        CaseloadResponse(caseloadId = "MDI", roles = emptyList(), audit = audit()),
-        CaseloadResponse(
-          caseloadId = "NWEB",
-          roles = listOf(
-            RoleResponse(code = "DPS_CODE_1", name = "Dps Role 1", audit = audit()),
-            RoleResponse(code = "DPS_CODE_2", name = "Dps Role 2", audit = audit()),
-          ),
-          audit = audit(),
-        ),
+  accounts = listOf(staffAccount()),
+)
+
+fun staffAccount() = StaffAccount(
+  username = "JOHNSMITH_ADM",
+  sourceCode = "USER",
+  status = "OPEN",
+  typeCode = "ADMIN",
+  activeCaseloadId = "MDI",
+  lastLoggedIn = LocalDateTime.parse("2026-03-17T12:30:00"),
+  caseloads = listOf(
+    CaseloadResponse(
+      caseloadId = "LEI",
+      roles = emptyList(),
+      audit = audit(),
+    ),
+    CaseloadResponse(caseloadId = "MDI", roles = emptyList(), audit = audit()),
+    CaseloadResponse(
+      caseloadId = "NWEB",
+      roles = listOf(
+        RoleResponse(code = "DPS_CODE_1", name = "Dps Role 1", audit = audit()),
+        RoleResponse(code = "DPS_CODE_2", name = "Dps Role 2", audit = audit()),
       ),
       audit = audit(),
     ),
   ),
+  audit = audit(),
 )
+
 fun audit() = NomisAudit(
   createDatetime = LocalDateTime.parse("2016-08-01T10:55:00"),
   createUsername = "KOFEADDY",
