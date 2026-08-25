@@ -269,6 +269,15 @@ reports:
       reconciliation:
         page-size: 100
         thread-count: 15
+  transfer-scheduler:
+    all-prisoners:
+      reconciliation:
+        page-size: 100
+        thread-count: 15
+    active-prisoners:
+      reconciliation:
+        page-size: 100
+        thread-count: 15
 
 hmpps.sqs:
   defaultErrorVisibilityTimeout: 1, 10, 60, 600
