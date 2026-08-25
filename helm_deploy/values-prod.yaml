@@ -173,6 +173,10 @@ generic-service:
       type: PRISONER_TRANSACTIONS_RECON
       schedule: "15 3 * * *"
       suspend: true
+    - name: property-recon
+      type: PROPERTY_RECON
+      schedule: "00 5 * * *"
+      suspend: true
     - name: sentencing-recon
       type: SENTENCING_RECON
       schedule: "50 1 * * *"

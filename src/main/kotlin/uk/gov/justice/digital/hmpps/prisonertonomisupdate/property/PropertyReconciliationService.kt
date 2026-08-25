@@ -23,7 +23,8 @@ class PropertyReconciliationService(
   private val dpsApiService: PropertyDpsApiService,
   private val propertyMappingService: PropertyMappingService,
   private val locationsMappingService: LocationsMappingService,
-  @Value("\${reports.property.reconciliation.page-size:1000}") private val pageSize: Int = 1000,
+  @Value("\${reports.property.reconciliation.nomis-page-size:1000}") private val nomisPageSize: Int = 1000,
+  @Value("\${reports.property.reconciliation.dps-page-size:1000}") private val dpsPageSize: Int = 1000,
   @Value("\${reports.property.reconciliation.thread-count:10}") private val threadCount: Int = 10,
 ) {
   private companion object {
@@ -31,24 +32,28 @@ class PropertyReconciliationService(
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  suspend fun generatePropertyReconciliationReportBatch() {
-    telemetryClient.trackEvent(
-      "$TELEMETRY_PREFIX-requested",
-      emptyMap(),
-    )
+  private val dpsIdsInNomisMappings = mutableSetOf<UUID>()
 
-    runCatching { generatePropertyReconciliationReport() }
-      .onSuccess {
-        telemetryClient.trackEvent(
-          "$TELEMETRY_PREFIX-report",
-          mapOf(
-            "property-count" to it.itemsChecked.toString(),
-            "page-count" to it.pagesChecked.toString(),
-            "mismatch-count" to it.mismatches.size.toString(),
-            "success" to "true",
-          ),
-        )
-      }
+  suspend fun generatePropertyReconciliationReportBatch() {
+    telemetryClient.trackEvent("$TELEMETRY_PREFIX-requested", emptyMap())
+
+    runCatching {
+      dpsIdsInNomisMappings.clear()
+      val report = generatePropertyReconciliationReport()
+      val dpsOnlyCount = findDpsOnlyIds()
+      dpsIdsInNomisMappings.clear()
+
+      telemetryClient.trackEvent(
+        "$TELEMETRY_PREFIX-report",
+        mapOf(
+          "nomis-property-count" to report.itemsChecked.toString(),
+          "page-count" to report.pagesChecked.toString(),
+          "mismatch-count" to report.mismatches.size.toString(),
+          "dps-only-count" to dpsOnlyCount.toString(),
+          "success" to "true",
+        ),
+      )
+    }
       .onFailure {
         telemetryClient.trackEvent(
           "$TELEMETRY_PREFIX-report",
@@ -64,9 +69,26 @@ class PropertyReconciliationService(
   private suspend fun generatePropertyReconciliationReport(): ReconciliationResult<MismatchProperty> = generateIdRangesReconciliationReport(
     threadCount = threadCount,
     checkMatch = ::checkProperty,
-    idRanges = { propertyNomisApiService.getIdRanges(pageSize).toIdRanges() },
+    idRanges = { propertyNomisApiService.getIdRanges(nomisPageSize).toIdRanges() },
     idsInRange = { range -> this.getIdsInRange(range.fromId, range.toId) },
   )
+
+  private suspend fun findDpsOnlyIds(): Int {
+    var i = 0
+    var dpsOnlyCount = 0
+    do {
+      val page = dpsApiService.getPageOfDpsIds(i++, dpsPageSize).content
+        ?.onEach { dpsId ->
+          if (!dpsIdsInNomisMappings.contains(dpsId)) {
+            log.info("DPS only property container found for dpsId=$dpsId")
+            telemetryClient.trackEvent("$TELEMETRY_PREFIX-dps-only", mapOf("dpsId" to dpsId.toString()))
+            dpsOnlyCount++
+          }
+        }
+        ?.also { log.info("DPS page requested page: ${i - 1}, size: ${it.size}") }
+    } while (page?.size == dpsPageSize)
+    return dpsOnlyCount
+  }
 
   fun List<Long>.toIdRanges(): List<IdRange> = mutableListOf(0L).apply {
     addAll(this@toIdRanges)
@@ -107,7 +129,10 @@ class PropertyReconciliationService(
       )
     }
 
-    val dpsData = dpsApiService.getPropertyOrNull(UUID.fromString(mapping.dpsPropertyContainerId))
+    val dpsId = UUID.fromString(mapping.dpsPropertyContainerId)
+    dpsIdsInNomisMappings.add(dpsId)
+
+    val dpsData = dpsApiService.getPropertyOrNull(dpsId)
     if (dpsData == null) {
       log.info("No DPS record found for nomisId=$id")
       telemetryClient.trackEvent(
@@ -176,7 +201,7 @@ class PropertyReconciliationService(
   }.fold(
     onSuccess = { ids ->
       ReconciliationSuccessPageResult(ids = ids, last = 0)
-        .also { log.info("Page requested from fromId: $fromId, toId: $toId, with ${it.ids.size} prisoners") }
+        .also { log.info("Nomis page requested from fromId: $fromId, toId: $toId, with ${it.ids.size} prisoners") }
     },
     onFailure = {
       telemetryClient.trackEvent(

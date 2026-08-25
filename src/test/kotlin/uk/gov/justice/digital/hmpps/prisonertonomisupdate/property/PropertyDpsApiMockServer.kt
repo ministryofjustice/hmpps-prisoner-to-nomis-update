@@ -3,14 +3,16 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.property
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.get
-import com.github.tomakehurst.wiremock.client.WireMock.urlMatching
+import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import tools.jackson.databind.json.JsonMapper
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.property.model.PageUUID
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.property.model.PropertyContainerDto
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -56,14 +58,9 @@ class PropertyDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun ResponseDefinitionBuilder.withBody(body: Any): ResponseDefinitionBuilder {
-    this.withBody(PropertyDpsApiExtension.jsonMapper.writeValueAsString(body))
-    return this
-  }
-
   fun stubGetProperty(id: String, response: PropertyContainerDto = dpsProperty(), status: Int = 200) {
     stubFor(
-      get(urlMatching("/sync/property-containers/$id"))
+      get(urlPathEqualTo("/sync/property-containers/$id"))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
@@ -71,6 +68,25 @@ class PropertyDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
             .withStatus(status),
         ),
     )
+  }
+
+  fun stubGetAllIds(page: Int, size: Int, response: PageUUID, status: Int = 200) {
+    stubFor(
+      get(urlPathEqualTo("/sync/property-containers/ids"))
+        .withQueryParam("page", equalTo(page.toString()))
+        .withQueryParam("size", equalTo(size.toString()))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(response)
+            .withStatus(status),
+        ),
+    )
+  }
+
+  fun ResponseDefinitionBuilder.withBody(body: Any): ResponseDefinitionBuilder {
+    this.withBody(PropertyDpsApiExtension.jsonMapper.writeValueAsString(body))
+    return this
   }
 }
 

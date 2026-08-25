@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.Integratio
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PropertyContainerMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PropertyContainerGetResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.property.PropertyDpsApiExtension.Companion.propertyDpsApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.property.model.PageUUID
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.property.model.PropertyContainerDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 import java.util.UUID
@@ -62,6 +63,10 @@ class PropertyReconciliationResourceIntTest : IntegrationTestBase() {
           dpsProperty().copy(prisonerNumber = "A000${i}NN"),
         )
       }
+      propertyDpsApi.stubGetAllIds(page = 0, size = 6, PageUUID(content = (1L..6L).map { UUID.fromString(generateDpsId(it)) }, propertySize = 6))
+      propertyDpsApi.stubGetAllIds(page = 1, size = 6, PageUUID(content = (7L..12L).map { UUID.fromString(generateDpsId(it)) }, propertySize = 6))
+      propertyDpsApi.stubGetAllIds(page = 2, size = 6, PageUUID(content = (13L..18L).map { UUID.fromString(generateDpsId(it)) }, propertySize = 6))
+      propertyDpsApi.stubGetAllIds(page = 3, size = 6, PageUUID(content = (19L..20L).map { UUID.fromString(generateDpsId(it)) }, propertySize = 2))
     }
 
     @Test
@@ -78,7 +83,8 @@ class PropertyReconciliationResourceIntTest : IntegrationTestBase() {
         verify(telemetryClient).trackEvent(
           eq("property-reports-reconciliation-report"),
           check {
-            assertThat(it).containsEntry("property-count", "20")
+            assertThat(it).containsEntry("nomis-property-count", "20")
+            assertThat(it).containsEntry("dps-only-count", "0")
             assertThat(it).containsEntry("page-count", "2")
             assertThat(it).containsEntry("mismatch-count", "0")
             assertThat(it).containsEntry("success", "true")
@@ -102,9 +108,32 @@ class PropertyReconciliationResourceIntTest : IntegrationTestBase() {
       verify(telemetryClient).trackEvent(
         eq("property-reports-reconciliation-report"),
         check {
-          assertThat(it).containsEntry("property-count", "20")
+          assertThat(it).containsEntry("nomis-property-count", "20")
+          assertThat(it).containsEntry("dps-only-count", "0")
           assertThat(it).containsEntry("page-count", "2")
           assertThat(it).containsEntry("mismatch-count", "1")
+          assertThat(it).containsEntry("success", "true")
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `will output a mismatch when there is a DPS record with no matching Nomis record`() = runTest {
+      // 1 extra DPS record 21 with no matching Nomis record
+      propertyDpsApi.stubGetAllIds(page = 3, size = 6, PageUUID(content = (19L..21L).map { UUID.fromString(generateDpsId(it)) }, propertySize = 3))
+
+      propertyReconciliationService.generatePropertyReconciliationReportBatch()
+
+      awaitReportFinished()
+
+      verify(telemetryClient).trackEvent(
+        eq("property-reports-reconciliation-report"),
+        check {
+          assertThat(it).containsEntry("nomis-property-count", "20")
+          assertThat(it).containsEntry("dps-only-count", "1")
+          assertThat(it).containsEntry("page-count", "2")
+          assertThat(it).containsEntry("mismatch-count", "0")
           assertThat(it).containsEntry("success", "true")
         },
         isNull(),
@@ -124,7 +153,7 @@ class PropertyReconciliationResourceIntTest : IntegrationTestBase() {
 
   private fun stubProperty(nomisId: Long, nomisResponse: PropertyContainerGetResponse, dpsResponse: PropertyContainerDto) {
     propertyNomisApi.stubGetProperty(nomisId, nomisResponse)
-    val dpsId = "be1ee367-8cfa-4499-942b-393811110${nomisId.toString().padStart(3, '0')}"
+    val dpsId = generateDpsId(nomisId)
     propertyMappingApiMockServer.stubGetByNomisId(
       nomisId,
       PropertyContainerMappingDto(dpsId, nomisId, BOOKING_ID, OFFENDER_NO, PropertyContainerMappingDto.MappingType.MIGRATED),
@@ -140,4 +169,6 @@ class PropertyReconciliationResourceIntTest : IntegrationTestBase() {
     )
     propertyDpsApi.stubGetProperty(dpsId, dpsResponse.copy(id = UUID.fromString(dpsId)))
   }
+
+  private fun generateDpsId(nomisId: Long): String = "be1ee367-8cfa-4499-942b-393811110${nomisId.toString().padStart(3, '0')}"
 }

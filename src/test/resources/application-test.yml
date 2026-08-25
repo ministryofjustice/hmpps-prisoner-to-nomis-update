@@ -466,6 +466,10 @@ reports:
   incidents:
     reconciliation:
       page-size: 10
+  property:
+    reconciliation:
+      nomis-page-size: 10
+      dps-page-size: 6
   contact-person.profile-details:
     reconciliation:
       page-size: 3
