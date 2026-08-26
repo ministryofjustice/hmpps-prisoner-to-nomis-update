@@ -43,6 +43,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Cr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCourtCaseRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.DeleteRecallRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderChargeIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderChargeRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RecallRelatedSentenceDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ReturnToCustodyRequest
@@ -289,6 +290,37 @@ class CourtSentencingService(
     clonedClonedCourtCaseDetails = clonedCourtCases?.toClonedCourtCaseDetails(),
   )
 
+  private suspend fun OffenderChargeIdResponse.toCourtCaseBatchMappingDto(
+    dpsChargeId: String,
+    offenderNo: String,
+  ): CourtCaseBatchUpdateAndCreateMappingsWrapper = CourtCaseBatchUpdateAndCreateMappingsWrapper(
+    mappings =
+    CourtCaseBatchUpdateAndCreateMappingDto(
+      mappingsToCreate = CourtCaseBatchMappingDto(
+        courtAppearances = emptyList(),
+        courtCases = emptyList(),
+        courtCharges = listOf(
+          CourtChargeMappingDto(
+            dpsCourtChargeId = dpsChargeId,
+            nomisCourtChargeId = this.offenderChargeId,
+          ),
+        ),
+        sentences = emptyList(),
+        sentenceTerms = emptyList(),
+        mappingType = CourtCaseBatchMappingDto.MappingType.DPS_CREATED,
+      ),
+      mappingsToUpdate = CourtCaseBatchUpdateMappingDto(
+        courtCases = clonedCourtCases.toCourtCases(),
+        courtAppearances = clonedCourtCases.toCourtAppearances(),
+        courtCharges = clonedCourtCases.toCourtCharges(),
+        sentences = clonedCourtCases.toSentences(),
+        sentenceTerms = clonedCourtCases.toSentenceTerms(),
+      ),
+    ),
+    offenderNo = offenderNo,
+    clonedClonedCourtCaseDetails = clonedCourtCases?.toClonedCourtCaseDetails(),
+  )
+
   private suspend fun ConvertToRecallResponse.toCourtCaseBatchMappingDto(
     dpsRecallId: String,
     offenderNo: String,
@@ -470,22 +502,24 @@ class CourtSentencingService(
           telemetryMap["nomisOutcomeCode"] = charge.nomisOutcomeCode ?: "null"
           telemetryMap["nomisOffenceCode"] = charge.offenceCode
 
-          val nomisChargeResponseDto =
-            nomisApiService.createCourtCharge(
-              offenderNo,
-              courtCaseMapping.nomisCourtCaseId,
-              charge.toNomisCourtCharge(isOnFutureCourtAppearance = futureCourtAppearance == true),
-            )
-
-          CourtChargeMappingDto(
-            nomisCourtChargeId = nomisChargeResponseDto.offenderChargeId,
-            dpsCourtChargeId = charge.lifetimeUuid.toString(),
-          ).also {
-            telemetryMap["nomisChargeId"] = nomisChargeResponseDto.offenderChargeId.toString()
+          nomisApiService.createCourtCharge(
+            offenderNo,
+            courtCaseMapping.nomisCourtCaseId,
+            // TODO isBreach acts like a feature switch - so we will not set it yet
+            charge.toNomisCourtCharge(isOnFutureCourtAppearance = futureCourtAppearance, isBreach = false),
+          ).let { response ->
+            telemetryMap["nomisChargeId"] = response.offenderChargeId.toString()
             telemetryMap["nomisCourtCaseId"] = courtCaseMapping.nomisCourtCaseId.toString()
+            response.toCourtCaseBatchMappingDto(dpsChargeId = chargeId, offenderNo = offenderNo)
           }
         }
-        saveMapping { courtCaseMappingService.createChargeMapping(it) }
+        saveMapping {
+          createChargeMappingsAndNotifyClonedCases(
+            mappingsWrapper = it,
+            offenderNo = offenderNo,
+            telemetry = telemetryMap,
+          )
+        }
       }
     } else {
       telemetryMap["reason"] = "Charge created in NOMIS"
@@ -518,7 +552,8 @@ class CourtSentencingService(
             val chargeMapping = retrieveParentChargeMapping(chargeId)
             telemetryMap["nomisChargeId"] = chargeMapping.nomisCourtChargeId.toString()
 
-            val nomisCourtCharge = dpsCharge.toNomisCourtCharge(isOnFutureCourtAppearance = futureCourtAppearance == true)
+            // TODO isBreach acts like a feature switch - so we will not set it yet but will eventually come from createEvent
+            val nomisCourtCharge = dpsCharge.toNomisCourtCharge(isOnFutureCourtAppearance = futureCourtAppearance, isBreach = false)
             telemetryMap["nomisOutcomeCode"] = nomisCourtCharge.resultCode1 ?: "null"
             telemetryMap["nomisOffenceCode"] = nomisCourtCharge.offenceCode
             nomisApiService.updateCourtCharge(
@@ -637,6 +672,39 @@ class CourtSentencingService(
       telemetryClient.trackEvent(
         "court-appearance-create-cases-cloned",
         telemetry + ("nomisCourtCaseIds" to details.clonedCourtCaseIds.joinToString()),
+        null,
+      )
+    }
+  }
+
+  suspend fun createChargeMappingsAndNotifyClonedCases(
+    mappingsWrapper: CourtCaseBatchUpdateAndCreateMappingsWrapper,
+    offenderNo: String,
+    telemetry: Map<String, String>,
+  ) {
+    createAndUpdateMappingsAndNotifyClonedCases(
+      mappingsWrapper = mappingsWrapper,
+      offenderNo = offenderNo,
+    )
+
+    mappingsWrapper.clonedClonedCourtCaseDetails?.also { details ->
+      telemetryClient.trackEvent(
+        "charge-create-cases-cloned",
+        telemetry + ("nomisCourtCaseIds" to details.clonedCourtCaseIds.joinToString()),
+        null,
+      )
+    }
+  }
+
+  suspend fun createChargeMappingsRetry(message: CreateMappingRetryMessage<CourtCaseBatchUpdateAndCreateMappingsWrapper>) = with(message) {
+    createChargeMappingsAndNotifyClonedCases(
+      mappingsWrapper = mapping,
+      offenderNo = mapping.offenderNo,
+      telemetry = telemetryAttributes,
+    ).also {
+      telemetryClient.trackEvent(
+        "charge-create-mapping-retry-success",
+        telemetryAttributes,
         null,
       )
     }
@@ -810,7 +878,7 @@ class CourtSentencingService(
         message.fromJson(),
       )
 
-      EntityType.COURT_CHARGE.displayName -> createChargeRetry(message.fromJson())
+      EntityType.COURT_CHARGE.displayName -> createChargeMappingsRetry(message.fromJson())
 
       EntityType.SENTENCE.displayName -> createSentenceRetry(message.fromJson())
 
@@ -963,7 +1031,8 @@ class CourtSentencingService(
           val nomisSentenceTermResponse =
             nomisApiService.createSentenceTerm(
               offenderNo,
-              request = dpsPeriodLength.toNomisSentenceTerm(),
+              // TODO isBreach acts like a feature switch - so we will not set it yet but will eventually come from createEvent
+              request = dpsPeriodLength.toNomisSentenceTerm(isBreach = false),
               caseId = courtCaseMapping.nomisCourtCaseId,
               sentenceSeq = sentenceMapping.nomisSentenceSequence,
             )
@@ -1369,7 +1438,8 @@ class CourtSentencingService(
             caseId = courtCaseMapping.nomisCourtCaseId,
             sentenceSeq = sentenceTermMapping.nomisSentenceSequence,
             termSeq = sentenceTermMapping.nomisTermSequence,
-            request = dpsPeriodLength.toNomisSentenceTerm(),
+            // TODO isBreach acts like a feature switch - so we will not set it yet but will eventually come from createEvent
+            request = dpsPeriodLength.toNomisSentenceTerm(isBreach = false),
           )
         } ?: run {
           telemetryMap["reason"] = "DPS sentence term $termId does not exist in RaS"
@@ -1535,6 +1605,7 @@ class CourtSentencingService(
     val source: String,
     val courtCaseId: String,
     val isOnFutureCourtAppearance: Boolean,
+    val isBreach: Boolean? = false,
   )
 
   data class CourtChargeAdditionalInformation(
@@ -1543,6 +1614,7 @@ class CourtSentencingService(
     val source: String,
     val courtCaseId: String,
     val isOnFutureAppearance: Boolean? = false,
+    val isBreach: Boolean? = false,
   )
 
   data class SentenceAdditionalInformation(
@@ -1558,6 +1630,7 @@ class CourtSentencingService(
     val courtAppearanceId: String,
     val source: String,
     val courtCaseId: String,
+    val isBreach: Boolean? = false,
   )
 
   data class CaseReferencesAdditionalInformation(
@@ -1731,12 +1804,13 @@ fun LegacyCourtAppearance.toNomisCourtAppearance(
   forcePreventClone = forcePreventClone,
 )
 
-fun LegacyCharge.toNomisCourtCharge(isOnFutureCourtAppearance: Boolean): OffenderChargeRequest = OffenderChargeRequest(
+fun LegacyCharge.toNomisCourtCharge(isOnFutureCourtAppearance: Boolean, isBreach: Boolean): OffenderChargeRequest = OffenderChargeRequest(
   offenceCode = this.offenceCode,
   offenceDate = this.offenceStartDate,
   offenceEndDate = this.offenceEndDate,
   resultCode1 = this.nomisOutcomeCode,
   futureAppearance = isOnFutureCourtAppearance,
+  isBreach = isBreach,
 )
 
 fun LegacyCharge.toNomisCourtEventCharge(nomisChargeId: Long): CourtEventChargeRequest = CourtEventChargeRequest(
@@ -1767,13 +1841,14 @@ fun LegacySentence.toNomisSentence(
   eventId = nomisEventId,
 )
 
-fun LegacyPeriodLength.toNomisSentenceTerm(): SentenceTermRequest = SentenceTermRequest(
+fun LegacyPeriodLength.toNomisSentenceTerm(isBreach: Boolean): SentenceTermRequest = SentenceTermRequest(
   years = this.periodYears,
   months = this.periodMonths,
   days = this.periodDays,
   weeks = this.periodWeeks,
   sentenceTermType = this.sentenceTermCode,
   lifeSentenceFlag = this.isLifeSentence ?: false,
+  isBreach = isBreach,
 )
 
 private fun CourtChargeBatchUpdateMappingDto.hasAnyMappingsToUpdate(): Boolean = this.courtChargesToCreate.isNotEmpty() || this.courtChargesToDelete.isNotEmpty()
@@ -1997,6 +2072,7 @@ fun CourtSentencingService.CourtAppearanceCreatedEvent.asTelemetry() = mutableMa
   "dpsCourtCaseId" to additionalInformation.courtCaseId,
   "dpsCourtAppearanceId" to additionalInformation.courtAppearanceId,
   "offenderNo" to eventOffenderNo(personReference),
+  "isBreach" to (additionalInformation.isBreach == true).toString(),
 )
 
 fun CourtSentencingService.CourtChargeCreatedEvent.asTelemetry() = mutableMapOf(
@@ -2005,6 +2081,7 @@ fun CourtSentencingService.CourtChargeCreatedEvent.asTelemetry() = mutableMapOf(
   "isOnFutureAppearance" to (additionalInformation.isOnFutureAppearance == true).toString(),
   "dpsCourtAppearanceId" to (additionalInformation.courtAppearanceId ?: "null"),
   "offenderNo" to eventOffenderNo(personReference),
+  "isBreach" to (additionalInformation.isBreach == true).toString(),
 )
 
 fun CourtSentencingService.SentenceCreatedEvent.asTelemetry() = mutableMapOf(
@@ -2020,6 +2097,7 @@ fun CourtSentencingService.PeriodLengthCreatedEvent.asTelemetry() = mutableMapOf
   "dpsCourtAppearanceId" to additionalInformation.courtAppearanceId,
   "dpsTermId" to additionalInformation.periodLengthId,
   "offenderNo" to eventOffenderNo(personReference),
+  "isBreach" to (additionalInformation.isBreach == true).toString(),
 )
 
 fun CourtSentencingService.RecallEvent.asTelemetry() = mutableMapOf(
