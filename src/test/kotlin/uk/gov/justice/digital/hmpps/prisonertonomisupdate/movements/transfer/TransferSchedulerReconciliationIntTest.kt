@@ -12,6 +12,7 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.check
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
+import org.mockito.kotlin.never
 import org.mockito.kotlin.reset
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
@@ -21,15 +22,25 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.Tra
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.TransferSchedulerDpsApiMockServer.Companion.reconciliation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.TransferSchedulerDpsApiMockServer.Companion.transferMovement
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.TransferSchedulerDpsApiMockServer.Companion.transferSchedule
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.TransferSchedulerDpsApiMockServer.Companion.transferWaitlist
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.TransferSchedulerNomisApiMockServer.Companion.offenderTransferMovementsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.TransferSchedulerNomisApiMockServer.Companion.transferMovementOutResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.TransferSchedulerNomisApiMockServer.Companion.transferScheduleOutResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.TransferSchedulerNomisApiMockServer.Companion.transferScheduleWaitlistResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TransferMovementMappingIdsDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TransferScheduleMappingIdsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TransferSchedulerPrisonerMappingIdsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingTransferSchedule
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.TransferMovementOut
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.TransferScheduleOut
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.TransferScheduleWaitlist
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.transferscheduler.model.ReconciliationTransfer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.transferscheduler.model.SyncTransfer
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.transferscheduler.model.SyncWaitlist
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.generateOffenderNo
+import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.*
 
 class TransferSchedulerReconciliationIntTest(
@@ -390,6 +401,347 @@ class TransferSchedulerReconciliationIntTest(
         isNull(),
       )
     }
+  }
+
+  @Nested
+  inner class PropertyDifferences {
+    private val offender = "A0001TZ"
+    private val dpsScheduleId = UUID.randomUUID()
+    private val dpsScheduledMovementId = UUID.randomUUID()
+    private val dpsUnscheduledMovementId = UUID.randomUUID()
+    private val now = LocalDateTime.now()
+    private val yesterday = now.minusDays(1)
+
+    @BeforeEach
+    fun setUp() = runTest {
+      reset(telemetryClient)
+      nomisPrisonerApi.stubGetAllPrisoners(
+        offenderId = 0,
+        pageSize = 100,
+        prisoners = listOf(generateOffenderNo(sequence = 1)),
+      )
+    }
+
+    @Nested
+    inner class Schedules {
+
+      private fun verifyTelemetry(type: String) = verify(telemetryClient).trackEvent(
+        eq("transfer-scheduler-reconciliation-mismatch"),
+        eq(
+          mapOf(
+            "offenderNo" to "A0001TZ",
+            "nomisEventId" to "123",
+            "dpsScheduleId" to "$dpsScheduleId",
+            "type" to type,
+          ),
+        ),
+        isNull(),
+      )
+
+      @Test
+      fun `should not report if there are no differences`() = runTest {
+        stubNomis()
+        stubDps()
+        stubMappings()
+        reconciliationService.generateTransferSchedulerReconciliationReportBatch()
+          .also { awaitReportFinished() }
+
+        verify(telemetryClient, never()).trackEvent(
+          eq("transfer-scheduler-reconciliation-mismatch"),
+          any(),
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `should NOT report different event status`() = runTest {
+        stubNomis(schedule = stubNomisSchedule(eventStatus = "CANC"))
+        stubDps()
+        stubMappings()
+        reconciliationService.generateTransferSchedulerReconciliationReportBatch()
+          .also { awaitReportFinished() }
+
+        verify(telemetryClient, never()).trackEvent(
+          eq("transfer-scheduler-reconciliation-mismatch"),
+          any(),
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `should report different start time`() = runTest {
+        stubNomis(schedule = stubNomisSchedule(startTime = yesterday))
+        stubDps()
+        stubMappings()
+        reconciliationService.generateTransferSchedulerReconciliationReportBatch()
+          .also { awaitReportFinished() }
+
+        verifyTelemetry("START_TIME")
+      }
+
+      @Test
+      fun `should report different event subtype`() = runTest {
+        stubNomis(schedule = stubNomisSchedule(eventSubType = "29"))
+        stubDps()
+        stubMappings()
+        reconciliationService.generateTransferSchedulerReconciliationReportBatch()
+          .also { awaitReportFinished() }
+
+        verifyTelemetry("EVENT_SUBTYPE")
+      }
+
+      @Test
+      fun `should report different from prison`() = runTest {
+        stubNomis(schedule = stubNomisSchedule(fromPrison = "MDI"))
+        stubDps()
+        stubMappings()
+        reconciliationService.generateTransferSchedulerReconciliationReportBatch()
+          .also { awaitReportFinished() }
+
+        verifyTelemetry("FROM_PRISON")
+      }
+
+      @Test
+      fun `should report different to prison`() = runTest {
+        stubNomis(schedule = stubNomisSchedule(toPrison = "MDI"))
+        stubDps()
+        stubMappings()
+        reconciliationService.generateTransferSchedulerReconciliationReportBatch()
+          .also { awaitReportFinished() }
+
+        verifyTelemetry("TO_PRISON")
+      }
+
+      @Test
+      fun `should report different comment`() = runTest {
+        stubNomis(schedule = stubNomisSchedule(comment = "different"))
+        stubDps()
+        stubMappings()
+        reconciliationService.generateTransferSchedulerReconciliationReportBatch()
+          .also { awaitReportFinished() }
+
+        verifyTelemetry("COMMENT")
+      }
+
+      @Test
+      fun `should report different hidden comment`() = runTest {
+        stubNomis(schedule = stubNomisSchedule(hiddenComment = "different"))
+        stubDps()
+        stubMappings()
+        reconciliationService.generateTransferSchedulerReconciliationReportBatch()
+          .also { awaitReportFinished() }
+
+        verifyTelemetry("HIDDEN_COMMENT")
+      }
+
+      @Test
+      fun `should report different outcome`() = runTest {
+        stubNomis(schedule = stubNomisSchedule(cancellationReasonCode = "TRANS"))
+        stubDps()
+        stubMappings()
+        reconciliationService.generateTransferSchedulerReconciliationReportBatch()
+          .also { awaitReportFinished() }
+
+        verifyTelemetry("CANCELLATION_REASON")
+      }
+
+      @Test
+      fun `should report different escort code`() = runTest {
+        stubNomis(schedule = stubNomisSchedule(escortCode = "GEO"))
+        stubDps()
+        stubMappings()
+        reconciliationService.generateTransferSchedulerReconciliationReportBatch()
+          .also { awaitReportFinished() }
+
+        verifyTelemetry("ESCORT")
+      }
+    }
+
+    fun stubNomis(
+      schedule: TransferScheduleOut = stubNomisSchedule(),
+      waitlist: TransferScheduleWaitlist = stubNomisWaitlist(),
+      scheduledMovement: TransferMovementOut = stubNomisMovement(eventId = schedule.eventId, sequence = 3),
+      unscheduledMovement: TransferMovementOut = stubNomisMovement(eventId = null, sequence = 4),
+    ) {
+      nomisApi.stubGetOffenderTransferMovements(
+        offenderNo = offender,
+        response = offenderTransferMovementsResponse(
+          offenderNo = offender,
+          schedules = listOf(
+            BookingTransferSchedule(
+              schedule = schedule.copy(waitlist = waitlist),
+              movement = scheduledMovement,
+            ),
+          ),
+          unscheduledMovements = listOf(unscheduledMovement),
+        ),
+      )
+    }
+
+    fun stubNomisSchedule(
+      eventId: Long = 123L,
+      eventStatus: String = "SCH",
+      startTime: LocalDateTime = now,
+      eventSubType: String = "TRN",
+      fromPrison: String = "BXI",
+      toPrison: String = "LEI",
+      comment: String = "some schedule comment",
+      hiddenComment: String = "some hidden comment",
+      cancellationReasonCode: String = "ADMI",
+      escortCode: String = "PECS",
+      waitlist: TransferScheduleWaitlist? = null,
+    ) = transferScheduleOutResponse().copy(
+      eventId = eventId,
+      eventStatus = eventStatus,
+      startTime = startTime,
+      eventSubType = eventSubType,
+      fromPrison = fromPrison,
+      toPrison = toPrison,
+      comment = comment,
+      hiddenComment = hiddenComment,
+      cancellationReasonCode = cancellationReasonCode,
+      escortCode = escortCode,
+      waitlist = waitlist,
+    )
+
+    fun stubNomisWaitlist(
+      requestDate: LocalDate = yesterday.toLocalDate(),
+      status: String = "PEND",
+      statusDate: LocalDate = now.toLocalDate(),
+      priority: String = "3",
+      approved: Boolean = true,
+      cancellationReasonCode: String = "ADMI",
+      comment: String = "some waitlist comment",
+      approvedUserName: String = "some user",
+    ) = transferScheduleWaitlistResponse().copy(
+      requestDate = requestDate,
+      status = status,
+      statusDate = statusDate,
+      priority = priority,
+      approved = approved,
+      cancellationReasonCode = cancellationReasonCode,
+      comment = comment,
+      approvedUserName = approvedUserName,
+    )
+
+    fun stubNomisMovement(
+      eventId: Long? = 123L,
+      sequence: Int = 3,
+      movementTime: LocalDateTime = LocalDateTime.now(),
+      movementReason: String = "28",
+      fromPrison: String = "BXI",
+      toPrison: String = "LEI",
+      active: Boolean = true,
+      transferScheduleOutId: Long? = null,
+      commentText: String? = null,
+    ) = transferMovementOutResponse().copy(
+      eventId = eventId,
+      sequence = sequence,
+      movementTime = movementTime,
+      movementReason = movementReason,
+      fromPrison = fromPrison,
+      toPrison = toPrison,
+      active = active,
+      transferScheduleOutId = transferScheduleOutId,
+      commentText = commentText,
+    )
+
+    fun stubDps() {
+      dpsApi.stubGetTransferSchedulerReconciliation(
+        personIdentifier = offender,
+        response = reconciliation(
+          listOf(
+            ReconciliationTransfer(
+              transfer = SyncTransfer(dpsId = dpsScheduleId, schedule = stubDpsSchedule()),
+              movement = stubDpsMovement(dpsId = dpsScheduledMovementId, dpsTransferId = dpsScheduleId),
+            ),
+          ),
+          listOf(
+            stubDpsMovement(dpsId = dpsUnscheduledMovementId, dpsTransferId = null),
+          ),
+        ),
+      )
+    }
+
+    fun stubDpsWaitlist(
+      requestDate: LocalDate = yesterday.toLocalDate(),
+      waitListStatus: String = "PEND",
+      statusDate: LocalDate = now.toLocalDate(),
+      transferPriority: String = "3",
+      approved: Boolean = true,
+      approvedUsername: String = "some user",
+      outcomeReasonCode: SyncWaitlist.OutcomeReasonCode = SyncWaitlist.OutcomeReasonCode.TRANS,
+      commentText1: String = "some waitlist comment",
+    ) = transferWaitlist().copy(
+      requestDate = requestDate,
+      waitListStatus = waitListStatus,
+      statusDate = statusDate,
+      transferPriority = transferPriority,
+      approved = approved,
+      approvedUsername = approvedUsername,
+      outcomeReasonCode = outcomeReasonCode,
+      commentText1 = commentText1,
+    )
+
+    fun stubDpsSchedule(
+      start: LocalDateTime = now,
+      eventSubType: String = "TRN",
+      eventStatus: String = "SCH",
+      commentText: String = "some schedule comment",
+      hiddenCommentText: String = "some hidden comment",
+      agyLocId: String = "BXI",
+      toAgyLocId: String = "LEI",
+      outcomeReasonCode: String = "ADMI",
+      escortCode: String = "PECS",
+    ) = transferSchedule().copy(
+      start = start,
+      eventSubType = eventSubType,
+      eventStatus = eventStatus,
+      commentText = commentText,
+      hiddenCommentText = hiddenCommentText,
+      agyLocId = agyLocId,
+      toAgyLocId = toAgyLocId,
+      outcomeReasonCode = outcomeReasonCode,
+      escortCode = escortCode,
+    )
+
+    fun stubDpsMovement(
+      dpsId: UUID,
+      dpsTransferId: UUID?,
+      offenderBookId: Long = 12345L,
+      movementSeq: Int = 3,
+      occurredAt: LocalDateTime = now,
+      movementReasonCode: String = "28",
+      escortCode: String = "PECS",
+      fromAgyLocId: String = "BXI",
+      toAgyLocId: String = "LEI",
+      active: Boolean = true,
+      commentText: String = "some transfer movement comment",
+    ) = transferMovement(dpsId, dpsTransferId).copy(
+      dpsId = dpsId,
+      dpsTransferId = dpsTransferId,
+      offenderBookId = offenderBookId,
+      movementSeq = movementSeq,
+      occurredAt = occurredAt,
+      movementReasonCode = movementReasonCode,
+      escortCode = escortCode,
+      fromAgyLocId = fromAgyLocId,
+      toAgyLocId = toAgyLocId,
+      active = active,
+      commentText = commentText,
+    )
+
+    fun stubMappings() = mappingApi.stubGetTransferSchedulerPrisonerMappingIds(
+      prisonerNumber = offender,
+      idMappings = TransferSchedulerPrisonerMappingIdsDto(
+        prisonerNumber = offender,
+        schedules = listOf(TransferScheduleMappingIdsDto(123L, dpsScheduleId)),
+        movements = listOf(
+          TransferMovementMappingIdsDto(12345L, 3, dpsScheduledMovementId),
+          TransferMovementMappingIdsDto(12345L, 4, dpsUnscheduledMovementId),
+        ),
+      ),
+    )
   }
 
   private fun stubEmptyResponses(offender: String = "A0001TZ") {
