@@ -45,7 +45,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceRecallMappingsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseAllMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseBatchUpdateAndCreateMappingDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtSentenceIdPair
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtSentenceTermIdPair
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceMappingDto
@@ -1686,7 +1685,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         )
 
         courtSentencingMappingApi.stubGetCourtChargeMappingGivenDpsIdWithError(DPS_COURT_CHARGE_ID, 404)
-        courtSentencingMappingApi.stubCreateCourtCharge()
+        courtSentencingMappingApi.stubUpdateAndCreateMappings()
 
         publishCreateCourtChargeDomainEvent(courtAppearanceId = DPS_COURT_APPEARANCE_ID)
       }
@@ -1707,7 +1706,6 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
             assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
             assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-            assertThat(it["mappingType"]).isEqualTo(CourtChargeMappingDto.MappingType.DPS_CREATED.toString())
             assertThat(it["dpsChargeId"]).isEqualTo(DPS_COURT_CHARGE_ID)
             assertThat(it["nomisChargeId"]).isEqualTo(NOMIS_COURT_CHARGE_ID.toString())
             assertThat(it["nomisOutcomeCode"]).isEqualTo("4531")
@@ -1724,29 +1722,23 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       }
 
       @Test
-      fun `will create a mapping between the two charges`() {
+      fun `will create just a mapping between the two court charges but not update any other mappings`() {
         waitForAnyProcessingToComplete()
 
-        await untilAsserted {
-          courtSentencingMappingApi.verify(
-            postRequestedFor(urlEqualTo("/mapping/court-sentencing/court-charges"))
-              .withRequestBody(
-                matchingJsonPath(
-                  "dpsCourtChargeId",
-                  equalTo(DPS_COURT_CHARGE_ID),
-                ),
-              )
-              .withRequestBody(
-                matchingJsonPath(
-                  "nomisCourtChargeId",
-                  equalTo(
-                    NOMIS_COURT_CHARGE_ID.toString(),
-                  ),
-                ),
-              ),
-          )
-        }
-        await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
+        val request: CourtCaseBatchUpdateAndCreateMappingDto = CourtSentencingMappingApiMockServer.getRequestBody(putRequestedFor(urlEqualTo("/mapping/court-sentencing/court-cases/update-create")))
+        assertThat(request.mappingsToCreate.courtCases).isEmpty()
+        assertThat(request.mappingsToCreate.courtAppearances).hasSize(0)
+        assertThat(request.mappingsToCreate.courtCharges).hasSize(1)
+        assertThat(request.mappingsToCreate.courtCharges[0].dpsCourtChargeId).isEqualTo(DPS_COURT_CHARGE_ID)
+        assertThat(request.mappingsToCreate.courtCharges[0].nomisCourtChargeId).isEqualTo(NOMIS_COURT_CHARGE_ID)
+        assertThat(request.mappingsToCreate.sentences).isEmpty()
+        assertThat(request.mappingsToCreate.sentenceTerms).isEmpty()
+
+        assertThat(request.mappingsToUpdate.courtCases).isEmpty()
+        assertThat(request.mappingsToUpdate.courtAppearances).isEmpty()
+        assertThat(request.mappingsToUpdate.courtCharges).isEmpty()
+        assertThat(request.mappingsToUpdate.sentences).isEmpty()
+        assertThat(request.mappingsToUpdate.sentenceTerms).isEmpty()
       }
     }
 
@@ -1770,7 +1762,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         )
 
         courtSentencingMappingApi.stubGetCourtChargeMappingGivenDpsIdWithError(DPS_COURT_CHARGE_ID, 404)
-        courtSentencingMappingApi.stubCreateCourtCharge()
+        courtSentencingMappingApi.stubUpdateAndCreateMappings()
 
         publishCreateCourtChargeDomainEvent(courtAppearanceId = null)
       }
@@ -1791,7 +1783,6 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
             assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
             assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-            assertThat(it["mappingType"]).isEqualTo(CourtChargeMappingDto.MappingType.DPS_CREATED.toString())
             assertThat(it["dpsChargeId"]).isEqualTo(DPS_COURT_CHARGE_ID)
             assertThat(it["nomisChargeId"]).isEqualTo(NOMIS_COURT_CHARGE_ID.toString())
             assertThat(it["nomisOutcomeCode"]).isEqualTo("4531")
@@ -1811,26 +1802,10 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       fun `will create a mapping between the two charges`() {
         waitForAnyProcessingToComplete()
 
-        await untilAsserted {
-          courtSentencingMappingApi.verify(
-            postRequestedFor(urlEqualTo("/mapping/court-sentencing/court-charges"))
-              .withRequestBody(
-                matchingJsonPath(
-                  "dpsCourtChargeId",
-                  equalTo(DPS_COURT_CHARGE_ID),
-                ),
-              )
-              .withRequestBody(
-                matchingJsonPath(
-                  "nomisCourtChargeId",
-                  equalTo(
-                    NOMIS_COURT_CHARGE_ID.toString(),
-                  ),
-                ),
-              ),
-          )
-        }
-        await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
+        val request: CourtCaseBatchUpdateAndCreateMappingDto = CourtSentencingMappingApiMockServer.getRequestBody(putRequestedFor(urlEqualTo("/mapping/court-sentencing/court-cases/update-create")))
+        assertThat(request.mappingsToCreate.courtCharges).hasSize(1)
+        assertThat(request.mappingsToCreate.courtCharges[0].dpsCourtChargeId).isEqualTo(DPS_COURT_CHARGE_ID)
+        assertThat(request.mappingsToCreate.courtCharges[0].nomisCourtChargeId).isEqualTo(NOMIS_COURT_CHARGE_ID)
       }
     }
 
@@ -1886,7 +1861,8 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           nomisCourtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
         )
         courtSentencingMappingApi.stubGetCourtChargeMappingGivenDpsIdWithError(DPS_COURT_CHARGE_ID, 404)
-        courtSentencingMappingApi.stubCreateCourtChargeWithErrorFollowedBySuccess()
+        courtSentencingMappingApi.stubUpdateAndCreateMappingsWithErrorFollowedBySuccess()
+
         publishCreateCourtChargeDomainEvent()
 
         await untilCallTo { courtSentencingApi.getCountFor("/legacy/court-appearance/${DPS_COURT_APPEARANCE_ID}/charge/$DPS_COURT_CHARGE_ID") } matches { it == 1 }
@@ -1911,32 +1887,16 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will eventually create a mapping after NOMIS court charge is created`() {
         await untilAsserted {
-          courtSentencingMappingApi.verify(
-            2,
-            postRequestedFor(urlEqualTo("/mapping/court-sentencing/court-charges"))
-              .withRequestBody(
-                matchingJsonPath(
-                  "dpsCourtChargeId",
-                  equalTo(DPS_COURT_CHARGE_ID),
-                ),
-              )
-              .withRequestBody(
-                matchingJsonPath(
-                  "nomisCourtChargeId",
-                  equalTo(
-                    NOMIS_COURT_CHARGE_ID.toString(),
-                  ),
-                ),
-              ),
-          )
-        }
-        await untilAsserted {
           verify(telemetryClient).trackEvent(
             eq("charge-create-mapping-retry-success"),
             any(),
             isNull(),
           )
         }
+        val request: CourtCaseBatchUpdateAndCreateMappingDto = CourtSentencingMappingApiMockServer.getRequestBody(putRequestedFor(urlEqualTo("/mapping/court-sentencing/court-cases/update-create")))
+        assertThat(request.mappingsToCreate.courtCharges).hasSize(1)
+        assertThat(request.mappingsToCreate.courtCharges[0].dpsCourtChargeId).isEqualTo(DPS_COURT_CHARGE_ID)
+        assertThat(request.mappingsToCreate.courtCharges[0].nomisCourtChargeId).isEqualTo(NOMIS_COURT_CHARGE_ID)
       }
     }
   }
