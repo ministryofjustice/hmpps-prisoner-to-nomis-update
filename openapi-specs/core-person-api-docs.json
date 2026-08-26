@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-08-13.4624.ad0066a"
+    "version" : "2026-08-25.4803.8306cab"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -462,6 +462,43 @@
               "*/*" : {
                 "schema" : {
                   "type" : "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/syscon-sync/aliases-identifiers/{prisonNumber}" : {
+      "post" : {
+        "tags" : [ "Syscon Sync" ],
+        "description" : "Save the prison aliases and identifers for the given prison number. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
+        "operationId" : "saveAliasesAndIdentifiers",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PrisonAliasesAndIdentifiersRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SysconAliasesAndIdentifiersResponseBody"
                 }
               }
             }
@@ -1421,6 +1458,199 @@
         },
         "required" : [ "disability", "modifyDateTime", "modifyUserId" ]
       },
+      "NomisIdentifierId" : {
+        "type" : "object",
+        "properties" : {
+          "nomisOffenderId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The nomis offender id for this identifier",
+            "example" : 10000
+          },
+          "nomisSequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The sequence index for the identifier on the offender",
+            "example" : 1
+          }
+        },
+        "required" : [ "nomisOffenderId", "nomisSequence" ]
+      },
+      "PrisonAlias" : {
+        "type" : "object",
+        "properties" : {
+          "nomisOffenderId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The nomis offender id for this alias",
+            "example" : 10000
+          },
+          "titleCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "The alias title code",
+            "enum" : [ "MR", "MRS", "MISS", "MS", "MX", "REV", "FR", "IMAM", "RABBI", "BR", "SR", "DME", "DR", "LDY", "LRD", "SIR", "UN" ],
+            "example" : "MR"
+          },
+          "firstName" : {
+            "type" : [ "string", "null" ],
+            "description" : "The alias first name",
+            "example" : "Jon"
+          },
+          "middleNames" : {
+            "type" : [ "string", "null" ],
+            "description" : "The alias middles name",
+            "example" : "James"
+          },
+          "lastName" : {
+            "type" : [ "string", "null" ],
+            "description" : "The alias last name",
+            "example" : "Smythe"
+          },
+          "dateOfBirth" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "The alias date of birth",
+            "example" : "1980-01-01"
+          },
+          "sexCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "The alias sex code",
+            "enum" : [ "M", "F", "N", "NS" ],
+            "example" : "M"
+          },
+          "isPrimary" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Indicates if this is a primary alias",
+            "example" : true
+          },
+          "birthPlace" : {
+            "type" : [ "string", "null" ],
+            "description" : "Birth place of this offender record"
+          },
+          "birthCountry" : {
+            "type" : [ "string", "null" ],
+            "description" : "Birth country of this offender record",
+            "enum" : [ "ABW", "AFG", "AGO", "AIA", "AKR", "ALA", "ALB", "AND", "ANT", "ARE", "ARG", "ARM", "ASM", "ATA", "ATF", "ATG", "AUS", "AUT", "AZE", "BDI", "BEL", "BEN", "BES", "BFA", "BGD", "BGR", "BHR", "BHS", "BIH", "BLM", "BLR", "BLZ", "BMU", "BOL", "BRA", "BRB", "BRN", "BTN", "BVT", "BWA", "CAF", "CAN", "CCK", "CHE", "CHL", "CHN", "CI", "CIV", "CMR", "COD", "COG", "COK", "COL", "COM", "CPV", "CRI", "CUB", "CUW", "CXR", "CYM", "CYP", "CZE", "DEU", "DJI", "DKL", "DMA", "DNK", "DOM", "DZA", "ECU", "EGY", "ENG", "ERI", "ESH", "ESP", "EST", "ETH", "FIN", "FJI", "FLK", "FRA", "FRO", "FSM", "FXX", "GAB", "GBR", "GEO", "GGY", "GHA", "GIB", "GIN", "GLP", "GMB", "GNB", "GNQ", "GRC", "GRD", "GRL", "GTM", "GUF", "GUM", "GUY", "HKG", "HMD", "HND", "HRV", "HTI", "HUN", "IDN", "IMN", "IND", "IOT", "IRL", "IRN", "IRQ", "ISL", "ISR", "ITA", "JAM", "JEY", "JOR", "JPN", "KAZ", "KEN", "KGZ", "KHM", "KIR", "KNA", "KOR", "KOS", "KWT", "LAO", "LBN", "LBR", "LBY", "LCA", "LIE", "LKA", "LSO", "LTU", "LUX", "LVA", "MAC", "MAF", "MAR", "MCO", "MDA", "MDG", "MDV", "MEX", "MHL", "MKD", "MLI", "MLT", "MMR", "MNE", "MNG", "MNP", "MOZ", "MRT", "MSR", "MTQ", "MUS", "MWI", "MYS", "MYT", "NAM", "NCL", "NER", "NFK", "NGA", "NI", "NIC", "NIU", "NLD", "NOR", "NPL", "NRU", "NZL", "OMN", "PAK", "PAN", "PCN", "PER", "PHL", "PLW", "PNG", "POL", "PRI", "PRK", "PRT", "PRY", "PSE", "PYF", "QAT", "REU", "ROU", "RUS", "RWA", "SAU", "SCG", "SCOT", "SDN", "SEN", "SGP", "SGS", "SHN", "SJM", "SLB", "SLE", "SLV", "SMR", "SOM", "SPM", "SRB", "SSD", "STP", "SU", "SUR", "SVK", "SVN", "SWE", "SWZ", "SXM", "SYC", "SYR", "TCA", "TCD", "TGO", "THA", "TJK", "TKL", "TKM", "TLS", "TON", "TTO", "TUN", "TUR", "TUV", "TWN", "TZA", "UGA", "UKR", "UMI", "URY", "USA", "UZB", "VAT", "VCT", "VEN", "VGB", "VIR", "VNM", "VUT", "WALES", "WLF", "WSM", "XRK", "XX", "XZ", "YEM", "YU", "ZAF", "ZMB", "ZWE" ]
+          },
+          "ethnicity" : {
+            "type" : [ "string", "null" ],
+            "description" : "Ethnicity of this offender record",
+            "enum" : [ "A1", "A2", "A3", "A4", "A9", "B1", "B2", "B9", "ETH03", "M1", "M2", "M3", "M9", "MERGE", "NS", "O1", "O2", "O9", "UN", "W1", "W2", "W3", "W4", "W5", "W8", "W9", "Z1" ]
+          },
+          "createDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Date this offender record was created"
+          }
+        },
+        "required" : [ "nomisOffenderId" ]
+      },
+      "PrisonAliasesAndIdentifiersRequest" : {
+        "type" : "object",
+        "properties" : {
+          "aliases" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonAlias"
+            },
+            "minItems" : 1
+          },
+          "identifiers" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonIdentifier"
+            },
+            "minItems" : 1
+          }
+        },
+        "required" : [ "aliases", "identifiers" ]
+      },
+      "PrisonIdentifier" : {
+        "type" : "object",
+        "properties" : {
+          "nomisIdentifierId" : {
+            "$ref" : "#/components/schemas/NomisIdentifierId",
+            "description" : "The nomis identifier id"
+          },
+          "type" : {
+            "type" : "string",
+            "description" : "The identifier type",
+            "enum" : [ "PNC", "CRO", "NATIONAL_INSURANCE_NUMBER", "DRIVER_LICENSE_NUMBER", "ARREST_SUMMONS_NUMBER", "AAMR", "ACC", "APNC", "AMRL", "ASN", "URN", "DRL", "DNOMS", "XIMMN", "XNOMS", "IMMN", "DOFF", "LCRN", "LBCN", "LIFN", "MFCRN", "MTCRN", "MSVN", "NHS", "NOMS", "OTHR", "PCRN", "PARN", "PST", "AI02", "PRNOMS", "SPNC", "NPNC", "VISO", "YCRN", "UNKNOWN" ],
+            "example" : "PNC"
+          },
+          "value" : {
+            "type" : "string",
+            "description" : "The identifier value",
+            "example" : "2000/1234567A"
+          },
+          "comment" : {
+            "type" : [ "string", "null" ],
+            "description" : "The identifier comment",
+            "example" : "Some comment"
+          },
+          "issuedAuthority" : {
+            "type" : [ "string", "null" ],
+            "description" : "The issued authority",
+            "example" : "Police"
+          },
+          "issuedDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "The issued date"
+          },
+          "verified" : {
+            "type" : "boolean",
+            "description" : "Verified"
+          }
+        },
+        "required" : [ "nomisIdentifierId", "type", "value", "verified" ]
+      },
+      "SysconAliasMapping" : {
+        "type" : "object",
+        "properties" : {
+          "nomisOffenderId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "cprAliasId" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "cprAliasId", "nomisOffenderId" ]
+      },
+      "SysconAliasesAndIdentifiersResponseBody" : {
+        "type" : "object",
+        "properties" : {
+          "prisonNumber" : {
+            "type" : "string"
+          },
+          "aliasesMappings" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SysconAliasMapping"
+            }
+          },
+          "identifiersMappings" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SysconIdentifierMapping"
+            }
+          }
+        },
+        "required" : [ "aliasesMappings", "identifiersMappings", "prisonNumber" ]
+      },
+      "SysconIdentifierMapping" : {
+        "type" : "object",
+        "properties" : {
+          "nomisIdentifierId" : {
+            "$ref" : "#/components/schemas/NomisIdentifierId"
+          },
+          "cprIdentifierId" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "cprIdentifierId", "nomisIdentifierId" ]
+      },
       "PersonSearchRequest" : {
         "type" : "object",
         "properties" : {
@@ -1476,7 +1706,7 @@
           "noFixedAbode" : {
             "type" : [ "boolean", "null" ],
             "description" : "Person no fixed abode",
-            "examples" : [ "false", "true", "null" ]
+            "examples" : [ false, true, null ]
           },
           "startDate" : {
             "type" : [ "string", "null" ],
@@ -1568,7 +1798,7 @@
           "typeVerified" : {
             "type" : [ "boolean", "null" ],
             "description" : "Person address comment",
-            "examples" : [ "false", "true", "null" ]
+            "examples" : [ false, true, null ]
           },
           "usages" : {
             "type" : "array",
@@ -1935,7 +2165,7 @@
           "typeVerified" : {
             "type" : "boolean",
             "description" : "Is the address type verified",
-            "examples" : [ "false", "true" ]
+            "examples" : [ false, true ]
           },
           "usages" : {
             "type" : "array",
