@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.staff
 
+import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.entry
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -13,9 +15,6 @@ import java.util.UUID
 class StaffReconciliationResourceIntTest(
   @Autowired
   private val nomisApi: StaffNomisApiMockServer,
-
-  @Autowired
-  private val mappingService: StaffMappingApiMockServer,
 ) : IntegrationTestBase() {
 
   private val dpsApi = StaffDpsApiExtension.dpsStaffServer
@@ -58,7 +57,7 @@ class StaffReconciliationResourceIntTest(
     }
 
     @Nested
-    inner class HappyPathNoMismatch {
+    inner class HappyPathMatch {
       @Test
       fun `will not return mismatch`() {
         webTestClient.get().uri("/staff/nomis-staff-id/$nomisStaffId/reconciliation")
@@ -72,31 +71,60 @@ class StaffReconciliationResourceIntTest(
 
     @Nested
     inner class HappyPathMismatch {
-      @BeforeEach
-      fun setUp() {
-        stubStaff(
-          nomisStaffId,
-          dpsStaffId,
-          nomisStaffDetails().copy(firstName = "FRED"),
-          dpsStaffDetails().copy(firstName = "BOB"),
-        )
+
+      @Nested
+      inner class MismatchStaffMember {
+        @BeforeEach
+        fun setUp() {
+          stubStaff(
+            nomisStaffId,
+            dpsStaffId,
+            nomisStaffDetails().copy(firstName = "FRED"),
+            dpsStaffDetails().copy(firstName = "BOB"),
+          )
+        }
+
+        @Test
+        fun `will return mismatch`() {
+          webTestClient.get().uri("/staff/nomis-staff-id/$nomisStaffId/reconciliation")
+            .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
+            .exchange()
+            .expectStatus().isOk
+            .expectBody()
+            .jsonPath("$.nomisStaffId").isEqualTo(nomisStaffId)
+            .jsonPath("$.dpsStaffId").isEqualTo(dpsStaffId)
+            .jsonPath("differences").value<Map<String, String>> {
+              assertThat(it).containsExactly(entry("firstName", "nomis=FRED, dps=BOB"))
+            }
+        }
       }
 
-      @Test
-      fun `will return mismatch`() {
-        webTestClient.get().uri("/staff/nomis-staff-id/$nomisStaffId/reconciliation")
-          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
-          .exchange()
-          .expectStatus().isOk
-          .expectBody()
-          .jsonPath("$.nomisStaffId").isEqualTo(nomisStaffId)
-          .jsonPath("$.dpsStaffId").isEqualTo(dpsStaffId)
-          .jsonPath("$.reason").isEqualTo("different-staff-details")
-          .jsonPath("$.nomisStaff.firstName").isEqualTo("FRED")
-          .jsonPath("$.dpsStaff.firstName").isEqualTo("BOB")
-      }
+      @Nested
+      inner class MismatchStaffUserAccount {
+        @BeforeEach
+        fun setUp() {
+          stubStaff(
+            nomisStaffId,
+            dpsStaffId,
+            nomisStaffDetails().copy(accounts = listOf(staffAccount().copy(typeCode = "GENERAL"))),
+            dpsStaffDetails(),
+          )
+        }
 
-      // TODO Additional tests for reconciliation differences
+        @Test
+        fun `will return mismatch`() {
+          webTestClient.get().uri("/staff/nomis-staff-id/$nomisStaffId/reconciliation")
+            .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
+            .exchange()
+            .expectStatus().isOk
+            .expectBody()
+            .jsonPath("$.nomisStaffId").isEqualTo(nomisStaffId)
+            .jsonPath("$.dpsStaffId").isEqualTo(dpsStaffId)
+            .jsonPath("differences").value<Map<String, String>> {
+              assertThat(it).containsExactly(entry("accounts[0].typeCode", "nomis=GENERAL, dps=ADMIN"))
+            }
+        }
+      }
     }
 
     @Nested
@@ -110,9 +138,12 @@ class StaffReconciliationResourceIntTest(
           .expectStatus().isOk
           .expectBody()
           .jsonPath("$.nomisStaffId").isEqualTo(nomisStaffId)
-          // TODO add back in when DPS staff id is returned in the response
-          // .jsonPath("$.dpsStaffId").isEqualTo(dpsStaffId)
-          .jsonPath("$.reason").isEqualTo("dps-record-missing")
+          .jsonPath("$.dpsStaffId").doesNotExist()
+          .jsonPath("differences").value<Map<String, String>> {
+            assertThat(it).containsExactly(
+              entry("dps-record-missing", "true"),
+            )
+          }
       }
     }
   }
