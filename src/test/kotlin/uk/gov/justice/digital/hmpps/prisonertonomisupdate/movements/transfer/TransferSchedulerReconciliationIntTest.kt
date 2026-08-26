@@ -53,9 +53,7 @@ class TransferSchedulerReconciliationIntTest(
         prisoners = listOf(generateOffenderNo(sequence = 1)),
       )
 
-      nomisApi.stubGetOffenderTransferMovements(offenderNo = "A0001TZ")
-      dpsApi.stubGetTransferSchedulerReconciliation(personIdentifier = "A0001TZ")
-      mappingApi.stubGetTransferSchedulerPrisonerMappingIds(prisonerNumber = "A0001TZ")
+      stubEmptyResponses(offender = "A0001TZ")
     }
 
     @Test
@@ -277,6 +275,120 @@ class TransferSchedulerReconciliationIntTest(
           isNull(),
         )
       }
+    }
+  }
+
+  @Nested
+  inner class MissingMappings {
+    private val offender = "A0001TZ"
+    private val dpsScheduleId = UUID.randomUUID()
+    private val dpsScheduledMovementId = UUID.randomUUID()
+    private val dpsUnscheduledMovementId = UUID.randomUUID()
+
+    @BeforeEach
+    fun setUp() = runTest {
+      reset(telemetryClient)
+      nomisPrisonerApi.stubGetAllPrisoners(
+        offenderId = 0,
+        pageSize = 100,
+        prisoners = listOf(generateOffenderNo(sequence = 1)),
+      )
+
+      // stub NOMIS transfers
+      nomisApi.stubGetOffenderTransferMovements(
+        offenderNo = offender,
+        response = offenderTransferMovementsResponse(
+          offenderNo = offender,
+          schedules = listOf(
+            BookingTransferSchedule(
+              schedule = transferScheduleOutResponse(eventId = 123L),
+              movement = transferMovementOutResponse().copy(eventId = 123L, sequence = 3),
+            ),
+          ),
+          unscheduledMovements = listOf(transferMovementOutResponse().copy(transferScheduleOutId = null, sequence = 4)),
+        ),
+      )
+
+      // stub DPS transfers
+      dpsApi.stubGetTransferSchedulerReconciliation(
+        personIdentifier = offender,
+        response = reconciliation(
+          transfers = listOf(
+            ReconciliationTransfer(
+              transfer = SyncTransfer(dpsId = dpsScheduleId, schedule = transferSchedule()),
+              movement = transferMovement(dpsId = dpsScheduledMovementId),
+            ),
+          ),
+          unscheduledMovements = listOf(transferMovement(dpsId = dpsUnscheduledMovementId)),
+        ),
+      )
+
+      // stub no mappings
+      mappingApi.stubGetTransferSchedulerPrisonerMappingIds(
+        prisonerNumber = offender,
+        idMappings = TransferSchedulerPrisonerMappingIdsDto(
+          prisonerNumber = offender,
+          schedules = listOf(),
+          movements = listOf(),
+        ),
+      )
+
+      reconciliationService.generateTransferSchedulerReconciliationReportBatch()
+      awaitReportFinished()
+    }
+
+    @Test
+    fun `should report missing schedule mappings`() = runTest {
+      verify(telemetryClient).trackEvent(
+        eq("transfer-scheduler-reconciliation-mismatch"),
+        eq(
+          mapOf(
+            "offenderNo" to offender,
+            "type" to "MISSING_MAPPING_SCHEDULE",
+            "nomisCount" to "1",
+            "dpsCount" to "1",
+            "unexpected-nomis-ids" to "[123]",
+            "unexpected-dps-ids" to "[$dpsScheduleId]",
+          ),
+        ),
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `should report missing scheduled movement mappings`() = runTest {
+      verify(telemetryClient).trackEvent(
+        eq("transfer-scheduler-reconciliation-mismatch"),
+        eq(
+          mapOf(
+            "offenderNo" to offender,
+            "type" to "MISSING_MAPPING_SCHEDULED_MOVEMENT",
+            "nomisCount" to "1",
+            "dpsCount" to "1",
+            "unexpected-nomis-ids" to "[12345_3]",
+            "unexpected-dps-ids" to "[$dpsScheduledMovementId]",
+          ),
+        ),
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `should report missing unscheduled movement mappings`() = runTest {
+      verify(telemetryClient).trackEvent(
+        eq("transfer-scheduler-reconciliation-mismatch"),
+        eq(
+          mapOf(
+            "offenderNo" to offender,
+            "type" to "MISSING_MAPPING_UNSCHEDULED_MOVEMENT",
+            "nomisCount" to "1",
+            "dpsCount" to "1",
+            "unexpected-nomis-ids" to "[12345_4]",
+            "unexpected-dps-ids" to "[$dpsUnscheduledMovementId]",
+          ),
+        ),
+        isNull(),
+      )
     }
   }
 
