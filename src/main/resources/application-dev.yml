@@ -17,7 +17,7 @@ api.base.url:
   finance: http://localhost:8080
   incentives: http://localhost:8080
   incidents: http://localhost:8080
-  nonAssociations: http://localhost:8080
+  non-associations: http://localhost:8080
   organisations: http://localhost:8080
   personal.relationships: http://localhost:8080
   property: http://localhost:8080

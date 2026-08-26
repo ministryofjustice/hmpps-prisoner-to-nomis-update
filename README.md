@@ -754,6 +754,9 @@ in the mapping service because 2 NAs have both parties the same and also the sam
 and set its sequence to 2. The open one can be identified as being set as such in DPS and has no expiry date in Nomis. If neither has an expiry date in Nomis, a sync from DPS can be forced
 by e.g. editing the comment in the DPS UI, or the NA can be closed by calling the /close nomis-api endpoint.
 
+Also, NA creation in DPS may fail because there is an existing closed NA, and that NA is only closed for 1 of the 2 rows in Nomis.
+In this case the nomis-api may reject the create call with an 'already exists' error.
+
 ## Architecture
 
 Architecture decision records start [here](doc/architecture/decisions/0001-use-adr.md)

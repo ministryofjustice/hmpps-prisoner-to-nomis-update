@@ -30,6 +30,7 @@ class NonAssociationsReconciliationService(
   private companion object {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
+
   suspend fun generateReconciliationReport() {
     val nonAssociationsCount = nomisApiService.getNonAssociations(0, 1).totalElements
 
@@ -162,6 +163,9 @@ class NonAssociationsReconciliationService(
         async { nonAssociationsApiService.getNonAssociationsBetween(id.offenderNo1, id.offenderNo2) }
     }.awaitBoth()
 
+    // WIP - not sure yet if needed:
+    // checkForHalfOpen(nomisListUnsorted, nomisApiService.getNonAssociationDetails(id.offenderNo2, id.offenderNo1))
+
     val nomisListSortedBySequence = nomisListUnsorted.sortedBy { it.typeSequence }
     // Ignore old open records
     val closedPlusOpenLists = nomisListSortedBySequence.partition { closedInNomis(it, today) }
@@ -269,6 +273,26 @@ class NonAssociationsReconciliationService(
         }
     }
     return mismatches to nomisList.size
+  }
+
+  private fun checkForHalfOpen(
+    details: List<NonAssociationResponse>,
+    otherWayRound: List<NonAssociationResponse>,
+  ) {
+    if (details.size != otherWayRound.size) {
+      log.warn("checkForHalfOpen(): different size details lists for ${details.first().offenderNo} - ${details.first().nsOffenderNo}")
+    }
+    details.sortedWith(compareBy(NonAssociationResponse::typeSequence))
+      .zip(otherWayRound.sortedWith(compareBy(NonAssociationResponse::typeSequence)))
+      .forEach { (detail, otherWayRound) ->
+        if (detail.typeSequence != otherWayRound.typeSequence) {
+          log.warn("checkForHalfOpen(): sequences do not match for ${detail.offenderNo} - ${detail.nsOffenderNo} seq=${detail.typeSequence} otherseq = ${otherWayRound.typeSequence}")
+        } else {
+          if ((detail.expiryDate == null) xor (otherWayRound.expiryDate == null)) {
+            log.warn("checkForHalfOpen(): detected half open NA ${detail.offenderNo} - ${detail.nsOffenderNo} seq=${detail.typeSequence}")
+          }
+        }
+      }
   }
 
   internal fun doesNotMatch(
