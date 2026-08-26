@@ -16,13 +16,11 @@ import org.mockito.kotlin.reset
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.StaffMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.StaffIdResponse
 
 class StaffReconciliationIntTest(
   @Autowired private val reconciliationService: StaffReconciliationService,
   @Autowired private val nomisApi: StaffNomisApiMockServer,
-  @Autowired private val mappingApi: StaffMappingApiMockServer,
 ) : IntegrationTestBase() {
 
   private val dpsApi = StaffDpsApiExtension.dpsStaffServer
@@ -35,36 +33,16 @@ class StaffReconciliationIntTest(
       reset(telemetryClient)
       nomisApi.stubGetStaffIds(content = listOf(StaffIdResponse(1), StaffIdResponse(2), StaffIdResponse(3)))
       nomisApi.stubGetStaffIdsFromId(content = listOf(StaffIdResponse(1), StaffIdResponse(2), StaffIdResponse(3)))
-      // dpsApi.stubGetStaffIds(content = listOf(DpsStaffId("100")))
 
       // staffId 1 - matches
-      mappingApi.stubGetStaffByNomisIdOrNull(
-        nomisStaffId = 1,
-        mapping = StaffMappingDto(
-          dpsId = "100",
-          nomisId = 1,
-          mappingType = StaffMappingDto.MappingType.MIGRATED,
-        ),
-      )
       nomisApi.stubGetStaffById(staffId = 1)
       dpsApi.stubGetStaff(nomisStaffId = 1)
 
-      // staffId 2
-      mappingApi.stubGetStaffByNomisIdOrNull(
-        nomisStaffId = 2,
-        mapping = null,
-      )
-      nomisApi.stubGetStaffById(staffId = 2)
+      // staffId 2 - mismatch on firstName
+      nomisApi.stubGetStaffById(staffId = 2, response = nomisStaffDetails(2).copy(firstName = "JIM"))
+      dpsApi.stubGetStaff(nomisStaffId = 2)
 
       // staffId 3 - missing from Dps
-      mappingApi.stubGetStaffByNomisIdOrNull(
-        nomisStaffId = 3,
-        mapping = StaffMappingDto(
-          dpsId = "300",
-          nomisId = 3,
-          mappingType = StaffMappingDto.MappingType.MIGRATED,
-        ),
-      )
       nomisApi.stubGetStaffById(staffId = 3)
       dpsApi.stubGetStaff(nomisStaffId = 3, response = null)
     }
@@ -99,7 +77,7 @@ class StaffReconciliationIntTest(
     }
 
     @Test
-    fun `will output a mismatch for missing DPS staff when mapping exists`() = runTest {
+    fun `will output a mismatch for missing DPS staff`() = runTest {
       reconciliationService.generateReconciliationReportBatch()
       awaitReportFinished()
 
@@ -108,11 +86,25 @@ class StaffReconciliationIntTest(
         eq(
           mapOf(
             "nomisStaffId" to "3",
-            // TODO add back in when dps value returned
-            // "dpsStaffId" to "300",
             "reason" to "dps-record-missing",
           ),
         ),
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `will output a mismatch data`() = runTest {
+      reconciliationService.generateReconciliationReportBatch()
+      awaitReportFinished()
+
+      verify(telemetryClient).trackEvent(
+        eq("staff-reconciliation-mismatch"),
+        check {
+          assertThat(it["nomisStaffId"]).isEqualTo("2")
+          assertThat(it["dpsStaffId"]).isNotEmpty()
+          assertThat(it["firstName"]).isEqualTo("nomis=JIM, dps=JOHN")
+        },
         isNull(),
       )
     }
