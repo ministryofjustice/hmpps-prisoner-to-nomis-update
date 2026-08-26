@@ -476,7 +476,7 @@ class TransferSchedulerReconciliationIntTest(
         reconciliationService.generateTransferSchedulerReconciliationReportBatch()
           .also { awaitReportFinished() }
 
-        verifyTelemetry("START_TIME")
+        verifyTelemetry("SCHEDULE_START_TIME")
       }
 
       @Test
@@ -487,7 +487,7 @@ class TransferSchedulerReconciliationIntTest(
         reconciliationService.generateTransferSchedulerReconciliationReportBatch()
           .also { awaitReportFinished() }
 
-        verifyTelemetry("EVENT_SUBTYPE")
+        verifyTelemetry("SCHEDULE_EVENT_SUBTYPE")
       }
 
       @Test
@@ -498,7 +498,7 @@ class TransferSchedulerReconciliationIntTest(
         reconciliationService.generateTransferSchedulerReconciliationReportBatch()
           .also { awaitReportFinished() }
 
-        verifyTelemetry("FROM_PRISON")
+        verifyTelemetry("SCHEDULE_FROM_PRISON")
       }
 
       @Test
@@ -509,7 +509,7 @@ class TransferSchedulerReconciliationIntTest(
         reconciliationService.generateTransferSchedulerReconciliationReportBatch()
           .also { awaitReportFinished() }
 
-        verifyTelemetry("TO_PRISON")
+        verifyTelemetry("SCHEDULE_TO_PRISON")
       }
 
       @Test
@@ -520,7 +520,7 @@ class TransferSchedulerReconciliationIntTest(
         reconciliationService.generateTransferSchedulerReconciliationReportBatch()
           .also { awaitReportFinished() }
 
-        verifyTelemetry("COMMENT")
+        verifyTelemetry("SCHEDULE_COMMENT")
       }
 
       @Test
@@ -531,7 +531,7 @@ class TransferSchedulerReconciliationIntTest(
         reconciliationService.generateTransferSchedulerReconciliationReportBatch()
           .also { awaitReportFinished() }
 
-        verifyTelemetry("HIDDEN_COMMENT")
+        verifyTelemetry("SCHEDULE_HIDDEN_COMMENT")
       }
 
       @Test
@@ -542,7 +542,7 @@ class TransferSchedulerReconciliationIntTest(
         reconciliationService.generateTransferSchedulerReconciliationReportBatch()
           .also { awaitReportFinished() }
 
-        verifyTelemetry("CANCELLATION_REASON")
+        verifyTelemetry("SCHEDULE_CANCELLATION_REASON")
       }
 
       @Test
@@ -553,13 +553,107 @@ class TransferSchedulerReconciliationIntTest(
         reconciliationService.generateTransferSchedulerReconciliationReportBatch()
           .also { awaitReportFinished() }
 
-        verifyTelemetry("ESCORT")
+        verifyTelemetry("SCHEDULE_ESCORT")
+      }
+    }
+
+    @Nested
+    inner class Waitlists {
+
+      private fun verifyTelemetry(type: String) = verify(telemetryClient).trackEvent(
+        eq("transfer-scheduler-reconciliation-mismatch"),
+        eq(
+          mapOf(
+            "offenderNo" to "A0001TZ",
+            "nomisEventId" to "123",
+            "dpsScheduleId" to "$dpsScheduleId",
+            "type" to type,
+          ),
+        ),
+        isNull(),
+      )
+
+      @Test
+      fun `should report waitlist missing`() = runTest {
+        stubNomis(waitlist = null)
+        stubDps()
+        stubMappings()
+        reconciliationService.generateTransferSchedulerReconciliationReportBatch()
+          .also { awaitReportFinished() }
+
+        verifyTelemetry("WAITLIST")
+      }
+
+      @Test
+      fun `should report different start time`() = runTest {
+        stubNomis(waitlist = stubNomisWaitlist(requestDate = now.toLocalDate()))
+        stubDps()
+        stubMappings()
+        reconciliationService.generateTransferSchedulerReconciliationReportBatch()
+          .also { awaitReportFinished() }
+
+        verifyTelemetry("WAITLIST_REQUESTED_DATE")
+      }
+
+      @Test
+      fun `should report different status date`() = runTest {
+        stubNomis(waitlist = stubNomisWaitlist(statusDate = yesterday.toLocalDate()))
+        stubDps()
+        stubMappings()
+        reconciliationService.generateTransferSchedulerReconciliationReportBatch()
+          .also { awaitReportFinished() }
+
+        verifyTelemetry("WAITLIST_STATUS_DATE")
+      }
+
+      @Test
+      fun `should report different transfer priority`() = runTest {
+        stubNomis(waitlist = stubNomisWaitlist(priority = "1"))
+        stubDps()
+        stubMappings()
+        reconciliationService.generateTransferSchedulerReconciliationReportBatch()
+          .also { awaitReportFinished() }
+
+        verifyTelemetry("WAITLIST_TRANSFER_PRIORITY")
+      }
+
+      @Test
+      fun `should report different approved flag`() = runTest {
+        stubNomis(waitlist = stubNomisWaitlist(approved = false))
+        stubDps()
+        stubMappings()
+        reconciliationService.generateTransferSchedulerReconciliationReportBatch()
+          .also { awaitReportFinished() }
+
+        verifyTelemetry("WAITLIST_APPROVED")
+      }
+
+      @Test
+      fun `should report different cancellation reason`() = runTest {
+        stubNomis(waitlist = stubNomisWaitlist(cancellationReasonCode = "TRANS"))
+        stubDps()
+        stubMappings()
+        reconciliationService.generateTransferSchedulerReconciliationReportBatch()
+          .also { awaitReportFinished() }
+
+        verifyTelemetry("WAITLIST_CANCELLATION_REASON")
+      }
+
+      @Test
+      fun `should report different comment`() = runTest {
+        stubNomis(waitlist = stubNomisWaitlist(comment = "different"))
+        stubDps()
+        stubMappings()
+        reconciliationService.generateTransferSchedulerReconciliationReportBatch()
+          .also { awaitReportFinished() }
+
+        verifyTelemetry("WAITLIST_COMMENT")
       }
     }
 
     fun stubNomis(
       schedule: TransferScheduleOut = stubNomisSchedule(),
-      waitlist: TransferScheduleWaitlist = stubNomisWaitlist(),
+      waitlist: TransferScheduleWaitlist? = stubNomisWaitlist(),
       scheduledMovement: TransferMovementOut = stubNomisMovement(eventId = schedule.eventId, sequence = 3),
       unscheduledMovement: TransferMovementOut = stubNomisMovement(eventId = null, sequence = 4),
     ) {
@@ -652,7 +746,7 @@ class TransferSchedulerReconciliationIntTest(
         response = reconciliation(
           listOf(
             ReconciliationTransfer(
-              transfer = SyncTransfer(dpsId = dpsScheduleId, schedule = stubDpsSchedule()),
+              transfer = SyncTransfer(dpsId = dpsScheduleId, schedule = stubDpsSchedule(), waitlist = stubDpsWaitlist()),
               movement = stubDpsMovement(dpsId = dpsScheduledMovementId, dpsTransferId = dpsScheduleId),
             ),
           ),
@@ -670,7 +764,7 @@ class TransferSchedulerReconciliationIntTest(
       transferPriority: String = "3",
       approved: Boolean = true,
       approvedUsername: String = "some user",
-      outcomeReasonCode: SyncWaitlist.OutcomeReasonCode = SyncWaitlist.OutcomeReasonCode.TRANS,
+      outcomeReasonCode: SyncWaitlist.OutcomeReasonCode = SyncWaitlist.OutcomeReasonCode.ADMI,
       commentText1: String = "some waitlist comment",
     ) = transferWaitlist().copy(
       requestDate = requestDate,

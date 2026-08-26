@@ -17,14 +17,21 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.generateReconc
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.NomisMovementId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.findMatches
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.findMissing
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.MismatchPrisonerScheduleDetails.Type.CANCELLATION_REASON
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.MismatchPrisonerScheduleDetails.Type.COMMENT
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.MismatchPrisonerScheduleDetails.Type.ESCORT
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.MismatchPrisonerScheduleDetails.Type.EVENT_SUBTYPE
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.MismatchPrisonerScheduleDetails.Type.FROM_PRISON
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.MismatchPrisonerScheduleDetails.Type.HIDDEN_COMMENT
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.MismatchPrisonerScheduleDetails.Type.START_TIME
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.MismatchPrisonerScheduleDetails.Type.TO_PRISON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.MismatchPrisonerScheduleDetails.Type.SCHEDULE_CANCELLATION_REASON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.MismatchPrisonerScheduleDetails.Type.SCHEDULE_COMMENT
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.MismatchPrisonerScheduleDetails.Type.SCHEDULE_ESCORT
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.MismatchPrisonerScheduleDetails.Type.SCHEDULE_EVENT_SUBTYPE
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.MismatchPrisonerScheduleDetails.Type.SCHEDULE_FROM_PRISON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.MismatchPrisonerScheduleDetails.Type.SCHEDULE_HIDDEN_COMMENT
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.MismatchPrisonerScheduleDetails.Type.SCHEDULE_START_TIME
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.MismatchPrisonerScheduleDetails.Type.SCHEDULE_TO_PRISON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.MismatchPrisonerScheduleDetails.Type.WAITLIST
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.MismatchPrisonerScheduleDetails.Type.WAITLIST_APPROVED
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.MismatchPrisonerScheduleDetails.Type.WAITLIST_CANCELLATION_REASON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.MismatchPrisonerScheduleDetails.Type.WAITLIST_COMMENT
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.MismatchPrisonerScheduleDetails.Type.WAITLIST_REQUESTED_DATE
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.MismatchPrisonerScheduleDetails.Type.WAITLIST_STATUS_DATE
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.MismatchPrisonerScheduleDetails.Type.WAITLIST_TRANSFER_PRIORITY
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.MismatchedPrisonerTransferIds.Type.MISSING_MAPPING_SCHEDULE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.MismatchedPrisonerTransferIds.Type.MISSING_MAPPING_SCHEDULED_MOVEMENT
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.MismatchedPrisonerTransferIds.Type.MISSING_MAPPING_UNSCHEDULED_MOVEMENT
@@ -326,46 +333,85 @@ class TransferScheduleReconciliationService(
     mappings.matchingSchedules(nomisScheduleIds, dpsScheduleIds).forEach { (nomisId, dpsId) ->
       fun mismatch(type: MismatchPrisonerScheduleDetails.Type, nomisValue: String, dpsValue: String) = MismatchPrisonerScheduleDetails(offenderNo, type, nomisId, dpsId, nomisValue, dpsValue)
       val nomisSchedule = nomisTransfers.findSchedule(nomisId)
+      val nomisWaitlist = nomisSchedule.waitlist
       val dpsSchedule = dpsTransfers.findSchedule(dpsId)
+      val dpsWaitlist = dpsTransfers.findWaitlist(dpsId)
 
       // cancellation reason
       if (nomisSchedule.cancellationReasonCode != dpsSchedule.outcomeReasonCode) {
-        mismatches.add(mismatch(CANCELLATION_REASON, "${nomisSchedule.cancellationReasonCode}", "${dpsSchedule.outcomeReasonCode}"))
+        mismatches.add(mismatch(SCHEDULE_CANCELLATION_REASON, "${nomisSchedule.cancellationReasonCode}", "${dpsSchedule.outcomeReasonCode}"))
       }
 
       // comment
       if (nomisSchedule.comment != dpsSchedule.commentText) {
-        mismatches.add(mismatch(COMMENT, "${nomisSchedule.comment}", "${dpsSchedule.commentText}"))
+        mismatches.add(mismatch(SCHEDULE_COMMENT, "${nomisSchedule.comment}", "${dpsSchedule.commentText}"))
       }
 
       // escort
       if (nomisSchedule.escortCode != dpsSchedule.escortCode) {
-        mismatches.add(mismatch(ESCORT, "${nomisSchedule.escortCode}", "${dpsSchedule.escortCode}"))
+        mismatches.add(mismatch(SCHEDULE_ESCORT, "${nomisSchedule.escortCode}", "${dpsSchedule.escortCode}"))
       }
 
       // event subtype
       if (nomisSchedule.eventSubType != dpsSchedule.eventSubType) {
-        mismatches.add(mismatch(EVENT_SUBTYPE, nomisSchedule.eventSubType, dpsSchedule.eventSubType))
+        mismatches.add(mismatch(SCHEDULE_EVENT_SUBTYPE, nomisSchedule.eventSubType, dpsSchedule.eventSubType))
       }
 
       // from prison
       if (nomisSchedule.fromPrison != dpsSchedule.agyLocId) {
-        mismatches.add(mismatch(FROM_PRISON, nomisSchedule.fromPrison, dpsSchedule.agyLocId))
+        mismatches.add(mismatch(SCHEDULE_FROM_PRISON, nomisSchedule.fromPrison, dpsSchedule.agyLocId))
       }
 
       // hidden comment
       if (nomisSchedule.hiddenComment != dpsSchedule.hiddenCommentText) {
-        mismatches.add(mismatch(HIDDEN_COMMENT, "${nomisSchedule.hiddenComment}", "${dpsSchedule.hiddenCommentText}"))
+        mismatches.add(mismatch(SCHEDULE_HIDDEN_COMMENT, "${nomisSchedule.hiddenComment}", "${dpsSchedule.hiddenCommentText}"))
       }
 
       // start time
       if (nomisSchedule.startTime != dpsSchedule.start) {
-        mismatches.add(mismatch(START_TIME, "${nomisSchedule.startTime}", "${dpsSchedule.start}"))
+        mismatches.add(mismatch(SCHEDULE_START_TIME, "${nomisSchedule.startTime}", "${dpsSchedule.start}"))
       }
 
       // to prison
       if (nomisSchedule.toPrison != dpsSchedule.toAgyLocId) {
-        mismatches.add(mismatch(TO_PRISON, "${nomisSchedule.toPrison}", "${dpsSchedule.toAgyLocId}"))
+        mismatches.add(mismatch(SCHEDULE_TO_PRISON, "${nomisSchedule.toPrison}", "${dpsSchedule.toAgyLocId}"))
+      }
+
+      // waitlist exists
+      if ((nomisWaitlist == null) != (dpsWaitlist == null)) {
+        mismatches.add(mismatch(WAITLIST, "${nomisWaitlist == null}", "${dpsWaitlist == null}"))
+      }
+
+      if (nomisWaitlist != null && dpsWaitlist != null) {
+        // waitlist requested date
+        if (nomisWaitlist.requestDate != dpsWaitlist.requestDate) {
+          mismatches.add(mismatch(WAITLIST_REQUESTED_DATE, "${nomisWaitlist.requestDate}", "${dpsWaitlist.requestDate}"))
+        }
+
+        // waitlist status date
+        if (nomisWaitlist.statusDate != dpsWaitlist.statusDate) {
+          mismatches.add(mismatch(WAITLIST_STATUS_DATE, "${nomisWaitlist.statusDate}", "${dpsWaitlist.statusDate}"))
+        }
+
+        // waitlist transfer priority
+        if (nomisWaitlist.priority != dpsWaitlist.transferPriority) {
+          mismatches.add(mismatch(WAITLIST_TRANSFER_PRIORITY, nomisWaitlist.priority, dpsWaitlist.transferPriority))
+        }
+
+        // waitlist approved
+        if (nomisWaitlist.approved != dpsWaitlist.approved) {
+          mismatches.add(mismatch(WAITLIST_APPROVED, "${nomisWaitlist.approved}", "${dpsWaitlist.approved}"))
+        }
+
+        // waitlist cancellation reason
+        if (nomisWaitlist.cancellationReasonCode != dpsWaitlist.outcomeReasonCode?.value) {
+          mismatches.add(mismatch(WAITLIST_CANCELLATION_REASON, "${nomisWaitlist.cancellationReasonCode}", "${dpsWaitlist.outcomeReasonCode?.value}"))
+        }
+
+        // waitlist comment
+        if (nomisWaitlist.comment != dpsWaitlist.commentText1) {
+          mismatches.add(mismatch(WAITLIST_COMMENT, "${nomisWaitlist.comment}", "${dpsWaitlist.commentText1}"))
+        }
       }
     }
 
@@ -425,6 +471,7 @@ class TransferScheduleReconciliationService(
     ?: throw IllegalStateException("Unable to find schedule for eventId=$eventId despite having matched it earlier. This should not happen!")
   private fun ReconciliationResponse.findSchedule(dpsId: UUID) = transfers.map { it.transfer }.find { it.dpsId == dpsId }?.schedule
     ?: throw IllegalStateException("Unable to find schedule for dpsId=$dpsId despite having matched it earlier. Has there been a merge or move court event mid reconciliation?")
+  private fun ReconciliationResponse.findWaitlist(dpsId: UUID) = transfers.map { it.transfer }.find { it.dpsId == dpsId }?.waitlist
 }
 
 abstract class MismatchedPrisonerTransfer(
@@ -459,13 +506,20 @@ class MismatchPrisonerScheduleDetails(
   val dpsValue: String,
 ) : MismatchedPrisonerTransfer(offenderNo, type.name) {
   enum class Type {
-    CANCELLATION_REASON,
-    COMMENT,
-    ESCORT,
-    EVENT_SUBTYPE,
-    FROM_PRISON,
-    HIDDEN_COMMENT,
-    START_TIME,
-    TO_PRISON,
+    SCHEDULE_CANCELLATION_REASON,
+    SCHEDULE_COMMENT,
+    SCHEDULE_ESCORT,
+    SCHEDULE_EVENT_SUBTYPE,
+    SCHEDULE_FROM_PRISON,
+    SCHEDULE_HIDDEN_COMMENT,
+    SCHEDULE_START_TIME,
+    SCHEDULE_TO_PRISON,
+    WAITLIST,
+    WAITLIST_REQUESTED_DATE,
+    WAITLIST_STATUS_DATE,
+    WAITLIST_TRANSFER_PRIORITY,
+    WAITLIST_APPROVED,
+    WAITLIST_CANCELLATION_REASON,
+    WAITLIST_COMMENT,
   }
 }
