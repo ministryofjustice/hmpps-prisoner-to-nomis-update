@@ -4,7 +4,6 @@ import kotlinx.coroutines.reactor.awaitSingle
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
-import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.api.CsraMappingResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CsraMappingDto
@@ -17,9 +16,6 @@ class CsraMappingService(
   retryApiService: RetryApiService,
 ) {
   private val api = CsraMappingResourceApi(webClient)
-  private val retrySpec = retryApiService.getBackoffSpec().withRetryContext(
-    Context.of("api", "CsraMappingService"),
-  )
 
   suspend fun create(csraMappingDto: CsraMappingDto) = api
     .createCsraMapping(csraMappingDto)
