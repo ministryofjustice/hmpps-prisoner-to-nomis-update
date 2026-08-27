@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing
 
+import kotlinx.coroutines.reactor.awaitSingle
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.http.HttpEntity
 import org.springframework.http.ResponseEntity
@@ -9,6 +10,7 @@ import org.springframework.web.reactive.function.client.awaitBodilessEntity
 import org.springframework.web.reactive.function.client.awaitBody
 import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyWithRetry
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.CourtSentencingResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingCourtCaseCloneResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CaseIdentifierRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ConvertToRecallRequest
@@ -17,6 +19,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtCaseRepairRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtCaseRepairResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtCaseResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateBreachAppearanceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCourtAppearanceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCourtCaseRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCourtCaseResponse
@@ -36,6 +39,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiServi
 
 @Service
 class CourtSentencingNomisApiService(@Qualifier("nomisApiWebClient") private val webClient: WebClient, retryApiService: RetryApiService) {
+  private val api = CourtSentencingResourceApi(webClient)
 
   suspend fun createCourtCase(offenderNo: String, request: CreateCourtCaseRequest): CreateCourtCaseResponse = webClient.post()
     .uri("/prisoners/{offenderNo}/sentencing/court-cases", offenderNo)
@@ -64,6 +68,8 @@ class CourtSentencingNomisApiService(@Qualifier("nomisApiWebClient") private val
     .bodyValue(request)
     .retrieve()
     .awaitBody()
+
+  suspend fun createBreachCourtAppearance(offenderNo: String, nomisCourtCaseId: Long, request: CreateBreachAppearanceRequest): CreateCourtAppearanceResponse = api.createBreachCourtAppearance(offenderNo, nomisCourtCaseId, request).awaitSingle()
 
   suspend fun createCourtCharge(offenderNo: String, nomisCourtCaseId: Long, request: OffenderChargeRequest): OffenderChargeIdResponse = webClient.post()
     .uri("/prisoners/{offenderNo}/sentencing/court-cases/{courtCaseId}/charges", offenderNo, nomisCourtCaseId)

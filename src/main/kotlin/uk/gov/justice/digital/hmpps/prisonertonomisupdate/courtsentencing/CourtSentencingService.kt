@@ -39,6 +39,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ConvertToRecallResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtAppearanceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtEventChargeRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateBreachAppearanceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCourtAppearanceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCourtCaseRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceRequest
@@ -226,16 +227,30 @@ class CourtSentencingService(
           telemetryMap["courtEventChargesWithOutcomes"] = courtEventChargesToUpdateWithOutcomes.toString()
 
           tryUpdate {
-            nomisApiService.createCourtAppearance(
-              offenderNo,
-              courtCaseMapping.nomisCourtCaseId,
-              courtAppearance.toNomisCourtAppearance(
-                courtEventChargesWithOutcomes = courtEventChargesToUpdateWithOutcomes,
-                isOnFutureCourtAppearance = createEvent.additionalInformation.isOnFutureCourtAppearance,
-                forceClone = forceClone,
-                forcePreventClone = forcePreventClone,
-              ),
+            val courtAppearanceRequest = courtAppearance.toNomisCourtAppearance(
+              courtEventChargesWithOutcomes = courtEventChargesToUpdateWithOutcomes,
+              isOnFutureCourtAppearance = createEvent.additionalInformation.isOnFutureCourtAppearance,
+              forceClone = forceClone,
+              forcePreventClone = forcePreventClone,
             )
+
+            if (createEvent.additionalInformation.isBreach == true) {
+              // send both identifiers and court appearance together incase there is a clone
+              nomisApiService.createBreachCourtAppearance(
+                offenderNo,
+                courtCaseMapping.nomisCourtCaseId,
+                CreateBreachAppearanceRequest(
+                  courtAppearance = courtAppearanceRequest,
+                  caseIdentifiers = CaseIdentifierRequest(courtSentencingApiService.getCourtCase(dpsCourtCaseId).getNomisCaseIdentifiers()),
+                ),
+              )
+            } else {
+              nomisApiService.createCourtAppearance(
+                offenderNo,
+                courtCaseMapping.nomisCourtCaseId,
+                courtAppearanceRequest,
+              )
+            }
           }.also { response ->
             telemetryMap["nomisCourtAppearanceId"] = response.id.toString()
           }.toCourtCaseBatchMappingDto(dpsCourtAppearanceId = dpsCourtAppearanceId, offenderNo = offenderNo)
