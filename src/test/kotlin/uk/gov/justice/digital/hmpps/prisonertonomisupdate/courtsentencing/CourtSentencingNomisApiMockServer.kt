@@ -142,6 +142,9 @@ class CourtSentencingNomisApiMockServer {
   fun stubCourtAppearanceCreate(offenderNo: String, courtCaseId: Long, response: CreateCourtAppearanceResponse) {
     stubPost("/prisoners/$offenderNo/sentencing/court-cases/$courtCaseId/court-appearances", response = response)
   }
+  fun stubBreachCourtAppearanceCreate(offenderNo: String, courtCaseId: Long, response: CreateCourtAppearanceResponse) {
+    stubPost("/prisoners/$offenderNo/sentencing/court-cases/$courtCaseId/breach-court-appearances", response = response)
+  }
 
   fun stubCourtAppearanceCreateSuccessAfterError(
     offenderNo: String,
