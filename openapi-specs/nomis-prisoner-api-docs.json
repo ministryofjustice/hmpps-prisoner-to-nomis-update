@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-08-26.1973.e6abffc"
+    "version" : "2026-08-27.1977.dc855f5"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -34554,12 +34554,12 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paged" : {
+            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -41034,6 +41034,11 @@
             "type" : "number",
             "description" : "The account balance",
             "example" : "12.50"
+          },
+          "holdBalance" : {
+            "type" : "number",
+            "description" : "The account hold balance",
+            "example" : "2.50"
           }
         },
         "required" : [ "accountCode", "balance", "prisonId" ]
@@ -41076,6 +41081,11 @@
             "type" : "number",
             "description" : "The account balance",
             "example" : "12.50"
+          },
+          "holdBalance" : {
+            "type" : "number",
+            "description" : "The hold balance",
+            "example" : "1.50"
           }
         },
         "required" : [ "accountCode", "balance" ]
