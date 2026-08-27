@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-08-25.2379.8fd1644"
+    "version" : "2026-08-27.2398.eb00bcf"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -4078,6 +4078,58 @@
         }
       }
     },
+    "/sentence/has-active-sentences-after-on-other-court-appearance" : {
+      "get" : {
+        "tags" : [ "sentence-controller" ],
+        "summary" : "Sentences that have an active sentence consecutive to them outside of the given selection",
+        "description" : "Given a set of sentence uuids, returns the uuids of those sentences that have another active sentence consecutive to them which is not part of the given selection. An empty list means none of the selection is blocked.",
+        "operationId" : "hasActiveSentencesAfterOnOtherCourtAppearance",
+        "parameters" : [ {
+          "name" : "sentenceUuids",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns the sentence uuids with an active sentence after them, empty if none",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SentenceUuidsWithActiveSentencesAfterResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SentenceUuidsWithActiveSentencesAfterResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SentenceUuidsWithActiveSentencesAfterResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/sentence/consecutive-to-details" : {
       "get" : {
         "tags" : [ "sentence-controller" ],
@@ -7282,7 +7334,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "00:12:32.956563198"
+            "example" : "10:11:03.017277811"
           },
           "outcomeDispositionCode" : {
             "type" : [ "string", "null" ]
@@ -7653,7 +7705,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "00:12:32.956563198"
+            "example" : "10:11:03.017277811"
           },
           "courtCode" : {
             "type" : "string"
@@ -9879,6 +9931,19 @@
         },
         "required" : [ "hasSentenceAfterOnOtherCourtAppearance" ]
       },
+      "SentenceUuidsWithActiveSentencesAfterResponse" : {
+        "type" : "object",
+        "properties" : {
+          "sentenceUuidsWithActiveSentencesAfter" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        },
+        "required" : [ "sentenceUuidsWithActiveSentencesAfter" ]
+      },
       "SentenceConsecutiveToDetails" : {
         "type" : "object",
         "properties" : {
@@ -10541,7 +10606,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "00:12:32.956563198"
+            "example" : "10:11:03.017277811"
           },
           "courtCode" : {
             "type" : "string"
@@ -11229,7 +11294,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "00:12:32.956563198"
+            "example" : "10:11:03.017277811"
           },
           "nomisOutcomeCode" : {
             "type" : [ "string", "null" ]
@@ -11308,7 +11373,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "00:12:32.956563198"
+            "example" : "10:11:03.017277811"
           },
           "courtId" : {
             "type" : "string"
@@ -11460,7 +11525,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "00:12:32.956563198"
+            "example" : "10:11:03.017277811"
           },
           "charges" : {
             "type" : "array",
@@ -11497,7 +11562,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "00:12:32.956563198"
+            "example" : "10:11:03.017277811"
           },
           "courtId" : {
             "type" : "string"
@@ -11784,14 +11849,14 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
+          "pageSize" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
           "paged" : {
             "type" : "boolean"
           },
           "pageNumber" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "pageSize" : {
             "type" : "integer",
             "format" : "int32"
           },
@@ -12087,7 +12152,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "00:12:32.956563198"
+            "example" : "10:11:03.017277811"
           },
           "courtCode" : {
             "type" : [ "string", "null" ]
