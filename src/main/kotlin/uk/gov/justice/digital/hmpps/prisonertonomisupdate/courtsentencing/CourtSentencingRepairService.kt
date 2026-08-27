@@ -228,7 +228,7 @@ class CourtSentencingRepairService(
 
   suspend fun resynchroniseSentenceTermUpdateToNomis(offenderNo: String, courtCaseId: String, courtAppearanceId: String, sentenceId: String, periodLengthId: String) {
     courtSentencingService.updateSentenceTerm(
-      createEvent = CourtSentencingService.PeriodLengthCreatedEvent(
+      updateEvent = CourtSentencingService.PeriodLengthCreatedEvent(
         personReference = PersonReferenceList(
           identifiers = listOf(
             PersonReference(
@@ -262,7 +262,7 @@ class CourtSentencingRepairService(
 
   suspend fun resynchroniseChargeUpdateToNomis(offenderNo: String, courtCaseId: String, courtAppearanceId: String, chargeId: String) {
     courtSentencingService.updateCharge(
-      createEvent = CourtSentencingService.CourtChargeCreatedEvent(
+      updateEvent = CourtSentencingService.CourtChargeCreatedEvent(
         personReference = PersonReferenceList(
           identifiers = listOf(
             PersonReference(

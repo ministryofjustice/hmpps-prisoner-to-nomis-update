@@ -68,8 +68,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
-import java.util.UUID
-import kotlin.collections.plus
+import java.util.*
 
 typealias MappingSentenceId = uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceId
 
@@ -505,8 +504,7 @@ class CourtSentencingService(
           nomisApiService.createCourtCharge(
             offenderNo,
             courtCaseMapping.nomisCourtCaseId,
-            // TODO isBreach acts like a feature switch - so we will not set it yet
-            charge.toNomisCourtCharge(isOnFutureCourtAppearance = futureCourtAppearance, isBreach = false),
+            charge.toNomisCourtCharge(isOnFutureCourtAppearance = futureCourtAppearance, isBreach = createEvent.additionalInformation.isBreach == true),
           ).let { response ->
             telemetryMap["nomisChargeId"] = response.offenderChargeId.toString()
             telemetryMap["nomisCourtCaseId"] = courtCaseMapping.nomisCourtCaseId.toString()
@@ -531,14 +529,14 @@ class CourtSentencingService(
     }
   }
 
-  suspend fun updateCharge(createEvent: CourtChargeCreatedEvent) {
-    val chargeId = createEvent.additionalInformation.courtChargeId
-    val source = createEvent.additionalInformation.source
-    val courtCaseId = createEvent.additionalInformation.courtCaseId
-    val courtAppearanceId = createEvent.additionalInformation.courtAppearanceId!!
-    val futureCourtAppearance = createEvent.additionalInformation.isOnFutureAppearance == true
-    val offenderNo: String = eventOffenderNo(createEvent.personReference)
-    val telemetryMap = createEvent.asTelemetry()
+  suspend fun updateCharge(updateEvent: CourtChargeCreatedEvent) {
+    val chargeId = updateEvent.additionalInformation.courtChargeId
+    val source = updateEvent.additionalInformation.source
+    val courtCaseId = updateEvent.additionalInformation.courtCaseId
+    val courtAppearanceId = updateEvent.additionalInformation.courtAppearanceId!!
+    val futureCourtAppearance = updateEvent.additionalInformation.isOnFutureAppearance == true
+    val offenderNo: String = eventOffenderNo(updateEvent.personReference)
+    val telemetryMap = updateEvent.asTelemetry()
     if (isDpsCreated(source)) {
       track("charge-updated", telemetryMap) {
         courtSentencingApiService.getCourtChargeByAppearanceOrNull(appearanceId = courtAppearanceId, chargeId = chargeId)
@@ -552,8 +550,7 @@ class CourtSentencingService(
             val chargeMapping = retrieveParentChargeMapping(chargeId)
             telemetryMap["nomisChargeId"] = chargeMapping.nomisCourtChargeId.toString()
 
-            // TODO isBreach acts like a feature switch - so we will not set it yet but will eventually come from createEvent
-            val nomisCourtCharge = dpsCharge.toNomisCourtCharge(isOnFutureCourtAppearance = futureCourtAppearance, isBreach = false)
+            val nomisCourtCharge = dpsCharge.toNomisCourtCharge(isOnFutureCourtAppearance = futureCourtAppearance, isBreach = updateEvent.additionalInformation.isBreach == true)
             telemetryMap["nomisOutcomeCode"] = nomisCourtCharge.resultCode1 ?: "null"
             telemetryMap["nomisOffenceCode"] = nomisCourtCharge.offenceCode
             nomisApiService.updateCourtCharge(
@@ -819,14 +816,6 @@ class CourtSentencingService(
     }
   }
 
-  suspend fun createChargeRetry(message: CreateMappingRetryMessage<CourtChargeMappingDto>) = courtCaseMappingService.createChargeMapping(message.mapping).also {
-    telemetryClient.trackEvent(
-      "charge-create-mapping-retry-success",
-      message.telemetryAttributes,
-      null,
-    )
-  }
-
   suspend fun createSentenceRetry(message: CreateMappingRetryMessage<SentenceMappingDto>) = courtCaseMappingService.createSentenceMapping(message.mapping).also {
     telemetryClient.trackEvent(
       "sentence-mapping-retry-success",
@@ -1031,8 +1020,7 @@ class CourtSentencingService(
           val nomisSentenceTermResponse =
             nomisApiService.createSentenceTerm(
               offenderNo,
-              // TODO isBreach acts like a feature switch - so we will not set it yet but will eventually come from createEvent
-              request = dpsPeriodLength.toNomisSentenceTerm(isBreach = false),
+              request = dpsPeriodLength.toNomisSentenceTerm(isBreach = createEvent.additionalInformation.isBreach == true),
               caseId = courtCaseMapping.nomisCourtCaseId,
               sentenceSeq = sentenceMapping.nomisSentenceSequence,
             )
@@ -1415,12 +1403,12 @@ class CourtSentencingService(
     LegacyRecall.RecallType.FTR_56 -> true
   }
 
-  suspend fun updateSentenceTerm(createEvent: PeriodLengthCreatedEvent) {
-    val courtCaseId = createEvent.additionalInformation.courtCaseId
-    val source = createEvent.additionalInformation.source
-    val termId = createEvent.additionalInformation.periodLengthId
-    val offenderNo: String = eventOffenderNo(createEvent.personReference)
-    val telemetryMap = createEvent.asTelemetry()
+  suspend fun updateSentenceTerm(updateEvent: PeriodLengthCreatedEvent) {
+    val courtCaseId = updateEvent.additionalInformation.courtCaseId
+    val source = updateEvent.additionalInformation.source
+    val termId = updateEvent.additionalInformation.periodLengthId
+    val offenderNo: String = eventOffenderNo(updateEvent.personReference)
+    val telemetryMap = updateEvent.asTelemetry()
 
     if (isDpsCreated(source)) {
       track("sentence-term-updated", telemetryMap) {
@@ -1438,8 +1426,7 @@ class CourtSentencingService(
             caseId = courtCaseMapping.nomisCourtCaseId,
             sentenceSeq = sentenceTermMapping.nomisSentenceSequence,
             termSeq = sentenceTermMapping.nomisTermSequence,
-            // TODO isBreach acts like a feature switch - so we will not set it yet but will eventually come from createEvent
-            request = dpsPeriodLength.toNomisSentenceTerm(isBreach = false),
+            request = dpsPeriodLength.toNomisSentenceTerm(isBreach = updateEvent.additionalInformation.isBreach == true),
           )
         } ?: run {
           telemetryMap["reason"] = "DPS sentence term $termId does not exist in RaS"

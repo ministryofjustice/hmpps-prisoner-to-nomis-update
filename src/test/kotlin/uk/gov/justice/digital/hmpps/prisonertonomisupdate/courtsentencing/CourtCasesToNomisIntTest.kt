@@ -61,6 +61,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Cr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceTermResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderChargeIdResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderChargeRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceIdAndAdjustmentIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceIdAndAdjustmentsCreated
@@ -1823,9 +1824,15 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         courtSentencingMappingApi.stubGetCourtChargeMappingGivenDpsIdWithError(DPS_COURT_CHARGE_ID, 404)
         courtSentencingMappingApi.stubUpdateAndCreateMappings()
 
-        publishCreateCourtChargeDomainEvent(courtAppearanceId = DPS_COURT_APPEARANCE_ID)
+        publishCreateCourtChargeDomainEvent(courtAppearanceId = DPS_COURT_APPEARANCE_ID, isBreach = true)
 
         waitForAnyProcessingToComplete("charge-create-cases-cloned")
+      }
+
+      @Test
+      fun `will call nomis api to create the Charge with breach set`() {
+        val request: OffenderChargeRequest = NomisApiMockServer.getRequestBody(postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/${NOMIS_COURT_CASE_ID_FOR_CREATION}/charges")))
+        assertThat(request.isBreach).isTrue()
       }
 
       @Test
@@ -5815,7 +5822,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     ).get()
   }
 
-  private fun publishCreateCourtChargeDomainEvent(courtAppearanceId: String? = DPS_COURT_APPEARANCE_ID, source: String = "DPS") {
+  private fun publishCreateCourtChargeDomainEvent(courtAppearanceId: String? = DPS_COURT_APPEARANCE_ID, isBreach: Boolean = false, source: String = "DPS") {
     val eventType = "charge.inserted"
     awsSnsClient.publish(
       PublishRequest.builder().topicArn(topicArn)
@@ -5827,6 +5834,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             offenderNo = OFFENDER_NO,
             eventType = eventType,
             source = source,
+            isBreach = isBreach,
           ),
         )
         .messageAttributes(
@@ -6147,7 +6155,8 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     eventType: String,
     source: String = "DPS",
     isOnFutureAppearance: Boolean = false,
-  ) = """{"eventType":"$eventType", "additionalInformation": {"courtChargeId":"$courtChargeId", "courtCaseId":"$courtCaseId", ${courtAppearanceId?.let { """"courtAppearanceId":"$it",""" } ?: ""} "source": "$source", "isOnFutureAppearance": $isOnFutureAppearance}, "personReference": {"identifiers":[{"type":"NOMS", "value":"$offenderNo"}]}}"""
+    isBreach: Boolean = false,
+  ) = """{"eventType":"$eventType", "additionalInformation": {"courtChargeId":"$courtChargeId", "courtCaseId":"$courtCaseId", ${courtAppearanceId?.let { """"courtAppearanceId":"$it",""" } ?: ""} "source": "$source", "isOnFutureAppearance": $isOnFutureAppearance, "isBreach": $isBreach}, "personReference": {"identifiers":[{"type":"NOMS", "value":"$offenderNo"}]}}"""
 
   fun sentenceMessagePayload(
     courtCaseId: String,
