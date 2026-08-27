@@ -1017,13 +1017,14 @@ class CourtSentencingService(
                 telemetryMap["dpsTermId"] = it.periodLengthUuid.toString()
                 telemetryMap["termCode"] = it.sentenceTermCode
               }
-          val nomisSentenceTermResponse =
+          val nomisSentenceTermResponse = tryUpdate {
             nomisApiService.createSentenceTerm(
               offenderNo,
               request = dpsPeriodLength.toNomisSentenceTerm(isBreach = createEvent.additionalInformation.isBreach == true),
               caseId = courtCaseMapping.nomisCourtCaseId,
               sentenceSeq = sentenceMapping.nomisSentenceSequence,
             )
+          }
           telemetryMap["nomisSentenceSeq"] = nomisSentenceTermResponse.sentenceSeq.toString()
           telemetryMap["nomisbookingId"] = nomisSentenceTermResponse.bookingId.toString()
 
