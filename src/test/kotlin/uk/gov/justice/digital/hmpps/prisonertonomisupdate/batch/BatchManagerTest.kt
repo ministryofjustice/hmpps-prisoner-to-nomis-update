@@ -106,8 +106,8 @@ class BatchManagerTest {
   private val staffReconciliationService = mock<StaffReconciliationService>()
   private val tapActivePrisonersReconciliationService = mock<TapActivePrisonersReconciliationService>()
   private val tapAllPrisonersReconciliationService = mock<TapAllPrisonersReconciliationService>()
-  private val transferSchedulerReconciliationServiceActive = mock<TransferSchedulerReconciliationServiceAllPrisoners>()
-  private val transferSchedulerReconciliationServiceAll = mock<TransferSchedulerReconciliationServiceActivePrisoners>()
+  private val transferSchedulerReconciliationServiceActive = mock<TransferSchedulerReconciliationServiceActivePrisoners>()
+  private val transferSchedulerReconciliationServiceAll = mock<TransferSchedulerReconciliationServiceAllPrisoners>()
   private val visitBalanceReconciliationService = mock<VisitBalanceReconciliationService>()
   private val visitSlotsReconciliationService = mock<VisitSlotsReconciliationService>()
   private val activityDlqName = "activity-dlq-name"
