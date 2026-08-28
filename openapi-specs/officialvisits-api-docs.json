@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-08-25.1134.a3d2269"
+    "version" : "2026-08-27.1141.2e8c474"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -2193,6 +2193,35 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/job-admin/run/{jobName}" : {
+      "post" : {
+        "tags" : [ "Job Controller" ],
+        "summary" : "Endpoint to trigger a job, perhaps from a cron schedule.",
+        "description" : "\n\nThis endpoint can only be accessed from within the ingress. Requests from elsewhere will result in a 401 response code.",
+        "operationId" : "runJob",
+        "parameters" : [ {
+          "name" : "jobName",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "IDENTIFY_CANDIDATE_VISITS_TO_CHECK" ]
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "text/plain" : {
+                "schema" : {
+                  "type" : "string"
                 }
               }
             }
