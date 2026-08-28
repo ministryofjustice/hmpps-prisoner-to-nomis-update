@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseBatchMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseBatchUpdateAndCreateMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseBatchUpdateMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseBatchUpdateMappingResponseDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeBatchUpdateMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeMappingDto
@@ -767,7 +768,7 @@ class CourtSentencingService(
     mappingsWrapper: CourtCaseBatchUpdateAndCreateMappingsWrapper,
     offenderNo: String,
   ) {
-    courtCaseMappingService.updateAndCreateMappings(mappingsWrapper.mappings)
+    val updatedMappings = courtCaseMappingService.updateAndCreateMappings(mappingsWrapper.mappings)
     mappingsWrapper.clonedClonedCourtCaseDetails?.also { details ->
       queueService.sendMessageTrackOnFailure(
         queueId = "fromnomiscourtsentencing",
@@ -778,6 +779,7 @@ class CourtSentencingService(
           fromBookingId = details.fromBookingId,
           toBookingId = details.toBookingId,
           casesMoved = details.casesMoved,
+          updatedMappings = updatedMappings,
         ),
       )
 
@@ -1867,6 +1869,7 @@ data class OffenderCaseBookingResynchronisationEvent(
   val toBookingId: Long,
   val caseIds: List<Long>,
   val casesMoved: List<CaseBookingChanged>,
+  val updatedMappings: CourtCaseBatchUpdateMappingResponseDto,
 )
 
 data class CaseBookingChanged(

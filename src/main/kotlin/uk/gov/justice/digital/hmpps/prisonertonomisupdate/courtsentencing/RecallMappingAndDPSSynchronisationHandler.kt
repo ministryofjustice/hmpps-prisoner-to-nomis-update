@@ -4,6 +4,7 @@ import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingService.EntityType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceRecallMappingsUpdateDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseBatchUpdateMappingResponseDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.QueueService
 
@@ -114,6 +115,14 @@ class RecallMappingAndDPSSynchronisationHandler(
           fromBookingId = details.fromBookingId,
           toBookingId = details.toBookingId,
           casesMoved = details.casesMoved,
+          //  TODO - need mapping service to return this
+          updatedMappings = CourtCaseBatchUpdateMappingResponseDto(
+            courtCases = emptyList(),
+            courtAppearances = emptyList(),
+            courtCharges = emptyList(),
+            sentences = emptyList(),
+            sentenceTerms = emptyList(),
+          ),
         ),
       )
 
