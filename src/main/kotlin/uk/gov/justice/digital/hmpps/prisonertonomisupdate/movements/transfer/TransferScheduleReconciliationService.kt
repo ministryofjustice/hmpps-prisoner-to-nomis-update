@@ -131,12 +131,12 @@ class TransferScheduleReconciliationService(
     )
   }.getOrNull()
 
-  suspend fun checkPrisonersMatch(offenderNo: String): List<MismatchedPrisonerTransfer> = withContext(Dispatchers.Unconfined) {
+  suspend fun checkPrisonersMatch(offenderNo: String, suppressTelemetry: Boolean = false): List<MismatchedPrisonerTransfer> = withContext(Dispatchers.Unconfined) {
     val nomisTransfers = async { nomisApi.getOffenderTransferMovementsOrNull(offenderNo) }
     val dpsTransfers = async { dpsApi.getTransferSchedulerReconciliation(offenderNo) }
     val mappings = async { mappingApi.getMappings(offenderNo) }
 
-    checkPrisonersMatch(offenderNo, nomisTransfers.await(), dpsTransfers.await(), mappings.await())
+    checkPrisonersMatch(offenderNo, nomisTransfers.await(), dpsTransfers.await(), mappings.await(), suppressTelemetry)
   }
 
   private fun checkPrisonersMatch(
@@ -144,6 +144,7 @@ class TransferScheduleReconciliationService(
     nomisTransfers: OffenderTransferMovementsResponse?,
     dpsTransfers: ReconciliationResponse,
     mappings: TransferSchedulerPrisonerMappingIdsDto,
+    suppressTelemetry: Boolean,
   ): List<MismatchedPrisonerTransfer> {
     if (nomisTransfers == null) {
       throw IllegalStateException("Cannot perform reconciliation for a prisoner that doesn't exist in NOMIS - has the prisoner been merged or deleted recently?")
@@ -152,47 +153,59 @@ class TransferScheduleReconciliationService(
     val mismatchedEntities = findMismatchedEntities(offenderNo, nomisTransfers, dpsTransfers, mappings)
     val missingMappings = findMissingMappings(offenderNo, nomisTransfers, dpsTransfers, mappings)
     (mismatchedEntities + missingMappings).forEach {
-      telemetryClient.trackEvent(
-        "$TELEMETRY_TRANSFER_SCHEDULER-mismatch",
-        mapOf(
-          "offenderNo" to offenderNo,
-          "type" to it.type,
-          "nomisCount" to it.nomisCount.toString(),
-          "dpsCount" to it.dpsCount.toString(),
-          "unexpected-nomis-ids" to it.unexpectedNomisIds,
-          "unexpected-dps-ids" to it.unexpectedDpsIds,
-        ),
-      )
+      if (!suppressTelemetry) {
+        telemetryClient.trackEvent(
+          "$TELEMETRY_TRANSFER_SCHEDULER-mismatch",
+          mapOf(
+            "offenderNo" to offenderNo,
+            "type" to it.type,
+            "nomisCount" to it.nomisCount.toString(),
+            "dpsCount" to it.dpsCount.toString(),
+            "unexpected-nomis-ids" to it.unexpectedNomisIds,
+            "unexpected-dps-ids" to it.unexpectedDpsIds,
+          ),
+        )
+      }
     }
 
     val scheduleDifferences = findMismatchedSchedules(offenderNo, nomisTransfers, dpsTransfers, mappings)
     scheduleDifferences.forEach {
-      telemetryClient.trackEvent(
-        "$TELEMETRY_TRANSFER_SCHEDULER-mismatch",
-        mapOf(
-          "offenderNo" to offenderNo,
-          "type" to it.type,
-          "nomisEventId" to it.nomisEventId,
-          "dpsScheduleId" to it.dpsScheduleId,
-        ),
-      )
+      if (!suppressTelemetry) {
+        telemetryClient.trackEvent(
+          "$TELEMETRY_TRANSFER_SCHEDULER-mismatch",
+          mapOf(
+            "offenderNo" to offenderNo,
+            "type" to it.type,
+            "nomisEventId" to it.nomisEventId,
+            "dpsScheduleId" to it.dpsScheduleId,
+          ),
+        )
+      }
     }
 
     val scheduledMovementDifferences = findMismatchedScheduledMovements(offenderNo, nomisTransfers, dpsTransfers, mappings)
     val unscheduledMovementDifferences = findMismatchedUnscheduledMovements(offenderNo, nomisTransfers, dpsTransfers, mappings)
     (scheduledMovementDifferences + unscheduledMovementDifferences).forEach {
-      telemetryClient.trackEvent(
-        "$TELEMETRY_TRANSFER_SCHEDULER-mismatch",
-        mapOf(
-          "offenderNo" to offenderNo,
-          "type" to it.type,
-          "nomisMovementId" to it.nomisMovementId,
-          "dpsMovementId" to it.dpsMovementId,
-        ),
-      )
+      if (!suppressTelemetry) {
+        telemetryClient.trackEvent(
+          "$TELEMETRY_TRANSFER_SCHEDULER-mismatch",
+          mapOf(
+            "offenderNo" to offenderNo,
+            "type" to it.type,
+            "nomisMovementId" to it.nomisMovementId,
+            "dpsMovementId" to it.dpsMovementId,
+          ),
+        )
+      }
     }
 
-    return mismatchedEntities + missingMappings + scheduleDifferences + scheduledMovementDifferences + unscheduledMovementDifferences
+    return buildList {
+      addAll(scheduleDifferences)
+      addAll(scheduledMovementDifferences)
+      addAll(unscheduledMovementDifferences)
+      addAll(mismatchedEntities)
+      addAll(missingMappings)
+    }
   }
 
   private fun findMismatchedEntities(
@@ -565,12 +578,12 @@ class TransferScheduleReconciliationService(
     .find { it.bookingId == nomisMovementId.bookingId && it.sequence == nomisMovementId.sequence }
     ?: throw IllegalStateException("Unable to find movement for id=$nomisMovementId despite having matched it earlier. This should not happen!")
   private fun ReconciliationResponse.findSchedule(dpsId: UUID) = transfers.map { it.transfer }.find { it.dpsId == dpsId }?.schedule
-    ?: throw IllegalStateException("Unable to find schedule for dpsId=$dpsId despite having matched it earlier. Has there been a merge or move court event mid reconciliation?")
+    ?: throw IllegalStateException("Unable to find schedule for dpsId=$dpsId despite having matched it earlier. Has there been a merge or new transfer mid reconciliation?")
   private fun ReconciliationResponse.findWaitlist(dpsId: UUID) = transfers.map { it.transfer }.find { it.dpsId == dpsId }?.waitlist
   private fun ReconciliationResponse.findScheduledMovement(dpsId: UUID) = transfers.mapNotNull { it.movement }.find { it.dpsId == dpsId }
-    ?: throw IllegalStateException("Unable to find movement for dpsId=$dpsId despite having matched it earlier. Has there been a merge or move court event mid reconciliation?")
+    ?: throw IllegalStateException("Unable to find movement for dpsId=$dpsId despite having matched it earlier. Has there been a merge or new transfer mid reconciliation?")
   private fun ReconciliationResponse.findUnscheduledMovement(dpsId: UUID) = unscheduledMovements.find { it.dpsId == dpsId }
-    ?: throw IllegalStateException("Unable to find movement for dpsId=$dpsId despite having matched it earlier. Has there been a merge or move court event mid reconciliation?")
+    ?: throw IllegalStateException("Unable to find movement for dpsId=$dpsId despite having matched it earlier. Has there been a merge or new transfer mid reconciliation?")
 }
 
 abstract class MismatchedPrisonerTransfer(

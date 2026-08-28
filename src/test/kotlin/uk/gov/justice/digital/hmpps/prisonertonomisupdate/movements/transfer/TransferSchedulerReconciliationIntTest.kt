@@ -148,13 +148,13 @@ class TransferSchedulerReconciliationIntTest(
             unscheduledMovements = listOf(transferMovementOutResponse().copy(transferScheduleOutId = null, sequence = 4)),
           ),
         )
-
-        reconciliationService.generateTransferSchedulerReconciliationReportBatch()
-        awaitReportFinished()
       }
 
       @Test
-      fun `should report extra NOMIS transfer schedule`() {
+      fun `should report extra NOMIS transfer schedule`() = runTest {
+        reconciliationService.generateTransferSchedulerReconciliationReportBatch()
+        awaitReportFinished()
+
         verify(telemetryClient).trackEvent(
           eq("transfer-scheduler-reconciliation-mismatch"),
           eq(
@@ -172,7 +172,10 @@ class TransferSchedulerReconciliationIntTest(
       }
 
       @Test
-      fun `should report extra NOMIS scheduled movement`() {
+      fun `should report extra NOMIS scheduled movement`() = runTest {
+        reconciliationService.generateTransferSchedulerReconciliationReportBatch()
+        awaitReportFinished()
+
         verify(telemetryClient).trackEvent(
           eq("transfer-scheduler-reconciliation-mismatch"),
           eq(
@@ -190,7 +193,10 @@ class TransferSchedulerReconciliationIntTest(
       }
 
       @Test
-      fun `should report extra NOMIS unscheduled movement`() {
+      fun `should report extra NOMIS unscheduled movement`() = runTest {
+        reconciliationService.generateTransferSchedulerReconciliationReportBatch()
+        awaitReportFinished()
+
         verify(telemetryClient).trackEvent(
           eq("transfer-scheduler-reconciliation-mismatch"),
           eq(
@@ -203,6 +209,29 @@ class TransferSchedulerReconciliationIntTest(
               "unexpected-dps-ids" to "[]",
             ),
           ),
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `reconcile endpoint should return ID mismatches`() = runTest {
+        webTestClient.get().uri("/external-movements/transfer/$offender/reconciliation")
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
+          .exchange()
+          .expectStatus().isOk()
+          .expectBody()
+          .jsonPath("$.length()").isEqualTo(6)
+          .jsonPath("$[0].offenderNo").isEqualTo(offender)
+          .jsonPath("$[0].type").isEqualTo("SCHEDULE")
+          .jsonPath("$[0].nomisCount").isEqualTo("1")
+          .jsonPath("$[0].dpsCount").isEqualTo("0")
+          .jsonPath("$[0].unexpectedNomisIds").isEqualTo("[123]")
+          .jsonPath("$[0].unexpectedDpsIds").isEqualTo("[]")
+
+        // No telemetry
+        verify(telemetryClient, never()).trackEvent(
+          eq("transfer-scheduler-reconciliation-mismatch"),
+          any(),
           isNull(),
         )
       }
@@ -554,6 +583,31 @@ class TransferSchedulerReconciliationIntTest(
           .also { awaitReportFinished() }
 
         verifyTelemetry("SCHEDULE_ESCORT")
+      }
+
+      @Test
+      fun `reconcile endpoint should schedule detail mismatches`() = runTest {
+        stubNomis(schedule = stubNomisSchedule(startTime = yesterday))
+        stubDps()
+        stubMappings()
+
+        webTestClient.get().uri("/external-movements/transfer/$offender/reconciliation")
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
+          .exchange()
+          .expectStatus().isOk()
+          .expectBody()
+          .jsonPath("$.length()").isEqualTo(1)
+          .jsonPath("$[0].offenderNo").isEqualTo(offender)
+          .jsonPath("$[0].type").isEqualTo("SCHEDULE_START_TIME")
+          .jsonPath("$[0].nomisValue").isEqualTo("$yesterday")
+          .jsonPath("$[0].dpsValue").isEqualTo("$now")
+
+        // No telemetry
+        verify(telemetryClient, never()).trackEvent(
+          eq("transfer-scheduler-reconciliation-mismatch"),
+          any(),
+          isNull(),
+        )
       }
     }
 
@@ -1026,6 +1080,75 @@ class TransferSchedulerReconciliationIntTest(
         movements = listOf(),
       ),
     )
+  }
+
+  @Nested
+  inner class PrisonerReconciliationEndpoint {
+
+    @Nested
+    // Note that there are various tests in this class which test the reconciliation endpoint works
+    // the same as the batch job
+    inner class ReconcileSinglePrisoner {
+
+      @BeforeEach
+      fun setUp() = runTest {
+        stubEmptyResponses("A0001TZ")
+      }
+
+      @Test
+      fun `should return nothing if no mismatches`() = runTest {
+        webTestClient.get().uri("/external-movements/transfer/A0001TZ/reconciliation")
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
+          .exchange()
+          .expectStatus().isOk()
+          .expectBody()
+          .jsonPath("$.mismatches").doesNotExist()
+
+        // No telemetry
+        verify(telemetryClient, never()).trackEvent(
+          eq("transfer-scheduler-reconciliation-mismatch"),
+          any(),
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class Validation {
+      @Test
+      fun `should return error for unknown offender`() {
+        webTestClient.get().uri("/external-movements/transfer/UNKNOWN/reconciliation")
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
+          .exchange()
+          .expectStatus().is5xxServerError
+      }
+    }
+
+    @Nested
+    inner class Security {
+      @Test
+      fun `access forbidden when no role`() {
+        webTestClient.get().uri("/external-movements/transfer/A0001TZ/reconciliation")
+          .headers(setAuthorisation(roles = listOf()))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access forbidden with wrong role`() {
+        webTestClient.get().uri("/external-movements/transfer/A0001TZ/reconciliation")
+          .headers(setAuthorisation(roles = listOf("ROLE_BANANAS")))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access unauthorised with no auth token`() {
+        webTestClient.get().uri("/external-movements/transfer/A0001TZ/reconciliation")
+          .exchange()
+          .expectStatus().isUnauthorized
+      }
+    }
   }
 
   private fun awaitReportFinished() {
