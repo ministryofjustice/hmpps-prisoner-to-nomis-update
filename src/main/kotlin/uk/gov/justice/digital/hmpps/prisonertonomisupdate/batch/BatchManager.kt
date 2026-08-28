@@ -169,8 +169,8 @@ class BatchManager(
   private val sentencingReconciliationService: SentencingReconciliationService,
   private val tapActivePrisonersReconciliationService: TapActivePrisonersReconciliationService,
   private val tapAllPrisonersReconciliationService: TapAllPrisonersReconciliationService,
-  private val transferSchedulerReconciliationServiceAll: TransferSchedulerReconciliationServiceActivePrisoners,
-  private val transferSchedulerReconciliationServiceActive: TransferSchedulerReconciliationServiceAllPrisoners,
+  private val transferSchedulerReconciliationServiceAll: TransferSchedulerReconciliationServiceAllPrisoners,
+  private val transferSchedulerReconciliationServiceActive: TransferSchedulerReconciliationServiceActivePrisoners,
   private val visitBalancesReconciliationService: VisitBalanceReconciliationService,
   private val visitSlotsReconciliationService: VisitSlotsReconciliationService,
 ) {
