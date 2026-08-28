@@ -37,6 +37,10 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacySearchSentence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingApiExtension.Companion.courtSentencingApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingApiExtension.Companion.legacySentence
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingMappingApiMockServer.Companion.courtCaseBatchUpdateMappingResponseDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingMappingApiMockServer.Companion.courtSentenceIdTuple
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingMappingApiMockServer.Companion.courtSentenceTermIdTuple
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingMappingApiMockServer.Companion.simpleCourtSentencingIdTuple
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.countAllMessagesOnQueue
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.readRawMessages
@@ -803,6 +807,12 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         @Nested
         inner class MainHearing {
+          val dpsCaseId = UUID.randomUUID().toString()
+          val dpsAppearanceId = UUID.randomUUID().toString()
+          val dpsChargeId = UUID.randomUUID().toString()
+          val dpsSentenceId = UUID.randomUUID().toString()
+          val dpsSentenceTermId = UUID.randomUUID().toString()
+
           @BeforeEach
           fun setUp() {
             courtSentencingNomisApi.stubCourtAppearanceCreate(
@@ -810,6 +820,16 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
               NOMIS_COURT_CASE_ID_FOR_CREATION,
               clonedCourtCaseResponse,
             )
+            courtSentencingMappingApi.stubUpdateAndCreateMappings(
+              response = courtCaseBatchUpdateMappingResponseDto().copy(
+                courtCases = [simpleCourtSentencingIdTuple().copy(dpsId = dpsCaseId)],
+                courtAppearances = [simpleCourtSentencingIdTuple().copy(dpsId = dpsAppearanceId)],
+                courtCharges = [simpleCourtSentencingIdTuple().copy(dpsId = dpsChargeId)],
+                sentences = [courtSentenceIdTuple().copy(dpsId = dpsSentenceId)],
+                sentenceTerms = [courtSentenceTermIdTuple().copy(dpsId = dpsSentenceTermId)],
+              ),
+            )
+
             publishCreateCourtAppearanceDomainEvent().also {
               waitForAnyProcessingToComplete("court-appearance-create-cases-cloned")
             }
@@ -855,6 +875,16 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             assertThat(request.casesMoved[0].sentences[0].sentenceSequence).isEqualTo(20)
             assertThat(request.fromBookingId).isEqualTo(1L)
             assertThat(request.toBookingId).isEqualTo(2L)
+            assertThat(request.updatedMappings.courtCases).hasSize(1)
+            assertThat(request.updatedMappings.courtCases[0].dpsId).isEqualTo(dpsCaseId)
+            assertThat(request.updatedMappings.courtAppearances).hasSize(1)
+            assertThat(request.updatedMappings.courtAppearances[0].dpsId).isEqualTo(dpsAppearanceId)
+            assertThat(request.updatedMappings.courtCharges).hasSize(1)
+            assertThat(request.updatedMappings.courtCharges[0].dpsId).isEqualTo(dpsChargeId)
+            assertThat(request.updatedMappings.sentences).hasSize(1)
+            assertThat(request.updatedMappings.sentences[0].dpsId).isEqualTo(dpsSentenceId)
+            assertThat(request.updatedMappings.sentenceTerms).hasSize(1)
+            assertThat(request.updatedMappings.sentenceTerms[0].dpsId).isEqualTo(dpsSentenceTermId)
           }
 
           @Test
