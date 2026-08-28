@@ -55,6 +55,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.CourtS
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.CourtSchedulerReconciliationServiceAllPrisoners
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapActivePrisonersReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapAllPrisonersReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.TransferSchedulerReconciliationServiceActivePrisoners
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.TransferSchedulerReconciliationServiceAllPrisoners
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nonassociations.NonAssociationsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsActiveScheduledReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsAllMissingFromNOMISReconciliationService
@@ -75,6 +77,7 @@ class BatchManagerTest {
 
   private val activitiesReconService = mock<ActivitiesReconService>()
   private val adjudicationsReconService = mock<AdjudicationsReconciliationService>()
+  private val agencyRegistersReconciliationService = mock<AgencyRegistersReconciliationService>()
   private val alertsReconService = mock<AlertsReconciliationService>()
   private val appointmentsReconService = mock<AppointmentsReconciliationService>()
   private val caseNotesReconciliationService = mock<CaseNotesReconciliationService>()
@@ -103,9 +106,10 @@ class BatchManagerTest {
   private val staffReconciliationService = mock<StaffReconciliationService>()
   private val tapActivePrisonersReconciliationService = mock<TapActivePrisonersReconciliationService>()
   private val tapAllPrisonersReconciliationService = mock<TapAllPrisonersReconciliationService>()
+  private val transferSchedulerReconciliationServiceActive = mock<TransferSchedulerReconciliationServiceAllPrisoners>()
+  private val transferSchedulerReconciliationServiceAll = mock<TransferSchedulerReconciliationServiceActivePrisoners>()
   private val visitBalanceReconciliationService = mock<VisitBalanceReconciliationService>()
   private val visitSlotsReconciliationService = mock<VisitSlotsReconciliationService>()
-  private val agencyRegistersReconciliationService = mock<AgencyRegistersReconciliationService>()
   private val activityDlqName = "activity-dlq-name"
   private val event = mock<ContextRefreshedEvent>()
   private val context = mock<ConfigurableApplicationContext>()
@@ -498,11 +502,32 @@ class BatchManagerTest {
     verify(context).close()
   }
 
+  @Test
+  fun `should call the transfer scheduler all prisoner reconciliation service`() = runTest {
+    val batchManager = batchManager(BatchType.TRANSFER_SCHEDULER_ALL_RECON)
+
+    batchManager.onApplicationEvent(event)
+
+    verify(transferSchedulerReconciliationServiceAll).generateTransferSchedulerReconciliationReportBatch()
+    verify(context).close()
+  }
+
+  @Test
+  fun `should call the transfer scheduler active prisoner reconciliation service`() = runTest {
+    val batchManager = batchManager(BatchType.TRANSFER_SCHEDULER_ACTIVE_RECON)
+
+    batchManager.onApplicationEvent(event)
+
+    verify(transferSchedulerReconciliationServiceActive).generateTransferSchedulerReconciliationReportBatch()
+    verify(context).close()
+  }
+
   private fun batchManager(batchType: BatchType) = BatchManager(
     batchType = batchType,
     activitiesDlqName = activityDlqName,
     activitiesReconService = activitiesReconService,
     adjudicationsReconService = adjudicationsReconService,
+    agencyRegistersReconciliationService = agencyRegistersReconciliationService,
     alertsReconciliationService = alertsReconService,
     appointmentsReconciliationService = appointmentsReconService,
     caseNotesReconciliationService = caseNotesReconciliationService,
@@ -531,8 +556,9 @@ class BatchManagerTest {
     sentencingReconciliationService = sentencingReconciliationService,
     tapActivePrisonersReconciliationService = tapActivePrisonersReconciliationService,
     tapAllPrisonersReconciliationService = tapAllPrisonersReconciliationService,
+    transferSchedulerReconciliationServiceAll = transferSchedulerReconciliationServiceAll,
+    transferSchedulerReconciliationServiceActive = transferSchedulerReconciliationServiceActive,
     visitBalancesReconciliationService = visitBalanceReconciliationService,
     visitSlotsReconciliationService = visitSlotsReconciliationService,
-    agencyRegistersReconciliationService = agencyRegistersReconciliationService,
   )
 }

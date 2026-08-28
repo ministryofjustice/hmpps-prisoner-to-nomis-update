@@ -77,6 +77,10 @@ generic-service:
     - name: activity-mappings
       type: DELETE_UNKNOWN_ACTIVITY_MAPPINGS
       schedule: "15 7 * * 1-5"
+    - name: agency-recon
+      type: AGENCY_RECON
+      schedule: "30 6 * * *"
+      suspend: false
     - name: core-person-recon
       type: CORE_PERSON_FULL_RECON
       schedule: "30 12 * * *"
@@ -145,14 +149,18 @@ generic-service:
       type: TAP_ACTIVE_PRISONERS_RECON
       schedule: "30 2 * * *"
       suspend: true
+    - name: transfer-sched-act-recon
+      type: TRANSFER_SCHEDULER_ACTIVE_RECON
+      schedule: "30 4 * * *"
+      suspend: true
+    - name: transfer-sched-all-recon
+      type: TRANSFER_SCHEDULER_ALL_RECON
+      schedule: "30 4 * * *"
+      suspend: true
     - name: visit-slots-recon
       type: VISIT_SLOTS_RECON
       schedule: "45 2 * * *"
       suspend: true
-    - name: agency-recon
-      type: AGENCY_RECON
-      schedule: "30 6 * * *"
-      suspend: false
 
 
 generic-prometheus-alerts:
