@@ -17,10 +17,16 @@ import org.springframework.stereotype.Component
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceRecallMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseBatchUpdateMappingResponseDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtSentenceIdTuple
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtSentenceTermIdTuple
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceTermId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceTermMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SimpleCourtSentencingIdTuple
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.jsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
@@ -33,6 +39,41 @@ import java.util.UUID
 class CourtSentencingMappingApiMockServer(private val jsonMapper: JsonMapper) {
   companion object {
     inline fun <reified T> getRequestBody(pattern: RequestPatternBuilder): T = mappingServer.getRequestBody(pattern, jsonMapper = jsonMapper)
+
+    fun courtCaseBatchUpdateMappingResponseDto() = CourtCaseBatchUpdateMappingResponseDto(
+      courtCases = emptyList(),
+      courtAppearances = emptyList(),
+      courtCharges = emptyList(),
+      sentences = emptyList(),
+      sentenceTerms = emptyList(),
+    )
+
+    fun simpleCourtSentencingIdTuple() = SimpleCourtSentencingIdTuple(
+      fromNomisId = 1,
+      toNomisId = 2,
+      dpsId = UUID.randomUUID().toString(),
+    )
+
+    fun sentenceId() = SentenceId(
+      nomisBookingId = 12345,
+      nomisSequence = 1,
+    )
+
+    fun sentenceTermId() = SentenceTermId(
+      nomisSentenceId = sentenceId(),
+      nomisSequence = 1,
+    )
+    fun courtSentenceIdTuple() = CourtSentenceIdTuple(
+      fromNomisId = sentenceId(),
+      toNomisId = sentenceId().copy(nomisBookingId = 23456),
+      dpsId = UUID.randomUUID().toString(),
+    )
+
+    fun courtSentenceTermIdTuple() = CourtSentenceTermIdTuple(
+      fromNomisId = sentenceTermId(),
+      toNomisId = sentenceTermId().copy(nomisSentenceId = sentenceId().copy(nomisBookingId = 23456)),
+      dpsId = UUID.randomUUID().toString(),
+    )
   }
 
   fun stubCreateCourtCase() {
@@ -363,12 +404,53 @@ class CourtSentencingMappingApiMockServer(private val jsonMapper: JsonMapper) {
     )
   }
 
-  fun stubUpdateAndCreateMappings() {
-    stubPut("/mapping/court-sentencing/court-cases/update-create")
+  fun stubUpdateAndCreateMappings(
+    response: CourtCaseBatchUpdateMappingResponseDto = courtCaseBatchUpdateMappingResponseDto(),
+  ) {
+    mappingServer.stubFor(
+      put("/mapping/court-sentencing/court-cases/update-create").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            jsonMapper.writeValueAsString(
+              response,
+            ),
+          )
+          .withStatus(200),
+      ),
+    )
   }
 
-  fun stubUpdateAndCreateMappingsWithErrorFollowedBySuccess() {
-    stubPutWithErrorFollowedBySuccess(url = "/mapping/court-sentencing/court-cases/update-create", "Update and create mappings")
+  fun stubUpdateAndCreateMappingsWithErrorFollowedBySuccess(
+    response: CourtCaseBatchUpdateMappingResponseDto = courtCaseBatchUpdateMappingResponseDto(),
+  ) {
+    mappingServer.stubFor(
+      put("/mapping/court-sentencing/court-cases/update-create")
+        .inScenario("Retry Update and create mappings")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withStatus(500) // request unsuccessful with status code 500
+            .withHeader("Content-Type", "application/json"),
+        )
+        .willSetStateTo("Create Update and create mappings Success"),
+    )
+
+    mappingServer.stubFor(
+      put("/mapping/court-sentencing/court-cases/update-create")
+        .inScenario("Retry Update and create mappings")
+        .whenScenarioStateIs("Create Update and create mappings Success")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(
+              jsonMapper.writeValueAsString(
+                response,
+              ),
+            )
+            .withStatus(200),
+        ).willSetStateTo(Scenario.STARTED),
+    )
   }
 
   fun stubReplaceMappings() {

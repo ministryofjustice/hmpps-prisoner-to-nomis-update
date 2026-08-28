@@ -37,6 +37,10 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacySearchSentence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingApiExtension.Companion.courtSentencingApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingApiExtension.Companion.legacySentence
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingMappingApiMockServer.Companion.courtCaseBatchUpdateMappingResponseDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingMappingApiMockServer.Companion.courtSentenceIdTuple
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingMappingApiMockServer.Companion.courtSentenceTermIdTuple
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingMappingApiMockServer.Companion.simpleCourtSentencingIdTuple
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.countAllMessagesOnQueue
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.readRawMessages
@@ -61,6 +65,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Cr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceTermResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderChargeIdResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderChargeRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceIdAndAdjustmentIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceIdAndAdjustmentsCreated
@@ -802,6 +807,12 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         @Nested
         inner class MainHearing {
+          val dpsCaseId = UUID.randomUUID().toString()
+          val dpsAppearanceId = UUID.randomUUID().toString()
+          val dpsChargeId = UUID.randomUUID().toString()
+          val dpsSentenceId = UUID.randomUUID().toString()
+          val dpsSentenceTermId = UUID.randomUUID().toString()
+
           @BeforeEach
           fun setUp() {
             courtSentencingNomisApi.stubCourtAppearanceCreate(
@@ -809,6 +820,16 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
               NOMIS_COURT_CASE_ID_FOR_CREATION,
               clonedCourtCaseResponse,
             )
+            courtSentencingMappingApi.stubUpdateAndCreateMappings(
+              response = courtCaseBatchUpdateMappingResponseDto().copy(
+                courtCases = [simpleCourtSentencingIdTuple().copy(dpsId = dpsCaseId)],
+                courtAppearances = [simpleCourtSentencingIdTuple().copy(dpsId = dpsAppearanceId)],
+                courtCharges = [simpleCourtSentencingIdTuple().copy(dpsId = dpsChargeId)],
+                sentences = [courtSentenceIdTuple().copy(dpsId = dpsSentenceId)],
+                sentenceTerms = [courtSentenceTermIdTuple().copy(dpsId = dpsSentenceTermId)],
+              ),
+            )
+
             publishCreateCourtAppearanceDomainEvent().also {
               waitForAnyProcessingToComplete("court-appearance-create-cases-cloned")
             }
@@ -854,6 +875,16 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             assertThat(request.casesMoved[0].sentences[0].sentenceSequence).isEqualTo(20)
             assertThat(request.fromBookingId).isEqualTo(1L)
             assertThat(request.toBookingId).isEqualTo(2L)
+            assertThat(request.updatedMappings.courtCases).hasSize(1)
+            assertThat(request.updatedMappings.courtCases[0].dpsId).isEqualTo(dpsCaseId)
+            assertThat(request.updatedMappings.courtAppearances).hasSize(1)
+            assertThat(request.updatedMappings.courtAppearances[0].dpsId).isEqualTo(dpsAppearanceId)
+            assertThat(request.updatedMappings.courtCharges).hasSize(1)
+            assertThat(request.updatedMappings.courtCharges[0].dpsId).isEqualTo(dpsChargeId)
+            assertThat(request.updatedMappings.sentences).hasSize(1)
+            assertThat(request.updatedMappings.sentences[0].dpsId).isEqualTo(dpsSentenceId)
+            assertThat(request.updatedMappings.sentenceTerms).hasSize(1)
+            assertThat(request.updatedMappings.sentenceTerms[0].dpsId).isEqualTo(dpsSentenceTermId)
           }
 
           @Test
@@ -1823,9 +1854,15 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         courtSentencingMappingApi.stubGetCourtChargeMappingGivenDpsIdWithError(DPS_COURT_CHARGE_ID, 404)
         courtSentencingMappingApi.stubUpdateAndCreateMappings()
 
-        publishCreateCourtChargeDomainEvent(courtAppearanceId = DPS_COURT_APPEARANCE_ID)
+        publishCreateCourtChargeDomainEvent(courtAppearanceId = DPS_COURT_APPEARANCE_ID, isBreach = true)
 
         waitForAnyProcessingToComplete("charge-create-cases-cloned")
+      }
+
+      @Test
+      fun `will call nomis api to create the Charge with breach set`() {
+        val request: OffenderChargeRequest = NomisApiMockServer.getRequestBody(postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/${NOMIS_COURT_CASE_ID_FOR_CREATION}/charges")))
+        assertThat(request.isBreach).isTrue()
       }
 
       @Test
@@ -5815,7 +5852,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     ).get()
   }
 
-  private fun publishCreateCourtChargeDomainEvent(courtAppearanceId: String? = DPS_COURT_APPEARANCE_ID, source: String = "DPS") {
+  private fun publishCreateCourtChargeDomainEvent(courtAppearanceId: String? = DPS_COURT_APPEARANCE_ID, isBreach: Boolean = false, source: String = "DPS") {
     val eventType = "charge.inserted"
     awsSnsClient.publish(
       PublishRequest.builder().topicArn(topicArn)
@@ -5827,6 +5864,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             offenderNo = OFFENDER_NO,
             eventType = eventType,
             source = source,
+            isBreach = isBreach,
           ),
         )
         .messageAttributes(
@@ -6147,7 +6185,8 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     eventType: String,
     source: String = "DPS",
     isOnFutureAppearance: Boolean = false,
-  ) = """{"eventType":"$eventType", "additionalInformation": {"courtChargeId":"$courtChargeId", "courtCaseId":"$courtCaseId", ${courtAppearanceId?.let { """"courtAppearanceId":"$it",""" } ?: ""} "source": "$source", "isOnFutureAppearance": $isOnFutureAppearance}, "personReference": {"identifiers":[{"type":"NOMS", "value":"$offenderNo"}]}}"""
+    isBreach: Boolean = false,
+  ) = """{"eventType":"$eventType", "additionalInformation": {"courtChargeId":"$courtChargeId", "courtCaseId":"$courtCaseId", ${courtAppearanceId?.let { """"courtAppearanceId":"$it",""" } ?: ""} "source": "$source", "isOnFutureAppearance": $isOnFutureAppearance, "isBreach": $isBreach}, "personReference": {"identifiers":[{"type":"NOMS", "value":"$offenderNo"}]}}"""
 
   fun sentenceMessagePayload(
     courtCaseId: String,

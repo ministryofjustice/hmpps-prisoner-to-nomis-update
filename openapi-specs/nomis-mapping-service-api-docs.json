@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-08-21.766.9fc9feb"
+    "version" : "2026-08-27.775.ddc0d75"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -1076,7 +1076,13 @@
         "responses" : {
           "200" : {
             "description" : "Mapping created or replaced",
-            "content" : { }
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CourtCaseBatchUpdateMappingResponseDto"
+                }
+              }
+            }
           },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
@@ -5476,6 +5482,50 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/core-person/replace" : {
+      "post" : {
+        "tags" : [ "core-person-mapping-resource" ],
+        "summary" : "Replaces alias and identifier mappings.",
+        "description" : "Creates lists of alias and identifier mappings and removes the previous supplied set.\n      This does not add or remove any data from any associated parent CorePersonMappingDto entry. \n      Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "replaceCorePersonMappings",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CorePersonMappingsDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Mappings replaced",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -23293,7 +23343,7 @@
         "properties" : {
           "courtCases" : {
             "type" : "array",
-            "description" : "Mappings",
+            "description" : "Court Case Mappings",
             "items" : {
               "$ref" : "#/components/schemas/SimpleCourtSentencingIdPair"
             }
@@ -23524,6 +23574,95 @@
           }
         },
         "required" : [ "fromNomisId", "toNomisId" ]
+      },
+      "CourtCaseBatchUpdateMappingResponseDto" : {
+        "type" : "object",
+        "description" : "Court cases mapping updated including child entity mapping for both updating the NOMIS ID",
+        "properties" : {
+          "courtCases" : {
+            "type" : "array",
+            "description" : "Court case mappings updated",
+            "items" : {
+              "$ref" : "#/components/schemas/SimpleCourtSentencingIdTuple"
+            }
+          },
+          "courtAppearances" : {
+            "type" : "array",
+            "description" : "Court Appearance mappings updated",
+            "items" : {
+              "$ref" : "#/components/schemas/SimpleCourtSentencingIdTuple"
+            }
+          },
+          "courtCharges" : {
+            "type" : "array",
+            "description" : "Court Charge mappings updated",
+            "items" : {
+              "$ref" : "#/components/schemas/SimpleCourtSentencingIdTuple"
+            }
+          },
+          "sentences" : {
+            "type" : "array",
+            "description" : "Sentence mappings updated",
+            "items" : {
+              "$ref" : "#/components/schemas/CourtSentenceIdTuple"
+            }
+          },
+          "sentenceTerms" : {
+            "type" : "array",
+            "description" : "Sentence term mappings updated",
+            "items" : {
+              "$ref" : "#/components/schemas/CourtSentenceTermIdTuple"
+            }
+          }
+        },
+        "required" : [ "courtAppearances", "courtCases", "courtCharges", "sentenceTerms", "sentences" ]
+      },
+      "CourtSentenceIdTuple" : {
+        "type" : "object",
+        "properties" : {
+          "fromNomisId" : {
+            "$ref" : "#/components/schemas/SentenceId"
+          },
+          "toNomisId" : {
+            "$ref" : "#/components/schemas/SentenceId"
+          },
+          "dpsId" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "dpsId", "fromNomisId", "toNomisId" ]
+      },
+      "CourtSentenceTermIdTuple" : {
+        "type" : "object",
+        "properties" : {
+          "fromNomisId" : {
+            "$ref" : "#/components/schemas/SentenceTermId"
+          },
+          "toNomisId" : {
+            "$ref" : "#/components/schemas/SentenceTermId"
+          },
+          "dpsId" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "dpsId", "fromNomisId", "toNomisId" ]
+      },
+      "SimpleCourtSentencingIdTuple" : {
+        "type" : "object",
+        "properties" : {
+          "fromNomisId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "toNomisId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "dpsId" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "dpsId", "fromNomisId", "toNomisId" ]
       },
       "CourtAppearanceRecallMappingsUpdateDto" : {
         "type" : "object",
@@ -25554,34 +25693,6 @@
         },
         "required" : [ "dpsId", "mappingType", "nomisId" ]
       },
-      "ProfileMappingIdDto" : {
-        "type" : "object",
-        "properties" : {
-          "cprId" : {
-            "type" : "string",
-            "description" : "CPR profile id"
-          },
-          "nomisBookingId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "NOMIS booking id"
-          },
-          "nomisProfileType" : {
-            "type" : "string",
-            "description" : "NOMIS profile type"
-          },
-          "nomisPrisonNumber" : {
-            "type" : "string",
-            "description" : "NOMIS Prison number aka Offender number"
-          },
-          "mappingType" : {
-            "type" : "string",
-            "description" : "Mapping type - currently defaulted to be NOMIS_CREATED",
-            "enum" : [ "MIGRATED", "CPR_CREATED", "NOMIS_CREATED" ]
-          }
-        },
-        "required" : [ "cprId", "mappingType", "nomisBookingId", "nomisPrisonNumber", "nomisProfileType" ]
-      },
       "CorePersonMappingIdDto" : {
         "type" : "object",
         "description" : "NOMIS to CPR core person mapping IDs",
@@ -25709,6 +25820,34 @@
           }
         },
         "required" : [ "cprId", "mappingType", "nomisIdentifierSequence", "nomisOffenderId", "nomisPrisonNumber" ]
+      },
+      "ProfileMappingIdDto" : {
+        "type" : "object",
+        "properties" : {
+          "cprId" : {
+            "type" : "string",
+            "description" : "CPR profile id"
+          },
+          "nomisBookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS booking id"
+          },
+          "nomisProfileType" : {
+            "type" : "string",
+            "description" : "NOMIS profile type"
+          },
+          "nomisPrisonNumber" : {
+            "type" : "string",
+            "description" : "NOMIS Prison number aka Offender number"
+          },
+          "mappingType" : {
+            "type" : "string",
+            "description" : "Mapping type - currently defaulted to be NOMIS_CREATED",
+            "enum" : [ "MIGRATED", "CPR_CREATED", "NOMIS_CREATED" ]
+          }
+        },
+        "required" : [ "cprId", "mappingType", "nomisBookingId", "nomisPrisonNumber", "nomisProfileType" ]
       },
       "OffenderAliasMapping" : {
         "type" : "object",

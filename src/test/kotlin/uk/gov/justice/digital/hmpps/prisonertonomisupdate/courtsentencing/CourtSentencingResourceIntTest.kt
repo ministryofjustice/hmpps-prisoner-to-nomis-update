@@ -62,7 +62,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtCaseResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtEventChargeResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtEventResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtOrderResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCourtAppearanceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceTermResponse
@@ -2110,35 +2109,6 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
       conviction = true,
     ),
     createdByUsername = "msmith",
-  )
-
-  fun nomisSentenceResponse(
-    eventId: Long,
-    terms: List<SentenceTermResponse> = emptyList(),
-    charges: List<OffenderChargeResponse> = emptyList(),
-  ) = SentenceResponse(
-    sentenceSeq = NOMIS_SENTENCE_SEQ,
-    bookingId = NOMIS_BOOKING_ID,
-    category = CodeDescription(SENTENCE_CATEGORY, "desc"),
-    calculationType = CodeDescription(SENTENCE_CALC_TYPE, "desc"),
-    startDate = LocalDate.of(2024, 1, 1),
-    status = "A",
-    sentenceTerms = terms,
-    fineAmount = BigDecimal.TEN,
-    missingCourtOffenderChargeIds = emptyList(),
-    createdByUsername = "Q1251T",
-    createdDateTime = LocalDateTime.now(),
-    offenderCharges = charges,
-    prisonId = PRISON_MDI,
-    courtOrder = CourtOrderResponse(
-      eventId = eventId,
-      id = 1234,
-      courtDate = LocalDate.now(),
-      issuingCourt = "TFG",
-      sentencePurposes = emptyList(),
-      orderType = "type",
-      orderStatus = "status",
-    ),
   )
 
   fun nomisSentenceTermResponse(

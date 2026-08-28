@@ -41,9 +41,11 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.Mis
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TransferSchedulerPrisonerMappingIdsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTransferMovementsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerId
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.TransferMovementOut
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.transferscheduler.model.ReconciliationResponse
-import java.util.UUID
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.transferscheduler.model.SyncMovement
+import java.util.*
 
 @Service
 class TransferScheduleReconciliationService(
@@ -129,12 +131,12 @@ class TransferScheduleReconciliationService(
     )
   }.getOrNull()
 
-  suspend fun checkPrisonersMatch(offenderNo: String): List<MismatchedPrisonerTransfer> = withContext(Dispatchers.Unconfined) {
+  suspend fun checkPrisonersMatch(offenderNo: String, suppressTelemetry: Boolean = false): List<MismatchedPrisonerTransfer> = withContext(Dispatchers.Unconfined) {
     val nomisTransfers = async { nomisApi.getOffenderTransferMovementsOrNull(offenderNo) }
     val dpsTransfers = async { dpsApi.getTransferSchedulerReconciliation(offenderNo) }
     val mappings = async { mappingApi.getMappings(offenderNo) }
 
-    checkPrisonersMatch(offenderNo, nomisTransfers.await(), dpsTransfers.await(), mappings.await())
+    checkPrisonersMatch(offenderNo, nomisTransfers.await(), dpsTransfers.await(), mappings.await(), suppressTelemetry)
   }
 
   private fun checkPrisonersMatch(
@@ -142,55 +144,68 @@ class TransferScheduleReconciliationService(
     nomisTransfers: OffenderTransferMovementsResponse?,
     dpsTransfers: ReconciliationResponse,
     mappings: TransferSchedulerPrisonerMappingIdsDto,
+    suppressTelemetry: Boolean,
   ): List<MismatchedPrisonerTransfer> {
     if (nomisTransfers == null) {
       throw IllegalStateException("Cannot perform reconciliation for a prisoner that doesn't exist in NOMIS - has the prisoner been merged or deleted recently?")
     }
 
     val mismatchedEntities = findMismatchedEntities(offenderNo, nomisTransfers, dpsTransfers, mappings)
-    mismatchedEntities.forEach {
-      telemetryClient.trackEvent(
-        "$TELEMETRY_TRANSFER_SCHEDULER-mismatch",
-        mapOf(
-          "offenderNo" to offenderNo,
-          "type" to it.type,
-          "nomisCount" to it.nomisCount.toString(),
-          "dpsCount" to it.dpsCount.toString(),
-          "unexpected-nomis-ids" to it.unexpectedNomisIds,
-          "unexpected-dps-ids" to it.unexpectedDpsIds,
-        ),
-      )
-    }
-
     val missingMappings = findMissingMappings(offenderNo, nomisTransfers, dpsTransfers, mappings)
-    missingMappings.forEach {
-      telemetryClient.trackEvent(
-        "$TELEMETRY_TRANSFER_SCHEDULER-mismatch",
-        mapOf(
-          "offenderNo" to offenderNo,
-          "type" to it.type,
-          "nomisCount" to it.nomisCount.toString(),
-          "dpsCount" to it.dpsCount.toString(),
-          "unexpected-nomis-ids" to it.unexpectedNomisIds,
-          "unexpected-dps-ids" to it.unexpectedDpsIds,
-        ),
-      )
+    (mismatchedEntities + missingMappings).forEach {
+      if (!suppressTelemetry) {
+        telemetryClient.trackEvent(
+          "$TELEMETRY_TRANSFER_SCHEDULER-mismatch",
+          mapOf(
+            "offenderNo" to offenderNo,
+            "type" to it.type,
+            "nomisCount" to it.nomisCount.toString(),
+            "dpsCount" to it.dpsCount.toString(),
+            "unexpected-nomis-ids" to it.unexpectedNomisIds,
+            "unexpected-dps-ids" to it.unexpectedDpsIds,
+          ),
+        )
+      }
     }
 
     val scheduleDifferences = findMismatchedSchedules(offenderNo, nomisTransfers, dpsTransfers, mappings)
     scheduleDifferences.forEach {
-      telemetryClient.trackEvent(
-        "$TELEMETRY_TRANSFER_SCHEDULER-mismatch",
-        mapOf(
-          "offenderNo" to offenderNo,
-          "type" to it.type,
-          "nomisEventId" to it.nomisEventId,
-          "dpsScheduleId" to it.dpsScheduleId,
-        ),
-      )
+      if (!suppressTelemetry) {
+        telemetryClient.trackEvent(
+          "$TELEMETRY_TRANSFER_SCHEDULER-mismatch",
+          mapOf(
+            "offenderNo" to offenderNo,
+            "type" to it.type,
+            "nomisEventId" to it.nomisEventId,
+            "dpsScheduleId" to it.dpsScheduleId,
+          ),
+        )
+      }
     }
 
-    return mismatchedEntities + missingMappings + scheduleDifferences
+    val scheduledMovementDifferences = findMismatchedScheduledMovements(offenderNo, nomisTransfers, dpsTransfers, mappings)
+    val unscheduledMovementDifferences = findMismatchedUnscheduledMovements(offenderNo, nomisTransfers, dpsTransfers, mappings)
+    (scheduledMovementDifferences + unscheduledMovementDifferences).forEach {
+      if (!suppressTelemetry) {
+        telemetryClient.trackEvent(
+          "$TELEMETRY_TRANSFER_SCHEDULER-mismatch",
+          mapOf(
+            "offenderNo" to offenderNo,
+            "type" to it.type,
+            "nomisMovementId" to it.nomisMovementId,
+            "dpsMovementId" to it.dpsMovementId,
+          ),
+        )
+      }
+    }
+
+    return buildList {
+      addAll(scheduleDifferences)
+      addAll(scheduledMovementDifferences)
+      addAll(unscheduledMovementDifferences)
+      addAll(mismatchedEntities)
+      addAll(missingMappings)
+    }
   }
 
   private fun findMismatchedEntities(
@@ -418,6 +433,93 @@ class TransferScheduleReconciliationService(
     return mismatches
   }
 
+  fun findMismatchedScheduledMovements(
+    offenderNo: String,
+    nomisTransfers: OffenderTransferMovementsResponse,
+    dpsTransfers: ReconciliationResponse,
+    mappings: TransferSchedulerPrisonerMappingIdsDto,
+  ): List<MismatchPrisonerMovementDetails> {
+    val nomisMovementIds = nomisTransfers.scheduledMovementIds()
+    val dpsMovementIds = dpsTransfers.scheduledMovementIds()
+    val mismatches = mutableListOf<MismatchPrisonerMovementDetails>()
+
+    mappings.matchingMovements(nomisMovementIds, dpsMovementIds).forEach { (nomisId, dpsId) ->
+      val nomisMovement = nomisTransfers.findScheduledMovement(nomisId)
+      val dpsMovement = dpsTransfers.findScheduledMovement(dpsId)
+
+      mismatches.addAll(
+        compareMovements(offenderNo, nomisId, dpsId, nomisMovement, dpsMovement),
+      )
+    }
+
+    return mismatches
+  }
+
+  fun findMismatchedUnscheduledMovements(
+    offenderNo: String,
+    nomisTransfers: OffenderTransferMovementsResponse,
+    dpsTransfers: ReconciliationResponse,
+    mappings: TransferSchedulerPrisonerMappingIdsDto,
+  ): List<MismatchPrisonerMovementDetails> {
+    val nomisMovementIds = nomisTransfers.unscheduledMovementIds()
+    val dpsMovementIds = dpsTransfers.unscheduledMovementIds()
+    val mismatches = mutableListOf<MismatchPrisonerMovementDetails>()
+
+    mappings.matchingMovements(nomisMovementIds, dpsMovementIds).forEach { (nomisId, dpsId) ->
+      val nomisMovement = nomisTransfers.findUnscheduledMovement(nomisId)
+      val dpsMovement = dpsTransfers.findUnscheduledMovement(dpsId)
+
+      mismatches.addAll(
+        compareMovements(offenderNo, nomisId, dpsId, nomisMovement, dpsMovement),
+      )
+    }
+
+    return mismatches
+  }
+
+  private fun compareMovements(
+    offenderNo: String,
+    nomisId: NomisMovementId,
+    dpsId: UUID,
+    nomisMovement: TransferMovementOut,
+    dpsMovement: SyncMovement,
+  ): List<MismatchPrisonerMovementDetails> {
+    val mismatches = mutableListOf<MismatchPrisonerMovementDetails>()
+    fun mismatch(type: MismatchPrisonerMovementDetails.Type, nomisValue: String, dpsValue: String) = MismatchPrisonerMovementDetails(offenderNo, type, nomisId, dpsId, nomisValue, dpsValue)
+
+    // time must match
+    if (nomisMovement.movementTime != dpsMovement.occurredAt) {
+      mismatches.add(mismatch(MismatchPrisonerMovementDetails.Type.MOVEMENT_TIME, "${nomisMovement.movementTime}", "${dpsMovement.occurredAt}"))
+    }
+
+    // reason must match
+    if (nomisMovement.movementReason != dpsMovement.movementReasonCode) {
+      mismatches.add(mismatch(MismatchPrisonerMovementDetails.Type.MOVEMENT_REASON, nomisMovement.movementReason, dpsMovement.movementReasonCode))
+    }
+
+    // from prison must match
+    if (nomisMovement.fromPrison != dpsMovement.fromAgyLocId) {
+      mismatches.add(mismatch(MismatchPrisonerMovementDetails.Type.MOVEMENT_FROM_PRISON, nomisMovement.fromPrison, dpsMovement.fromAgyLocId))
+    }
+
+    // to prison must match
+    if (nomisMovement.toPrison != dpsMovement.toAgyLocId) {
+      mismatches.add(mismatch(MismatchPrisonerMovementDetails.Type.MOVEMENT_TO_PRISON, nomisMovement.toPrison, dpsMovement.toAgyLocId))
+    }
+
+    // active flag must match
+    if (nomisMovement.active != dpsMovement.active) {
+      mismatches.add(mismatch(MismatchPrisonerMovementDetails.Type.MOVEMENT_ACTIVE, "${nomisMovement.active}", "${dpsMovement.active}"))
+    }
+
+    // comment must match
+    if (nomisMovement.commentText != dpsMovement.commentText) {
+      mismatches.add(mismatch(MismatchPrisonerMovementDetails.Type.MOVEMENT_COMMENT, "${nomisMovement.commentText}", "${dpsMovement.commentText}"))
+    }
+
+    return mismatches
+  }
+
   private fun TransferSchedulerPrisonerMappingIdsDto.unexpectedNomisSchedules(
     nomisScheduleIds: List<Long>,
     dpsScheduleIds: List<UUID>,
@@ -469,9 +571,19 @@ class TransferScheduleReconciliationService(
   private fun OffenderTransferMovementsResponse.findSchedule(eventId: Long) = bookings.flatMap { it.transferSchedules }.map { it.schedule }
     .find { it.eventId == eventId }
     ?: throw IllegalStateException("Unable to find schedule for eventId=$eventId despite having matched it earlier. This should not happen!")
+  private fun OffenderTransferMovementsResponse.findScheduledMovement(nomisMovementId: NomisMovementId) = bookings.flatMap { it.transferSchedules }.mapNotNull { it.movement }
+    .find { it.bookingId == nomisMovementId.bookingId && it.sequence == nomisMovementId.sequence }
+    ?: throw IllegalStateException("Unable to find movement for id=$nomisMovementId despite having matched it earlier. This should not happen!")
+  private fun OffenderTransferMovementsResponse.findUnscheduledMovement(nomisMovementId: NomisMovementId) = bookings.flatMap { it.unscheduledTransferMovements }
+    .find { it.bookingId == nomisMovementId.bookingId && it.sequence == nomisMovementId.sequence }
+    ?: throw IllegalStateException("Unable to find movement for id=$nomisMovementId despite having matched it earlier. This should not happen!")
   private fun ReconciliationResponse.findSchedule(dpsId: UUID) = transfers.map { it.transfer }.find { it.dpsId == dpsId }?.schedule
-    ?: throw IllegalStateException("Unable to find schedule for dpsId=$dpsId despite having matched it earlier. Has there been a merge or move court event mid reconciliation?")
+    ?: throw IllegalStateException("Unable to find schedule for dpsId=$dpsId despite having matched it earlier. Has there been a merge or new transfer mid reconciliation?")
   private fun ReconciliationResponse.findWaitlist(dpsId: UUID) = transfers.map { it.transfer }.find { it.dpsId == dpsId }?.waitlist
+  private fun ReconciliationResponse.findScheduledMovement(dpsId: UUID) = transfers.mapNotNull { it.movement }.find { it.dpsId == dpsId }
+    ?: throw IllegalStateException("Unable to find movement for dpsId=$dpsId despite having matched it earlier. Has there been a merge or new transfer mid reconciliation?")
+  private fun ReconciliationResponse.findUnscheduledMovement(dpsId: UUID) = unscheduledMovements.find { it.dpsId == dpsId }
+    ?: throw IllegalStateException("Unable to find movement for dpsId=$dpsId despite having matched it earlier. Has there been a merge or new transfer mid reconciliation?")
 }
 
 abstract class MismatchedPrisonerTransfer(
@@ -521,5 +633,23 @@ class MismatchPrisonerScheduleDetails(
     WAITLIST_APPROVED,
     WAITLIST_CANCELLATION_REASON,
     WAITLIST_COMMENT,
+  }
+}
+
+class MismatchPrisonerMovementDetails(
+  offenderNo: String,
+  type: Type,
+  val nomisMovementId: NomisMovementId,
+  val dpsMovementId: UUID,
+  val nomisValue: String,
+  val dpsValue: String,
+) : MismatchedPrisonerTransfer(offenderNo, type.name) {
+  enum class Type {
+    MOVEMENT_TIME,
+    MOVEMENT_REASON,
+    MOVEMENT_FROM_PRISON,
+    MOVEMENT_TO_PRISON,
+    MOVEMENT_ACTIVE,
+    MOVEMENT_COMMENT,
   }
 }

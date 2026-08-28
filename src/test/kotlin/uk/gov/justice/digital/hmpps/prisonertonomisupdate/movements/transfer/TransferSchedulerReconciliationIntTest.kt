@@ -148,13 +148,13 @@ class TransferSchedulerReconciliationIntTest(
             unscheduledMovements = listOf(transferMovementOutResponse().copy(transferScheduleOutId = null, sequence = 4)),
           ),
         )
-
-        reconciliationService.generateTransferSchedulerReconciliationReportBatch()
-        awaitReportFinished()
       }
 
       @Test
-      fun `should report extra NOMIS transfer schedule`() {
+      fun `should report extra NOMIS transfer schedule`() = runTest {
+        reconciliationService.generateTransferSchedulerReconciliationReportBatch()
+        awaitReportFinished()
+
         verify(telemetryClient).trackEvent(
           eq("transfer-scheduler-reconciliation-mismatch"),
           eq(
@@ -172,7 +172,10 @@ class TransferSchedulerReconciliationIntTest(
       }
 
       @Test
-      fun `should report extra NOMIS scheduled movement`() {
+      fun `should report extra NOMIS scheduled movement`() = runTest {
+        reconciliationService.generateTransferSchedulerReconciliationReportBatch()
+        awaitReportFinished()
+
         verify(telemetryClient).trackEvent(
           eq("transfer-scheduler-reconciliation-mismatch"),
           eq(
@@ -190,7 +193,10 @@ class TransferSchedulerReconciliationIntTest(
       }
 
       @Test
-      fun `should report extra NOMIS unscheduled movement`() {
+      fun `should report extra NOMIS unscheduled movement`() = runTest {
+        reconciliationService.generateTransferSchedulerReconciliationReportBatch()
+        awaitReportFinished()
+
         verify(telemetryClient).trackEvent(
           eq("transfer-scheduler-reconciliation-mismatch"),
           eq(
@@ -203,6 +209,29 @@ class TransferSchedulerReconciliationIntTest(
               "unexpected-dps-ids" to "[]",
             ),
           ),
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `reconcile endpoint should return ID mismatches`() = runTest {
+        webTestClient.get().uri("/external-movements/transfer/$offender/reconciliation")
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
+          .exchange()
+          .expectStatus().isOk()
+          .expectBody()
+          .jsonPath("$.length()").isEqualTo(6)
+          .jsonPath("$[0].offenderNo").isEqualTo(offender)
+          .jsonPath("$[0].type").isEqualTo("SCHEDULE")
+          .jsonPath("$[0].nomisCount").isEqualTo("1")
+          .jsonPath("$[0].dpsCount").isEqualTo("0")
+          .jsonPath("$[0].unexpectedNomisIds").isEqualTo("[123]")
+          .jsonPath("$[0].unexpectedDpsIds").isEqualTo("[]")
+
+        // No telemetry
+        verify(telemetryClient, never()).trackEvent(
+          eq("transfer-scheduler-reconciliation-mismatch"),
+          any(),
           isNull(),
         )
       }
@@ -555,6 +584,31 @@ class TransferSchedulerReconciliationIntTest(
 
         verifyTelemetry("SCHEDULE_ESCORT")
       }
+
+      @Test
+      fun `reconcile endpoint should schedule detail mismatches`() = runTest {
+        stubNomis(schedule = stubNomisSchedule(startTime = yesterday))
+        stubDps()
+        stubMappings()
+
+        webTestClient.get().uri("/external-movements/transfer/$offender/reconciliation")
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
+          .exchange()
+          .expectStatus().isOk()
+          .expectBody()
+          .jsonPath("$.length()").isEqualTo(1)
+          .jsonPath("$[0].offenderNo").isEqualTo(offender)
+          .jsonPath("$[0].type").isEqualTo("SCHEDULE_START_TIME")
+          .jsonPath("$[0].nomisValue").isEqualTo("$yesterday")
+          .jsonPath("$[0].dpsValue").isEqualTo("$now")
+
+        // No telemetry
+        verify(telemetryClient, never()).trackEvent(
+          eq("transfer-scheduler-reconciliation-mismatch"),
+          any(),
+          isNull(),
+        )
+      }
     }
 
     @Nested
@@ -651,6 +705,172 @@ class TransferSchedulerReconciliationIntTest(
       }
     }
 
+    @Nested
+    inner class ScheduledMovements {
+
+      private fun verifyTelemetry(type: String) = verify(telemetryClient).trackEvent(
+        eq("transfer-scheduler-reconciliation-mismatch"),
+        eq(
+          mapOf(
+            "offenderNo" to "A0001TZ",
+            "nomisMovementId" to "12345_3",
+            "dpsMovementId" to "$dpsScheduledMovementId",
+            "type" to type,
+          ),
+        ),
+        isNull(),
+      )
+
+      @Test
+      fun `should report movement time difference`() = runTest {
+        stubNomis(scheduledMovement = stubNomisMovement(movementTime = yesterday, eventId = 123, sequence = 3))
+        stubDps()
+        stubMappings()
+        reconciliationService.generateTransferSchedulerReconciliationReportBatch()
+          .also { awaitReportFinished() }
+
+        verifyTelemetry("MOVEMENT_TIME")
+      }
+
+      @Test
+      fun `should report movement reason difference`() = runTest {
+        stubNomis(scheduledMovement = stubNomisMovement(movementReason = "29", eventId = 123, sequence = 3))
+        stubDps()
+        stubMappings()
+        reconciliationService.generateTransferSchedulerReconciliationReportBatch()
+          .also { awaitReportFinished() }
+
+        verifyTelemetry("MOVEMENT_REASON")
+      }
+
+      @Test
+      fun `should report from prison difference`() = runTest {
+        stubNomis(scheduledMovement = stubNomisMovement(fromPrison = "MDI", eventId = 123, sequence = 3))
+        stubDps()
+        stubMappings()
+        reconciliationService.generateTransferSchedulerReconciliationReportBatch()
+          .also { awaitReportFinished() }
+
+        verifyTelemetry("MOVEMENT_FROM_PRISON")
+      }
+
+      @Test
+      fun `should report to prison difference`() = runTest {
+        stubNomis(scheduledMovement = stubNomisMovement(toPrison = "MDI", eventId = 123, sequence = 3))
+        stubDps()
+        stubMappings()
+        reconciliationService.generateTransferSchedulerReconciliationReportBatch()
+          .also { awaitReportFinished() }
+
+        verifyTelemetry("MOVEMENT_TO_PRISON")
+      }
+
+      @Test
+      fun `should report active flag difference`() = runTest {
+        stubNomis(scheduledMovement = stubNomisMovement(active = false, eventId = 123, sequence = 3))
+        stubDps()
+        stubMappings()
+        reconciliationService.generateTransferSchedulerReconciliationReportBatch()
+          .also { awaitReportFinished() }
+
+        verifyTelemetry("MOVEMENT_ACTIVE")
+      }
+
+      @Test
+      fun `should report comment difference`() = runTest {
+        stubNomis(scheduledMovement = stubNomisMovement(commentText = "different", eventId = 123, sequence = 3))
+        stubDps()
+        stubMappings()
+        reconciliationService.generateTransferSchedulerReconciliationReportBatch()
+          .also { awaitReportFinished() }
+
+        verifyTelemetry("MOVEMENT_COMMENT")
+      }
+    }
+
+    @Nested
+    inner class UnscheduledMovements {
+
+      private fun verifyTelemetry(type: String) = verify(telemetryClient).trackEvent(
+        eq("transfer-scheduler-reconciliation-mismatch"),
+        eq(
+          mapOf(
+            "offenderNo" to "A0001TZ",
+            "nomisMovementId" to "12345_4",
+            "dpsMovementId" to "$dpsUnscheduledMovementId",
+            "type" to type,
+          ),
+        ),
+        isNull(),
+      )
+
+      @Test
+      fun `should report movement time difference`() = runTest {
+        stubNomis(unscheduledMovement = stubNomisMovement(movementTime = yesterday, eventId = null, sequence = 4))
+        stubDps()
+        stubMappings()
+        reconciliationService.generateTransferSchedulerReconciliationReportBatch()
+          .also { awaitReportFinished() }
+
+        verifyTelemetry("MOVEMENT_TIME")
+      }
+
+      @Test
+      fun `should report movement reason difference`() = runTest {
+        stubNomis(unscheduledMovement = stubNomisMovement(movementReason = "29", eventId = null, sequence = 4))
+        stubDps()
+        stubMappings()
+        reconciliationService.generateTransferSchedulerReconciliationReportBatch()
+          .also { awaitReportFinished() }
+
+        verifyTelemetry("MOVEMENT_REASON")
+      }
+
+      @Test
+      fun `should report from prison difference`() = runTest {
+        stubNomis(unscheduledMovement = stubNomisMovement(fromPrison = "MDI", eventId = null, sequence = 4))
+        stubDps()
+        stubMappings()
+        reconciliationService.generateTransferSchedulerReconciliationReportBatch()
+          .also { awaitReportFinished() }
+
+        verifyTelemetry("MOVEMENT_FROM_PRISON")
+      }
+
+      @Test
+      fun `should report to prison difference`() = runTest {
+        stubNomis(unscheduledMovement = stubNomisMovement(toPrison = "MDI", eventId = null, sequence = 4))
+        stubDps()
+        stubMappings()
+        reconciliationService.generateTransferSchedulerReconciliationReportBatch()
+          .also { awaitReportFinished() }
+
+        verifyTelemetry("MOVEMENT_TO_PRISON")
+      }
+
+      @Test
+      fun `should report active flag difference`() = runTest {
+        stubNomis(unscheduledMovement = stubNomisMovement(active = false, eventId = null, sequence = 4))
+        stubDps()
+        stubMappings()
+        reconciliationService.generateTransferSchedulerReconciliationReportBatch()
+          .also { awaitReportFinished() }
+
+        verifyTelemetry("MOVEMENT_ACTIVE")
+      }
+
+      @Test
+      fun `should report comment difference`() = runTest {
+        stubNomis(unscheduledMovement = stubNomisMovement(commentText = "different", eventId = null, sequence = 4))
+        stubDps()
+        stubMappings()
+        reconciliationService.generateTransferSchedulerReconciliationReportBatch()
+          .also { awaitReportFinished() }
+
+        verifyTelemetry("MOVEMENT_COMMENT")
+      }
+    }
+
     fun stubNomis(
       schedule: TransferScheduleOut = stubNomisSchedule(),
       waitlist: TransferScheduleWaitlist? = stubNomisWaitlist(),
@@ -721,13 +941,13 @@ class TransferSchedulerReconciliationIntTest(
     fun stubNomisMovement(
       eventId: Long? = 123L,
       sequence: Int = 3,
-      movementTime: LocalDateTime = LocalDateTime.now(),
+      movementTime: LocalDateTime = now,
       movementReason: String = "28",
       fromPrison: String = "BXI",
       toPrison: String = "LEI",
       active: Boolean = true,
       transferScheduleOutId: Long? = null,
-      commentText: String? = null,
+      commentText: String? = "some transfer movement comment",
     ) = transferMovementOutResponse().copy(
       eventId = eventId,
       sequence = sequence,
@@ -860,6 +1080,75 @@ class TransferSchedulerReconciliationIntTest(
         movements = listOf(),
       ),
     )
+  }
+
+  @Nested
+  inner class PrisonerReconciliationEndpoint {
+
+    @Nested
+    // Note that there are various tests in this class which test the reconciliation endpoint works
+    // the same as the batch job
+    inner class ReconcileSinglePrisoner {
+
+      @BeforeEach
+      fun setUp() = runTest {
+        stubEmptyResponses("A0001TZ")
+      }
+
+      @Test
+      fun `should return nothing if no mismatches`() = runTest {
+        webTestClient.get().uri("/external-movements/transfer/A0001TZ/reconciliation")
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
+          .exchange()
+          .expectStatus().isOk()
+          .expectBody()
+          .jsonPath("$.mismatches").doesNotExist()
+
+        // No telemetry
+        verify(telemetryClient, never()).trackEvent(
+          eq("transfer-scheduler-reconciliation-mismatch"),
+          any(),
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class Validation {
+      @Test
+      fun `should return error for unknown offender`() {
+        webTestClient.get().uri("/external-movements/transfer/UNKNOWN/reconciliation")
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
+          .exchange()
+          .expectStatus().is5xxServerError
+      }
+    }
+
+    @Nested
+    inner class Security {
+      @Test
+      fun `access forbidden when no role`() {
+        webTestClient.get().uri("/external-movements/transfer/A0001TZ/reconciliation")
+          .headers(setAuthorisation(roles = listOf()))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access forbidden with wrong role`() {
+        webTestClient.get().uri("/external-movements/transfer/A0001TZ/reconciliation")
+          .headers(setAuthorisation(roles = listOf("ROLE_BANANAS")))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access unauthorised with no auth token`() {
+        webTestClient.get().uri("/external-movements/transfer/A0001TZ/reconciliation")
+          .exchange()
+          .expectStatus().isUnauthorized
+      }
+    }
   }
 
   private fun awaitReportFinished() {

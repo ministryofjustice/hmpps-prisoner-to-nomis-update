@@ -11,6 +11,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.Mismatc
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.MismatchPrisonerTapsSummary
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapActivePrisonersReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapAllPrisonersReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.MismatchedPrisonerTransfer
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.TransferScheduleReconciliationService
 
 @PreAuthorize("hasAnyRole('PRISONER_TO_NOMIS__UPDATE__RW', 'ROLE_PRISONER_FROM_NOMIS__REPAIR_MOVEMENTS__RW')")
 @RestController
@@ -19,6 +21,7 @@ class ExternalMovementsReconciliationResource(
   private val allPrisonerReconService: TapAllPrisonersReconciliationService,
   private val activePrisonerReconService: TapActivePrisonersReconciliationService,
   private val courtSchedulerReconService: CourtSchedulerReconciliationService,
+  private val transferSchedulerReconService: TransferScheduleReconciliationService,
 ) {
 
   @GetMapping("/external-movements/all-taps/{offenderNo}/reconciliation")
@@ -33,4 +36,9 @@ class ExternalMovementsReconciliationResource(
   suspend fun courtMovementsReconciliation(
     @PathVariable offenderNo: String,
   ): List<MismatchedPrisonerCourtMovements> = courtSchedulerReconService.checkPrisonersMatch(offenderNo, suppressTelemetry = true)
+
+  @GetMapping("/external-movements/transfer/{offenderNo}/reconciliation")
+  suspend fun transferMovementsReconciliation(
+    @PathVariable offenderNo: String,
+  ): List<MismatchedPrisonerTransfer> = transferSchedulerReconService.checkPrisonersMatch(offenderNo, suppressTelemetry = true)
 }

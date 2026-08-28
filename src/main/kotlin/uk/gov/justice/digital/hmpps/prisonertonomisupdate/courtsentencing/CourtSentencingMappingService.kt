@@ -236,13 +236,8 @@ class CourtSentencingMappingService(
       .awaitBodilessEntity()
   }
 
-  suspend fun updateAndCreateMappings(request: CourtCaseBatchUpdateAndCreateMappingDto) {
-    webClient.put()
-      .uri("/mapping/court-sentencing/court-cases/update-create")
-      .bodyValue(request)
-      .retrieve()
-      .awaitBodilessEntityOrThrowOnConflict()
-  }
+  suspend fun updateAndCreateMappings(request: CourtCaseBatchUpdateAndCreateMappingDto) = api.updateAndCreateMappingByNomisId(request).awaitSingle()
+
   suspend fun replaceMappings(request: CourtCaseBatchMappingDto) {
     webClient.put()
       .uri("/mapping/court-sentencing/court-cases/replace")
