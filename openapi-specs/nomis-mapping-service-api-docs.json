@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-08-27.775.ddc0d75"
+    "version" : "2026-08-28.777.d3c0d53"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -4849,7 +4849,13 @@
         "responses" : {
           "201" : {
             "description" : "Mappings created",
-            "content" : { }
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CourtCaseBatchUpdateMappingResponseDto"
+                }
+              }
+            }
           },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
