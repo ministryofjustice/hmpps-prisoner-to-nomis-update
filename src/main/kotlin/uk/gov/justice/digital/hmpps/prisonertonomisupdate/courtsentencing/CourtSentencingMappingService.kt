@@ -8,6 +8,7 @@ import org.springframework.web.reactive.function.client.awaitBodilessEntity
 import org.springframework.web.reactive.function.client.awaitBody
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodilessEntityOrThrowOnConflict
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrThrowOnConflict
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.api.CourtSentencingMappingResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceRecallMappingDto
@@ -16,6 +17,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseAllMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseBatchMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseBatchUpdateAndCreateMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseBatchUpdateMappingResponseDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeBatchUpdateMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeMappingDto
@@ -57,13 +59,9 @@ class CourtSentencingMappingService(
       .awaitBodilessEntity()
   }
 
-  suspend fun createAppearanceRecallMappings(request: CourtAppearanceRecallMappingsDto) {
-    webClient.post()
-      .uri("/mapping/court-sentencing/court-appearances/recall")
-      .bodyValue(request)
-      .retrieve()
-      .awaitBodilessEntityOrThrowOnConflict()
-  }
+  suspend fun createAppearanceRecallMappings(request: CourtAppearanceRecallMappingsDto): CourtCaseBatchUpdateMappingResponseDto = api.prepare(api.createCourtAppearanceRecallMappingRequestConfig(request))
+    .retrieve()
+    .awaitBodyOrThrowOnConflict()
 
   suspend fun updateAppearanceRecallMappings(recallId: String, request: CourtAppearanceRecallMappingsUpdateDto) {
     api.updateCourtAppearanceRecallMapping(

@@ -106,6 +106,12 @@ suspend fun WebClient.ResponseSpec.awaitBodilessEntityOrThrowOnConflict() = this
   }
   .awaitSingleOrNull()
 
+suspend inline fun <reified T : Any> WebClient.ResponseSpec.awaitBodyOrThrowOnConflict(): T = this.bodyToMono<T>()
+  .onErrorResume(WebClientResponseException.Conflict::class.java) {
+    Mono.error(DuplicateMappingException(it.getResponseBodyAs(DuplicateErrorResponse::class.java)!!))
+  }
+  .awaitSingle()
+
 class DuplicateMappingException(val error: DuplicateErrorResponse) : RuntimeException("message")
 
 class DuplicateErrorResponse(
