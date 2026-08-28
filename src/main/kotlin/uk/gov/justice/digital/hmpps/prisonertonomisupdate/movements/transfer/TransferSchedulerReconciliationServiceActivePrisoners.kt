@@ -73,7 +73,7 @@ class TransferSchedulerReconciliationServiceActivePrisoners(
     )
   }.onFailure {
     telemetryClient.trackEvent(
-      "$TELEMETRY_COURT_SCHEDULER-mismatch-page-error",
+      "$TELEMETRY_TRANSFER_SCHEDULER-mismatch-page-error",
       mapOf(
         "booking" to lastBookingId.toString(),
       ),
