@@ -56,7 +56,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Cl
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ConvertToRecallResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtAppearanceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtEventChargeRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateBreachAppearanceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCourtAppearanceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCourtCaseResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceResponse
@@ -739,66 +738,6 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           assertThat(request.mappingsToUpdate.courtCharges).isEmpty()
           assertThat(request.mappingsToUpdate.sentences).isEmpty()
           assertThat(request.mappingsToUpdate.sentenceTerms).isEmpty()
-        }
-      }
-
-      @Nested
-      inner class WhenAppearanceIsPartOfASupervisionBreach {
-        @BeforeEach
-        fun setUp() {
-          courtSentencingApi.stubCourtCaseGet(
-            COURT_CASE_ID_FOR_CREATION,
-            legacyCourtCaseResponse().copy(
-              caseReferences = [
-                CaseReferenceLegacyData(
-                  offenderCaseReference = "BREACH1",
-                  updatedDate = LocalDateTime.now(),
-                  source = CaseReferenceLegacyData.Source.DPS,
-                ),
-                CaseReferenceLegacyData(
-                  offenderCaseReference = "BREACH2",
-                  updatedDate = LocalDateTime.now(),
-                  source = CaseReferenceLegacyData.Source.DPS,
-                ),
-              ],
-            ),
-          )
-          courtSentencingNomisApi.stubBreachCourtAppearanceCreate(
-            OFFENDER_NO,
-            NOMIS_COURT_CASE_ID_FOR_CREATION,
-            nomisCourtAppearanceCreateResponse(),
-          )
-
-          publishCreateCourtAppearanceDomainEvent(isBreach = true).also {
-            waitForAnyProcessingToComplete()
-          }
-        }
-
-        @Test
-        fun `will create success telemetry`() {
-          verify(telemetryClient).trackEvent(
-            eq("court-appearance-create-success"),
-            check {
-              assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
-            },
-            isNull(),
-          )
-        }
-
-        @Test
-        fun `will call nomis api to create the breach Court Appearance with case identifiers`() {
-          val request: CreateBreachAppearanceRequest = NomisApiMockServer.getRequestBody(postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/${NOMIS_COURT_CASE_ID_FOR_CREATION}/breach-court-appearances")))
-
-          assertThat(request.courtAppearance.eventDateTime).isEqualTo("2024-09-23T10:00:00")
-          assertThat(request.caseIdentifiers.caseIdentifiers.map { it.reference }).containsExactly("BREACH1", "BREACH2")
-        }
-
-        @Test
-        fun `will create just a mapping between the two court appearances but not update any other mappings`() {
-          val request: CourtCaseBatchUpdateAndCreateMappingDto = CourtSentencingMappingApiMockServer.getRequestBody(putRequestedFor(urlEqualTo("/mapping/court-sentencing/court-cases/update-create")))
-          assertThat(request.mappingsToCreate.courtAppearances).hasSize(1)
-          assertThat(request.mappingsToCreate.courtAppearances[0].dpsCourtAppearanceId).isEqualTo(DPS_COURT_APPEARANCE_ID)
-          assertThat(request.mappingsToCreate.courtAppearances[0].nomisCourtAppearanceId).isEqualTo(NOMIS_COURT_APPEARANCE_ID)
         }
       }
 
@@ -5838,7 +5777,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     ).get()
   }
 
-  private fun publishCreateCourtAppearanceDomainEvent(source: String = "DPS", isOnFutureCourtAppearance: Boolean = false, isBreach: Boolean = false) {
+  private fun publishCreateCourtAppearanceDomainEvent(source: String = "DPS", isOnFutureCourtAppearance: Boolean = false) {
     val eventType = "court-appearance.inserted"
     awsSnsClient.publish(
       PublishRequest.builder().topicArn(topicArn)
@@ -5850,7 +5789,6 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             eventType = eventType,
             source = source,
             isOnFutureCourtAppearance = isOnFutureCourtAppearance,
-            isBreach = isBreach,
           ),
         )
         .messageAttributes(
@@ -6207,8 +6145,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     eventType: String,
     source: String = "DPS",
     isOnFutureCourtAppearance: Boolean = false,
-    isBreach: Boolean = false,
-  ) = """{"eventType":"$eventType", "additionalInformation": {"courtAppearanceId":"$courtAppearanceId", "courtCaseId":"$courtCaseId", "source": "$source", "isOnFutureCourtAppearance": $isOnFutureCourtAppearance, "isBreach": $isBreach}, "personReference": {"identifiers":[{"type":"NOMS", "value":"$offenderNo"}]}}"""
+  ) = """{"eventType":"$eventType", "additionalInformation": {"courtAppearanceId":"$courtAppearanceId", "courtCaseId":"$courtCaseId", "source": "$source", "isOnFutureCourtAppearance": $isOnFutureCourtAppearance}, "personReference": {"identifiers":[{"type":"NOMS", "value":"$offenderNo"}]}}"""
 
   fun courtChargeMessagePayload(
     courtCaseId: String,
