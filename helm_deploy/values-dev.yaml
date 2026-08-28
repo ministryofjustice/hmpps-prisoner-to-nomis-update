@@ -74,6 +74,10 @@ generic-service:
   # The type must exist in enum BatchType
   # Can be removed once testing in dev complete
   batchjobs:
+    - name: agency-recon
+      type: AGENCY_RECON
+      schedule: "30 6 * * *"
+      suspend: true
     - name: core-person-recon
       type: CORE_PERSON_FULL_RECON
       schedule: "30 12 * * *"
@@ -110,13 +114,17 @@ generic-service:
       type: STAFF_RECON
       schedule: "0 4 * * 1-5"
       suspend: true
+    - name: transfer-sched-act-recon
+      type: TRANSFER_SCHEDULER_ACTIVE_RECON
+      schedule: "30 4 * * *"
+      suspend: true
+    - name: transfer-sched-all-recon
+      type: TRANSFER_SCHEDULER_ALL_RECON
+      schedule: "30 4 * * *"
+      suspend: true
     - name: visit-slots-recon
       type: VISIT_SLOTS_RECON
       schedule: "45 2 * * *"
-      suspend: true
-    - name: agency-recon
-      type: AGENCY_RECON
-      schedule: "30 6 * * *"
       suspend: true
 
 generic-prometheus-alerts:

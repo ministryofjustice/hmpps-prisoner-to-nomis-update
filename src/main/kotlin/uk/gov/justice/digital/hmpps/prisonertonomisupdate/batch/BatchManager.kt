@@ -53,6 +53,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.STAFF_
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.SUSPENDED_ALLOCATION_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.TAP_ACTIVE_PRISONERS_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.TAP_ALL_PRISONERS_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.TRANSFER_SCHEDULER_ACTIVE_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.TRANSFER_SCHEDULER_ALL_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.VISIT_BALANCE_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.VISIT_SLOTS_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.CaseNotesReconciliationService
@@ -68,6 +70,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.CourtS
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.CourtSchedulerReconciliationServiceAllPrisoners
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapActivePrisonersReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapAllPrisonersReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.TransferSchedulerReconciliationServiceActivePrisoners
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.TransferSchedulerReconciliationServiceAllPrisoners
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nonassociations.NonAssociationsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsActiveScheduledReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsAllMissingFromNOMISReconciliationService
@@ -86,6 +90,7 @@ import java.time.LocalDate
 
 enum class BatchType {
   ADJUDICATION_RECON,
+  AGENCY_RECON,
   ALERT_RECON,
   ALLOCATION_RECON,
   APPOINTMENT_RECON,
@@ -123,8 +128,9 @@ enum class BatchType {
   SUSPENDED_ALLOCATION_RECON,
   TAP_ALL_PRISONERS_RECON,
   TAP_ACTIVE_PRISONERS_RECON,
+  TRANSFER_SCHEDULER_ACTIVE_RECON,
+  TRANSFER_SCHEDULER_ALL_RECON,
   VISIT_BALANCE_RECON,
-  AGENCY_RECON,
 }
 
 @ConditionalOnProperty(name = ["batch.enabled"], havingValue = "true")
@@ -134,6 +140,7 @@ class BatchManager(
   @Value($$"${hmpps.sqs.queues.activity.dlq.name}") private val activitiesDlqName: String,
   private val activitiesReconService: ActivitiesReconService,
   private val adjudicationsReconService: AdjudicationsReconciliationService,
+  private val agencyRegistersReconciliationService: AgencyRegistersReconciliationService,
   private val alertsReconciliationService: AlertsReconciliationService,
   private val appointmentsReconciliationService: AppointmentsReconciliationService,
   private val caseNotesReconciliationService: CaseNotesReconciliationService,
@@ -162,9 +169,10 @@ class BatchManager(
   private val sentencingReconciliationService: SentencingReconciliationService,
   private val tapActivePrisonersReconciliationService: TapActivePrisonersReconciliationService,
   private val tapAllPrisonersReconciliationService: TapAllPrisonersReconciliationService,
+  private val transferSchedulerReconciliationServiceAll: TransferSchedulerReconciliationServiceAllPrisoners,
+  private val transferSchedulerReconciliationServiceActive: TransferSchedulerReconciliationServiceActivePrisoners,
   private val visitBalancesReconciliationService: VisitBalanceReconciliationService,
   private val visitSlotsReconciliationService: VisitSlotsReconciliationService,
-  private val agencyRegistersReconciliationService: AgencyRegistersReconciliationService,
 ) {
 
   @EventListener
@@ -174,6 +182,7 @@ class BatchManager(
   fun runBatchJob(@SpanAttribute batchType: BatchType) = runBlocking {
     when (batchType) {
       ADJUDICATION_RECON -> adjudicationsReconService.generateAdjudicationsReconciliationReport()
+      AGENCY_RECON -> agencyRegistersReconciliationService.generateAgencyReconciliationReportBatch()
       ALERT_RECON -> alertsReconciliationService.generateAlertsReconciliationReport()
       ALLOCATION_RECON -> activitiesReconService.allocationReconciliationReport()
       APPOINTMENT_RECON -> appointmentsReconciliationService.generateReconciliationReportBatch()
@@ -210,9 +219,10 @@ class BatchManager(
       SUSPENDED_ALLOCATION_RECON -> activitiesReconService.suspendedAllocationReconciliationReport()
       TAP_ACTIVE_PRISONERS_RECON -> tapActivePrisonersReconciliationService.generateTapActivePrisonersReconciliationReportBatch()
       TAP_ALL_PRISONERS_RECON -> tapAllPrisonersReconciliationService.generateTapAllPrisonersReconciliationReportBatch()
+      TRANSFER_SCHEDULER_ACTIVE_RECON -> transferSchedulerReconciliationServiceActive.generateTransferSchedulerReconciliationReportBatch()
+      TRANSFER_SCHEDULER_ALL_RECON -> transferSchedulerReconciliationServiceAll.generateTransferSchedulerReconciliationReportBatch()
       VISIT_BALANCE_RECON -> visitBalancesReconciliationService.generateReconciliationReport()
       VISIT_SLOTS_RECON -> visitSlotsReconciliationService.generateVisitSlotsReconciliationReportBatch()
-      AGENCY_RECON -> agencyRegistersReconciliationService.generateAgencyReconciliationReportBatch()
     }
   }
 
