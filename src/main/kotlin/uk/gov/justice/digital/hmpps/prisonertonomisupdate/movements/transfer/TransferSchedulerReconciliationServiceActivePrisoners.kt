@@ -93,7 +93,7 @@ class TransferSchedulerReconciliationServiceActivePrisoners(
     reconciliationService.checkPrisonersMatch(prisonerIds.offenderNo).takeIf { it.isNotEmpty() }
       ?.let { prisonerIds }
   }.onFailure {
-    TransferScheduleReconciliationService.log.error("Unable to match transfers for prisoner ${prisonerIds.offenderNo}", it)
+    log.error("Unable to match transfers for prisoner ${prisonerIds.offenderNo}", it)
     telemetryClient.trackEvent(
       "$TELEMETRY_TRANSFER_SCHEDULER-mismatch-error",
       mapOf(
