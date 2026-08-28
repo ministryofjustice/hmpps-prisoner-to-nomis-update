@@ -4,7 +4,6 @@ import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingService.EntityType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceRecallMappingsUpdateDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseBatchUpdateMappingResponseDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.QueueService
 
@@ -59,7 +58,7 @@ class RecallMappingAndDPSSynchronisationHandler(
     offenderNo: String,
     telemetry: Map<String, String>,
   ) {
-    courtCaseMappingService.createAppearanceRecallMappings(mappingsWrapper.mappings)
+    val updatedMappings = courtCaseMappingService.createAppearanceRecallMappings(mappingsWrapper.mappings)
 
     // we might get adjustments that just need updating since the cases have not been cloned,
     // or we might get cases that have been created and the adjustments have been created, in which case they will appear in both lists,
@@ -115,14 +114,7 @@ class RecallMappingAndDPSSynchronisationHandler(
           fromBookingId = details.fromBookingId,
           toBookingId = details.toBookingId,
           casesMoved = details.casesMoved,
-          //  TODO - need mapping service to return this
-          updatedMappings = CourtCaseBatchUpdateMappingResponseDto(
-            courtCases = emptyList(),
-            courtAppearances = emptyList(),
-            courtCharges = emptyList(),
-            sentences = emptyList(),
-            sentenceTerms = emptyList(),
-          ),
+          updatedMappings = updatedMappings,
         ),
       )
 

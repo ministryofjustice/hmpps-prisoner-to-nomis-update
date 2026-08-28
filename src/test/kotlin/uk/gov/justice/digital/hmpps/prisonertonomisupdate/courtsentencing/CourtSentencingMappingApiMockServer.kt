@@ -379,8 +379,53 @@ class CourtSentencingMappingApiMockServer(private val jsonMapper: JsonMapper) {
     stubCreateWithErrorFollowedBySuccess(url = "/mapping/court-sentencing/sentence-terms", "Sentence term")
   }
 
-  fun stubCreateAppearanceRecallMapping() {
-    stubCreate("/mapping/court-sentencing/court-appearances/recall")
+  fun stubCreateAppearanceRecallMapping(
+    response: CourtCaseBatchUpdateMappingResponseDto = courtCaseBatchUpdateMappingResponseDto(),
+  ) {
+    mappingServer.stubFor(
+      post("/mapping/court-sentencing/court-appearances/recall").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            jsonMapper.writeValueAsString(
+              response,
+            ),
+          )
+          .withStatus(201),
+      ),
+    )
+  }
+
+  fun stubCreateAppearanceRecallMappingWithErrorFollowedBySuccess(
+    response: CourtCaseBatchUpdateMappingResponseDto = courtCaseBatchUpdateMappingResponseDto(),
+  ) {
+    mappingServer.stubFor(
+      post("/mapping/court-sentencing/court-appearances/recall")
+        .inScenario("Retry Create appearance recall mappings")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withStatus(500) // request unsuccessful with status code 500
+            .withHeader("Content-Type", "application/json"),
+        )
+        .willSetStateTo("Create appearance recall mappings Success"),
+    )
+
+    mappingServer.stubFor(
+      post("/mapping/court-sentencing/court-appearances/recall")
+        .inScenario("Retry Create appearance recall mappings")
+        .whenScenarioStateIs("Create appearance recall mappings Success")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(
+              jsonMapper.writeValueAsString(
+                response,
+              ),
+            )
+            .withStatus(200),
+        ).willSetStateTo(Scenario.STARTED),
+    )
   }
 
   fun stubUpdateAppearanceRecallMapping(recallId: String) {
