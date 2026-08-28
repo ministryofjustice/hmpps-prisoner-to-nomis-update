@@ -20,8 +20,8 @@ class TransferSchedulerReconciliationServiceAllPrisoners(
   private val telemetryClient: TelemetryClient,
   private val nomisPrisonerApi: NomisApiService,
   private val reconciliationService: TransferScheduleReconciliationService,
-  @param:Value($$"${reports.temporary-absences.active-prisoners.reconciliation.page-size}") private val pageSize: Int = 100,
-  @param:Value($$"${reports.temporary-absences.active-prisoners.reconciliation.thread-count}") private val threadCount: Int = 15,
+  @param:Value($$"${reports.transfer-scheduler.all-prisoners.reconciliation.page-size}") private val pageSize: Int = 100,
+  @param:Value($$"${reports.transfer-scheduler.all-prisoners.reconciliation.thread-count}") private val threadCount: Int = 15,
 ) {
   internal companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
