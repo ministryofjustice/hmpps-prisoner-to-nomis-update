@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-08-27.1977.dc855f5"
+    "version" : "2026-08-28.1992.b5a61c4"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -2506,6 +2506,124 @@
           },
           "403" : {
             "description" : "Forbidden to access this endpoint when role NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prisoners/booking-id/{bookingId}/csra/{sequence}" : {
+      "get" : {
+        "tags" : [ "csra-resource" ],
+        "summary" : "Get a CSRA record for a prisoner",
+        "description" : "Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getCsra",
+        "parameters" : [ {
+          "name" : "bookingId",
+          "in" : "path",
+          "description" : "Booking Id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Booking Id",
+            "example" : 2345678
+          },
+          "example" : 2345678
+        }, {
+          "name" : "sequence",
+          "in" : "path",
+          "description" : "Sequence within booking",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Sequence within booking",
+            "example" : 3
+          },
+          "example" : 3
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CsraGetDto"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "CSRA or booking does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put" : {
+        "tags" : [ "csra-resource" ],
+        "summary" : "Updates a CSRA record for a prisoner",
+        "description" : "Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "updateCsra",
+        "parameters" : [ {
+          "name" : "bookingId",
+          "in" : "path",
+          "description" : "Booking Id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Booking Id",
+            "example" : 2345678
+          },
+          "example" : 2345678
+        }, {
+          "name" : "sequence",
+          "in" : "path",
+          "description" : "Sequence within booking",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Sequence within booking",
+            "example" : 3
+          },
+          "example" : 3
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CsraUpdateDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "400" : {
+            "description" : "Invalid agency or user",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "CSRA or booking does not exist",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -10463,10 +10581,14 @@
         "parameters" : [ {
           "name" : "offenderNo",
           "in" : "path",
+          "description" : "Offender Number",
           "required" : true,
           "schema" : {
-            "type" : "string"
-          }
+            "type" : "string",
+            "description" : "Offender Number",
+            "example" : "A1234AA"
+          },
+          "example" : "A1234AA"
         } ],
         "requestBody" : {
           "content" : {
@@ -17833,6 +17955,48 @@
         }
       }
     },
+    "/prisoners/{offenderNo}/csras/current" : {
+      "get" : {
+        "tags" : [ "csra-resource" ],
+        "summary" : "Gets current CSRA for a prisoner",
+        "description" : "Retrieves the current CSRA for a specific prisoner, for reconciliation. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getCurrentCsraForPrisoner",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender No AKA prisoner number",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender No AKA prisoner number",
+            "example" : "A3745XD"
+          },
+          "example" : "A3745XD"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CsraGetDto"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Prisoner does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/prisoners/{offenderNo}/csip/reconciliation" : {
       "get" : {
         "tags" : [ "csip-resource" ],
@@ -19070,61 +19234,6 @@
           },
           "404" : {
             "description" : "Offender booking not found",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/prisoners/booking-id/{bookingId}/csra/{sequence}" : {
-      "get" : {
-        "tags" : [ "csra-resource" ],
-        "summary" : "Get a CSRA record for a prisoner",
-        "description" : "Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-        "operationId" : "getCsra",
-        "parameters" : [ {
-          "name" : "bookingId",
-          "in" : "path",
-          "description" : "Booking Id",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Booking Id",
-            "example" : 2345678
-          },
-          "example" : 2345678
-        }, {
-          "name" : "sequence",
-          "in" : "path",
-          "description" : "Sequence within booking",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "Sequence within booking",
-            "example" : 3
-          },
-          "example" : 3
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/CsraGetDto"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "CSRA or booking does not exist",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -22985,6 +23094,117 @@
                   "type" : "array",
                   "items" : {
                     "$ref" : "#/components/schemas/RootOffenderIdRange"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint when role NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/finance/prisoners/holds/{prisonNumber}" : {
+      "get" : {
+        "tags" : [ "prisoner-holds-resource" ],
+        "summary" : "Gets all holds for a prisoner",
+        "description" : "Gets all outstanding holds (HOA and WHF) for a prisoner by prisonNumber. Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
+        "operationId" : "getPrisonerHolds",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "description" : "Prison number aka nomisId",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prison number aka nomisId",
+            "example" : "A1234BC"
+          },
+          "example" : "A1234BC"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "paged list of prisoner ids",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/PrisonerHoldProjection"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint when role NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/finance/prisoners/holds/rootOffenderId/{rootOffenderId}" : {
+      "get" : {
+        "tags" : [ "prisoner-holds-resource" ],
+        "summary" : "Gets all holds for a prisoner using their root offenderId",
+        "description" : "Gets all outstanding holds (HOA and WHF) for a prisoner by rootOffenderId. Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
+        "operationId" : "getPrisonerHoldsByOffenderId",
+        "parameters" : [ {
+          "name" : "rootOffenderId",
+          "in" : "path",
+          "description" : "rootOffenderId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "rootOffenderId",
+            "example" : 123456
+          },
+          "example" : 123456
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "paged list of prisoner ids",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/PrisonerHoldProjection"
                   }
                 }
               }
@@ -27863,6 +28083,85 @@
         },
         "required" : [ "isBreach", "lifeSentenceFlag", "sentenceTermType" ]
       },
+      "AssessmentCommittee" : {
+        "type" : "string",
+        "enum" : [ "GOV", "MED", "OCA", "RECP", "REVIEW", "SECSTATE", "SECUR" ]
+      },
+      "AssessmentLevel" : {
+        "type" : "string",
+        "enum" : [ "STANDARD", "PEND", "LOW", "MED", "HI" ]
+      },
+      "AssessmentStatusType" : {
+        "type" : "string",
+        "enum" : [ "I", "A", "P" ]
+      },
+      "CsraUpdateDto" : {
+        "type" : "object",
+        "properties" : {
+          "status" : {
+            "$ref" : "#/components/schemas/AssessmentStatusType",
+            "description" : "Status, active, inactive or provisional",
+            "enum" : [ "I", "A", "P" ]
+          },
+          "committeeCode" : {
+            "$ref" : "#/components/schemas/AssessmentCommittee",
+            "description" : "The assessment committee code (reference code in domain 'ASSESS_COMM')"
+          },
+          "nextReviewDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Next review date"
+          },
+          "comment" : {
+            "type" : "string",
+            "description" : "Comment text"
+          },
+          "placementAgencyId" : {
+            "type" : "string",
+            "description" : "A prison to be transferred to",
+            "example" : "LEI"
+          },
+          "reviewLevel" : {
+            "$ref" : "#/components/schemas/AssessmentLevel",
+            "description" : "The review CSRA level"
+          },
+          "approvedLevel" : {
+            "$ref" : "#/components/schemas/AssessmentLevel",
+            "description" : "The approval CSRA level"
+          },
+          "evaluationDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Evaluation or approval date"
+          },
+          "evaluationResultCode" : {
+            "$ref" : "#/components/schemas/EvaluationResultCode",
+            "description" : "Approved or rejected indicator"
+          },
+          "reviewCommitteeCode" : {
+            "$ref" : "#/components/schemas/AssessmentCommittee",
+            "description" : "The review/approval committee code (reference code in domain 'ASSESS_COMM')"
+          },
+          "reviewCommitteeComment" : {
+            "type" : "string",
+            "description" : "Approval Committee Comment text"
+          },
+          "reviewPlacementAgencyId" : {
+            "type" : "string",
+            "description" : "The reviewed prison to be transferred to",
+            "example" : "MDI"
+          },
+          "reviewComment" : {
+            "type" : "string",
+            "description" : "Approval Comment text"
+          }
+        },
+        "required" : [ "status" ]
+      },
+      "EvaluationResultCode" : {
+        "type" : "string",
+        "enum" : [ "APP", "REJ" ]
+      },
       "AlertResponse" : {
         "type" : "object",
         "description" : "The data held in NOMIS about an alert associated with a prisoner",
@@ -31633,18 +31932,6 @@
         },
         "required" : [ "bookingId", "sequence" ]
       },
-      "AssessmentCommittee" : {
-        "type" : "string",
-        "enum" : [ "GOV", "MED", "OCA", "RECP", "REVIEW", "SECSTATE", "SECUR" ]
-      },
-      "AssessmentLevel" : {
-        "type" : "string",
-        "enum" : [ "STANDARD", "PEND", "LOW", "MED", "HI" ]
-      },
-      "AssessmentStatusType" : {
-        "type" : "string",
-        "enum" : [ "I", "A", "P" ]
-      },
       "AssessmentType" : {
         "type" : "string",
         "enum" : [ "CSR", "CSR1", "CSRDO", "CSRF", "CSRH", "CSRREV", "CATEGORY" ]
@@ -31742,10 +32029,6 @@
           }
         },
         "required" : [ "assessmentDate", "calculatedLevel", "createdBy", "createdDateTime", "status", "type" ]
-      },
-      "EvaluationResultCode" : {
-        "type" : "string",
-        "enum" : [ "APP", "REJ" ]
       },
       "CreateSentenceResponse" : {
         "type" : "object",
@@ -34554,12 +34837,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "paged" : {
+            "type" : "boolean"
+          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "paged" : {
-            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -41208,6 +41491,40 @@
           }
         },
         "required" : [ "lastOffenderId", "rootOffenderIds" ]
+      },
+      "PrisonerHoldProjection" : {
+        "type" : "object",
+        "properties" : {
+          "txnId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "txnEntryDate" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "txnEntryDesc" : {
+            "type" : "string"
+          },
+          "txnReferenceNumber" : {
+            "type" : "string"
+          },
+          "txnEntryAmount" : {
+            "type" : "number"
+          },
+          "txnEntrySeq" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "clientUniqueRef" : {
+            "type" : "string"
+          },
+          "holdNumber" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "txnEntryAmount", "txnEntryDate", "txnEntrySeq", "txnId" ]
       },
       "PrisonAccountBalanceDto" : {
         "type" : "object",
