@@ -62,6 +62,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtEventChargeRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCourtAppearanceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCourtCaseResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateOrUpdateSentenceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceTermResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderChargeIdResponse
@@ -2536,7 +2537,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         courtSentencingMappingApi.stubGetSentenceMappingGivenDpsIdWithError(DPS_SENTENCE_ID, 404)
         courtSentencingMappingApi.stubCreateSentence()
 
-        publishCreateSentenceDomainEvent()
+        publishCreateSentenceDomainEvent(isBreach = false)
       }
 
       @Test
@@ -2602,6 +2603,12 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
               matchingJsonPath(
                 "status",
                 equalTo("A"),
+              ),
+            )
+            .withRequestBody(
+              matchingJsonPath(
+                "isBreach",
+                equalTo("false"),
               ),
             )
             .withRequestBody(
@@ -3240,7 +3247,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         courtSentencingMappingApi.stubGetCourtChargeMappingGivenDpsId(DPS_COURT_CHARGE_ID, NOMIS_COURT_CHARGE_ID)
 
-        publishUpdateSentenceDomainEvent()
+        publishUpdateSentenceDomainEvent(isBreach = true)
       }
 
       @Test
@@ -3272,6 +3279,8 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       fun `will call nomis api to update the Sentence`() {
         waitForAnyProcessingToComplete()
         courtSentencingNomisApi.verify(putRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/court-cases/${NOMIS_COURT_CASE_ID_FOR_CREATION}/sentences/${NOMIS_SENTENCE_SEQ}")))
+        val request: CreateOrUpdateSentenceRequest = NomisApiMockServer.getRequestBody(putRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/court-cases/${NOMIS_COURT_CASE_ID_FOR_CREATION}/sentences/${NOMIS_SENTENCE_SEQ}")))
+        assertThat(request.isBreach).isTrue
       }
     }
 
@@ -5938,7 +5947,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     ).get()
   }
 
-  private fun publishCreateSentenceDomainEvent(source: String = "DPS") {
+  private fun publishCreateSentenceDomainEvent(source: String = "DPS", isBreach: Boolean = false) {
     val eventType = "sentence.inserted"
     awsSnsClient.publish(
       PublishRequest.builder().topicArn(topicArn)
@@ -5950,6 +5959,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             offenderNo = OFFENDER_NO,
             eventType = eventType,
             source = source,
+            isBreach = isBreach,
           ),
         )
         .messageAttributes(
@@ -5984,7 +5994,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     ).get()
   }
 
-  private fun publishUpdateSentenceDomainEvent(source: String = "DPS") {
+  private fun publishUpdateSentenceDomainEvent(source: String = "DPS", isBreach: Boolean = false) {
     val eventType = "sentence.updated"
     awsSnsClient.publish(
       PublishRequest.builder().topicArn(topicArn)
@@ -5996,6 +6006,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             offenderNo = OFFENDER_NO,
             eventType = eventType,
             source = source,
+            isBreach = isBreach,
           ),
         )
         .messageAttributes(
@@ -6213,7 +6224,8 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     offenderNo: String,
     eventType: String,
     source: String = "DPS",
-  ) = """{"eventType":"$eventType", "additionalInformation": {"sentenceId":"$sentenceId", "courtAppearanceId":"$courtAppearanceId", "courtCaseId":"$courtCaseId", "source": "$source"}, "personReference": {"identifiers":[{"type":"NOMS", "value":"$offenderNo"}]}}"""
+    isBreach: Boolean = false,
+  ) = """{"eventType":"$eventType", "additionalInformation": {"sentenceId":"$sentenceId", "courtAppearanceId":"$courtAppearanceId", "courtCaseId":"$courtCaseId", "source": "$source", "isBreach": $isBreach}, "personReference": {"identifiers":[{"type":"NOMS", "value":"$offenderNo"}]}}"""
 
   fun periodLengthMessagePayload(
     courtCaseId: String,

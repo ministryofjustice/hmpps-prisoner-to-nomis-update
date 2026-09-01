@@ -42,7 +42,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtEventChargeRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCourtAppearanceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCourtCaseRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateOrUpdateSentenceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.DeleteRecallRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderChargeIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderChargeRequest
@@ -942,6 +942,7 @@ class CourtSentencingService(
                 nomisChargeId = chargeMapping.nomisCourtChargeId,
                 nomisConsecutiveToSentenceSeq = consecutiveSentenceSeq,
                 nomisEventId = courtAppearanceMapping.nomisCourtAppearanceId,
+                isBreach = createEvent.additionalInformation.isBreach == true,
               ),
               caseId = courtCaseMapping.nomisCourtCaseId,
             )
@@ -1094,16 +1095,19 @@ class CourtSentencingService(
               "Missing DPS consecutive sentence id:",
             ).nomisSentenceSequence.toLong()
           }
-          nomisApiService.updateSentence(
-            offenderNo = offenderNo,
-            caseId = courtCaseMapping.nomisCourtCaseId,
-            sentenceSeq = sentenceMapping.nomisSentenceSequence,
-            request = dpsSentence.toNomisSentence(
-              nomisChargeId = chargeMapping.nomisCourtChargeId,
-              nomisConsecutiveToSentenceSeq = consecutiveSentenceSeq,
-              nomisEventId = appearanceMapping.nomisCourtAppearanceId,
-            ),
-          )
+          tryUpdate {
+            nomisApiService.updateSentence(
+              offenderNo = offenderNo,
+              caseId = courtCaseMapping.nomisCourtCaseId,
+              sentenceSeq = sentenceMapping.nomisSentenceSequence,
+              request = dpsSentence.toNomisSentence(
+                nomisChargeId = chargeMapping.nomisCourtChargeId,
+                nomisConsecutiveToSentenceSeq = consecutiveSentenceSeq,
+                nomisEventId = appearanceMapping.nomisCourtAppearanceId,
+                isBreach = createEvent.additionalInformation.isBreach == true,
+              ),
+            )
+          }
         } ?: run {
           telemetryMap["reason"] = "DPS sentence $sentenceId does not exist in RaS"
           telemetryClient.trackEvent("sentence-updated-ignored", telemetryMap, null)
@@ -1612,6 +1616,7 @@ class CourtSentencingService(
     val courtAppearanceId: String,
     val source: String,
     val courtCaseId: String,
+    val isBreach: Boolean? = false,
   )
 
   data class PeriodLengthAdditionalInformation(
@@ -1814,7 +1819,8 @@ fun LegacySentence.toNomisSentence(
   nomisChargeId: Long,
   nomisConsecutiveToSentenceSeq: Long?,
   nomisEventId: Long,
-): CreateSentenceRequest = CreateSentenceRequest(
+  isBreach: Boolean = false,
+): CreateOrUpdateSentenceRequest = CreateOrUpdateSentenceRequest(
   offenderChargeIds = listOf(nomisChargeId),
   startDate = sentenceStartDate,
   // no end date provided,
@@ -1829,6 +1835,7 @@ fun LegacySentence.toNomisSentence(
   fine = this.fineAmount,
   consecutiveToSentenceSeq = nomisConsecutiveToSentenceSeq,
   eventId = nomisEventId,
+  isBreach = isBreach,
 )
 
 fun LegacyPeriodLength.toNomisSentenceTerm(isBreach: Boolean): SentenceTermRequest = SentenceTermRequest(
