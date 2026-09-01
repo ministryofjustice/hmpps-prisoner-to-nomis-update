@@ -5,6 +5,7 @@ import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.okJson
+import com.github.tomakehurst.wiremock.client.WireMock.status
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csra.CsraDpsApiExtension.Companion.jsonMapper
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csra.model.CsraCurrentRating
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csra.model.CsraReviewHistory
 
 class CsraDpsApiExtension :
@@ -64,6 +66,20 @@ class CsraDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     stubFor(
       get(urlPathEqualTo("/csra-review/prisoner/$prisonerNumber/history"))
         .willReturn(okJson(jsonMapper.writeValueAsString(response))),
+    )
+  }
+
+  fun stubGetCurrentCsra(prisonerNumber: String, response: CsraCurrentRating) {
+    stubFor(
+      get(urlPathEqualTo("/csra-review/prisoner/$prisonerNumber/current-rating"))
+        .willReturn(okJson(jsonMapper.writeValueAsString(response))),
+    )
+  }
+
+  fun stubGetCurrentCsraError(prisonerNumber: String, status: Int) {
+    stubFor(
+      get(urlPathEqualTo("/csra-review/prisoner/$prisonerNumber/current-rating"))
+        .willReturn(status(status)),
     )
   }
 }

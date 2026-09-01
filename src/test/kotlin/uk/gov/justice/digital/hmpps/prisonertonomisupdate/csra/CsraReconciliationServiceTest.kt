@@ -15,11 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.web.reactive.function.client.WebClientResponseException
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csra.model.CsraEstablishment
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csra.model.CsraLegacyDetail
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csra.model.CsraReviewHistory
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csra.model.CsraReviewHistorySummary
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csra.model.CsraReviewSummary
+import software.amazon.awssdk.http.HttpStatusCode
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csra.model.CsraCurrentRating
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationErrorPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationSuccessPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
@@ -27,7 +24,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.As
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AssessmentStatusType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AssessmentType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CsraGetDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerCsrasResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
@@ -36,6 +32,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 const val CSRA_OFFENDER_NO = "A5678BZ"
+const val CSRA_DPS_ID = "57718979-573c-433a-abcd-000011112222"
 
 @SpringAPIServiceTest
 @Import(
@@ -65,20 +62,23 @@ class CsraReconciliationServiceTest {
   @BeforeEach
   fun setUp() {
     reset(telemetryClient)
+    // WireMock.reset()
   }
 
   @Nested
   inner class CheckMatch {
-    private fun stubCsraReconciliation(nomisCsras: PrisonerCsrasResponse, dpsCsras: CsraReviewHistory) {
-      csraNomisApi.stubGetCsrasForPrisoner(CSRA_OFFENDER_NO, nomisCsras)
-      dpsApi.stubGetCsraHistory(CSRA_OFFENDER_NO, dpsCsras)
+    private fun stubCsraReconciliation(nomisCsra: CsraGetDto?, dpsCsra: CsraCurrentRating?) {
+      nomisCsra?.let { csraNomisApi.stubGetCurrentCsraForPrisoner(CSRA_OFFENDER_NO, it) }
+        ?: csraNomisApi.stubGetCurrentCsraForPrisonerError(CSRA_OFFENDER_NO, HttpStatusCode.NOT_FOUND)
+      dpsCsra?.let { dpsApi.stubGetCurrentCsra(CSRA_OFFENDER_NO, it) }
+        ?: dpsApi.stubGetCurrentCsraError(CSRA_OFFENDER_NO, HttpStatusCode.NOT_FOUND)
     }
 
     @Test
     fun `will not report a mismatch when no differences found`() = runTest {
       stubCsraReconciliation(
-        nomisCsras(),
-        dpsCsras(),
+        nomisCsra(),
+        dpsCsra(CSRA_DPS_ID),
       )
       assertThat(service.checkCsra(CSRA_OFFENDER_NO)).isNull()
     }
@@ -86,12 +86,12 @@ class CsraReconciliationServiceTest {
     @Test
     fun `will report an extra DPS csra`() = runTest {
       stubCsraReconciliation(
-        nomisCsras().copy(csras = listOf()),
-        dpsCsras(),
+        null,
+        dpsCsra(CSRA_DPS_ID),
       )
       assertThat(service.checkCsra(CSRA_OFFENDER_NO)?.differences).isEqualTo(
         listOf(
-          Difference(property = "prisoner-csras.csras", dps = 1, nomis = 0),
+          Difference(property = "current-csra", dps = 1, nomis = 0, dpsId = CSRA_DPS_ID, nomisId = null),
         ),
       )
     }
@@ -99,44 +99,25 @@ class CsraReconciliationServiceTest {
     @Test
     fun `will report an extra Nomis csra`() = runTest {
       stubCsraReconciliation(
-        nomisCsras().copy(csras = listOf(nomisCsra(), nomisCsra(assessmentDate = LocalDate.parse("2024-02-01")))),
-        dpsCsras(),
+        nomisCsra(),
+        null,
       )
       assertThat(service.checkCsra(CSRA_OFFENDER_NO)?.differences).isEqualTo(
         listOf(
-          Difference(property = "prisoner-csras.csras", dps = 1, nomis = 2),
+          Difference(property = "current-csra", dps = 0, nomis = 1, dpsId = null, nomisId = "1-1"),
         ),
       )
-    }
-
-    @Test
-    fun `will not report a mismatch when csras are in a different order`() = runTest {
-      stubCsraReconciliation(
-        nomisCsras().copy(
-          csras = listOf(
-            nomisCsra(assessmentDate = LocalDate.parse("2024-02-01")),
-            nomisCsra(assessmentDate = LocalDate.parse("2024-01-01")),
-          ),
-        ),
-        dpsCsras().copy(
-          content = listOf(
-            dpsCsra(recordedDate = LocalDate.parse("2024-01-01")),
-            dpsCsra(recordedDate = LocalDate.parse("2024-02-01")),
-          ),
-        ),
-      )
-      assertThat(service.checkCsra(CSRA_OFFENDER_NO)).isNull()
     }
 
     @Test
     fun `will report a level mismatch`() = runTest {
       stubCsraReconciliation(
-        nomisCsras(),
-        dpsCsras().copy(content = listOf(dpsCsra(rating = CsraReviewSummary.Rating.HIGH))),
+        nomisCsra(),
+        dpsCsra(CSRA_DPS_ID, rating = CsraCurrentRating.Rating.HIGH),
       )
       assertThat(service.checkCsra(CSRA_OFFENDER_NO)?.differences).isEqualTo(
         listOf(
-          Difference(property = "prisoner-csras.csras[0].level: assessmentDate 2024-01-01", dps = "HI", nomis = "STANDARD"),
+          Difference(property = "level", dps = "HI", nomis = "STANDARD", dpsId = CSRA_DPS_ID, nomisId = "1-1"),
         ),
       )
     }
@@ -144,34 +125,14 @@ class CsraReconciliationServiceTest {
     @Test
     fun `will report an assessment date mismatch`() = runTest {
       stubCsraReconciliation(
-        nomisCsras(),
-        dpsCsras().copy(content = listOf(dpsCsra(recordedDate = LocalDate.parse("2024-06-01")))),
+        nomisCsra(assessmentDate = LocalDate.parse("2024-06-01")),
+        dpsCsra(CSRA_DPS_ID),
       )
       assertThat(service.checkCsra(CSRA_OFFENDER_NO)?.differences).isEqualTo(
         listOf(
-          Difference(property = "prisoner-csras.csras[0].assessmentDate", dps = LocalDate.parse("2024-06-01"), nomis = LocalDate.parse("2024-01-01")),
+          Difference(property = "assessmentDate", nomis = LocalDate.parse("2024-06-01"), dps = LocalDate.parse("2024-01-01"), dpsId = CSRA_DPS_ID, nomisId = "1-1"),
         ),
       )
-    }
-
-    @Test
-    fun `will use the legacy assessment date and level when present`() = runTest {
-      stubCsraReconciliation(
-        nomisCsras(assessmentDate = LocalDate.parse("2023-05-01"), calculatedLevel = AssessmentLevel.MED),
-        dpsCsras().copy(
-          content = listOf(
-            dpsCsra(
-              recordedDate = LocalDate.parse("2024-01-01"),
-              rating = CsraReviewSummary.Rating.HIGH,
-              legacy = CsraLegacyDetail(
-                assessmentDate = LocalDate.parse("2023-05-01"),
-                level = CsraLegacyDetail.Level.MED,
-              ),
-            ),
-          ),
-        ),
-      )
-      assertThat(service.checkCsra(CSRA_OFFENDER_NO)).isNull()
     }
   }
 
@@ -231,39 +192,27 @@ fun nomisCsra(
   calculatedLevel = calculatedLevel,
 )
 
-fun nomisCsras(
-  assessmentDate: LocalDate = LocalDate.parse("2024-01-01"),
-  calculatedLevel: AssessmentLevel = AssessmentLevel.STANDARD,
-) = PrisonerCsrasResponse(
-  csras = listOf(nomisCsra(assessmentDate = assessmentDate, calculatedLevel = calculatedLevel)),
-)
-
 fun dpsCsra(
-  id: UUID = UUID.randomUUID(),
-  recordedDate: LocalDate = LocalDate.parse("2024-01-01"),
-  rating: CsraReviewSummary.Rating = CsraReviewSummary.Rating.STANDARD,
-  legacy: CsraLegacyDetail? = null,
-) = CsraReviewSummary(
-  id = id,
-  type = CsraReviewSummary.Type.CSRA_REVIEW,
+  uuid: String,
+  rating: CsraCurrentRating.Rating = CsraCurrentRating.Rating.STANDARD,
+) = CsraCurrentRating(
+  reviewId = UUID.fromString(uuid),
+  type = CsraCurrentRating.Type.CSRA_REVIEW,
   rating = rating,
-  recordedDate = recordedDate,
-  legacy = legacy,
-)
-
-fun dpsCsras(
-  recordedDate: LocalDate = LocalDate.parse("2024-01-01"),
-  rating: CsraReviewSummary.Rating = CsraReviewSummary.Rating.STANDARD,
-) = CsraReviewHistory(
-  summary = CsraReviewHistorySummary(
-    totalCsras = 1,
-    highCount = 0,
-    standardCount = 1,
-    establishments = emptyList<CsraEstablishment>(),
-  ),
-  content = listOf(dpsCsra(recordedDate = recordedDate, rating = rating)),
-  page = 0,
-  propertySize = 1000,
-  totalElements = 1,
-  totalPages = 1,
+  prisonerNumber = CSRA_OFFENDER_NO,
+  status = CsraCurrentRating.Status.COMPLETE,
+  provisional = false,
+  riskTo = emptyList(),
+  vulnerabilities = emptyList(),
+  finalDate = LocalDate.parse("2024-01-01"),
+//  reviewId = TODO(),
+//  prisonId = TODO(),
+//  assessmentComment = TODO(),
+//  provisionalAssessmentComment = TODO(),
+//  provisionalDate = TODO(),
+//  finalDate = TODO(),
+//  nextReviewDate = TODO(),
+//  startedBy = TODO(),
+//  startedAt = TODO(),
+//  inProgress = TODO(),
 )

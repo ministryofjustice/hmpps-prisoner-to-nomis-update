@@ -19,11 +19,13 @@ import org.mockito.kotlin.reset
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.springframework.beans.factory.annotation.Autowired
+import software.amazon.awssdk.http.HttpStatusCode
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csra.CsraDpsApiExtension.Companion.csraApi
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csra.model.CsraReviewHistory
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csra.model.CsraCurrentRating
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerCsrasResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CsraGetDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
+import java.time.Duration
 
 class CsraReconciliationResourceIntTest(
   @Autowired private val reconciliationService: CsraReconciliationService,
@@ -54,7 +56,7 @@ class CsraReconciliationResourceIntTest(
       )
       for (i in 1..20) {
         val prisonNumber = "A${"$i".padStart(4, '0')}NN"
-        stubCsras(prisonNumber, nomisCsras(), dpsCsras())
+        stubCsras(prisonNumber, nomisCsra(), dpsCsra(CSRA_DPS_ID))
       }
     }
 
@@ -111,19 +113,20 @@ class CsraReconciliationResourceIntTest(
       fun `will output a mismatch when there is a difference in the DPS record`() = runTest {
         stubCsras(
           "A0002NN",
-          nomisCsras(),
-          dpsCsras().copy(content = emptyList()),
+          nomisCsra(),
+          null,
         )
         reconciliationService.generateReconciliationReportBatch(false)
 
         verify(telemetryClient).trackEvent(
           eq("csra-reports-reconciliation-report"),
           check {
-            assertThat(it).containsEntry("activeOnly", "false")
-            assertThat(it).containsEntry("csra-count", "20")
-            assertThat(it).containsEntry("page-count", "2")
-            assertThat(it).containsEntry("mismatch-count", "1")
-            assertThat(it).containsEntry("success", "true")
+            assertThat(it)
+              .containsEntry("activeOnly", "false")
+              .containsEntry("csra-count", "20")
+              .containsEntry("page-count", "2")
+              .containsEntry("mismatch-count", "1")
+              .containsEntry("success", "true")
           },
           isNull(),
         )
@@ -229,26 +232,31 @@ class CsraReconciliationResourceIntTest(
       fun `will output a mismatch when there is a difference in the DPS record`() = runTest {
         stubCsras(
           CSRA_OFFENDER_NO,
-          nomisCsras(),
-          dpsCsras().copy(content = emptyList()),
+          nomisCsra(),
+          null,
         )
 
-        webTestClient.get().uri("/csra/reconciliation/$CSRA_OFFENDER_NO")
+        webTestClient.mutate()
+          .responseTimeout(Duration.ofMillis(60000))
+          .build()
+          .get().uri("/csra/reconciliation/$CSRA_OFFENDER_NO")
           .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
           .exchange()
           .expectStatus()
           .isOk
           .expectBody()
-          .jsonPath("nomis.prisonNumber").isEqualTo(CSRA_OFFENDER_NO)
-          .jsonPath("dps.prisonNumber").isEqualTo(CSRA_OFFENDER_NO)
-          .jsonPath("differences[0].property").isEqualTo("prisoner-csras.csras")
-          .jsonPath("differences[0].dps").isEqualTo(0)
+          .jsonPath("nomis.id").isEqualTo("1-1")
+          .jsonPath("differences[0].property").isEqualTo("current-csra")
           .jsonPath("differences[0].nomis").isEqualTo(1)
+          .jsonPath("differences[0].dps").isEqualTo(0)
 
         verify(telemetryClient).trackEvent(
           eq("csra-reports-reconciliation-mismatch"),
           check {
             assertThat(it["prisoner"]).isEqualTo(CSRA_OFFENDER_NO)
+            assertThat(it)
+              .containsEntry("prisoner", CSRA_OFFENDER_NO)
+              .containsEntry("current-csra", "Difference(property=current-csra, dps=0, nomis=1, dpsId=null, nomisId=1-1)")
           },
           isNull(),
         )
@@ -258,8 +266,8 @@ class CsraReconciliationResourceIntTest(
       fun `will return no differences when there is a match`() = runTest {
         stubCsras(
           CSRA_OFFENDER_NO,
-          nomisCsras(),
-          dpsCsras(),
+          nomisCsra(),
+          dpsCsra(CSRA_DPS_ID),
         )
 
         webTestClient.get().uri("/csra/reconciliation/$CSRA_OFFENDER_NO")
@@ -274,8 +282,10 @@ class CsraReconciliationResourceIntTest(
     }
   }
 
-  private fun stubCsras(offenderNo: String, nomisResponse: PrisonerCsrasResponse, dpsResponse: CsraReviewHistory) {
-    csraNomisApi.stubGetCsrasForPrisoner(offenderNo, nomisResponse)
-    csraApi.stubGetCsraHistory(offenderNo, dpsResponse)
+  private fun stubCsras(offenderNo: String, nomisResponse: CsraGetDto?, dpsResponse: CsraCurrentRating?) {
+    nomisResponse?.let { csraNomisApi.stubGetCurrentCsraForPrisoner(offenderNo, it) }
+      ?: csraNomisApi.stubGetCurrentCsraForPrisonerError(offenderNo, HttpStatusCode.NOT_FOUND)
+    dpsResponse?.let { csraApi.stubGetCurrentCsra(offenderNo, it) }
+      ?: csraApi.stubGetCurrentCsraError(offenderNo, HttpStatusCode.NOT_FOUND)
   }
 }

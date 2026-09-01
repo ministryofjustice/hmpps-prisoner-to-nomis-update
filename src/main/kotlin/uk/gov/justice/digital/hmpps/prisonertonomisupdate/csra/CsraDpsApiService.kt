@@ -9,6 +9,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csra.api.CSRAReviewApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csra.model.CsraCurrentRating
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csra.model.CsraReviewDetail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csra.model.CsraReviewHistory
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyWithRetry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import java.util.UUID
 
@@ -29,11 +31,9 @@ class CsraDpsApiService(
 
   suspend fun getCsraHistory(prisonerNumber: String, size: Int = 1000): CsraReviewHistory = api
     .getCsraHistory(prisonerNumber = prisonerNumber, size = size)
-    .retryWhen(retrySpec)
-    .awaitSingle()
+    .awaitBodyWithRetry(retrySpec)
 
   suspend fun getCsraCurrent(prisonerNumber: String): CsraCurrentRating? = api
     .getCurrentRating(prisonerNumber = prisonerNumber)
-    .retryWhen(retrySpec)
-    .awaitSingle()
+    .awaitBodyOrNullForNotFound(retrySpec)
 }
