@@ -115,22 +115,14 @@ class CsraReconciliationService(
     }
   }.onFailure {
     log.error("Unable to match CSRAs for offenderNo=$offenderNo", it)
+    telemetryClient.trackEvent(
+      "$TELEMETRY_CSRA_PREFIX-mismatch-error",
+      mapOf(
+        "prisoner" to offenderNo,
+        "error" to (it.message ?: it.javaClass.name),
+      ),
+    )
   }.getOrNull()
-
-//  private fun <T> compareLists(dpsList: List<T>, nomisList: List<T>, parentProperty: String): List<Difference> {
-//    val differences = mutableListOf<Difference>()
-//    val maxSize = maxOf(dpsList.size, nomisList.size)
-//    if (dpsList.size != nomisList.size) {
-//      differences.add(Difference(parentProperty, dpsList.size, nomisList.size))
-//    } else {
-//      for (i in 0 until maxSize) {
-//        val dpsObj = dpsList.getOrNull(i)
-//        val nomisObj = nomisList.getOrNull(i)
-//        differences.addAll(compareObjects(dpsObj, nomisObj, "$parentProperty[$i]"))
-//      }
-//    }
-//    return differences
-//  }
 
   private fun compareObjects(dpsDetail: CsraDetailFields?, nomisDetail: CsraDetailFields?): List<Difference> {
     if (dpsDetail == null && nomisDetail == null) return emptyList()
@@ -193,14 +185,6 @@ class CsraReconciliationService(
     },
   )
 }
-
-// The DPS review rating collapses to a single value, but legacy (NOMIS migrated) reviews retain the raw NOMIS
-// level, which is a closer match to the level NOMIS itself holds for the review.
-// private fun CsraReviewSummary.toNomisLevel(): AssessmentLevel = legacy?.level?.let { AssessmentLevel.valueOf(it.name) }
-//  ?: when (rating) {
-//    CsraReviewSummary.Rating.HIGH, CsraReviewSummary.Rating.HIGH_GENERAL, CsraReviewSummary.Rating.HIGH_SPECIFIC -> AssessmentLevel.HI
-//    CsraReviewSummary.Rating.STANDARD -> AssessmentLevel.STANDARD
-//  }
 
 private fun CsraCurrentRating.toNomisLevel(): AssessmentLevel? = when (rating) {
   CsraCurrentRating.Rating.HIGH, CsraCurrentRating.Rating.HIGH_GENERAL, CsraCurrentRating.Rating.HIGH_SPECIFIC -> AssessmentLevel.HI
