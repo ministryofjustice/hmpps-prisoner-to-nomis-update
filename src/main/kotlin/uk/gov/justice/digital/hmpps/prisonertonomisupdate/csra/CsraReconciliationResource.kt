@@ -18,7 +18,7 @@ class CsraReconciliationResource(
   @GetMapping("/csra/reconciliation/{offenderNo}")
   @Operation(
     summary = "Run the CSRA reconciliation for this prisoner",
-    description = """Retrieves the CSRA differences for a prisoner. A null response returned if no differences found. 
+    description = """Retrieves the CSRA differences for a prisoner. Returns an empty response body when no differences are found. 
       Requires ROLE_PRISONER_TO_NOMIS__UPDATE__RW""",
     responses = [ApiResponse(responseCode = "200", description = "Reconciliation differences returned")],
   )

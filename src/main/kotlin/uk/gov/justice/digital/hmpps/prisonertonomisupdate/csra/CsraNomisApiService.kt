@@ -42,6 +42,5 @@ class CsraNomisApiService(
 
   suspend fun getCurrentCsraForPrisonerOrNull(offenderNo: String): CsraGetDto? = api
     .getCurrentCsraForPrisoner(offenderNo)
-    .retryWhen(retrySpec)
     .awaitBodyOrNullForNotFound(retrySpec)
 }
