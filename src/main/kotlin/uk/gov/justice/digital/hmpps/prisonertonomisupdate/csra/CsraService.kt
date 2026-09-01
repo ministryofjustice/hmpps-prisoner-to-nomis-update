@@ -10,13 +10,10 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.As
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AssessmentStatusType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AssessmentType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CsraCreateDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CsraUpdateDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.EvaluationResultCode
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.TelemetryEnabled
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.track
 
 @Service
 class CsraService(
@@ -71,19 +68,19 @@ class CsraService(
 
   suspend fun updated(event: CsraDomainEvent) {
     val telemetry = event.asTelemetry()
-    if (event.originatedInDps()) {
-      track("csra-update", telemetry) {
-        val dpsId = event.additionalInformation.id!!
-        val dpsData = csraDpsApiService.getCsraReview((dpsId))
-        val mapping = csraMappingService.getMappingByDpsId(dpsId.toString())
-        val (_, nomisId, sequence) = mapping
-        telemetry += "nomisBookingId" to nomisId.toString()
-
-        csraNomisApiService.updateCsra(nomisId, sequence, dpsData.toNomisUpdateRequest())
-      }
-    } else {
-      telemetryClient.trackEvent("csra-update-ignored", telemetry, null)
-    }
+    // TODO: I dont think this is needed, as we don't update CSRA in DPS, only create.
+    //    if (event.originatedInDps()) {
+//      track("csra-update", telemetry) {
+//        val dpsId = event.additionalInformation.id!!
+//        val dpsData = csraDpsApiService.getCsraReview((dpsId))
+//        val mapping = csraMappingService.getMappingByDpsId(dpsId.toString())
+//        val nomisId = mapping.nomisBookingId, sequence
+//        telemetry += "nomisBookingId" to nomisId.toString()
+//
+//        csraNomisApiService.updateCsra(nomisId, dpsData.toNomisUpdateRequest())
+//      }
+//    } else {
+    telemetryClient.trackEvent("csra-update-ignored", telemetry, null)
   }
 
   override suspend fun retryCreateMapping(message: String) {
@@ -128,14 +125,10 @@ private fun CsraReviewDetail.toNomisCreateRequest() = CsraCreateDto(
   createdBy = createdBy,
 )
 
-private fun CsraReviewDetail.toNomisUpdateRequest() = CsraUpdateDto(
-  reviewLevel = finalResult?.toNomisLevel(),
-  evaluationDate = finalResultDate,
-  evaluationResultCode = EvaluationResultCode.APP,
-  status = if (finalResult != null) AssessmentStatusType.A else AssessmentStatusType.P,
-  reviewComment = "Updated by DPS",
-  // still WIP
-)
+// private fun CsraReviewDetail.toNomisUpdateRequest() = CsraUpdateDto(
+//   reviewLevel = finalResult?.toNomisLevel(),
+//   status = if (finalResult != null) AssessmentStatusType.A else AssessmentStatusType.P,
+// )
 
 private fun CsraReviewDetail.Type.toNomisAssessmentType(): AssessmentType = when (this) {
   CsraReviewDetail.Type.FULL -> AssessmentType.CSRF
