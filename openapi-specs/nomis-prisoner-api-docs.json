@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-09-01.1994.7ad196c"
+    "version" : "2026-09-01.2000.e6d73af"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -2207,7 +2207,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/CreateSentenceRequest"
+                "$ref" : "#/components/schemas/CreateOrUpdateSentenceRequest"
               }
             }
           },
@@ -2385,7 +2385,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/CreateSentenceRequest"
+                "$ref" : "#/components/schemas/CreateOrUpdateSentenceRequest"
               }
             }
           },
@@ -5020,6 +5020,88 @@
           },
           "403" : {
             "description" : "Forbidden, requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/movements/{offenderNo}/transfers/schedule/out" : {
+      "put" : {
+        "tags" : [ "transfer-schedule-resource" ],
+        "summary" : "Inserts or updates a transfer schedule out and waitlist for an offender",
+        "description" : "Creates or updates a transfer schedule out on the prisoner's latest booking. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "upsertTransferScheduleOut",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender no (aka prisoner number)",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender no (aka prisoner number)",
+            "example" : "A1234AK"
+          },
+          "example" : "A1234AK"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpsertTransferScheduleOut"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Transfer schedule out created or updated",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UpsertTransferScheduleOutResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "One or more fields in the request contains invalid data",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Prisoner does not exist",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -10668,7 +10750,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/CreateSentenceRequest"
+                "$ref" : "#/components/schemas/CreateOrUpdateSentenceRequest"
               }
             }
           },
@@ -27785,7 +27867,7 @@
           },
           "isBreach" : {
             "type" : "boolean",
-            "description" : "Indicates if the sentence term is related to a breach supervision (or imprisonable offence)"
+            "description" : "Indicates if the charge is related to a breach supervision (or imprisonable offence)"
           }
         },
         "required" : [ "isBreach", "offenceCode" ]
@@ -28001,7 +28083,7 @@
         },
         "required" : [ "bookingId", "created" ]
       },
-      "CreateSentenceRequest" : {
+      "CreateOrUpdateSentenceRequest" : {
         "type" : "object",
         "description" : "Sentence request",
         "properties" : {
@@ -28042,9 +28124,13 @@
           "eventId" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "isBreach" : {
+            "type" : "boolean",
+            "description" : "Indicates if the sentence is related to a breach supervision (or imprisonable offence)"
           }
         },
-        "required" : [ "eventId", "offenderChargeIds", "sentenceCalcType", "sentenceCategory", "sentenceLevel", "startDate", "status" ]
+        "required" : [ "eventId", "isBreach", "offenderChargeIds", "sentenceCalcType", "sentenceCategory", "sentenceLevel", "startDate", "status" ]
       },
       "SentenceTermRequest" : {
         "type" : "object",
@@ -28732,6 +28818,117 @@
           }
         },
         "required" : [ "effectiveDate", "reason", "recipReason", "type" ]
+      },
+      "UpsertTransferScheduleOut" : {
+        "type" : "object",
+        "description" : "Upsert transfer schedule out request",
+        "properties" : {
+          "eventId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Event ID"
+          },
+          "startTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Start time"
+          },
+          "eventSubType" : {
+            "type" : "string",
+            "description" : "Event sub type, aka movement reason"
+          },
+          "eventStatus" : {
+            "type" : "string",
+            "description" : "Event status"
+          },
+          "comment" : {
+            "type" : "string",
+            "description" : "Comment"
+          },
+          "hiddenComment" : {
+            "type" : "string",
+            "description" : "Hidden Comment"
+          },
+          "fromPrison" : {
+            "type" : "string",
+            "description" : "From prison"
+          },
+          "toPrison" : {
+            "type" : "string",
+            "description" : "To prison"
+          },
+          "cancellationReasonCode" : {
+            "type" : "string",
+            "description" : "Cancellation reason"
+          },
+          "escortCode" : {
+            "type" : "string",
+            "description" : "Escort code"
+          },
+          "waitlist" : {
+            "$ref" : "#/components/schemas/UpsertTransferScheduleWaitlist",
+            "description" : "The waitlist"
+          }
+        },
+        "required" : [ "eventStatus", "eventSubType", "fromPrison" ]
+      },
+      "UpsertTransferScheduleWaitlist" : {
+        "type" : "object",
+        "description" : "Upsert transfer schedule waitlist request",
+        "properties" : {
+          "requestDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Requested date"
+          },
+          "status" : {
+            "type" : "string",
+            "description" : "Waitlist status"
+          },
+          "statusDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The date the status was changed"
+          },
+          "priority" : {
+            "type" : "string",
+            "description" : "The transfer priority"
+          },
+          "approved" : {
+            "type" : "boolean",
+            "description" : "Is the transfer approved?"
+          },
+          "approvedUserName" : {
+            "type" : "string",
+            "description" : "Approved by user"
+          },
+          "cancellationReasonCode" : {
+            "type" : "string",
+            "description" : "Cancellation reason"
+          },
+          "comment" : {
+            "type" : "string",
+            "description" : "Comment"
+          }
+        },
+        "required" : [ "approved", "priority", "requestDate", "status", "statusDate" ]
+      },
+      "UpsertTransferScheduleOutResponse" : {
+        "type" : "object",
+        "description" : "Upsert transfer schedule response",
+        "properties" : {
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Booking ID"
+          },
+          "eventId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Event ID"
+          }
+        },
+        "required" : [ "bookingId", "eventId" ]
       },
       "UpsertTapAddress" : {
         "type" : "object",
@@ -34837,12 +35034,12 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paged" : {
+            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -41507,12 +41704,6 @@
             "type" : "integer",
             "format" : "int64"
           },
-          "txnEntryDesc" : {
-            "type" : "string"
-          },
-          "txnReferenceNumber" : {
-            "type" : "string"
-          },
           "txnEntrySeq" : {
             "type" : "integer",
             "format" : "int32"
@@ -41521,12 +41712,18 @@
             "type" : "integer",
             "format" : "int64"
           },
+          "txnReferenceNumber" : {
+            "type" : "string"
+          },
+          "txnEntryAmount" : {
+            "type" : "number"
+          },
           "txnEntryDate" : {
             "type" : "string",
             "format" : "date-time"
           },
-          "txnEntryAmount" : {
-            "type" : "number"
+          "txnEntryDesc" : {
+            "type" : "string"
           }
         },
         "required" : [ "txnEntryAmount", "txnEntryDate", "txnEntrySeq", "txnId" ]

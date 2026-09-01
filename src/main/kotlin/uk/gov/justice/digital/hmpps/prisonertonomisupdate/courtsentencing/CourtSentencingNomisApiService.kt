@@ -20,7 +20,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCourtAppearanceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCourtCaseRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCourtCaseResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateOrUpdateSentenceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceTermResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.DeleteRecallRequest
@@ -106,7 +106,7 @@ class CourtSentencingNomisApiService(@Qualifier("nomisApiWebClient") private val
   suspend fun createSentence(
     offenderNo: String,
     caseId: Long,
-    request: CreateSentenceRequest,
+    request: CreateOrUpdateSentenceRequest,
   ): CreateSentenceResponse = webClient.post()
     .uri("/prisoners/{offenderNo}/court-cases/{caseId}/sentences", offenderNo, caseId)
     .bodyValue(request)
@@ -117,7 +117,7 @@ class CourtSentencingNomisApiService(@Qualifier("nomisApiWebClient") private val
     offenderNo: String,
     sentenceSeq: Int,
     caseId: Long,
-    request: CreateSentenceRequest,
+    request: CreateOrUpdateSentenceRequest,
   ): HttpEntity<Void> = webClient.put()
     .uri("/prisoners/{offenderNo}/court-cases/{caseId}/sentences/{sentenceSeq}", offenderNo, caseId, sentenceSeq)
     .bodyValue(request)
