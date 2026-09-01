@@ -31,6 +31,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.COURT_
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.COURT_SCHEDULER_ACTIVE_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.COURT_SCHEDULER_ALL_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.CSIP_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.CSRA_ACTIVE_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.CSRA_FULL_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.DELETE_UNKNOWN_ACTIVITY_MAPPINGS
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.INCENTIVES_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.INCIDENTS_RECON
@@ -61,6 +63,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.CaseNotesRec
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.CSIPReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csra.CsraReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.PrisonerBalanceReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.PrisonerTransactionReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives.IncentivesReconciliationService
@@ -97,6 +100,8 @@ enum class BatchType {
   ATTENDANCE_RECON,
   CASE_NOTES_ACTIVE_RECON,
   CASE_NOTES_FULL_RECON,
+  CSRA_ACTIVE_RECON,
+  CSRA_FULL_RECON,
   CONTACT_PERSON_PROFILE_DETAILS_RECON,
   CORE_PERSON_ACTIVE_RECON,
   CORE_PERSON_FULL_RECON,
@@ -144,6 +149,7 @@ class BatchManager(
   private val alertsReconciliationService: AlertsReconciliationService,
   private val appointmentsReconciliationService: AppointmentsReconciliationService,
   private val caseNotesReconciliationService: CaseNotesReconciliationService,
+  private val csraReconciliationService: CsraReconciliationService,
   private val contactPersonProfileDetailsReconService: ContactPersonProfileDetailsReconciliationService,
   private val contactPersonReconciliationService: ContactPersonReconciliationService,
   private val corePersonReconciliationService: CorePersonReconciliationService,
@@ -189,6 +195,8 @@ class BatchManager(
       ATTENDANCE_RECON -> activitiesReconService.attendanceReconciliationReport(LocalDate.now().minusDays(1))
       CASE_NOTES_ACTIVE_RECON -> caseNotesReconciliationService.generateReconciliationReport(activeOnly = true)
       CASE_NOTES_FULL_RECON -> caseNotesReconciliationService.generateReconciliationReport(activeOnly = false)
+      CSRA_ACTIVE_RECON -> csraReconciliationService.generateReconciliationReportBatch(activeOnly = true)
+      CSRA_FULL_RECON -> csraReconciliationService.generateReconciliationReportBatch(activeOnly = false)
       CONTACT_PERSON_PROFILE_DETAILS_RECON -> contactPersonProfileDetailsReconService.reconciliationReport()
       CORE_PERSON_ACTIVE_RECON -> corePersonReconciliationService.generateReconciliationReport(activeOnly = true)
       CORE_PERSON_FULL_RECON -> corePersonReconciliationService.generateReconciliationReport(activeOnly = false)

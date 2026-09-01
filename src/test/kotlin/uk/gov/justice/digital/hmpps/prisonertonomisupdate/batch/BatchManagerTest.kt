@@ -46,6 +46,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.CaseNotesRec
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.CSIPReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csra.CsraReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.PrisonerBalanceReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.PrisonerTransactionReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives.IncentivesReconciliationService
@@ -88,6 +89,7 @@ class BatchManagerTest {
   private val courtSchedulerReconciliationServiceAll = mock<CourtSchedulerReconciliationServiceAllPrisoners>()
   private val courtSentencingReconciliationService = mock<CourtSentencingReconciliationService>()
   private val csipReconciliationService = mock<CSIPReconciliationService>()
+  private val csraReconciliationService = mock<CsraReconciliationService>()
   private val hmppsQueueService = mock<HmppsQueueService>()
   private val incentivesReconciliationService = mock<IncentivesReconciliationService>()
   private val incidentsReconciliationService = mock<IncidentsReconciliationService>()
@@ -403,6 +405,26 @@ class BatchManagerTest {
   }
 
   @Test
+  fun `should call the CSRA reconciliation service`() = runTest {
+    val batchManager = batchManager(BatchType.CSRA_ACTIVE_RECON)
+
+    batchManager.onApplicationEvent(event)
+
+    verify(csraReconciliationService).generateReconciliationReportBatch(true)
+    verify(context).close()
+  }
+
+  @Test
+  fun `should call the property reconciliation service`() = runTest {
+    val batchManager = batchManager(BatchType.PROPERTY_RECON)
+
+    batchManager.onApplicationEvent(event)
+
+    verify(propertyReconciliationService).generatePropertyReconciliationReportBatch()
+    verify(context).close()
+  }
+
+  @Test
   fun `should call the official visits full reconciliation service`() = runTest {
     val batchManager = batchManager(BatchType.OFFICIAL_VISIT_ALL_RECON)
 
@@ -538,6 +560,7 @@ class BatchManagerTest {
     courtSchedulerReconciliationServiceActive = courtSchedulerReconciliationServiceActive,
     courtSentencingReconciliationService = courtSentencingReconciliationService,
     csipReconciliationService = csipReconciliationService,
+    csraReconciliationService = csraReconciliationService,
     hmppsQueueService = hmppsQueueService,
     incentivesReconciliationService = incentivesReconciliationService,
     incidentsReconciliationService = incidentsReconciliationService,
