@@ -11,7 +11,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.NomisMovementId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.findMatches
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.findMissing
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.MismatchPrisonerScheduleDetails.Type.SCHEDULE_CANCELLATION_REASON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.MismatchPrisonerScheduleDetails.Type.SCHEDULE_COMMENT
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.MismatchPrisonerScheduleDetails.Type.SCHEDULE_ESCORT
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.MismatchPrisonerScheduleDetails.Type.SCHEDULE_EVENT_SUBTYPE
@@ -20,11 +19,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.Mis
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.MismatchPrisonerScheduleDetails.Type.SCHEDULE_START_TIME
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.MismatchPrisonerScheduleDetails.Type.SCHEDULE_TO_PRISON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.MismatchPrisonerScheduleDetails.Type.WAITLIST
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.MismatchPrisonerScheduleDetails.Type.WAITLIST_APPROVED
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.MismatchPrisonerScheduleDetails.Type.WAITLIST_CANCELLATION_REASON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.MismatchPrisonerScheduleDetails.Type.WAITLIST_COMMENT
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.MismatchPrisonerScheduleDetails.Type.WAITLIST_REQUESTED_DATE
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.MismatchPrisonerScheduleDetails.Type.WAITLIST_STATUS_DATE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.MismatchPrisonerScheduleDetails.Type.WAITLIST_TRANSFER_PRIORITY
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.MismatchedPrisonerTransferIds.Type.MISSING_MAPPING_SCHEDULE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.MismatchedPrisonerTransferIds.Type.MISSING_MAPPING_SCHEDULED_MOVEMENT
@@ -268,14 +264,13 @@ class TransferScheduleReconciliationService(
     mappings.matchingSchedules(nomisScheduleIds, dpsScheduleIds).forEach { (nomisId, dpsId) ->
       fun mismatch(type: MismatchPrisonerScheduleDetails.Type, nomisValue: String, dpsValue: String) = MismatchPrisonerScheduleDetails(offenderNo, type, nomisId, dpsId, nomisValue, dpsValue)
       val nomisSchedule = nomisTransfers.findSchedule(nomisId)
+      val nomisMovementFromPrison = nomisTransfers.findMovement(nomisId)?.fromPrison
       val nomisWaitlist = nomisSchedule.waitlist
       val dpsSchedule = dpsTransfers.findSchedule(dpsId)
       val dpsWaitlist = dpsTransfers.findWaitlist(dpsId)
 
-      // cancellation reason
-      if (nomisSchedule.cancellationReasonCode != dpsSchedule.outcomeReasonCode) {
-        mismatches.add(mismatch(SCHEDULE_CANCELLATION_REASON, "${nomisSchedule.cancellationReasonCode}", "${dpsSchedule.outcomeReasonCode}"))
-      }
+      // Do not reconcile schedule properties if there is no NOMIS start time - this means there's no schedule in DPS
+      if (nomisSchedule.startTime == null) return@forEach
 
       // comment
       if (nomisSchedule.comment != dpsSchedule.commentText) {
@@ -293,7 +288,7 @@ class TransferScheduleReconciliationService(
       }
 
       // from prison
-      if (nomisSchedule.fromPrison != dpsSchedule.agyLocId) {
+      if (nomisSchedule.fromPrison != dpsSchedule.agyLocId && nomisMovementFromPrison != dpsSchedule.agyLocId) {
         mismatches.add(mismatch(SCHEDULE_FROM_PRISON, nomisSchedule.fromPrison, dpsSchedule.agyLocId))
       }
 
@@ -314,7 +309,7 @@ class TransferScheduleReconciliationService(
 
       // waitlist exists
       if ((nomisWaitlist == null) != (dpsWaitlist == null)) {
-        mismatches.add(mismatch(WAITLIST, "${nomisWaitlist == null}", "${dpsWaitlist == null}"))
+        mismatches.add(mismatch(WAITLIST, "${nomisWaitlist != null}", "${dpsWaitlist != null}"))
       }
 
       if (nomisWaitlist != null && dpsWaitlist != null) {
@@ -323,24 +318,9 @@ class TransferScheduleReconciliationService(
           mismatches.add(mismatch(WAITLIST_REQUESTED_DATE, "${nomisWaitlist.requestDate}", "${dpsWaitlist.requestDate}"))
         }
 
-        // waitlist status date
-        if (nomisWaitlist.statusDate != dpsWaitlist.statusDate) {
-          mismatches.add(mismatch(WAITLIST_STATUS_DATE, "${nomisWaitlist.statusDate}", "${dpsWaitlist.statusDate}"))
-        }
-
         // waitlist transfer priority
         if (nomisWaitlist.priority != dpsWaitlist.transferPriority) {
           mismatches.add(mismatch(WAITLIST_TRANSFER_PRIORITY, nomisWaitlist.priority, dpsWaitlist.transferPriority))
-        }
-
-        // waitlist approved
-        if (nomisWaitlist.approved != dpsWaitlist.approved) {
-          mismatches.add(mismatch(WAITLIST_APPROVED, "${nomisWaitlist.approved}", "${dpsWaitlist.approved}"))
-        }
-
-        // waitlist cancellation reason
-        if (nomisWaitlist.cancellationReasonCode != dpsWaitlist.outcomeReasonCode?.value) {
-          mismatches.add(mismatch(WAITLIST_CANCELLATION_REASON, "${nomisWaitlist.cancellationReasonCode}", "${dpsWaitlist.outcomeReasonCode?.value}"))
         }
 
         // waitlist comment
@@ -482,15 +462,16 @@ class TransferScheduleReconciliationService(
     this.movements.find { it.nomisBookingId == nomisId.bookingId && it.nomisMovementSeq == nomisId.sequence }?.dpsTransferMovementId
   }
 
-  private fun OffenderTransferMovementsResponse.scheduleIds() = bookings.flatMap { it.transferSchedules }.map { it.schedule.eventId }
+  private fun OffenderTransferMovementsResponse.scheduleIds() = bookings.flatMap { it.transferSchedules }.filter { it.schedule.startTime != null }.map { it.schedule.eventId }
   private fun OffenderTransferMovementsResponse.scheduledMovementIds() = bookings.flatMap { it.transferSchedules }.mapNotNull { it.movement }.map { NomisMovementId(it.bookingId, it.sequence) }
   private fun OffenderTransferMovementsResponse.unscheduledMovementIds() = bookings.flatMap { it.unscheduledTransferMovements }.map { NomisMovementId(it.bookingId, it.sequence) }
-  private fun ReconciliationResponse.scheduleIds() = transfers.map { it.transfer.dpsId!! }
+  private fun ReconciliationResponse.scheduleIds() = transfers.filter { it.transfer.schedule?.start != null }.map { it.transfer.dpsId!! }
   private fun ReconciliationResponse.scheduledMovementIds() = transfers.mapNotNull { it.movement }.map { it.dpsId!! }
   private fun ReconciliationResponse.unscheduledMovementIds() = unscheduledMovements.map { it.dpsId!! }
   private fun OffenderTransferMovementsResponse.findSchedule(eventId: Long) = bookings.flatMap { it.transferSchedules }.map { it.schedule }
     .find { it.eventId == eventId }
     ?: throw IllegalStateException("Unable to find schedule for eventId=$eventId despite having matched it earlier. This should not happen!")
+  private fun OffenderTransferMovementsResponse.findMovement(eventId: Long) = bookings.flatMap { it.transferSchedules }.find { it.schedule.eventId == eventId }?.movement
   private fun OffenderTransferMovementsResponse.findScheduledMovement(nomisMovementId: NomisMovementId) = bookings.flatMap { it.transferSchedules }.mapNotNull { it.movement }
     .find { it.bookingId == nomisMovementId.bookingId && it.sequence == nomisMovementId.sequence }
     ?: throw IllegalStateException("Unable to find movement for id=$nomisMovementId despite having matched it earlier. This should not happen!")
@@ -538,7 +519,6 @@ class MismatchPrisonerScheduleDetails(
   val dpsValue: String,
 ) : MismatchedPrisonerTransfer(offenderNo, type.name) {
   enum class Type {
-    SCHEDULE_CANCELLATION_REASON,
     SCHEDULE_COMMENT,
     SCHEDULE_ESCORT,
     SCHEDULE_EVENT_SUBTYPE,
@@ -548,10 +528,7 @@ class MismatchPrisonerScheduleDetails(
     SCHEDULE_TO_PRISON,
     WAITLIST,
     WAITLIST_REQUESTED_DATE,
-    WAITLIST_STATUS_DATE,
     WAITLIST_TRANSFER_PRIORITY,
-    WAITLIST_APPROVED,
-    WAITLIST_CANCELLATION_REASON,
     WAITLIST_COMMENT,
   }
 }

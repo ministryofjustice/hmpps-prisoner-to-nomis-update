@@ -61,7 +61,7 @@ class TransferSchedulerNomisApiMockServer(private val jsonMapper: JsonMapper) {
     fun transferScheduleOutResponse(
       eventId: Long = 1,
       eventStatus: String = "SCH",
-      startTime: LocalDateTime = now,
+      startTime: LocalDateTime? = now,
       createDateTime: LocalDateTime = now,
       createUsername: String = "PRISONER_MANAGER_API",
       modifyDateTime: LocalDateTime? = null,
