@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-08-27.1141.2e8c474"
+    "version" : "2026-09-01.1147.ab2a04b"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -2212,7 +2212,7 @@
           "required" : true,
           "schema" : {
             "type" : "string",
-            "enum" : [ "IDENTIFY_CANDIDATE_VISITS_TO_CHECK" ]
+            "enum" : [ "IDENTIFY_CANDIDATE_VISITS_TO_CHECK", "PROCESS_CANDIDATE_VISITS_TO_CHECK" ]
           }
         } ],
         "responses" : {
