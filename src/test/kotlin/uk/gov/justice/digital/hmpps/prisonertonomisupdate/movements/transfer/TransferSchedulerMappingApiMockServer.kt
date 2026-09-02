@@ -4,11 +4,13 @@ import com.github.tomakehurst.wiremock.client.CountMatchingStrategy
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.delete
 import com.github.tomakehurst.wiremock.client.WireMock.get
+import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import tools.jackson.databind.json.JsonMapper
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateMappingErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TransferMovementMappingIdsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TransferScheduleMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TransferScheduleMappingIdsDto
@@ -112,6 +114,39 @@ class TransferSchedulerMappingApiMockServer(private val jsonMapper: JsonMapper) 
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(status.value())
+          .withBody(jsonMapper.writeValueAsString(error)),
+      ),
+    )
+  }
+
+  fun stubCreateTransferScheduleMapping() {
+    mappingServer.stubFor(
+      post("/mapping/transfer-scheduler/schedule")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(201),
+        ),
+    )
+  }
+
+  fun stubCreateTransferScheduleMapping(status: HttpStatus, error: ErrorResponse = ErrorResponse(status = status.value())) {
+    mappingServer.stubFor(
+      post("/mapping/transfer-scheduler/schedule").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(status.value())
+          .withBody(jsonMapper.writeValueAsString(error)),
+      ),
+    )
+  }
+
+  fun stubCreateTransferScheduleMappingConflict(error: DuplicateMappingErrorResponse) {
+    mappingServer.stubFor(
+      post("/mapping/transfer-scheduler/schedule").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(409)
           .withBody(jsonMapper.writeValueAsString(error)),
       ),
     )
