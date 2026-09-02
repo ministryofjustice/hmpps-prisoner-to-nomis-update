@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-08-26.1024.1e7f63b"
+    "version" : "2026-09-01.1041.2cecafa"
   },
   "servers" : [ {
     "url" : "https://prisoner-finance-sync-api-dev.hmpps.service.justice.gov.uk/",
@@ -103,6 +103,89 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/SyncTransactionReceipt"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error - An unexpected error occurred.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearer-jwt" : [ "ROLE_PRISONER_FINANCE_SYNC__RW" ]
+        } ]
+      }
+    },
+    "/sync/holds" : {
+      "post" : {
+        "tags" : [ "Holds" ],
+        "summary" : "Create a new Hold record",
+        "description" : "Creates a new Hold record for the specified prisoner in the holds service",
+        "operationId" : "postHolds",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SyncCreateHoldRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Hold record created.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/HoldResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad request - invalid input data.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - requires a valid OAuth2 token",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden - requires an appropriate role",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Conflict - Legacy Hold Number already in use",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -879,9 +962,7 @@
           },
           "generalLedgerEntries" : {
             "type" : "array",
-            "format" : "decimal",
             "description" : "A list of general ledger entries associated with this offender transaction.",
-            "example" : 162.0,
             "items" : {
               "$ref" : "#/components/schemas/GeneralLedgerEntry"
             }
@@ -1013,6 +1094,129 @@
           }
         },
         "required" : [ "status" ]
+      },
+      "SyncCreateHoldRequest" : {
+        "type" : "object",
+        "description" : "Create Hold Request",
+        "properties" : {
+          "prisonNumber" : {
+            "type" : "string",
+            "description" : "The prison number that the hold belongs to",
+            "example" : "19228028"
+          },
+          "subAccountCode" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The general ledger account code",
+            "example" : 2101
+          },
+          "holdNumber" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The hold number",
+            "example" : 123456789
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time the transaction was created.",
+            "example" : "2024-06-18T14:30:00.123456"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "The user id of the person who created the transaction.",
+            "example" : "JD12345"
+          },
+          "holdFromDate" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time the hold applies from.",
+            "example" : "2024-06-18T14:30:00.123456"
+          },
+          "holdUntilDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "The date and time the hold applies until.",
+            "example" : "2024-06-20T14:30:00.123456"
+          },
+          "isReleased" : {
+            "type" : "boolean",
+            "description" : "A flag to indicate if the hold has been released."
+          },
+          "description" : {
+            "type" : [ "string", "null" ],
+            "description" : "The description on the hold transaction."
+          },
+          "holdType" : {
+            "type" : "string",
+            "description" : "The hold type of the hold transaction.",
+            "example" : "WHF"
+          },
+          "holdLocation" : {
+            "type" : "string",
+            "description" : "The prison code of the location that initiated the transaction.",
+            "example" : "LEI"
+          },
+          "amount" : {
+            "type" : "number",
+            "description" : "The amount to hold.",
+            "example" : 10.23
+          }
+        },
+        "required" : [ "amount", "createdAt", "createdBy", "holdFromDate", "holdLocation", "holdNumber", "holdType", "isReleased", "prisonNumber", "subAccountCode" ]
+      },
+      "HoldResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "prisonNumber" : {
+            "type" : "string"
+          },
+          "legacyHoldNumber" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "subAccountRef" : {
+            "type" : "string",
+            "enum" : [ "CASH", "SPENDS", "SAVINGS" ]
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "createdBy" : {
+            "type" : "string"
+          },
+          "holdFromDate" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "isReleased" : {
+            "type" : "boolean"
+          },
+          "holdType" : {
+            "type" : "string",
+            "enum" : [ "HOA", "WHF" ]
+          },
+          "amount" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "holdLocation" : {
+            "type" : "string"
+          },
+          "holdUntilDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time"
+          },
+          "description" : {
+            "type" : [ "string", "null" ]
+          }
+        },
+        "required" : [ "amount", "createdAt", "createdBy", "holdFromDate", "holdLocation", "holdType", "id", "isReleased", "legacyHoldNumber", "prisonNumber", "subAccountRef" ]
       },
       "SyncGeneralLedgerTransactionRequest" : {
         "type" : "object",
@@ -1331,10 +1535,6 @@
             "type" : "string",
             "format" : "uuid"
           },
-          "legacyTransactionId" : {
-            "type" : [ "integer", "null" ],
-            "format" : "int64"
-          },
           "caseloadId" : {
             "type" : [ "string", "null" ]
           },
@@ -1344,6 +1544,10 @@
           },
           "transactionType" : {
             "type" : [ "string", "null" ]
+          },
+          "legacyTransactionId" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int64"
           },
           "synchronizedTransactionId" : {
             "type" : "string",
