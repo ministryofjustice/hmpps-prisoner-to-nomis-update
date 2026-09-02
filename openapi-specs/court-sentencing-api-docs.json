@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-08-27.2398.eb00bcf"
+    "version" : "2026-09-01.2420.68d7f92"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -82,6 +82,9 @@
   }, {
     "name" : "hmcts-court-data-controller",
     "description" : "Endpoints to retrieve HMCTS Court Data in RaS structure."
+  }, {
+    "name" : "person-admin-controller",
+    "description" : "Person admin"
   }, {
     "name" : "booking-controller",
     "description" : "Create operation for bookings in NOMIS. This is used when court cases are cloned onto different bookings"
@@ -2625,6 +2628,29 @@
         }
       }
     },
+    "/person-admin/fix-many-charges-to-sentence" : {
+      "post" : {
+        "tags" : [ "person-admin-controller" ],
+        "summary" : "Fixes the single sentence to many charges issue for prisoner ids",
+        "description" : "Fix all single sentence to many charges for prisoner ids",
+        "operationId" : "cleanupManyChargesToSentence",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/FixSingleSentenceMultipleChargesPeople"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "202" : {
+            "description" : "fix triggered"
+          }
+        }
+      }
+    },
     "/next-court-appearance-admin/link-latest-court-appearances" : {
       "post" : {
         "tags" : [ "next-court-appearance-admin-controller" ],
@@ -3337,7 +3363,7 @@
         "tags" : [ "court-case-admin-controller" ],
         "summary" : "Fixes the single sentence to many charges issue",
         "description" : "\n      NOMIS contains an erroneous relationship between sentences and charges where a single sentence is \n      linked to multiple charges. This endpoint identifies all court cases with this issue and creates \n      new sentences for each charge, ensuring that each sentence is correctly linked to its respective charge.\n      ",
-        "operationId" : "cleanupManyChargesToSentence",
+        "operationId" : "cleanupManyChargesToSentence_1",
         "responses" : {
           "202" : {
             "description" : "Cleanup triggered"
@@ -7334,7 +7360,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "10:11:03.017277811"
+            "example" : "07:44:33.135893616"
           },
           "outcomeDispositionCode" : {
             "type" : [ "string", "null" ]
@@ -7705,7 +7731,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "10:11:03.017277811"
+            "example" : "07:44:33.135893616"
           },
           "courtCode" : {
             "type" : "string"
@@ -8200,6 +8226,18 @@
           }
         },
         "required" : [ "isRecallPossible", "sentenceIds" ]
+      },
+      "FixSingleSentenceMultipleChargesPeople" : {
+        "type" : "object",
+        "properties" : {
+          "prisonerIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        },
+        "required" : [ "prisonerIds" ]
       },
       "LegacySentenceCreatedResponse" : {
         "type" : "object",
@@ -10606,7 +10644,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "10:11:03.017277811"
+            "example" : "07:44:33.135893616"
           },
           "courtCode" : {
             "type" : "string"
@@ -11294,7 +11332,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "10:11:03.017277811"
+            "example" : "07:44:33.135893616"
           },
           "nomisOutcomeCode" : {
             "type" : [ "string", "null" ]
@@ -11373,7 +11411,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "10:11:03.017277811"
+            "example" : "07:44:33.135893616"
           },
           "courtId" : {
             "type" : "string"
@@ -11525,7 +11563,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "10:11:03.017277811"
+            "example" : "07:44:33.135893616"
           },
           "charges" : {
             "type" : "array",
@@ -11562,7 +11600,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "10:11:03.017277811"
+            "example" : "07:44:33.135893616"
           },
           "courtId" : {
             "type" : "string"
@@ -11849,14 +11887,14 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
-          "pageSize" : {
+          "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
           },
           "paged" : {
             "type" : "boolean"
           },
-          "pageNumber" : {
+          "pageSize" : {
             "type" : "integer",
             "format" : "int32"
           },
@@ -12152,7 +12190,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "10:11:03.017277811"
+            "example" : "07:44:33.135893616"
           },
           "courtCode" : {
             "type" : [ "string", "null" ]
