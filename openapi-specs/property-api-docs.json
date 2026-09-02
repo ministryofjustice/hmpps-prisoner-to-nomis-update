@@ -7,7 +7,7 @@
       "name" : "Move a prisoner Team",
       "email" : "Moveaprisoner-gg@justice.gov.uk"
     },
-    "version" : "2026-08-24.260.2869f87"
+    "version" : "2026-09-01.271.beaea2f"
   },
   "servers" : [ {
     "url" : "/",
@@ -2587,9 +2587,6 @@
             "type" : "integer",
             "format" : "int64"
           },
-          "unpaged" : {
-            "type" : "boolean"
-          },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
@@ -2603,6 +2600,9 @@
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "unpaged" : {
+            "type" : "boolean"
           }
         }
       },
