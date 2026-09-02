@@ -160,6 +160,12 @@ abstract class SqsIntegrationTestBase : IntegrationTestBase() {
   internal val courtMovementsQueueUrl by lazy { courtMovementsQueue.queueUrl }
   internal val courtMovementsDlqUrl by lazy { courtMovementsQueue.dlqUrl }
 
+  internal val transferMovementsQueue by lazy { hmppsQueueService.findByQueueId("transfermovements") as HmppsQueue }
+  internal val transferMovementsQueueClient by lazy { transferMovementsQueue.sqsClient }
+  internal val transferMovementsDlqClient by lazy { transferMovementsQueue.sqsDlqClient }
+  internal val transferMovementsQueueUrl by lazy { transferMovementsQueue.queueUrl }
+  internal val transferMovementsDlqUrl by lazy { transferMovementsQueue.dlqUrl }
+
   internal val agencyRegistersQueue by lazy { hmppsQueueService.findByQueueId("agencyregisters") as HmppsQueue }
   internal val agencyRegistersQueueClient by lazy { agencyRegistersQueue.sqsClient }
   internal val agencyRegistersDlqClient by lazy { agencyRegistersQueue.sqsDlqClient }
@@ -225,6 +231,9 @@ abstract class SqsIntegrationTestBase : IntegrationTestBase() {
 
     courtMovementsQueueClient.purgeQueue(courtMovementsQueueUrl).get()
     courtMovementsDlqClient?.purgeQueue(courtMovementsDlqUrl)?.get()
+
+    transferMovementsQueueClient.purgeQueue(transferMovementsQueueUrl).get()
+    transferMovementsDlqClient?.purgeQueue(transferMovementsDlqUrl)?.get()
 
     agencyRegistersQueueClient.purgeQueue(agencyRegistersQueueUrl).get()
     agencyRegistersDlqClient?.purgeQueue(agencyRegistersDlqUrl)?.get()
