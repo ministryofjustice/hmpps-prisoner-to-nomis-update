@@ -203,7 +203,6 @@ class CorePersonReconciliationService(
           n.current != cpr.current -> "$i-current:nomis=${n.current}, cpr=${cpr.current}"
           n.createUsername != cpr.createUsername -> "$i-createUser:nomis=${n.createUsername}, cpr=${cpr.createUsername}"
           n.createDatetime.notEqualsIgnoringNanos(cpr.createDatetime) -> "$i-createDatetime:nomis=${n.createDatetime}, cpr=${cpr.createDatetime}"
-          !datesEqualToWithin(n.modifyDatetime, cpr.modifyDatetime, Duration.ofHours(1)) -> "$i-modifyDatetime:nomis=${n.modifyDatetime}, cpr=${cpr.modifyDatetime}"
           else -> null
         }
       }
@@ -247,7 +246,6 @@ fun DpsPrisonRecord.toPerson() = PrisonerPerson(
       createUsername = it.createUserId,
       createDatetime = it.createDateTime,
       modifyUsername = it.modifyUserId,
-      modifyDatetime = it.modifyDateTime,
     )
   },
 )
@@ -264,7 +262,6 @@ fun List<OffenderBelief>.toPerson() = PrisonerPerson(
       createUsername = r.audit.createUsername,
       createDatetime = r.audit.createDatetime,
       modifyUsername = r.audit.modifyUserId,
-      modifyDatetime = r.audit.modifyDatetime,
     )
   },
 )
@@ -289,5 +286,4 @@ data class PrisonerReligion(
   val createUsername: String,
   val createDatetime: LocalDateTime,
   val modifyUsername: String?,
-  val modifyDatetime: LocalDateTime?,
 )
