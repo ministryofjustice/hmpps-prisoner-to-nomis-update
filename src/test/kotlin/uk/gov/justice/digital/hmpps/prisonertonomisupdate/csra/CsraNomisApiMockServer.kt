@@ -20,14 +20,14 @@ class CsraNomisApiMockServer(private val jsonMapper: JsonMapper) {
 
   fun stubCreateCsra(offenderNo: String, response: CsraCreateResponse) {
     nomisApi.stubFor(
-      post(urlPathEqualTo("/prisoners/$offenderNo/csras"))
+      post(urlPathEqualTo("/prisoners/$offenderNo/csra"))
         .willReturn(okJson(jsonMapper.writeValueAsString(response))),
     )
   }
 
   fun stubUpdateCsra(bookingId: Long, sequence: Int) {
     nomisApi.stubFor(
-      put(urlPathEqualTo("/bookings/$bookingId/csras/$sequence"))
+      put(urlPathEqualTo("/prisoners/booking-id/$bookingId/csra/$sequence"))
         .willReturn(ok()),
     )
   }
