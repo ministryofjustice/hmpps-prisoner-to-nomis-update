@@ -15,6 +15,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.TransferSchedulerDpsApiExtension.Companion.transferSchedulerDpsApiServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
+import java.util.*
 
 @SpringAPIServiceTest
 @Import(
@@ -76,6 +77,56 @@ class TransferSchedulerDpsApiServiceTest {
 
       assertThrows<WebClientResponseException.InternalServerError> {
         apiService.getTransferSchedulerReconciliation(personIdentifier)
+      }
+    }
+  }
+
+  @Nested
+  inner class GetTransferSchedule {
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      val id = UUID.randomUUID()
+      transferSchedulerDpsApiServer.stubGetTransferSchedule(id)
+
+      apiService.getTransferSchedule(id)
+
+      transferSchedulerDpsApiServer.verify(
+        getRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call get endpoint`() = runTest {
+      val id = UUID.randomUUID()
+      transferSchedulerDpsApiServer.stubGetTransferSchedule(id)
+
+      apiService.getTransferSchedule(id)
+
+      transferSchedulerDpsApiServer.verify(
+        getRequestedFor(urlPathEqualTo("/sync/transfers/$id")),
+      )
+    }
+
+    @Test
+    fun `will return data`() = runTest {
+      val id = UUID.randomUUID()
+      transferSchedulerDpsApiServer.stubGetTransferSchedule(id)
+
+      with(apiService.getTransferSchedule(id)) {
+        assertThat(this.dpsId).isEqualTo(id)
+        assertThat(schedule?.agyLocId).isEqualTo("BXI")
+        assertThat(waitlist?.waitListStatus).isEqualTo("CANC")
+      }
+    }
+
+    @Test
+    fun `will throw if error`() = runTest {
+      val id = UUID.randomUUID()
+      transferSchedulerDpsApiServer.stubGetTransferSchedule(status = 500)
+
+      assertThrows<WebClientResponseException.InternalServerError> {
+        apiService.getTransferSchedule(id)
       }
     }
   }

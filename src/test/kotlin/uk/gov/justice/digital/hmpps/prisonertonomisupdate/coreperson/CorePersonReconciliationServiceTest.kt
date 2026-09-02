@@ -76,27 +76,6 @@ class CorePersonReconciliationServiceTest {
     }
   }
 
-  @Nested
-  @ParameterizedClass
-  @CsvSource(
-    value = [
-      ",,true",
-      ",2016-06-01T01:02:03,false",
-      "2016-06-01T01:02:03,,false",
-      "2016-06-01T01:02:03,2016-06-01T01:02:03,true",
-      "2016-06-01T01:02:03,2016-06-01T01:02:02,true",
-      "2016-06-01T01:02:03,2016-06-01T02:02:04,false",
-    ],
-  )
-  inner class LocalDateTimeModifiedTests(private val nomisDate: LocalDateTime?, private val cprDate: LocalDateTime?, private val fieldsEquals: Boolean) {
-    @Test
-    fun `modify date time test`() {
-      val nomis = listOf(createReligion().copy(modifyDatetime = nomisDate))
-      val cpr = listOf(createReligion().copy(modifyDatetime = cprDate))
-      comparePrisonerReligions(nomis, cpr, fieldsEquals, "modifyDatetime", nomisDate, cprDate)
-    }
-  }
-
   private fun comparePrisonerReligions(
     nomis: List<PrisonerReligion>,
     cpr: List<PrisonerReligion>,
@@ -131,6 +110,5 @@ class CorePersonReconciliationServiceTest {
     createUsername = "ME",
     createDatetime = LocalDateTime.parse("2025-02-03T10:20:30"),
     modifyUsername = null,
-    modifyDatetime = null,
   )
 }

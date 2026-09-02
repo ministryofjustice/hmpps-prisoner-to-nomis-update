@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
+import com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching
 import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
@@ -106,6 +107,16 @@ class TransferSchedulerDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       active = true,
       commentText = "some transfer movement comment",
     )
+
+    fun syncTransfer(
+      id: UUID = UUID.randomUUID(),
+      eventId: Long = 123L,
+    ) = SyncTransfer(
+      dpsId = id,
+      eventId = eventId,
+      schedule = transferSchedule(),
+      waitlist = transferWaitlist(),
+    )
   }
 
   fun stubGetTransferSchedulerReconciliation(personIdentifier: String, response: ReconciliationResponse = reconciliation()) {
@@ -123,6 +134,33 @@ class TransferSchedulerDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   fun stubGetTransferSchedulerReconciliation(personIdentifier: String, status: Int = 500, error: ErrorResponse = ErrorResponse(status = status)) {
     transferSchedulerDpsApiServer.stubFor(
       get("/reconciliation/transfers/$personIdentifier")
+        .willReturn(
+          aResponse()
+            .withStatus(status)
+            .withHeader("Content-Type", "application/json")
+            .withBody(jsonMapper.writeValueAsString(error)),
+        ),
+    )
+  }
+
+  fun stubGetTransferSchedule(
+    id: UUID,
+    response: SyncTransfer = syncTransfer(id),
+  ) {
+    transferSchedulerDpsApiServer.stubFor(
+      get("/sync/transfers/$id")
+        .willReturn(
+          aResponse()
+            .withStatus(200)
+            .withHeader("Content-Type", "application/json")
+            .withBody(jsonMapper.writeValueAsString(response)),
+        ),
+    )
+  }
+
+  fun stubGetTransferSchedule(status: Int = 500, error: ErrorResponse = ErrorResponse(status = status)) {
+    transferSchedulerDpsApiServer.stubFor(
+      get(urlPathMatching("/sync/transfers/.*"))
         .willReturn(
           aResponse()
             .withStatus(status)
