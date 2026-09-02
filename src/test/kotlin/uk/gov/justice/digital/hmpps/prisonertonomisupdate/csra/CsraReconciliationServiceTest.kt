@@ -33,6 +33,8 @@ import java.util.UUID
 
 const val CSRA_OFFENDER_NO = "A5678BZ"
 const val CSRA_DPS_ID = "57718979-573c-433a-abcd-000011112222"
+const val CSRA_BOOKING_ID = 12345L
+const val CSRA_SEQUENCE = 1
 
 @SpringAPIServiceTest
 @Import(

@@ -15,7 +15,11 @@ import org.springframework.test.context.junit.jupiter.SpringExtension
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csra.CsraDpsApiExtension.Companion.jsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csra.model.CsraCurrentRating
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csra.model.CsraReviewDetail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csra.model.CsraReviewHistory
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.util.UUID
 
 class CsraDpsApiExtension :
   BeforeAllCallback,
@@ -82,4 +86,27 @@ class CsraDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
         .willReturn(status(status)),
     )
   }
+
+  fun stubGetCsraReview(id: UUID, response: CsraReviewDetail = dpsCsra(id)) {
+    stubFor(
+      get(urlPathEqualTo("/csra-review/$id"))
+        .willReturn(okJson(jsonMapper.writeValueAsString(response))),
+    )
+  }
 }
+
+fun dpsCsra(
+  id: UUID = UUID.randomUUID(),
+  prisonerNumber: String = CSRA_OFFENDER_NO,
+  finalResult: CsraReviewDetail.FinalResult? = CsraReviewDetail.FinalResult.STANDARD,
+) = CsraReviewDetail(
+  id = id,
+  prisonerNumber = prisonerNumber,
+  assessmentDate = LocalDate.parse("2026-01-02"),
+  type = CsraReviewDetail.Type.RATING,
+  createdAt = LocalDateTime.parse("2026-01-02T10:00:00"),
+  createdBy = "ME",
+  prisonId = "MDI",
+  finalResult = finalResult,
+  finalResultDate = LocalDate.parse("2026-01-03"),
+)

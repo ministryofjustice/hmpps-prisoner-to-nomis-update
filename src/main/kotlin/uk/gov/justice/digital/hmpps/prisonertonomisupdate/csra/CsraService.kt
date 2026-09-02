@@ -122,6 +122,9 @@ private fun CsraReviewDetail.toNomisCreateRequest() = CsraCreateDto(
   assessmentDate = assessmentDate,
   type = type.toNomisAssessmentType(),
   calculatedLevel = finalResult?.toNomisLevel() ?: interimResult?.toNomisLevel() ?: AssessmentLevel.STANDARD,
+  reviewLevel = finalResult?.toNomisLevel(),
+  evaluationDate = finalResultDate,
+  evaluationResultCode = finalResult?.let { EvaluationResultCode.APP },
   // DPS does not hold a numeric CSRA score for a review, only a rating/level, so this is not populated
   score = null,
   status = if (finalResult != null) AssessmentStatusType.A else AssessmentStatusType.P,
