@@ -4,6 +4,8 @@ import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
 import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
+import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
@@ -15,7 +17,11 @@ import org.springframework.context.annotation.Import
 import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
 import org.springframework.http.HttpStatus.NOT_FOUND
 import org.springframework.web.reactive.function.client.WebClientResponseException
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.DuplicateMappingException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateErrorContentObject
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateMappingErrorResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TransferScheduleMappingDto
 import java.util.UUID
 
 @SpringAPIServiceTest
@@ -125,6 +131,76 @@ class TransferSchedulerMappingApiServiceTest {
 
       assertThrows<WebClientResponseException.InternalServerError> {
         apiService.deleteTransferScheduleMapping(dpsId)
+      }
+    }
+  }
+
+  @Nested
+  inner class CreateTransferScheduleMappings {
+    @Test
+    internal fun `should pass oath2 token to service`() = runTest {
+      mappingApi.stubCreateTransferScheduleMapping()
+
+      apiService.createTransferScheduleMapping(transferScheduleMapping())
+
+      mappingApi.verify(
+        postRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `should pass data to service`() = runTest {
+      mappingApi.stubCreateTransferScheduleMapping()
+
+      apiService.createTransferScheduleMapping(transferScheduleMapping())
+
+      mappingApi.verify(
+        postRequestedFor(anyUrl())
+          .withRequestBody(matchingJsonPath("prisonerNumber", equalTo("A1234BC"))),
+      )
+    }
+
+    @Test
+    fun `should return error for 409 conflict`() = runTest {
+      val dpsTransferScheduleId = UUID.randomUUID()
+      mappingApi.stubCreateTransferScheduleMappingConflict(
+        error = DuplicateMappingErrorResponse(
+          moreInfo = DuplicateErrorContentObject(
+            existing = TransferScheduleMappingDto(
+              prisonerNumber = "A1234BC",
+              bookingId = 12345L,
+              nomisEventId = 1L,
+              dpsTransferScheduleId = dpsTransferScheduleId,
+              mappingType = TransferScheduleMappingDto.MappingType.NOMIS_CREATED,
+            ),
+            duplicate = TransferScheduleMappingDto(
+              prisonerNumber = "A1234BC",
+              bookingId = 12345L,
+              nomisEventId = 2L,
+              dpsTransferScheduleId = dpsTransferScheduleId,
+              mappingType = TransferScheduleMappingDto.MappingType.NOMIS_CREATED,
+            ),
+          ),
+          errorCode = 1409,
+          status = DuplicateMappingErrorResponse.Status._409_CONFLICT,
+          userMessage = "Duplicate mapping",
+        ),
+      )
+
+      assertThrows<DuplicateMappingException> {
+        apiService.createTransferScheduleMapping(transferScheduleMapping())
+      }.error.apply {
+        assertThat(moreInfo.existing!!["nomisEventId"]).isEqualTo(1)
+        assertThat(moreInfo.duplicate["nomisEventId"]).isEqualTo(2)
+      }
+    }
+
+    @Test
+    fun `should throw if API calls fail`() = runTest {
+      mappingApi.stubCreateTransferScheduleMapping(status = INTERNAL_SERVER_ERROR)
+
+      assertThrows<WebClientResponseException.InternalServerError> {
+        apiService.createTransferScheduleMapping(transferScheduleMapping())
       }
     }
   }
