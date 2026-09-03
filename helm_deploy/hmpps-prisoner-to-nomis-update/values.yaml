@@ -197,6 +197,10 @@ generic-service:
       HMPPS_SQS_QUEUES_COURTMOVEMENTS_QUEUE_NAME: "sqs_queue_name"
     domain-events-sqs-nomis-update-courtmovements-dlq:
       HMPPS_SQS_QUEUES_COURTMOVEMENTS_DLQ_NAME: "sqs_queue_name"
+    domain-events-sqs-nomis-update-transfermovements:
+      HMPPS_SQS_QUEUES_TRANSFERMOVEMENTS_QUEUE_NAME: "sqs_queue_name"
+    domain-events-sqs-nomis-update-transfermovements-dlq:
+      HMPPS_SQS_QUEUES_TRANSFERMOVEMENTS_DLQ_NAME: "sqs_queue_name"
     domain-events-sqs-nomis-update-officialvisits:
       HMPPS_SQS_QUEUES_OFFICIALVISITS_QUEUE_NAME: "sqs_queue_name"
     domain-events-sqs-nomis-update-officialvisits-dlq:
