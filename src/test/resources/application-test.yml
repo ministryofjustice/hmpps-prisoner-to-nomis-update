@@ -397,6 +397,31 @@ hmpps.sqs:
       dlqMaxReceiveCount: 1
       visibilityTimeout: 120
       errorVisibilityTimeout: 0
+    transfermovements:
+      queueName: "transfer-movements-${random.uuid}"
+      dlqName: "transfer-movements-dlq-${random.uuid}"
+      subscribeTopicId: domainevents
+      subscribeFilter: >-
+        { "eventType":[
+          "person.transfer.planned",
+          "person.transfer.scheduled",
+          "person.transfer.moved-to-planning",
+          "person.transfer.cancelled",
+          "person.transfer.expired",
+          "person.transfer.in-transit",
+          "person.transfer.completed",
+          "person.transfer.rescheduled",
+          "person.transfer.relocated",
+          "person.transfer.recategorised",
+          "person.transfer.logistics-changed",
+          "person.transfer.reprioritised",
+          "person.transfer.planning-comments-changed",
+          "person.transfer.schedule-comments-changed",
+          "person.transfer.deleted"
+        ]}
+      dlqMaxReceiveCount: 1
+      visibilityTimeout: 120
+      errorVisibilityTimeout: 0
     officialvisits:
       queueName: "officialvisits-${random.uuid}"
       dlqName: "officialvisits-dlq-${random.uuid}"
