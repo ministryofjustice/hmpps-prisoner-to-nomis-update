@@ -3,6 +3,9 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
+import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
@@ -15,7 +18,7 @@ import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
 import org.springframework.http.HttpStatus.NOT_FOUND
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.TransferSchedulerNomisApiService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.TransferSchedulerNomisApiMockServer.Companion.upsertTransferScheduleOut
 
 @SpringAPIServiceTest
 @Import(TransferSchedulerNomisApiService::class, TransferSchedulerNomisApiMockServer::class)
@@ -76,6 +79,44 @@ class TransferSchedulerNomisApiServiceTest {
 
       assertThrows<WebClientResponseException.InternalServerError> {
         apiService.getOffenderTransferMovementsOrNull(offenderNo = "A1234BC")
+      }
+    }
+  }
+
+  @Nested
+  inner class UpsertTransferSchedule {
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      transferSchedulerNomisApiMockServer.stubUpsertTransferScheduleOut("A1234BC")
+
+      apiService.upsertTransferSchedule("A1234BC", upsertTransferScheduleOut())
+
+      transferSchedulerNomisApiMockServer.verify(
+        putRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call upsert endpoint`() = runTest {
+      transferSchedulerNomisApiMockServer.stubUpsertTransferScheduleOut("A1234BC")
+
+      apiService.upsertTransferSchedule("A1234BC", upsertTransferScheduleOut())
+
+      transferSchedulerNomisApiMockServer.verify(
+        putRequestedFor(urlEqualTo("/movements/A1234BC/transfers/schedule/out"))
+          .withRequestBody(
+            matchingJsonPath("fromPrison", equalTo("BXI")),
+          ),
+      )
+    }
+
+    @Test
+    fun `will throw if error`() = runTest {
+      transferSchedulerNomisApiMockServer.stubUpsertTransferScheduleOut(status = INTERNAL_SERVER_ERROR)
+
+      assertThrows<WebClientResponseException.InternalServerError> {
+        apiService.upsertTransferSchedule("A1234BC", upsertTransferScheduleOut())
       }
     }
   }
