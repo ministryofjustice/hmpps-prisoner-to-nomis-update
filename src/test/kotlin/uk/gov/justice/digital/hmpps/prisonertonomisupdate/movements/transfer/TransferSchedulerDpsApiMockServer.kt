@@ -79,8 +79,8 @@ class TransferSchedulerDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       commentText1 = "some waitlist comment",
     )
 
-    fun transferSchedule() = SyncSchedule(
-      start = now,
+    fun transferSchedule(start: LocalDateTime = now) = SyncSchedule(
+      start = start,
       eventSubType = "TRN",
       eventStatus = "SCH",
       commentText = "Some schedule comment",
@@ -111,10 +111,11 @@ class TransferSchedulerDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     fun syncTransfer(
       id: UUID = UUID.randomUUID(),
       eventId: Long = 123L,
+      start: LocalDateTime = now,
     ) = SyncTransfer(
       dpsId = id,
       eventId = eventId,
-      schedule = transferSchedule(),
+      schedule = transferSchedule(start = start),
       waitlist = transferWaitlist(),
     )
   }
@@ -145,7 +146,8 @@ class TransferSchedulerDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubGetTransferSchedule(
     id: UUID,
-    response: SyncTransfer = syncTransfer(id),
+    start: LocalDateTime = now,
+    response: SyncTransfer = syncTransfer(id = id, start = start),
   ) {
     transferSchedulerDpsApiServer.stubFor(
       get("/sync/transfers/$id")

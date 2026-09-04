@@ -16,6 +16,7 @@ class TransferSchedulerDomainEventListener(
   jsonMapper: JsonMapper,
   eventFeatureSwitch: EventFeatureSwitch,
   retryService: TransferSchedulerRetryService,
+  private val scheduleService: TransferSchedulerScheduleService,
   telemetryClient: TelemetryClient,
 ) : DomainEventListener(
   service = retryService,
@@ -50,7 +51,7 @@ class TransferSchedulerDomainEventListener(
       "person.transfer.reprioritised",
       "person.transfer.planning-comments-changed",
       "person.transfer.schedule-comments-changed",
-      -> log.info("Ignoring transfer scheduler update event: $eventType")
+      -> scheduleService.transferScheduleChanged(message.fromJson())
 
       "person.transfer.deleted",
       -> log.info("Ignoring transfer scheduler delete event: $eventType")
