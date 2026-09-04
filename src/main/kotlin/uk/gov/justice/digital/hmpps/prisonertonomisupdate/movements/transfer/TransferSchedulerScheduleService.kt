@@ -21,6 +21,7 @@ class TransferSchedulerScheduleService(
   companion object {
     private val TELEMETRY_KEY = "transfer-scheduler-schedule"
     private val TELEMETRY_KEY_CREATE = "$TELEMETRY_KEY-create"
+    private val TELEMETRY_KEY_UPDATE = "$TELEMETRY_KEY-update"
 
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
@@ -32,27 +33,31 @@ class TransferSchedulerScheduleService(
       "offenderNo" to prisonerNumber,
       "dpsTransferScheduleId" to dpsTransferScheduleId.toString(),
     )
-    val telemetryKey = TELEMETRY_KEY_CREATE
+    var telemetryKey = TELEMETRY_KEY_CREATE
 
     runCatching {
       val existingMapping = mappingApi.getTransferScheduleMapping(dpsTransferScheduleId)
       val dps = dpsApi.getTransferSchedule(dpsTransferScheduleId)
-      val nomis = nomisApi.upsertTransferSchedule(prisonerNumber, dps.toNomisUpsertRequest())
+      val nomis = nomisApi.upsertTransferSchedule(prisonerNumber, dps.toNomisUpsertRequest(existingMapping?.nomisEventId))
         .also {
           telemetryMap["bookingId"] = it.bookingId.toString()
           telemetryMap["nomisEventId"] = it.eventId.toString()
         }
 
       val mapping = TransferScheduleMappingDto(prisonerNumber, nomis.bookingId, nomis.eventId, dpsTransferScheduleId, TransferScheduleMappingDto.MappingType.DPS_CREATED)
-      mappingApi.createTransferScheduleMapping(mapping)
+      if (existingMapping == null) {
+        mappingApi.createTransferScheduleMapping(mapping)
+      } else {
+        telemetryKey = TELEMETRY_KEY_UPDATE
+      }
 
       telemetryClient.trackEvent("$telemetryKey-success", telemetryMap)
     }
   }
 }
 
-private fun SyncTransfer.toNomisUpsertRequest() = UpsertTransferScheduleOut(
-  eventId = null,
+private fun SyncTransfer.toNomisUpsertRequest(eventId: Long?) = UpsertTransferScheduleOut(
+  eventId = eventId,
   eventSubType = schedule!!.eventSubType,
   eventStatus = schedule.eventStatus,
   fromPrison = schedule.agyLocId,
@@ -64,9 +69,7 @@ private fun SyncTransfer.toNomisUpsertRequest() = UpsertTransferScheduleOut(
     UpsertTransferScheduleWaitlist(
       requestDate = it.requestDate,
       status = waitlist.waitListStatus,
-      statusDate = waitlist.statusDate,
       priority = waitlist.transferPriority,
-      approved = waitlist.approved,
       approvedUserName = waitlist.approvedUsername,
       comment = waitlist.commentText1,
     )
