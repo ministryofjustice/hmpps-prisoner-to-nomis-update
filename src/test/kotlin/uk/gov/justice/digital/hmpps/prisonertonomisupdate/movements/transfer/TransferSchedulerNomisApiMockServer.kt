@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer
 
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
+import com.github.tomakehurst.wiremock.client.WireMock.put
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
@@ -16,6 +17,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Of
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.TransferMovementOut
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.TransferScheduleOut
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.TransferScheduleWaitlist
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTransferScheduleOut
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTransferScheduleOutResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTransferScheduleWaitlist
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDateTime
@@ -43,6 +47,35 @@ class TransferSchedulerNomisApiMockServer(private val jsonMapper: JsonMapper) {
   ) {
     nomisApi.stubFor(
       get(urlPathMatching("/movements/.*/transfer")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(status.value())
+          .withBody(jsonMapper.writeValueAsString(error)),
+      ),
+    )
+  }
+
+  fun stubUpsertTransferScheduleOut(
+    prisonerNumber: String = "A1234BC",
+    eventId: Long = 123,
+    response: UpsertTransferScheduleOutResponse = upsertTransferScheduleResponse(eventId = eventId),
+  ) {
+    nomisApi.stubFor(
+      put(urlPathMatching("/movements/$prisonerNumber/transfers/schedule/out.*")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.CREATED.value())
+          .withBody(jsonMapper.writeValueAsString(response)),
+      ),
+    )
+  }
+
+  fun stubUpsertTransferScheduleOut(
+    status: HttpStatus = HttpStatus.INTERNAL_SERVER_ERROR,
+    error: ErrorResponse = ErrorResponse(status = status.value()),
+  ) {
+    nomisApi.stubFor(
+      put(urlPathMatching("/movements/.*/transfers/schedule/out.*")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(status.value())
@@ -159,5 +192,27 @@ class TransferSchedulerNomisApiMockServer(private val jsonMapper: JsonMapper) {
         ),
       ),
     )
+
+    fun upsertTransferScheduleOut() = UpsertTransferScheduleOut(
+      eventSubType = "TRN",
+      eventStatus = "SCH",
+      fromPrison = "BXI",
+      eventId = 123L,
+      startTime = now,
+      comment = "Some schedule comment",
+      toPrison = "LEI",
+      escortCode = "PECS",
+      waitlist = UpsertTransferScheduleWaitlist(
+        requestDate = yesterday.toLocalDate(),
+        status = "CANC",
+        statusDate = now.toLocalDate(),
+        priority = "3",
+        approved = true,
+        approvedUserName = "APPROVE_USER",
+        comment = "Some waitlist comment",
+      ),
+    )
+
+    fun upsertTransferScheduleResponse(eventId: Long = 123L) = UpsertTransferScheduleOutResponse(bookingId = 12345L, eventId = eventId)
   }
 }
