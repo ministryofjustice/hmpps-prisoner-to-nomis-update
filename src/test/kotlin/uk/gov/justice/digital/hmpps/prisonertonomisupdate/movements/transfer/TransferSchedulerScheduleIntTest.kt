@@ -382,7 +382,7 @@ class TransferSchedulerScheduleIntTest(
   }
 
   @Nested
-  inner class TransferAppearanceDeleted {
+  inner class TransferScheduleDeleted {
     private val prisonerNumber = "A1234BC"
     private val dpsTransferScheduleId = UUID.randomUUID()
     private val nomisEventId = 123L
