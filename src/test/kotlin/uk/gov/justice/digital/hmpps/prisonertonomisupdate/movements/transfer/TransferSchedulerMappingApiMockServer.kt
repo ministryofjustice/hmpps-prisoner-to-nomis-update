@@ -151,6 +151,8 @@ class TransferSchedulerMappingApiMockServer(private val jsonMapper: JsonMapper) 
       ),
     )
   }
+
+  fun stubCreateTransferScheduleMappingFailureFollowedBySuccess() = mappingServer.stubMappingCreateFailureFollowedBySuccess("/mapping/transfer-scheduler/schedule")
 }
 
 fun transferSchedulerPrisonerIdMappings(

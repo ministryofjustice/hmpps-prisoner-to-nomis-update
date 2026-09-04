@@ -5,17 +5,22 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.TransferSchedulerRetryService.Companion.MappingTypes.SCHEDULE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TransferScheduleMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTransferScheduleOut
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTransferScheduleWaitlist
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.TelemetryEnabled
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.createMapping
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.transferscheduler.model.SyncTransfer
+import java.util.*
 
 @Service
 class TransferSchedulerScheduleService(
   private val mappingApi: TransferSchedulerMappingApiService,
   private val dpsApi: TransferSchedulerDpsApiService,
   private val nomisApi: TransferSchedulerNomisApiService,
+  private val retryQueueService: TransferSchedulerRetryQueueService,
   override val telemetryClient: TelemetryClient,
 ) : TelemetryEnabled {
   companion object {
@@ -35,8 +40,16 @@ class TransferSchedulerScheduleService(
     )
     var telemetryKey = TELEMETRY_KEY_CREATE
 
+    if (event.additionalInformation.source != "DPS") {
+      telemetryClient.trackEvent("${TELEMETRY_KEY}-ignored", telemetryMap)
+      return
+    }
+
     runCatching {
       val existingMapping = mappingApi.getTransferScheduleMapping(dpsTransferScheduleId)
+      if (existingMapping != null) {
+        telemetryKey = TELEMETRY_KEY_UPDATE
+      }
       val dps = dpsApi.getTransferSchedule(dpsTransferScheduleId)
       val nomis = nomisApi.upsertTransferSchedule(prisonerNumber, dps.toNomisUpsertRequest(existingMapping?.nomisEventId))
         .also {
@@ -44,14 +57,50 @@ class TransferSchedulerScheduleService(
           telemetryMap["nomisEventId"] = it.eventId.toString()
         }
 
-      val mapping = TransferScheduleMappingDto(prisonerNumber, nomis.bookingId, nomis.eventId, dpsTransferScheduleId, TransferScheduleMappingDto.MappingType.DPS_CREATED)
       if (existingMapping == null) {
-        mappingApi.createTransferScheduleMapping(mapping)
+        createTransferScheduleMapping(prisonerNumber, nomis.bookingId, nomis.eventId, dpsTransferScheduleId, telemetryMap)
       } else {
-        telemetryKey = TELEMETRY_KEY_UPDATE
+        telemetryClient.trackEvent("$telemetryKey-success", telemetryMap)
       }
+    }
+      .onFailure {
+        telemetryMap["error"] = it.message ?: "Unknown error"
+        telemetryClient.trackEvent("$telemetryKey-error", telemetryMap)
+        throw it
+      }
+  }
 
-      telemetryClient.trackEvent("$telemetryKey-success", telemetryMap)
+  private suspend fun createTransferScheduleMapping(
+    prisonerNumber: String,
+    bookingId: Long,
+    eventId: Long,
+    dpsTransferScheduleId: UUID,
+    telemetryMap: MutableMap<String, String>,
+  ) = TransferScheduleMappingDto(prisonerNumber, bookingId, eventId, dpsTransferScheduleId, TransferScheduleMappingDto.MappingType.DPS_CREATED)
+    .also {
+      createMapping(
+        it,
+        telemetryClient,
+        { createTransferScheduleMapping(it, telemetryMap) },
+        telemetryMap,
+        retryQueueService,
+        SCHEDULE.entityName,
+        log,
+        failureSuffix = "error",
+        failureReasonKey = "error",
+      )
+    }
+
+  suspend fun createTransferScheduleMapping(message: CreateMappingRetryMessage<TransferScheduleMappingDto>) {
+    createTransferScheduleMapping(message.mapping, message.telemetryAttributes)
+  }
+
+  suspend fun createTransferScheduleMapping(mapping: TransferScheduleMappingDto, telemetry: Map<String, String>) {
+    mappingApi.createTransferScheduleMapping(mapping).also {
+      telemetryClient.trackEvent(
+        "${TELEMETRY_KEY_CREATE}-success",
+        telemetry,
+      )
     }
   }
 }
