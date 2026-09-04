@@ -304,3 +304,6 @@ springdoc:
   swagger-ui:
     enabled: false
     version: 5.32.11
+  model-converters:
+    kotlin-nullable-property-customizer:
+      enabled: false
