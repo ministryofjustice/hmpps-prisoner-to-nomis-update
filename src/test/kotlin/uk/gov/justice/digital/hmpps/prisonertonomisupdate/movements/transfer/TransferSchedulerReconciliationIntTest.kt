@@ -37,6 +37,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Tr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.TransferScheduleOut
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.TransferScheduleWaitlist
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.transferscheduler.model.ReconciliationTransfer
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.transferscheduler.model.SyncMovement
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.transferscheduler.model.SyncSchedule
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.transferscheduler.model.SyncTransfer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.transferscheduler.model.SyncWaitlist
@@ -321,7 +322,7 @@ class TransferSchedulerReconciliationIntTest(
             schedules = listOf(
               BookingTransferSchedule(
                 schedule = transferScheduleOutResponse(eventId = 123L, startTime = null),
-                movement = null,
+                movement = transferMovementOutResponse().copy(eventId = 123L, sequence = 3),
               ),
             ),
             unscheduledMovements = listOf(),
@@ -343,6 +344,42 @@ class TransferSchedulerReconciliationIntTest(
               "nomisCount" to "1",
               "dpsCount" to "0",
               "unexpected-nomis-ids" to "[123]",
+              "unexpected-dps-ids" to "[]",
+            ),
+          ),
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `should report extra NOMIS movement as unscheduled`() = runTest {
+        allPrisonersReconciliationService.generateTransferSchedulerReconciliationReportBatch()
+        awaitReportFinished()
+
+        verify(telemetryClient).trackEvent(
+          eq("transfer-scheduler-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "offenderNo" to offender,
+              "type" to "UNSCHEDULED_MOVEMENT",
+              "nomisCount" to "1",
+              "dpsCount" to "0",
+              "unexpected-nomis-ids" to "[12345_3]",
+              "unexpected-dps-ids" to "[]",
+            ),
+          ),
+          isNull(),
+        )
+
+        verify(telemetryClient, never()).trackEvent(
+          eq("transfer-scheduler-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "offenderNo" to offender,
+              "type" to "SCHEDULED_MOVEMENT",
+              "nomisCount" to "1",
+              "dpsCount" to "0",
+              "unexpected-nomis-ids" to "[12345_3]",
               "unexpected-dps-ids" to "[]",
             ),
           ),
@@ -743,8 +780,8 @@ class TransferSchedulerReconciliationIntTest(
 
       @Test
       fun `should NOT report different schedule start time where the NOMIS start time is null`() = runTest {
-        stubNomis(schedule = stubNomisSchedule(startTime = null))
-        stubDps(schedule = stubDpsSchedule(start = null))
+        stubNomis(schedule = stubNomisSchedule(startTime = null), scheduledMovement = null, unscheduledMovement = null)
+        stubDps(schedule = stubDpsSchedule(start = null), scheduledMovement = null, unscheduledMovement = null)
         stubMappings()
         allPrisonersReconciliationService.generateTransferSchedulerReconciliationReportBatch()
           .also { awaitReportFinished() }
@@ -758,8 +795,8 @@ class TransferSchedulerReconciliationIntTest(
 
       @Test
       fun `should NOT report different schedule comment where the NOMIS start time is null`() = runTest {
-        stubNomis(schedule = stubNomisSchedule(startTime = null, comment = "different"))
-        stubDps(schedule = stubDpsSchedule(start = null))
+        stubNomis(schedule = stubNomisSchedule(startTime = null, comment = "different"), scheduledMovement = null, unscheduledMovement = null)
+        stubDps(schedule = stubDpsSchedule(start = null), scheduledMovement = null, unscheduledMovement = null)
         stubMappings()
         allPrisonersReconciliationService.generateTransferSchedulerReconciliationReportBatch()
           .also { awaitReportFinished() }
@@ -837,7 +874,7 @@ class TransferSchedulerReconciliationIntTest(
       schedule: TransferScheduleOut = stubNomisSchedule(),
       waitlist: TransferScheduleWaitlist? = stubNomisWaitlist(),
       scheduledMovement: TransferMovementOut? = stubNomisMovement(eventId = schedule.eventId, sequence = 3),
-      unscheduledMovement: TransferMovementOut = stubNomisMovement(eventId = null, sequence = 4),
+      unscheduledMovement: TransferMovementOut? = stubNomisMovement(eventId = null, sequence = 4),
     ) {
       nomisApi.stubGetOffenderTransferMovements(
         offenderNo = offender,
@@ -849,7 +886,7 @@ class TransferSchedulerReconciliationIntTest(
               movement = scheduledMovement,
             ),
           ),
-          unscheduledMovements = listOf(unscheduledMovement),
+          unscheduledMovements = listOfNotNull(unscheduledMovement),
         ),
       )
     }
@@ -924,6 +961,8 @@ class TransferSchedulerReconciliationIntTest(
 
     fun stubDps(
       schedule: SyncSchedule? = stubDpsSchedule(),
+      scheduledMovement: SyncMovement? = stubDpsMovement(dpsId = dpsScheduledMovementId, dpsTransferId = dpsScheduleId),
+      unscheduledMovement: SyncMovement? = stubDpsMovement(dpsId = dpsUnscheduledMovementId, dpsTransferId = null),
     ) {
       dpsApi.stubGetTransferSchedulerReconciliation(
         personIdentifier = offender,
@@ -931,12 +970,10 @@ class TransferSchedulerReconciliationIntTest(
           listOf(
             ReconciliationTransfer(
               transfer = SyncTransfer(dpsId = dpsScheduleId, schedule = schedule, waitlist = stubDpsWaitlist()),
-              movement = stubDpsMovement(dpsId = dpsScheduledMovementId, dpsTransferId = dpsScheduleId),
+              movement = scheduledMovement,
             ),
           ),
-          listOf(
-            stubDpsMovement(dpsId = dpsUnscheduledMovementId, dpsTransferId = null),
-          ),
+          listOfNotNull(unscheduledMovement),
         ),
       )
     }
