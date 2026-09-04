@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-09-01.1147.ab2a04b"
+    "version" : "2026-09-02.1159.9061814"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -26,11 +26,11 @@
     "bearer-jwt" : [ "read", "write" ]
   } ],
   "paths" : {
-    "/visit-review/prison/{prisonCode}/id/{visitReviewId}/acknowledge" : {
+    "/visit-review/prison/{prisonCode}/id/{officialVisitId}/acknowledge" : {
       "put" : {
         "tags" : [ "Visit review" ],
         "summary" : "Acknowledge a visit review",
-        "description" : "Acknowledges all currently unacknowledged and unexpired visit review details for the given visit review. Username is taken from the client token.\n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISITS_ADMIN\n* ROLE_OFFICIAL_VISITS__RW\n* ROLE_OFFICIAL_VISITS_RW",
+        "description" : "Acknowledges all currently unacknowledged details on the unexpired visit review for the given official visit. Username is taken from the client token.\n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISITS_ADMIN\n* ROLE_OFFICIAL_VISITS__RW\n* ROLE_OFFICIAL_VISITS_RW",
         "operationId" : "acknowledgeVisitReview",
         "parameters" : [ {
           "name" : "prisonCode",
@@ -42,9 +42,9 @@
           },
           "example" : "MDI"
         }, {
-          "name" : "visitReviewId",
+          "name" : "officialVisitId",
           "in" : "path",
-          "description" : "The visit review ID",
+          "description" : "The official visit ID",
           "required" : true,
           "schema" : {
             "type" : "integer",
@@ -2212,7 +2212,7 @@
           "required" : true,
           "schema" : {
             "type" : "string",
-            "enum" : [ "IDENTIFY_CANDIDATE_VISITS_TO_CHECK", "PROCESS_CANDIDATE_VISITS_TO_CHECK" ]
+            "enum" : [ "IDENTIFY_CANDIDATE_VISITS_TO_CHECK", "PROCESS_CANDIDATE_VISITS_TO_CHECK", "EXPIRE_VISITS_FOR_REVIEW" ]
           }
         } ],
         "responses" : {
