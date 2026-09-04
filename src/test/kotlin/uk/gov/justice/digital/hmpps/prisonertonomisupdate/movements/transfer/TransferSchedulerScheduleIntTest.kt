@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer
 
+import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
@@ -17,6 +18,7 @@ import org.mockito.kotlin.isNull
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus.BAD_REQUEST
+import org.springframework.http.HttpStatus.CONFLICT
 import org.springframework.http.HttpStatus.NOT_FOUND
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
@@ -376,6 +378,106 @@ class TransferSchedulerScheduleIntTest(
           isNull(),
         )
       }
+    }
+  }
+
+  @Nested
+  inner class TransferScheduleDeleted {
+    private val prisonerNumber = "A1234BC"
+    private val dpsTransferScheduleId = UUID.randomUUID()
+    private val nomisEventId = 123L
+
+    @BeforeEach
+    fun setUp() {
+      mappingApi.stubGetTransferScheduleMapping(dpsId = dpsTransferScheduleId)
+      nomisApi.stubDeleteTransferScheduleOut(prisonerNumber, nomisEventId)
+    }
+
+    private fun publishDeleteEvent(source: String = "DPS", completedTelemetry: String? = null) {
+      publishTransferDomainEvent(dpsTransferScheduleId, prisonerNumber, source, "person.transfer.deleted")
+      if (completedTelemetry == null) {
+        waitForAnyProcessingToComplete()
+      } else {
+        waitForAnyProcessingToComplete(completedTelemetry)
+      }
+    }
+
+    @Test
+    fun `should delete the scheduled transfer in NOMIS`() {
+      publishDeleteEvent()
+
+      nomisApi.verify(deleteRequestedFor(urlEqualTo("/movements/$prisonerNumber/transfers/schedule/out/$nomisEventId")))
+    }
+
+    @Test
+    fun `should publish telemetry`() {
+      publishDeleteEvent()
+
+      verify(telemetryClient).trackEvent(
+        eq("transfer-scheduler-schedule-delete-success"),
+        check {
+          assertThat(it).containsEntry("dpsTransferScheduleId", dpsTransferScheduleId.toString())
+          assertThat(it).containsEntry("nomisEventId", nomisEventId.toString())
+          assertThat(it).containsEntry("offenderNo", prisonerNumber)
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `should ignore if triggered by NOMIS`() {
+      publishDeleteEvent(source = "NOMIS")
+
+      verify(telemetryClient).trackEvent(
+        eq("transfer-scheduler-schedule-delete-ignored"),
+        check {
+          assertThat(it).containsEntry("dpsTransferScheduleId", dpsTransferScheduleId.toString())
+          assertThat(it).containsEntry("offenderNo", prisonerNumber)
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `should end up on DLQ if mapping does not exist`() {
+      mappingApi.stubGetTransferScheduleMapping(status = NOT_FOUND)
+
+      publishDeleteEvent(completedTelemetry = "transfer-scheduler-schedule-delete-error")
+
+      await untilAsserted {
+        assertThat(transferMovementsDlqClient.countAllMessagesOnQueue(transferMovementsDlqUrl).get()).isEqualTo(1)
+      }
+
+      verify(telemetryClient).trackEvent(
+        eq("transfer-scheduler-schedule-delete-error"),
+        check {
+          assertThat(it).containsEntry("offenderNo", prisonerNumber)
+          assertThat(it).containsEntry("dpsTransferScheduleId", dpsTransferScheduleId.toString())
+          assertThat(it).containsEntry("error", "Cannot find transfer schedule mapping for $dpsTransferScheduleId")
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `should end up on DLQ if NOMIS returns a conflict`() {
+      nomisApi.stubDeleteTransferScheduleOut(prisonerNumber, nomisEventId, status = CONFLICT)
+
+      publishDeleteEvent(completedTelemetry = "transfer-scheduler-schedule-delete-error")
+
+      await untilAsserted {
+        assertThat(transferMovementsDlqClient.countAllMessagesOnQueue(transferMovementsDlqUrl).get()).isEqualTo(1)
+      }
+
+      verify(telemetryClient).trackEvent(
+        eq("transfer-scheduler-schedule-delete-error"),
+        check {
+          assertThat(it).containsEntry("offenderNo", prisonerNumber)
+          assertThat(it).containsEntry("dpsTransferScheduleId", dpsTransferScheduleId.toString())
+          assertThat(it).containsEntry("error", "409 Conflict from DELETE http://localhost:8082/movements/$prisonerNumber/transfers/schedule/out/$nomisEventId")
+        },
+        isNull(),
+      )
     }
   }
 

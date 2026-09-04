@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Up
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.TelemetryEnabled
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.createMapping
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.track
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.transferscheduler.model.SyncTransfer
 import java.util.*
 
@@ -27,6 +28,7 @@ class TransferSchedulerScheduleService(
     private val TELEMETRY_KEY = "transfer-scheduler-schedule"
     private val TELEMETRY_KEY_CREATE = "$TELEMETRY_KEY-create"
     private val TELEMETRY_KEY_UPDATE = "$TELEMETRY_KEY-update"
+    private val TELEMETRY_KEY_DELETE = "$TELEMETRY_KEY-delete"
 
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
@@ -68,6 +70,27 @@ class TransferSchedulerScheduleService(
         telemetryClient.trackEvent("$telemetryKey-error", telemetryMap)
         throw it
       }
+  }
+
+  suspend fun transferScheduleDeleted(event: TransferSchedulerEvent) {
+    val prisonerNumber = event.personReference.prisonerNumber()
+    val dpsTransferScheduleId = event.additionalInformation.id
+    val telemetryMap = mutableMapOf(
+      "offenderNo" to prisonerNumber,
+      "dpsTransferScheduleId" to dpsTransferScheduleId.toString(),
+    )
+
+    if (event.additionalInformation.source != "DPS") {
+      telemetryClient.trackEvent("$TELEMETRY_KEY_DELETE-ignored", telemetryMap)
+      return
+    }
+
+    track(TELEMETRY_KEY_DELETE, telemetryMap) {
+      val mapping = mappingApi.getTransferScheduleMapping(dpsTransferScheduleId)
+        ?.also { telemetryMap["nomisEventId"] = it.nomisEventId.toString() }
+        ?: throw TransferSchedulerSyncException("Cannot find transfer schedule mapping for $dpsTransferScheduleId")
+      nomisApi.deleteTransferScheduleOut(prisonerNumber, mapping.nomisEventId)
+    }
   }
 
   private suspend fun createTransferScheduleMapping(
@@ -124,3 +147,5 @@ private fun SyncTransfer.toNomisUpsertRequest(eventId: Long?) = UpsertTransferSc
     )
   },
 )
+
+class TransferSchedulerSyncException(message: String) : RuntimeException(message)

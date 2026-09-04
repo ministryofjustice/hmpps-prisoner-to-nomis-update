@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer
 
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
+import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
@@ -117,6 +118,41 @@ class TransferSchedulerNomisApiServiceTest {
 
       assertThrows<WebClientResponseException.InternalServerError> {
         apiService.upsertTransferSchedule("A1234BC", upsertTransferScheduleOut())
+      }
+    }
+  }
+
+  @Nested
+  inner class DeleteTransferScheduleOut {
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      transferSchedulerNomisApiMockServer.stubDeleteTransferScheduleOut("A1234BC", 123L)
+
+      apiService.deleteTransferScheduleOut("A1234BC", 123L)
+
+      transferSchedulerNomisApiMockServer.verify(
+        deleteRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call delete endpoint`() = runTest {
+      transferSchedulerNomisApiMockServer.stubDeleteTransferScheduleOut("A1234BC", 123L)
+
+      apiService.deleteTransferScheduleOut("A1234BC", 123L)
+
+      transferSchedulerNomisApiMockServer.verify(
+        deleteRequestedFor(urlPathEqualTo("/movements/A1234BC/transfers/schedule/out/123")),
+      )
+    }
+
+    @Test
+    fun `will throw if error`() = runTest {
+      transferSchedulerNomisApiMockServer.stubDeleteTransferScheduleOut(status = INTERNAL_SERVER_ERROR)
+
+      assertThrows<WebClientResponseException.InternalServerError> {
+        apiService.deleteTransferScheduleOut("A1234BC", 123L)
       }
     }
   }

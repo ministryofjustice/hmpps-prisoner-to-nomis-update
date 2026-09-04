@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer
 
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import com.github.tomakehurst.wiremock.client.WireMock.delete
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.put
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
@@ -76,6 +77,34 @@ class TransferSchedulerNomisApiMockServer(private val jsonMapper: JsonMapper) {
   ) {
     nomisApi.stubFor(
       put(urlPathMatching("/movements/.*/transfers/schedule/out.*")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(status.value())
+          .withBody(jsonMapper.writeValueAsString(error)),
+      ),
+    )
+  }
+  fun stubDeleteTransferScheduleOut(
+    prisonerNumber: String = "A1234BC",
+    eventId: Long = 123,
+  ) {
+    nomisApi.stubFor(
+      delete(urlPathMatching("/movements/$prisonerNumber/transfers/schedule/out/$eventId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.NO_CONTENT.value()),
+      ),
+    )
+  }
+
+  fun stubDeleteTransferScheduleOut(
+    prisonerNumber: String = "A1234BC",
+    eventId: Long = 123,
+    status: HttpStatus,
+    error: ErrorResponse = ErrorResponse(status = status.value()),
+  ) {
+    nomisApi.stubFor(
+      delete(urlPathEqualTo("/movements/$prisonerNumber/transfers/schedule/out/$eventId")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(status.value())

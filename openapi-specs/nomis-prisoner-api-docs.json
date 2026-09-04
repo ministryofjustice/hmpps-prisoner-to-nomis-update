@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-09-04.2012.d12065f"
+    "version" : "2026-09-04.2015.dd6bcf7"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -20229,6 +20229,71 @@
           },
           "404" : {
             "description" : "Offender or transfer schedule not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "transfer-schedule-resource" ],
+        "summary" : "Delete a transfer schedule out for an offender.",
+        "description" : "Deletes a transfer schedule out. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "deleteTransferScheduleOut",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender no (aka prisoner number)",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender no (aka prisoner number)",
+            "example" : "A1234AK"
+          },
+          "example" : "A1234AK"
+        }, {
+          "name" : "eventId",
+          "in" : "path",
+          "description" : "Scheduled transfer movement event ID",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Scheduled transfer movement event ID",
+            "example" : 12345
+          },
+          "example" : 12345
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Transfer schedule out deleted"
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Unable to delete the schedule. See error message for details",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -41687,6 +41752,13 @@
             "type" : "integer",
             "format" : "int64"
           },
+          "txnEntryAmount" : {
+            "type" : "number"
+          },
+          "txnEntrySeq" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
           "txnEntryDate" : {
             "type" : "string",
             "format" : "date-time"
@@ -41696,13 +41768,6 @@
           },
           "txnReferenceNumber" : {
             "type" : "string"
-          },
-          "txnEntrySeq" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "txnEntryAmount" : {
-            "type" : "number"
           }
         },
         "required" : [ "txnEntryAmount", "txnEntryDate", "txnEntrySeq", "txnId" ]

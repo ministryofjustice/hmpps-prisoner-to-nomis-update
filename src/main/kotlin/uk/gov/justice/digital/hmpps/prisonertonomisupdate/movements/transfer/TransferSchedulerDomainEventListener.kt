@@ -54,7 +54,7 @@ class TransferSchedulerDomainEventListener(
       -> scheduleService.transferScheduleChanged(message.fromJson())
 
       "person.transfer.deleted",
-      -> log.info("Ignoring transfer scheduler delete event: $eventType")
+      -> scheduleService.transferScheduleDeleted(message.fromJson())
 
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }
