@@ -39,7 +39,7 @@ class TransferSchedulerScheduleIntTest(
     private val prisonerNumber = "A1234BC"
     private val dpsTransferScheduleId = UUID.randomUUID()
     private val nomisEventId = 123L
-    private val startTime = LocalDateTime.now()
+    private val start = LocalDateTime.now()
 
     @Nested
     inner class WhenDpsCreated {
@@ -50,7 +50,7 @@ class TransferSchedulerScheduleIntTest(
         @BeforeEach
         fun setUp() {
           mappingApi.stubGetTransferScheduleMapping(status = HttpStatus.NOT_FOUND)
-          dpsApi.stubGetTransferSchedule(id = dpsTransferScheduleId, start = startTime)
+          dpsApi.stubGetTransferSchedule(id = dpsTransferScheduleId, start = start)
           nomisApi.stubUpsertTransferScheduleOut(response = UpsertTransferScheduleOutResponse(12345L, nomisEventId))
           mappingApi.stubCreateTransferScheduleMapping()
 
@@ -77,7 +77,7 @@ class TransferSchedulerScheduleIntTest(
               assertThat(eventId).isNull()
               assertThat(eventSubType).isEqualTo("TRN")
               assertThat(eventStatus).isEqualTo("SCH")
-              assertThat(startTime).isEqualTo(startTime)
+              assertThat(startTime).isEqualTo(start)
               assertThat(fromPrison).isEqualTo("BXI")
               assertThat(toPrison).isEqualTo("LEI")
               assertThat(comment).isEqualTo("Some schedule comment")
@@ -85,9 +85,7 @@ class TransferSchedulerScheduleIntTest(
               with(request.waitlist!!) {
                 assertThat(requestDate).isEqualTo(LocalDate.now().minusDays(1))
                 assertThat(status).isEqualTo("CANC")
-                assertThat(statusDate).isEqualTo(LocalDate.now())
                 assertThat(priority).isEqualTo("3")
-                assertThat(approved).isTrue
                 assertThat(approvedUserName).isEqualTo("APPROVE_USER")
                 assertThat(comment).isEqualTo("some waitlist comment")
               }
@@ -109,6 +107,63 @@ class TransferSchedulerScheduleIntTest(
         fun `will publish success telemetry`() {
           verify(telemetryClient).trackEvent(
             eq("transfer-scheduler-schedule-create-success"),
+            check {
+              assertThat(it).containsEntry("dpsTransferScheduleId", "$dpsTransferScheduleId")
+              assertThat(it).containsEntry("nomisEventId", nomisEventId.toString())
+              assertThat(it).containsEntry("offenderNo", prisonerNumber)
+              assertThat(it).containsEntry("bookingId", "12345")
+            },
+            isNull(),
+          )
+        }
+      }
+
+      @Nested
+      inner class HappyPathUpdated {
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetTransferScheduleMapping(dpsId = dpsTransferScheduleId, nomisEventId = nomisEventId)
+          dpsApi.stubGetTransferSchedule(id = dpsTransferScheduleId, start = start)
+          nomisApi.stubUpsertTransferScheduleOut(response = UpsertTransferScheduleOutResponse(12345L, nomisEventId))
+
+          publishTransferDomainEvent(dpsTransferScheduleId, prisonerNumber)
+          waitForAnyProcessingToComplete("transfer-scheduler-schedule-update-success")
+        }
+
+        @Test
+        fun `will check for existing mapping`() {
+          mappingApi.verify(getRequestedFor(urlEqualTo("/mapping/transfer-scheduler/schedule/dps-id/$dpsTransferScheduleId")))
+        }
+
+        @Test
+        fun `will get DPS transfer schedule`() {
+          dpsApi.verify(getRequestedFor(urlEqualTo("/sync/transfers/$dpsTransferScheduleId")))
+        }
+
+        @Test
+        fun `will upsert NOMIS transfer schedule`() {
+          NomisApiMockServer.getRequestBody<UpsertTransferScheduleOut>(
+            putRequestedFor(urlEqualTo("/movements/A1234BC/transfers/schedule/out")),
+          ).also { request ->
+            with(request) {
+              assertThat(eventId).isEqualTo(nomisEventId)
+            }
+          }
+        }
+
+        @Test
+        fun `will NOT create mapping`() {
+          mappingApi.verify(
+            count = 0,
+            postRequestedFor(urlEqualTo("/mapping/transfer-scheduler/schedule")),
+          )
+        }
+
+        @Test
+        fun `will publish success telemetry`() {
+          verify(telemetryClient).trackEvent(
+            eq("transfer-scheduler-schedule-update-success"),
             check {
               assertThat(it).containsEntry("dpsTransferScheduleId", "$dpsTransferScheduleId")
               assertThat(it).containsEntry("nomisEventId", nomisEventId.toString())

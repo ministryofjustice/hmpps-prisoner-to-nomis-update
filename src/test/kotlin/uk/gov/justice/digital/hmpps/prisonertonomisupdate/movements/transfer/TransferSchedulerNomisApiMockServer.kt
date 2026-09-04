@@ -205,9 +205,7 @@ class TransferSchedulerNomisApiMockServer(private val jsonMapper: JsonMapper) {
       waitlist = UpsertTransferScheduleWaitlist(
         requestDate = yesterday.toLocalDate(),
         status = "CANC",
-        statusDate = now.toLocalDate(),
         priority = "3",
-        approved = true,
         approvedUserName = "APPROVE_USER",
         comment = "Some waitlist comment",
       ),
