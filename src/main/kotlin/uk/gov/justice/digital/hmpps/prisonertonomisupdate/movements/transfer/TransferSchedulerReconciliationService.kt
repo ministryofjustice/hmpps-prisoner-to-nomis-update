@@ -346,19 +346,53 @@ class TransferScheduleReconciliationService(
     this.movements.find { it.nomisBookingId == nomisId.bookingId && it.nomisMovementSeq == nomisId.sequence }?.dpsTransferMovementId
   }
 
-  private fun OffenderTransferMovementsResponse.scheduleIds() = bookings.flatMap { it.transferSchedules }.filter { it.schedule.startTime != null }.map { it.schedule.eventId }
-  private fun OffenderTransferMovementsResponse.scheduledMovementIds() = bookings.flatMap { it.transferSchedules }.mapNotNull { it.movement }.map { NomisMovementId(it.bookingId, it.sequence) }
-  private fun OffenderTransferMovementsResponse.unscheduledMovementIds() = bookings.flatMap { it.unscheduledTransferMovements }.map { NomisMovementId(it.bookingId, it.sequence) }
-  private fun ReconciliationResponse.scheduleIds() = transfers.filter { it.transfer.schedule?.start != null }.map { it.transfer.dpsId!! }
-  private fun ReconciliationResponse.scheduledMovementIds() = transfers.mapNotNull { it.movement }.map { it.dpsId!! }
+  // For reconciliation, we ignore schedules without a start time because DPS models them differently
+  private fun OffenderTransferMovementsResponse.scheduleIds() = bookings.flatMap { it.transferSchedules }
+    .filter { it.schedule.startTime != null }
+    .map { it.schedule.eventId }
+
+  // For reconciliation, we consider NOMIS schedules without a start time as unscheduled to match DPS
+  private fun OffenderTransferMovementsResponse.scheduledMovementIds() = bookings.flatMap { it.transferSchedules }
+    .filter { it.schedule.startTime != null }
+    .mapNotNull { it.movement }
+    .map { NomisMovementId(it.bookingId, it.sequence) }
+
+  private fun OffenderTransferMovementsResponse.unscheduledMovementIds(): List<NomisMovementId> = buildList {
+    bookings.flatMap { it.unscheduledTransferMovements }
+      .forEach { add(NomisMovementId(it.bookingId, it.sequence)) }
+    // For reconciliation, we consider NOMIS schedules without a start time as unscheduled to match DPS
+    bookings.flatMap { it.transferSchedules }
+      .filter { it.schedule.startTime == null }
+      .mapNotNull { it.movement }
+      .forEach { add(NomisMovementId(it.bookingId, it.sequence)) }
+  }
+
+  // For reconciliation, we ignore schedules without a start time because DPS models them differently
+  private fun ReconciliationResponse.scheduleIds() = transfers.filter { it.transfer.schedule?.start != null }
+    .map { it.transfer.dpsId!! }
+
+  private fun ReconciliationResponse.scheduledMovementIds() = transfers.mapNotNull { it.movement }
+    .map { it.dpsId!! }
+
   private fun ReconciliationResponse.unscheduledMovementIds() = unscheduledMovements.map { it.dpsId!! }
-  private fun OffenderTransferMovementsResponse.findSchedule(eventId: Long) = bookings.flatMap { it.transferSchedules }.map { it.schedule }
+
+  private fun OffenderTransferMovementsResponse.findSchedule(eventId: Long) = bookings.flatMap { it.transferSchedules }
+    .map { it.schedule }
     .find { it.eventId == eventId }
     ?: throw IllegalStateException("Unable to find schedule for eventId=$eventId despite having matched it earlier. This should not happen!")
-  private fun OffenderTransferMovementsResponse.findMovement(eventId: Long) = bookings.flatMap { it.transferSchedules }.find { it.schedule.eventId == eventId }?.movement
-  private fun ReconciliationResponse.findSchedule(dpsId: UUID) = transfers.map { it.transfer }.find { it.dpsId == dpsId }?.schedule
+
+  private fun OffenderTransferMovementsResponse.findMovement(eventId: Long) = bookings.flatMap { it.transferSchedules }
+    .find { it.schedule.eventId == eventId }
+    ?.movement
+
+  private fun ReconciliationResponse.findSchedule(dpsId: UUID) = transfers.map { it.transfer }
+    .find { it.dpsId == dpsId }
+    ?.schedule
     ?: throw IllegalStateException("Unable to find schedule for dpsId=$dpsId despite having matched it earlier. Has there been a merge or new transfer mid reconciliation?")
-  private fun ReconciliationResponse.findWaitlist(dpsId: UUID) = transfers.map { it.transfer }.find { it.dpsId == dpsId }?.waitlist
+
+  private fun ReconciliationResponse.findWaitlist(dpsId: UUID) = transfers.map { it.transfer }
+    .find { it.dpsId == dpsId }
+    ?.waitlist
 }
 
 abstract class MismatchedPrisonerTransfer(
