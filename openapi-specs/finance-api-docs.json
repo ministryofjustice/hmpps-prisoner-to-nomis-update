@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-09-01.1041.2cecafa"
+    "version" : "2026-09-03.1056.6a73f09"
   },
   "servers" : [ {
     "url" : "https://prisoner-finance-sync-api-dev.hmpps.service.justice.gov.uk/",
@@ -182,6 +182,98 @@
           },
           "409" : {
             "description" : "Conflict - Legacy Hold Number already in use",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error - An unexpected error occurred.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearer-jwt" : [ "ROLE_PRISONER_FINANCE_SYNC__RW" ]
+        } ]
+      }
+    },
+    "/sync/holds/{holdNumber}/release" : {
+      "post" : {
+        "tags" : [ "Holds" ],
+        "summary" : "Release an existing hold record",
+        "description" : "Releases a specific hold in the holds service",
+        "operationId" : "releaseHold",
+        "parameters" : [ {
+          "name" : "holdNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SyncReleaseHoldRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Hold record released.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncReleasedHoldResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad request - invalid input data.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - requires a valid OAuth2 token",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden - requires an appropriate role",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Hold not found",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -1218,6 +1310,37 @@
         },
         "required" : [ "amount", "createdAt", "createdBy", "holdFromDate", "holdLocation", "holdType", "id", "isReleased", "legacyHoldNumber", "prisonNumber", "subAccountRef" ]
       },
+      "SyncReleaseHoldRequest" : {
+        "type" : "object",
+        "properties" : {
+          "releaseDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The time the hold was released according to NOMIS"
+          }
+        },
+        "required" : [ "releaseDateTime" ]
+      },
+      "SyncReleasedHoldResponse" : {
+        "type" : "object",
+        "properties" : {
+          "prisonNumber" : {
+            "type" : "string"
+          },
+          "holdNumber" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "amountReleased" : {
+            "type" : "number"
+          },
+          "releasedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        },
+        "required" : [ "amountReleased", "holdNumber", "prisonNumber", "releasedAt" ]
+      },
       "SyncGeneralLedgerTransactionRequest" : {
         "type" : "object",
         "description" : "Request body for synchronizing general ledger transactions. Please note these are for non-offender accounts only.",
@@ -1535,15 +1658,15 @@
             "type" : "string",
             "format" : "uuid"
           },
+          "transactionType" : {
+            "type" : [ "string", "null" ]
+          },
           "caseloadId" : {
             "type" : [ "string", "null" ]
           },
           "transactionTimestamp" : {
             "type" : [ "string", "null" ],
             "format" : "date-time"
-          },
-          "transactionType" : {
-            "type" : [ "string", "null" ]
           },
           "legacyTransactionId" : {
             "type" : [ "integer", "null" ],
