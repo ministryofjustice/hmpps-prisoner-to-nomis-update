@@ -1,28 +1,123 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer
 
+import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import org.assertj.core.api.Assertions.assertThat
-import org.awaitility.kotlin.await
-import org.awaitility.kotlin.untilAsserted
-import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.springframework.boot.test.system.CapturedOutput
+import org.mockito.ArgumentMatchers.eq
+import org.mockito.kotlin.check
+import org.mockito.kotlin.isNull
+import org.mockito.kotlin.verify
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.HttpStatus
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
-import java.util.UUID
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.TransferSchedulerDpsApiExtension.Companion.transferSchedulerDpsApiServer
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TransferScheduleMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTransferScheduleOut
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTransferScheduleOutResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingMockServer
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiMockServer
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.util.*
 
-class TransferSchedulerScheduleIntTest : SqsIntegrationTestBase() {
+class TransferSchedulerScheduleIntTest(
+  @Autowired private val mappingApi: TransferSchedulerMappingApiMockServer,
+  @Autowired private val nomisApi: TransferSchedulerNomisApiMockServer,
+) : SqsIntegrationTestBase() {
+
+  private val dpsApi = transferSchedulerDpsApiServer
 
   @Nested
-  @DisplayName("Transfer created")
-  inner class TransferCreated {
-    // TODO replace with proper tests
-    @Test
-    fun `will consume message`(output: CapturedOutput) {
-      publishTransferDomainEvent(UUID.randomUUID(), "A1234BC")
-      await untilAsserted {
-        assertThat(output.out).contains("Ignoring transfer scheduler update event")
+  inner class TransferScheduleUpserted {
+    private val prisonerNumber = "A1234BC"
+    private val dpsTransferScheduleId = UUID.randomUUID()
+    private val nomisEventId = 123L
+    private val startTime = LocalDateTime.now()
+
+    @Nested
+    inner class WhenDpsCreated {
+
+      @Nested
+      inner class HappyPath {
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetTransferScheduleMapping(status = HttpStatus.NOT_FOUND)
+          dpsApi.stubGetTransferSchedule(id = dpsTransferScheduleId, start = startTime)
+          nomisApi.stubUpsertTransferScheduleOut(response = UpsertTransferScheduleOutResponse(12345L, nomisEventId))
+          mappingApi.stubCreateTransferScheduleMapping()
+
+          publishTransferDomainEvent(dpsTransferScheduleId, prisonerNumber)
+          waitForAnyProcessingToComplete("transfer-scheduler-schedule-create-success")
+        }
+
+        @Test
+        fun `will check for existing mapping`() {
+          mappingApi.verify(getRequestedFor(urlEqualTo("/mapping/transfer-scheduler/schedule/dps-id/$dpsTransferScheduleId")))
+        }
+
+        @Test
+        fun `will get DPS transfer schedule`() {
+          dpsApi.verify(getRequestedFor(urlEqualTo("/sync/transfers/$dpsTransferScheduleId")))
+        }
+
+        @Test
+        fun `will upsert NOMIS transfer schedule`() {
+          NomisApiMockServer.getRequestBody<UpsertTransferScheduleOut>(
+            putRequestedFor(urlEqualTo("/movements/A1234BC/transfers/schedule/out")),
+          ).also { request ->
+            with(request) {
+              assertThat(eventId).isNull()
+              assertThat(eventSubType).isEqualTo("TRN")
+              assertThat(eventStatus).isEqualTo("SCH")
+              assertThat(startTime).isEqualTo(startTime)
+              assertThat(fromPrison).isEqualTo("BXI")
+              assertThat(toPrison).isEqualTo("LEI")
+              assertThat(comment).isEqualTo("Some schedule comment")
+              assertThat(escortCode).isEqualTo("PECS")
+              with(request.waitlist!!) {
+                assertThat(requestDate).isEqualTo(LocalDate.now().minusDays(1))
+                assertThat(status).isEqualTo("CANC")
+                assertThat(statusDate).isEqualTo(LocalDate.now())
+                assertThat(priority).isEqualTo("3")
+                assertThat(approved).isTrue
+                assertThat(approvedUserName).isEqualTo("APPROVE_USER")
+                assertThat(comment).isEqualTo("some waitlist comment")
+              }
+            }
+          }
+        }
+
+        @Test
+        fun `will create mapping`() {
+          MappingMockServer.getRequestBody<TransferScheduleMappingDto>(
+            postRequestedFor(urlEqualTo("/mapping/transfer-scheduler/schedule")),
+          ).also { request ->
+            assertThat(request.nomisEventId).isEqualTo(nomisEventId)
+            assertThat(request.dpsTransferScheduleId).isEqualTo(dpsTransferScheduleId)
+          }
+        }
+
+        @Test
+        fun `will publish success telemetry`() {
+          verify(telemetryClient).trackEvent(
+            eq("transfer-scheduler-schedule-create-success"),
+            check {
+              assertThat(it).containsEntry("dpsTransferScheduleId", "$dpsTransferScheduleId")
+              assertThat(it).containsEntry("nomisEventId", nomisEventId.toString())
+              assertThat(it).containsEntry("offenderNo", prisonerNumber)
+              assertThat(it).containsEntry("bookingId", "12345")
+            },
+            isNull(),
+          )
+        }
       }
     }
   }
