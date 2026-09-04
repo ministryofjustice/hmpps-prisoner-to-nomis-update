@@ -352,7 +352,7 @@ class TransferSchedulerReconciliationIntTest(
       }
 
       @Test
-      fun `should report extra NOMIS movemente as unscheduled`() = runTest {
+fun `should report extra NOMIS movement as unscheduled`() = runTest {
         allPrisonersReconciliationService.generateTransferSchedulerReconciliationReportBatch()
         awaitReportFinished()
 
