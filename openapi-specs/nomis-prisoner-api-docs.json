@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-09-01.2000.e6d73af"
+    "version" : "2026-09-03.2007.6af7af1"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -28845,10 +28845,6 @@
             "type" : "string",
             "description" : "Comment"
           },
-          "hiddenComment" : {
-            "type" : "string",
-            "description" : "Hidden Comment"
-          },
           "fromPrison" : {
             "type" : "string",
             "description" : "From prison"
@@ -28856,10 +28852,6 @@
           "toPrison" : {
             "type" : "string",
             "description" : "To prison"
-          },
-          "cancellationReasonCode" : {
-            "type" : "string",
-            "description" : "Cancellation reason"
           },
           "escortCode" : {
             "type" : "string",
@@ -28901,10 +28893,6 @@
           "approvedUserName" : {
             "type" : "string",
             "description" : "Approved by user"
-          },
-          "cancellationReasonCode" : {
-            "type" : "string",
-            "description" : "Cancellation reason"
           },
           "comment" : {
             "type" : "string",
@@ -35034,12 +35022,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "paged" : {
+            "type" : "boolean"
+          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "paged" : {
-            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -41697,6 +41685,10 @@
       "PrisonerHoldProjection" : {
         "type" : "object",
         "properties" : {
+          "txnEntrySeq" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
           "clientUniqueRef" : {
             "type" : "string"
           },
@@ -41704,19 +41696,9 @@
             "type" : "integer",
             "format" : "int64"
           },
-          "txnEntrySeq" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
           "txnId" : {
             "type" : "integer",
             "format" : "int64"
-          },
-          "txnReferenceNumber" : {
-            "type" : "string"
-          },
-          "txnEntryAmount" : {
-            "type" : "number"
           },
           "txnEntryDate" : {
             "type" : "string",
@@ -41724,6 +41706,12 @@
           },
           "txnEntryDesc" : {
             "type" : "string"
+          },
+          "txnReferenceNumber" : {
+            "type" : "string"
+          },
+          "txnEntryAmount" : {
+            "type" : "number"
           }
         },
         "required" : [ "txnEntryAmount", "txnEntryDate", "txnEntrySeq", "txnId" ]
