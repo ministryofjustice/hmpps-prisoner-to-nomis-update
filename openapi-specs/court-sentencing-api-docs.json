@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-09-01.2420.68d7f92"
+    "version" : "2026-09-04.2487.b5c7f6a"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -623,6 +623,47 @@
           },
           "403" : {
             "description" : "Forbidden, requires an appropriate role"
+          }
+        }
+      }
+    },
+    "/legacy/sentence/{lifetimeUuid}/booking-id" : {
+      "put" : {
+        "tags" : [ "legacy-sentence-controller" ],
+        "summary" : "Update a sentence booking id",
+        "description" : "Synchronise an update of sentence booking id from NOMIS Offender sentences into remand and sentencing API.",
+        "operationId" : "updateBookingId",
+        "parameters" : [ {
+          "name" : "lifetimeUuid",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/LegacyUpdateSentenceBookingId"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "No content"
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token"
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role"
+          },
+          "422" : {
+            "description" : "Unprocessable , requires the sentence to be associated to a charge which has an association with an appearance"
           }
         }
       }
@@ -7129,6 +7170,19 @@
         },
         "required" : [ "postedDate" ]
       },
+      "LegacyUpdateSentenceBookingId" : {
+        "type" : "object",
+        "properties" : {
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "performedByUser" : {
+            "type" : [ "string", "null" ]
+          }
+        },
+        "required" : [ "bookingId" ]
+      },
       "LegacyCreatePeriodLength" : {
         "type" : "object",
         "description" : "Used for creating or updating period length records (aka sentence-terms in NOMIS).",
@@ -7258,7 +7312,7 @@
             "uniqueItems" : true
           }
         },
-        "required" : [ "eventType", "isBreach", "prisonerId" ]
+        "required" : [ "eventType", "prisonerId" ]
       },
       "LegacyLinkCase" : {
         "type" : "object",
@@ -7360,7 +7414,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:33.135893616"
+            "example" : "08:31:46.664261731"
           },
           "outcomeDispositionCode" : {
             "type" : [ "string", "null" ]
@@ -7731,7 +7785,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:33.135893616"
+            "example" : "08:31:46.664261731"
           },
           "courtCode" : {
             "type" : "string"
@@ -7832,6 +7886,13 @@
             } ]
           },
           "prisonId" : {
+            "type" : [ "string", "null" ]
+          },
+          "status" : {
+            "type" : [ "string", "null" ],
+            "enum" : [ "ACTIVE", "DUPLICATE", "DELETED", "MANY_CHARGES_DATA_FIX", "INACTIVE" ]
+          },
+          "reason" : {
             "type" : [ "string", "null" ]
           }
         },
@@ -10644,7 +10705,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:33.135893616"
+            "example" : "08:31:46.664261731"
           },
           "courtCode" : {
             "type" : "string"
@@ -11332,7 +11393,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:44:33.135893616"
+            "example" : "08:31:46.664261731"
           },
           "nomisOutcomeCode" : {
             "type" : [ "string", "null" ]
@@ -11411,7 +11472,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:33.135893616"
+            "example" : "08:31:46.664261731"
           },
           "courtId" : {
             "type" : "string"
@@ -11563,7 +11624,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:44:33.135893616"
+            "example" : "08:31:46.664261731"
           },
           "charges" : {
             "type" : "array",
@@ -11600,7 +11661,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:33.135893616"
+            "example" : "08:31:46.664261731"
           },
           "courtId" : {
             "type" : "string"
@@ -11887,14 +11948,14 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
-          "pageNumber" : {
+          "pageSize" : {
             "type" : "integer",
             "format" : "int32"
           },
           "paged" : {
             "type" : "boolean"
           },
-          "pageSize" : {
+          "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
           },
@@ -12190,7 +12251,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:33.135893616"
+            "example" : "08:31:46.664261731"
           },
           "courtCode" : {
             "type" : [ "string", "null" ]
@@ -12254,9 +12315,13 @@
           },
           "hasRecall" : {
             "type" : "boolean"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "ACTIVE", "DUPLICATE", "DELETED", "MANY_CHARGES_DATA_FIX", "INACTIVE" ]
           }
         },
-        "required" : [ "hasRecall", "periodLengths", "sentenceServeType", "sentenceUuid" ]
+        "required" : [ "hasRecall", "periodLengths", "sentenceServeType", "sentenceUuid", "status" ]
       },
       "PagedSentencePeriodLength" : {
         "type" : "object",
