@@ -7,7 +7,7 @@
       "name" : "Move a prisoner Team",
       "email" : "Moveaprisoner-gg@justice.gov.uk"
     },
-    "version" : "2026-09-01.271.beaea2f"
+    "version" : "2026-09-04.297.e72cfcf"
   },
   "servers" : [ {
     "url" : "/",
@@ -1252,6 +1252,114 @@
           },
           "403" : {
             "description" : "Forbidden - the ROLE_PRISONER_PROPERTY__SYNC role is required",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearer-jwt" : [ ]
+        } ]
+      }
+    },
+    "/subject-access-request" : {
+      "get" : {
+        "tags" : [ "Subject Access Request" ],
+        "summary" : "Provides content for a prisoner to satisfy the needs of a subject access request on their behalf",
+        "description" : "Requires role SAR_DATA_ACCESS or additional role as specified by hmpps.sar.additionalAccessRole configuration.",
+        "operationId" : "getSarContentByReference",
+        "parameters" : [ {
+          "name" : "prn",
+          "in" : "query",
+          "description" : "NOMIS Prison Reference Number",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "crn",
+          "in" : "query",
+          "description" : "nDelius Case Reference Number",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "fromDate",
+          "in" : "query",
+          "description" : "Optional parameter denoting minimum date of event occurrence which should be returned in the response",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "name" : "toDate",
+          "in" : "query",
+          "description" : "Optional parameter denoting maximum date of event occurrence which should be returned in the response",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Request successfully processed - content found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/HmppsSubjectAccessRequestContent"
+                }
+              }
+            }
+          },
+          "204" : {
+            "description" : "Request successfully processed - no content found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            }
+          },
+          "209" : {
+            "description" : "Subject Identifier is not recognised by this service",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "The client does not have authorisation to make this request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Unexpected error occurred",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -2619,6 +2727,75 @@
             "type" : "boolean"
           }
         }
+      },
+      "Attachment" : {
+        "type" : "object",
+        "properties" : {
+          "attachmentNumber" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The number of the attachment which will match any corresponding reference in the content section"
+          },
+          "name" : {
+            "type" : "string",
+            "description" : "The name or description of the attachment which will be included in the report"
+          },
+          "contentType" : {
+            "type" : "string",
+            "description" : "The content type of the attachment"
+          },
+          "url" : {
+            "type" : "string",
+            "description" : "The url to be used to download the attachment file"
+          },
+          "filesize" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int32",
+            "description" : "The size of the attachment file in bytes"
+          },
+          "filename" : {
+            "type" : "string",
+            "description" : "The filename of attachment file"
+          },
+          "headers" : {
+            "type" : [ "array", "null" ],
+            "description" : "The additional headers to use when calling the url for fetching this attachment",
+            "items" : {
+              "$ref" : "#/components/schemas/AttachmentHeader"
+            }
+          }
+        },
+        "required" : [ "attachmentNumber", "contentType", "filename", "name", "url" ]
+      },
+      "AttachmentHeader" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "description" : "The name of the header"
+          },
+          "value" : {
+            "type" : "string",
+            "description" : "The value of the header"
+          }
+        },
+        "required" : [ "name", "value" ]
+      },
+      "HmppsSubjectAccessRequestContent" : {
+        "type" : "object",
+        "properties" : {
+          "content" : {
+            "description" : "The content of the subject access request response"
+          },
+          "attachments" : {
+            "type" : [ "array", "null" ],
+            "description" : "The details of any attachments for the subject access request response",
+            "items" : {
+              "$ref" : "#/components/schemas/Attachment"
+            }
+          }
+        },
+        "required" : [ "content" ]
       },
       "PropertyEventDto" : {
         "type" : "object",
