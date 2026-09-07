@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance
 
-import kotlinx.coroutines.reactor.awaitSingle
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
@@ -24,8 +23,7 @@ class FinanceDpsApiService(
 
   suspend fun getPrisonerAccounts(prisonNumber: String): Map<String, SubAccountBalanceForReconciliation> = syncApi
     .listPrisonerSubaccountBalances(prisonNumber)
-    .retryWhen(backoffSpec)
-    .awaitSingle()
+    .awaitBodyOrNullForNotFound(retrySpec = backoffSpec) ?: emptyMap()
 
   suspend fun getPrisonerTransactionOrNull(nomisTransactionId: Long): SyncOffenderTransactionResponse? = syncApi.getTransactionReconciliationById(nomisTransactionId)
     .awaitBodyOrNullForNotFound(retrySpec = backoffSpec)

@@ -12,13 +12,13 @@ import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import tools.jackson.databind.json.JsonMapper
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiExtension.Companion.jsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiExtension.Companion.prisonerTransaction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.GeneralLedgerEntry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.OffenderTransaction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SubAccountBalanceForReconciliation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SyncOffenderTransactionResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ErrorResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension.Companion.jsonMapper
 import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.util.UUID
@@ -98,7 +98,7 @@ class FinanceDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
   fun ResponseDefinitionBuilder.withBody(body: Any): ResponseDefinitionBuilder {
-    this.withBody(FinanceDpsApiExtension.jsonMapper.writeValueAsString(body))
+    this.withBody(jsonMapper.writeValueAsString(body))
     return this
   }
 
@@ -128,10 +128,19 @@ class FinanceDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
         )
       }
   }
-  fun stubGetPrisonerAccounts(prisonNumber: String, response: Map<String, SubAccountBalanceForReconciliation>) {
+  fun stubGetPrisonerAccounts(
+    prisonNumber: String,
+    response: Map<String, SubAccountBalanceForReconciliation> = emptyMap(),
+    status: HttpStatus = HttpStatus.OK,
+    error: ErrorResponse = ErrorResponse(status = status.value()),
+  ) {
     stubFor(
-      get("/reconcile/prisoner-balances/$prisonNumber")
-        .willReturn(okJson(jsonMapper.writeValueAsString(response))),
+      get("/reconcile/prisoner-balances/$prisonNumber").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(status.value())
+          .withBody(jsonMapper.writeValueAsString(if (status == HttpStatus.OK) response else error)),
+      ),
     )
   }
 }

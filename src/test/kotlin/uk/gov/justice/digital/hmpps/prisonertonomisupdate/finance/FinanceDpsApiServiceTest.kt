@@ -8,8 +8,12 @@ import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
+import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
+import org.springframework.http.HttpStatus.NOT_FOUND
+import org.springframework.web.reactive.function.client.WebClientResponseException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiExtension.Companion.dpsFinanceServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SubAccountBalanceForReconciliation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
@@ -89,6 +93,22 @@ class FinanceDpsApiServiceTest {
       val data = apiService.getPrisonerAccounts(prisonerNo)
 
       assertThat(data).isEqualTo(sampleResponse)
+    }
+
+    @Test
+    fun `will return empty map when prisoner accounts not found`() = runTest {
+      dpsFinanceServer.stubGetPrisonerAccounts(prisonNumber = prisonerNo, status = NOT_FOUND)
+
+      assertThat(apiService.getPrisonerAccounts(prisonerNo)).isEmpty()
+    }
+
+    @Test
+    fun `will throw error when prisoner accounts API returns an error`() = runTest {
+      dpsFinanceServer.stubGetPrisonerAccounts(prisonNumber = prisonerNo, status = INTERNAL_SERVER_ERROR)
+
+      assertThrows<WebClientResponseException.InternalServerError> {
+        apiService.getPrisonerAccounts(prisonerNo)
+      }
     }
   }
 }
