@@ -175,7 +175,7 @@ class PropertyReconciliationServiceTest {
     propertyDpsApi.stubGetProperty(DPS_ID, dpsProperty.copy(id = UUID.fromString(DPS_ID)))
     propertyMappingApi.stubGetByNomisId(
       NOMIS_ID,
-      PropertyContainerMappingDto(DPS_ID, NOMIS_ID, BOOKING_ID, OFFENDER_NO, PropertyContainerMappingDto.MappingType.MIGRATED),
+      PropertyContainerMappingDto(DPS_ID, NOMIS_ID, BOOKING_ID, PropertyContainerMappingDto.MappingType.MIGRATED),
     )
     mappingServer.stubGetMappingGivenNomisLocationIdUsingExternalApi(
       NOMIS_LOCATION_ID,

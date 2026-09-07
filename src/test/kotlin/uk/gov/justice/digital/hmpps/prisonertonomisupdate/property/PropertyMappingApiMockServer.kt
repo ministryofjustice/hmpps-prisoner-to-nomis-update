@@ -24,7 +24,6 @@ class PropertyMappingApiMockServer(private val jsonMapper: JsonMapper) {
     mapping: PropertyContainerMappingDto = PropertyContainerMappingDto(
       dpsPropertyContainerId = dpsId,
       nomisPropertyContainerId = 1,
-      offenderNo = "A1234AA",
       bookingId = 123456,
       mappingType = PropertyContainerMappingDto.MappingType.MIGRATED,
     ),

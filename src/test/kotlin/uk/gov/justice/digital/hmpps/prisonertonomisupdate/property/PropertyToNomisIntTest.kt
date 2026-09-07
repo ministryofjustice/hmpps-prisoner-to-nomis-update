@@ -307,7 +307,6 @@ class PropertyToNomisIntTest : SqsIntegrationTestBase() {
             nomisPropertyContainerId = NOMIS_ID,
             dpsPropertyContainerId = DPS_ID,
             bookingId = BOOKING_ID,
-            offenderNo = OFFENDER_NO,
             mappingType = PropertyContainerMappingDto.MappingType.DPS_CREATED,
           ),
         )

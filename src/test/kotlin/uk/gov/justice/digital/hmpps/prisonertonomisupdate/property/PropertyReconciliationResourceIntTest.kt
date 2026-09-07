@@ -156,7 +156,7 @@ class PropertyReconciliationResourceIntTest : IntegrationTestBase() {
     val dpsId = generateDpsId(nomisId)
     propertyMappingApiMockServer.stubGetByNomisId(
       nomisId,
-      PropertyContainerMappingDto(dpsId, nomisId, BOOKING_ID, OFFENDER_NO, PropertyContainerMappingDto.MappingType.MIGRATED),
+      PropertyContainerMappingDto(dpsId, nomisId, BOOKING_ID, PropertyContainerMappingDto.MappingType.MIGRATED),
     )
     mappingServer.stubGetMappingGivenNomisLocationIdUsingExternalApi(
       NOMIS_LOCATION_ID,
