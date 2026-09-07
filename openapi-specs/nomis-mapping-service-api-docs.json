@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-09-01.789.d45a8d8"
+    "version" : "2026-09-04.794.25e8d17"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -571,110 +571,6 @@
           "409" : {
             "description" : "One of the punishment mappings already exist",
             "content" : { }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/mapping/property/merge/from/{oldOffenderNo}/to/{newOffenderNo}" : {
-      "put" : {
-        "tags" : [ "property-container-mapping-resource" ],
-        "summary" : "Replaces all occurrences of the 'from' id with the 'to' id in the mapping table",
-        "description" : "Used for update after a prisoner number merge. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "updatePropertyContainerMappingsByNomisId",
-        "parameters" : [ {
-          "name" : "oldOffenderNo",
-          "in" : "path",
-          "description" : "Old prisoner number to replace",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "description" : "Old prisoner number to replace",
-            "example" : "A3456KM"
-          },
-          "example" : "A3456KM"
-        }, {
-          "name" : "newOffenderNo",
-          "in" : "path",
-          "description" : "New prisoner number to use",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "description" : "New prisoner number to use",
-            "example" : "A3457LZ"
-          },
-          "example" : "A3457LZ"
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Replacement made, or not present in table",
-            "content" : { }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/mapping/property/merge/booking-id/{bookingId}/to/{newOffenderNo}" : {
-      "put" : {
-        "tags" : [ "property-container-mapping-resource" ],
-        "summary" : "For all property containers with the given booking id in the mapping table, sets the offender no to the given 'to' id",
-        "description" : "Used for update after a booking has been moved from one offender to another. Returns the affected property containers. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "updatePropertyContainerMappingsByBookingId",
-        "parameters" : [ {
-          "name" : "bookingId",
-          "in" : "path",
-          "description" : "The booking id",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The booking id",
-            "example" : 1234567
-          },
-          "example" : 1234567
-        }, {
-          "name" : "newOffenderNo",
-          "in" : "path",
-          "description" : "New prisoner number to use",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "description" : "New prisoner number to use",
-            "example" : "A3457LZ"
-          },
-          "example" : "A3457LZ"
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Replacement made, or not present in table",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/PropertyContainerMappingDto"
-                  }
-                }
-              }
-            }
           },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
@@ -22674,6 +22570,7 @@
             "description" : "The DPS transfer schedule ID"
           },
           "movement" : {
+            "description" : "Mapping for the transfer movement belonging to this transfer schedule, if it has occurred",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/BookingTransferMovementMappingsDto"
             }, {
@@ -23180,48 +23077,6 @@
           }
         },
         "required" : [ "nomisBookingId", "nomisSanctionSequence" ]
-      },
-      "PropertyContainerMappingDto" : {
-        "type" : "object",
-        "description" : "property container mapping",
-        "properties" : {
-          "dpsPropertyContainerId" : {
-            "type" : "string",
-            "description" : "property container id in DPS"
-          },
-          "nomisPropertyContainerId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Nomis property container id"
-          },
-          "bookingId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Nomis booking id"
-          },
-          "offenderNo" : {
-            "type" : "string",
-            "description" : "Prisoner number in Nomis"
-          },
-          "label" : {
-            "type" : [ "string", "null" ],
-            "description" : "Label (a timestamp for migrated ids)",
-            "maxLength" : 20,
-            "minLength" : 0
-          },
-          "mappingType" : {
-            "type" : "string",
-            "description" : "Mapping type",
-            "enum" : [ "MIGRATED", "NOMIS_CREATED", "DPS_CREATED" ]
-          },
-          "whenCreated" : {
-            "type" : "string",
-            "description" : "Date-time the mapping was created",
-            "example" : "2021-07-05T10:35:17",
-            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
-          }
-        },
-        "required" : [ "bookingId", "dpsPropertyContainerId", "mappingType", "nomisPropertyContainerId", "offenderNo" ]
       },
       "CsraMappingDto" : {
         "type" : "object",
@@ -24608,6 +24463,44 @@
           }
         },
         "required" : [ "punishments" ]
+      },
+      "PropertyContainerMappingDto" : {
+        "type" : "object",
+        "description" : "property container mapping",
+        "properties" : {
+          "dpsPropertyContainerId" : {
+            "type" : "string",
+            "description" : "property container id in DPS"
+          },
+          "nomisPropertyContainerId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Nomis property container id"
+          },
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Nomis booking id"
+          },
+          "label" : {
+            "type" : [ "string", "null" ],
+            "description" : "Label (a timestamp for migrated ids)",
+            "maxLength" : 20,
+            "minLength" : 0
+          },
+          "mappingType" : {
+            "type" : "string",
+            "description" : "Mapping type",
+            "enum" : [ "MIGRATED", "NOMIS_CREATED", "DPS_CREATED" ]
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "description" : "Date-time the mapping was created",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          }
+        },
+        "required" : [ "bookingId", "dpsPropertyContainerId", "mappingType", "nomisPropertyContainerId" ]
       },
       "PrisonerBalanceMappingDto" : {
         "type" : "object",
@@ -26847,13 +26740,13 @@
       "PageVisitTimeSlotMappingDto" : {
         "type" : "object",
         "properties" : {
-          "totalElements" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
           "totalPages" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "size" : {
             "type" : "integer",
@@ -26869,21 +26762,21 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
           },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
           },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "empty" : {
             "type" : "boolean"
@@ -26904,12 +26797,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "paged" : {
+            "type" : "boolean"
+          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "paged" : {
-            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -27171,13 +27064,13 @@
       "PageTapMigrationDto" : {
         "type" : "object",
         "properties" : {
-          "totalElements" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
           "totalPages" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "size" : {
             "type" : "integer",
@@ -27193,21 +27086,21 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
           },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
           },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "empty" : {
             "type" : "boolean"
@@ -27303,13 +27196,13 @@
       "PageOfficialVisitMappingDto" : {
         "type" : "object",
         "properties" : {
-          "totalElements" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
           "totalPages" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "size" : {
             "type" : "integer",
@@ -27325,21 +27218,21 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
           },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
           },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "empty" : {
             "type" : "boolean"
@@ -27349,13 +27242,13 @@
       "PageNonAssociationMappingDto" : {
         "type" : "object",
         "properties" : {
-          "totalElements" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
           "totalPages" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "size" : {
             "type" : "integer",
@@ -27371,21 +27264,21 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
           },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
           },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "empty" : {
             "type" : "boolean"
@@ -27435,13 +27328,13 @@
       "PageCourtSentencingMigrationSummary" : {
         "type" : "object",
         "properties" : {
-          "totalElements" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
           "totalPages" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "size" : {
             "type" : "integer",
@@ -27457,21 +27350,21 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
           },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
           },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "empty" : {
             "type" : "boolean"
@@ -27661,13 +27554,13 @@
       "PageCourtSchedulerMigrationDto" : {
         "type" : "object",
         "properties" : {
-          "totalElements" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
           "totalPages" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "size" : {
             "type" : "integer",
@@ -27683,21 +27576,21 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
           },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
           },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "empty" : {
             "type" : "boolean"
@@ -27707,13 +27600,13 @@
       "PageOrganisationsMappingDto" : {
         "type" : "object",
         "properties" : {
-          "totalElements" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
           "totalPages" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "size" : {
             "type" : "integer",
@@ -27729,21 +27622,21 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
           },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
           },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "empty" : {
             "type" : "boolean"
@@ -27855,13 +27748,13 @@
       "PageCorePersonMappingDto" : {
         "type" : "object",
         "properties" : {
-          "totalElements" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
           "totalPages" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "size" : {
             "type" : "integer",
@@ -27877,21 +27770,21 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
           },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
           },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "empty" : {
             "type" : "boolean"
@@ -27994,13 +27887,13 @@
       "PageReligionsMappingDto" : {
         "type" : "object",
         "properties" : {
-          "totalElements" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
           "totalPages" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "size" : {
             "type" : "integer",
@@ -28016,21 +27909,21 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
           },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
           },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "empty" : {
             "type" : "boolean"
@@ -28040,13 +27933,13 @@
       "PagePersonMappingDto" : {
         "type" : "object",
         "properties" : {
-          "totalElements" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
           "totalPages" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "size" : {
             "type" : "integer",
@@ -28062,21 +27955,21 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
           },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
           },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "empty" : {
             "type" : "boolean"
@@ -28114,13 +28007,13 @@
       "PagePrisonerAlertMappingsSummaryDto" : {
         "type" : "object",
         "properties" : {
-          "totalElements" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
           "totalPages" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "size" : {
             "type" : "integer",
@@ -28136,21 +28029,21 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
           },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
           },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "empty" : {
             "type" : "boolean"
@@ -28182,13 +28075,13 @@
       "PageAlertMappingDto" : {
         "type" : "object",
         "properties" : {
-          "totalElements" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
           "totalPages" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "size" : {
             "type" : "integer",
@@ -28204,21 +28097,21 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
           },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
           },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "empty" : {
             "type" : "boolean"

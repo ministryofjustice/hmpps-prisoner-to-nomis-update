@@ -51,7 +51,6 @@ class PropertyService(
                 dpsPropertyContainerId = event.additionalInformation.dpsId,
                 nomisPropertyContainerId = propertyContainerId,
                 bookingId = bookingId,
-                offenderNo = event.prisonerNumber,
                 mappingType = PropertyContainerMappingDto.MappingType.DPS_CREATED,
               )
             }
@@ -97,7 +96,6 @@ class PropertyService(
         dpsPropertyContainerId = mapping.dpsPropertyContainerId,
         nomisPropertyContainerId = mapping.nomisPropertyContainerId,
         bookingId = mapping.bookingId,
-        offenderNo = mapping.offenderNo,
         mappingType = PropertyContainerMappingDto.MappingType.DPS_CREATED,
       ),
     )
