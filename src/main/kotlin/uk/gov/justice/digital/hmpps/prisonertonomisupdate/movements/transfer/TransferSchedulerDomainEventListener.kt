@@ -51,6 +51,7 @@ class TransferSchedulerDomainEventListener(
       "person.transfer.reprioritised",
       "person.transfer.planning-comments-changed",
       "person.transfer.schedule-comments-changed",
+      "person.transfer.planning-requested-changed",
       -> scheduleService.transferScheduleChanged(message.fromJson())
 
       "person.transfer.deleted",
