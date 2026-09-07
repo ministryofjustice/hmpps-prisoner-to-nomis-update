@@ -71,7 +71,7 @@ class CorePersonCprApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(status.value())
-          .withBody(jsonMapper.writeValueAsString(if (status == HttpStatus.OK) response else error)),
+          .withBody(if (status == HttpStatus.OK) response else error),
       ),
     )
   }

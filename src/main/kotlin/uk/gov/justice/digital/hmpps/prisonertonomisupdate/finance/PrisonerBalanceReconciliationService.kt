@@ -121,7 +121,14 @@ class PrisonerBalanceReconciliationService(
       return null
     }
   }.onFailure {
-    log.error("Unable to match prisoner balances for offenderId=$rootOffenderId", it)
+    log.error("Unable to match prisoner balances for offenderId={}", rootOffenderId, it)
+    telemetryClient.trackEvent(
+      "$TELEMETRY_PRISONER_PREFIX-mismatch-error",
+      mapOf(
+        "rootOffenderId" to rootOffenderId.toString(),
+        "error" to (it.message ?: ""),
+      ),
+    )
   }.getOrNull()
 
   private fun <T> compareLists(dpsList: List<T>, nomisList: List<T>, parentProperty: String): List<Difference> {

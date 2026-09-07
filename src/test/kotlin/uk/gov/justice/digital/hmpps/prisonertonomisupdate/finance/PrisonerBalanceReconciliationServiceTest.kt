@@ -11,8 +11,11 @@ import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.reset
 import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoInteractions
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
+import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
+import org.springframework.http.HttpStatus.NOT_FOUND
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SubAccountBalanceForReconciliation
@@ -194,6 +197,62 @@ class PrisonerBalanceReconciliationServiceTest {
         listOf(
           Difference(property = "prisoner-balances.accounts[0].accountCode", dps = 1234, nomis = 1001),
         ),
+      )
+    }
+
+    @Test
+    fun `will return null and report telemetry when nomis account API returns not found`() = runTest {
+      financeNomisApi.stubGetPrisonerAccountsWithError(OFFENDER_ID, NOT_FOUND)
+
+      assertThat(service.checkPrisonerBalance(OFFENDER_ID)).isNull()
+
+      verify(telemetryClient).trackEvent(
+        eq("prisoner-balance-reports-reconciliation-mismatch-error"),
+        check {
+          assertThat(it).containsEntry("rootOffenderId", OFFENDER_ID.toString())
+          assertThat(it).containsKey("error")
+          assertThat(it["error"]).startsWith("404 Not Found from GET")
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `will return null and report telemetry when dps API returns not found`() = runTest {
+      financeNomisApi.stubGetPrisonerAccounts(OFFENDER_ID, nomisPrisonerAccounts())
+      dpsApi.stubGetPrisonerAccounts(OFFENDER_NO, status = NOT_FOUND)
+
+      assertThat(service.checkPrisonerBalance(OFFENDER_ID)?.differences).isEqualTo(
+        listOf(
+          Difference(property = "prisoner-balances.accounts", dps = 0, nomis = 1),
+        ),
+      )
+    }
+
+    @Test
+    fun `will return success if no nomis account and dps API returns not found`() = runTest {
+      financeNomisApi.stubGetPrisonerAccounts(OFFENDER_ID, nomisPrisonerAccounts().copy(accounts = listOf()))
+      dpsApi.stubGetPrisonerAccounts(OFFENDER_NO, status = NOT_FOUND)
+
+      assertThat(service.checkPrisonerBalance(OFFENDER_ID)?.differences).isNull()
+      verifyNoInteractions(telemetryClient)
+    }
+
+    @Test
+    fun `will return null and report telemetry when dps API returns internal server error`() = runTest {
+      financeNomisApi.stubGetPrisonerAccounts(OFFENDER_ID, nomisPrisonerAccounts())
+      dpsApi.stubGetPrisonerAccounts(OFFENDER_NO, status = INTERNAL_SERVER_ERROR)
+
+      assertThat(service.checkPrisonerBalance(OFFENDER_ID)).isNull()
+
+      verify(telemetryClient).trackEvent(
+        eq("prisoner-balance-reports-reconciliation-mismatch-error"),
+        check {
+          assertThat(it).containsEntry("rootOffenderId", OFFENDER_ID.toString())
+          assertThat(it).containsKey("error")
+          assertThat(it["error"]).startsWith("500 Internal Server Error from GET")
+        },
+        isNull(),
       )
     }
   }
