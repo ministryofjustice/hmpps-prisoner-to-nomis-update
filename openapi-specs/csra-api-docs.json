@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-08-26.442.5193858"
+    "version" : "2026-09-07.489.742ed80"
   },
   "servers" : [ {
     "url" : "/",
@@ -194,6 +194,16 @@
                 }
               }
             }
+          },
+          "409" : {
+            "description" : "The review has been closed or archived by a prisoner movement and can no longer be edited",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -276,6 +286,16 @@
           },
           "404" : {
             "description" : "No such review for this prisoner",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "The review has been closed or archived by a prisoner movement and can no longer be edited",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -382,6 +402,16 @@
                 }
               }
             }
+          },
+          "409" : {
+            "description" : "The assessment has been closed or archived by a prisoner movement and can no longer be edited",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -471,6 +501,16 @@
                 }
               }
             }
+          },
+          "409" : {
+            "description" : "The assessment has been closed or archived by a prisoner movement and can no longer be edited",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -553,6 +593,16 @@
           },
           "404" : {
             "description" : "No such assessment for this prisoner",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "The assessment has been closed or archived by a prisoner movement and can no longer be edited",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -707,6 +757,16 @@
           },
           "403" : {
             "description" : "Missing required role. Requires the PRISONER_CSRA__SYNC__RW role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "The review has been closed or archived by a prisoner movement and can no longer be updated",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -1894,6 +1954,12 @@
             "description" : "Whether the current rating is provisional (a final rating has not yet been confirmed)",
             "example" : false
           },
+          "ratingStage" : {
+            "type" : [ "string", "null" ],
+            "description" : "Which stage the current rating came from. Distinguishes an assessment's provisional rating from a review's interim one, which the provisional flag cannot. Null when there is no rating.",
+            "enum" : [ "FINAL", "PROVISIONAL", "INTERIM" ],
+            "example" : "FINAL"
+          },
           "reviewId" : {
             "type" : [ "string", "null" ],
             "format" : "uuid",
@@ -1904,6 +1970,11 @@
             "type" : [ "string", "null" ],
             "description" : "The prison the current assessment/review took place at",
             "example" : "LEI"
+          },
+          "prisonName" : {
+            "type" : [ "string", "null" ],
+            "description" : "The name of the prison the current assessment/review took place at, falling back to the id if it cannot be resolved",
+            "example" : "Leeds (HMP)"
           },
           "assessmentComment" : {
             "type" : [ "string", "null" ],
@@ -2006,6 +2077,11 @@
             "type" : [ "string", "null" ],
             "description" : "The prison it was started at",
             "example" : "LEI"
+          },
+          "prisonName" : {
+            "type" : [ "string", "null" ],
+            "description" : "The name of the prison it was started at, falling back to the id if it cannot be resolved",
+            "example" : "Brixton (HMP)"
           }
         },
         "required" : [ "reviewId", "type" ]
@@ -3796,6 +3872,12 @@
             "description" : "Whether the current rating is provisional (a Day 1 interim rating not yet finalised)",
             "example" : false
           },
+          "ratingStage" : {
+            "type" : [ "string", "null" ],
+            "description" : "Which stage the current rating came from. Distinguishes an assessment's provisional rating from a review's interim one, which the provisional flag cannot. Null when there is no rating.",
+            "enum" : [ "FINAL", "PROVISIONAL", "INTERIM" ],
+            "example" : "FINAL"
+          },
           "assessmentType" : {
             "type" : [ "string", "null" ],
             "description" : "The type of the assessment that produced the current rating; null when no rating",
@@ -3919,6 +4001,12 @@
             "type" : "boolean",
             "description" : "Whether the current rating is provisional (an interim Day 1 rating)",
             "example" : false
+          },
+          "ratingStage" : {
+            "type" : [ "string", "null" ],
+            "description" : "Which stage the current rating came from. Distinguishes an assessment's provisional rating from a review's interim one, which the provisional flag cannot.",
+            "enum" : [ "FINAL", "PROVISIONAL", "INTERIM" ],
+            "example" : "FINAL"
           },
           "lastRatingSource" : {
             "type" : "string",
