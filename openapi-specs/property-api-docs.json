@@ -7,7 +7,7 @@
       "name" : "Move a prisoner Team",
       "email" : "Moveaprisoner-gg@justice.gov.uk"
     },
-    "version" : "2026-09-04.297.e72cfcf"
+    "version" : "2026-09-07.305.622ed61"
   },
   "servers" : [ {
     "url" : "/",
@@ -21,6 +21,85 @@
     "description" : "Endpoints that are to be used by administrators only for managing SQS queues. All endpoints require the <b>QUEUE_ADMIN</b> role further information can be found in the <a href=\"https://github.com/ministryofjustice/hmpps-spring-boot-sqs\">hmpps-spring-boot-sqs</a> project"
   } ],
   "paths" : {
+    "/sync/property-containers/move/from/{source}/to/{target}" : {
+      "put" : {
+        "tags" : [ "Sync with NOMIS" ],
+        "summary" : "Move property containers from the source prisoner to the target prisoner",
+        "description" : "Called by Nomis sync to implement the <i>prison-offender-events.prisoner.booking.moved</i> Nomis event to correct DPS property.The containers must initially belong to the source prisoner, or already belong to the target prisoner.Requires role ROLE_PRISONER_PROPERTY__SYNC.",
+        "operationId" : "moveToPrisoner",
+        "parameters" : [ {
+          "name" : "source",
+          "in" : "path",
+          "description" : "Source prisoner",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "A1234FG"
+        }, {
+          "name" : "target",
+          "in" : "path",
+          "description" : "Target prisoner",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "A1234FG"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string",
+                  "format" : "uuid"
+                }
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Containers moved"
+          },
+          "401" : {
+            "description" : "Unauthorized - a valid token was not presented",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden - the ROLE_PRISONER_PROPERTY__SYNC role is required",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Some of the supplied DPS ids do not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearer-jwt" : [ ]
+        } ]
+      }
+    },
     "/property-locations/{id}" : {
       "put" : {
         "tags" : [ "Property storage locations (management)" ],
