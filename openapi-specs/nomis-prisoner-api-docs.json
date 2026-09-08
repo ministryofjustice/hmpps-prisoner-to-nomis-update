@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-09-04.2015.dd6bcf7"
+    "version" : "2026-09-07.2018.fc3df12"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -21599,6 +21599,69 @@
         }
       }
     },
+    "/movements/booking/{bookingId}/transfer" : {
+      "get" : {
+        "tags" : [ "offender-transfer-movements-resource" ],
+        "summary" : "Get transfer schedules and movements for a booking",
+        "description" : "Get transfer schedules and movements for a booking. This is used to migrate transfer movements to DPS and for reconciliation. Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getAllBookingTransferMovements",
+        "parameters" : [ {
+          "name" : "bookingId",
+          "in" : "path",
+          "description" : "Booking ID",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Booking ID",
+            "example" : 123456
+          },
+          "example" : 123456
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Booking transfer movements returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BookingTransferMovements"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Booking not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/movements/booking/{bookingId}/taps" : {
       "get" : {
         "tags" : [ "offender-taps-resource" ],
@@ -41752,13 +41815,6 @@
             "type" : "integer",
             "format" : "int64"
           },
-          "txnEntryAmount" : {
-            "type" : "number"
-          },
-          "txnEntrySeq" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
           "txnEntryDate" : {
             "type" : "string",
             "format" : "date-time"
@@ -41768,6 +41824,13 @@
           },
           "txnReferenceNumber" : {
             "type" : "string"
+          },
+          "txnEntryAmount" : {
+            "type" : "number"
+          },
+          "txnEntrySeq" : {
+            "type" : "integer",
+            "format" : "int32"
           }
         },
         "required" : [ "txnEntryAmount", "txnEntryDate", "txnEntrySeq", "txnId" ]
