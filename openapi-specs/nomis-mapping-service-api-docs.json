@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-09-04.794.25e8d17"
+    "version" : "2026-09-08.804.5920620"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -30,6 +30,83 @@
     "description" : "APIs designed to be used by DPS services that need to map NOMIS ids stored in a DPS service to a sibling DPS domain service"
   } ],
   "paths" : {
+    "/mapping/transfer-scheduler/move-booking/{bookingId}/from/{fromOffenderNo}/to/{toOffenderNo}" : {
+      "put" : {
+        "tags" : [ "transfer-scheduler-prisoner-resource" ],
+        "summary" : "Move all mappings for a booking from one offender to another",
+        "description" : "Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "moveTransferSchedulerBookingMappings",
+        "parameters" : [ {
+          "name" : "bookingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "name" : "fromOffenderNo",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "toOffenderNo",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Bookings moved",
+            "content" : { }
+          },
+          "400" : {
+            "description" : "We were unable to move the bookings",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "There are no mappings for the booking",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mapping/transfer-scheduler/migrate" : {
       "put" : {
         "tags" : [ "transfer-scheduler-migration-resource" ],
@@ -8743,6 +8820,55 @@
         }
       }
     },
+    "/mapping/transfer-scheduler/move-booking/{bookingId}" : {
+      "get" : {
+        "tags" : [ "transfer-scheduler-prisoner-resource" ],
+        "summary" : "Get all mappings for a booking",
+        "description" : "Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "getTransferSchedulerBookingMappings",
+        "parameters" : [ {
+          "name" : "bookingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Booking mapping IDs returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TransferSchedulerMoveBookingMappingDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mapping/transactions/{offenderNo}/all" : {
       "get" : {
         "tags" : [ "transaction-mapping-resource" ],
@@ -10616,6 +10742,42 @@
           "204" : {
             "description" : "Mapping Deleted",
             "content" : { }
+          }
+        }
+      }
+    },
+    "/mapping/property/booking-id/{bookingId}" : {
+      "get" : {
+        "tags" : [ "property-container-mapping-resource" ],
+        "summary" : "get mappings for given booking id",
+        "description" : "Retrieves mappings by booking id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "getPropertyContainerMappingsByBookingId",
+        "parameters" : [ {
+          "name" : "bookingId",
+          "in" : "path",
+          "description" : "Booking id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Booking id",
+            "example" : 123456
+          },
+          "example" : 123456
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Mapping Information Returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/PropertyContainerMappingDto"
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -22538,6 +22700,28 @@
   },
   "components" : {
     "schemas" : {
+      "ErrorResponse" : {
+        "type" : "object",
+        "properties" : {
+          "status" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "errorCode" : {
+            "type" : [ "string", "null" ]
+          },
+          "userMessage" : {
+            "type" : [ "string", "null" ]
+          },
+          "developerMessage" : {
+            "type" : [ "string", "null" ]
+          },
+          "moreInfo" : {
+            "type" : [ "string", "null" ]
+          }
+        },
+        "required" : [ "status" ]
+      },
       "BookingTransferMovementMappingsDto" : {
         "type" : "object",
         "description" : "Mappings for a single transfer movement",
@@ -22635,28 +22819,6 @@
           }
         },
         "required" : [ "bookings", "migrationId", "offenderNo" ]
-      },
-      "ErrorResponse" : {
-        "type" : "object",
-        "properties" : {
-          "status" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "errorCode" : {
-            "type" : [ "string", "null" ]
-          },
-          "userMessage" : {
-            "type" : [ "string", "null" ]
-          },
-          "developerMessage" : {
-            "type" : [ "string", "null" ]
-          },
-          "moreInfo" : {
-            "type" : [ "string", "null" ]
-          }
-        },
-        "required" : [ "status" ]
       },
       "TransactionMappingDto" : {
         "type" : "object",
@@ -26790,19 +26952,19 @@
             "type" : "integer",
             "format" : "int64"
           },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
-          },
-          "pageSize" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
           "paged" : {
             "type" : "boolean"
           },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "pageSize" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -26887,6 +27049,62 @@
           }
         },
         "required" : [ "movements", "prisonerNumber", "schedules" ]
+      },
+      "TransferMovementIdMapping" : {
+        "type" : "object",
+        "description" : "Mappings for a prisoner booking's transfer movements",
+        "properties" : {
+          "nomisMovementSeq" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The NOMIS movement's movement sequence"
+          },
+          "dpsTransferMovementId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS movement ID"
+          }
+        },
+        "required" : [ "dpsTransferMovementId", "nomisMovementSeq" ]
+      },
+      "TransferScheduleIdMapping" : {
+        "type" : "object",
+        "description" : "Mappings for a prisoner booking's transfer schedules",
+        "properties" : {
+          "nomisEventId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS event ID",
+            "example" : 12345
+          },
+          "dpsTransferScheduleId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS transfer schedule ID"
+          }
+        },
+        "required" : [ "dpsTransferScheduleId", "nomisEventId" ]
+      },
+      "TransferSchedulerMoveBookingMappingDto" : {
+        "type" : "object",
+        "description" : "Mappings for a prisoner booking's entire transfer scheduler history",
+        "properties" : {
+          "scheduleIds" : {
+            "type" : "array",
+            "description" : "A list mapping NOMIS event IDs to DPS transfer schedule IDs",
+            "items" : {
+              "$ref" : "#/components/schemas/TransferScheduleIdMapping"
+            }
+          },
+          "movementIds" : {
+            "type" : "array",
+            "description" : "A list mapping NOMIS movement sequence numbers to DPS movement IDs",
+            "items" : {
+              "$ref" : "#/components/schemas/TransferMovementIdMapping"
+            }
+          }
+        },
+        "required" : [ "movementIds", "scheduleIds" ]
       },
       "AllPrisonerTransactionMappingsDto" : {
         "type" : "object",
