@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-09-02.1159.9061814"
+    "version" : "2026-09-07.1168.e3a72bb"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -2466,11 +2466,11 @@
         } ],
         "responses" : {
           "200" : {
-            "description" : "Visits for review",
+            "description" : "Paginated list of visits for review",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/VisitsForReviewResponse"
+                  "$ref" : "#/components/schemas/PagedModelVisitsForReviewResponse"
                 }
               }
             }
@@ -7169,6 +7169,20 @@
           }
         },
         "required" : [ "assistedVisit", "createdBy", "createdTime", "leadVisitor", "officialVisitorId", "visitorTypeCode" ]
+      },
+      "PagedModelVisitsForReviewResponse" : {
+        "type" : "object",
+        "properties" : {
+          "content" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/VisitsForReviewResponse"
+            }
+          },
+          "page" : {
+            "$ref" : "#/components/schemas/PageMetadata"
+          }
+        }
       },
       "VisitForReviewIssue" : {
         "type" : "object",
