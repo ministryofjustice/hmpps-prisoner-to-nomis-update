@@ -137,6 +137,7 @@ private fun SyncTransfer.toNomisUpsertRequest(eventId: Long?) = UpsertTransferSc
   comment = schedule.commentText,
   toPrison = schedule.toAgyLocId,
   escortCode = schedule.escortCode,
+  cancellationReasonCode = schedule.outcomeReasonCode,
   waitlist = waitlist?.let {
     UpsertTransferScheduleWaitlist(
       requestDate = it.requestDate,

@@ -91,6 +91,7 @@ class TransferSchedulerScheduleIntTest(
               assertThat(toPrison).isEqualTo("LEI")
               assertThat(comment).isEqualTo("Some schedule comment")
               assertThat(escortCode).isEqualTo("PECS")
+              assertThat(cancellationReasonCode).isEqualTo("ADMI")
               with(request.waitlist!!) {
                 assertThat(requestDate).isEqualTo(LocalDate.now().minusDays(1))
                 assertThat(status).isEqualTo("CANC")
