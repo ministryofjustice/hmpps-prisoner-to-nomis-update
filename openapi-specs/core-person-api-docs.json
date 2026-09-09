@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-08-25.4803.8306cab"
+    "version" : "2026-09-09.4996.4a29fea"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -788,6 +788,39 @@
           },
           "301" : {
             "description" : "Permanent Redirect"
+          }
+        },
+        "security" : [ {
+          "api-role" : [ ]
+        } ]
+      }
+    },
+    "/person/prison/dps/{prisonNumber}/religion-history" : {
+      "get" : {
+        "tags" : [ "Prison" ],
+        "description" : "Retrieve prison religion history by Prison Number. Role required is **ROLE_CORE_PERSON_RECORD_API__RO**. ",
+        "operationId" : "getReligionHistoryByPrisonNumberDps",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Prisoner religion history returned",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/PrisonReligion"
+                  }
+                }
+              }
+            }
           }
         },
         "security" : [ {
