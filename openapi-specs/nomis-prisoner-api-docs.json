@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-09-09.2027.933ef34"
+    "version" : "2026-09-10.2029.3facbc2"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -29520,6 +29520,23 @@
             "type" : [ "boolean", "null" ],
             "description" : "Whether location is activated"
           },
+          "deactivateDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "The deactivation date, defaults to today",
+            "example" : "2024-12-31"
+          },
+          "reasonCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "The reason code for deactivation, reference data 'LIV_UN_RSN'",
+            "enum" : [ "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L" ]
+          },
+          "reactivateDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "The expected reactivation date if any",
+            "example" : "2024-12-31"
+          },
           "profiles" : {
             "type" : [ "array", "null" ],
             "description" : "Profiles",
@@ -42237,13 +42254,6 @@
             "type" : [ "integer", "null" ],
             "format" : "int64"
           },
-          "txnEntryAmount" : {
-            "type" : "number"
-          },
-          "txnEntrySeq" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
           "txnId" : {
             "type" : "integer",
             "format" : "int64"
@@ -42257,6 +42267,13 @@
           },
           "txnReferenceNumber" : {
             "type" : [ "string", "null" ]
+          },
+          "txnEntryAmount" : {
+            "type" : "number"
+          },
+          "txnEntrySeq" : {
+            "type" : "integer",
+            "format" : "int32"
           }
         },
         "required" : [ "txnEntryAmount", "txnEntryDate", "txnEntrySeq", "txnId" ]

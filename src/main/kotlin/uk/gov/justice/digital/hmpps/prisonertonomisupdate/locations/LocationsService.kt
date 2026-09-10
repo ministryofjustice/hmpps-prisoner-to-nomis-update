@@ -353,6 +353,9 @@ class LocationsService(
     comment = instance.comments,
     tracking = instance.internalMovementAllowed,
     active = instance.active,
+    deactivateDate = instance.deactivatedDate,
+    reasonCode = toReasonCode(instance),
+    reactivateDate = instance.proposedReactivationDate,
     profiles = instance.attributes?.map { toAttribute(it) },
     usages = instance.usage?.map { toUsage(it) },
   )
@@ -440,6 +443,16 @@ class LocationsService(
   override suspend fun retryCreateMapping(message: String) = createRetry(message.fromJson())
 
   private inline fun <reified T> String.fromJson(): T = jsonMapper.readValue(this)
+}
+
+private fun toReasonCode(instance: LegacyLocation): UpdateLocationRequest.ReasonCode? = when (instance.deactivatedReason) {
+  LegacyLocation.DeactivatedReason.REFURBISHMENT -> UpdateLocationRequest.ReasonCode.D
+  LegacyLocation.DeactivatedReason.OTHER -> UpdateLocationRequest.ReasonCode.F
+  LegacyLocation.DeactivatedReason.MAINTENANCE -> UpdateLocationRequest.ReasonCode.G
+  LegacyLocation.DeactivatedReason.STAFF_SHORTAGE -> UpdateLocationRequest.ReasonCode.H
+  LegacyLocation.DeactivatedReason.MOTHBALLED -> UpdateLocationRequest.ReasonCode.I
+  LegacyLocation.DeactivatedReason.DAMAGED -> UpdateLocationRequest.ReasonCode.J
+  else -> null
 }
 
 data class LocationDomainEvent(
