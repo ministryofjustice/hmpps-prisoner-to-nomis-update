@@ -294,6 +294,19 @@ class LocationsReconciliationService(
     if (dps.residentialHousingType == null && nomis.tracking != dps.internalMovementAllowed && nomis.active) {
       return TRACKING_MISMATCH
     }
+    if (dps.deactivatedDate != null && dps.deactivatedDate != nomis.deactivateDate) {
+      return "Deactivated date mismatch dps=${dps.deactivatedDate} nomis=${nomis.deactivateDate}"
+    }
+    if (
+      !dps.active &&
+      dps.deactivatedReason != LegacyLocation.DeactivatedReason.OTHER &&
+      toReasonCode(dps).toString() != nomis.reasonCode.toString()
+    ) {
+      return "Deactivated reason mismatch dps=${toReasonCode(dps)} nomis=${nomis.reasonCode}"
+    }
+    if (dps.proposedReactivationDate != null && dps.proposedReactivationDate != nomis.reactivateDate) {
+      return "Reactivation date mismatch dps=${dps.proposedReactivationDate} nomis=${nomis.reactivateDate}"
+    }
     return null
   }
 

@@ -445,7 +445,7 @@ class LocationsService(
   private inline fun <reified T> String.fromJson(): T = jsonMapper.readValue(this)
 }
 
-private fun toReasonCode(instance: LegacyLocation): UpdateLocationRequest.ReasonCode? = when (instance.deactivatedReason) {
+fun toReasonCode(instance: LegacyLocation): UpdateLocationRequest.ReasonCode? = when (instance.deactivatedReason) {
   LegacyLocation.DeactivatedReason.REFURBISHMENT -> UpdateLocationRequest.ReasonCode.D
   LegacyLocation.DeactivatedReason.OTHER -> UpdateLocationRequest.ReasonCode.F
   LegacyLocation.DeactivatedReason.MAINTENANCE -> UpdateLocationRequest.ReasonCode.G
