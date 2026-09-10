@@ -7,7 +7,7 @@
       "name" : "Move a prisoner Team",
       "email" : "Moveaprisoner-gg@justice.gov.uk"
     },
-    "version" : "2026-09-07.305.622ed61"
+    "version" : "2026-09-09.314.d55ea3a"
   },
   "servers" : [ {
     "url" : "/",
@@ -1761,7 +1761,7 @@
         }, {
           "name" : "query",
           "in" : "query",
-          "description" : "Free-text search matched against prisoner number, seal number or storage location",
+          "description" : "Free-text search matched against prisoner number (exact), or part of a seal number or storage location. * and ? are wildcards. A term matching a seal number also finds property that has left storage.",
           "required" : false,
           "schema" : {
             "type" : "string"
@@ -1779,7 +1779,7 @@
         }, {
           "name" : "sealNumber",
           "in" : "query",
-          "description" : "Filter to a single seal number",
+          "description" : "Filter to a single seal number, matched in full, including property that has left storage. Use query for a partial seal search.",
           "required" : false,
           "schema" : {
             "type" : "string"
@@ -1814,7 +1814,7 @@
         }, {
           "name" : "storageLocation",
           "in" : "query",
-          "description" : "Filter to a storage location code (e.g. PB5638), or BRANSTON for offsite storage",
+          "description" : "Filter to storage locations matching this term - part of a code, local name or path hierarchy (* and ? are wildcards) - or BRANSTON for offsite storage",
           "required" : false,
           "schema" : {
             "type" : "string"
@@ -2781,12 +2781,12 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paged" : {
+            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -2889,7 +2889,7 @@
           "eventType" : {
             "type" : "string",
             "description" : "What happened to the container",
-            "enum" : [ "CREATED_SEALED", "SEAL_CHANGED", "CONTAINER_TYPE_CHANGE", "MOVED", "PRISONER_RECEIVED", "PRISONER_RELEASED", "DIED_IN_CUSTODY", "TRANSFERRED", "RETURNED", "DISPOSAL_REQUIRED", "DISPOSED", "COMBINED", "CREATED_IN_ERROR", "REMOVED", "REACTIVATED" ],
+            "enum" : [ "CREATED_SEALED", "SEAL_CHANGED", "CONTAINER_TYPE_CHANGE", "MOVED", "PRISONER_RECEIVED", "PRISONER_TRANSFERRED_OUT", "PRISONER_RELEASED", "DIED_IN_CUSTODY", "TRANSFERRED", "RETURNED", "DISPOSAL_REQUIRED", "DISPOSED", "COMBINED", "CREATED_IN_ERROR", "REMOVED", "REACTIVATED" ],
             "example" : "MOVED"
           },
           "eventDateTime" : {
@@ -3187,7 +3187,7 @@
           "eventType" : {
             "type" : [ "string", "null" ],
             "description" : "What happened to the container, for container events; null for prisoner movements",
-            "enum" : [ "CREATED_SEALED", "SEAL_CHANGED", "CONTAINER_TYPE_CHANGE", "MOVED", "PRISONER_RECEIVED", "PRISONER_RELEASED", "DIED_IN_CUSTODY", "TRANSFERRED", "RETURNED", "DISPOSAL_REQUIRED", "DISPOSED", "COMBINED", "CREATED_IN_ERROR", "REMOVED", "REACTIVATED" ],
+            "enum" : [ "CREATED_SEALED", "SEAL_CHANGED", "CONTAINER_TYPE_CHANGE", "MOVED", "PRISONER_RECEIVED", "PRISONER_TRANSFERRED_OUT", "PRISONER_RELEASED", "DIED_IN_CUSTODY", "TRANSFERRED", "RETURNED", "DISPOSAL_REQUIRED", "DISPOSED", "COMBINED", "CREATED_IN_ERROR", "REMOVED", "REACTIVATED" ],
             "example" : "TRANSFERRED"
           },
           "eventStatus" : {
