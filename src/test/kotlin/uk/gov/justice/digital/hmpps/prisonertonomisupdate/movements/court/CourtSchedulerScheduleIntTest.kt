@@ -15,10 +15,8 @@ import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.eq
 import org.mockito.kotlin.any
 import org.mockito.kotlin.check
-import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.verify
-import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus.CONFLICT
 import org.springframework.http.HttpStatus.NOT_FOUND
@@ -266,7 +264,7 @@ class CourtSchedulerScheduleIntTest(
       }
 
       @Nested
-      inner class WhenUpdateComesFromSentencingAndWeIgnoreEventType {
+      inner class WhenUpdateComesFromSentencing {
 
         @BeforeEach
         fun setUp() {
@@ -278,60 +276,8 @@ class CourtSchedulerScheduleIntTest(
           publishCourtAppearanceDomainEvent(
             dpsId = dpsCourtAppearanceId,
             prisonerNumber = "A1234BC",
-            eventType = "person.court-appearance.scheduled",
-            externalReferenceExists = true,
-          )
-          waitForAnyProcessingToComplete("court-scheduler-schedule-ignored")
-        }
-
-        @Test
-        fun `will not check for existing mapping`() {
-          mappingApi.verify(
-            count = 0,
-            getRequestedFor(urlEqualTo("/mapping/court-scheduler/schedule/dps-id/$dpsCourtAppearanceId")),
-          )
-        }
-
-        @Test
-        fun `will not upsert NOMIS court schedule`() {
-          nomisApi.verify(
-            count = 0,
-            putRequestedFor(urlEqualTo("/movements/A1234BC/court/schedule/out")),
-          )
-        }
-
-        @Test
-        fun `will publish ignored telemetry`() {
-          verify(telemetryClient).trackEvent(
-            eq("court-scheduler-schedule-ignored"),
-            check {
-              assertThat(it).containsEntry("dpsCourtAppearanceId", "$dpsCourtAppearanceId")
-              assertThat(it).containsEntry("offenderNo", prisonerNumber)
-              assertThat(it).containsEntry("externalReferenceUrn", "some-ext-ref")
-            },
-            isNull(),
-          )
-        }
-      }
-
-      @Nested
-      inner class WhenUpdateComesFromSentencingAndWeIgnoreAllEventTypes {
-
-        @BeforeEach
-        fun setUp() {
-          // Note that the feature switch is on
-          doReturn(true).whenever(courtSchedulerFeature).ignoreAllSentencingEvents
-
-          mappingApi.stubGetCourtScheduleMapping(status = NOT_FOUND)
-          dpsApi.stubGetCourtAppearance(id = dpsCourtAppearanceId, startTime = startTime)
-          nomisApi.stubUpsertCourtScheduleOut(response = UpsertCourtScheduleOutResponse(12345L, nomisEventId))
-          mappingApi.stubCreateCourtScheduleMapping()
-
-          publishCourtAppearanceDomainEvent(
-            dpsId = dpsCourtAppearanceId,
-            prisonerNumber = "A1234BC",
-            // Note the event type is in the list to ignore
             eventType = "person.court-appearance.relocated",
+            // This tells us the appearance comes from sentencing
             externalReferenceExists = true,
           )
           waitForAnyProcessingToComplete("court-scheduler-schedule-ignored")
