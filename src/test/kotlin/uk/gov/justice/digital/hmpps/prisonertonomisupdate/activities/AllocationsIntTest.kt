@@ -238,7 +238,8 @@ fun buildApiAllocationDtoJsonResponse(id: Long = ALLOCATION_ID): String = """
     "activitySummary" : "summary",
     "status": "ACTIVE",
     "exclusions": [],
-    "isUnemployment": false
+    "isUnemployment": false,
+    "scheduleLastChanged": []
   }
 """.trimIndent()
 
@@ -256,7 +257,8 @@ fun buildApiAllocationDtoWithMissingPayBand(id: Long = ALLOCATION_ID): String = 
     "scheduleDescription" : "description",
     "activitySummary" : "summary",
     "status": "ACTIVE",
-    "exclusions": []
+    "exclusions": [],
+    "scheduleLastChanged": []
   }
 """.trimIndent()
 
@@ -290,7 +292,8 @@ fun buildApiAllocationDeallocatedJsonResponse(id: Long = ALLOCATION_ID, plannedD
     "scheduleDescription" : "description",
     "activitySummary" : "summary",
     "status": "ENDED",
-    "exclusions": []
+    "exclusions": [],
+    "scheduleLastChanged": []
   }
 """.trimIndent()
 
@@ -319,7 +322,8 @@ fun buildApiAllocationSuspendedJsonResponse(id: Long = ALLOCATION_ID): String = 
     "scheduleDescription" : "description",
     "activitySummary" : "summary",
     "status": "SUSPENDED",
-    "exclusions": []
+    "exclusions": [],
+    "scheduleLastChanged": []
   }
 """.trimIndent()
 
@@ -390,6 +394,7 @@ fun buildApiAllocationWithExclusionsJsonResponse(id: Long = ALLOCATION_ID): Stri
           "FRIDAY"
         ]
       }
-    ]
+    ],
+    "scheduleLastChanged": []
   }
 """.trimIndent()
