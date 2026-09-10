@@ -17,13 +17,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.createMapping
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.track
 import java.util.*
 
-// These events are ignored if there is a RaS external reference on the event (we expect this to be true for all events soon)
-val ignoreSentencingEvents = listOf(
-  "person.court-appearance.scheduled",
-  "person.court-appearance.recorded",
-  "person.court-appearance.cancelled",
-)
-
 @Service
 class CourtSchedulerAppearanceService(
   private val mappingApi: CourtSchedulerMappingApiService,
@@ -31,7 +24,6 @@ class CourtSchedulerAppearanceService(
   private val nomisApi: CourtSchedulerNomisApiService,
   private val retryQueueService: CourtSchedulerRetryQueueService,
   override val telemetryClient: TelemetryClient,
-  private val features: CourtSchedulerFeatureSwitches,
 ) : TelemetryEnabled {
   companion object {
     private val TELEMETRY_KEY = "court-scheduler-schedule"
@@ -52,7 +44,7 @@ class CourtSchedulerAppearanceService(
       "externalReferenceUrn" to externalReference.toString(),
     )
 
-    if (event.additionalInformation.source != "DPS" || shouldIgnoreSyncEvent(externalReference, event.eventType, features.ignoreAllSentencingEvents)) {
+    if (event.additionalInformation.source != "DPS" || externalReference != null) {
       telemetryClient.trackEvent("$TELEMETRY_KEY-ignored", telemetryMap)
       return
     }
@@ -105,7 +97,7 @@ class CourtSchedulerAppearanceService(
       "externalReferenceUrn" to externalReference.toString(),
     )
 
-    if (event.additionalInformation.source != "DPS" || shouldIgnoreSyncEvent(externalReference, event.eventType, features.ignoreAllSentencingEvents)) {
+    if (event.additionalInformation.source != "DPS" || externalReference != null) {
       telemetryClient.trackEvent("$TELEMETRY_KEY_DELETE-ignored", telemetryMap)
       return
     }
@@ -175,19 +167,3 @@ fun String.toNomisSchedulesStatus() = when {
 }
 
 class CourtSchedulerSyncException(message: String) : RuntimeException(message)
-
-// Eventually we will ignore all remand and sentencing events - which are any with an external reference
-// To assist integration between court scheduler and remand and sentencing, it's currently a bit more complicated and we always ignore some events but others are behind a feature switch
-internal fun shouldIgnoreSyncEvent(externalReferenceUrn: String?, eventType: String, ignoreAllEvents: Boolean): Boolean {
-  // No external reference means this is owned by the court scheduler, so we never ignore
-  if (externalReferenceUrn == null) return false
-
-  // The event type is one that we always ignore
-  if (ignoreSentencingEvents.contains(eventType)) return true
-
-  // The ignoreAllSentencingEvents feature is enabled, so we ignore all events
-  if (ignoreAllEvents) return true
-
-  // We cannot find a reason to ignore the event, so don't ignore it
-  return false
-}
