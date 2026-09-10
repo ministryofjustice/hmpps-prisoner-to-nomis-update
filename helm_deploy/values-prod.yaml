@@ -188,10 +188,9 @@ generic-service:
     - name: prisoner-balance-active-recon
       type: PRISONER_BALANCE_ACTIVE_RECON
       schedule: "30 3 * * SUN,MON,TUE,WED,THU,FRI"
-      suspend: true
     - name: prisoner-balance-all-recon
       type: PRISONER_BALANCE_ALL_RECON
-      schedule: "30 3 * * *"
+      schedule: "30 3 * * SAT"
     - name: prisner-contact-recon
       type: PRISONER_CONTACT_RECON
       schedule: "50 3 * * *"
