@@ -208,4 +208,5 @@ private fun newAllocation(): Allocation = Allocation(
   isUnemployment = false,
   status = ACTIVE,
   exclusions = emptyList(),
+  scheduleLastChanged = listOf(),
 )

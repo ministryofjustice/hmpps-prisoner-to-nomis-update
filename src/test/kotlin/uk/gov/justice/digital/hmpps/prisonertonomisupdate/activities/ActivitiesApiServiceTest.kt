@@ -113,7 +113,8 @@ internal class ActivitiesApiServiceTest {
               "description": "Released from prison"
             },
             "status": "ACTIVE",
-            "exclusions": []
+            "exclusions": [],
+            "scheduleLastChanged": []
           }
         ],
         "description": "Monday AM Houseblock 3",
@@ -359,7 +360,8 @@ internal class ActivitiesApiServiceTest {
                 "description": "Released from prison"
               },
               "status": "ACTIVE",
-              "exclusions": []
+              "exclusions": [],
+              "scheduleLastChanged": []
             }
           ],
           "description": "Monday AM Houseblock 3",
@@ -570,7 +572,8 @@ internal class ActivitiesApiServiceTest {
             "suspendedBy": "Mrs Blogs",
             "suspendedReason": "TRANSFERRED",
             "status": "ACTIVE",
-            "exclusions": []
+            "exclusions": [],
+            "scheduleLastChanged": []
           }
         """.trimIndent(),
       )
