@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-08-04.1726.bd17a6b"
+    "version" : "2026-09-09.1850.41698cc"
   },
   "servers" : [ {
     "url" : "https://activities-api-dev.prison.service.justice.gov.uk",
@@ -7374,7 +7374,7 @@
             "type" : "array",
             "items" : {
               "type" : "string",
-              "enum" : [ "SAA_EDUCATION", "SAA_INDUSTRIES", "SAA_PRISON_JOBS", "SAA_GYM_SPORTS_FITNESS", "SAA_INDUCTION", "SAA_INTERVENTIONS", "SAA_FAITH_SPIRITUALITY", "SAA_NOT_IN_WORK", "SAA_OTHER" ]
+              "enum" : [ "SAA_EDUCATION", "SAA_INDUSTRIES", "SAA_PRISON_JOBS", "SAA_GYM_SPORTS_FITNESS", "SAA_INDUCTION", "SAA_INTERVENTIONS", "SAA_FAITH_SPIRITUALITY", "SAA_NOT_IN_WORK", "SAA_OTHER", "SAA_ROTL" ]
             }
           }
         } ],
@@ -8282,6 +8282,16 @@
         "summary" : "Get the list of top-level activity categories",
         "description" : "\n\nRequires one of the following roles:\n* PRISON\n* ACTIVITY_ADMIN\n* NOMIS_ACTIVITIES",
         "operationId" : "getCategories",
+        "parameters" : [ {
+          "name" : "includeRotl",
+          "in" : "query",
+          "description" : "Include the SAA_ROTL (outside activity) category in the response",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          },
+          "example" : false
+        } ],
         "responses" : {
           "200" : {
             "description" : "Activity categories found",
@@ -9634,12 +9644,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "paged" : {
+            "type" : "boolean"
+          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "paged" : {
-            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -11277,6 +11287,13 @@
               "$ref" : "#/components/schemas/Slot"
             }
           },
+          "scheduleLastChanged" : {
+            "type" : "array",
+            "description" : "Details of the most recent activity schedule amendment that actually affected this allocation. For a schedule spanning multiple weeks, contains one entry per week that has an amendment - e.g. up to 2 entries for a bi-weekly schedule.",
+            "items" : {
+              "$ref" : "#/components/schemas/ScheduleLastChanged"
+            }
+          },
           "prisonerName" : {
             "type" : [ "string", "null" ],
             "deprecated" : true,
@@ -11319,7 +11336,7 @@
             "description" : "Does the prisoner have non-associations?. Included only if includePrisonerSummary = true. Null implies that non-associations could not be retrieved"
           }
         },
-        "required" : [ "activityId", "activitySummary", "bookingId", "exclusions", "id", "isUnemployment", "prisonerNumber", "scheduleDescription", "scheduleId", "startDate", "status" ]
+        "required" : [ "activityId", "activitySummary", "bookingId", "exclusions", "id", "isUnemployment", "prisonerNumber", "scheduleDescription", "scheduleId", "scheduleLastChanged", "startDate", "status" ]
       },
       "DeallocationReason" : {
         "type" : "object",
@@ -11495,6 +11512,68 @@
           }
         },
         "required" : [ "allocations", "prisonerNumber" ]
+      },
+      "ScheduleLastChanged" : {
+        "type" : "object",
+        "description" : "Details of the most recent activity schedule change that affected this allocation for a specific week of the schedule",
+        "properties" : {
+          "weekNumber" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The week of the activity schedule this change relates to",
+            "example" : 1
+          },
+          "changedAt" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "When the activity schedule amendment affecting this allocation was made"
+          },
+          "changedBy" : {
+            "type" : "string",
+            "description" : "Who made the activity schedule amendment",
+            "example" : "Mrs Blogs"
+          },
+          "addedSessions" : {
+            "type" : "array",
+            "description" : "The sessions added to the schedule as part of this amendment that the prisoner is now attending",
+            "items" : {
+              "$ref" : "#/components/schemas/ScheduleSession"
+            }
+          },
+          "removedSessions" : {
+            "type" : "array",
+            "description" : "The sessions removed from the schedule as part of this amendment that the prisoner was attending",
+            "items" : {
+              "$ref" : "#/components/schemas/ScheduleSession"
+            }
+          }
+        },
+        "required" : [ "addedSessions", "changedAt", "changedBy", "removedSessions", "weekNumber" ]
+      },
+      "ScheduleSession" : {
+        "type" : "object",
+        "description" : "A single day/time-slot session that was added or removed by an activity schedule amendment",
+        "properties" : {
+          "weekNumber" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The week of the activity schedule this session relates to",
+            "example" : 1
+          },
+          "timeSlot" : {
+            "type" : "string",
+            "description" : "The time slot of the session",
+            "enum" : [ "AM", "PM", "ED" ],
+            "example" : "AM"
+          },
+          "dayOfWeek" : {
+            "type" : "string",
+            "description" : "The day of the week the session runs on",
+            "enum" : [ "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY" ],
+            "example" : "Monday"
+          }
+        },
+        "required" : [ "dayOfWeek", "timeSlot", "weekNumber" ]
       },
       "PrisonPayBandCreateRequest" : {
         "type" : "object",
