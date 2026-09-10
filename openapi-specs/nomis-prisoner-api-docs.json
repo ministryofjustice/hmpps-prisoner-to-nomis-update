@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-09-08.2024.7adb84a"
+    "version" : "2026-09-09.2027.933ef34"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -35740,6 +35740,27 @@
         },
         "required" : [ "accountCode", "amount", "caseloadId", "createdAt", "createdBy", "createdByDisplayName", "description", "generalLedgerEntrySequence", "postingType", "transactionEntrySequence", "transactionId", "transactionTimestamp", "type" ]
       },
+      "HoldDto" : {
+        "type" : "object",
+        "description" : "The data held in NOMIS about a hold transaction",
+        "properties" : {
+          "holdNumber" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The hold number"
+          },
+          "holdCleared" : {
+            "type" : "boolean",
+            "description" : "If the hold has been cleared - ie has an associated HOR/WFR transaction"
+          },
+          "holdUntilDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "The date until the hold is valid"
+          }
+        },
+        "required" : [ "holdCleared", "holdNumber" ]
+      },
       "OffenderTransactionDto" : {
         "type" : "object",
         "description" : "The data held in NOMIS about a financial transaction",
@@ -35818,6 +35839,14 @@
             "type" : "string",
             "description" : "The account type",
             "enum" : [ "REG", "SAV", "SPND", "REL" ]
+          },
+          "holdDetails" : {
+            "description" : "Hold information if this is a hold transaction",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/HoldDto"
+            }, {
+              "type" : "null"
+            } ]
           },
           "generalLedgerTransactions" : {
             "type" : "array",
@@ -42211,6 +42240,10 @@
           "txnEntryAmount" : {
             "type" : "number"
           },
+          "txnEntrySeq" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
           "txnId" : {
             "type" : "integer",
             "format" : "int64"
@@ -42224,10 +42257,6 @@
           },
           "txnReferenceNumber" : {
             "type" : [ "string", "null" ]
-          },
-          "txnEntrySeq" : {
-            "type" : "integer",
-            "format" : "int32"
           }
         },
         "required" : [ "txnEntryAmount", "txnEntryDate", "txnEntrySeq", "txnId" ]
