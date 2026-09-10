@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Pr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateLocationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UsageRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -123,6 +124,9 @@ internal class LocationsServiceTest {
         assertThat(it.listSequence).isEqualTo(4)
         assertThat(it.comment).isEqualTo("comments")
         assertThat(it.active).isFalse()
+        assertThat(it.deactivateDate).isEqualTo("2024-05-25")
+        assertThat(it.reactivateDate).isEqualTo("2024-05-26")
+        assertThat(it.reasonCode).isEqualTo(UpdateLocationRequest.ReasonCode.D)
         assertThat(it.profiles).extracting("profileType", "profileCode").containsExactly(
           Tuple.tuple(ProfileRequest.ProfileType.HOU_UNIT_ATT, "GC"),
           Tuple.tuple(ProfileRequest.ProfileType.HOU_USED_FOR, "7"),
@@ -212,6 +216,9 @@ internal class LocationsServiceTest {
       certifiedNormalAccommodation = 13,
     ),
     certifiedCell = true,
+    deactivatedDate = LocalDate.parse("2024-05-25"),
+    proposedReactivationDate = LocalDate.parse("2024-05-26"),
+    deactivatedReason = LegacyLocation.DeactivatedReason.REFURBISHMENT,
     attributes = listOf(
       LegacyLocation.Attributes.GATED_CELL,
       LegacyLocation.Attributes.VULNERABLE_PRISONER_UNIT,
