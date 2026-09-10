@@ -187,10 +187,10 @@ generic-service:
       schedule: "50 1 * * 6"
     - name: prisoner-balance-active-recon
       type: PRISONER_BALANCE_ACTIVE_RECON
-      schedule: "30 3 * * SUN,MON,TUE,WED,THU,FRI"
+      schedule: "30 3 * * TUE,WED,THU,FRI"
     - name: prisoner-balance-all-recon
       type: PRISONER_BALANCE_ALL_RECON
-      schedule: "30 3 * * SAT"
+      schedule: "30 3 * * MON"
     - name: prisner-contact-recon
       type: PRISONER_CONTACT_RECON
       schedule: "50 3 * * *"
