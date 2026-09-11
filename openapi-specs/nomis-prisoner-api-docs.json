@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-09-11.2034.544981a"
+    "version" : "2026-09-11.2041.2a28465"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -5294,15 +5294,6 @@
             "example" : "A1234AK"
           },
           "example" : "A1234AK"
-        }, {
-          "name" : "recreate",
-          "in" : "query",
-          "description" : "Recreate the court schedule out with the same event ID. This either creates a new court schedule out or overwrites the existing one if it exists.",
-          "required" : false,
-          "schema" : {
-            "type" : "boolean",
-            "description" : "Recreate the court schedule out with the same event ID. This either creates a new court schedule out or overwrites the existing one if it exists."
-          }
         } ],
         "requestBody" : {
           "content" : {
@@ -23547,6 +23538,241 @@
           },
           "404" : {
             "description" : "Prison does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/drug-testing/{rtpId}" : {
+      "get" : {
+        "tags" : [ "drug-testing-resource" ],
+        "summary" : "Get a random testing program with its offender selections",
+        "operationId" : "getRandomTestingProgramWithOffenders",
+        "parameters" : [ {
+          "name" : "rtpId",
+          "in" : "path",
+          "description" : "Random testing program id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Random testing program id",
+            "example" : 12345
+          },
+          "example" : 12345
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Random testing program returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RandomTestingProgramResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Random testing program not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/drug-testing/ids-in-range" : {
+      "get" : {
+        "tags" : [ "drug-testing-resource" ],
+        "summary" : "Get every random testing program id in range",
+        "description" : "Returns a list of random testing program ids greater than the specified fromId and less than or equal to the\n      specified toId. Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
+        "operationId" : "getDrugTestingIdsInRange",
+        "parameters" : [ {
+          "name" : "fromId",
+          "in" : "query",
+          "description" : "Return ids greater than this value.",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Return ids greater than this value."
+          }
+        }, {
+          "name" : "toId",
+          "in" : "query",
+          "description" : "Return ids less than or equal to this value.",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Return ids less than or equal to this value."
+          }
+        }, {
+          "name" : "includedPrisonIds",
+          "in" : "query",
+          "description" : "Filter results by included prison ids",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            },
+            "uniqueItems" : true
+          },
+          "example" : "['MDI','LEI']"
+        }, {
+          "name" : "excludedPrisonIds",
+          "in" : "query",
+          "description" : "Filter results by excluded prison ids",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            },
+            "uniqueItems" : true
+          },
+          "example" : "['MDI','LEI']"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "List of random testing program ids",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "integer",
+                    "format" : "int64"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint when role not present",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/drug-testing/id-ranges" : {
+      "get" : {
+        "tags" : [ "drug-testing-resource" ],
+        "summary" : "Get random testing program ids by page size",
+        "description" : "Retrieves a list of random testing program ids, spaced by the page size. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
+        "operationId" : "getDrugTestingIdRanges",
+        "parameters" : [ {
+          "name" : "pageSize",
+          "in" : "query",
+          "description" : "Range size of ids to get",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 1000,
+            "minimum" : 1
+          }
+        }, {
+          "name" : "includedPrisonIds",
+          "in" : "query",
+          "description" : "Filter results by included prison ids",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            },
+            "uniqueItems" : true
+          },
+          "example" : "['MDI','LEI']"
+        }, {
+          "name" : "excludedPrisonIds",
+          "in" : "query",
+          "description" : "Filter results by excluded prison ids",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            },
+            "uniqueItems" : true
+          },
+          "example" : "['MDI','LEI']"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "List of ids are returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "integer",
+                    "format" : "int64"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint when role not present",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -42254,14 +42480,6 @@
             "type" : [ "integer", "null" ],
             "format" : "int64"
           },
-          "txnId" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "txnEntryDate" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
           "txnEntryDesc" : {
             "type" : [ "string", "null" ]
           },
@@ -42270,6 +42488,14 @@
           },
           "txnEntryAmount" : {
             "type" : "number"
+          },
+          "txnId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "txnEntryDate" : {
+            "type" : "string",
+            "format" : "date-time"
           },
           "txnEntrySeq" : {
             "type" : "integer",
@@ -42317,6 +42543,93 @@
           }
         },
         "required" : [ "accountBalances", "prisonId" ]
+      },
+      "OffenderTestSelectionResponse" : {
+        "type" : "object",
+        "properties" : {
+          "offenderBookId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Offender booking id"
+          },
+          "testSelectionType" : {
+            "type" : "string",
+            "description" : "Test selection type"
+          },
+          "testSelectionNo" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Test selection number"
+          },
+          "testedFlag" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Tested flag"
+          },
+          "reasonNotTested" : {
+            "type" : [ "string", "null" ],
+            "description" : "Reason not tested"
+          },
+          "notes" : {
+            "type" : [ "string", "null" ],
+            "description" : "Notes"
+          }
+        },
+        "required" : [ "offenderBookId", "testSelectionNo", "testSelectionType" ]
+      },
+      "RandomTestingProgramResponse" : {
+        "type" : "object",
+        "properties" : {
+          "rtpId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Random testing program id",
+            "example" : 12345
+          },
+          "caseloadId" : {
+            "type" : "string",
+            "description" : "Caseload id",
+            "example" : "MDI"
+          },
+          "rtpDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Random testing program date",
+            "example" : "2024-01-01"
+          },
+          "mainPercentage" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Main percentage"
+          },
+          "reservePercentage" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Reserve percentage"
+          },
+          "selectionsCount" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int32",
+            "description" : "Selections count"
+          },
+          "eligibleCount" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int32",
+            "description" : "Eligible count"
+          },
+          "reserveCount" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int32",
+            "description" : "Reserve count"
+          },
+          "offenderTestSelection" : {
+            "type" : "array",
+            "description" : "List of offender selections for the random testing program",
+            "items" : {
+              "$ref" : "#/components/schemas/OffenderTestSelectionResponse"
+            }
+          }
+        },
+        "required" : [ "caseloadId", "mainPercentage", "offenderTestSelection", "reservePercentage", "rtpDate", "rtpId" ]
       },
       "CSIPIdResponse" : {
         "type" : "object",
