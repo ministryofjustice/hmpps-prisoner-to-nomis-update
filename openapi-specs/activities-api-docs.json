@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-09-11-temporary-fix"
+    "version" : "2026-09-11.1856.c01a5cf"
   },
   "servers" : [ {
     "url" : "https://activities-api-dev.prison.service.justice.gov.uk",
@@ -11288,7 +11288,7 @@
             }
           },
           "scheduleLastChanged" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "Details of the most recent activity schedule amendment that actually affected this allocation. For a schedule spanning multiple weeks, contains one entry per week that has an amendment - e.g. up to 2 entries for a bi-weekly schedule.",
             "items" : {
               "$ref" : "#/components/schemas/ScheduleLastChanged"
