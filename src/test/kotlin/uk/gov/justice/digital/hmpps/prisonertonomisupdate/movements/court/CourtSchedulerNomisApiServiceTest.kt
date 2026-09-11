@@ -113,21 +113,10 @@ class CourtSchedulerNomisApiServiceTest {
       apiService.upsertCourtScheduleOut("A1234BC", upsertCourtScheduleOut())
 
       courtSchedulerNomisApiMockServer.verify(
-        putRequestedFor(urlEqualTo("/movements/A1234BC/court/schedule/out?recreate=false"))
+        putRequestedFor(urlEqualTo("/movements/A1234BC/court/schedule/out"))
           .withRequestBody(
             matchingJsonPath("court", equalTo("LEEDMC")),
           ),
-      )
-    }
-
-    @Test
-    fun `will allow recreate=true`() = runTest {
-      courtSchedulerNomisApiMockServer.stubUpsertCourtScheduleOut("A1234BC")
-
-      apiService.upsertCourtScheduleOut("A1234BC", upsertCourtScheduleOut(), recreate = true)
-
-      courtSchedulerNomisApiMockServer.verify(
-        putRequestedFor(urlEqualTo("/movements/A1234BC/court/schedule/out?recreate=true")),
       )
     }
 

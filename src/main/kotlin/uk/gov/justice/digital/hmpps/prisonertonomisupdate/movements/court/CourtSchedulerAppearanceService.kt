@@ -4,7 +4,6 @@ import com.microsoft.applicationinsights.TelemetryClient
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.BadRequestException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtscheduler.model.CourtEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.CourtSchedulerRetryService.Companion.MappingTypes.SCHEDULE
@@ -56,19 +55,15 @@ class CourtSchedulerAppearanceService(
     prisonerNumber: String,
     dpsCourtAppearanceId: UUID,
     telemetryMap: MutableMap<String, String> = mutableMapOf(),
-    recreate: Boolean = false,
   ) {
     var telemetryKey = TELEMETRY_KEY_CREATE
-    telemetryMap["recreate"] = "$recreate"
     runCatching {
       val existingMapping = mappingApi.getCourtScheduleMapping(dpsCourtAppearanceId)
       if (existingMapping != null) {
         telemetryKey = TELEMETRY_KEY_UPDATE
-      } else {
-        if (recreate) throw BadRequestException("Cannot find court schedule mapping for $dpsCourtAppearanceId but recreate is true so we need an existing nomis eventId")
       }
       val dps = dpsApi.getCourtAppearance(dpsCourtAppearanceId)
-      val nomis = nomisApi.upsertCourtScheduleOut(prisonerNumber, dps.toNomisUpsertRequest(existingMapping?.nomisEventId), recreate)
+      val nomis = nomisApi.upsertCourtScheduleOut(prisonerNumber, dps.toNomisUpsertRequest(existingMapping?.nomisEventId))
         .also {
           telemetryMap["bookingId"] = it.bookingId.toString()
           telemetryMap["nomisEventId"] = it.eventId.toString()
