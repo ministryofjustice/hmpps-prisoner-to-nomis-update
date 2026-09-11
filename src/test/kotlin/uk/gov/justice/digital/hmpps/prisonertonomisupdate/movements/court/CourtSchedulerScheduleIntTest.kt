@@ -80,7 +80,7 @@ class CourtSchedulerScheduleIntTest(
         @Test
         fun `will upsert NOMIS court schedule`() {
           NomisApiMockServer.getRequestBody<UpsertCourtScheduleOut>(
-            putRequestedFor(urlEqualTo("/movements/A1234BC/court/schedule/out?recreate=false")),
+            putRequestedFor(urlEqualTo("/movements/A1234BC/court/schedule/out")),
           ).also { request ->
             assertThat(request.eventId).isNull()
             assertThat(request.court).isEqualTo("LEEDMC")
@@ -134,7 +134,7 @@ class CourtSchedulerScheduleIntTest(
         @Test
         fun `will upsert NOMIS court schedule with event ID`() {
           NomisApiMockServer.getRequestBody<UpsertCourtScheduleOut>(
-            putRequestedFor(urlEqualTo("/movements/A1234BC/court/schedule/out?recreate=false")),
+            putRequestedFor(urlEqualTo("/movements/A1234BC/court/schedule/out")),
           ).also { request ->
             assertThat(request.eventId).isEqualTo(nomisEventId)
           }
@@ -191,7 +191,7 @@ class CourtSchedulerScheduleIntTest(
         @Test
         fun `will upsert NOMIS court schedule once`() {
           nomisApi.verify(
-            putRequestedFor(urlEqualTo("/movements/A1234BC/court/schedule/out?recreate=false")),
+            putRequestedFor(urlEqualTo("/movements/A1234BC/court/schedule/out")),
           )
         }
 
@@ -249,7 +249,7 @@ class CourtSchedulerScheduleIntTest(
         @Test
         fun `will upsert NOMIS court schedule once`() {
           nomisApi.verify(
-            putRequestedFor(urlEqualTo("/movements/A1234BC/court/schedule/out?recreate=false")),
+            putRequestedFor(urlEqualTo("/movements/A1234BC/court/schedule/out")),
           )
         }
 
