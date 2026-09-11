@@ -202,8 +202,7 @@ generic-service:
       suspend: true
     - name: property-recon
       type: PROPERTY_RECON
-      schedule: "00 5 * * *"
-      suspend: true
+      schedule: "00 6 * * SUN"
     - name: sentencing-recon
       type: SENTENCING_RECON
       schedule: "50 1 * * *"
