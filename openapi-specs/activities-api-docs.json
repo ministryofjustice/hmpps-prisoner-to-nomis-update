@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-09-09.1850.41698cc"
+    "version" : "2026-09-11-temporary-fix"
   },
   "servers" : [ {
     "url" : "https://activities-api-dev.prison.service.justice.gov.uk",
@@ -9659,13 +9659,13 @@
       "PagedWaitingListApplication" : {
         "type" : "object",
         "properties" : {
-          "totalPages" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
           "totalElements" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "totalPages" : {
+            "type" : "integer",
+            "format" : "int32"
           },
           "size" : {
             "type" : "integer",
@@ -11336,7 +11336,7 @@
             "description" : "Does the prisoner have non-associations?. Included only if includePrisonerSummary = true. Null implies that non-associations could not be retrieved"
           }
         },
-        "required" : [ "activityId", "activitySummary", "bookingId", "exclusions", "id", "isUnemployment", "prisonerNumber", "scheduleDescription", "scheduleId", "scheduleLastChanged", "startDate", "status" ]
+        "required" : [ "activityId", "activitySummary", "bookingId", "exclusions", "id", "isUnemployment", "prisonerNumber", "scheduleDescription", "scheduleId", "startDate", "status" ]
       },
       "DeallocationReason" : {
         "type" : "object",
