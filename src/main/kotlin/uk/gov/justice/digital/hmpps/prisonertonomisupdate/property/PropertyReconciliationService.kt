@@ -77,16 +77,20 @@ class PropertyReconciliationService(
     var i = 0
     var dpsOnlyCount = 0
     do {
-      val page = dpsApiService.getPageOfDpsIds(i++, dpsPageSize).content
-        ?.onEach { dpsId ->
+      val page = dpsApiService.getPageOfDpsIds(i++, dpsPageSize)
+      if (i == 0 && page.totalElements?.toInt() == dpsIdsInNomisMappings.size) {
+        return 0
+      }
+      val content = page.content!!
+        .onEach { dpsId ->
           if (!dpsIdsInNomisMappings.contains(dpsId)) {
             log.info("DPS only property container found for dpsId=$dpsId")
             telemetryClient.trackEvent("$TELEMETRY_PREFIX-dps-only", mapOf("dpsId" to dpsId.toString()))
             dpsOnlyCount++
           }
         }
-        ?.also { log.info("DPS page requested page: ${i - 1}, size: ${it.size}") }
-    } while (page?.size == dpsPageSize)
+        .also { log.info("DPS page requested page: ${i - 1}, size: ${it.size}") }
+    } while (content.size == dpsPageSize)
     return dpsOnlyCount
   }
 
