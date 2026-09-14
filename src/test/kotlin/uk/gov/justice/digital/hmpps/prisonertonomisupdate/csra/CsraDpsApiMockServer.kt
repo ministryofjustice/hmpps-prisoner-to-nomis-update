@@ -102,6 +102,7 @@ fun dpsCsra(
 ) = CsraReviewDetail(
   id = id,
   prisonerNumber = prisonerNumber,
+  assessmentType = CsraReviewDetail.AssessmentType.REVIEW,
   assessmentDate = LocalDate.parse("2026-01-02"),
   type = CsraReviewDetail.Type.RATING,
   createdAt = LocalDateTime.parse("2026-01-02T10:00:00"),

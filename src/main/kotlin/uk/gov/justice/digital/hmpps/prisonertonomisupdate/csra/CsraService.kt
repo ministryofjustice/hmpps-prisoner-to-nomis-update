@@ -147,8 +147,8 @@ private fun CsraReviewDetail.Type.toNomisAssessmentType(): AssessmentType = when
   CsraReviewDetail.Type.LOCATE -> AssessmentType.CSRDO
   CsraReviewDetail.Type.RATING -> AssessmentType.CSR
   CsraReviewDetail.Type.RECEPTION -> AssessmentType.CSR1
-  CsraReviewDetail.Type.REVIEW -> AssessmentType.CSRREV
-  CsraReviewDetail.Type.CSRA_INITIAL_REVIEW -> AssessmentType.CSR
+  CsraReviewDetail.Type.NOMIS_REVIEW -> AssessmentType.CSRREV
+  CsraReviewDetail.Type.CSRA_INITIAL_ASSESSMENT -> AssessmentType.CSR
   CsraReviewDetail.Type.CSRA_REVIEW -> AssessmentType.CSRREV
 }
 
