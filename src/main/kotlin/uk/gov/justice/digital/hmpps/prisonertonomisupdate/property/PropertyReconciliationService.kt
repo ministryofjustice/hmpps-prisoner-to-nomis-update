@@ -249,13 +249,14 @@ private fun compareObjects(dpsObj: PropertyContainerFields?, nomisObj: PropertyC
   if (nomisObj.sealMark != null && dpsObj.sealMark != nomisObj.sealMark) {
     differences.add(Difference("sealMark", dpsObj.sealMark, nomisObj.sealMark))
   }
-  if (dpsObj.containerCode != nomisObj.containerCode) {
-    differences.add(Difference("containerCode", dpsObj.containerCode, nomisObj.containerCode))
+  // DEStroyed not supported in DPS which stores it as STANDARD, translated here to BULK, so ignore this difference
+  if (!(dpsObj.containerCode == "BULK" && nomisObj.containerCode == "DES") && dpsObj.containerCode != nomisObj.containerCode) {
+    differences.add(Difference("containerCode", dpsObj.containerCode, nomisObj.containerCode)) // containerCode: dps=BULK, nomis=DES
   }
   if (dpsObj.proposedDisposalDate != nomisObj.proposedDisposalDate) {
     differences.add(Difference("proposedDisposalDate", dpsObj.proposedDisposalDate, nomisObj.proposedDisposalDate))
   }
-  if (nomisObj.expiryDate != null && dpsObj.expiryDate != nomisObj.expiryDate) {
+  if (nomisObj.expiryDate != null && !nomisObj.active && dpsObj.expiryDate != nomisObj.expiryDate) {
     differences.add(Difference("expiryDate", dpsObj.expiryDate, nomisObj.expiryDate))
   }
   return differences
