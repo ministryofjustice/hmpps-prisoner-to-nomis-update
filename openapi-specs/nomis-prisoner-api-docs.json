@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-09-11.2041.2a28465"
+    "version" : "2026-09-11.2048.4a64af5"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -42480,14 +42480,9 @@
             "type" : [ "integer", "null" ],
             "format" : "int64"
           },
-          "txnEntryDesc" : {
-            "type" : [ "string", "null" ]
-          },
-          "txnReferenceNumber" : {
-            "type" : [ "string", "null" ]
-          },
-          "txnEntryAmount" : {
-            "type" : "number"
+          "txnEntrySeq" : {
+            "type" : "integer",
+            "format" : "int32"
           },
           "txnId" : {
             "type" : "integer",
@@ -42497,9 +42492,14 @@
             "type" : "string",
             "format" : "date-time"
           },
-          "txnEntrySeq" : {
-            "type" : "integer",
-            "format" : "int32"
+          "txnEntryDesc" : {
+            "type" : [ "string", "null" ]
+          },
+          "txnReferenceNumber" : {
+            "type" : [ "string", "null" ]
+          },
+          "txnEntryAmount" : {
+            "type" : "number"
           }
         },
         "required" : [ "txnEntryAmount", "txnEntryDate", "txnEntrySeq", "txnId" ]
@@ -42552,6 +42552,10 @@
             "format" : "int64",
             "description" : "Offender booking id"
           },
+          "prisonNumber" : {
+            "type" : "string",
+            "description" : "Prisoner number"
+          },
           "testSelectionType" : {
             "type" : "string",
             "description" : "Test selection type"
@@ -42574,7 +42578,7 @@
             "description" : "Notes"
           }
         },
-        "required" : [ "offenderBookId", "testSelectionNo", "testSelectionType" ]
+        "required" : [ "offenderBookId", "prisonNumber", "testSelectionNo", "testSelectionType" ]
       },
       "RandomTestingProgramResponse" : {
         "type" : "object",
