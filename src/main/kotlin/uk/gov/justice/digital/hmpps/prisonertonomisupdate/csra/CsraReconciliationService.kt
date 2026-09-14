@@ -67,7 +67,7 @@ class CsraReconciliationService(
     threadCount = threadCount,
     checkMatch = ::checkCsra,
     idRanges = { nomisApiService.getAllPrisonersIdRanges(pageSize.toLong(), activeOnly) },
-    idsInRange = { range -> this.getOffenderNosInRange(range.fromRootOffenderId, range.toRootOffenderId, activeOnly) },
+    idsInRange = { range -> this.getOffenderNosInRange(range.fromId, range.toId, activeOnly) },
   )
 
   internal suspend fun checkCsra(offenderNo: String): MismatchCsra? = runCatching {

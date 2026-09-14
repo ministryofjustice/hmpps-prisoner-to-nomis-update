@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-09-11.2048.4a64af5"
+    "version" : "2026-09-14.2052.2ddf60b"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -15796,7 +15796,7 @@
       "get" : {
         "tags" : [ "staff-resource" ],
         "summary" : "Gets every staff id between range.",
-        "description" : "Returns a list of staff ids for staff ids greater than the specified\n      fromStaffId and less than or equal to the specified toStaffId.\n      Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
+        "description" : "Returns a list of staff ids for staff ids greater than the specified\n      fromId and less than or equal to the specified toId.\n      Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
         "operationId" : "getAllStaffInRange",
         "parameters" : [ {
           "name" : "active",
@@ -15807,7 +15807,7 @@
             "type" : "boolean"
           }
         }, {
-          "name" : "fromStaffId",
+          "name" : "fromId",
           "in" : "query",
           "description" : "Return staff with staff id greater than this value.",
           "required" : true,
@@ -15816,7 +15816,7 @@
             "format" : "int64"
           }
         }, {
-          "name" : "toStaffId",
+          "name" : "toId",
           "in" : "query",
           "description" : "Return staff with staff id less than or equal to this value.",
           "required" : true,
@@ -16043,7 +16043,7 @@
                 "schema" : {
                   "type" : "array",
                   "items" : {
-                    "$ref" : "#/components/schemas/StaffIdRange"
+                    "$ref" : "#/components/schemas/IdRange"
                   }
                 }
               }
@@ -16277,7 +16277,7 @@
       "get" : {
         "tags" : [ "prisoner-search-resource" ],
         "summary" : "Gets every prison number between range for prisoner search.",
-        "description" : "Returns a list of prison numbers for root offender ids greater than the specified\n      fromRootOffenderId and less than or equal to the specified toRootOffenderId.\n      Requires role NOMIS_PRISONER_API__PRISONER_SEARCH_R.",
+        "description" : "Returns a list of prison numbers for root offender ids greater than the specified\n      fromId and less than or equal to the specified toId.\n      Requires role NOMIS_PRISONER_API__PRISONER_SEARCH_R.",
         "operationId" : "getAllPrisonersInRangeForSearch",
         "parameters" : [ {
           "name" : "active",
@@ -16288,7 +16288,7 @@
             "type" : "boolean"
           }
         }, {
-          "name" : "fromRootOffenderId",
+          "name" : "fromId",
           "in" : "query",
           "description" : "Return prisoners with root offender id greater than this value.",
           "required" : true,
@@ -16297,7 +16297,7 @@
             "format" : "int64"
           }
         }, {
-          "name" : "toRootOffenderId",
+          "name" : "toId",
           "in" : "query",
           "description" : "Return prisoners with root offender id less than or equal to this value.",
           "required" : true,
@@ -16376,7 +16376,7 @@
                 "schema" : {
                   "type" : "array",
                   "items" : {
-                    "$ref" : "#/components/schemas/RootOffenderIdRange"
+                    "$ref" : "#/components/schemas/IdRange"
                   }
                 }
               }
@@ -18984,10 +18984,10 @@
       "get" : {
         "tags" : [ "prisoners-resource" ],
         "summary" : "Gets every prison number and root offender id between range for prisoner search.",
-        "description" : "Returns a list of ids for root offender ids greater than the specified\n      fromRootOffenderId and less than or equal to the specified toRootOffenderId.\n      Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
+        "description" : "Returns a list of ids for root offender ids greater than the specified\n      fromId and less than or equal to the specified toId.\n      Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
         "operationId" : "getAllPrisonersInRange",
         "parameters" : [ {
-          "name" : "fromRootOffenderId",
+          "name" : "fromId",
           "in" : "query",
           "description" : "Return prisoners with root offender id greater than this value.",
           "required" : true,
@@ -18996,7 +18996,7 @@
             "format" : "int64"
           }
         }, {
-          "name" : "toRootOffenderId",
+          "name" : "toId",
           "in" : "query",
           "description" : "Return prisoners with root offender id less than or equal to this value.",
           "required" : true,
@@ -19085,7 +19085,7 @@
                 "schema" : {
                   "type" : "array",
                   "items" : {
-                    "$ref" : "#/components/schemas/RootOffenderIdRange"
+                    "$ref" : "#/components/schemas/IdRange"
                   }
                 }
               }
@@ -23180,10 +23180,10 @@
       "get" : {
         "tags" : [ "prisoner-balance-resource" ],
         "summary" : "Gets every prisoner root offender id with a trust account balance in range.",
-        "description" : "Returns a list of root offender ids greater than the specified fromRootOffenderId and less than or equal to the\n      specified toRootOffenderId. Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
+        "description" : "Returns a list of root offender ids greater than the specified fromId and less than or equal to the\n      specified toId. Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
         "operationId" : "getPrisonerBalanceIdentifiersInRange",
         "parameters" : [ {
-          "name" : "fromRootOffenderId",
+          "name" : "fromId",
           "in" : "query",
           "description" : "Return prisoners with root offender id greater than this value.",
           "required" : true,
@@ -23193,7 +23193,7 @@
             "description" : "Return prisoners with root offender id greater than this value."
           }
         }, {
-          "name" : "toRootOffenderId",
+          "name" : "toId",
           "in" : "query",
           "description" : "Return prisoners with root offender id less than or equal to this value.",
           "required" : true,
@@ -23294,7 +23294,7 @@
                 "schema" : {
                   "type" : "array",
                   "items" : {
-                    "$ref" : "#/components/schemas/RootOffenderIdRange"
+                    "$ref" : "#/components/schemas/IdRange"
                   }
                 }
               }
@@ -23754,8 +23754,7 @@
                 "schema" : {
                   "type" : "array",
                   "items" : {
-                    "type" : "integer",
-                    "format" : "int64"
+                    "$ref" : "#/components/schemas/IdRange"
                   }
                 }
               }
@@ -36365,24 +36364,24 @@
         },
         "required" : [ "ids" ]
       },
-      "StaffIdRange" : {
+      "IdRange" : {
         "type" : "object",
-        "description" : "Staff ID range.",
+        "description" : "Nomis PK ID range.",
         "properties" : {
-          "fromStaffId" : {
+          "fromId" : {
             "type" : "integer",
             "format" : "int64",
-            "description" : "The lowest NOMIS staffId in the range",
-            "example" : 1234567
+            "description" : "The lowest NOMIS id in the range",
+            "example" : 123456789
           },
-          "toStaffId" : {
+          "toId" : {
             "type" : "integer",
             "format" : "int64",
-            "description" : "The highest NOMIS staffId in the range",
-            "example" : 1234567
+            "description" : "The highest NOMIS id in the range",
+            "example" : 987654321
           }
         },
-        "required" : [ "fromStaffId", "toStaffId" ]
+        "required" : [ "fromId", "toId" ]
       },
       "SplashConditionDto" : {
         "type" : "object",
@@ -36540,25 +36539,6 @@
           }
         },
         "required" : [ "code", "description" ]
-      },
-      "RootOffenderIdRange" : {
-        "type" : "object",
-        "description" : "Root offender ID range.",
-        "properties" : {
-          "fromRootOffenderId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The lowest NOMIS rootOffenderId in the range",
-            "example" : 1234567
-          },
-          "toRootOffenderId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The highest NOMIS rootOffenderId in the range",
-            "example" : 1234567
-          }
-        },
-        "required" : [ "fromRootOffenderId", "toRootOffenderId" ]
       },
       "RoleDetail" : {
         "type" : "object",
@@ -42480,10 +42460,6 @@
             "type" : [ "integer", "null" ],
             "format" : "int64"
           },
-          "txnEntrySeq" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
           "txnId" : {
             "type" : "integer",
             "format" : "int64"
@@ -42500,6 +42476,10 @@
           },
           "txnEntryAmount" : {
             "type" : "number"
+          },
+          "txnEntrySeq" : {
+            "type" : "integer",
+            "format" : "int32"
           }
         },
         "required" : [ "txnEntryAmount", "txnEntryDate", "txnEntrySeq", "txnId" ]
