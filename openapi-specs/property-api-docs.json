@@ -7,7 +7,7 @@
       "name" : "Move a prisoner Team",
       "email" : "Moveaprisoner-gg@justice.gov.uk"
     },
-    "version" : "2026-09-09.314.d55ea3a"
+    "version" : "2026-09-11.318.9883a6b"
   },
   "servers" : [ {
     "url" : "/",
@@ -1206,6 +1206,143 @@
         } ]
       }
     },
+    "/active-agencies/{agencyId}/cleanup" : {
+      "get" : {
+        "tags" : [ "Active agencies" ],
+        "summary" : "List the legacy clean-up jobs run at a prison, newest first",
+        "description" : "Every job requested for the prison with its status and counts, without items. Requires role ROLE_PRISONER_PROPERTY__ADMIN.",
+        "operationId" : "listLegacyCleanupJobs",
+        "parameters" : [ {
+          "name" : "agencyId",
+          "in" : "path",
+          "description" : "Agency (prison) id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "MDI"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Jobs returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/LegacyCleanupJobDto"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - a valid token was not presented",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden - the ROLE_PRISONER_PROPERTY__ADMIN role is required",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearer-jwt" : [ ]
+        } ]
+      },
+      "post" : {
+        "tags" : [ "Active agencies" ],
+        "summary" : "Run a legacy clean-up at a prison",
+        "description" : "Snapshots the containers the preview would close for the given window as a job and queues it for processing, returning immediately. Each container is then marked returned or transferred in its own transaction and a `prison-property.container.updated` event published for it, so NOMIS is brought into line. Follow progress with the job endpoints. One job may be in flight per prison. Requires role ROLE_PRISONER_PROPERTY__ADMIN.",
+        "operationId" : "startLegacyCleanup",
+        "parameters" : [ {
+          "name" : "agencyId",
+          "in" : "path",
+          "description" : "Agency (prison) id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "MDI"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/StartLegacyCleanupRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "202" : {
+            "description" : "Clean-up queued; the job is returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LegacyCleanupJobDto"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid window, or too many containers at the prison to classify",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - a valid token was not presented",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden - the ROLE_PRISONER_PROPERTY__ADMIN role is required",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "A clean-up is already pending or running for this prison",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearer-jwt" : [ ]
+        } ]
+      }
+    },
     "/sync/property-containers/{id}" : {
       "get" : {
         "tags" : [ "Sync with NOMIS" ],
@@ -2144,6 +2281,145 @@
         } ]
       }
     },
+    "/active-agencies/{agencyId}/cleanup/preview" : {
+      "get" : {
+        "tags" : [ "Active agencies" ],
+        "summary" : "Preview what a legacy clean-up would close at a prison",
+        "description" : "Counts the live containers held at the prison whose owner was released, or left for another prison, at least `olderThanDays` days ago - the ones a run with that window would mark returned or transferred - alongside the totals currently shown as due for return / due for transfer out, what is left alone and why, and how old the backlog is. Changes nothing. Requires role ROLE_PRISONER_PROPERTY__ADMIN.",
+        "operationId" : "previewLegacyCleanup",
+        "parameters" : [ {
+          "name" : "agencyId",
+          "in" : "path",
+          "description" : "Agency (prison) id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "MDI"
+        }, {
+          "name" : "olderThanDays",
+          "in" : "query",
+          "description" : "Only count property for people who left at least this many days ago",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 28,
+            "maximum" : 3650,
+            "minimum" : 1
+          },
+          "example" : 28
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Preview returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LegacyCleanupPreviewDto"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid window, or too many containers at the prison to classify",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - a valid token was not presented",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden - the ROLE_PRISONER_PROPERTY__ADMIN role is required",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearer-jwt" : [ ]
+        } ]
+      }
+    },
+    "/active-agencies/cleanup/{jobId}" : {
+      "get" : {
+        "tags" : [ "Active agencies" ],
+        "summary" : "Get a legacy clean-up job with its items",
+        "description" : "The job's status and counts plus every container it set out to close and what happened to each. Requires role ROLE_PRISONER_PROPERTY__ADMIN.",
+        "operationId" : "getLegacyCleanupJob",
+        "parameters" : [ {
+          "name" : "jobId",
+          "in" : "path",
+          "description" : "Job id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Job returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LegacyCleanupJobDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - a valid token was not presented",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden - the ROLE_PRISONER_PROPERTY__ADMIN role is required",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "No such job",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearer-jwt" : [ ]
+        } ]
+      }
+    },
     "/active-agencies/all" : {
       "get" : {
         "tags" : [ "Active agencies" ],
@@ -2720,6 +2996,140 @@
         },
         "required" : [ "containerType", "sealNumber", "sourceContainerIds" ]
       },
+      "StartLegacyCleanupRequest" : {
+        "type" : "object",
+        "description" : "Request to run the legacy property clean-up for a prison",
+        "properties" : {
+          "olderThanDays" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 28,
+            "description" : "Only close property for people who left at least this many days ago",
+            "example" : 28,
+            "maximum" : 3650,
+            "minimum" : 1
+          }
+        }
+      },
+      "LegacyCleanupItemDto" : {
+        "type" : "object",
+        "description" : "One container a clean-up job set out to close and what happened to it",
+        "properties" : {
+          "containerId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "prisonerNumber" : {
+            "type" : "string",
+            "example" : "A1234AA"
+          },
+          "action" : {
+            "type" : "string",
+            "enum" : [ "RETURN", "TRANSFER" ]
+          },
+          "plannedEventDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The date the closing event is dated to - the release date, or the date the person left"
+          },
+          "plannedToPrisonId" : {
+            "type" : [ "string", "null" ],
+            "description" : "For TRANSFER, the prison the person is now at",
+            "example" : "LEI"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "PENDING", "PROCESSED", "SKIPPED", "FAILED" ]
+          },
+          "message" : {
+            "type" : [ "string", "null" ],
+            "description" : "Why the item was skipped or failed, if it was"
+          },
+          "processedAt" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time"
+          }
+        },
+        "required" : [ "action", "containerId", "plannedEventDate", "prisonerNumber", "status" ]
+      },
+      "LegacyCleanupJobDto" : {
+        "type" : "object",
+        "description" : "A legacy clean-up job and its progress",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "prisonId" : {
+            "type" : "string",
+            "example" : "MDI"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "PENDING", "STARTED", "FINISHED" ]
+          },
+          "olderThanDays" : {
+            "type" : "integer",
+            "format" : "int32",
+            "example" : 28
+          },
+          "cutoffDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "requestedBy" : {
+            "type" : "string",
+            "description" : "The admin who requested the run",
+            "example" : "ADMIN_USER"
+          },
+          "requestedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "startTime" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time"
+          },
+          "endTime" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time"
+          },
+          "totalRecords" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Containers the job set out to close"
+          },
+          "processedRecords" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Items that have reached a final status (processed, skipped or failed)"
+          },
+          "returnedRecords" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "transferredRecords" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "skippedRecords" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "failedRecords" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "items" : {
+            "type" : [ "array", "null" ],
+            "description" : "The items, only on the single-job read",
+            "items" : {
+              "$ref" : "#/components/schemas/LegacyCleanupItemDto"
+            }
+          }
+        },
+        "required" : [ "cutoffDate", "failedRecords", "id", "olderThanDays", "prisonId", "processedRecords", "requestedAt", "requestedBy", "returnedRecords", "skippedRecords", "status", "totalRecords", "transferredRecords" ]
+      },
       "PageUUID" : {
         "type" : "object",
         "properties" : {
@@ -2781,12 +3191,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "paged" : {
+            "type" : "boolean"
+          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "paged" : {
-            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -3520,6 +3930,118 @@
             "type" : "boolean"
           }
         }
+      },
+      "CleanupAgeBandDto" : {
+        "type" : "object",
+        "description" : "How many containers fall in a band of time since the person left",
+        "properties" : {
+          "label" : {
+            "type" : "string",
+            "description" : "Band label",
+            "example" : "91 to 365 days"
+          },
+          "fromDays" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Lower bound of the band in days since the person left",
+            "example" : 91
+          },
+          "toDays" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int32",
+            "description" : "Upper bound of the band in days, or null for open-ended",
+            "example" : 365
+          },
+          "containers" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Containers in the band whose owner left in it",
+            "example" : 120
+          }
+        },
+        "required" : [ "containers", "fromDays", "label" ]
+      },
+      "CleanupCountDto" : {
+        "type" : "object",
+        "description" : "A count of containers and of the distinct prisoners they belong to",
+        "properties" : {
+          "containers" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Number of containers",
+            "example" : 412
+          },
+          "prisoners" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Number of distinct prisoners those containers belong to",
+            "example" : 180
+          }
+        },
+        "required" : [ "containers", "prisoners" ]
+      },
+      "LegacyCleanupPreviewDto" : {
+        "type" : "object",
+        "description" : "What a legacy clean-up would close at a prison for a given look-back window, without changing anything",
+        "properties" : {
+          "prisonId" : {
+            "type" : "string",
+            "description" : "Prison the preview is for",
+            "example" : "MDI"
+          },
+          "olderThanDays" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The look-back window the preview applied",
+            "example" : 28
+          },
+          "cutoffDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "People must have left on or before this date to be in scope",
+            "example" : "2026-08-14"
+          },
+          "generatedAt" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "When the preview was generated"
+          },
+          "toReturn" : {
+            "$ref" : "#/components/schemas/CleanupCountDto",
+            "description" : "Containers that would be marked returned: the owner was released on or before the cut-off"
+          },
+          "toTransfer" : {
+            "$ref" : "#/components/schemas/CleanupCountDto",
+            "description" : "Containers that would be marked transferred: the owner left for another prison on or before the cut-off"
+          },
+          "dueForReturnNow" : {
+            "$ref" : "#/components/schemas/CleanupCountDto",
+            "description" : "Containers currently shown as due for return at the prison, whatever the window - the tile the clean-up reduces"
+          },
+          "dueForTransferOutNow" : {
+            "$ref" : "#/components/schemas/CleanupCountDto",
+            "description" : "Containers currently shown as due for transfer out at the prison, whatever the window - the tile the clean-up reduces"
+          },
+          "candidates" : {
+            "$ref" : "#/components/schemas/CleanupCountDto",
+            "description" : "Every live container at the prison that was considered"
+          },
+          "ineligible" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/CleanupCountDto"
+            },
+            "description" : "Containers left alone, by reason"
+          },
+          "ageBands" : {
+            "type" : "array",
+            "description" : "The containers that would be closed, banded by how long ago the person left",
+            "items" : {
+              "$ref" : "#/components/schemas/CleanupAgeBandDto"
+            }
+          }
+        },
+        "required" : [ "ageBands", "candidates", "cutoffDate", "dueForReturnNow", "dueForTransferOutNow", "generatedAt", "ineligible", "olderThanDays", "prisonId", "toReturn", "toTransfer" ]
       }
     },
     "securitySchemes" : {
