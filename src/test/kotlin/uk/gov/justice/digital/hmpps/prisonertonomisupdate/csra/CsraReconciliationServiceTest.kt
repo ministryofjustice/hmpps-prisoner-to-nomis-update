@@ -204,6 +204,7 @@ fun dpsCsra(
   prisonerNumber = CSRA_OFFENDER_NO,
   status = CsraCurrentRating.Status.COMPLETE,
   provisional = false,
+  inheritedAfterTransfer = false,
   riskTo = emptyList(),
   vulnerabilities = emptyList(),
   finalDate = LocalDate.parse("2024-01-01"),

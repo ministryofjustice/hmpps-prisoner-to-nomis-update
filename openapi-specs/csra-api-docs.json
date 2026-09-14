@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-09-07.489.742ed80"
+    "version" : "2026-09-10.522.da686e1"
   },
   "servers" : [ {
     "url" : "/",
@@ -176,7 +176,7 @@
             }
           },
           "403" : {
-            "description" : "Missing required role. Requires the ROLE_CSRA_REVIEW__RW role",
+            "description" : "Missing required role (requires ROLE_CSRA_REVIEW__RW), or CSRA is not switched on in DPS for the prison on the request — errorCode PrisonNotActive. ROLE_PRISONER_CSRA__ROLLOUT_OVERRIDE bypasses the rollout check",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -275,7 +275,7 @@
             }
           },
           "403" : {
-            "description" : "Missing required role. Requires the ROLE_CSRA_REVIEW__RW role",
+            "description" : "Missing required role (requires ROLE_CSRA_REVIEW__RW), or CSRA is not switched on in DPS for the prison on the request — errorCode PrisonNotActive. ROLE_PRISONER_CSRA__ROLLOUT_OVERRIDE bypasses the rollout check",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -384,7 +384,7 @@
             }
           },
           "403" : {
-            "description" : "Missing required role. Requires the ROLE_CSRA_REVIEW__RW role",
+            "description" : "Missing required role (requires ROLE_CSRA_REVIEW__RW), or CSRA is not switched on in DPS for the prison on the request — errorCode PrisonNotActive. ROLE_PRISONER_CSRA__ROLLOUT_OVERRIDE bypasses the rollout check",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -483,7 +483,7 @@
             }
           },
           "403" : {
-            "description" : "Missing required role. Requires the ROLE_CSRA_REVIEW__RW role",
+            "description" : "Missing required role (requires ROLE_CSRA_REVIEW__RW), or CSRA is not switched on in DPS for the prison on the request — errorCode PrisonNotActive. ROLE_PRISONER_CSRA__ROLLOUT_OVERRIDE bypasses the rollout check",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -582,7 +582,7 @@
             }
           },
           "403" : {
-            "description" : "Missing required role. Requires the ROLE_CSRA_REVIEW__RW role",
+            "description" : "Missing required role (requires ROLE_CSRA_REVIEW__RW), or CSRA is not switched on in DPS for the prison on the request — errorCode PrisonNotActive. ROLE_PRISONER_CSRA__ROLLOUT_OVERRIDE bypasses the rollout check",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -914,7 +914,7 @@
             }
           },
           "403" : {
-            "description" : "Missing required role. Requires the ROLE_CSRA_REVIEW__RW role",
+            "description" : "Missing required role (requires ROLE_CSRA_REVIEW__RW), or CSRA is not switched on in DPS for the prison on the request — errorCode PrisonNotActive. ROLE_PRISONER_CSRA__ROLLOUT_OVERRIDE bypasses the rollout check",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -994,7 +994,7 @@
             }
           },
           "403" : {
-            "description" : "Missing required role. Requires the ROLE_CSRA_REVIEW__RW role",
+            "description" : "Missing required role (requires ROLE_CSRA_REVIEW__RW), or CSRA is not switched on in DPS for the prison on the request — errorCode PrisonNotActive. ROLE_PRISONER_CSRA__ROLLOUT_OVERRIDE bypasses the rollout check",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -1954,6 +1954,11 @@
             "description" : "Whether the current rating is provisional (a final rating has not yet been confirmed)",
             "example" : false
           },
+          "inheritedAfterTransfer" : {
+            "type" : "boolean",
+            "description" : "Whether the current provisional or interim rating was inherited because the prisoner transferred before it was completed. Use ratingStage to decide which copy to show.",
+            "example" : false
+          },
           "ratingStage" : {
             "type" : [ "string", "null" ],
             "description" : "Which stage the current rating came from. Distinguishes an assessment's provisional rating from a review's interim one, which the provisional flag cannot. Null when there is no rating.",
@@ -2031,9 +2036,15 @@
           },
           "type" : {
             "type" : [ "string", "null" ],
+            "description" : "The exact kind of record the rating came from, legacy NOMIS types included. Absent when there is no rating. Note CSRA_INITIAL_ASSESSMENT is an assessment — use `assessmentType` unless you need the precise type.",
+            "enum" : [ "FULL", "HEALTH", "LOCATE", "RATING", "RECEPTION", "NOMIS_REVIEW", "CSRA_INITIAL_ASSESSMENT", "CSRA_REVIEW" ],
+            "example" : "CSRA_INITIAL_ASSESSMENT"
+          },
+          "assessmentType" : {
+            "type" : [ "string", "null" ],
             "description" : "Whether the rating came from an assessment or a review. Absent when there is no rating.",
-            "enum" : [ "FULL", "HEALTH", "LOCATE", "RATING", "RECEPTION", "REVIEW", "CSRA_INITIAL_REVIEW", "CSRA_REVIEW" ],
-            "example" : "CSRA_INITIAL_REVIEW"
+            "enum" : [ "ASSESSMENT", "REVIEW" ],
+            "example" : "ASSESSMENT"
           },
           "inProgress" : {
             "description" : "The assessment or review currently in progress, if any. Absent when nothing is in progress.",
@@ -2044,7 +2055,7 @@
             } ]
           }
         },
-        "required" : [ "prisonerNumber", "provisional", "riskTo", "status", "vulnerabilities" ]
+        "required" : [ "inheritedAfterTransfer", "prisonerNumber", "provisional", "riskTo", "status", "vulnerabilities" ]
       },
       "CsraInProgressReview" : {
         "type" : "object",
@@ -2058,9 +2069,15 @@
           },
           "type" : {
             "type" : "string",
+            "description" : "The exact kind of record in progress. Always a new-model type: a migrated NOMIS review is never in progress, so the legacy values cannot appear here.",
+            "enum" : [ "FULL", "HEALTH", "LOCATE", "RATING", "RECEPTION", "NOMIS_REVIEW", "CSRA_INITIAL_ASSESSMENT", "CSRA_REVIEW" ],
+            "example" : "CSRA_INITIAL_ASSESSMENT"
+          },
+          "assessmentType" : {
+            "type" : "string",
             "description" : "Whether this is an assessment or a review — the card is captioned accordingly",
-            "enum" : [ "FULL", "HEALTH", "LOCATE", "RATING", "RECEPTION", "REVIEW", "CSRA_INITIAL_REVIEW", "CSRA_REVIEW" ],
-            "example" : "CSRA_INITIAL_REVIEW"
+            "enum" : [ "ASSESSMENT", "REVIEW" ],
+            "example" : "ASSESSMENT"
           },
           "startedBy" : {
             "type" : [ "string", "null" ],
@@ -2084,7 +2101,7 @@
             "example" : "Brixton (HMP)"
           }
         },
-        "required" : [ "reviewId", "type" ]
+        "required" : [ "assessmentType", "reviewId", "type" ]
       },
       "CsraRiskToDetail" : {
         "type" : "object",
@@ -3352,9 +3369,15 @@
           },
           "type" : {
             "type" : "string",
-            "description" : "The type of assessment",
-            "enum" : [ "FULL", "HEALTH", "LOCATE", "RATING", "RECEPTION", "REVIEW", "CSRA_INITIAL_REVIEW", "CSRA_REVIEW" ],
-            "example" : "CSRA_INITIAL_REVIEW"
+            "description" : "The exact kind of record, legacy NOMIS types included. Note CSRA_INITIAL_ASSESSMENT is an assessment — use `assessmentType` unless you need the precise type.",
+            "enum" : [ "FULL", "HEALTH", "LOCATE", "RATING", "RECEPTION", "NOMIS_REVIEW", "CSRA_INITIAL_ASSESSMENT", "CSRA_REVIEW" ],
+            "example" : "CSRA_INITIAL_ASSESSMENT"
+          },
+          "assessmentType" : {
+            "type" : "string",
+            "description" : "Whether this is an assessment or a review",
+            "enum" : [ "ASSESSMENT", "REVIEW" ],
+            "example" : "ASSESSMENT"
           },
           "interimResult" : {
             "type" : [ "string", "null" ],
@@ -3411,7 +3434,7 @@
             } ]
           }
         },
-        "required" : [ "assessmentDate", "createdAt", "createdBy", "id", "prisonerNumber", "type" ]
+        "required" : [ "assessmentDate", "assessmentType", "createdAt", "createdBy", "id", "prisonerNumber", "type" ]
       },
       "CsraReviewQuestion" : {
         "type" : "object",
@@ -3600,8 +3623,14 @@
           },
           "type" : {
             "type" : "string",
-            "description" : "The type of assessment",
-            "enum" : [ "FULL", "HEALTH", "LOCATE", "RATING", "RECEPTION", "REVIEW", "CSRA_INITIAL_REVIEW", "CSRA_REVIEW" ],
+            "description" : "The exact kind of record, legacy NOMIS types included. Note CSRA_INITIAL_ASSESSMENT is an assessment — use `assessmentType` unless you need the precise type.",
+            "enum" : [ "FULL", "HEALTH", "LOCATE", "RATING", "RECEPTION", "NOMIS_REVIEW", "CSRA_INITIAL_ASSESSMENT", "CSRA_REVIEW" ],
+            "example" : "NOMIS_REVIEW"
+          },
+          "assessmentType" : {
+            "type" : "string",
+            "description" : "Whether this is an assessment or a review",
+            "enum" : [ "ASSESSMENT", "REVIEW" ],
             "example" : "REVIEW"
           },
           "rating" : {
@@ -3640,7 +3669,7 @@
             } ]
           }
         },
-        "required" : [ "id", "rating", "recordedDate", "type" ]
+        "required" : [ "assessmentType", "id", "rating", "recordedDate", "type" ]
       },
       "CsraReviewInProgressRow" : {
         "type" : "object",
