@@ -44,11 +44,11 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Cr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.EvidenceToUpdateOrAdd
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ExistingHearingResultAwardRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.HearingResultAwardRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.IdRange
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.IncidentToCreate
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.MergeDetail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonNumberAndRootOffenderId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RepairToUpdateOrAdd
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RootOffenderIdRange
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UnquashHearingResultAwardRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateActivityRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateEvidenceRequest
@@ -1539,8 +1539,8 @@ internal class NomisApiServiceTest {
 
       nomisApi.verify(
         getRequestedFor(urlPathEqualTo("/prisoners/ids-in-range"))
-          .withQueryParam("fromRootOffenderId", equalTo("5"))
-          .withQueryParam("toRootOffenderId", equalTo("100"))
+          .withQueryParam("fromId", equalTo("5"))
+          .withQueryParam("toId", equalTo("100"))
           .withQueryParam("active", equalTo("false")),
       )
     }
@@ -1601,8 +1601,8 @@ internal class NomisApiServiceTest {
       )
 
       assertThat(prisonerIds).hasSize(2)
-      assertThat(prisonerIds[0]).isEqualTo(RootOffenderIdRange(0, 10))
-      assertThat(prisonerIds[1]).isEqualTo(RootOffenderIdRange(10, 20))
+      assertThat(prisonerIds[0]).isEqualTo(IdRange(0, 10))
+      assertThat(prisonerIds[1]).isEqualTo(IdRange(10, 20))
     }
   }
 }

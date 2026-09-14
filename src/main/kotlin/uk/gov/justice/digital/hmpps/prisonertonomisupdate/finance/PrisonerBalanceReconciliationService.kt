@@ -73,7 +73,7 @@ class PrisonerBalanceReconciliationService(
     threadCount = threadCount,
     checkMatch = ::checkPrisonerBalance,
     idRanges = { nomisApiService.getAllPrisonersIdRanges(pageSize.toLong(), activeOnly) },
-    idsInRange = { range -> this.getOffenderIdsInRange(range.fromRootOffenderId, range.toRootOffenderId, activeOnly) },
+    idsInRange = { range -> this.getOffenderIdsInRange(range.fromId, range.toId, activeOnly) },
   )
 
   internal suspend fun checkPrisonerBalance(rootOffenderId: Long): MismatchPrisonerBalance? = runCatching {

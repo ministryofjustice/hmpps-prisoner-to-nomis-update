@@ -9,8 +9,7 @@ import kotlinx.coroutines.channels.toList
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.data.IdRange
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RootOffenderIdRange
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.IdRange
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
@@ -29,8 +28,8 @@ import java.util.concurrent.atomic.AtomicInteger
 suspend fun <T, M> generateRangesReconciliationReport(
   threadCount: Int,
   checkMatch: suspend (T) -> M?,
-  idRanges: suspend () -> List<RootOffenderIdRange>,
-  idsInRange: suspend (RootOffenderIdRange) -> ReconciliationPageResult<T>,
+  idRanges: suspend () -> List<IdRange>,
+  idsInRange: suspend (IdRange) -> ReconciliationPageResult<T>,
 ): ReconciliationResult<M> = coroutineScope {
   val itemsCount = AtomicInteger(0)
   val pagesCount = AtomicInteger(0)
@@ -67,12 +66,12 @@ suspend fun <T, M> generateIdRangesReconciliationReport(
 ) = generateRangesReconciliationReport(
   threadCount = threadCount,
   checkMatch = checkMatch,
-  idRanges = { idRanges().map { RootOffenderIdRange(it.fromId, it.toId) } },
-  idsInRange = { rootOffenderIdRange: RootOffenderIdRange -> idsInRange(IdRange(rootOffenderIdRange.fromRootOffenderId, rootOffenderIdRange.toRootOffenderId)) },
+  idRanges = { idRanges().map { IdRange(it.fromId, it.toId) } },
+  idsInRange = { idRange: IdRange -> idsInRange(IdRange(idRange.fromId, idRange.toId)) },
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
-private fun <T> CoroutineScope.produceIds(idRanges: List<RootOffenderIdRange>, pagesCount: AtomicInteger, threadCount: Int, idsInRange: suspend (RootOffenderIdRange) -> ReconciliationPageResult<T>) = produce(capacity = threadCount * 2) {
+private fun <T> CoroutineScope.produceIds(idRanges: List<IdRange>, pagesCount: AtomicInteger, threadCount: Int, idsInRange: suspend (IdRange) -> ReconciliationPageResult<T>) = produce(capacity = threadCount * 2) {
   var pageErrorCount = 0L
   for (idRange in idRanges) {
     when (val result = idsInRange(idRange)) {

@@ -24,13 +24,13 @@ import org.springframework.test.context.junit.jupiter.SpringExtension
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AdjudicationADAAwardSummaryResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingIdsWithLast
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.IdRange
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.MergeDetail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Prison
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonNumberAndRootOffenderId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RootOffenderIdRange
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentencingAdjustmentsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.jsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
@@ -2322,9 +2322,9 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
   }
 
   fun stubGetAllPrisonersIdRanges(pageSize: Long = 10, totalElements: Long = 20) {
-    val content: List<RootOffenderIdRange> = (0..(totalElements / pageSize))
+    val content: List<IdRange> = (0..(totalElements / pageSize))
       .zipWithNext()
-      .map { RootOffenderIdRange(it.first * pageSize, it.second * pageSize) }
+      .map { IdRange(it.first * pageSize, it.second * pageSize) }
     nomisApi.stubFor(
       get(urlPathEqualTo("/prisoners/id-ranges")).willReturn(
         aResponse()
@@ -2347,8 +2347,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     }
     nomisApi.stubFor(
       get(urlPathEqualTo("/prisoners/ids-in-range"))
-        .withQueryParam("fromRootOffenderId", equalTo(fromRootOffenderId.toString()))
-        .withQueryParam("toRootOffenderId", equalTo(toRootOffenderId.toString()))
+        .withQueryParam("fromId", equalTo(fromRootOffenderId.toString()))
+        .withQueryParam("toId", equalTo(toRootOffenderId.toString()))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
