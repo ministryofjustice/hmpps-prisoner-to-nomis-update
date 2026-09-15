@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodilessE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrLogAndRethrowBadRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyWithRetry
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.AppointmentsResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.BookingsResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.IncentivesResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.PrisonResourceApi
@@ -98,9 +99,11 @@ class NomisApiService(
   private companion object {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
+
   private val backoffSpec = retryApiService.getBackoffSpec(maxRetryAttempts, backoffMillis)
 
   private val bookingApi = BookingsResourceApi(webClient)
+  private val appointmentsResourceApi = AppointmentsResourceApi(webClient)
   private val incentivesResourceApi = IncentivesResourceApi(webClient)
   private val sentencingAdjustmentResourceApi = SentencingAdjustmentResourceApi(webClient)
   private val prisonApi = PrisonResourceApi(webClient)
@@ -305,6 +308,10 @@ class NomisApiService(
     .uri("/appointments/{nomisEventId}", nomisEventId)
     .retrieve()
     .awaitBodyWithRetry(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/appointments/{nomisEventId}", "nomisEventId", nomisEventId)))
+
+  suspend fun getAppointmentOrNull(nomisEventId: Long): AppointmentResponse? = appointmentsResourceApi
+    .getAppointmentById(nomisEventId)
+    .awaitBodyOrNullForNotFound(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/appointments/{nomisEventId}", "nomisEventId", nomisEventId)))
 
   suspend fun getAppointmentsByFilter(
     bookingId: Long,

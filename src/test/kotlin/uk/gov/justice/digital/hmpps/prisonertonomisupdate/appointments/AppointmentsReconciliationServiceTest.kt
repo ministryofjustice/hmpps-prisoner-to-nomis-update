@@ -11,6 +11,7 @@ import org.mockito.kotlin.check
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.never
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
@@ -96,9 +97,9 @@ class AppointmentsReconciliationServiceTest {
     whenever(nomisApiService.getAppointmentIds(listOf(PRISON_CODE), LocalDate.parse(START_DATE), LocalDate.parse(END_DATE), 0, 5))
       .thenReturn(
         PageImpl(
-          listOf(AppointmentIdResponse(676842281), AppointmentIdResponse(681900464)),
+          listOf(AppointmentIdResponse(999999)),
           Pageable.ofSize(5),
-          2,
+          1,
         ),
       )
     whenever(appointmentsApiService.searchAppointments(PRISON_CODE, LocalDate.parse(START_DATE), LocalDate.parse(END_DATE)))
@@ -213,7 +214,7 @@ class AppointmentsReconciliationServiceTest {
   }
 
   @Test
-  fun `will report appointments in DPS only`() = runTest {
+  fun `will report appointments in DPS-only`() = runTest {
     val allDpsIdsInNomisPrison = setOf(10001L, 10002L)
     whenever(appointmentsApiService.searchAppointments(PRISON_CODE, LocalDate.parse(START_DATE), LocalDate.parse(END_DATE)))
       .thenReturn(
@@ -265,23 +266,64 @@ class AppointmentsReconciliationServiceTest {
   }
 
   @Test
-  fun `will skip appointments in DPS only in the exclude list`() = runTest {
+  fun `will not report an appointment in DPS-only if a false positive`() = runTest {
+    val allDpsIdsInNomisPrison = setOf(10001L, 10002L)
     whenever(appointmentsApiService.searchAppointments(PRISON_CODE, LocalDate.parse(START_DATE), LocalDate.parse(END_DATE)))
       .thenReturn(
         appointmentSearchResults(
           2345L,
           listOf(
             AppointmentAttendeeSearchResult(
-              appointmentAttendeeId = 7906234,
+              appointmentAttendeeId = 10001,
               prisonerNumber = OFFENDER_NO,
               bookingId = 1001,
             ),
           ),
           listOf(
             AppointmentAttendeeSearchResult(
-              appointmentAttendeeId = 7910446,
+              appointmentAttendeeId = 10002,
               prisonerNumber = "B2345ZZ",
               bookingId = 1002,
+            ),
+            AppointmentAttendeeSearchResult(
+              appointmentAttendeeId = 10003,
+              prisonerNumber = "B2345ZZ",
+              bookingId = 1002,
+            ),
+          ),
+        ),
+      )
+
+    // When the reconciliation service checks for a mapping and Nomis record for the DPS appointment, it finds one, so it is not DPS-only
+    whenever(appointmentsMappingService.getMappingGivenAppointmentInstanceIdOrNull(10003))
+      .thenReturn(AppointmentMappingDto(appointmentInstanceId = 10003, nomisEventId = 20001))
+    whenever(nomisApiService.getAppointmentOrNull(20001))
+      .thenReturn(nomisResponse(eventId = 20001, offenderNo = "B2345ZZ"))
+
+    val results = appointmentsReconciliationService.checkForMissingDpsRecords(
+      allDpsIdsInNomisPrison,
+      PRISON_CODE,
+      LocalDate.parse(START_DATE),
+      LocalDate.parse(END_DATE),
+      3,
+    )
+
+    assertThat(results).isEmpty()
+
+    verify(telemetryClient, never()).trackEvent(eq("appointments-reports-reconciliation-dps-only"), anyMap(), isNull())
+  }
+
+  @Test
+  fun `will skip appointments in DPS-only in the exclude list`() = runTest {
+    whenever(appointmentsApiService.searchAppointments(PRISON_CODE, LocalDate.parse(START_DATE), LocalDate.parse(END_DATE)))
+      .thenReturn(
+        appointmentSearchResults(
+          2345L,
+          listOf(
+            AppointmentAttendeeSearchResult(
+              appointmentAttendeeId = 999999,
+              prisonerNumber = OFFENDER_NO,
+              bookingId = 1001,
             ),
           ),
         ),
