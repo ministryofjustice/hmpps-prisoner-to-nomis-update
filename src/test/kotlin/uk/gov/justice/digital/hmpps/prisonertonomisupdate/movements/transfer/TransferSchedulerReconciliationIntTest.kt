@@ -40,7 +40,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.transferscheduler.mode
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.transferscheduler.model.SyncMovement
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.transferscheduler.model.SyncSchedule
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.transferscheduler.model.SyncTransfer
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.transferscheduler.model.SyncWaitlist
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.generateOffenderNo
 import java.time.LocalDate
@@ -985,7 +984,7 @@ class TransferSchedulerReconciliationIntTest(
       transferPriority: String = "3",
       approved: Boolean = true,
       approvedUsername: String = "some user",
-      outcomeReasonCode: SyncWaitlist.OutcomeReasonCode = SyncWaitlist.OutcomeReasonCode.ADMI,
+      outcomeReasonCode: String = "ADMI",
       commentText1: String = "some waitlist comment",
     ) = transferWaitlist().copy(
       requestDate = requestDate,

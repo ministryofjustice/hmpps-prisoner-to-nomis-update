@@ -75,7 +75,7 @@ class TransferSchedulerDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       transferPriority = "3",
       approved = true,
       approvedUsername = "APPROVE_USER",
-      outcomeReasonCode = SyncWaitlist.OutcomeReasonCode.TRANS,
+      outcomeReasonCode = "TRANS",
       commentText1 = "some waitlist comment",
     )
 

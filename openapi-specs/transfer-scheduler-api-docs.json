@@ -6,7 +6,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-09-11.292.996931b"
+    "version" : "2026-09-14.299.90a1e80"
   },
   "servers" : [ {
     "url" : "https://transfer-scheduler-api-dev.hmpps.service.justice.gov.uk",
@@ -495,7 +495,7 @@
           "required" : true,
           "schema" : {
             "type" : "string",
-            "enum" : [ "transfer-logistics", "transfer-priority", "transfer-reason", "transfer-status" ]
+            "enum" : [ "transfer-cancellation-reason", "transfer-logistics", "transfer-priority", "transfer-reason", "transfer-status" ]
           }
         } ],
         "responses" : {
@@ -706,6 +706,14 @@
         "type" : "object",
         "allOf" : [ {
           "$ref" : "#/components/schemas/TransferAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "reasonCode" : {
+              "type" : "string",
+              "nullable" : true
+            }
+          }
         } ]
       },
       "CompleteTransfer" : {
@@ -730,6 +738,10 @@
         "required" : [ "destinationCode", "logisticsCode", "occurredAt", "reasonCode" ],
         "type" : "object",
         "properties" : {
+          "comments" : {
+            "type" : "string",
+            "nullable" : true
+          },
           "occurredAt" : {
             "type" : "string",
             "format" : "date-time"
@@ -742,10 +754,6 @@
           },
           "logisticsCode" : {
             "type" : "string"
-          },
-          "comments" : {
-            "type" : "string",
-            "nullable" : true
           }
         }
       },
@@ -1002,6 +1010,10 @@
             "allOf" : [ {
               "$ref" : "#/components/schemas/SyncSchedule"
             } ]
+          },
+          "cancellationReason" : {
+            "type" : "string",
+            "nullable" : true
           }
         }
       },
@@ -1035,7 +1047,7 @@
         }
       },
       "SyncWaitlist" : {
-        "required" : [ "approved", "requestDate", "statusDate", "transferPriority", "waitListStatus" ],
+        "required" : [ "approved", "requestDate", "transferPriority", "waitListStatus" ],
         "type" : "object",
         "properties" : {
           "requestDate" : {
@@ -1047,7 +1059,8 @@
           },
           "statusDate" : {
             "type" : "string",
-            "format" : "date"
+            "format" : "date",
+            "nullable" : true
           },
           "transferPriority" : {
             "type" : "string"
@@ -1061,8 +1074,7 @@
           },
           "outcomeReasonCode" : {
             "type" : "string",
-            "nullable" : true,
-            "enum" : [ "OIC", "ADMI", "TRANS" ]
+            "nullable" : true
           },
           "commentText1" : {
             "type" : "string",
@@ -1597,12 +1609,12 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "start" : {
+          "end" : {
             "type" : "string",
             "format" : "date",
             "nullable" : true
           },
-          "end" : {
+          "start" : {
             "type" : "string",
             "format" : "date",
             "nullable" : true
