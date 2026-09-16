@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-09-14.2052.2ddf60b"
+    "version" : "2026-09-15.2060.6e126bb"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -42464,10 +42464,6 @@
             "type" : "integer",
             "format" : "int64"
           },
-          "txnEntryDate" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
           "txnEntryDesc" : {
             "type" : [ "string", "null" ]
           },
@@ -42480,6 +42476,10 @@
           "txnEntrySeq" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "txnEntryDate" : {
+            "type" : "string",
+            "format" : "date-time"
           }
         },
         "required" : [ "txnEntryAmount", "txnEntryDate", "txnEntrySeq", "txnId" ]
@@ -42580,6 +42580,15 @@
             "description" : "Random testing program date",
             "example" : "2024-01-01"
           },
+          "createdByUsername" : {
+            "type" : "string",
+            "description" : "Username of person who created the record in NOMIS"
+          },
+          "createdDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Date time when the record was created in NOMIS"
+          },
           "mainPercentage" : {
             "type" : "integer",
             "format" : "int32",
@@ -42613,7 +42622,7 @@
             }
           }
         },
-        "required" : [ "caseloadId", "mainPercentage", "offenderTestSelection", "reservePercentage", "rtpDate", "rtpId" ]
+        "required" : [ "caseloadId", "createdByUsername", "createdDateTime", "mainPercentage", "offenderTestSelection", "reservePercentage", "rtpDate", "rtpId" ]
       },
       "CSIPIdResponse" : {
         "type" : "object",
