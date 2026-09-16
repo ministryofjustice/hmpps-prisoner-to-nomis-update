@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-09-07.1168.e3a72bb"
+    "version" : "2026-09-15.1204.7a9b6ae"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -2212,7 +2212,7 @@
           "required" : true,
           "schema" : {
             "type" : "string",
-            "enum" : [ "IDENTIFY_CANDIDATE_VISITS_TO_CHECK", "PROCESS_CANDIDATE_VISITS_TO_CHECK", "EXPIRE_VISITS_FOR_REVIEW" ]
+            "enum" : [ "IDENTIFY_CANDIDATE_VISITS_TO_CHECK", "IDENTIFY_CANDIDATE_VISITS_TO_RECHECK", "PROCESS_CANDIDATE_VISITS_TO_CHECK", "EXPIRE_VISITS_FOR_REVIEW" ]
           }
         } ],
         "responses" : {
@@ -4157,11 +4157,13 @@
           },
           "startTime" : {
             "type" : "string",
+            "format" : "partial-time",
             "description" : "Start time",
             "example" : "09:00"
           },
           "endTime" : {
             "type" : "string",
+            "format" : "partial-time",
             "description" : "End time",
             "example" : "11:00"
           },
@@ -4213,11 +4215,13 @@
           },
           "startTime" : {
             "type" : "string",
+            "format" : "partial-time",
             "description" : "Start time",
             "example" : "09:00"
           },
           "endTime" : {
             "type" : "string",
+            "format" : "partial-time",
             "description" : "End time",
             "example" : "11:00"
           },
@@ -4301,11 +4305,13 @@
           },
           "startTime" : {
             "type" : "string",
+            "format" : "partial-time",
             "description" : "The start time for this official visit",
             "example" : "09:15"
           },
           "endTime" : {
             "type" : "string",
+            "format" : "partial-time",
             "description" : "The end time for this official visit",
             "example" : "10:15"
           },
@@ -4411,11 +4417,13 @@
           },
           "startTime" : {
             "type" : "string",
+            "format" : "partial-time",
             "description" : "The start time",
             "example" : "09:15"
           },
           "endTime" : {
             "type" : "string",
+            "format" : "partial-time",
             "description" : "The end time",
             "example" : "10:15"
           },
@@ -4840,11 +4848,13 @@
           },
           "startTime" : {
             "type" : "string",
+            "format" : "partial-time",
             "description" : "The start time of the official visit",
             "example" : "10:00"
           },
           "endTime" : {
             "type" : "string",
+            "format" : "partial-time",
             "description" : "The end time of the official visit",
             "example" : "11:00"
           },
@@ -5006,11 +5016,13 @@
           },
           "startTime" : {
             "type" : "string",
+            "format" : "partial-time",
             "description" : "Start time",
             "example" : "09:00"
           },
           "endTime" : {
             "type" : "string",
+            "format" : "partial-time",
             "description" : "End time",
             "example" : "11:00"
           },
@@ -5051,11 +5063,13 @@
           },
           "startTime" : {
             "type" : "string",
+            "format" : "partial-time",
             "description" : "Start time",
             "example" : "09:00"
           },
           "endTime" : {
             "type" : "string",
+            "format" : "partial-time",
             "description" : "End time",
             "example" : "11:00"
           },
@@ -5151,11 +5165,13 @@
           },
           "startTime" : {
             "type" : "string",
+            "format" : "partial-time",
             "description" : "Start time",
             "example" : "09:00"
           },
           "endTime" : {
             "type" : "string",
+            "format" : "partial-time",
             "description" : "End time",
             "example" : "11:00"
           },
@@ -5231,11 +5247,13 @@
           },
           "startTime" : {
             "type" : "string",
+            "format" : "partial-time",
             "description" : "The start time for this official visit",
             "example" : "09:15"
           },
           "endTime" : {
             "type" : "string",
+            "format" : "partial-time",
             "description" : "The end time for this official visit",
             "example" : "10:15"
           },
@@ -5454,11 +5472,13 @@
           },
           "startTime" : {
             "type" : "string",
+            "format" : "partial-time",
             "description" : "The start time for this official visit",
             "example" : "09:15"
           },
           "endTime" : {
             "type" : "string",
+            "format" : "partial-time",
             "description" : "The end time for this official visit",
             "example" : "10:15"
           },
@@ -5741,11 +5761,13 @@
           },
           "startTime" : {
             "type" : "string",
+            "format" : "partial-time",
             "description" : "The start time of the official visit",
             "example" : "10:00"
           },
           "endTime" : {
             "type" : "string",
+            "format" : "partial-time",
             "description" : "The end time of the official visit",
             "example" : "11:00"
           },
@@ -5850,11 +5872,13 @@
           },
           "startTime" : {
             "type" : "string",
+            "format" : "partial-time",
             "description" : "The start time on which to check for overlapping",
             "example" : "10:00"
           },
           "endTime" : {
             "type" : "string",
+            "format" : "partial-time",
             "description" : "The end time on which to check for overlapping",
             "example" : "11:00"
           },
@@ -6087,11 +6111,13 @@
           },
           "startTime" : {
             "type" : "string",
+            "format" : "partial-time",
             "description" : "The start time of the official visit",
             "example" : "10:00"
           },
           "endTime" : {
             "type" : "string",
+            "format" : "partial-time",
             "description" : "The end time of the official visit",
             "example" : "11:00"
           },
@@ -6286,11 +6312,13 @@
           },
           "startTime" : {
             "type" : [ "string", "null" ],
+            "format" : "partial-time",
             "description" : "The start time of the visit being checked. Optional, but must be supplied with the end time. When the times are supplied only visits overlapping them are returned",
             "example" : "10:00"
           },
           "endTime" : {
             "type" : [ "string", "null" ],
+            "format" : "partial-time",
             "description" : "The end time of the visit being checked. Optional, but must be supplied with the start time. When the times are supplied only visits overlapping them are returned",
             "example" : "11:00"
           }
@@ -6319,11 +6347,13 @@
           },
           "startTime" : {
             "type" : "string",
+            "format" : "partial-time",
             "description" : "The start time of the non-associate's official visit",
             "example" : "10:00"
           },
           "endTime" : {
             "type" : "string",
+            "format" : "partial-time",
             "description" : "The end time of the non-associate's official visit",
             "example" : "11:00"
           },
@@ -6608,11 +6638,13 @@
           },
           "startTime" : {
             "type" : "string",
+            "format" : "partial-time",
             "description" : "The start time for this visit time slot",
             "example" : "13:30"
           },
           "endTime" : {
             "type" : "string",
+            "format" : "partial-time",
             "description" : "The end time for this visit time slot",
             "example" : "14:30"
           },
@@ -6781,11 +6813,13 @@
           },
           "startTime" : {
             "type" : "string",
+            "format" : "partial-time",
             "description" : "Start time",
             "example" : "09:00"
           },
           "endTime" : {
             "type" : "string",
+            "format" : "partial-time",
             "description" : "End time",
             "example" : "11:00"
           },
@@ -6864,10 +6898,12 @@
             "format" : "date"
           },
           "startTime" : {
-            "type" : "string"
+            "type" : "string",
+            "format" : "partial-time"
           },
           "endTime" : {
-            "type" : "string"
+            "type" : "string",
+            "format" : "partial-time"
           },
           "visitStatusCode" : {
             "type" : [ "string", "null" ]
@@ -6948,10 +6984,12 @@
           },
           "startTime" : {
             "type" : "string",
+            "format" : "partial-time",
             "description" : "The Official visit start time"
           },
           "endTime" : {
             "type" : "string",
+            "format" : "partial-time",
             "description" : "The Official visit end time"
           },
           "dpsLocationId" : {
@@ -8035,10 +8073,12 @@
           },
           "startTime" : {
             "type" : "string",
+            "format" : "partial-time",
             "description" : "The start time for the official visit slot"
           },
           "endTime" : {
             "type" : "string",
+            "format" : "partial-time",
             "description" : "The end time for the official visit slot"
           },
           "dpsLocationId" : {
