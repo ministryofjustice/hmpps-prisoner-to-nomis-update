@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-09-09.4996.4a29fea"
+    "version" : "2026-09-16.5149.c7b9d97"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -499,34 +499,6 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/SysconAliasesAndIdentifiersResponseBody"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/person/search" : {
-      "post" : {
-        "tags" : [ "Search" ],
-        "operationId" : "personSearch",
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/PersonSearchRequest"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "description" : "The objects in the top level array will be ordered by the strongest match descending (first record strongest, last record weakest).",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/PersonSearchResponse"
                 }
               }
             }
@@ -1684,441 +1656,6 @@
         },
         "required" : [ "cprIdentifierId", "nomisIdentifierId" ]
       },
-      "PersonSearchRequest" : {
-        "type" : "object",
-        "properties" : {
-          "firstName" : {
-            "type" : "string"
-          },
-          "lastName" : {
-            "type" : "string"
-          },
-          "middleName" : {
-            "type" : [ "string", "null" ]
-          },
-          "dateOfBirth" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "firstNameAliases" : {
-            "type" : [ "array", "null" ],
-            "items" : {
-              "type" : "string"
-            }
-          },
-          "lastNameAliases" : {
-            "type" : [ "array", "null" ],
-            "items" : {
-              "type" : "string"
-            }
-          },
-          "dateOfBirthAliases" : {
-            "type" : [ "array", "null" ],
-            "items" : {
-              "type" : "string",
-              "format" : "date"
-            }
-          },
-          "postcodes" : {
-            "type" : [ "array", "null" ],
-            "items" : {
-              "type" : "string"
-            }
-          }
-        },
-        "required" : [ "dateOfBirth", "firstName", "lastName" ]
-      },
-      "CanonicalAddress" : {
-        "type" : "object",
-        "properties" : {
-          "cprAddressId" : {
-            "type" : "string",
-            "description" : "CPR address Id",
-            "example" : "ec4c7479-218c-4f11-a02d-edd749820679"
-          },
-          "noFixedAbode" : {
-            "type" : [ "boolean", "null" ],
-            "description" : "Person no fixed abode",
-            "examples" : [ false, true, null ]
-          },
-          "startDate" : {
-            "type" : [ "string", "null" ],
-            "description" : "Person address start date",
-            "example" : "2020-02-26"
-          },
-          "startDateTime" : {
-            "type" : [ "string", "null" ],
-            "format" : "date-time",
-            "description" : "Person address start date time",
-            "example" : "2026-02-26T11:08:46.347Z"
-          },
-          "endDate" : {
-            "type" : [ "string", "null" ],
-            "description" : "Person address end date",
-            "example" : "2023-07-15"
-          },
-          "endDateTime" : {
-            "type" : [ "string", "null" ],
-            "format" : "date-time",
-            "description" : "Person address end date time",
-            "example" : "2026-07-15T11:08:46.347Z"
-          },
-          "postcode" : {
-            "type" : [ "string", "null" ],
-            "description" : "Person address postcode",
-            "example" : "SW1H 9AJ"
-          },
-          "subBuildingName" : {
-            "type" : [ "string", "null" ],
-            "description" : "Person address sub building name",
-            "example" : "Sub building 2"
-          },
-          "buildingName" : {
-            "type" : [ "string", "null" ],
-            "description" : "Person address building Name",
-            "example" : "Main Building"
-          },
-          "buildingNumber" : {
-            "type" : [ "string", "null" ],
-            "description" : "Person address building number",
-            "example" : "102"
-          },
-          "thoroughfareName" : {
-            "type" : [ "string", "null" ],
-            "description" : "Person address thoroughfareName",
-            "example" : "Petty France"
-          },
-          "dependentLocality" : {
-            "type" : [ "string", "null" ],
-            "description" : "Person address dependentLocality",
-            "example" : "Westminster"
-          },
-          "postTown" : {
-            "type" : [ "string", "null" ],
-            "description" : "Person address post town",
-            "example" : "London"
-          },
-          "county" : {
-            "type" : [ "string", "null" ],
-            "description" : "Person address county",
-            "example" : "Greater London"
-          },
-          "country" : {
-            "type" : [ "string", "null" ],
-            "description" : "Person address country",
-            "example" : "United Kingdom of Great Britain and Northern Ireland (the)"
-          },
-          "countryCode" : {
-            "type" : [ "string", "null" ],
-            "description" : "Person address country code",
-            "enum" : [ "ABW", "AFG", "AGO", "AIA", "AKR", "ALA", "ALB", "AND", "ANT", "ARE", "ARG", "ARM", "ASM", "ATA", "ATF", "ATG", "AUS", "AUT", "AZE", "BDI", "BEL", "BEN", "BES", "BFA", "BGD", "BGR", "BHR", "BHS", "BIH", "BLM", "BLR", "BLZ", "BMU", "BOL", "BRA", "BRB", "BRN", "BTN", "BVT", "BWA", "CAF", "CAN", "CCK", "CHE", "CHL", "CHN", "CI", "CIV", "CMR", "COD", "COG", "COK", "COL", "COM", "CPV", "CRI", "CUB", "CUW", "CXR", "CYM", "CYP", "CZE", "DEU", "DJI", "DKL", "DMA", "DNK", "DOM", "DZA", "ECU", "EGY", "ENG", "ERI", "ESH", "ESP", "EST", "ETH", "FIN", "FJI", "FLK", "FRA", "FRO", "FSM", "FXX", "GAB", "GBR", "GEO", "GGY", "GHA", "GIB", "GIN", "GLP", "GMB", "GNB", "GNQ", "GRC", "GRD", "GRL", "GTM", "GUF", "GUM", "GUY", "HKG", "HMD", "HND", "HRV", "HTI", "HUN", "IDN", "IMN", "IND", "IOT", "IRL", "IRN", "IRQ", "ISL", "ISR", "ITA", "JAM", "JEY", "JOR", "JPN", "KAZ", "KEN", "KGZ", "KHM", "KIR", "KNA", "KOR", "KOS", "KWT", "LAO", "LBN", "LBR", "LBY", "LCA", "LIE", "LKA", "LSO", "LTU", "LUX", "LVA", "MAC", "MAF", "MAR", "MCO", "MDA", "MDG", "MDV", "MEX", "MHL", "MKD", "MLI", "MLT", "MMR", "MNE", "MNG", "MNP", "MOZ", "MRT", "MSR", "MTQ", "MUS", "MWI", "MYS", "MYT", "NAM", "NCL", "NER", "NFK", "NGA", "NI", "NIC", "NIU", "NLD", "NOR", "NPL", "NRU", "NZL", "OMN", "PAK", "PAN", "PCN", "PER", "PHL", "PLW", "PNG", "POL", "PRI", "PRK", "PRT", "PRY", "PSE", "PYF", "QAT", "REU", "ROU", "RUS", "RWA", "SAU", "SCG", "SCOT", "SDN", "SEN", "SGP", "SGS", "SHN", "SJM", "SLB", "SLE", "SLV", "SMR", "SOM", "SPM", "SRB", "SSD", "STP", "SU", "SUR", "SVK", "SVN", "SWE", "SWZ", "SXM", "SYC", "SYR", "TCA", "TCD", "TGO", "THA", "TJK", "TKL", "TKM", "TLS", "TON", "TTO", "TUN", "TUR", "TUV", "TWN", "TZA", "UGA", "UKR", "UMI", "URY", "USA", "UZB", "VAT", "VCT", "VEN", "VGB", "VIR", "VNM", "VUT", "WALES", "WLF", "WSM", "XRK", "XX", "XZ", "YEM", "YU", "ZAF", "ZMB", "ZWE" ],
-            "example" : "GBR"
-          },
-          "uprn" : {
-            "type" : [ "string", "null" ],
-            "description" : "Person address uprn",
-            "example" : "100120991537"
-          },
-          "status" : {
-            "$ref" : "#/components/schemas/CanonicalAddressStatus",
-            "description" : "Person address status"
-          },
-          "comment" : {
-            "type" : [ "string", "null" ],
-            "description" : "Person address comment",
-            "example" : "Some comment"
-          },
-          "typeVerified" : {
-            "type" : [ "boolean", "null" ],
-            "description" : "Person address comment",
-            "examples" : [ false, true, null ]
-          },
-          "usages" : {
-            "type" : "array",
-            "description" : "List of person address usages",
-            "items" : {
-              "$ref" : "#/components/schemas/CanonicalAddressUsage"
-            }
-          },
-          "contacts" : {
-            "type" : "array",
-            "description" : "List of person address contacts",
-            "items" : {
-              "$ref" : "#/components/schemas/CanonicalContact"
-            }
-          }
-        },
-        "required" : [ "contacts", "cprAddressId", "status", "usages" ]
-      },
-      "CanonicalAddressStatus" : {
-        "type" : "object",
-        "properties" : {
-          "code" : {
-            "type" : [ "string", "null" ],
-            "description" : "Address status code",
-            "enum" : [ "B", "M", "MA", "P", "PR", "PR1", "RJ", "RT", "S", "PM", "UNKNOWN" ],
-            "example" : "M"
-          },
-          "description" : {
-            "type" : [ "string", "null" ],
-            "description" : "Address status description",
-            "example" : "Main"
-          }
-        }
-      },
-      "CanonicalAddressUsage" : {
-        "type" : "object",
-        "properties" : {
-          "code" : {
-            "type" : [ "string", "null" ],
-            "description" : "Address usage code",
-            "enum" : [ "CARE", "CURFEW", "DAP", "DBA", "DBH", "DNF", "DOH", "DPH", "DSH", "DST", "DUT", "HDC", "HDC2", "HOME", "HOSP", "HOST", "OTHER", "RECEP", "RELEASE", "RES", "ROTL", "A02", "A16", "A10", "A11", "A17", "A07B", "A07A", "A14", "A13", "A08A", "A08C", "A08", "A01A", "A15", "A12", "A01C", "A01D", "A04", "A03", "A01", "A01B", "A05", "A06", "A07", "A08B", "A96", "A97", "A98", "A99", "CS02", "CS03", "CS04", "CS05", "CS06", "UNKNOWN" ],
-            "example" : "CURFEW"
-          },
-          "description" : {
-            "type" : [ "string", "null" ],
-            "description" : "Address usage description",
-            "example" : "Curfew Order"
-          },
-          "isActive" : {
-            "type" : "boolean",
-            "description" : "Address usage active flag",
-            "example" : true
-          }
-        },
-        "required" : [ "isActive" ]
-      },
-      "CanonicalAlias" : {
-        "type" : "object",
-        "properties" : {
-          "firstName" : {
-            "type" : [ "string", "null" ],
-            "description" : "Person alias first name",
-            "example" : "Jon"
-          },
-          "lastName" : {
-            "type" : [ "string", "null" ],
-            "description" : "Person alias last name",
-            "example" : "do"
-          },
-          "middleNames" : {
-            "type" : [ "string", "null" ],
-            "description" : "Person alias middle names",
-            "example" : "Morgain"
-          },
-          "title" : {
-            "$ref" : "#/components/schemas/CanonicalTitle",
-            "description" : "Person alias title"
-          },
-          "sex" : {
-            "$ref" : "#/components/schemas/CanonicalSex",
-            "description" : "Person alias sex"
-          }
-        },
-        "required" : [ "sex", "title" ]
-      },
-      "CanonicalContact" : {
-        "type" : "object",
-        "properties" : {
-          "type" : {
-            "$ref" : "#/components/schemas/CanonicalContactType",
-            "description" : "Contact type"
-          },
-          "value" : {
-            "type" : [ "string", "null" ],
-            "description" : "Contact value",
-            "example" : "+44 20 7946 0000"
-          },
-          "extension" : {
-            "type" : [ "string", "null" ],
-            "description" : "Contact extension",
-            "example" : "1234"
-          }
-        },
-        "required" : [ "type" ]
-      },
-      "CanonicalContactType" : {
-        "type" : "object",
-        "properties" : {
-          "code" : {
-            "type" : [ "string", "null" ],
-            "description" : "Address contact type code",
-            "example" : "HOME"
-          },
-          "description" : {
-            "type" : [ "string", "null" ],
-            "description" : "Address contact type description",
-            "example" : "Home"
-          }
-        }
-      },
-      "CanonicalSearchIdentifiers" : {
-        "type" : "object",
-        "properties" : {
-          "crn" : {
-            "type" : [ "string", "null" ]
-          },
-          "prisonNumber" : {
-            "type" : [ "string", "null" ]
-          },
-          "defendantId" : {
-            "type" : [ "string", "null" ]
-          },
-          "cid" : {
-            "type" : [ "string", "null" ]
-          },
-          "pncs" : {
-            "type" : "array",
-            "items" : {
-              "type" : "string"
-            }
-          },
-          "cros" : {
-            "type" : "array",
-            "items" : {
-              "type" : "string"
-            }
-          },
-          "nationalInsuranceNumbers" : {
-            "type" : "array",
-            "items" : {
-              "type" : "string"
-            }
-          },
-          "driverLicenseNumbers" : {
-            "type" : "array",
-            "items" : {
-              "type" : "string"
-            }
-          },
-          "arrestSummonsNumbers" : {
-            "type" : "array",
-            "items" : {
-              "type" : "string"
-            }
-          },
-          "otherIdentifiers" : {
-            "type" : "array",
-            "items" : {
-              "type" : "string"
-            }
-          }
-        },
-        "required" : [ "arrestSummonsNumbers", "cros", "driverLicenseNumbers", "nationalInsuranceNumbers", "otherIdentifiers", "pncs" ]
-      },
-      "CanonicalSex" : {
-        "type" : "object",
-        "properties" : {
-          "code" : {
-            "type" : [ "string", "null" ],
-            "description" : "Person sex code",
-            "enum" : [ "M", "F", "N", "NS" ],
-            "example" : "M"
-          },
-          "description" : {
-            "type" : [ "string", "null" ],
-            "description" : "Person sex description",
-            "example" : "Male"
-          }
-        }
-      },
-      "CanonicalTitle" : {
-        "type" : "object",
-        "properties" : {
-          "code" : {
-            "type" : [ "string", "null" ],
-            "description" : "Person title code",
-            "enum" : [ "MR", "MRS", "MISS", "MS", "MX", "REV", "FR", "IMAM", "RABBI", "BR", "SR", "DME", "DR", "LDY", "LRD", "SIR", "UN" ],
-            "example" : "Mr"
-          },
-          "description" : {
-            "type" : [ "string", "null" ],
-            "description" : "Person title description",
-            "example" : "Mr"
-          }
-        }
-      },
-      "PersonSearchResponse" : {
-        "type" : "object",
-        "properties" : {
-          "data" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/SearchData"
-            }
-          }
-        },
-        "required" : [ "data" ]
-      },
-      "SearchData" : {
-        "type" : "object",
-        "properties" : {
-          "name" : {
-            "$ref" : "#/components/schemas/SearchName"
-          },
-          "aliases" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/CanonicalAlias"
-            }
-          },
-          "addresses" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/CanonicalAddress"
-            }
-          },
-          "identifiers" : {
-            "$ref" : "#/components/schemas/CanonicalSearchIdentifiers"
-          },
-          "sourceSystem" : {
-            "type" : "string",
-            "enum" : [ "NOMIS", "DELIUS", "COMMON_PLATFORM", "LIBRA" ]
-          },
-          "status" : {
-            "type" : "string",
-            "enum" : [ "TRUSTED", "NOT_TRUSTED" ]
-          },
-          "linkedRecords" : {
-            "type" : "array",
-            "example" : [ {
-              "name" : {
-                "firstName" : "",
-                "middleNames" : "",
-                "lastName" : "",
-                "dateOfBirth" : ""
-              },
-              "aliases" : [ ],
-              "addresses" : [ ],
-              "identifiers" : [ ],
-              "sourceSystem" : "",
-              "status" : ""
-            } ],
-            "items" : {
-              "$ref" : "#/components/schemas/SearchData"
-            }
-          }
-        },
-        "required" : [ "addresses", "aliases", "identifiers", "linkedRecords", "name", "sourceSystem", "status" ]
-      },
-      "SearchName" : {
-        "type" : "object",
-        "properties" : {
-          "firstName" : {
-            "type" : [ "string", "null" ]
-          },
-          "middleNames" : {
-            "type" : [ "string", "null" ]
-          },
-          "lastName" : {
-            "type" : [ "string", "null" ]
-          },
-          "dateOfBirth" : {
-            "type" : [ "string", "null" ],
-            "format" : "date"
-          }
-        }
-      },
       "ProbationCreateAddress" : {
         "type" : "object",
         "properties" : {
@@ -2360,6 +1897,230 @@
         },
         "required" : [ "messages", "messagesFoundCount", "messagesReturnedCount" ]
       },
+      "CanonicalAddress" : {
+        "type" : "object",
+        "properties" : {
+          "cprAddressId" : {
+            "type" : "string",
+            "description" : "CPR address Id",
+            "example" : "ec4c7479-218c-4f11-a02d-edd749820679"
+          },
+          "noFixedAbode" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Person no fixed abode",
+            "examples" : [ false, true, null ]
+          },
+          "startDate" : {
+            "type" : [ "string", "null" ],
+            "description" : "Person address start date",
+            "example" : "2020-02-26"
+          },
+          "startDateTime" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "Person address start date time",
+            "example" : "2026-02-26T11:08:46.347Z"
+          },
+          "endDate" : {
+            "type" : [ "string", "null" ],
+            "description" : "Person address end date",
+            "example" : "2023-07-15"
+          },
+          "endDateTime" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "Person address end date time",
+            "example" : "2026-07-15T11:08:46.347Z"
+          },
+          "postcode" : {
+            "type" : [ "string", "null" ],
+            "description" : "Person address postcode",
+            "example" : "SW1H 9AJ"
+          },
+          "subBuildingName" : {
+            "type" : [ "string", "null" ],
+            "description" : "Person address sub building name",
+            "example" : "Sub building 2"
+          },
+          "buildingName" : {
+            "type" : [ "string", "null" ],
+            "description" : "Person address building Name",
+            "example" : "Main Building"
+          },
+          "buildingNumber" : {
+            "type" : [ "string", "null" ],
+            "description" : "Person address building number",
+            "example" : "102"
+          },
+          "thoroughfareName" : {
+            "type" : [ "string", "null" ],
+            "description" : "Person address thoroughfareName",
+            "example" : "Petty France"
+          },
+          "dependentLocality" : {
+            "type" : [ "string", "null" ],
+            "description" : "Person address dependentLocality",
+            "example" : "Westminster"
+          },
+          "postTown" : {
+            "type" : [ "string", "null" ],
+            "description" : "Person address post town",
+            "example" : "London"
+          },
+          "county" : {
+            "type" : [ "string", "null" ],
+            "description" : "Person address county",
+            "example" : "Greater London"
+          },
+          "country" : {
+            "type" : [ "string", "null" ],
+            "description" : "Person address country",
+            "example" : "United Kingdom of Great Britain and Northern Ireland (the)"
+          },
+          "countryCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "Person address country code",
+            "enum" : [ "ABW", "AFG", "AGO", "AIA", "AKR", "ALA", "ALB", "AND", "ANT", "ARE", "ARG", "ARM", "ASM", "ATA", "ATF", "ATG", "AUS", "AUT", "AZE", "BDI", "BEL", "BEN", "BES", "BFA", "BGD", "BGR", "BHR", "BHS", "BIH", "BLM", "BLR", "BLZ", "BMU", "BOL", "BRA", "BRB", "BRN", "BTN", "BVT", "BWA", "CAF", "CAN", "CCK", "CHE", "CHL", "CHN", "CI", "CIV", "CMR", "COD", "COG", "COK", "COL", "COM", "CPV", "CRI", "CUB", "CUW", "CXR", "CYM", "CYP", "CZE", "DEU", "DJI", "DKL", "DMA", "DNK", "DOM", "DZA", "ECU", "EGY", "ENG", "ERI", "ESH", "ESP", "EST", "ETH", "FIN", "FJI", "FLK", "FRA", "FRO", "FSM", "FXX", "GAB", "GBR", "GEO", "GGY", "GHA", "GIB", "GIN", "GLP", "GMB", "GNB", "GNQ", "GRC", "GRD", "GRL", "GTM", "GUF", "GUM", "GUY", "HKG", "HMD", "HND", "HRV", "HTI", "HUN", "IDN", "IMN", "IND", "IOT", "IRL", "IRN", "IRQ", "ISL", "ISR", "ITA", "JAM", "JEY", "JOR", "JPN", "KAZ", "KEN", "KGZ", "KHM", "KIR", "KNA", "KOR", "KOS", "KWT", "LAO", "LBN", "LBR", "LBY", "LCA", "LIE", "LKA", "LSO", "LTU", "LUX", "LVA", "MAC", "MAF", "MAR", "MCO", "MDA", "MDG", "MDV", "MEX", "MHL", "MKD", "MLI", "MLT", "MMR", "MNE", "MNG", "MNP", "MOZ", "MRT", "MSR", "MTQ", "MUS", "MWI", "MYS", "MYT", "NAM", "NCL", "NER", "NFK", "NGA", "NI", "NIC", "NIU", "NLD", "NOR", "NPL", "NRU", "NZL", "OMN", "PAK", "PAN", "PCN", "PER", "PHL", "PLW", "PNG", "POL", "PRI", "PRK", "PRT", "PRY", "PSE", "PYF", "QAT", "REU", "ROU", "RUS", "RWA", "SAU", "SCG", "SCOT", "SDN", "SEN", "SGP", "SGS", "SHN", "SJM", "SLB", "SLE", "SLV", "SMR", "SOM", "SPM", "SRB", "SSD", "STP", "SU", "SUR", "SVK", "SVN", "SWE", "SWZ", "SXM", "SYC", "SYR", "TCA", "TCD", "TGO", "THA", "TJK", "TKL", "TKM", "TLS", "TON", "TTO", "TUN", "TUR", "TUV", "TWN", "TZA", "UGA", "UKR", "UMI", "URY", "USA", "UZB", "VAT", "VCT", "VEN", "VGB", "VIR", "VNM", "VUT", "WALES", "WLF", "WSM", "XRK", "XX", "XZ", "YEM", "YU", "ZAF", "ZMB", "ZWE" ],
+            "example" : "GBR"
+          },
+          "uprn" : {
+            "type" : [ "string", "null" ],
+            "description" : "Person address uprn",
+            "example" : "100120991537"
+          },
+          "status" : {
+            "$ref" : "#/components/schemas/CanonicalAddressStatus",
+            "description" : "Person address status"
+          },
+          "comment" : {
+            "type" : [ "string", "null" ],
+            "description" : "Person address comment",
+            "example" : "Some comment"
+          },
+          "typeVerified" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Person address comment",
+            "examples" : [ false, true, null ]
+          },
+          "usages" : {
+            "type" : "array",
+            "description" : "List of person address usages",
+            "items" : {
+              "$ref" : "#/components/schemas/CanonicalAddressUsage"
+            }
+          },
+          "contacts" : {
+            "type" : "array",
+            "description" : "List of person address contacts",
+            "items" : {
+              "$ref" : "#/components/schemas/CanonicalContact"
+            }
+          }
+        },
+        "required" : [ "contacts", "cprAddressId", "status", "usages" ]
+      },
+      "CanonicalAddressStatus" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : [ "string", "null" ],
+            "description" : "Address status code",
+            "enum" : [ "B", "M", "MA", "P", "PR", "PR1", "RJ", "RT", "S", "PM", "UNKNOWN" ],
+            "example" : "M"
+          },
+          "description" : {
+            "type" : [ "string", "null" ],
+            "description" : "Address status description",
+            "example" : "Main"
+          }
+        }
+      },
+      "CanonicalAddressUsage" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : [ "string", "null" ],
+            "description" : "Address usage code",
+            "enum" : [ "CARE", "CURFEW", "DAP", "DBA", "DBH", "DNF", "DOH", "DPH", "DSH", "DST", "DUT", "HDC", "HDC2", "HOME", "HOSP", "HOST", "OTHER", "RECEP", "RELEASE", "RES", "ROTL", "A02", "A16", "A10", "A11", "A17", "A07B", "A07A", "A14", "A13", "A08A", "A08C", "A08", "A01A", "A15", "A12", "A01C", "A01D", "A04", "A03", "A01", "A01B", "A05", "A06", "A07", "A08B", "A96", "A97", "A98", "A99", "CS02", "CS03", "CS04", "CS05", "CS06", "UNKNOWN" ],
+            "example" : "CURFEW"
+          },
+          "description" : {
+            "type" : [ "string", "null" ],
+            "description" : "Address usage description",
+            "example" : "Curfew Order"
+          },
+          "isActive" : {
+            "type" : "boolean",
+            "description" : "Address usage active flag",
+            "example" : true
+          }
+        },
+        "required" : [ "isActive" ]
+      },
+      "CanonicalAlias" : {
+        "type" : "object",
+        "properties" : {
+          "firstName" : {
+            "type" : [ "string", "null" ],
+            "description" : "Person alias first name",
+            "example" : "Jon"
+          },
+          "lastName" : {
+            "type" : [ "string", "null" ],
+            "description" : "Person alias last name",
+            "example" : "do"
+          },
+          "middleNames" : {
+            "type" : [ "string", "null" ],
+            "description" : "Person alias middle names",
+            "example" : "Morgain"
+          },
+          "title" : {
+            "$ref" : "#/components/schemas/CanonicalTitle",
+            "description" : "Person alias title"
+          },
+          "sex" : {
+            "$ref" : "#/components/schemas/CanonicalSex",
+            "description" : "Person alias sex"
+          }
+        },
+        "required" : [ "sex", "title" ]
+      },
+      "CanonicalContact" : {
+        "type" : "object",
+        "properties" : {
+          "type" : {
+            "$ref" : "#/components/schemas/CanonicalContactType",
+            "description" : "Contact type"
+          },
+          "value" : {
+            "type" : [ "string", "null" ],
+            "description" : "Contact value",
+            "example" : "+44 20 7946 0000"
+          },
+          "extension" : {
+            "type" : [ "string", "null" ],
+            "description" : "Contact extension",
+            "example" : "1234"
+          }
+        },
+        "required" : [ "type" ]
+      },
+      "CanonicalContactType" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : [ "string", "null" ],
+            "description" : "Address contact type code",
+            "example" : "HOME"
+          },
+          "description" : {
+            "type" : [ "string", "null" ],
+            "description" : "Address contact type description",
+            "example" : "Home"
+          }
+        }
+      },
       "CanonicalEthnicity" : {
         "type" : "object",
         "properties" : {
@@ -2578,6 +2339,22 @@
           }
         }
       },
+      "CanonicalSex" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : [ "string", "null" ],
+            "description" : "Person sex code",
+            "enum" : [ "M", "F", "N", "NS" ],
+            "example" : "M"
+          },
+          "description" : {
+            "type" : [ "string", "null" ],
+            "description" : "Person sex description",
+            "example" : "Male"
+          }
+        }
+      },
       "CanonicalSexualOrientation" : {
         "type" : "object",
         "properties" : {
@@ -2591,6 +2368,22 @@
             "type" : [ "string", "null" ],
             "description" : "Person sexual orientation description",
             "example" : "Heterosexual"
+          }
+        }
+      },
+      "CanonicalTitle" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : [ "string", "null" ],
+            "description" : "Person title code",
+            "enum" : [ "MR", "MRS", "MISS", "MS", "MX", "REV", "FR", "IMAM", "RABBI", "BR", "SR", "DME", "DR", "LDY", "LRD", "SIR", "UN" ],
+            "example" : "Mr"
+          },
+          "description" : {
+            "type" : [ "string", "null" ],
+            "description" : "Person title description",
+            "example" : "Mr"
           }
         }
       },
