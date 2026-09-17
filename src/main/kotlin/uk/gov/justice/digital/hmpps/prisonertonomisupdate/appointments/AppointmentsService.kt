@@ -6,8 +6,10 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import tools.jackson.databind.json.JsonMapper
 import tools.jackson.module.kotlin.readValue
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AppointmentInstance
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.ConflictException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AppointmentMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateAppointmentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
@@ -15,6 +17,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiServi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateAppointmentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
 import java.time.LocalTime
+import kotlin.to
 
 @Service
 class AppointmentsService(
@@ -45,10 +48,23 @@ class AppointmentsService(
           eventTelemetry += "date" to request.eventDate.toString()
           eventTelemetry += "start" to request.startTime.toString()
 
-          AppointmentMappingDto(
-            nomisEventId = nomisApiService.createAppointment(request).eventId,
-            appointmentInstanceId = id,
-          )
+          try {
+            AppointmentMappingDto(
+              nomisEventId = nomisApiService.createAppointment(request).eventId,
+              appointmentInstanceId = id,
+            )
+          } catch (e: WebClientResponseException.Conflict) {
+            eventTelemetry += "duplicate-detected" to e.message
+            val response = e.getResponseBodyAs(ErrorResponse::class.java)!!
+            eventTelemetry += "message" to response.developerMessage.toString()
+            response.moreInfo?.toLong()?.let { eventId ->
+              AppointmentMappingDto(
+                nomisEventId = eventId,
+                appointmentInstanceId = id,
+              )
+            }
+              ?: throw ConflictException("Duplicate detected but no Nomis event ID returned")
+          }
         }
       }
       saveMapping { mappingService.createMapping(it) }
