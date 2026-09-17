@@ -166,6 +166,72 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
           }
         }
       }
+
+      @Nested
+      inner class WhenNomisServiceReportsDuplicate {
+        @BeforeEach
+        fun setUp() {
+          mappingServer.stubGetMappingGivenAppointmentInstanceIdWithError(APPOINTMENT_INSTANCE_ID, 404)
+          mappingServer.stubGetMappingGivenDpsLocationId(APPOINTMENT_DPS_LOCATION_ID, appointmentLocationMappingResponse)
+          appointmentsApi.stubGetAppointmentInstance(id = APPOINTMENT_INSTANCE_ID, response = appointmentResponse)
+          nomisApi.stubAppointmentCreateWithError(409, """{ "status" : 409, "moreInfo" : 222333444, "userMessage": "Duplicate appointment", "developerMessage": "Duplicate appointment" }""")
+
+          await untilCallTo {
+            awsSqsAppointmentDlqClient!!.countAllMessagesOnQueue(appointmentDlqUrl!!).get()
+          } matches { it == 0 }
+
+          publishAppointmentEvent("appointments.appointment-instance.created")
+        }
+
+        @Test
+        fun `will send appointment data to NOMIS`() {
+          await untilAsserted {
+            nomisApi.verify(
+              postRequestedFor(urlEqualTo("/appointments"))
+                .withRequestBody(matchingJsonPath("bookingId", equalTo("$BOOKING_ID")))
+                .withRequestBody(matchingJsonPath("internalLocationId", equalTo("$APPOINTMENT_NOMIS_LOCATION_ID")))
+                .withRequestBody(matchingJsonPath("eventDate", equalTo("2023-03-14")))
+                .withRequestBody(matchingJsonPath("startTime", equalTo("10:15")))
+                .withRequestBody(matchingJsonPath("endTime", equalTo("11:42")))
+                .withRequestBody(matchingJsonPath("eventSubType", equalTo("MEDI")))
+                .withRequestBody(matchingJsonPath("comment", equalTo("Some comment"))),
+            )
+          }
+          await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
+        }
+
+        @Test
+        fun `will create a mapping using the original eventId`() {
+          await untilAsserted {
+            mappingServer.verify(
+              postRequestedFor(urlEqualTo("/mapping/appointments"))
+                .withRequestBody(matchingJsonPath("nomisEventId", equalTo("222333444")))
+                .withRequestBody(matchingJsonPath("appointmentInstanceId", equalTo(APPOINTMENT_INSTANCE_ID.toString()))),
+            )
+          }
+          await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
+        }
+
+        @Test
+        fun `will create success telemetry`() {
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("appointment-create-success"),
+              check {
+                assertThat(it["appointmentInstanceId"]).isEqualTo(APPOINTMENT_INSTANCE_ID.toString())
+                assertThat(it["bookingId"]).isEqualTo(BOOKING_ID.toString())
+                assertThat(it["locationId"]).isEqualTo(APPOINTMENT_NOMIS_LOCATION_ID.toString())
+                assertThat(it["date"]).isEqualTo("2023-03-14")
+                assertThat(it["start"]).isEqualTo("10:15")
+                assertThat(it["nomisEventId"]).isEqualTo("222333444")
+                assertThat(it["duplicate-detected"]).isEqualTo("409 Conflict from POST http://localhost:8082/appointments")
+                assertThat(it["message"]).isEqualTo("Duplicate appointment")
+              },
+              isNull(),
+            )
+          }
+        }
+      }
     }
 
     @Nested
@@ -480,7 +546,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
     }
 
     @Test
-    fun `will log when duplicate is detected`() {
+    fun `will log when mapping duplicate is detected`() {
       appointmentsApi.stubGetAppointmentInstance(id = APPOINTMENT_INSTANCE_ID, response = appointmentResponse)
       mappingServer.stubGetMappingGivenDpsLocationId(APPOINTMENT_DPS_LOCATION_ID, appointmentLocationMappingResponse)
       mappingServer.stubGetMappingGivenAppointmentInstanceIdWithError(APPOINTMENT_INSTANCE_ID, 404)

@@ -564,12 +564,12 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubAppointmentCreateWithError(status: Int = 500) {
+  fun stubAppointmentCreateWithError(status: Int = 500, response: String = ERROR_RESPONSE) {
     stubFor(
       post("/appointments").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          .withBody(ERROR_RESPONSE)
+          .withBody(response)
           .withStatus(status),
       ),
     )
