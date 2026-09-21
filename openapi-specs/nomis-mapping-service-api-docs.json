@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-09-17.817.cff773a"
+    "version" : "2026-09-18.820.19a2785"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -830,6 +830,74 @@
         }
       }
     },
+    "/mapping/csras/move/booking-id/{bookingId}/from/{oldOffenderNo}/to/{newOffenderNo}" : {
+      "put" : {
+        "tags" : [ "csra-mapping-resource" ],
+        "summary" : "For all CSRAs with the given booking id and old offender no in the mapping table, sets the offender no to the new id",
+        "description" : "Used for update after a booking has been moved from one offender to another. Returns the affected CSRAs. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "updateCsraMappingsByBookingId",
+        "parameters" : [ {
+          "name" : "bookingId",
+          "in" : "path",
+          "description" : "The booking id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The booking id",
+            "example" : 1234567
+          },
+          "example" : 1234567
+        }, {
+          "name" : "oldOffenderNo",
+          "in" : "path",
+          "description" : "Previous prisoner number",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Previous prisoner number",
+            "example" : "A3422FE"
+          },
+          "example" : "A3422FE"
+        }, {
+          "name" : "newOffenderNo",
+          "in" : "path",
+          "description" : "New prisoner number to use",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "New prisoner number to use",
+            "example" : "A3457LZ"
+          },
+          "example" : "A3457LZ"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Replacement made, or not present in table",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/CsraMappingDto"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mapping/csras/merge/from/{oldOffenderNo}/to/{newOffenderNo}" : {
       "put" : {
         "tags" : [ "csra-mapping-resource" ],
@@ -863,63 +931,6 @@
           "200" : {
             "description" : "Replacement made, or not present in table",
             "content" : { }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/mapping/csras/merge/booking-id/{bookingId}/to/{newOffenderNo}" : {
-      "put" : {
-        "tags" : [ "csra-mapping-resource" ],
-        "summary" : "For all CSRAs with the given booking id in the mapping table, sets the offender no to the given 'to' id",
-        "description" : "Used for update after a booking has been moved from one offender to another. Returns the affected CSRAs. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "updateCsraMappingsByBookingId",
-        "parameters" : [ {
-          "name" : "bookingId",
-          "in" : "path",
-          "description" : "The booking id",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The booking id",
-            "example" : 1234567
-          },
-          "example" : 1234567
-        }, {
-          "name" : "newOffenderNo",
-          "in" : "path",
-          "description" : "New prisoner number to use",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "description" : "New prisoner number to use",
-            "example" : "A3457LZ"
-          },
-          "example" : "A3457LZ"
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Replacement made, or not present in table",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/CsraMappingDto"
-                  }
-                }
-              }
-            }
           },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
