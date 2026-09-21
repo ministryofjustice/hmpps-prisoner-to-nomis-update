@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-09-16.5149.c7b9d97"
+    "version" : "2026-09-18.5182.a0d2dfb"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -499,6 +499,43 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/SysconAliasesAndIdentifiersResponseBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/syscon-sync/addresses/{prisonNumber}" : {
+      "post" : {
+        "tags" : [ "Syscon Sync" ],
+        "description" : "Save the prison addresses for the given prison number. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
+        "operationId" : "saveAddresses",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PrisonAddressesRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SysconAddressesResponseBody"
                 }
               }
             }
@@ -1655,6 +1692,207 @@
           }
         },
         "required" : [ "cprIdentifierId", "nomisIdentifierId" ]
+      },
+      "PrisonAddress" : {
+        "type" : "object",
+        "properties" : {
+          "nomisAddressId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Is nomis address id",
+            "example" : 5678
+          },
+          "fullAddress" : {
+            "type" : [ "string", "null" ],
+            "description" : "The full address",
+            "example" : "Sub building 2, Main Building, 102 Petty France, Westminster, London, Greater London, SW1H 9AJ"
+          },
+          "noFixedAbode" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Is the person without a permanent residence",
+            "example" : false
+          },
+          "startDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "The address start date",
+            "example" : "2020-02-26"
+          },
+          "endDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "The address end date",
+            "example" : "2023-07-15"
+          },
+          "postcode" : {
+            "type" : [ "string", "null" ],
+            "description" : "The address postcode",
+            "example" : "SW1H 9AJ"
+          },
+          "subBuildingName" : {
+            "type" : [ "string", "null" ],
+            "description" : "The address sub building name",
+            "example" : "Sub building 2"
+          },
+          "buildingName" : {
+            "type" : [ "string", "null" ],
+            "description" : "The address building name",
+            "example" : "Main Building"
+          },
+          "buildingNumber" : {
+            "type" : [ "string", "null" ],
+            "description" : "The address building number",
+            "example" : "102"
+          },
+          "thoroughfareName" : {
+            "type" : [ "string", "null" ],
+            "description" : "The address thoroughfare name",
+            "example" : "Petty France"
+          },
+          "dependentLocality" : {
+            "type" : [ "string", "null" ],
+            "description" : "The address dependent locality",
+            "example" : "Westminster"
+          },
+          "postTown" : {
+            "type" : [ "string", "null" ],
+            "description" : "The address building number",
+            "example" : "London"
+          },
+          "county" : {
+            "type" : [ "string", "null" ],
+            "description" : "The address building number",
+            "example" : "Greater London"
+          },
+          "countryCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "The address country code",
+            "enum" : [ "ABW", "AFG", "AGO", "AIA", "AKR", "ALA", "ALB", "AND", "ANT", "ARE", "ARG", "ARM", "ASM", "ATA", "ATF", "ATG", "AUS", "AUT", "AZE", "BDI", "BEL", "BEN", "BES", "BFA", "BGD", "BGR", "BHR", "BHS", "BIH", "BLM", "BLR", "BLZ", "BMU", "BOL", "BRA", "BRB", "BRN", "BTN", "BVT", "BWA", "CAF", "CAN", "CCK", "CHE", "CHL", "CHN", "CI", "CIV", "CMR", "COD", "COG", "COK", "COL", "COM", "CPV", "CRI", "CUB", "CUW", "CXR", "CYM", "CYP", "CZE", "DEU", "DJI", "DKL", "DMA", "DNK", "DOM", "DZA", "ECU", "EGY", "ENG", "ERI", "ESH", "ESP", "EST", "ETH", "FIN", "FJI", "FLK", "FRA", "FRO", "FSM", "FXX", "GAB", "GBR", "GEO", "GGY", "GHA", "GIB", "GIN", "GLP", "GMB", "GNB", "GNQ", "GRC", "GRD", "GRL", "GTM", "GUF", "GUM", "GUY", "HKG", "HMD", "HND", "HRV", "HTI", "HUN", "IDN", "IMN", "IND", "IOT", "IRL", "IRN", "IRQ", "ISL", "ISR", "ITA", "JAM", "JEY", "JOR", "JPN", "KAZ", "KEN", "KGZ", "KHM", "KIR", "KNA", "KOR", "KOS", "KWT", "LAO", "LBN", "LBR", "LBY", "LCA", "LIE", "LKA", "LSO", "LTU", "LUX", "LVA", "MAC", "MAF", "MAR", "MCO", "MDA", "MDG", "MDV", "MEX", "MHL", "MKD", "MLI", "MLT", "MMR", "MNE", "MNG", "MNP", "MOZ", "MRT", "MSR", "MTQ", "MUS", "MWI", "MYS", "MYT", "NAM", "NCL", "NER", "NFK", "NGA", "NI", "NIC", "NIU", "NLD", "NOR", "NPL", "NRU", "NZL", "OMN", "PAK", "PAN", "PCN", "PER", "PHL", "PLW", "PNG", "POL", "PRI", "PRK", "PRT", "PRY", "PSE", "PYF", "QAT", "REU", "ROU", "RUS", "RWA", "SAU", "SCG", "SCOT", "SDN", "SEN", "SGP", "SGS", "SHN", "SJM", "SLB", "SLE", "SLV", "SMR", "SOM", "SPM", "SRB", "SSD", "STP", "SU", "SUR", "SVK", "SVN", "SWE", "SWZ", "SXM", "SYC", "SYR", "TCA", "TCD", "TGO", "THA", "TJK", "TKL", "TKM", "TLS", "TON", "TTO", "TUN", "TUR", "TUV", "TWN", "TZA", "UGA", "UKR", "UMI", "URY", "USA", "UZB", "VAT", "VCT", "VEN", "VGB", "VIR", "VNM", "VUT", "WALES", "WLF", "WSM", "XRK", "XX", "XZ", "YEM", "YU", "ZAF", "ZMB", "ZWE" ],
+            "example" : "GBR"
+          },
+          "comment" : {
+            "type" : [ "string", "null" ],
+            "description" : "The address comment",
+            "example" : "String"
+          },
+          "isPrimary" : {
+            "type" : "boolean",
+            "description" : "Is this the main address",
+            "example" : true
+          },
+          "isMail" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Is this the mail address",
+            "example" : true
+          },
+          "addressUsage" : {
+            "type" : "array",
+            "description" : "List of address usages",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonAddressUsage"
+            }
+          },
+          "contacts" : {
+            "type" : "array",
+            "description" : "List of address contacts",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonContact"
+            }
+          }
+        },
+        "required" : [ "addressUsage", "contacts", "isPrimary", "nomisAddressId" ]
+      },
+      "PrisonAddressUsage" : {
+        "type" : "object",
+        "properties" : {
+          "nomisAddressUsageId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The nomis address usage id",
+            "example" : 5678
+          },
+          "addressUsageCode" : {
+            "type" : "string",
+            "description" : "The address usage code",
+            "enum" : [ "CARE", "CURFEW", "DAP", "DBA", "DBH", "DNF", "DOH", "DPH", "DSH", "DST", "DUT", "HDC", "HDC2", "HOME", "HOSP", "HOST", "OTHER", "RECEP", "RELEASE", "RES", "ROTL", "A02", "A16", "A10", "A11", "A17", "A07B", "A07A", "A14", "A13", "A08A", "A08C", "A08", "A01A", "A15", "A12", "A01C", "A01D", "A04", "A03", "A01", "A01B", "A05", "A06", "A07", "A08B", "A96", "A97", "A98", "A99", "CS02", "CS03", "CS04", "CS05", "CS06", "UNKNOWN" ],
+            "example" : "DSH"
+          },
+          "isActive" : {
+            "type" : "boolean",
+            "description" : "Is the address active",
+            "example" : true
+          }
+        },
+        "required" : [ "addressUsageCode", "isActive", "nomisAddressUsageId" ]
+      },
+      "PrisonAddressesRequest" : {
+        "type" : "object",
+        "properties" : {
+          "addresses" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonAddress"
+            },
+            "minItems" : 1
+          }
+        },
+        "required" : [ "addresses" ]
+      },
+      "PrisonContact" : {
+        "type" : "object",
+        "properties" : {
+          "nomisContactId" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int64",
+            "description" : "The nomis contact id",
+            "example" : 1234
+          },
+          "value" : {
+            "type" : [ "string", "null" ],
+            "description" : "The contact value",
+            "example" : "01234567890"
+          },
+          "type" : {
+            "type" : "string",
+            "description" : "The contact type",
+            "enum" : [ "HOME", "BUS", "FAX", "ALTB", "ALTH", "MOBILE", "VISIT", "EMAIL" ],
+            "example" : "HOME"
+          },
+          "extension" : {
+            "type" : [ "string", "null" ],
+            "description" : "The contact extension",
+            "example" : "235"
+          }
+        },
+        "required" : [ "type" ]
+      },
+      "SysconAddressMapping" : {
+        "type" : "object",
+        "properties" : {
+          "nomisAddressId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "cprAddressId" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "cprAddressId", "nomisAddressId" ]
+      },
+      "SysconAddressesResponseBody" : {
+        "type" : "object",
+        "properties" : {
+          "prisonNumber" : {
+            "type" : "string"
+          },
+          "addressesMappings" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SysconAddressMapping"
+            }
+          }
+        },
+        "required" : [ "addressesMappings", "prisonNumber" ]
       },
       "ProbationCreateAddress" : {
         "type" : "object",

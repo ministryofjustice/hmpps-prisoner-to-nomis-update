@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-09-10.522.da686e1"
+    "version" : "2026-09-18.540.36d3c05"
   },
   "servers" : [ {
     "url" : "/",
@@ -1690,7 +1690,7 @@
             "items" : {
               "type" : "string",
               "description" : "A high-risk CSRA rating type for the due-for-review worklist and its filter",
-              "enum" : [ "HIGH", "HIGH_GENERAL", "HIGH_GENERAL_INTERIM", "HIGH_SPECIFIC" ]
+              "enum" : [ "HIGH", "HIGH_GENERAL", "HIGH_GENERAL_PROVISIONAL", "HIGH_GENERAL_INTERIM", "HIGH_SPECIFIC", "HIGH_SPECIFIC_PROVISIONAL", "HIGH_SPECIFIC_INTERIM" ]
             }
           }
         }, {
@@ -3983,7 +3983,7 @@
             "items" : {
               "type" : "string",
               "description" : "A high-risk CSRA rating type for the due-for-review worklist and its filter",
-              "enum" : [ "HIGH", "HIGH_GENERAL", "HIGH_GENERAL_INTERIM", "HIGH_SPECIFIC" ]
+              "enum" : [ "HIGH", "HIGH_GENERAL", "HIGH_GENERAL_PROVISIONAL", "HIGH_GENERAL_INTERIM", "HIGH_SPECIFIC", "HIGH_SPECIFIC_PROVISIONAL", "HIGH_SPECIFIC_INTERIM" ]
             }
           }
         },
@@ -4017,7 +4017,7 @@
           "ratingType" : {
             "type" : "string",
             "description" : "The current high-risk rating type",
-            "enum" : [ "HIGH", "HIGH_GENERAL", "HIGH_GENERAL_INTERIM", "HIGH_SPECIFIC" ],
+            "enum" : [ "HIGH", "HIGH_GENERAL", "HIGH_GENERAL_PROVISIONAL", "HIGH_GENERAL_INTERIM", "HIGH_SPECIFIC", "HIGH_SPECIFIC_PROVISIONAL", "HIGH_SPECIFIC_INTERIM" ],
             "example" : "HIGH_GENERAL"
           },
           "rating" : {

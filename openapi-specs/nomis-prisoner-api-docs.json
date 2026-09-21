@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-09-17.2082.8509b1b"
+    "version" : "2026-09-18.2096.7b808df"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -22695,6 +22695,71 @@
         }
       }
     },
+    "/finance/prisoners/{prisonNumber}/scheduled-payments" : {
+      "get" : {
+        "tags" : [ "prisoner-scheduled-payments-resource" ],
+        "summary" : "Get a prisoner's scheduled payments by their prison number",
+        "description" : "Retrieves a prisoner's scheduled payments. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getPrisonerScheduledPayments",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "description" : "prisonNumber",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "prisonNumber",
+            "example" : "A1234BC"
+          },
+          "example" : "A1234BC"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Scheduled Payment Information Returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/PrisonerScheduledPaymentDto"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint when role NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Prisoner does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/finance/prisoners/{prisonNumber}/balance/reconcile" : {
       "get" : {
         "tags" : [ "prisoner-balance-resource" ],
@@ -22815,6 +22880,134 @@
           },
           "404" : {
             "description" : "Prisoner does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/finance/prisoners/{prisonNumber}/advances" : {
+      "get" : {
+        "tags" : [ "prisoner-advance-resource" ],
+        "summary" : "Get a prisoner's advances by their prison number",
+        "description" : "Retrieves a prisoner's advances. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getPrisonerAdvances",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "description" : "prisonNumber",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "prisonNumber",
+            "example" : "A1234BC"
+          },
+          "example" : "A1234BC"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Advance Information Returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/PrisonerAdvanceDto"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint when role NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Prisoner does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/finance/prisoners/scheduled-payments/{scheduledPaymentId}" : {
+      "get" : {
+        "tags" : [ "prisoner-scheduled-payments-resource" ],
+        "summary" : "Get a prisoner scheduled payment by id",
+        "description" : "Retrieves a prisoner scheduled payment identified by id. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getScheduledPayment",
+        "parameters" : [ {
+          "name" : "scheduledPaymentId",
+          "in" : "path",
+          "description" : "Id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Id",
+            "example" : 123456789
+          },
+          "example" : 123456789
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Scheduled Payment Information Returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonerScheduledPaymentDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Scheduled Payment does not exist",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -23433,6 +23626,69 @@
           },
           "403" : {
             "description" : "Forbidden to access this endpoint when role NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/finance/prisoners/advances/{advanceId}" : {
+      "get" : {
+        "tags" : [ "prisoner-advance-resource" ],
+        "summary" : "Get a prisoner advance by id",
+        "description" : "Retrieves a prisoner advance identified by id. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getAdvance",
+        "parameters" : [ {
+          "name" : "advanceId",
+          "in" : "path",
+          "description" : "Id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Id",
+            "example" : 123456789
+          },
+          "example" : 123456789
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Advance Information Returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonerAdvanceDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Advance does not exist",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -42514,6 +42770,71 @@
         },
         "required" : [ "accounts", "prisonNumber", "rootOffenderId" ]
       },
+      "PrisonerScheduledPaymentDto" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The scheduled payment id",
+            "example" : 123456
+          },
+          "prisonNumber" : {
+            "type" : "string",
+            "description" : "The prisonNumber",
+            "example" : "A1234BC"
+          },
+          "caseloadId" : {
+            "type" : "string",
+            "description" : "The caseload",
+            "example" : "MDI"
+          },
+          "transactionType" : {
+            "type" : "string",
+            "description" : "transaction type",
+            "example" : "TELE"
+          },
+          "amount" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The amount in pence to be paid to the prison, so £1.50 returned as 150",
+            "example" : 150
+          },
+          "startDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The start date of the scheduled payment",
+            "example" : "2024-06-01"
+          },
+          "endDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "The date the scheduled payment ends or null if it does not end",
+            "example" : "2024-06-01"
+          },
+          "reference" : {
+            "type" : [ "string", "null" ],
+            "description" : "The reference for the scheduled payment",
+            "example" : "REF12345"
+          },
+          "comment" : {
+            "type" : [ "string", "null" ],
+            "description" : "The comment for the scheduled payment",
+            "example" : "Sched payment for personal expenses"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "The user who created the scheduled payment",
+            "example" : "FRED_SMITH"
+          },
+          "status" : {
+            "type" : [ "string", "null" ],
+            "description" : "The status of the scheduled payment",
+            "example" : "ACTIVE"
+          }
+        },
+        "required" : [ "amount", "caseloadId", "createdBy", "id", "prisonNumber", "startDate", "transactionType" ]
+      },
       "AggregatedAccountDto" : {
         "type" : "object",
         "properties" : {
@@ -42622,6 +42943,77 @@
           }
         },
         "required" : [ "accounts", "prisonNumber", "rootOffenderId" ]
+      },
+      "PrisonerAdvanceDto" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The advance id",
+            "example" : 123456
+          },
+          "prisonNumber" : {
+            "type" : "string",
+            "description" : "The prisonNumber",
+            "example" : "A1234BC"
+          },
+          "caseloadId" : {
+            "type" : "string",
+            "description" : "The caseload",
+            "example" : "MDI"
+          },
+          "transactionType" : {
+            "type" : "string",
+            "description" : "transaction type",
+            "example" : "TELE"
+          },
+          "advanceAmount" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The total amount in pence to be paid to the prisoner, so £1.50 returned as 150",
+            "example" : 150
+          },
+          "advanceDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "The date of the advance given to the prisoner",
+            "example" : "2024-06-01"
+          },
+          "repaymentAmount" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The amount to be taken from the prisoner as a weekly repayment, in pence",
+            "example" : 150
+          },
+          "startDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The start date of the repayment",
+            "example" : "2024-06-01"
+          },
+          "reference" : {
+            "type" : [ "string", "null" ],
+            "description" : "The reference for the advance",
+            "example" : "REF12345"
+          },
+          "comment" : {
+            "type" : [ "string", "null" ],
+            "description" : "The comment for the advance",
+            "example" : "Advance for personal expenses"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "The user who created the advance",
+            "example" : "FRED_SMITH"
+          },
+          "status" : {
+            "type" : [ "string", "null" ],
+            "description" : "The status of the advance",
+            "example" : "ACTIVE"
+          }
+        },
+        "required" : [ "advanceAmount", "caseloadId", "createdBy", "id", "prisonNumber", "repaymentAmount", "startDate", "transactionType" ]
       },
       "PagedModelLong" : {
         "type" : "object",
@@ -43510,9 +43902,27 @@
             "items" : {
               "$ref" : "#/components/schemas/OffenderAddressUsage"
             }
+          },
+          "createdDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Date time when the record was created the record in NOMIS"
+          },
+          "createdByUsername" : {
+            "type" : "string",
+            "description" : "Username of person who created the record in NOMIS"
+          },
+          "lastUpdatedDateTime" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "Date time when the record was last updated the record in NOMIS"
+          },
+          "lastUpdatedByUsername" : {
+            "type" : [ "string", "null" ],
+            "description" : "Username of person who last updated the record in NOMIS"
           }
         },
-        "required" : [ "addressId", "mailAddress", "primaryAddress" ]
+        "required" : [ "addressId", "createdByUsername", "createdDateTime", "lastUpdatedByUsername", "lastUpdatedDateTime", "mailAddress", "primaryAddress" ]
       },
       "OffenderAddressUsage" : {
         "type" : "object",
@@ -43531,9 +43941,27 @@
           "active" : {
             "type" : "boolean",
             "description" : "Whether the address usage is active"
+          },
+          "createdDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Date time when the record was created the record in NOMIS"
+          },
+          "createdByUsername" : {
+            "type" : "string",
+            "description" : "Username of person who created the record in NOMIS"
+          },
+          "lastUpdatedDateTime" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "Date time when the record was last updated the record in NOMIS"
+          },
+          "lastUpdatedByUsername" : {
+            "type" : [ "string", "null" ],
+            "description" : "Username of person who last updated the record in NOMIS"
           }
         },
-        "required" : [ "active", "addressId", "usage" ]
+        "required" : [ "active", "addressId", "createdByUsername", "createdDateTime", "lastUpdatedByUsername", "lastUpdatedDateTime", "usage" ]
       },
       "OffenderBelief" : {
         "type" : "object",
@@ -43590,9 +44018,27 @@
             "type" : "string",
             "description" : "The email address",
             "example" : "john.smith@internet.co.uk"
+          },
+          "createdDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Date time when the record was created the record in NOMIS"
+          },
+          "createdByUsername" : {
+            "type" : "string",
+            "description" : "Username of person who created the record in NOMIS"
+          },
+          "lastUpdatedDateTime" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "Date time when the record was last updated the record in NOMIS"
+          },
+          "lastUpdatedByUsername" : {
+            "type" : [ "string", "null" ],
+            "description" : "Username of person who last updated the record in NOMIS"
           }
         },
-        "required" : [ "email", "emailAddressId" ]
+        "required" : [ "createdByUsername", "createdDateTime", "email", "emailAddressId", "lastUpdatedByUsername", "lastUpdatedDateTime" ]
       },
       "OffenderPhoneNumber" : {
         "type" : "object",
@@ -43614,9 +44060,27 @@
           "type" : {
             "$ref" : "#/components/schemas/CodeDescription",
             "description" : "Phone type"
+          },
+          "createdDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Date time when the record was created the record in NOMIS"
+          },
+          "createdByUsername" : {
+            "type" : "string",
+            "description" : "Username of person who created the record in NOMIS"
+          },
+          "lastUpdatedDateTime" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "Date time when the record was last updated the record in NOMIS"
+          },
+          "lastUpdatedByUsername" : {
+            "type" : [ "string", "null" ],
+            "description" : "Username of person who last updated the record in NOMIS"
           }
         },
-        "required" : [ "number", "phoneId", "type" ]
+        "required" : [ "createdByUsername", "createdDateTime", "lastUpdatedByUsername", "lastUpdatedDateTime", "number", "phoneId", "type" ]
       },
       "BookingIdsWithLast" : {
         "type" : "object",
