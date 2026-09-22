@@ -221,12 +221,10 @@ generic-service:
       schedule: "00 3 * * *"
     - name: transfer-sched-act-recon
       type: TRANSFER_SCHEDULER_ACTIVE_RECON
-      schedule: "30 4 * * *"
-      suspend: true
+      schedule: "45 3 * * 6"
     - name: transfer-sched-all-recon
       type: TRANSFER_SCHEDULER_ALL_RECON
-      schedule: "30 4 * * *"
-      suspend: true
+      schedule: "45 3 * * 1-5"
     - name: visit-balance-recon
       type: VISIT_BALANCE_RECON
       schedule: "45 4 * * *"
