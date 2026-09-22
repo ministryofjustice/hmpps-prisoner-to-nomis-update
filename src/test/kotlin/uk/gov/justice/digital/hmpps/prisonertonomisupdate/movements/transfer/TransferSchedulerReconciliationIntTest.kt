@@ -350,8 +350,9 @@ class TransferSchedulerReconciliationIntTest(
         )
       }
 
+      // DPS consider a schedule without a time, but with a movement, to be scheduled. So for reconciliation we must do the same.
       @Test
-      fun `should report extra NOMIS movement as unscheduled`() = runTest {
+      fun `should report extra NOMIS movement as scheduled`() = runTest {
         allPrisonersReconciliationService.generateTransferSchedulerReconciliationReportBatch()
         awaitReportFinished()
 
@@ -360,7 +361,7 @@ class TransferSchedulerReconciliationIntTest(
           eq(
             mapOf(
               "offenderNo" to offender,
-              "type" to "UNSCHEDULED_MOVEMENT",
+              "type" to "SCHEDULED_MOVEMENT",
               "nomisCount" to "1",
               "dpsCount" to "0",
               "unexpected-nomis-ids" to "[12345_3]",
@@ -375,7 +376,7 @@ class TransferSchedulerReconciliationIntTest(
           eq(
             mapOf(
               "offenderNo" to offender,
-              "type" to "SCHEDULED_MOVEMENT",
+              "type" to "UNSCHEDULED_MOVEMENT",
               "nomisCount" to "1",
               "dpsCount" to "0",
               "unexpected-nomis-ids" to "[12345_3]",
