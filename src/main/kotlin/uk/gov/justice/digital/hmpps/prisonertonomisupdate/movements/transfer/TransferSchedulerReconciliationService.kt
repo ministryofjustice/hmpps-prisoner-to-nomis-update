@@ -353,7 +353,7 @@ class TransferScheduleReconciliationService(
 
   // For reconciliation, we consider NOMIS schedules without a start time as unscheduled to match DPS
   private fun OffenderTransferMovementsResponse.scheduledMovementIds() = bookings.flatMap { it.transferSchedules }
-    .filter { it.schedule.startTime != null }
+    .filter { it.schedule.startTime != null || it.movement != null }
     .mapNotNull { it.movement }
     .map { NomisMovementId(it.bookingId, it.sequence) }
 
@@ -362,7 +362,7 @@ class TransferScheduleReconciliationService(
       .forEach { add(NomisMovementId(it.bookingId, it.sequence)) }
     // For reconciliation, we consider NOMIS schedules without a start time as unscheduled to match DPS
     bookings.flatMap { it.transferSchedules }
-      .filter { it.schedule.startTime == null }
+      .filter { it.schedule.startTime == null && it.movement == null }
       .mapNotNull { it.movement }
       .forEach { add(NomisMovementId(it.bookingId, it.sequence)) }
   }
