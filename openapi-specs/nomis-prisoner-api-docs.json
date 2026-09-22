@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-09-18.2096.7b808df"
+    "version" : "2026-09-21.2103.219e603"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -24880,136 +24880,6 @@
         }
       }
     },
-    "/core-person/{prisonNumber}/phoneNumbers" : {
-      "get" : {
-        "tags" : [ "core-person-resource" ],
-        "summary" : "Get all the phone number information for an offender by prison number",
-        "description" : "Retrieves the phone numbers information for an offender. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-        "operationId" : "getOffenderPhoneNumbersByPrisonNumber",
-        "parameters" : [ {
-          "name" : "prisonNumber",
-          "in" : "path",
-          "description" : "Prison number aka noms id / offender id display",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "description" : "Prison number aka noms id / offender id display",
-            "example" : "A1234BC"
-          },
-          "example" : "A1234BC"
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Core phone number information returned",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/OffenderPhoneNumber"
-                  }
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Offender does not exist",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/core-person/{prisonNumber}/emailAddresses" : {
-      "get" : {
-        "tags" : [ "core-person-resource" ],
-        "summary" : "Get all the email address information for an offender by prison number",
-        "description" : "Retrieves the email addresses information for an offender. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-        "operationId" : "getOffenderEmailAddressesByPrisonNumber",
-        "parameters" : [ {
-          "name" : "prisonNumber",
-          "in" : "path",
-          "description" : "Prison number aka noms id / offender id display",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "description" : "Prison number aka noms id / offender id display",
-            "example" : "A1234BC"
-          },
-          "example" : "A1234BC"
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Core email address information returned",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/OffenderEmailAddress"
-                  }
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Offender does not exist",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/core-person/{prisonNumber}/aliases-identifiers" : {
       "get" : {
         "tags" : [ "core-person-resource" ],
@@ -25075,12 +24945,12 @@
         }
       }
     },
-    "/core-person/{prisonNumber}/addresses" : {
+    "/core-person/{prisonNumber}/addresses-contacts" : {
       "get" : {
         "tags" : [ "core-person-resource" ],
-        "summary" : "Get all the address information for an offender by prison number",
-        "description" : "Retrieves the addresses information for an offender. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-        "operationId" : "getOffenderAddressesByPrisonNumber",
+        "summary" : "Get all the address and contact information for an offender by prison number",
+        "description" : "Retrieves the address and contact information for an offender. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getOffenderAddressesAndContactsByPrisonNumber",
         "parameters" : [ {
           "name" : "prisonNumber",
           "in" : "path",
@@ -25095,14 +24965,11 @@
         } ],
         "responses" : {
           "200" : {
-            "description" : "Core addresses information returned",
+            "description" : "Core addresses and contacts returned",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/OffenderAddress"
-                  }
+                  "$ref" : "#/components/schemas/CorePersonAddressContact"
                 }
               }
             }
@@ -44081,6 +43948,33 @@
           }
         },
         "required" : [ "createdByUsername", "createdDateTime", "lastUpdatedByUsername", "lastUpdatedDateTime", "number", "phoneId", "type" ]
+      },
+      "CorePersonAddressContact" : {
+        "type" : "object",
+        "description" : "The data held in NOMIS for an offender",
+        "properties" : {
+          "addresses" : {
+            "type" : [ "array", "null" ],
+            "description" : "List of addresses for the person",
+            "items" : {
+              "$ref" : "#/components/schemas/OffenderAddress"
+            }
+          },
+          "phoneNumbers" : {
+            "type" : [ "array", "null" ],
+            "description" : "List of phone numbers for the person",
+            "items" : {
+              "$ref" : "#/components/schemas/OffenderPhoneNumber"
+            }
+          },
+          "emailAddresses" : {
+            "type" : [ "array", "null" ],
+            "description" : "List of email addresses for the person",
+            "items" : {
+              "$ref" : "#/components/schemas/OffenderEmailAddress"
+            }
+          }
+        }
       },
       "BookingIdsWithLast" : {
         "type" : "object",
