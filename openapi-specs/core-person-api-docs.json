@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-09-18.5182.a0d2dfb"
+    "version" : "2026-09-22.5228.a4f58f0"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -506,11 +506,11 @@
         }
       }
     },
-    "/syscon-sync/addresses/{prisonNumber}" : {
+    "/syscon-sync/addresses-contacts/{prisonNumber}" : {
       "post" : {
         "tags" : [ "Syscon Sync" ],
-        "description" : "Save the prison addresses for the given prison number. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
-        "operationId" : "saveAddresses",
+        "description" : "Save the prison addresses and contacts for the given prison number. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
+        "operationId" : "saveAddressesAndContacts",
         "parameters" : [ {
           "name" : "prisonNumber",
           "in" : "path",
@@ -523,7 +523,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/PrisonAddressesRequest"
+                "$ref" : "#/components/schemas/PrisonAddressesAndContactsRequest"
               }
             }
           },
@@ -535,7 +535,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/SysconAddressesResponseBody"
+                  "$ref" : "#/components/schemas/SysconAddressesAndContactsResponseBody"
                 }
               }
             }
@@ -1798,9 +1798,31 @@
             "items" : {
               "$ref" : "#/components/schemas/PrisonContact"
             }
+          },
+          "createDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The address create date and time",
+            "example" : "2000-01-01 12:00:00"
+          },
+          "createUserId" : {
+            "type" : "string",
+            "description" : "The address create user id",
+            "example" : "12345"
+          },
+          "modifyDateTime" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "The address modify date and time",
+            "example" : "2000-01-01 12:00:00"
+          },
+          "modifyUserId" : {
+            "type" : [ "string", "null" ],
+            "description" : "The address modify user id",
+            "example" : "12345"
           }
         },
-        "required" : [ "addressUsage", "contacts", "isPrimary", "nomisAddressId" ]
+        "required" : [ "addressUsage", "contacts", "createDateTime", "createUserId", "isPrimary", "nomisAddressId" ]
       },
       "PrisonAddressUsage" : {
         "type" : "object",
@@ -1821,22 +1843,50 @@
             "type" : "boolean",
             "description" : "Is the address active",
             "example" : true
+          },
+          "createDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The address usage create date and time",
+            "example" : "2000-01-01 12:00:00"
+          },
+          "createUserId" : {
+            "type" : "string",
+            "description" : "The address usage create user id",
+            "example" : "12345"
+          },
+          "modifyDateTime" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "The address usage modify date and time",
+            "example" : "2000-01-01 12:00:00"
+          },
+          "modifyUserId" : {
+            "type" : [ "string", "null" ],
+            "description" : "The address usage modify user id",
+            "example" : "12345"
           }
         },
-        "required" : [ "addressUsageCode", "isActive", "nomisAddressUsageId" ]
+        "required" : [ "addressUsageCode", "createDateTime", "createUserId", "isActive", "nomisAddressUsageId" ]
       },
-      "PrisonAddressesRequest" : {
+      "PrisonAddressesAndContactsRequest" : {
         "type" : "object",
         "properties" : {
           "addresses" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
+            "description" : "List of addresses",
             "items" : {
               "$ref" : "#/components/schemas/PrisonAddress"
-            },
-            "minItems" : 1
+            }
+          },
+          "contacts" : {
+            "type" : [ "array", "null" ],
+            "description" : "List of address contacts",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonContact"
+            }
           }
-        },
-        "required" : [ "addresses" ]
+        }
       },
       "PrisonContact" : {
         "type" : "object",
@@ -1862,9 +1912,31 @@
             "type" : [ "string", "null" ],
             "description" : "The contact extension",
             "example" : "235"
+          },
+          "createDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The contact create date and time",
+            "example" : "2000-01-01 12:00:00"
+          },
+          "createUserId" : {
+            "type" : "string",
+            "description" : "The contact create user id",
+            "example" : "12345"
+          },
+          "modifyDateTime" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "The contact modify date and time",
+            "example" : "2000-01-01 12:00:00"
+          },
+          "modifyUserId" : {
+            "type" : [ "string", "null" ],
+            "description" : "The contact modify user id",
+            "example" : "12345"
           }
         },
-        "required" : [ "type" ]
+        "required" : [ "createDateTime", "createUserId", "type" ]
       },
       "SysconAddressMapping" : {
         "type" : "object",
@@ -1875,11 +1947,40 @@
           },
           "cprAddressId" : {
             "type" : "string"
+          },
+          "addressUsageMappings" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SysconAddressUsageMapping"
+            }
+          },
+          "contactMappings" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SysconContactMapping"
+            }
           }
         },
-        "required" : [ "cprAddressId", "nomisAddressId" ]
+        "required" : [ "addressUsageMappings", "contactMappings", "cprAddressId", "nomisAddressId" ]
       },
-      "SysconAddressesResponseBody" : {
+      "SysconAddressUsageMapping" : {
+        "type" : "object",
+        "properties" : {
+          "nomisAddressUsageId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "nomisAddressUsageCode" : {
+            "type" : "string",
+            "enum" : [ "CARE", "CURFEW", "DAP", "DBA", "DBH", "DNF", "DOH", "DPH", "DSH", "DST", "DUT", "HDC", "HDC2", "HOME", "HOSP", "HOST", "OTHER", "RECEP", "RELEASE", "RES", "ROTL", "A02", "A16", "A10", "A11", "A17", "A07B", "A07A", "A14", "A13", "A08A", "A08C", "A08", "A01A", "A15", "A12", "A01C", "A01D", "A04", "A03", "A01", "A01B", "A05", "A06", "A07", "A08B", "A96", "A97", "A98", "A99", "CS02", "CS03", "CS04", "CS05", "CS06", "UNKNOWN" ]
+          },
+          "cprAddressUsageId" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "cprAddressUsageId", "nomisAddressUsageCode", "nomisAddressUsageId" ]
+      },
+      "SysconAddressesAndContactsResponseBody" : {
         "type" : "object",
         "properties" : {
           "prisonNumber" : {
@@ -1890,9 +1991,32 @@
             "items" : {
               "$ref" : "#/components/schemas/SysconAddressMapping"
             }
+          },
+          "contactMappings" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SysconContactMapping"
+            }
           }
         },
-        "required" : [ "addressesMappings", "prisonNumber" ]
+        "required" : [ "addressesMappings", "contactMappings", "prisonNumber" ]
+      },
+      "SysconContactMapping" : {
+        "type" : "object",
+        "properties" : {
+          "nomisContactId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "nomisContactType" : {
+            "type" : "string",
+            "enum" : [ "HOME", "BUS", "FAX", "ALTB", "ALTH", "MOBILE", "VISIT", "EMAIL" ]
+          },
+          "cprContactId" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "cprContactId", "nomisContactId", "nomisContactType" ]
       },
       "ProbationCreateAddress" : {
         "type" : "object",
