@@ -91,7 +91,7 @@ generic-service:
     - name: agency-recon
       type: AGENCY_RECON
       schedule: "30 6 * * *"
-      suspend: true
+      suspend: false
     - name: alert-recon
       type: ALERT_RECON
       schedule: "45 4 * * *"
