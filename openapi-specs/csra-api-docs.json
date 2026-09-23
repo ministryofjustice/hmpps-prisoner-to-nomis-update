@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-09-18.540.36d3c05"
+    "version" : "2026-09-22.562.49a87b9"
   },
   "servers" : [ {
     "url" : "/",
@@ -1186,14 +1186,12 @@
         }, {
           "name" : "ratings",
           "in" : "query",
-          "description" : "Only include CSRAs in these rating buckets",
+          "description" : "Only include CSRAs matching these exact rating variants",
           "required" : false,
           "schema" : {
             "type" : "array",
             "items" : {
-              "type" : "string",
-              "description" : "A coarse CSRA rating bucket for filtering and summary counts",
-              "enum" : [ "HIGH", "STANDARD" ]
+              "type" : "string"
             }
           }
         } ],
@@ -1594,7 +1592,7 @@
             "items" : {
               "type" : "string",
               "description" : "A CSRA rating value for filtering the prison prisoner list; NO_RATING matches prisoners with no current rating",
-              "enum" : [ "NO_RATING", "STANDARD", "HIGH", "HIGH_GENERAL", "HIGH_SPECIFIC" ]
+              "enum" : [ "NO_RATING", "STANDARD", "STANDARD_LEGACY", "HIGH", "HIGH_GENERAL", "HIGH_GENERAL_INTERIM", "HIGH_GENERAL_PROVISIONAL", "HIGH_SPECIFIC", "HIGH_SPECIFIC_PROVISIONAL", "MED", "LOW", "PEND" ]
             }
           }
         }, {
@@ -3601,6 +3599,15 @@
             "description" : "The date of the most recent high-risk CSRA",
             "example" : "2013-07-14"
           },
+          "ratings" : {
+            "type" : "array",
+            "description" : "The distinct CSRA rating filter values the prisoner has CSRAs of, ordered to match the UI checkbox sequence: HIGH, HIGH_GENERAL, HIGH_GENERAL_INTERIM, HIGH_GENERAL_PROVISIONAL, HIGH_SPECIFIC, HIGH_SPECIFIC_PROVISIONAL, STANDARD, STANDARD_LEGACY, LOW, MED, PEND.",
+            "items" : {
+              "type" : "string",
+              "description" : "A CSRA rating value for filtering the prison prisoner list; NO_RATING matches prisoners with no current rating",
+              "enum" : [ "NO_RATING", "STANDARD", "STANDARD_LEGACY", "HIGH", "HIGH_GENERAL", "HIGH_GENERAL_INTERIM", "HIGH_GENERAL_PROVISIONAL", "HIGH_SPECIFIC", "HIGH_SPECIFIC_PROVISIONAL", "MED", "LOW", "PEND" ]
+            }
+          },
           "establishments" : {
             "type" : "array",
             "description" : "The distinct establishments the prisoner has CSRAs at, for the establishment filter (name-sorted)",
@@ -3609,7 +3616,7 @@
             }
           }
         },
-        "required" : [ "establishments", "highCount", "standardCount", "totalCsras" ]
+        "required" : [ "establishments", "highCount", "ratings", "standardCount", "totalCsras" ]
       },
       "CsraReviewSummary" : {
         "type" : "object",
