@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-09-21.1089.320be30"
+    "version" : "2026-09-22.1093.70a391b"
   },
   "servers" : [ {
     "url" : "https://prisoner-finance-sync-api-dev.hmpps.service.justice.gov.uk/",
@@ -180,16 +180,6 @@
               }
             }
           },
-          "409" : {
-            "description" : "Conflict - Legacy Hold Number already in use",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "500" : {
             "description" : "Internal Server Error - An unexpected error occurred.",
             "content" : {
@@ -347,6 +337,79 @@
           },
           "501" : {
             "description" : "Method not implemented - General ledger transactions are not currently supported.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearer-jwt" : [ "ROLE_PRISONER_FINANCE_SYNC__RW" ]
+        } ]
+      }
+    },
+    "/sync/advances" : {
+      "post" : {
+        "tags" : [ "Advances" ],
+        "summary" : "Create a new Advance record",
+        "description" : "Creates a new Advance record for the specified prisoner in the advance service",
+        "operationId" : "postAdvance",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SyncCreateAdvanceRecordRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Advance record created.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/HoldResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad request - invalid input data.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - requires a valid OAuth2 token",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden - requires an appropriate role",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error - An unexpected error occurred.",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -1434,6 +1497,71 @@
           }
         },
         "required" : [ "caseloadId", "createdAt", "createdBy", "createdByDisplayName", "description", "generalLedgerEntries", "requestId", "transactionId", "transactionTimestamp", "transactionType" ]
+      },
+      "SyncCreateAdvanceRecordRequest" : {
+        "type" : "object",
+        "properties" : {
+          "legacyPaymentProfileId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The payment profile id from NOMIS",
+            "example" : 123456789
+          },
+          "legacyInformationNumber" : {
+            "type" : "string",
+            "description" : "The information number for the advance from NOMIS",
+            "example" : "12345678-1"
+          },
+          "prisonNumber" : {
+            "type" : "string",
+            "description" : "The prison number of the offender this advance was for",
+            "example" : "A9917EC"
+          },
+          "prisonID" : {
+            "type" : "string",
+            "description" : "The prison ID that issued this advance",
+            "example" : "LEI"
+          },
+          "amount" : {
+            "type" : "number",
+            "description" : "The amount issued in the advance",
+            "example" : 5.32
+          },
+          "createdOn" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date time when the advance was created with the time set to midnight",
+            "example" : "2024-06-18T00:00:00.000000"
+          },
+          "repaymentStartDate" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date time when the payments are intended to begin",
+            "example" : "2024-06-18T00:00:00.000000"
+          },
+          "repaymentAmount" : {
+            "type" : "number",
+            "description" : "The amount to be repaid weekly",
+            "example" : 0.5
+          },
+          "reference" : {
+            "type" : "string",
+            "description" : "The reference from the payment profile ",
+            "example" : "FNC"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "The username that created this advance",
+            "example" : "JOHN_USER"
+          },
+          "status" : {
+            "type" : "string",
+            "description" : "The current status of this advance",
+            "enum" : [ "ACTIVE", "REPAID", "WRITTEN_OFF" ],
+            "example" : "AdvanceStatus.ACTIVE"
+          }
+        },
+        "required" : [ "amount", "createdBy", "createdOn", "legacyInformationNumber", "legacyPaymentProfileId", "prisonID", "prisonNumber", "reference", "repaymentAmount", "repaymentStartDate", "status" ]
       },
       "PrisonerAccountPointInTimeBalance" : {
         "type" : "object",
