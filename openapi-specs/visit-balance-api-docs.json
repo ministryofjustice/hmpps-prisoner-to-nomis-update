@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-01-16.860.dcaf836"
+    "version" : "2026-09-22.1231.7b40caa"
   },
   "servers" : [ {
     "url" : "https://hmpps-visit-allocation-api-dev.prison.service.justice.gov.uk",
@@ -33,7 +33,7 @@
       "get" : {
         "tags" : [ "balance-controller" ],
         "summary" : "Endpoint to get a prisoners current balance.",
-        "description" : "Takes a prisoner id and return their current visit order balance.\n\nRequires one of the following roles:\n* ROLE_VISIT_ALLOCATION_API__NOMIS_API\n* ROLE_VISIT_ALLOCATION_API__HMPPS_MANAGE_PRISON_VISITS_ORCHESTRATION",
+        "description" : "Takes a prisoner id and return their current visit order balance.\n\nRequires one of the following roles:\n* ROLE_VISIT_ALLOCATION_API__NOMIS_API\n* ROLE_VISIT_ALLOCATION_API__HMPPS_MANAGE_PRISON_VISITS_ORCHESTRATION\n* ROLE_VISIT_ALLOCATION_API__VISIT_SCHEDULER",
         "operationId" : "getPrisonerBalance",
         "parameters" : [ {
           "name" : "prisonerId",
@@ -724,16 +724,16 @@
             "format" : "int32"
           },
           "errorCode" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "userMessage" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "developerMessage" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "moreInfo" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           }
         },
         "required" : [ "status" ]
@@ -742,13 +742,13 @@
         "type" : "object",
         "properties" : {
           "voAmount" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "VOs that need to be added or removed (can be negative, negative denotes REMOVE)",
             "example" : 5
           },
           "pvoAmount" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "PVOs that need to be added or removed (can be negative, negative denotes REMOVE)",
             "example" : 5
@@ -759,13 +759,18 @@
             "enum" : [ "GOVERNOR_ADJUSTMENT", "BALANCE_TRANSFER_FROM_PREVIOUS_PRISON", "CORRECTIVE_ACTION", "EXCHANGE_FOR_PIN_PHONE_CREDIT", "OTHER" ]
           },
           "adjustmentReasonText" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Adjustment Reason Text"
           },
           "userName" : {
             "type" : "string",
             "description" : "Staff user ID",
             "example" : "ABC1234"
+          },
+          "caseloadId" : {
+            "type" : [ "string", "null" ],
+            "description" : "The caseload from which the adjustment was made",
+            "example" : "MDI"
           }
         },
         "required" : [ "adjustmentReasonType", "userName" ]
@@ -819,28 +824,29 @@
           "prisonerId" : {
             "type" : "string",
             "description" : "nomsNumber of the prisoner",
-            "example" : "AA123456"
+            "example" : "AA123456",
+            "minLength" : 1
           },
           "oldVoBalance" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "The previous VO balance (can be negative)",
             "example" : 5
           },
           "changeToVoBalance" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "The change of the VO balance (can be negative)",
             "example" : 5
           },
           "oldPvoBalance" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "The previous PVO balance (can be negative)",
             "example" : 2
           },
           "changeToPvoBalance" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "The change of the PVO balance (can be negative)",
             "example" : 5
@@ -864,7 +870,7 @@
             "example" : "SYSTEM or STAFF"
           },
           "comment" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Additional information on the sync reason",
             "example" : "Manually adjusted for phone credit"
           }
@@ -877,7 +883,8 @@
           "prisonerId" : {
             "type" : "string",
             "description" : "nomsNumber of the prisoner",
-            "example" : "AA123456"
+            "example" : "AA123456",
+            "minLength" : 1
           },
           "voBalance" : {
             "type" : "integer",
@@ -892,7 +899,7 @@
             "example" : 2
           },
           "lastVoAllocationDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date which the last iep allocation was given",
             "example" : "2025-02-28"
@@ -923,7 +930,7 @@
           "attributeType" : {
             "type" : "string",
             "description" : "Visit order history attribute type",
-            "enum" : [ "VISIT_REFERENCE", "INCENTIVE_LEVEL", "OLD_PRISONER_ID", "NEW_PRISONER_ID", "ADJUSTMENT_REASON_TYPE" ],
+            "enum" : [ "VISIT_REFERENCE", "INCENTIVE_LEVEL", "OLD_PRISONER_ID", "NEW_PRISONER_ID", "ADJUSTMENT_REASON_TYPE", "VISIT_ORDER_TYPE_USED" ],
             "example" : "VISIT_REFERENCE"
           },
           "attributeValue" : {
@@ -971,7 +978,7 @@
             "example" : "SYSTEM"
           },
           "comment" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Comment added by STAFF, null if SYSTEM event or if no comment was entered by STAFF"
           },
           "attributes" : {
@@ -1047,13 +1054,13 @@
             "example" : "2025-01-01"
           },
           "lastPvoAllocatedDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date PVOs were last allocated to the prisoner",
             "example" : "2025-01-01"
           },
           "nextPvoAllocationDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The next likely PVO allocation date",
             "example" : "2025-01-01"
@@ -1070,25 +1077,25 @@
             "example" : "AA123456"
           },
           "voBalance" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "previous VO balance of prisoner (can be negative)",
             "example" : 2
           },
           "changeToVoBalance" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "change to previous VO balance (can be negative)",
             "example" : -1
           },
           "pvoBalance" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "previous PVO balance of prisoner (can be negative)",
             "example" : 1
           },
           "changeToPvoBalance" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "change to previous PVO balance (can be negative)",
             "example" : -1
@@ -1116,7 +1123,7 @@
             "description" : "Timestamp of when change occurred"
           },
           "comment" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "additional information of change applied",
             "example" : "Gave prisoner extra VO"
           }
