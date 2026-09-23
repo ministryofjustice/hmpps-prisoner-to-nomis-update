@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-08-07.276.13b0756"
+    "version" : "2026-09-22.334.a1e8e6b"
   },
   "servers" : [ {
     "url" : "/",
@@ -14696,27 +14696,16 @@
         },
         "required" : [ "employmentId", "isActive", "organisationId" ]
       },
-      "JsonNullableString" : {
-        "type" : "object",
-        "properties" : {
-          "present" : {
-            "type" : "boolean"
-          },
-          "undefined" : {
-            "type" : "boolean"
-          }
-        }
-      },
       "PatchContactAddressRequest" : {
         "type" : "object",
         "description" : "Request to patch a contact address",
         "properties" : {
           "addressType" : {
-            "type" : "null",
-            "$ref" : "#/components/schemas/JsonNullableString",
+            "type" : [ "string", "null" ],
             "description" : "\n    The type of address.\n    This is a coded value (from the group code ADDRESS_TYPE in reference data).\n    The known values are HOME, WORK or BUS (business address).\n    ",
             "example" : "HOME",
-            "maxLength" : 12
+            "maxLength" : 12,
+            "minLength" : 0
           },
           "primaryAddress" : {
             "type" : "string",
