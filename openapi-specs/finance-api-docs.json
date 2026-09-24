@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-09-22.1093.70a391b"
+    "version" : "2026-09-23.1109.8c7c8d5"
   },
   "servers" : [ {
     "url" : "https://prisoner-finance-sync-api-dev.hmpps.service.justice.gov.uk/",
@@ -1316,9 +1316,19 @@
             "type" : "number",
             "description" : "The amount to hold.",
             "example" : 10.23
+          },
+          "holdTransactionId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The transaction id of the hold transaction."
+          },
+          "releaseTransactionId" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int64",
+            "description" : "The transaction id of the hold release transaction."
           }
         },
-        "required" : [ "amount", "createdAt", "createdBy", "holdFromDate", "holdLocation", "holdNumber", "holdType", "isReleased", "prisonNumber", "subAccountCode" ]
+        "required" : [ "amount", "createdAt", "createdBy", "holdFromDate", "holdLocation", "holdNumber", "holdTransactionId", "holdType", "isReleased", "prisonNumber", "subAccountCode" ]
       },
       "HoldResponse" : {
         "type" : "object",
@@ -1786,6 +1796,13 @@
             "type" : "string",
             "format" : "uuid"
           },
+          "synchronizedTransactionId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "requestTypeIdentifier" : {
+            "type" : [ "string", "null" ]
+          },
           "transactionType" : {
             "type" : [ "string", "null" ]
           },
@@ -1799,13 +1816,6 @@
           "legacyTransactionId" : {
             "type" : [ "integer", "null" ],
             "format" : "int64"
-          },
-          "synchronizedTransactionId" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "requestTypeIdentifier" : {
-            "type" : [ "string", "null" ]
           }
         },
         "required" : [ "id", "requestId", "synchronizedTransactionId", "timestamp" ]
