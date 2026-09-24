@@ -110,11 +110,11 @@ class CorePersonResource(
   ) {
     corePersonMergeService.mergePerson(
       event = MergePersonEvent(
-        eventType = "core-person-record.prison.merged",
-        personReferenceTo = PersonReferenceList(
+        eventType = "core-person-record.prison.record.merged",
+        personReference = PersonReferenceList(
           identifiers = listOf(
             PersonReference(
-              type = "prisonNumber",
+              type = "toPrisonNumber",
               value = prisonNumberTo,
             ),
           ),
