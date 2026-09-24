@@ -44,6 +44,7 @@ internal val appointmentLocationMappingResponse = """
       "mappingType": "LOCATION_CREATED"
     }
 """.trimIndent()
+
 class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
 
   private val appointmentResponse = """{
@@ -1214,6 +1215,141 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
             )
             mappingServer.verify(deleteRequestedFor(urlEqualTo("/mapping/appointments/appointment-instance-id/$APPOINTMENT_INSTANCE_ID")))
           }
+        }
+      }
+    }
+  }
+
+  @Nested
+  inner class RepairAppointment {
+    @Nested
+    inner class WhenAppointmentShouldBeCreated {
+
+      @BeforeEach
+      fun setUp() {
+        mappingServer.stubGetMappingGivenAppointmentInstanceIdWithError(APPOINTMENT_INSTANCE_ID, 404)
+        mappingServer.stubGetMappingGivenDpsLocationId(APPOINTMENT_DPS_LOCATION_ID, appointmentLocationMappingResponse)
+        mappingServer.stubCreateAppointment()
+        nomisApi.stubAppointmentCreate("""{ "eventId": $EVENT_ID }""")
+        appointmentsApi.stubGetAppointmentInstance(id = APPOINTMENT_INSTANCE_ID, response = appointmentResponse)
+        webTestClient.put().uri("/appointments/repair/$APPOINTMENT_INSTANCE_ID")
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
+          .exchange()
+          .expectStatus().isOk
+      }
+
+      @Test
+      fun `will create an appointment in NOMIS`() {
+        nomisApi.verify(
+          postRequestedFor(urlEqualTo("/appointments"))
+            .withRequestBody(matchingJsonPath("eventDate", equalTo("2023-03-14")))
+            .withRequestBody(matchingJsonPath("startTime", equalTo("10:15"))),
+        )
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        await untilAsserted {
+          verify(telemetryClient).trackEvent(
+            eq("appointment-repair-success"),
+            check {
+              assertThat(it["appointmentInstanceId"]).isEqualTo(APPOINTMENT_INSTANCE_ID.toString())
+              assertThat(it["created"]).isEqualTo("true")
+            },
+            isNull(),
+          )
+        }
+      }
+    }
+
+    @Nested
+    inner class WhenAppointmentShouldBeUpdated {
+      @BeforeEach
+      fun setUp() {
+        appointmentsApi.stubGetAppointmentInstance(id = APPOINTMENT_INSTANCE_ID, response = appointmentResponse)
+        mappingServer.stubGetMappingGivenAppointmentInstanceId(APPOINTMENT_INSTANCE_ID, mappingResponse)
+        mappingServer.stubGetMappingGivenDpsLocationId(APPOINTMENT_DPS_LOCATION_ID, appointmentLocationMappingResponse)
+        nomisApi.stubAppointmentUpdate(EVENT_ID)
+        webTestClient.put().uri("/appointments/repair/$APPOINTMENT_INSTANCE_ID")
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
+          .exchange()
+          .expectStatus().isOk
+      }
+
+      @Test
+      fun `will update an appointment in NOMIS`() {
+        await untilAsserted {
+          nomisApi.verify(
+            putRequestedFor(urlEqualTo("/appointments/$EVENT_ID"))
+              .withRequestBody(matchingJsonPath("internalLocationId", equalTo("$APPOINTMENT_NOMIS_LOCATION_ID")))
+              .withRequestBody(matchingJsonPath("eventDate", equalTo("2023-03-14")))
+              .withRequestBody(matchingJsonPath("startTime", equalTo("10:15")))
+              .withRequestBody(matchingJsonPath("endTime", equalTo("11:42")))
+              .withRequestBody(matchingJsonPath("eventSubType", equalTo("MEDI"))),
+          )
+        }
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        await untilAsserted {
+          verify(telemetryClient).trackEvent(
+            eq("appointment-repair-success"),
+            check {
+              assertThat(it["appointmentInstanceId"]).isEqualTo(APPOINTMENT_INSTANCE_ID.toString())
+              assertThat(it["created"]).isEqualTo("false")
+            },
+            isNull(),
+          )
+        }
+      }
+    }
+
+    @Nested
+    inner class Security {
+      @Test
+      fun `access forbidden when no role`() {
+        webTestClient.put().uri("/appointments/repair/$APPOINTMENT_INSTANCE_ID")
+          .headers(setAuthorisation(roles = listOf()))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access forbidden with wrong role`() {
+        webTestClient.put().uri("/appointments/repair/$APPOINTMENT_INSTANCE_ID")
+          .headers(setAuthorisation(roles = listOf("ROLE_BANANAS")))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access unauthorised with no auth token`() {
+        webTestClient.put().uri("/appointments/repair/$APPOINTMENT_INSTANCE_ID")
+          .exchange()
+          .expectStatus().isUnauthorized
+      }
+    }
+
+    @Nested
+    inner class ExceptionHandling {
+      @Nested
+      inner class WhenAppointmentServiceFails {
+        @BeforeEach
+        fun setUp() {
+          mappingServer.stubGetMappingGivenAppointmentInstanceIdWithError(APPOINTMENT_INSTANCE_ID, 404)
+          appointmentsApi.stubGetAppointmentInstanceWithError(APPOINTMENT_INSTANCE_ID, 404)
+        }
+
+        @Test
+        fun `will fail if DPS appointment is not found`() {
+          webTestClient.put()
+            .uri("/appointments/repair/$APPOINTMENT_INSTANCE_ID")
+            .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
+            .exchange()
+            .expectStatus().is5xxServerError
+            .expectBody()
+            .jsonPath("userMessage").isEqualTo("Unexpected error: 404 Not Found from GET http://localhost:8088/appointment-instances/$APPOINTMENT_INSTANCE_ID")
         }
       }
     }

@@ -198,6 +198,33 @@ class AppointmentsService(
     }
   }
 
+  suspend fun repairAppointment(appointmentAttendeeId: Long) {
+    val telemetryMap = mutableMapOf("appointmentInstanceId" to appointmentAttendeeId.toString())
+    val mapping = mappingService.getMappingGivenAppointmentInstanceIdOrNull(appointmentAttendeeId)
+    if (mapping == null) {
+      createAppointment(
+        AppointmentDomainEvent(
+          eventType = "appointment-created",
+          version = "1.0",
+          description = "Repairing appointment creation",
+          additionalInformation = AppointmentAdditionalInformation(appointmentInstanceId = appointmentAttendeeId),
+        ),
+      )
+      telemetryMap["created"] = "true"
+    } else {
+      updateAppointment(
+        AppointmentDomainEvent(
+          eventType = "appointment-updated",
+          version = "1.0",
+          description = "Repairing appointment update",
+          additionalInformation = AppointmentAdditionalInformation(appointmentInstanceId = appointmentAttendeeId),
+        ),
+      )
+      telemetryMap["created"] = "false"
+    }
+    telemetryClient.trackEvent("appointment-repair-success", telemetryMap, null)
+  }
+
   private suspend fun toCreateAppointmentRequest(instance: AppointmentInstance) = CreateAppointmentRequest(
     bookingId = instance.bookingId,
     internalLocationId = if (instance.inCell) {
