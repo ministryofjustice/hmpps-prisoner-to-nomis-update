@@ -71,7 +71,7 @@ internal class CorePersonDomainEventsListenerTest(@Autowired private val jsonMap
 
         verify(corePersonMergeService).mergePerson(
           check {
-            assertThat(it.personReferenceTo.identifiers.first { it.type == "prisonNumber" }.value).isEqualTo("A1234BC")
+            assertThat(it.personReference.identifiers.first { it.type == "toPrisonNumber" }.value).isEqualTo("A1234BC")
           },
         )
       }
