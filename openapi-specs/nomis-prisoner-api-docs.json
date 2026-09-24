@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-09-21.2103.219e603"
+    "version" : "2026-09-23.2112.7cac223"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -7345,6 +7345,646 @@
         }
       }
     },
+    "/core-person/{offenderId}/phone/{phoneId}" : {
+      "put" : {
+        "tags" : [ "core-person-resource" ],
+        "summary" : "Updated an offender global phone",
+        "description" : "Updates an offender global phone in NOMIS. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "updateOffenderPhone",
+        "parameters" : [ {
+          "name" : "offenderId",
+          "in" : "path",
+          "description" : "Offender Id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Offender Id",
+            "example" : 12345
+          },
+          "example" : 12345
+        }, {
+          "name" : "phoneId",
+          "in" : "path",
+          "description" : "Phone Id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Phone Id",
+            "example" : 35355
+          },
+          "example" : 35355
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateOffenderPhoneRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Offender Phone ID Updated"
+          },
+          "400" : {
+            "description" : "Invalid request data, e.g type is not valid",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Offender or phone does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "core-person-resource" ],
+        "summary" : "Deleted an offender global phone",
+        "description" : "Deletes an offender global phone in NOMIS. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "deleteOffenderPhone",
+        "parameters" : [ {
+          "name" : "offenderId",
+          "in" : "path",
+          "description" : "Offender Id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Offender Id",
+            "example" : 12345
+          },
+          "example" : 12345
+        }, {
+          "name" : "phoneId",
+          "in" : "path",
+          "description" : "Phone Id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Phone Id",
+            "example" : 35355
+          },
+          "example" : 35355
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Offender Phone ID Deleted"
+          },
+          "400" : {
+            "description" : "Phone exists but not for this offender",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/core-person/{offenderId}/email/{emailAddressId}" : {
+      "put" : {
+        "tags" : [ "core-person-resource" ],
+        "summary" : "Updates an offender email",
+        "description" : "Updates an offender email in NOMIS. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "updateOffenderEmail",
+        "parameters" : [ {
+          "name" : "offenderId",
+          "in" : "path",
+          "description" : "Offender Id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Offender Id",
+            "example" : 12345
+          },
+          "example" : 12345
+        }, {
+          "name" : "emailAddressId",
+          "in" : "path",
+          "description" : "Email address Id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Email address Id",
+            "example" : 76554
+          },
+          "example" : 76554
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateOffenderEmailRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Offender Email ID aka InternetAddressId Update"
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Offender or email address does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "core-person-resource" ],
+        "summary" : "Deletes an offender email",
+        "description" : "Deletes an offender email in NOMIS. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "deleteOffenderEmail",
+        "parameters" : [ {
+          "name" : "offenderId",
+          "in" : "path",
+          "description" : "Offender Id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Offender Id",
+            "example" : 12345
+          },
+          "example" : 12345
+        }, {
+          "name" : "emailAddressId",
+          "in" : "path",
+          "description" : "Email address Id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Email address Id",
+            "example" : 76554
+          },
+          "example" : 76554
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Offender Email ID aka InternetAddressId Delete"
+          },
+          "400" : {
+            "description" : "The email exists but not for this offender",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Offender or email address does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/core-person/{offenderId}/address/{addressId}" : {
+      "put" : {
+        "tags" : [ "core-person-resource" ],
+        "summary" : "Updates an offender address",
+        "description" : "Updates an offender address in NOMIS. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "updateOffenderAddress",
+        "parameters" : [ {
+          "name" : "offenderId",
+          "in" : "path",
+          "description" : "Offender Id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Offender Id",
+            "example" : 12345
+          },
+          "example" : 12345
+        }, {
+          "name" : "addressId",
+          "in" : "path",
+          "description" : "Address Id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Address Id",
+            "example" : 47474
+          },
+          "example" : 47474
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateOffenderAddressRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Offender Address Updated"
+          },
+          "400" : {
+            "description" : "The request contains bad for example type code does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Offender or address does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "core-person-resource" ],
+        "summary" : "Deletes an offender address",
+        "description" : "Deletes an offender address in NOMIS. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "deleteOffenderAddress",
+        "parameters" : [ {
+          "name" : "offenderId",
+          "in" : "path",
+          "description" : "Offender Id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Offender Id",
+            "example" : 12345
+          },
+          "example" : 12345
+        }, {
+          "name" : "addressId",
+          "in" : "path",
+          "description" : "Address Id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Address Id",
+            "example" : 47474
+          },
+          "example" : 47474
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Offender Address Deleted"
+          },
+          "400" : {
+            "description" : "The address exists but not for this offender",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/core-person/{offenderId}/address/{addressId}/phone/{phoneId}" : {
+      "put" : {
+        "tags" : [ "core-person-resource" ],
+        "summary" : "Updates an offender address phone",
+        "description" : "Updates an offender phone associated with an address in NOMIS. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "updateOffenderAddressPhone",
+        "parameters" : [ {
+          "name" : "offenderId",
+          "in" : "path",
+          "description" : "Offender Id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Offender Id",
+            "example" : 12345
+          },
+          "example" : 12345
+        }, {
+          "name" : "addressId",
+          "in" : "path",
+          "description" : "Address Id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Address Id",
+            "example" : 56789
+          },
+          "example" : 56789
+        }, {
+          "name" : "phoneId",
+          "in" : "path",
+          "description" : "Phone Id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Phone Id",
+            "example" : 585850
+          },
+          "example" : 585850
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateOffenderPhoneRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Offender Phone ID Updated"
+          },
+          "400" : {
+            "description" : "Invalid request data, e.g type is not valid",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Offender or address does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "core-person-resource" ],
+        "summary" : "Deletes an offender address phone",
+        "description" : "Deletes an offender phone associated with an address in NOMIS. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "deleteOffenderAddressPhone",
+        "parameters" : [ {
+          "name" : "offenderId",
+          "in" : "path",
+          "description" : "Offender Id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Offender Id",
+            "example" : 12345
+          },
+          "example" : 12345
+        }, {
+          "name" : "addressId",
+          "in" : "path",
+          "description" : "Address Id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Address Id",
+            "example" : 56789
+          },
+          "example" : 56789
+        }, {
+          "name" : "phoneId",
+          "in" : "path",
+          "description" : "Phone Id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Phone Id",
+            "example" : 585850
+          },
+          "example" : 585850
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Offender Phone ID Deleted"
+          },
+          "400" : {
+            "description" : "Phone exists but not for this address or address exists but not for this offender",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/casenotes/{caseNoteId}" : {
       "get" : {
         "tags" : [ "case-notes-resource" ],
@@ -13565,6 +14205,340 @@
         }
       }
     },
+    "/core-person/{offenderId}/phone" : {
+      "post" : {
+        "tags" : [ "core-person-resource" ],
+        "summary" : "Creates an offender global phone",
+        "description" : "Creates an offender global phone in NOMIS. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "createOffenderPhone",
+        "parameters" : [ {
+          "name" : "offenderId",
+          "in" : "path",
+          "description" : "Offender Id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Offender Id",
+            "example" : 12345
+          },
+          "example" : 12345
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateOffenderPhoneRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Offender Phone ID Returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CreateOffenderPhoneResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid request data, e.g type is not valid",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Offender does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/core-person/{offenderId}/email" : {
+      "post" : {
+        "tags" : [ "core-person-resource" ],
+        "summary" : "Creates an offender email",
+        "description" : "Creates an offender email in NOMIS. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "createOffenderEmail",
+        "parameters" : [ {
+          "name" : "offenderId",
+          "in" : "path",
+          "description" : "Offender Id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Offender Id",
+            "example" : 12345
+          },
+          "example" : 12345
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateOffenderEmailRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Offender Email ID aka InternetAddressId Returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CreateOffenderEmailResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Offender does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/core-person/{offenderId}/address" : {
+      "post" : {
+        "tags" : [ "core-person-resource" ],
+        "summary" : "Creates an offender address",
+        "description" : "Creates an offender address in NOMIS. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "createOffenderAddress",
+        "parameters" : [ {
+          "name" : "offenderId",
+          "in" : "path",
+          "description" : "Offender Id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Offender Id",
+            "example" : 12345
+          },
+          "example" : 12345
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateOffenderAddressRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Offender Address ID Returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CreateOffenderAddressResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "The request contains bad for example type code does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Offender does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/core-person/{offenderId}/address/{addressId}/phone" : {
+      "post" : {
+        "tags" : [ "core-person-resource" ],
+        "summary" : "Creates an offender address phone",
+        "description" : "Creates an offender phone associated with an address in NOMIS. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "createOffenderAddressPhone",
+        "parameters" : [ {
+          "name" : "offenderId",
+          "in" : "path",
+          "description" : "Offender Id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Offender Id",
+            "example" : 12345
+          },
+          "example" : 12345
+        }, {
+          "name" : "addressId",
+          "in" : "path",
+          "description" : "Address Id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Address Id",
+            "example" : 56789
+          },
+          "example" : 56789
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateOffenderPhoneRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Offender Phone ID Returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CreateOffenderPhoneResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid request data, e.g type is not valid",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Offender or address does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/appointments" : {
       "post" : {
         "tags" : [ "appointments-resource" ],
@@ -13614,16 +14588,6 @@
           },
           "403" : {
             "description" : "Forbidden, requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "409" : {
-            "description" : "Conflict, an appointment already exists for the given booking, location, date, and start time.This can occur if the same request is sent twice, e.g. due to a network error. 'moreInfo' contains the eventId of the existing appointment.",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -31356,6 +32320,119 @@
         },
         "required" : [ "isServices", "mailAddress", "noFixedAddress", "primaryAddress", "startDate" ]
       },
+      "UpdateOffenderPhoneRequest" : {
+        "type" : "object",
+        "properties" : {
+          "number" : {
+            "type" : "string",
+            "description" : "The number",
+            "example" : "0114 555 555"
+          },
+          "extension" : {
+            "type" : [ "string", "null" ],
+            "description" : "Extension",
+            "example" : "x432"
+          },
+          "typeCode" : {
+            "type" : "string",
+            "description" : "Phone type code",
+            "example" : "MOB"
+          }
+        },
+        "required" : [ "number", "typeCode" ]
+      },
+      "UpdateOffenderEmailRequest" : {
+        "type" : "object",
+        "properties" : {
+          "email" : {
+            "type" : "string",
+            "description" : "Email address",
+            "example" : "test@test.justice.gov.uk"
+          }
+        },
+        "required" : [ "email" ]
+      },
+      "UpdateOffenderAddressRequest" : {
+        "type" : "object",
+        "properties" : {
+          "typeCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "Address reference code",
+            "example" : "HOME"
+          },
+          "flat" : {
+            "type" : [ "string", "null" ],
+            "description" : "Flat name or number",
+            "example" : "Apartment 3"
+          },
+          "premise" : {
+            "type" : [ "string", "null" ],
+            "description" : "Premise",
+            "example" : "22"
+          },
+          "street" : {
+            "type" : [ "string", "null" ],
+            "description" : "Street",
+            "example" : "West Street"
+          },
+          "locality" : {
+            "type" : [ "string", "null" ],
+            "description" : "Locality",
+            "example" : "Keighley"
+          },
+          "postcode" : {
+            "type" : [ "string", "null" ],
+            "description" : "Post code",
+            "example" : "MK15 2ST"
+          },
+          "cityCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "City reference code",
+            "example" : "25343"
+          },
+          "countyCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "County reference code",
+            "example" : "S.YORKSHIRE"
+          },
+          "countryCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "Country reference code",
+            "example" : "ENG"
+          },
+          "noFixedAddress" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "true if address not fixed. for example homeless"
+          },
+          "primaryAddress" : {
+            "type" : "boolean",
+            "description" : "true if this is the offender's primary address"
+          },
+          "mailAddress" : {
+            "type" : "boolean",
+            "description" : "true if this is used for mail"
+          },
+          "comment" : {
+            "type" : [ "string", "null" ],
+            "description" : "Free format comment about the address"
+          },
+          "startDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Date address was valid from"
+          },
+          "endDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Date address was valid to"
+          },
+          "validatedPAF" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "true if address validated by PAF"
+          }
+        },
+        "required" : [ "mailAddress", "primaryAddress" ]
+      },
       "UpdateAmendment" : {
         "type" : "object",
         "properties" : {
@@ -35479,6 +36556,148 @@
           }
         },
         "required" : [ "beliefId" ]
+      },
+      "CreateOffenderPhoneResponse" : {
+        "type" : "object",
+        "properties" : {
+          "phoneId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Unique NOMIS Id of phone"
+          }
+        },
+        "required" : [ "phoneId" ]
+      },
+      "CreateOffenderPhoneRequest" : {
+        "type" : "object",
+        "properties" : {
+          "number" : {
+            "type" : "string",
+            "description" : "The number",
+            "example" : "0114 555 555"
+          },
+          "extension" : {
+            "type" : [ "string", "null" ],
+            "description" : "Extension",
+            "example" : "x432"
+          },
+          "typeCode" : {
+            "type" : "string",
+            "description" : "Phone type code",
+            "example" : "MOB"
+          }
+        },
+        "required" : [ "number", "typeCode" ]
+      },
+      "CreateOffenderEmailResponse" : {
+        "type" : "object",
+        "properties" : {
+          "emailAddressId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Unique NOMIS Id of email address"
+          }
+        },
+        "required" : [ "emailAddressId" ]
+      },
+      "CreateOffenderEmailRequest" : {
+        "type" : "object",
+        "properties" : {
+          "email" : {
+            "type" : "string",
+            "description" : "Email address",
+            "example" : "test@test.justice.gov.uk"
+          }
+        },
+        "required" : [ "email" ]
+      },
+      "CreateOffenderAddressResponse" : {
+        "type" : "object",
+        "properties" : {
+          "addressId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The address Id"
+          }
+        },
+        "required" : [ "addressId" ]
+      },
+      "CreateOffenderAddressRequest" : {
+        "type" : "object",
+        "properties" : {
+          "typeCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "Address reference code",
+            "example" : "HOME"
+          },
+          "flat" : {
+            "type" : [ "string", "null" ],
+            "description" : "Flat name or number",
+            "example" : "Apartment 3"
+          },
+          "premise" : {
+            "type" : [ "string", "null" ],
+            "description" : "Premise",
+            "example" : "22"
+          },
+          "street" : {
+            "type" : [ "string", "null" ],
+            "description" : "Street",
+            "example" : "West Street"
+          },
+          "locality" : {
+            "type" : [ "string", "null" ],
+            "description" : "Locality",
+            "example" : "Keighley"
+          },
+          "postcode" : {
+            "type" : [ "string", "null" ],
+            "description" : "Post code",
+            "example" : "MK15 2ST"
+          },
+          "cityCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "City reference code",
+            "example" : "25343"
+          },
+          "countyCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "County reference code",
+            "example" : "S.YORKSHIRE"
+          },
+          "countryCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "Country reference code",
+            "example" : "ENG"
+          },
+          "noFixedAddress" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "true if address not fixed. for example homeless"
+          },
+          "primaryAddress" : {
+            "type" : "boolean",
+            "description" : "true if this is the offender's primary address"
+          },
+          "mailAddress" : {
+            "type" : "boolean",
+            "description" : "true if this is used for mail"
+          },
+          "comment" : {
+            "type" : [ "string", "null" ],
+            "description" : "Free format comment about the address"
+          },
+          "startDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Date address was valid from"
+          },
+          "endDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Date address was valid to"
+          }
+        },
+        "required" : [ "mailAddress", "primaryAddress" ]
       },
       "CreateAppointmentRequest" : {
         "type" : "object",
@@ -42924,10 +44143,6 @@
             "type" : [ "integer", "null" ],
             "format" : "int64"
           },
-          "txnEntrySeq" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
           "txnId" : {
             "type" : "integer",
             "format" : "int64"
@@ -42944,6 +44159,10 @@
           },
           "txnEntryAmount" : {
             "type" : "number"
+          },
+          "txnEntrySeq" : {
+            "type" : "integer",
+            "format" : "int32"
           }
         },
         "required" : [ "txnEntryAmount", "txnEntryDate", "txnEntrySeq", "txnId" ]
