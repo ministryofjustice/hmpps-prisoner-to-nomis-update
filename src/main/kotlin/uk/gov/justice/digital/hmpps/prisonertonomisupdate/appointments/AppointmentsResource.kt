@@ -20,7 +20,7 @@ class AppointmentsResource(
     summary = "Resynchronise an appointment instance / attendee to Nomis",
     description = """Create or update a DPS appointment attendee in Nomis, depending on whether a mapping exists. 
       Requires ROLE_PRISONER_TO_NOMIS__UPDATE__RW""",
-    responses = [ApiResponse(responseCode = "200", description = "Reconciliation differences returned")],
+    responses = [ApiResponse(responseCode = "200", description = "Appointment repaired")],
   )
   suspend fun repairAppointment(
     @Schema(description = "Appointment attendee DPS id", example = "123456789")
