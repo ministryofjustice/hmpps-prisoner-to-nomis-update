@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-09-22.840.60e8d40"
+    "version" : "2026-09-23.845.15027ea"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -5557,6 +5557,60 @@
         }
       }
     },
+    "/mapping/core-person/phone" : {
+      "post" : {
+        "tags" : [ "core-person-mapping-resource" ],
+        "summary" : "Creates core person phone mappings for synchronisation",
+        "description" : "Creates core person phone mappings for synchronisation between NOMIS ids and CPR ids. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "createCorePersonPhoneMapping",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CorePersonPhoneMappingDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Mapping created",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Indicates a duplicate mapping has been rejected. If Error code = 1409 the body will return a DuplicateErrorResponse",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mapping/core-person/migrate" : {
       "post" : {
         "tags" : [ "core-person-mapping-resource" ],
@@ -5665,6 +5719,60 @@
         }
       }
     },
+    "/mapping/core-person/email" : {
+      "post" : {
+        "tags" : [ "core-person-mapping-resource" ],
+        "summary" : "Creates core person email mappings for synchronisation",
+        "description" : "Creates core person email mappings for synchronisation between NOMIS ids and CPR ids. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "createCorePersonEmailMapping",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CorePersonEmailAddressMappingDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Mapping created",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Indicates a duplicate mapping has been rejected. If Error code = 1409 the body will return a DuplicateErrorResponse",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mapping/core-person/alias" : {
       "post" : {
         "tags" : [ "core-person-alias-mapping-resource" ],
@@ -5691,6 +5799,60 @@
                 }
               }
             }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Indicates a duplicate mapping has been rejected. If Error code = 1409 the body will return a DuplicateErrorResponse",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/core-person/address" : {
+      "post" : {
+        "tags" : [ "core-person-mapping-resource" ],
+        "summary" : "Creates core person address mappings for synchronisation",
+        "description" : "Creates core person address mappings for synchronisation between NOMIS ids and CPR ids. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "createCorePersonAddressMapping",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CorePersonAddressMappingDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Mapping created",
+            "content" : { }
           },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
@@ -16836,6 +16998,51 @@
             }
           }
         }
+      },
+      "delete" : {
+        "tags" : [ "core-person-mapping-resource" ],
+        "summary" : "Delete core person phone mapping by nomis phone Id",
+        "description" : "Delete the core person phone mapping by NOMIS Phone Id. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "deleteCorePersonPhoneMappingByNomisId",
+        "parameters" : [ {
+          "name" : "nomisPhoneId",
+          "in" : "path",
+          "description" : "NOMIS phone id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS phone id",
+            "example" : 12345
+          },
+          "example" : 12345
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Core person phone mapping deleted",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access this endpoint is forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/mapping/core-person/phone/cpr-phone-id/{cprPhoneId}" : {
@@ -17338,6 +17545,51 @@
             }
           }
         }
+      },
+      "delete" : {
+        "tags" : [ "core-person-mapping-resource" ],
+        "summary" : "Delete core person email mapping by nomis email address Id",
+        "description" : "Delete the core person email mapping by NOMIS Email/Internet Address Id. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "deleteCorePersonEmailMappingByNomisId",
+        "parameters" : [ {
+          "name" : "nomisEmailAddressId",
+          "in" : "path",
+          "description" : "NOMIS email address id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS email address id",
+            "example" : 12345
+          },
+          "example" : 12345
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Core person email mapping deleted",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access this endpoint is forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/mapping/core-person/email/cpr-email-address-id/{cprEmailAddressId}" : {
@@ -17624,6 +17876,51 @@
           },
           "404" : {
             "description" : "Id does not exist in mapping table",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "core-person-mapping-resource" ],
+        "summary" : "Delete core person address mapping by nomis address Id",
+        "description" : "Delete the core person address mapping by NOMIS Address Id. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "deleteCorePersonAddressMappingByNomisId",
+        "parameters" : [ {
+          "name" : "nomisAddressId",
+          "in" : "path",
+          "description" : "NOMIS address id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS address id",
+            "example" : 12345
+          },
+          "example" : 12345
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Core person address mapping deleted",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access this endpoint is forbidden",
             "content" : {
               "application/json" : {
                 "schema" : {
