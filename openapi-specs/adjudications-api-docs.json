@@ -12,7 +12,7 @@
       "name" : "MIT",
       "url" : "https://opensource.org/license/mit-0"
     },
-    "version" : "2026-07-30.520.c07b530"
+    "version" : "2026-09-23.625.e3edb70"
   },
   "servers" : [ {
     "url" : "/",
@@ -7866,6 +7866,7 @@
             "description" : "the outcome"
           },
           "referralOutcome" : {
+            "description" : "the optional referral outcome",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/OutcomeDto"
             }, {
@@ -7934,6 +7935,7 @@
             "description" : "oic hearing type description"
           },
           "outcome" : {
+            "description" : "hearing outcome",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/HearingOutcomeDto"
             }, {
@@ -8047,6 +8049,7 @@
             "example" : "25a"
           },
           "offenceRule" : {
+            "description" : "The offence rules related to the given incident role, Will not be set of there is no role code",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/OffenceRuleDetailsDto"
             }, {
@@ -8228,6 +8231,7 @@
         "additionalProperties" : false,
         "properties" : {
           "hearing" : {
+            "description" : "hearing including hearing outcome",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/HearingDto"
             }, {
@@ -8235,6 +8239,7 @@
             } ]
           },
           "outcome" : {
+            "description" : "combined outcome",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/CombinedOutcomeDto"
             }, {
@@ -9237,6 +9242,7 @@
             "description" : "Incident details"
           },
           "incidentRole" : {
+            "description" : "Information about the role of this prisoner in the incident",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/IncidentRoleDto"
             }, {
@@ -9244,6 +9250,7 @@
             } ]
           },
           "offenceDetails" : {
+            "description" : "Details about the offence the prisoner is accused of",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/OffenceDetailsDto"
             }, {
@@ -9251,6 +9258,7 @@
             } ]
           },
           "incidentStatement" : {
+            "description" : "Incident statement",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/IncidentStatementDto"
             }, {
@@ -10022,6 +10030,7 @@
             "description" : "total number of charge proved for same offence"
           },
           "lastReportedOffence" : {
+            "description" : "optional last reported same offence",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/LastReportedOffence"
             }, {
@@ -10104,13 +10113,13 @@
         "type" : "object",
         "additionalProperties" : false,
         "properties" : {
-          "totalElements" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
           "totalPages" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "size" : {
             "type" : "integer",
@@ -10126,21 +10135,21 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
           },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
           },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "empty" : {
             "type" : "boolean"
@@ -10155,19 +10164,19 @@
             "type" : "integer",
             "format" : "int64"
           },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
-          },
-          "pageSize" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
           "paged" : {
             "type" : "boolean"
           },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "pageSize" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -10512,13 +10521,13 @@
         "type" : "object",
         "additionalProperties" : false,
         "properties" : {
-          "totalElements" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
           "totalPages" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "size" : {
             "type" : "integer",
@@ -10534,21 +10543,21 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
           },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
           },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "empty" : {
             "type" : "boolean"
