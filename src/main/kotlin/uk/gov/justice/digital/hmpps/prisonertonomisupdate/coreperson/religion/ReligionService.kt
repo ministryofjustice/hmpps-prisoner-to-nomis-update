@@ -34,7 +34,7 @@ class ReligionService(
       "cprReligionId" to cprReligionId,
     )
     // TODO create religion in nomis
-    telemetryClient.trackEvent("cpr-religion-created-success", telemetryMap)
+    telemetryClient.trackEvent("coreperson-religion-created-success", telemetryMap)
   }
 
   suspend fun mergeReligions(toPrisonNumber: String) {
@@ -56,7 +56,7 @@ class ReligionService(
     if (corePersonReligionRequests.isNotEmpty()) {
       corePersonNomisApiService.mergeReligions(toPrisonNumber, CorePersonMergeRequest(corePersonReligionRequests))
     }
-    telemetryClient.trackEvent("cpr-religions-merged-success", telemetryMap)
+    telemetryClient.trackEvent("coreperson-religions-merged-success", telemetryMap)
   }
 
   data class ReligionEvent(
