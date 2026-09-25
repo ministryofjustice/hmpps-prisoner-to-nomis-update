@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-09-22.2563.43cc093"
+    "version" : "2026-09-24.2569.1292f1c"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -7457,7 +7457,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:45.469719882"
+            "example" : "07:44:42.186940503"
           },
           "outcomeDispositionCode" : {
             "type" : [ "string", "null" ]
@@ -7836,7 +7836,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:45.469719882"
+            "example" : "07:44:42.186940503"
           },
           "courtCode" : {
             "type" : "string"
@@ -8076,6 +8076,9 @@
             "type" : "string",
             "minLength" : 1
           },
+          "hmctsCode" : {
+            "type" : [ "string", "null" ]
+          },
           "status" : {
             "type" : "string",
             "enum" : [ "ACTIVE", "INACTIVE" ]
@@ -8105,6 +8108,9 @@
           },
           "dispositionCode" : {
             "type" : "string"
+          },
+          "hmctsCode" : {
+            "type" : [ "string", "null" ]
           },
           "status" : {
             "type" : "string",
@@ -10791,7 +10797,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:45.469719882"
+            "example" : "07:44:42.186940503"
           },
           "courtCode" : {
             "type" : "string"
@@ -11483,7 +11489,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:44:45.469719882"
+            "example" : "07:44:42.186940503"
           },
           "nomisOutcomeCode" : {
             "type" : [ "string", "null" ]
@@ -11562,7 +11568,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:45.469719882"
+            "example" : "07:44:42.186940503"
           },
           "courtId" : {
             "type" : "string"
@@ -11714,7 +11720,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:44:45.469719882"
+            "example" : "07:44:42.186940503"
           },
           "charges" : {
             "type" : "array",
@@ -11751,7 +11757,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:45.469719882"
+            "example" : "07:44:42.186940503"
           },
           "courtId" : {
             "type" : "string"
@@ -12347,7 +12353,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:45.469719882"
+            "example" : "07:44:42.186940503"
           },
           "courtCode" : {
             "type" : [ "string", "null" ]
