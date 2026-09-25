@@ -12,6 +12,8 @@ import org.springframework.http.HttpStatus
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonCprApiExtension.Companion.jsonMapper
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalAddress
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalAddressStatus
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalEthnicity
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalIdentifiers
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalNationality
@@ -112,8 +114,27 @@ fun prisonReligionReadResponse(prisonNumber: String, cprReligionId: String) = Pr
   ),
 )
 
-fun corePersonDto(nationality: String? = null, religion: String? = null) = DpsPrisonRecord(
-  addresses = listOf(),
+fun canonicalAddress() = CanonicalAddress(
+  cprAddressId = "ec4c7479-218c-4f11-a02d-edd749820679",
+  status = CanonicalAddressStatus(),
+  usages = listOf(),
+  contacts = listOf(),
+  noFixedAbode = false,
+  startDate = "2020-02-26",
+  endDate = "2023-07-15",
+  postcode = "SW1H 9AJ",
+  subBuildingName = "Sub building 2",
+  buildingNumber = "102",
+  thoroughfareName = "Petty France",
+  dependentLocality = "Westminster",
+  postTown = "London",
+  county = "Greater London",
+  countryCode = CanonicalAddress.CountryCode.GBR,
+  comment = "Some comment",
+)
+
+fun corePersonDto(nationality: String? = null, religion: String? = null, addresses: List<CanonicalAddress> = listOf()) = DpsPrisonRecord(
+  addresses = addresses,
   aliases = listOf(),
   dateOfBirth = null,
   ethnicity = CanonicalEthnicity(),
