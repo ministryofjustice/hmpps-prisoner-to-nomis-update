@@ -19,6 +19,7 @@ import org.mockito.kotlin.reset
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiExtension.Companion.dpsFinanceServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SubAccountBalanceForReconciliation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
@@ -137,6 +138,29 @@ class PrisonerBalanceReconciliationResourceIntTest(
         )
 
         awaitReportFinished()
+      }
+
+      @Test
+      fun `will retry checkPrisonerBalance after it fails the first time`() = runTest {
+        financeNomisApi.stubGetPrisonerAccountsWithError(2, HttpStatus.INTERNAL_SERVER_ERROR)
+
+        reconciliationService.generateReconciliationReportBatch(false)
+
+        awaitReportFinished()
+
+        // called once during the initial pass and again during the retry pass
+        financeNomisApi.verify(
+          2,
+          getRequestedFor(urlPathEqualTo("/finance/prisoners/rootOffenderId/2/balance/reconcile")),
+        )
+
+        verify(telemetryClient).trackEvent(
+          eq("prisoner-balance-reports-reconciliation-mismatch-error"),
+          check {
+            assertThat(it).containsEntry("rootOffenderId", "2")
+          },
+          isNull(),
+        )
       }
     }
 

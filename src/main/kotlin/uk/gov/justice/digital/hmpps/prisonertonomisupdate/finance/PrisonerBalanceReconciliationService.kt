@@ -15,6 +15,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.generateRanges
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import java.math.BigDecimal
 
+private const val RETRY_ERROR_LIMIT = 100
+
 @Service
 class PrisonerBalanceReconciliationService(
   private val telemetryClient: TelemetryClient,
@@ -27,6 +29,7 @@ class PrisonerBalanceReconciliationService(
   private companion object {
     private const val TELEMETRY_PRISONER_PREFIX = "prisoner-balance-reports-reconciliation"
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
+    private val retryRootOffenders = mutableListOf<Long>()
   }
 
   suspend fun manualCheckPrisonerBalance(rootOffenderId: Long): MismatchPrisonerBalance? = checkPrisonerBalance(rootOffenderId)
@@ -62,74 +65,86 @@ class PrisonerBalanceReconciliationService(
           "$TELEMETRY_PRISONER_PREFIX-report",
           mapOf(
             "success" to "false",
-            "error" to (it.message ?: ""),
+            "error" to (it.message ?: it.javaClass.name),
           ),
         )
         log.error("Prisoner balance reconciliation report failed", it)
       }
   }
 
-  private suspend fun generateReconciliationReport(activeOnly: Boolean): ReconciliationResult<MismatchPrisonerBalance> = generateRangesReconciliationReport(
-    threadCount = threadCount,
-    checkMatch = ::checkPrisonerBalance,
-    idRanges = { nomisApiService.getAllPrisonersIdRanges(pageSize.toLong(), activeOnly) },
-    idsInRange = { range -> this.getOffenderIdsInRange(range.fromId, range.toId, activeOnly) },
-  )
-
-  internal suspend fun checkPrisonerBalance(rootOffenderId: Long): MismatchPrisonerBalance? = runCatching {
-    val nomisAccounts = financeNomisApiService.getPrisonerAccountsToReconcile(rootOffenderId)
-    val dpsAccounts = dpsApiService.getPrisonerAccounts(nomisAccounts.prisonNumber)
-    val nomisFields = BalanceFields(
-      prisonNumber = nomisAccounts.prisonNumber,
-      accounts = nomisAccounts.accounts.filter { it.balance.compareTo(BigDecimal.ZERO) != 0 }
-        .map {
-          AccountFields(
-            accountCode = it.accountCode.toInt(),
-            balance = it.balance,
-          )
-        },
+  private suspend fun generateReconciliationReport(activeOnly: Boolean): ReconciliationResult<MismatchPrisonerBalance> {
+    retryRootOffenders.clear()
+    return generateRangesReconciliationReport(
+      threadCount = threadCount,
+      checkMatch = ::checkPrisonerBalance,
+      idRanges = { nomisApiService.getAllPrisonersIdRanges(pageSize.toLong(), activeOnly) },
+      idsInRange = { range -> this.getOffenderIdsInRange(range.fromId, range.toId, activeOnly) },
     )
-    val dpsFields = BalanceFields(
-      prisonNumber = nomisAccounts.prisonNumber,
-      accounts = dpsAccounts.filter { it.value.totalBalance.compareTo(BigDecimal.ZERO) != 0 }
-        .map {
-          AccountFields(
-            accountCode = it.key.toInt(),
-            balance = it.value.totalBalance,
-          )
-        },
-    )
+      .also {
+        retryRootOffenders.forEach { checkPrisonerBalance(it, retry = true) }
+      }
+  }
 
-    val differenceList = compareObjects(dpsFields, nomisFields, "prisoner-balances")
-
-    // log.info("$rootOffenderId compared\n$dpsFields with\n$nomisFields with result\n$differenceList")
-
-    if (differenceList.isNotEmpty()) {
-      // log.info("Differences: ${objectMapper.writeValueAsString(differenceList)}")
-      telemetryClient.trackEvent(
-        "$TELEMETRY_PRISONER_PREFIX-mismatch",
-        mapOf(
-          "prisoner" to nomisAccounts.prisonNumber,
-        ) + differenceList.associate { it.property to it.toString() },
+  internal suspend fun checkPrisonerBalance(rootOffenderId: Long, retry: Boolean = false): MismatchPrisonerBalance? {
+    return runCatching {
+      val nomisAccounts = financeNomisApiService.getPrisonerAccountsToReconcile(rootOffenderId)
+      val dpsAccounts = dpsApiService.getPrisonerAccounts(nomisAccounts.prisonNumber)
+      val nomisFields = BalanceFields(
+        prisonNumber = nomisAccounts.prisonNumber,
+        accounts = nomisAccounts.accounts.filter { it.balance.compareTo(BigDecimal.ZERO) != 0 }
+          .map {
+            AccountFields(
+              accountCode = it.accountCode.toInt(),
+              balance = it.balance,
+            )
+          },
       )
-      return MismatchPrisonerBalance(
-        nomis = nomisFields,
-        dps = dpsFields,
-        differences = differenceList,
+      val dpsFields = BalanceFields(
+        prisonNumber = nomisAccounts.prisonNumber,
+        accounts = dpsAccounts.filter { it.value.totalBalance.compareTo(BigDecimal.ZERO) != 0 }
+          .map {
+            AccountFields(
+              accountCode = it.key.toInt(),
+              balance = it.value.totalBalance,
+            )
+          },
       )
-    } else {
-      return null
-    }
-  }.onFailure {
-    log.error("Unable to match prisoner balances for offenderId={}", rootOffenderId, it)
-    telemetryClient.trackEvent(
-      "$TELEMETRY_PRISONER_PREFIX-mismatch-error",
-      mapOf(
-        "rootOffenderId" to rootOffenderId.toString(),
-        "error" to (it.message ?: ""),
-      ),
-    )
-  }.getOrNull()
+
+      val differenceList = compareObjects(dpsFields, nomisFields, "prisoner-balances")
+
+      // log.info("$rootOffenderId compared\n$dpsFields with\n$nomisFields with result\n$differenceList")
+
+      if (differenceList.isNotEmpty()) {
+        // log.info("Differences: ${objectMapper.writeValueAsString(differenceList)}")
+        telemetryClient.trackEvent(
+          "$TELEMETRY_PRISONER_PREFIX-mismatch",
+          mapOf(
+            "prisoner" to nomisAccounts.prisonNumber,
+          ) + differenceList.associate { it.property to it.toString() },
+        )
+        return MismatchPrisonerBalance(
+          nomis = nomisFields,
+          dps = dpsFields,
+          differences = differenceList,
+        )
+      } else {
+        return null
+      }
+    }.onFailure {
+      log.error("Unable to match prisoner balances for offenderId={}", rootOffenderId, it)
+      if (retry || retryRootOffenders.size > RETRY_ERROR_LIMIT) {
+        telemetryClient.trackEvent(
+          "$TELEMETRY_PRISONER_PREFIX-mismatch-error",
+          mapOf(
+            "rootOffenderId" to rootOffenderId.toString(),
+            "error" to (it.message ?: it.javaClass.name),
+          ),
+        )
+      } else {
+        retryRootOffenders.add(rootOffenderId)
+      }
+    }.getOrNull()
+  }
 
   private fun <T> compareLists(dpsList: List<T>, nomisList: List<T>, parentProperty: String): List<Difference> {
     val differences = mutableListOf<Difference>()
@@ -205,7 +220,7 @@ class PrisonerBalanceReconciliationService(
         mapOf(
           "fromRootOffenderId" to fromRootOffenderId.toString(),
           "toRootOffenderId" to toRootOffenderId.toString(),
-          "error" to (it.message ?: ""),
+          "error" to (it.message ?: it.javaClass.name),
         ),
       )
       log.error("Unable to match entire page of prisoners from fromRootOffenderId: $fromRootOffenderId, toRootOffenderId: $toRootOffenderId", it)
