@@ -304,8 +304,8 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
         )
         visitBalanceNomisApi.verify(
           putRequestedFor(urlPathEqualTo("/prisoners/$movedToNomsNumber/visit-balance"))
-            .withRequestBody(matchingJsonPath("remainingVisitOrders", absent()))
-            .withRequestBody(matchingJsonPath("remainingPrivilegedVisitOrders", absent())),
+            .withRequestBodyJsonPath("remainingVisitOrders", "0")
+            .withRequestBodyJsonPath("remainingPrivilegedVisitOrders", "0"),
         )
       }
 

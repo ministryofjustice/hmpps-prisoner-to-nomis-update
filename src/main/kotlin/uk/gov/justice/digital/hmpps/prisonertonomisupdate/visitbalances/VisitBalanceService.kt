@@ -68,10 +68,10 @@ class VisitBalanceService(
       val visitBalance = dpsApiService.getVisitBalance(prisonNumber)
       visitBalanceNomisApiService.updateVisitBalance(
         prisonNumber,
-        visitBalance?.toNomisUpdateVisitBalanceRequest() ?: UpdateVisitBalanceRequest(null, null),
+        visitBalance?.toNomisUpdateVisitBalanceRequest() ?: UpdateVisitBalanceRequest(0, 0),
       )
-      telemetry.put("voBalance", visitBalance?.voBalance.toString())
-      telemetry.put("pvoBalance", visitBalance?.pvoBalance.toString())
+      telemetry["voBalance"] = visitBalance?.voBalance.toString()
+      telemetry["pvoBalance"] = visitBalance?.pvoBalance.toString()
       telemetryClient.trackEvent("visitbalance-synchronisation-$eventTypeSuffix-success", telemetry)
     } else {
       telemetryClient.trackEvent("visitbalance-synchronisation-$eventTypeSuffix-ignored", telemetry)
