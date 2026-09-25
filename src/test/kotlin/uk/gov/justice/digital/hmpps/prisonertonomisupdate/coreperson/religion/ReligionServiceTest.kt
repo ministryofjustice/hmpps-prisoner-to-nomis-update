@@ -64,7 +64,7 @@ internal class ReligionServiceTest(@Autowired jsonMapper: JsonMapper) {
       )
 
       verify(telemetryClient).trackEvent(
-        eq("cpr-religion-created-success"),
+        eq("coreperson-religion-created-success"),
         check {
           assertThat(it["prisonNumber"]).isEqualTo(prisonNumber)
           assertThat(it["cprReligionId"]).isEqualTo(cprReligionId.toString())
@@ -123,7 +123,7 @@ internal class ReligionServiceTest(@Autowired jsonMapper: JsonMapper) {
       )
 
       verify(telemetryClient).trackEvent(
-        eq("cpr-religions-merged-success"),
+        eq("coreperson-religions-merged-success"),
         check {
           assertThat(it["prisonNumber"]).isEqualTo(prisonNumber)
         },

@@ -15,7 +15,7 @@ class CorePersonMergeService(
     val toPrisonNumber = event.prisonNumber()
     if (toPrisonNumber == null) {
       telemetryClient.trackEvent(
-        "cpr-person-merged-no-prison-number",
+        "coreperson-person-merged-no-prison-number",
         event.personReference.identifiers.associate { it.type to it.value },
       )
       return
@@ -26,7 +26,7 @@ class CorePersonMergeService(
 
     religionService.mergeReligions(toPrisonNumber)
 
-    telemetryClient.trackEvent("cpr-person-merged-success", telemetryMap)
+    telemetryClient.trackEvent("coreperson-person-merged-success", telemetryMap)
   }
 
   private fun MergePersonEvent.prisonNumber() = personReference.identifiers.firstOrNull { it.type == "toPrisonNumber" }?.value
