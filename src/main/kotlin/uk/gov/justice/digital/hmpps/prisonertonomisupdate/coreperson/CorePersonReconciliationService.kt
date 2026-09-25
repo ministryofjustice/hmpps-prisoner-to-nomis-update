@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.telemetryOf
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEventOrSuppress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.DpsPrisonRecord
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationErrorPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationPageResult
@@ -21,7 +22,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Of
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
-import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.Objects
@@ -58,7 +58,7 @@ class CorePersonReconciliationService(
     runCatching {
       generateReconciliationReport(
         threadCount = prisonerPageSize,
-        checkMatch = ::checkCorePersonMatch,
+        checkMatch = { checkCorePersonMatch(it, suppressEvents = false) },
         nextPage = if (activeOnly) ::getNextActiveBookingsForPage else ::getNextAllBookingsForPage,
       )
     }
@@ -112,13 +112,13 @@ class CorePersonReconciliationService(
     .getOrElse { ReconciliationErrorPageResult(it) }
     .also { log.info("Page requested from booking: $lastBookingId, with $prisonerPageSize bookings") }
 
-  suspend fun checkCorePersonMatch(prisonerId: PrisonerIds): MismatchCorePerson? = runCatching {
+  suspend fun checkCorePersonMatch(prisonerId: PrisonerIds, suppressEvents: Boolean): MismatchCorePerson? = runCatching {
     val (nomisCorePerson, cprCorePerson) = withContext(Dispatchers.Unconfined) {
       async { nomisCorePersonApiService.getPrisonerReligions(prisonerId.offenderNo)?.toPerson() ?: PrisonerPerson() } to
         async { cprCorePersonApiService.getCorePerson(prisonerId.offenderNo)?.toPerson() ?: PrisonerPerson() }
     }.awaitBoth()
 
-    return findDifferences(prisonerId, nomisCorePerson, cprCorePerson)
+    return findDifferences(prisonerId, nomisCorePerson, cprCorePerson, suppressEvents)
   }.onFailure { e ->
     log.error("Unable to match core person for prisoner with ${prisonerId.offenderNo} booking: ${prisonerId.bookingId}", e)
     telemetryClient.trackEvent(
@@ -137,6 +137,7 @@ class CorePersonReconciliationService(
     prisonerId: PrisonerIds,
     nomisCorePerson: PrisonerPerson,
     cprCorePerson: PrisonerPerson,
+    suppressEvents: Boolean,
   ): MismatchCorePerson? {
     val differences = mutableMapOf<String, String>()
 
@@ -149,7 +150,7 @@ class CorePersonReconciliationService(
       differences.takeIf { it.isNotEmpty() }
         ?.let { MismatchCorePerson(prisonNumber = prisonerId.offenderNo, differences = it) }?.also { mismatch ->
           log.info("CorePerson mismatch found {}", mismatch)
-          telemetryClient.trackEvent(
+          telemetryClient.trackEventOrSuppress(
             "$TELEMETRY_CORE_PERSON_PREFIX-mismatch",
             telemetryOf(
               "prisonNumber" to mismatch.prisonNumber,
@@ -159,24 +160,25 @@ class CorePersonReconciliationService(
               // booking will be 0 if reconciliation is run for a single prisoner, in which case ignore
               prisonerId.bookingId.takeIf { it != 0L }?.let { telemetry["bookingId"] = it }
             },
+            suppressEvent = suppressEvents,
           )
         }
     } else {
       if (differences.isEmpty()) {
-        telemetryClient.trackEvent(
+        telemetryClient.trackEventOrSuppress(
           "$TELEMETRY_CORE_PERSON_PREFIX-excluded-offender-resolved",
           mapOf(
             "reason" to ("No reconciliation mismatches found for excluded bookingId ${prisonerId.bookingId}. Remove from exclusion file."),
           ),
-          null,
+          suppressEvent = suppressEvents,
         )
       } else {
-        telemetryClient.trackEvent(
+        telemetryClient.trackEventOrSuppress(
           "$TELEMETRY_CORE_PERSON_PREFIX-excluded-offender",
           mapOf(
             "reason" to ("Excluding reconciliation mismatches for bookingId ${prisonerId.bookingId}"),
           ),
-          null,
+          suppressEvent = suppressEvents,
         )
       }
       null
@@ -212,12 +214,6 @@ class CorePersonReconciliationService(
     }
   }
 
-  private fun datesEqualToWithin(first: LocalDateTime?, second: LocalDateTime?, withIn: Duration) = when {
-    first == null && second == null -> true
-    (first != null && second == null) || (first == null && second != null) -> false
-    else -> Duration.between(first, second).abs() <= withIn
-  }
-
   private fun appendDifference(
     nomisField: String?,
     cprField: String?,
@@ -228,7 +224,7 @@ class CorePersonReconciliationService(
     if (nomisField != cprField) differences[fieldName] = "nomis=$nomisField, cpr=$cprField"
   }
 
-  suspend fun checkCorePersonMatch(offenderNo: String): MismatchCorePerson? = checkCorePersonMatch(PrisonerIds(0, offenderNo))
+  suspend fun checkCorePersonMatch(offenderNo: String, suppressEvents: Boolean = false): MismatchCorePerson? = checkCorePersonMatch(PrisonerIds(0, offenderNo), suppressEvents)
 }
 
 private fun LocalDateTime?.notEqualsIgnoringNanos(createDatetime: LocalDateTime?): Boolean = !Objects.equals(this?.withNano(0), createDatetime?.withNano(0))

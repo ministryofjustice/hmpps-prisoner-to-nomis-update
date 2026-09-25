@@ -26,6 +26,7 @@ import org.mockito.kotlin.never
 import org.mockito.kotlin.reset
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoInteractions
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
@@ -107,7 +108,7 @@ class CorePersonReconciliationIntTest(
       stubGetCorePerson(prisonNumber = "A1234BC")
       cprApi.stubGetCorePerson(prisonNumber = "A1234BC", corePersonDto(religion = "ZORO"))
 
-      service.checkCorePersonMatch(PrisonerIds(1234567, "A1234BC"))
+      service.checkCorePersonMatch(PrisonerIds(1234567, "A1234BC"), suppressEvents = false)
 
       verify(telemetryClient).trackEvent(
         eq("$TELEMETRY_PREFIX-excluded-offender"),
@@ -127,7 +128,7 @@ class CorePersonReconciliationIntTest(
       stubGetCorePerson(prisonNumber = "A1234BC", religion = "ZORO")
       cprApi.stubGetCorePerson(prisonNumber = "A1234BC", corePersonDto(religion = "ZORO"))
 
-      service.checkCorePersonMatch(PrisonerIds(1234567, "A1234BC"))
+      service.checkCorePersonMatch(PrisonerIds(1234567, "A1234BC"), suppressEvents = false)
 
       verify(telemetryClient).trackEvent(
         eq("$TELEMETRY_PREFIX-excluded-offender-resolved"),
@@ -323,6 +324,26 @@ class CorePersonReconciliationIntTest(
         },
         isNull(),
       )
+    }
+
+    @Test
+    fun `should suppress events when called from endpoint`() = runTest {
+      stubGetCorePerson(religion = null)
+      cprApi.stubGetCorePerson(prisonNumber = "A1234BC", corePersonDto(religion = "ATHE"))
+
+      webTestClient.get()
+        .uri("/core-person/reconciliation/A1234BC")
+        .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .jsonPath(".prisonNumber").isEqualTo("A1234BC")
+        .jsonPath(".differences.religion").isEqualTo("nomis=null, cpr=ATHE")
+        .jsonPath(".differences.religions").isEqualTo("nomis=0, cpr=1")
+
+      // telemetry should be suppressed when called direct from endpoint
+      verifyNoInteractions(telemetryClient)
     }
   }
 
