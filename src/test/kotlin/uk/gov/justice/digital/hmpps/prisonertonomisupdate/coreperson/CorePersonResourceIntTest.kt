@@ -240,14 +240,14 @@ class CorePersonResourceIntTest(
           .exchange()
 
         verify(telemetryClient).trackEvent(
-          eq("cpr-religions-merged-success"),
+          eq("coreperson-religions-merged-success"),
           check {
             assertThat(it["prisonNumber"]).isEqualTo(prisonNumber)
           },
           isNull(),
         )
         verify(telemetryClient).trackEvent(
-          eq("cpr-person-merged-success"),
+          eq("coreperson-person-merged-success"),
           check {
             assertThat(it["prisonNumber"]).isEqualTo(prisonNumber)
           },
