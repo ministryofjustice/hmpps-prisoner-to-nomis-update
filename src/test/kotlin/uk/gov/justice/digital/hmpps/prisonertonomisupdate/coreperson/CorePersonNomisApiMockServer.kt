@@ -55,6 +55,33 @@ class CorePersonNomisApiMockServer(private val jsonMapper: JsonMapper) {
           .withFixedDelay(fixedDelay),
       ),
     )
+    nomisApi.stubFor(
+      get(urlEqualTo("/core-person/$prisonNumber/reconciliation")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(status.value())
+          .withBody(jsonMapper.writeValueAsString(if (status == HttpStatus.OK) corePerson(prisonNumber, response) else error))
+          .withFixedDelay(fixedDelay),
+      ),
+    )
+  }
+
+  fun stubGetCorePersonForReconciliation(
+    prisonNumber: String = "AA1234A",
+    response: CorePerson = corePerson(prisonNumber = prisonNumber),
+    fixedDelay: Int = 30,
+    status: HttpStatus = HttpStatus.OK,
+    error: ErrorResponse = ErrorResponse(status = status.value()),
+  ) {
+    nomisApi.stubFor(
+      get(urlEqualTo("/core-person/$prisonNumber/reconciliation")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(status.value())
+          .withBody(jsonMapper.writeValueAsString(if (status == HttpStatus.OK) response else error))
+          .withFixedDelay(fixedDelay),
+      ),
+    )
   }
 
   fun stubMergeCorePersonReligions(prisonNumber: String = "AA1234A") {
@@ -87,6 +114,13 @@ fun corePerson(prisonNumber: String? = null, religion: String? = null): CorePers
   } else {
     null
   },
+)
+
+private fun corePerson(prisonNumber: String, beliefs: List<OffenderBelief>): CorePerson = CorePerson(
+  prisonNumber = prisonNumber,
+  activeFlag = true,
+  inOutStatus = "IN",
+  beliefs = beliefs,
 )
 
 fun corePersonReligions(religion: String? = null): List<OffenderBelief> = if (religion != null) {
