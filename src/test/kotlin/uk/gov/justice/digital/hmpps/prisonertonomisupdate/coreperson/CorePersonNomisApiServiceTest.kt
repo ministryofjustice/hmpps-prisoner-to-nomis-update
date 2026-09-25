@@ -36,6 +36,32 @@ class CorePersonNomisApiServiceTest {
   private lateinit var jsonMapper: JsonMapper
 
   @Nested
+  inner class GetCorePersonForReconciliation {
+    @Test
+    fun `will pass prison number to service`() = runTest {
+      mockServer.stubGetCorePersonForReconciliation("A1234BC")
+
+      apiService.getPrisonerForReconciliation(prisonNumber = "A1234BC")
+
+      mockServer.verify(
+        getRequestedFor(urlPathEqualTo("/core-person/A1234BC/reconciliation")),
+      )
+    }
+
+    @Test
+    fun `will return core person`() = runTest {
+      mockServer.stubGetCorePersonForReconciliation(
+        prisonNumber = "A1234BC",
+        response = corePerson(prisonNumber = "A1234BC", religion = "JEHV"),
+      )
+
+      val corePerson = apiService.getPrisonerForReconciliation(prisonNumber = "A1234BC")!!
+
+      assertThat(corePerson.beliefs!!.first().belief.code).isEqualTo("JEHV")
+    }
+  }
+
+  @Nested
   inner class GetCorePersonReligion {
     @Test
     fun `will pass oath2 token to service`() = runTest {

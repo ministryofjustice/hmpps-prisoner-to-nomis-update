@@ -71,7 +71,7 @@ class CorePersonReconciliationIntTest(
         assertThat(it).isNull()
       }
 
-      corePersonNomisApi.verify(getRequestedFor(urlPathMatching("/core-person/A1234BC/religions")))
+      corePersonNomisApi.verify(getRequestedFor(urlPathMatching("/core-person/A1234BC/reconciliation")))
       cprApi.verify(getRequestedFor(urlPathEqualTo("/person/prison/dps/A1234BC")))
       verify(telemetryClient, never()).trackEvent(anyString(), anyMap(), isNull())
     }
@@ -295,7 +295,7 @@ class CorePersonReconciliationIntTest(
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
               "prisonNumber" to "A1234BC",
-              "error" to "500 Internal Server Error from GET http://localhost:8082/core-person/A1234BC/religions",
+              "error" to "500 Internal Server Error from GET http://localhost:8082/core-person/A1234BC/reconciliation",
             ),
           )
         },

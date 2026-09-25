@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.Reconciliation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationSuccessPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.generateReconciliationReport
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderBelief
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CorePerson
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
@@ -114,7 +114,7 @@ class CorePersonReconciliationService(
 
   suspend fun checkCorePersonMatch(prisonerId: PrisonerIds, suppressEvents: Boolean): MismatchCorePerson? = runCatching {
     val (nomisCorePerson, cprCorePerson) = withContext(Dispatchers.Unconfined) {
-      async { nomisCorePersonApiService.getPrisonerReligions(prisonerId.offenderNo)?.toPerson() ?: PrisonerPerson() } to
+      async { nomisCorePersonApiService.getPrisonerForReconciliation(prisonerId.offenderNo)?.toPerson() ?: PrisonerPerson() } to
         async { cprCorePersonApiService.getCorePerson(prisonerId.offenderNo)?.toPerson() ?: PrisonerPerson() }
     }.awaitBoth()
 
@@ -143,7 +143,7 @@ class CorePersonReconciliationService(
 
     appendDifference(nomisCorePerson.nationality, cprCorePerson.nationality, differences, "nationality")
     appendDifference(nomisCorePerson.religion, cprCorePerson.religion, differences, "religion")
-    appendReligionsDifference(nomisCorePerson.religions, cprCorePerson.religions, differences, "religions")
+    appendReligionsDifference(nomisCorePerson.religions, cprCorePerson.religions, differences)
 
     val excluded = excludedBookingIds.contains(prisonerId.bookingId)
     return if (!excluded) {
@@ -189,8 +189,8 @@ class CorePersonReconciliationService(
     nomisField: List<PrisonerReligion>,
     cprField: List<PrisonerReligion>,
     differences: MutableMap<String, String>,
-    fieldName: String,
   ) {
+    val fieldName = "religions"
     if (reconciliationFields != null && !reconciliationFields.contains(fieldName)) return
     if (nomisField.size != cprField.size) {
       differences[fieldName] = "nomis=${nomisField.size}, cpr=${cprField.size}"
@@ -246,9 +246,9 @@ fun DpsPrisonRecord.toPerson() = PrisonerPerson(
   },
 )
 
-fun List<OffenderBelief>.toPerson() = PrisonerPerson(
-  religion = this.firstOrNull()?.belief?.code,
-  religions = this.mapIndexed { i, r ->
+fun CorePerson.toPerson() = PrisonerPerson(
+  religion = this.beliefs?.firstOrNull()?.belief?.code,
+  religions = this.beliefs?.mapIndexed { i, r ->
     PrisonerReligion(
       religion = r.belief.code,
       startDate = r.startDate,
@@ -259,7 +259,7 @@ fun List<OffenderBelief>.toPerson() = PrisonerPerson(
       createDatetime = r.audit.createDatetime,
       modifyUsername = r.audit.modifyUserId,
     )
-  },
+  } ?: emptyList(),
 )
 
 data class MismatchCorePerson(
