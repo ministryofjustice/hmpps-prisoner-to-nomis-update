@@ -71,7 +71,7 @@ class CorePersonResource(
   suspend fun generateCorePersonReconciliationReportForPrisoner(
     @Schema(description = "Prison number aka noms id / offender id display", example = "A1234BC")
     @PathVariable prisonNumber: String,
-  ) = reconciliationService.checkCorePersonMatch(prisonNumber)
+  ) = reconciliationService.checkCorePersonMatch(prisonNumber, suppressEvents = true)
 
   @PreAuthorize("hasRole('PRISONER_TO_NOMIS__UPDATE__RW')")
   @PostMapping("/core-person/prisoner/{prisonNumberTo}/merge")

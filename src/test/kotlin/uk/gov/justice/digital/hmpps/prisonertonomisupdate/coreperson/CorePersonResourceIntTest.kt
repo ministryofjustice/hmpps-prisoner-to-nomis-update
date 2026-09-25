@@ -12,7 +12,6 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentCaptor
 import org.mockito.Captor
 import org.mockito.junit.jupiter.MockitoExtension
-import org.mockito.kotlin.any
 import org.mockito.kotlin.check
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
@@ -143,11 +142,8 @@ class CorePersonResourceIntTest(
             )
           }
 
-        verify(telemetryClient).trackEvent(
-          eq("coreperson-reports-reconciliation-mismatch"),
-          any(),
-          isNull(),
-        )
+        // events suppressed when calling from endpoint
+        verifyNoInteractions(telemetryClient)
       }
     }
   }

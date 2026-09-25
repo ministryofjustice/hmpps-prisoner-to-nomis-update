@@ -14,6 +14,7 @@ class ApplicationInsightsConfiguration {
 }
 
 fun TelemetryClient.trackEvent(name: String, properties: Map<String, Any>) = this.trackEvent(name, properties.valuesAsStrings(), null)
+fun TelemetryClient.trackEventOrSuppress(name: String, properties: Map<String, Any>, suppressEvent: Boolean) = if (!suppressEvent) this.trackEvent(name, properties.valuesAsStrings(), null) else Unit
 
 fun Map<String, Any>.valuesAsStrings(): Map<String, String> = this.entries.associate { it.key to it.value.toString() }
 

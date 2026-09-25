@@ -26,6 +26,7 @@ import org.mockito.kotlin.never
 import org.mockito.kotlin.reset
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoInteractions
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
@@ -107,7 +108,7 @@ class CorePersonReconciliationIntTest(
       stubGetCorePerson(prisonNumber = "A1234BC")
       cprApi.stubGetCorePerson(prisonNumber = "A1234BC", corePersonDto(religion = "ZORO"))
 
-      service.checkCorePersonMatch(PrisonerIds(1234567, "A1234BC"))
+      service.checkCorePersonMatch(PrisonerIds(1234567, "A1234BC"), suppressEvents = false)
 
       verify(telemetryClient).trackEvent(
         eq("$TELEMETRY_PREFIX-excluded-offender"),
@@ -127,7 +128,7 @@ class CorePersonReconciliationIntTest(
       stubGetCorePerson(prisonNumber = "A1234BC", religion = "ZORO")
       cprApi.stubGetCorePerson(prisonNumber = "A1234BC", corePersonDto(religion = "ZORO"))
 
-      service.checkCorePersonMatch(PrisonerIds(1234567, "A1234BC"))
+      service.checkCorePersonMatch(PrisonerIds(1234567, "A1234BC"), suppressEvents = false)
 
       verify(telemetryClient).trackEvent(
         eq("$TELEMETRY_PREFIX-excluded-offender-resolved"),
@@ -323,6 +324,22 @@ class CorePersonReconciliationIntTest(
         },
         isNull(),
       )
+    }
+
+    @Test
+    fun `should suppress events when flag set`() = runTest {
+      corePersonNomisApi.stubGetCorePersonReligions("A1234BC", status = NOT_FOUND)
+      cprApi.stubGetCorePerson(prisonNumber = "A1234BC", corePersonDto(religion = "ATHE"))
+
+      service.checkCorePersonMatch("A1234BC", suppressEvents = true).also {
+        assertThat(it?.prisonNumber).isEqualTo("A1234BC")
+        assertThat(it?.differences).containsExactly(
+          entry("religion", "nomis=null, cpr=ATHE"),
+          entry("religions", "nomis=0, cpr=1"),
+        )
+      }
+
+      verifyNoInteractions(telemetryClient)
     }
   }
 
