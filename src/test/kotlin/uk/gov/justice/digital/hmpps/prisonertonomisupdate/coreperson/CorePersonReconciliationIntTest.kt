@@ -327,22 +327,18 @@ class CorePersonReconciliationIntTest(
     }
 
     @Test
-    fun `should suppress events when called from endpoint`() = runTest {
-      stubGetCorePerson(religion = null)
+    fun `should suppress events when flag set`() = runTest {
+      corePersonNomisApi.stubGetCorePersonReligions("A1234BC", status = NOT_FOUND)
       cprApi.stubGetCorePerson(prisonNumber = "A1234BC", corePersonDto(religion = "ATHE"))
 
-      webTestClient.get()
-        .uri("/core-person/reconciliation/A1234BC")
-        .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
-        .exchange()
-        .expectStatus()
-        .isOk
-        .expectBody()
-        .jsonPath(".prisonNumber").isEqualTo("A1234BC")
-        .jsonPath(".differences.religion").isEqualTo("nomis=null, cpr=ATHE")
-        .jsonPath(".differences.religions").isEqualTo("nomis=0, cpr=1")
+      service.checkCorePersonMatch("A1234BC", suppressEvents = true).also {
+        assertThat(it?.prisonNumber).isEqualTo("A1234BC")
+        assertThat(it?.differences).containsExactly(
+          entry("religion", "nomis=null, cpr=ATHE"),
+          entry("religions", "nomis=0, cpr=1"),
+        )
+      }
 
-      // telemetry should be suppressed when called direct from endpoint
       verifyNoInteractions(telemetryClient)
     }
   }
