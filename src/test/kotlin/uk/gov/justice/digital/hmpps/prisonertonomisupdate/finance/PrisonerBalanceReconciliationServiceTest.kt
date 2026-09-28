@@ -204,7 +204,7 @@ class PrisonerBalanceReconciliationServiceTest {
     fun `will return null and report telemetry when nomis account API returns not found`() = runTest {
       financeNomisApi.stubGetPrisonerAccountsWithError(OFFENDER_ID, NOT_FOUND)
 
-      assertThat(service.checkPrisonerBalance(OFFENDER_ID)).isNull()
+      assertThat(service.checkPrisonerBalance(OFFENDER_ID, retry = true)).isNull()
 
       verify(telemetryClient).trackEvent(
         eq("prisoner-balance-reports-reconciliation-mismatch-error"),
@@ -243,7 +243,7 @@ class PrisonerBalanceReconciliationServiceTest {
       financeNomisApi.stubGetPrisonerAccounts(OFFENDER_ID, nomisPrisonerAccounts())
       dpsApi.stubGetPrisonerAccounts(OFFENDER_NO, status = INTERNAL_SERVER_ERROR)
 
-      assertThat(service.checkPrisonerBalance(OFFENDER_ID)).isNull()
+      assertThat(service.checkPrisonerBalance(OFFENDER_ID, retry = true)).isNull()
 
       verify(telemetryClient).trackEvent(
         eq("prisoner-balance-reports-reconciliation-mismatch-error"),
