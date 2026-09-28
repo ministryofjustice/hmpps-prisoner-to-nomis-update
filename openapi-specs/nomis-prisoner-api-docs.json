@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-09-24.2119.c5e5675"
+    "version" : "2026-09-25.2124.2d131db"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -37925,7 +37925,7 @@
           "description" : {
             "type" : "string",
             "description" : "A description of the transaction entry",
-            "example" : "???"
+            "example" : "Open/Reopen Trust Account"
           },
           "transactionTimestamp" : {
             "type" : "string",
@@ -37966,9 +37966,9 @@
         "description" : "The data held in NOMIS about a hold transaction",
         "properties" : {
           "holdNumber" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
-            "description" : "The hold number"
+            "description" : "The hold number - this may not be present in old release hold transactions"
           },
           "holdCleared" : {
             "type" : "boolean",
@@ -37980,7 +37980,7 @@
             "description" : "The date until the hold is valid"
           }
         },
-        "required" : [ "holdCleared", "holdNumber" ]
+        "required" : [ "holdCleared" ]
       },
       "OffenderTransactionDto" : {
         "type" : "object",
@@ -44576,8 +44576,16 @@
             "type" : [ "integer", "null" ],
             "format" : "int64"
           },
+          "txnEntryDate" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
           "txnEntryDesc" : {
             "type" : [ "string", "null" ]
+          },
+          "txnEntrySeq" : {
+            "type" : "integer",
+            "format" : "int32"
           },
           "txnId" : {
             "type" : "integer",
@@ -44588,14 +44596,6 @@
           },
           "txnEntryAmount" : {
             "type" : "number"
-          },
-          "txnEntryDate" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "txnEntrySeq" : {
-            "type" : "integer",
-            "format" : "int32"
           }
         },
         "required" : [ "txnEntryAmount", "txnEntryDate", "txnEntrySeq", "txnId" ]
