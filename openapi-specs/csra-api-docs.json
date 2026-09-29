@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-09-22.562.49a87b9"
+    "version" : "2026-09-28.587.2cd8226"
   },
   "servers" : [ {
     "url" : "/",
@@ -3485,6 +3485,15 @@
             "enum" : [ "STANDARD", "PEND", "LOW", "MED", "HI" ],
             "example" : "LOW"
           },
+          "calculatedLevel" : {
+            "description" : "The calculated NOMIS level before any review or approval level overrode it.",
+            "example" : "LOW",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CsraLevel"
+            }, {
+              "type" : "null"
+            } ]
+          },
           "assessmentComment" : {
             "type" : [ "string", "null" ],
             "description" : "The assessment comment recorded in NOMIS"
@@ -3641,15 +3650,77 @@
             "example" : "REVIEW"
           },
           "rating" : {
-            "type" : "string",
-            "description" : "The recorded rating (final result if present, otherwise the interim result)",
+            "type" : [ "string", "null" ],
+            "deprecated" : true,
+            "description" : "Deprecated: the final rating, or the provisional one where there is no final rating yet. Use `finalRating` and `provisionalRating` instead; this field will be removed once the UI has migrated.",
             "enum" : [ "HIGH", "HIGH_GENERAL", "HIGH_SPECIFIC", "STANDARD" ],
             "example" : "STANDARD"
           },
           "reviewComment" : {
             "type" : [ "string", "null" ],
-            "description" : "The review/assessment comment, if any. Where `legacy` is present, prefer its assessmentComment and approvalComment — NOMIS records the two separately and this field resolves them to one.",
+            "deprecated" : true,
+            "description" : "Deprecated: the comment belonging to the rating in `rating`. Use `finalReviewComment` and `provisionalReviewComment` instead; this field will be removed once the UI has migrated.",
             "example" : "PNC checked. No issues found."
+          },
+          "recordedDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "deprecated" : true,
+            "description" : "Deprecated: the date the rating in `rating` was recorded, falling back to the assessment date. Use `finalRecordedDate` and `provisionalRecordedDate` instead; this field will be removed once the UI has migrated.",
+            "example" : "2025-10-11"
+          },
+          "finalRating" : {
+            "type" : [ "string", "null" ],
+            "description" : "The final rating when the review has reached a final outcome",
+            "enum" : [ "HIGH", "HIGH_GENERAL", "HIGH_SPECIFIC", "STANDARD" ],
+            "example" : "STANDARD"
+          },
+          "finalReviewComment" : {
+            "type" : [ "string", "null" ],
+            "description" : "The final review/assessment comment when one exists",
+            "example" : "PNC checked. No issues found."
+          },
+          "finalRecordedDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "The date the final rating was recorded",
+            "example" : "2025-10-11"
+          },
+          "provisionalRating" : {
+            "type" : [ "string", "null" ],
+            "description" : "The provisional rating when the review has not reached a final outcome yet",
+            "enum" : [ "HIGH", "HIGH_GENERAL", "HIGH_SPECIFIC", "STANDARD" ],
+            "example" : "HIGH_GENERAL"
+          },
+          "provisionalReviewComment" : {
+            "type" : [ "string", "null" ],
+            "description" : "The provisional review/assessment comment when one exists",
+            "example" : "Day 2 assessment complete."
+          },
+          "provisionalRecordedDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "The date the provisional rating was recorded",
+            "example" : "2025-10-11"
+          },
+          "closureReason" : {
+            "type" : [ "string", "null" ],
+            "description" : "The reason the review was closed or archived. Only present if the review was closed or archived.",
+            "enum" : [ "NOT_COMPLETED_PRISONER_TRANSFER", "NOT_COMPLETED_PRISONER_RELEASE" ]
+          },
+          "riskTo" : {
+            "type" : "array",
+            "description" : "The risk details of the rating shown on this row: the final stage's where there is a final rating, otherwise the provisional stage's. Matches the rule used by the current-rating endpoint.",
+            "items" : {
+              "$ref" : "#/components/schemas/CsraRiskToDetail"
+            }
+          },
+          "vulnerabilities" : {
+            "type" : "array",
+            "description" : "The vulnerability details of the rating shown on this row: the final stage's where there is a final rating, otherwise the provisional stage's. Matches the rule used by the current-rating endpoint.",
+            "items" : {
+              "$ref" : "#/components/schemas/CsraVulnerabilityDetail"
+            }
           },
           "prisonId" : {
             "type" : [ "string", "null" ],
@@ -3661,12 +3732,6 @@
             "description" : "The name of the prison the CSRA was recorded at, falling back to the id if it cannot be resolved",
             "example" : "Leeds (HMP)"
           },
-          "recordedDate" : {
-            "type" : "string",
-            "format" : "date",
-            "description" : "The date the rating was recorded",
-            "example" : "2025-10-11"
-          },
           "legacy" : {
             "description" : "Legacy NOMIS detail. Present only on reviews migrated from NOMIS, so its presence identifies the row as legacy.",
             "oneOf" : [ {
@@ -3676,7 +3741,7 @@
             } ]
           }
         },
-        "required" : [ "assessmentType", "id", "rating", "recordedDate", "type" ]
+        "required" : [ "assessmentType", "id", "riskTo", "type", "vulnerabilities" ]
       },
       "CsraReviewInProgressRow" : {
         "type" : "object",
