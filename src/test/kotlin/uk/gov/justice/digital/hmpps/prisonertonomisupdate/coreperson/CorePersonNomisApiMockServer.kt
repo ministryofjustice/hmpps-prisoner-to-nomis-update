@@ -67,6 +67,17 @@ class CorePersonNomisApiMockServer(private val jsonMapper: JsonMapper) {
     )
   }
 
+  fun stubInsertReligion(prisonNumber: String, beliefId: Long = 12345L) {
+    nomisApi.stubFor(
+      post(urlEqualTo("/core-person/$prisonNumber/religion")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(beliefId.toString()),
+      ),
+    )
+  }
+
   fun verify(pattern: RequestPatternBuilder) = nomisApi.verify(pattern)
   fun verify(count: Int, pattern: RequestPatternBuilder) = nomisApi.verify(count, pattern)
 }

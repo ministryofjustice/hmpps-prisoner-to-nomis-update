@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-09-28.2130.f853597"
+    "version" : "2026-09-29.2134.e01c1f9"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -14433,6 +14433,79 @@
           },
           "404" : {
             "description" : "Corporate or address does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/core-person/{prisonNumber}/religion" : {
+      "post" : {
+        "tags" : [ "core-person-resource" ],
+        "summary" : "Insert a new religion for an offender",
+        "description" : "Inserts a new religion record for an offender. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "insertOffenderReligion",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "description" : "Prison number aka noms id / offender id display",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prison number aka noms id / offender id display",
+            "example" : "A1234BC"
+          },
+          "example" : "A1234BC"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CorePersonInsertReligionRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Religion record inserted and its identifier returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "integer",
+                  "format" : "int64"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Offender does not exist",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -36966,6 +37039,28 @@
         },
         "required" : [ "isServices", "mailAddress", "noFixedAddress", "primaryAddress", "startDate" ]
       },
+      "CorePersonInsertReligionRequest" : {
+        "type" : "object",
+        "description" : "Insert request for offender belief",
+        "properties" : {
+          "beliefCode" : {
+            "type" : "string",
+            "description" : "Belief",
+            "example" : "SCIE"
+          },
+          "startDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Date the belief started",
+            "example" : "2024-01-01"
+          },
+          "comments" : {
+            "type" : [ "string", "null" ],
+            "description" : "Comments describing reason for change of belief"
+          }
+        },
+        "required" : [ "beliefCode", "startDate" ]
+      },
       "CorePersonMergeRequest" : {
         "type" : "object",
         "description" : "Update request for offender merge",
@@ -44590,13 +44685,13 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "txnEntryDate" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
           "txnId" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "txnEntryDate" : {
+            "type" : "string",
+            "format" : "date-time"
           },
           "txnEntryDesc" : {
             "type" : [ "string", "null" ]

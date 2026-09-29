@@ -10,3 +10,4 @@
 **/src/test/
 **/api/*
 !**/PrisonApi.kt
+!**/SysconSyncApi.kt
