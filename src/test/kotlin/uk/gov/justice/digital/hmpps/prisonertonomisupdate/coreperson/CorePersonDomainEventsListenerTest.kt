@@ -60,6 +60,7 @@ internal class CorePersonDomainEventsListenerTest(@Autowired private val jsonMap
             assertThat(it.additionalInformation.cprReligionId.toString()).isEqualTo("e312a74d-ca98-4fbc-b212-608bc41558e7")
             assertThat(it.personReference.identifiers.first { it.type == "prisonNumber" }.value).isEqualTo("A1234BC")
           },
+          eq(EventSource(value = "DPS", type = "String")),
         )
       }
 

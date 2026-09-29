@@ -19,6 +19,8 @@ import org.springframework.boot.test.autoconfigure.json.JsonTest
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonCprApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonNomisApiService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonRetryQueueService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.EventSource
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalEthnicity
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalIdentifiers
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalReligion
@@ -44,9 +46,17 @@ internal class ReligionServiceTest(@Autowired jsonMapper: JsonMapper) {
   private val corePersonNomisApiService: CorePersonNomisApiService = mock()
   private val mapping: ReligionMappingApiService = mock()
   private val corePersonCprApiService: CorePersonCprApiService = mock()
+  private val corePersonRetryQueueService: CorePersonRetryQueueService = mock()
 
   private val religionService =
-    ReligionService(telemetryClient, corePersonCprApiService, mapping, corePersonNomisApiService)
+    ReligionService(
+      telemetryClient,
+      corePersonCprApiService,
+      mapping,
+      corePersonRetryQueueService,
+      corePersonNomisApiService,
+      jsonMapper,
+    )
 
   @Nested
   inner class ReligionCreated {
@@ -55,16 +65,33 @@ internal class ReligionServiceTest(@Autowired jsonMapper: JsonMapper) {
     fun `should log a religion being created`() = runTest {
       val cprReligionId = UUID.randomUUID()
       val prisonNumber = "A1234BC"
+      whenever(mapping.getReligionByCprIdOrNull(cprReligionId.toString())).thenReturn(null)
+      whenever(corePersonCprApiService.getReligion(prisonNumber, cprReligionId.toString())).thenReturn(
+        uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonReligionReadResponse(
+          prisonNumber = prisonNumber,
+          religion = PrisonReligion(
+            religionCode = ReligionCode.AGNO,
+            changeReasonKnown = true,
+            startDate = LocalDate.of(2024, 1, 1),
+            current = true,
+            createDateTime = LocalDateTime.of(2024, 1, 1, 0, 0),
+            createUserId = "TEST",
+            cprReligionId = cprReligionId.toString(),
+          ),
+        ),
+      )
+      whenever(corePersonNomisApiService.insertReligion(any(), any())).thenReturn(12345L)
       religionService.religionCreated(
         ReligionService.ReligionEvent(
           "core-person-record.prison.religion.created",
           ReligionService.CprReligionCreatedInfo(cprReligionId),
           PersonReferenceList(listOf(PersonReference("prisonNumber", prisonNumber))),
         ),
+        EventSource(value = "DPS", type = "String"),
       )
 
       verify(telemetryClient).trackEvent(
-        eq("coreperson-religion-created-success"),
+        eq("core-person-religion-create-success"),
         check {
           assertThat(it["prisonNumber"]).isEqualTo(prisonNumber)
           assertThat(it["cprReligionId"]).isEqualTo(cprReligionId.toString())
