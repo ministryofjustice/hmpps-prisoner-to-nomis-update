@@ -21,6 +21,8 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 
+private const val LOOKAHEAD_DAYS = 26L
+
 @Service
 class AppointmentsReconciliationService(
   private val telemetryClient: TelemetryClient,
@@ -28,7 +30,6 @@ class AppointmentsReconciliationService(
   private val mappingService: AppointmentMappingService,
   private val dpsApiService: AppointmentsApiService,
   @Value("\${reports.appointments.reconciliation.page-size}") private val pageSize: Int,
-  @Value("\${reports.appointments.reconciliation.lookahead-days}") private val lookaheadDays: Long,
 ) {
   private companion object {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -40,11 +41,11 @@ class AppointmentsReconciliationService(
     private val excludeNomisIds = setOf<Long>(999999) // none currently
   }
 
-  suspend fun generateReconciliationReportBatch() {
+  suspend fun generateReconciliationReportBatch(full: Boolean = false) {
     telemetryClient.trackEvent("appointments-reports-reconciliation-requested")
     log.info("Appointments reconciliation report requested")
 
-    runCatching { generateReconciliationReport() }
+    runCatching { generateReconciliationReport(full) }
       .onSuccess { fullResults ->
         log.info("Appointments reconciliation report completed with ${fullResults.size} mismatches")
         val results = fullResults.take(10) // Only log the first 10 to avoid an insights error with too much data
@@ -59,20 +60,20 @@ class AppointmentsReconciliationService(
       }
   }
 
-  suspend fun generateReconciliationReport(): List<MismatchAppointment> {
-    val yesterday = LocalDate.now().minusDays(1)
-    val horizonDate = LocalDate.now().plusDays(lookaheadDays)
+  suspend fun generateReconciliationReport(full: Boolean = false): List<MismatchAppointment> {
+    val startDate = if (full) LocalDate.now().plusDays(LOOKAHEAD_DAYS) else LocalDate.now().minusDays(1)
+    val horizonDate = if (full) LocalDate.now().plusYears(1) else LocalDate.now().plusDays(LOOKAHEAD_DAYS)
     return dpsApiService.getRolloutPrisons()
       .filter { it.appointmentsRolledOut }
       .flatMap {
         val currentPrisonId = it.prisonCode
-        val appointmentsCount = nomisApiService.getAppointmentIds(listOf(currentPrisonId), yesterday, horizonDate, 0, 1).totalElements.toInt()
-        log.info("--------- Scanning prison {} with appointmentsCount = {}", currentPrisonId, appointmentsCount)
-        generateReconciliationReportForPrison(currentPrisonId, yesterday, horizonDate, appointmentsCount)
+        val appointmentsCount = nomisApiService.getAppointmentIds(listOf(currentPrisonId), startDate, horizonDate, 0, 1).totalElements.toInt()
+        log.info("--------- Scanning prison {} for {} - {} with appointmentsCount = {}", currentPrisonId, startDate, horizonDate, appointmentsCount)
+        generateReconciliationReportForPrison(currentPrisonId, startDate, horizonDate, appointmentsCount)
       }
 //    val currentPrisonId = "ISI"
-//    val appointmentsCount = nomisApiService.getAppointmentIds(listOf(currentPrisonId), yesterday, horizonDate, 0, 1).totalElements.toInt()
-//    return generateReconciliationReportForPrison(currentPrisonId, yesterday, horizonDate, appointmentsCount)
+//    val appointmentsCount = nomisApiService.getAppointmentIds(listOf(currentPrisonId), startDate, horizonDate, 0, 1).totalElements.toInt()
+//    return generateReconciliationReportForPrison(currentPrisonId, startDate, horizonDate, appointmentsCount)
   }
 
   suspend fun generateReconciliationReportForPrison(prisonId: String, startDate: LocalDate, endDate: LocalDate, nomisTotal: Int): List<MismatchAppointment> {
@@ -169,8 +170,12 @@ class AppointmentsReconciliationService(
     .also { log.info("Nomis Page requested: $page, with ${it.size} appointments") }
 
   internal suspend fun getDpsAppointmentsForPrison(prisonId: String, startDate: LocalDate, endDate: LocalDate): List<AppointmentAttendeeSearchResult> = runCatching {
-    dpsApiService.searchAppointments(prisonId, startDate, endDate)
-      .filterNot { app -> app.isDeleted }
+    datePeriodsOf(startDate, endDate, 28)
+      .flatMap { (periodStart, periodEnd) ->
+        log.info("Searching DPS appointments for prison {} from {} to {}", prisonId, periodStart, periodEnd)
+        dpsApiService.searchAppointments(prisonId, periodStart, periodEnd)
+          .filterNot { app -> app.isDeleted }
+      }
       .flatMap { app -> app.attendees }
   }
     .onFailure {
@@ -181,7 +186,7 @@ class AppointmentsReconciliationService(
       log.error("Unable to match entire DPS prison of prisoners: $prisonId", it)
     }
     .getOrElse { emptyList() }
-    .also { log.info("DPS prison requested: $prisonId, with ${it.size} appointment attendees") }
+    .also { log.info("DPS prison summary: $prisonId, with ${it.size} appointment attendees") }
 
   internal suspend fun checkForMissingDpsRecords(
     allDpsIdsInNomisPrison: Set<Long>,
@@ -283,7 +288,7 @@ class AppointmentsReconciliationService(
       )
       mismatch
     } else {
-      // log.info("Appointment matches: nomis ${mapping.nomisEventId} = dps ${mapping.appointmentInstanceId}")
+      // log.debug("Appointment matches: nomis ${mapping.nomisEventId} = dps ${mapping.appointmentInstanceId}")
       null
     }
   }.onSuccess {
@@ -331,6 +336,15 @@ class AppointmentsReconciliationService(
     }
   }
 }
+
+/**
+ * Splits a date range into a list of (start, end) pairs each spanning at most [maxDays] days,
+ * since the DPS search-appointments endpoint limits the range that can be queried at once.
+ */
+private fun datePeriodsOf(startDate: LocalDate, endDate: LocalDate, maxDays: Long): List<Pair<LocalDate, LocalDate>> = generateSequence(startDate) { it.plusDays(maxDays) }
+  .takeWhile { !it.isAfter(endDate) }
+  .map { periodStart -> periodStart to minOf(periodStart.plusDays(maxDays - 1), endDate) }
+  .toList()
 
 private fun parseOrNull(endTime: String?): LocalTime? = endTime?.let { LocalTime.parse(endTime) }
 

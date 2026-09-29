@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.AGENCY
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.ALERT_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.ALLOCATION_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.APPOINTMENT_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.APPOINTMENT_RECON_EXT
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.ATTENDANCE_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.CASE_NOTES_ACTIVE_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.CASE_NOTES_FULL_RECON
@@ -97,6 +98,7 @@ enum class BatchType {
   ALERT_RECON,
   ALLOCATION_RECON,
   APPOINTMENT_RECON,
+  APPOINTMENT_RECON_EXT,
   ATTENDANCE_RECON,
   CASE_NOTES_ACTIVE_RECON,
   CASE_NOTES_FULL_RECON,
@@ -192,6 +194,7 @@ class BatchManager(
       ALERT_RECON -> alertsReconciliationService.generateAlertsReconciliationReport()
       ALLOCATION_RECON -> activitiesReconService.allocationReconciliationReport()
       APPOINTMENT_RECON -> appointmentsReconciliationService.generateReconciliationReportBatch()
+      APPOINTMENT_RECON_EXT -> appointmentsReconciliationService.generateReconciliationReportBatch(full = true)
       ATTENDANCE_RECON -> activitiesReconService.attendanceReconciliationReport(LocalDate.now().minusDays(1))
       CASE_NOTES_ACTIVE_RECON -> caseNotesReconciliationService.generateReconciliationReport(activeOnly = true)
       CASE_NOTES_FULL_RECON -> caseNotesReconciliationService.generateReconciliationReport(activeOnly = false)
