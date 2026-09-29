@@ -255,6 +255,21 @@ class PrisonerBalanceReconciliationServiceTest {
         isNull(),
       )
     }
+
+    @Test
+    fun `should suppress events when flag set`() = runTest {
+      stubBalanceReconciliation(
+        nomisPrisonerAccounts().copy(accounts = listOf(nomisAccount(1001), nomisAccount(1002))),
+        dpsAccount(),
+      )
+      assertThat(service.checkPrisonerBalance(OFFENDER_ID, suppressEvents = true)?.differences).isEqualTo(
+        listOf(
+          Difference(property = "prisoner-balances.accounts", dps = 1, nomis = 2),
+        ),
+      )
+
+      verifyNoInteractions(telemetryClient)
+    }
   }
 
   @Nested
