@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.Canon
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalTitle
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.DpsPrisonRecord
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonReligion
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonReligionReadResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ErrorResponse
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -76,11 +77,40 @@ class CorePersonCprApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubGetReligion(
+    prisonNumber: String,
+    cprReligionId: String,
+    response: PrisonReligionReadResponse = prisonReligionReadResponse(prisonNumber, cprReligionId),
+  ) {
+    stubFor(
+      get("/syscon-sync/person/$prisonNumber/religion/$cprReligionId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(response),
+      ),
+    )
+  }
+
   fun ResponseDefinitionBuilder.withBody(body: Any): ResponseDefinitionBuilder {
     this.withBody(jsonMapper.writeValueAsString(body))
     return this
   }
 }
+
+fun prisonReligionReadResponse(prisonNumber: String, cprReligionId: String) = PrisonReligionReadResponse(
+  prisonNumber = prisonNumber,
+  religion = PrisonReligion(
+    religionCode = PrisonReligion.ReligionCode.JEHV,
+    changeReasonKnown = true,
+    startDate = LocalDate.parse("2024-01-01"),
+    current = true,
+    createDateTime = LocalDateTime.parse("2025-02-03T10:20:30"),
+    createUserId = "ME",
+    comments = "Updated religion",
+    cprReligionId = cprReligionId,
+  ),
+)
 
 fun corePersonDto(nationality: String? = null, religion: String? = null) = DpsPrisonRecord(
   addresses = listOf(),

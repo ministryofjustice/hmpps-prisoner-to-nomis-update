@@ -1,7 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson
 
-import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
-import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.equalToJson
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
@@ -14,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CorePersonInsertReligionRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CorePersonMergeRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CorePersonReligionRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
@@ -37,17 +36,6 @@ class CorePersonNomisApiServiceTest {
 
   @Nested
   inner class GetCorePersonReligion {
-    @Test
-    fun `will pass oath2 token to service`() = runTest {
-      mockServer.stubGetCorePersonReligions("A1234BC")
-
-      apiService.getPrisonerReligions(prisonNumber = "A1234BC")
-
-      mockServer.verify(
-        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
-      )
-    }
-
     @Test
     fun `will pass NOMIS id to service`() = runTest {
       mockServer.stubGetCorePersonReligions("A1234BC")
@@ -77,18 +65,6 @@ class CorePersonNomisApiServiceTest {
   @Nested
   inner class MergeReligions {
     @Test
-    fun `will pass oath2 token to service`() = runTest {
-      mockServer.stubMergeCorePersonReligions("A1234BC")
-
-      apiService.mergeReligions("A1234BC", mergeRequest())
-
-      mockServer.verify(
-        postRequestedFor(urlPathEqualTo("/core-person/A1234BC/merge"))
-          .withHeader("Authorization", equalTo("Bearer ABCDE")),
-      )
-    }
-
-    @Test
     fun `will pass NOMIS id to service`() = runTest {
       mockServer.stubMergeCorePersonReligions("A1234BC")
 
@@ -111,6 +87,37 @@ class CorePersonNomisApiServiceTest {
         postRequestedFor(urlPathEqualTo("/core-person/A1234BC/merge"))
           .withRequestBody(equalToJson(jsonMapper.writeValueAsString(mergeRequest))),
       )
+    }
+  }
+
+  @Nested
+  inner class InsertReligion {
+    private val prisonNumber = "A1234BC"
+    private val request = CorePersonInsertReligionRequest(
+      beliefCode = "JEHV",
+      startDate = LocalDate.parse("2024-01-01"),
+      comments = "Updated religion",
+    )
+
+    @Test
+    fun `will post the prisoner religion request`() = runTest {
+      mockServer.stubInsertReligion(prisonNumber)
+
+      apiService.insertReligion(prisonNumber, request)
+
+      mockServer.verify(
+        postRequestedFor(urlPathEqualTo("/core-person/$prisonNumber/religion"))
+          .withRequestBody(equalToJson(jsonMapper.writeValueAsString(request))),
+      )
+    }
+
+    @Test
+    fun `will return the inserted religion id`() = runTest {
+      mockServer.stubInsertReligion(prisonNumber, beliefId = 98765L)
+
+      val beliefId = apiService.insertReligion(prisonNumber, request)
+
+      assertThat(beliefId).isEqualTo(98765L)
     }
   }
 

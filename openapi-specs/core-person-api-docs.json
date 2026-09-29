@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-09-22.5228.a4f58f0"
+    "version" : "2026-09-29.5509.9aa992f"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -94,6 +94,230 @@
         "responses" : {
           "204" : {
             "description" : "No Content"
+          }
+        },
+        "security" : [ {
+          "api-role" : [ ]
+        } ]
+      }
+    },
+    "/syscon-sync/person/{prisonNumber}/contact/{cprContactId}" : {
+      "put" : {
+        "tags" : [ "Syscon Sync" ],
+        "description" : "Update prisoner contact record by Prison Number and contact uuid. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
+        "operationId" : "updatePrisonerContact",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "cprContactId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PrisonContact"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "No Content",
+            "content" : { }
+          }
+        },
+        "security" : [ {
+          "api-role" : [ ]
+        } ]
+      },
+      "delete" : {
+        "tags" : [ "Syscon Sync" ],
+        "description" : "Delete prisoner contact record by Prison Number and contact uuid. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
+        "operationId" : "deletePrisonerContact",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "cprContactId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content",
+            "content" : { }
+          }
+        },
+        "security" : [ {
+          "api-role" : [ ]
+        } ]
+      }
+    },
+    "/syscon-sync/person/{prisonNumber}/address/{cprAddressId}" : {
+      "put" : {
+        "tags" : [ "Syscon Sync" ],
+        "description" : "Update prisoner address record by Prison Number and address uuid. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
+        "operationId" : "updatePrisonerAddress",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "cprAddressId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PrisonAddress"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "No Content",
+            "content" : { }
+          }
+        },
+        "security" : [ {
+          "api-role" : [ ]
+        } ]
+      },
+      "delete" : {
+        "tags" : [ "Syscon Sync" ],
+        "description" : "Delete prisoner address record by Prison Number and address uuid. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
+        "operationId" : "deletePrisonerAddress",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "cprAddressId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content",
+            "content" : { }
+          }
+        },
+        "security" : [ {
+          "api-role" : [ ]
+        } ]
+      }
+    },
+    "/syscon-sync/person/{prisonNumber}/address/{cprAddressId}/usage/{cprUsageId}" : {
+      "put" : {
+        "tags" : [ "Syscon Sync" ],
+        "description" : "Update prisoner address usage record by Prison Number, address uuid and usage uuid. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
+        "operationId" : "updatePrisonerAddressUsage",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "cprAddressId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "cprUsageId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PrisonAddressUsage"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "No Content",
+            "content" : { }
+          }
+        },
+        "security" : [ {
+          "api-role" : [ ]
+        } ]
+      },
+      "delete" : {
+        "tags" : [ "Syscon Sync" ],
+        "description" : "Delete prisoner address usage record by Prison Number, address uuid and usage uuid. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
+        "operationId" : "deletePrisonerAddressUsage",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "cprAddressId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "cprUsageId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content",
+            "content" : { }
           }
         },
         "security" : [ {
@@ -200,6 +424,40 @@
         "responses" : {
           "200" : {
             "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "api-role" : [ ]
+        } ]
+      }
+    },
+    "/person/prison/dps/{prisonNumber}/religion" : {
+      "put" : {
+        "tags" : [ "Prison" ],
+        "description" : "Update the prisoner's religion by Prison Number. Role required is **ROLE_CORE_PERSON_RECORD_API__PRISON_RW**. ",
+        "operationId" : "updateReligionHistoryByPrisonNumberDps",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "description" : "The prisoner number",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PrisonReligionInsertRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
           }
         },
         "security" : [ {
@@ -348,6 +606,180 @@
         "responses" : {
           "204" : {
             "description" : "No Content"
+          }
+        },
+        "security" : [ {
+          "api-role" : [ ]
+        } ]
+      }
+    },
+    "/syscon-sync/person/{prisonNumber}/contact" : {
+      "post" : {
+        "tags" : [ "Syscon Sync" ],
+        "description" : "Create prisoner contact record by Prison Number. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
+        "operationId" : "createPrisonerContact",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PrisonContact"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SysconContactMapping"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "api-role" : [ ]
+        } ]
+      }
+    },
+    "/syscon-sync/person/{prisonNumber}/address" : {
+      "post" : {
+        "tags" : [ "Syscon Sync" ],
+        "description" : "Create prisoner address record by Prison Number. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
+        "operationId" : "createPrisonerAddress",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PrisonAddress"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SysconAddressMapping"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "api-role" : [ ]
+        } ]
+      }
+    },
+    "/syscon-sync/person/{prisonNumber}/address/{cprAddressId}/usage" : {
+      "post" : {
+        "tags" : [ "Syscon Sync" ],
+        "description" : "Create prisoner address usage record by Prison Number and address uuid. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
+        "operationId" : "createPrisonerAddressUsage",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "cprAddressId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PrisonAddressUsage"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SysconAddressUsageMapping"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "api-role" : [ ]
+        } ]
+      }
+    },
+    "/syscon-sync/person/{prisonNumber}/address/{cprAddressId}/contact" : {
+      "post" : {
+        "tags" : [ "Syscon Sync" ],
+        "description" : "Create prisoner address contact record by Prison Number and address uuid. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
+        "operationId" : "createPrisonerAddressContact",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "cprAddressId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PrisonContact"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SysconContactMapping"
+                }
+              }
+            }
           }
         },
         "security" : [ {
@@ -509,7 +941,7 @@
     "/syscon-sync/addresses-contacts/{prisonNumber}" : {
       "post" : {
         "tags" : [ "Syscon Sync" ],
-        "description" : "Save the prison addresses and contacts for the given prison number. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
+        "description" : "Save the prisoner addresses and contacts for the given prison number. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
         "operationId" : "saveAddressesAndContacts",
         "parameters" : [ {
           "name" : "prisonNumber",
@@ -540,7 +972,10 @@
               }
             }
           }
-        }
+        },
+        "security" : [ {
+          "api-role" : [ ]
+        } ]
       }
     },
     "/person/probation/{crn}/address" : {
@@ -819,13 +1254,46 @@
         } ],
         "responses" : {
           "200" : {
-            "description" : "Prisoner religion history returned",
+            "description" : "OK",
             "content" : {
               "*/*" : {
                 "schema" : {
                   "type" : "array",
                   "items" : {
                     "$ref" : "#/components/schemas/PrisonReligion"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "api-role" : [ ]
+        } ]
+      }
+    },
+    "/person/prison/dps/religion-codes" : {
+      "get" : {
+        "tags" : [ "Prison" ],
+        "description" : "Retrieve list of prison religion codes. Role required is **ROLE_CORE_PERSON_RECORD_API__RO**. ",
+        "operationId" : "getReligionCodes",
+        "parameters" : [ {
+          "name" : "active",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ReferenceDataResponse"
                   }
                 }
               }
@@ -941,6 +1409,232 @@
           }
         },
         "required" : [ "modifyDateTime", "modifyUserId" ]
+      },
+      "PrisonContact" : {
+        "type" : "object",
+        "properties" : {
+          "nomisContactId" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int64",
+            "description" : "The nomis contact id",
+            "example" : 1234
+          },
+          "value" : {
+            "type" : [ "string", "null" ],
+            "description" : "The contact value",
+            "example" : "01234567890"
+          },
+          "type" : {
+            "type" : "string",
+            "description" : "The contact type",
+            "enum" : [ "HOME", "BUS", "FAX", "ALTB", "ALTH", "MOBILE", "VISIT", "EMAIL" ],
+            "example" : "HOME"
+          },
+          "extension" : {
+            "type" : [ "string", "null" ],
+            "description" : "The contact extension",
+            "example" : "235"
+          },
+          "createDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The contact create date and time",
+            "example" : "2000-01-01 12:00:00"
+          },
+          "createUserId" : {
+            "type" : "string",
+            "description" : "The contact create user id",
+            "example" : "12345"
+          },
+          "modifyDateTime" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "The contact modify date and time",
+            "example" : "2000-01-01 12:00:00"
+          },
+          "modifyUserId" : {
+            "type" : [ "string", "null" ],
+            "description" : "The contact modify user id",
+            "example" : "12345"
+          }
+        },
+        "required" : [ "createDateTime", "createUserId", "type" ]
+      },
+      "PrisonAddress" : {
+        "type" : "object",
+        "properties" : {
+          "nomisAddressId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Is nomis address id",
+            "example" : 5678
+          },
+          "fullAddress" : {
+            "type" : [ "string", "null" ],
+            "description" : "The full address",
+            "example" : "Sub building 2, Main Building, 102 Petty France, Westminster, London, Greater London, SW1H 9AJ"
+          },
+          "noFixedAbode" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Is the person without a permanent residence",
+            "example" : false
+          },
+          "startDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "The address start date",
+            "example" : "2020-02-26"
+          },
+          "endDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "The address end date",
+            "example" : "2023-07-15"
+          },
+          "postcode" : {
+            "type" : [ "string", "null" ],
+            "description" : "The address postcode",
+            "example" : "SW1H 9AJ"
+          },
+          "subBuildingName" : {
+            "type" : [ "string", "null" ],
+            "description" : "The address sub building name",
+            "example" : "Sub building 2"
+          },
+          "buildingName" : {
+            "type" : [ "string", "null" ],
+            "description" : "The address building name",
+            "example" : "Main Building"
+          },
+          "buildingNumber" : {
+            "type" : [ "string", "null" ],
+            "description" : "The address building number",
+            "example" : "102"
+          },
+          "thoroughfareName" : {
+            "type" : [ "string", "null" ],
+            "description" : "The address thoroughfare name",
+            "example" : "Petty France"
+          },
+          "dependentLocality" : {
+            "type" : [ "string", "null" ],
+            "description" : "The address dependent locality",
+            "example" : "Westminster"
+          },
+          "postTown" : {
+            "type" : [ "string", "null" ],
+            "description" : "The address building number",
+            "example" : "London"
+          },
+          "county" : {
+            "type" : [ "string", "null" ],
+            "description" : "The address building number",
+            "example" : "Greater London"
+          },
+          "countryCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "The address country code",
+            "enum" : [ "ABW", "AFG", "AGO", "AIA", "AKR", "ALA", "ALB", "AND", "ANT", "ARE", "ARG", "ARM", "ASM", "ATA", "ATF", "ATG", "AUS", "AUT", "AZE", "BDI", "BEL", "BEN", "BES", "BFA", "BGD", "BGR", "BHR", "BHS", "BIH", "BLM", "BLR", "BLZ", "BMU", "BOL", "BRA", "BRB", "BRN", "BTN", "BVT", "BWA", "CAF", "CAN", "CCK", "CHE", "CHL", "CHN", "CI", "CIV", "CMR", "COD", "COG", "COK", "COL", "COM", "CPV", "CRI", "CUB", "CUW", "CXR", "CYM", "CYP", "CZE", "DEU", "DJI", "DKL", "DMA", "DNK", "DOM", "DZA", "ECU", "EGY", "ENG", "ERI", "ESH", "ESP", "EST", "ETH", "FIN", "FJI", "FLK", "FRA", "FRO", "FSM", "FXX", "GAB", "GBR", "GEO", "GGY", "GHA", "GIB", "GIN", "GLP", "GMB", "GNB", "GNQ", "GRC", "GRD", "GRL", "GTM", "GUF", "GUM", "GUY", "HKG", "HMD", "HND", "HRV", "HTI", "HUN", "IDN", "IMN", "IND", "IOT", "IRL", "IRN", "IRQ", "ISL", "ISR", "ITA", "JAM", "JEY", "JOR", "JPN", "KAZ", "KEN", "KGZ", "KHM", "KIR", "KNA", "KOR", "KOS", "KWT", "LAO", "LBN", "LBR", "LBY", "LCA", "LIE", "LKA", "LSO", "LTU", "LUX", "LVA", "MAC", "MAF", "MAR", "MCO", "MDA", "MDG", "MDV", "MEX", "MHL", "MKD", "MLI", "MLT", "MMR", "MNE", "MNG", "MNP", "MOZ", "MRT", "MSR", "MTQ", "MUS", "MWI", "MYS", "MYT", "NAM", "NCL", "NER", "NFK", "NGA", "NI", "NIC", "NIU", "NLD", "NOR", "NPL", "NRU", "NZL", "OMN", "PAK", "PAN", "PCN", "PER", "PHL", "PLW", "PNG", "POL", "PRI", "PRK", "PRT", "PRY", "PSE", "PYF", "QAT", "REU", "ROU", "RUS", "RWA", "SAU", "SCG", "SCOT", "SDN", "SEN", "SGP", "SGS", "SHN", "SJM", "SLB", "SLE", "SLV", "SMR", "SOM", "SPM", "SRB", "SSD", "STP", "SU", "SUR", "SVK", "SVN", "SWE", "SWZ", "SXM", "SYC", "SYR", "TCA", "TCD", "TGO", "THA", "TJK", "TKL", "TKM", "TLS", "TON", "TTO", "TUN", "TUR", "TUV", "TWN", "TZA", "UGA", "UKR", "UMI", "URY", "USA", "UZB", "VAT", "VCT", "VEN", "VGB", "VIR", "VNM", "VUT", "WALES", "WLF", "WSM", "XRK", "XX", "XZ", "YEM", "YU", "ZAF", "ZMB", "ZWE" ],
+            "example" : "GBR"
+          },
+          "comment" : {
+            "type" : [ "string", "null" ],
+            "description" : "The address comment",
+            "example" : "String"
+          },
+          "isPrimary" : {
+            "type" : "boolean",
+            "description" : "Is this the main address",
+            "example" : true
+          },
+          "isMail" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Is this the mail address",
+            "example" : true
+          },
+          "addressUsage" : {
+            "type" : "array",
+            "description" : "List of address usages",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonAddressUsage"
+            }
+          },
+          "contacts" : {
+            "type" : "array",
+            "description" : "List of address contacts",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonContact"
+            }
+          },
+          "createDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The address create date and time",
+            "example" : "2000-01-01 12:00:00"
+          },
+          "createUserId" : {
+            "type" : "string",
+            "description" : "The address create user id",
+            "example" : "12345"
+          },
+          "modifyDateTime" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "The address modify date and time",
+            "example" : "2000-01-01 12:00:00"
+          },
+          "modifyUserId" : {
+            "type" : [ "string", "null" ],
+            "description" : "The address modify user id",
+            "example" : "12345"
+          }
+        },
+        "required" : [ "addressUsage", "contacts", "createDateTime", "createUserId", "isPrimary", "nomisAddressId" ]
+      },
+      "PrisonAddressUsage" : {
+        "type" : "object",
+        "properties" : {
+          "nomisAddressUsageId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The nomis address usage id",
+            "example" : 5678
+          },
+          "addressUsageCode" : {
+            "type" : "string",
+            "description" : "The address usage code",
+            "enum" : [ "CARE", "CURFEW", "DAP", "DBA", "DBH", "DNF", "DOH", "DPH", "DSH", "DST", "DUT", "HDC", "HDC2", "HOME", "HOSP", "HOST", "OTHER", "RECEP", "RELEASE", "RES", "ROTL", "A02", "A16", "A10", "A11", "A17", "A07B", "A07A", "A14", "A13", "A08A", "A08C", "A08", "A01A", "A15", "A12", "A01C", "A01D", "A04", "A03", "A01", "A01B", "A05", "A06", "A07", "A08B", "A96", "A97", "A98", "A99", "CS02", "CS03", "CS04", "CS05", "CS06", "UNKNOWN" ],
+            "example" : "DSH"
+          },
+          "isActive" : {
+            "type" : "boolean",
+            "description" : "Is the address active",
+            "example" : true
+          },
+          "createDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The address usage create date and time",
+            "example" : "2000-01-01 12:00:00"
+          },
+          "createUserId" : {
+            "type" : "string",
+            "description" : "The address usage create user id",
+            "example" : "12345"
+          },
+          "modifyDateTime" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "The address usage modify date and time",
+            "example" : "2000-01-01 12:00:00"
+          },
+          "modifyUserId" : {
+            "type" : [ "string", "null" ],
+            "description" : "The address usage modify user id",
+            "example" : "12345"
+          }
+        },
+        "required" : [ "addressUsageCode", "createDateTime", "createUserId", "isActive", "nomisAddressUsageId" ]
       },
       "RetryDlqResult" : {
         "type" : "object",
@@ -1262,6 +1956,28 @@
           }
         }
       },
+      "PrisonReligionInsertRequest" : {
+        "type" : "object",
+        "description" : "Insert to prisoner religion",
+        "properties" : {
+          "religionCode" : {
+            "type" : "string",
+            "description" : "The religion code",
+            "enum" : [ "ADV", "AGNO", "APO", "ATHE", "BAHA", "BAPT", "BLAC", "BUDD", "CALV", "CCOG", "CE", "CHJCLDS", "CHRODX", "CHRST", "CHSC", "CINW", "COFE", "COFI", "COFN", "COFS", "CONG", "COPT", "CSW", "DRU", "EODX", "EORTH", "EPIS", "ETHO", "EVAN", "GOSP", "GROX", "HARE", "HIND", "HNDHAR", "HUM", "JAIN", "JEHV", "JEW", "LUTH", "METH", "MORM", "MOS", "MUSOTH", "NIL", "NONC", "NONP", "OORTH", "ORTH", "OTH", "PAG", "PAGDRU", "PENT", "PRES", "PROT", "QUAK", "RAST", "RC", "RUSS", "SALV", "SATN", "SCIE", "SDAY", "SHIA", "SHIN", "SHNTAO", "SIKH", "SPIR", "SUNI", "TAO", "TPRNTS", "UNIF", "UNIT", "UNKN", "UR", "WELS", "ZORO" ],
+            "example" : "ZORO"
+          },
+          "comment" : {
+            "type" : [ "string", "null" ],
+            "description" : "Reason for the religion change",
+            "example" : "Some information"
+          },
+          "userId" : {
+            "type" : "string",
+            "description" : "The user who made the change"
+          }
+        },
+        "required" : [ "religionCode", "userId" ]
+      },
       "PrisonSexualOrientation" : {
         "type" : "object",
         "properties" : {
@@ -1426,6 +2142,65 @@
           }
         },
         "required" : [ "fromPrisonNumber" ]
+      },
+      "SysconContactMapping" : {
+        "type" : "object",
+        "properties" : {
+          "nomisContactId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "nomisContactType" : {
+            "type" : "string",
+            "enum" : [ "HOME", "BUS", "FAX", "ALTB", "ALTH", "MOBILE", "VISIT", "EMAIL" ]
+          },
+          "cprContactId" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "cprContactId", "nomisContactId", "nomisContactType" ]
+      },
+      "SysconAddressMapping" : {
+        "type" : "object",
+        "properties" : {
+          "nomisAddressId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "cprAddressId" : {
+            "type" : "string"
+          },
+          "addressUsageMappings" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SysconAddressUsageMapping"
+            }
+          },
+          "contactMappings" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SysconContactMapping"
+            }
+          }
+        },
+        "required" : [ "addressUsageMappings", "contactMappings", "cprAddressId", "nomisAddressId" ]
+      },
+      "SysconAddressUsageMapping" : {
+        "type" : "object",
+        "properties" : {
+          "nomisAddressUsageId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "nomisAddressUsageCode" : {
+            "type" : "string",
+            "enum" : [ "CARE", "CURFEW", "DAP", "DBA", "DBH", "DNF", "DOH", "DPH", "DSH", "DST", "DUT", "HDC", "HDC2", "HOME", "HOSP", "HOST", "OTHER", "RECEP", "RELEASE", "RES", "ROTL", "A02", "A16", "A10", "A11", "A17", "A07B", "A07A", "A14", "A13", "A08A", "A08C", "A08", "A01A", "A15", "A12", "A01C", "A01D", "A04", "A03", "A01", "A01B", "A05", "A06", "A07", "A08B", "A96", "A97", "A98", "A99", "CS02", "CS03", "CS04", "CS05", "CS06", "UNKNOWN" ]
+          },
+          "cprAddressUsageId" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "cprAddressUsageId", "nomisAddressUsageCode", "nomisAddressUsageId" ]
       },
       "PrisonNationality" : {
         "type" : "object",
@@ -1693,182 +2468,6 @@
         },
         "required" : [ "cprIdentifierId", "nomisIdentifierId" ]
       },
-      "PrisonAddress" : {
-        "type" : "object",
-        "properties" : {
-          "nomisAddressId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Is nomis address id",
-            "example" : 5678
-          },
-          "fullAddress" : {
-            "type" : [ "string", "null" ],
-            "description" : "The full address",
-            "example" : "Sub building 2, Main Building, 102 Petty France, Westminster, London, Greater London, SW1H 9AJ"
-          },
-          "noFixedAbode" : {
-            "type" : [ "boolean", "null" ],
-            "description" : "Is the person without a permanent residence",
-            "example" : false
-          },
-          "startDate" : {
-            "type" : [ "string", "null" ],
-            "format" : "date",
-            "description" : "The address start date",
-            "example" : "2020-02-26"
-          },
-          "endDate" : {
-            "type" : [ "string", "null" ],
-            "format" : "date",
-            "description" : "The address end date",
-            "example" : "2023-07-15"
-          },
-          "postcode" : {
-            "type" : [ "string", "null" ],
-            "description" : "The address postcode",
-            "example" : "SW1H 9AJ"
-          },
-          "subBuildingName" : {
-            "type" : [ "string", "null" ],
-            "description" : "The address sub building name",
-            "example" : "Sub building 2"
-          },
-          "buildingName" : {
-            "type" : [ "string", "null" ],
-            "description" : "The address building name",
-            "example" : "Main Building"
-          },
-          "buildingNumber" : {
-            "type" : [ "string", "null" ],
-            "description" : "The address building number",
-            "example" : "102"
-          },
-          "thoroughfareName" : {
-            "type" : [ "string", "null" ],
-            "description" : "The address thoroughfare name",
-            "example" : "Petty France"
-          },
-          "dependentLocality" : {
-            "type" : [ "string", "null" ],
-            "description" : "The address dependent locality",
-            "example" : "Westminster"
-          },
-          "postTown" : {
-            "type" : [ "string", "null" ],
-            "description" : "The address building number",
-            "example" : "London"
-          },
-          "county" : {
-            "type" : [ "string", "null" ],
-            "description" : "The address building number",
-            "example" : "Greater London"
-          },
-          "countryCode" : {
-            "type" : [ "string", "null" ],
-            "description" : "The address country code",
-            "enum" : [ "ABW", "AFG", "AGO", "AIA", "AKR", "ALA", "ALB", "AND", "ANT", "ARE", "ARG", "ARM", "ASM", "ATA", "ATF", "ATG", "AUS", "AUT", "AZE", "BDI", "BEL", "BEN", "BES", "BFA", "BGD", "BGR", "BHR", "BHS", "BIH", "BLM", "BLR", "BLZ", "BMU", "BOL", "BRA", "BRB", "BRN", "BTN", "BVT", "BWA", "CAF", "CAN", "CCK", "CHE", "CHL", "CHN", "CI", "CIV", "CMR", "COD", "COG", "COK", "COL", "COM", "CPV", "CRI", "CUB", "CUW", "CXR", "CYM", "CYP", "CZE", "DEU", "DJI", "DKL", "DMA", "DNK", "DOM", "DZA", "ECU", "EGY", "ENG", "ERI", "ESH", "ESP", "EST", "ETH", "FIN", "FJI", "FLK", "FRA", "FRO", "FSM", "FXX", "GAB", "GBR", "GEO", "GGY", "GHA", "GIB", "GIN", "GLP", "GMB", "GNB", "GNQ", "GRC", "GRD", "GRL", "GTM", "GUF", "GUM", "GUY", "HKG", "HMD", "HND", "HRV", "HTI", "HUN", "IDN", "IMN", "IND", "IOT", "IRL", "IRN", "IRQ", "ISL", "ISR", "ITA", "JAM", "JEY", "JOR", "JPN", "KAZ", "KEN", "KGZ", "KHM", "KIR", "KNA", "KOR", "KOS", "KWT", "LAO", "LBN", "LBR", "LBY", "LCA", "LIE", "LKA", "LSO", "LTU", "LUX", "LVA", "MAC", "MAF", "MAR", "MCO", "MDA", "MDG", "MDV", "MEX", "MHL", "MKD", "MLI", "MLT", "MMR", "MNE", "MNG", "MNP", "MOZ", "MRT", "MSR", "MTQ", "MUS", "MWI", "MYS", "MYT", "NAM", "NCL", "NER", "NFK", "NGA", "NI", "NIC", "NIU", "NLD", "NOR", "NPL", "NRU", "NZL", "OMN", "PAK", "PAN", "PCN", "PER", "PHL", "PLW", "PNG", "POL", "PRI", "PRK", "PRT", "PRY", "PSE", "PYF", "QAT", "REU", "ROU", "RUS", "RWA", "SAU", "SCG", "SCOT", "SDN", "SEN", "SGP", "SGS", "SHN", "SJM", "SLB", "SLE", "SLV", "SMR", "SOM", "SPM", "SRB", "SSD", "STP", "SU", "SUR", "SVK", "SVN", "SWE", "SWZ", "SXM", "SYC", "SYR", "TCA", "TCD", "TGO", "THA", "TJK", "TKL", "TKM", "TLS", "TON", "TTO", "TUN", "TUR", "TUV", "TWN", "TZA", "UGA", "UKR", "UMI", "URY", "USA", "UZB", "VAT", "VCT", "VEN", "VGB", "VIR", "VNM", "VUT", "WALES", "WLF", "WSM", "XRK", "XX", "XZ", "YEM", "YU", "ZAF", "ZMB", "ZWE" ],
-            "example" : "GBR"
-          },
-          "comment" : {
-            "type" : [ "string", "null" ],
-            "description" : "The address comment",
-            "example" : "String"
-          },
-          "isPrimary" : {
-            "type" : "boolean",
-            "description" : "Is this the main address",
-            "example" : true
-          },
-          "isMail" : {
-            "type" : [ "boolean", "null" ],
-            "description" : "Is this the mail address",
-            "example" : true
-          },
-          "addressUsage" : {
-            "type" : "array",
-            "description" : "List of address usages",
-            "items" : {
-              "$ref" : "#/components/schemas/PrisonAddressUsage"
-            }
-          },
-          "contacts" : {
-            "type" : "array",
-            "description" : "List of address contacts",
-            "items" : {
-              "$ref" : "#/components/schemas/PrisonContact"
-            }
-          },
-          "createDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The address create date and time",
-            "example" : "2000-01-01 12:00:00"
-          },
-          "createUserId" : {
-            "type" : "string",
-            "description" : "The address create user id",
-            "example" : "12345"
-          },
-          "modifyDateTime" : {
-            "type" : [ "string", "null" ],
-            "format" : "date-time",
-            "description" : "The address modify date and time",
-            "example" : "2000-01-01 12:00:00"
-          },
-          "modifyUserId" : {
-            "type" : [ "string", "null" ],
-            "description" : "The address modify user id",
-            "example" : "12345"
-          }
-        },
-        "required" : [ "addressUsage", "contacts", "createDateTime", "createUserId", "isPrimary", "nomisAddressId" ]
-      },
-      "PrisonAddressUsage" : {
-        "type" : "object",
-        "properties" : {
-          "nomisAddressUsageId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The nomis address usage id",
-            "example" : 5678
-          },
-          "addressUsageCode" : {
-            "type" : "string",
-            "description" : "The address usage code",
-            "enum" : [ "CARE", "CURFEW", "DAP", "DBA", "DBH", "DNF", "DOH", "DPH", "DSH", "DST", "DUT", "HDC", "HDC2", "HOME", "HOSP", "HOST", "OTHER", "RECEP", "RELEASE", "RES", "ROTL", "A02", "A16", "A10", "A11", "A17", "A07B", "A07A", "A14", "A13", "A08A", "A08C", "A08", "A01A", "A15", "A12", "A01C", "A01D", "A04", "A03", "A01", "A01B", "A05", "A06", "A07", "A08B", "A96", "A97", "A98", "A99", "CS02", "CS03", "CS04", "CS05", "CS06", "UNKNOWN" ],
-            "example" : "DSH"
-          },
-          "isActive" : {
-            "type" : "boolean",
-            "description" : "Is the address active",
-            "example" : true
-          },
-          "createDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The address usage create date and time",
-            "example" : "2000-01-01 12:00:00"
-          },
-          "createUserId" : {
-            "type" : "string",
-            "description" : "The address usage create user id",
-            "example" : "12345"
-          },
-          "modifyDateTime" : {
-            "type" : [ "string", "null" ],
-            "format" : "date-time",
-            "description" : "The address usage modify date and time",
-            "example" : "2000-01-01 12:00:00"
-          },
-          "modifyUserId" : {
-            "type" : [ "string", "null" ],
-            "description" : "The address usage modify user id",
-            "example" : "12345"
-          }
-        },
-        "required" : [ "addressUsageCode", "createDateTime", "createUserId", "isActive", "nomisAddressUsageId" ]
-      },
       "PrisonAddressesAndContactsRequest" : {
         "type" : "object",
         "properties" : {
@@ -1887,98 +2486,6 @@
             }
           }
         }
-      },
-      "PrisonContact" : {
-        "type" : "object",
-        "properties" : {
-          "nomisContactId" : {
-            "type" : [ "integer", "null" ],
-            "format" : "int64",
-            "description" : "The nomis contact id",
-            "example" : 1234
-          },
-          "value" : {
-            "type" : [ "string", "null" ],
-            "description" : "The contact value",
-            "example" : "01234567890"
-          },
-          "type" : {
-            "type" : "string",
-            "description" : "The contact type",
-            "enum" : [ "HOME", "BUS", "FAX", "ALTB", "ALTH", "MOBILE", "VISIT", "EMAIL" ],
-            "example" : "HOME"
-          },
-          "extension" : {
-            "type" : [ "string", "null" ],
-            "description" : "The contact extension",
-            "example" : "235"
-          },
-          "createDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The contact create date and time",
-            "example" : "2000-01-01 12:00:00"
-          },
-          "createUserId" : {
-            "type" : "string",
-            "description" : "The contact create user id",
-            "example" : "12345"
-          },
-          "modifyDateTime" : {
-            "type" : [ "string", "null" ],
-            "format" : "date-time",
-            "description" : "The contact modify date and time",
-            "example" : "2000-01-01 12:00:00"
-          },
-          "modifyUserId" : {
-            "type" : [ "string", "null" ],
-            "description" : "The contact modify user id",
-            "example" : "12345"
-          }
-        },
-        "required" : [ "createDateTime", "createUserId", "type" ]
-      },
-      "SysconAddressMapping" : {
-        "type" : "object",
-        "properties" : {
-          "nomisAddressId" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "cprAddressId" : {
-            "type" : "string"
-          },
-          "addressUsageMappings" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/SysconAddressUsageMapping"
-            }
-          },
-          "contactMappings" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/SysconContactMapping"
-            }
-          }
-        },
-        "required" : [ "addressUsageMappings", "contactMappings", "cprAddressId", "nomisAddressId" ]
-      },
-      "SysconAddressUsageMapping" : {
-        "type" : "object",
-        "properties" : {
-          "nomisAddressUsageId" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "nomisAddressUsageCode" : {
-            "type" : "string",
-            "enum" : [ "CARE", "CURFEW", "DAP", "DBA", "DBH", "DNF", "DOH", "DPH", "DSH", "DST", "DUT", "HDC", "HDC2", "HOME", "HOSP", "HOST", "OTHER", "RECEP", "RELEASE", "RES", "ROTL", "A02", "A16", "A10", "A11", "A17", "A07B", "A07A", "A14", "A13", "A08A", "A08C", "A08", "A01A", "A15", "A12", "A01C", "A01D", "A04", "A03", "A01", "A01B", "A05", "A06", "A07", "A08B", "A96", "A97", "A98", "A99", "CS02", "CS03", "CS04", "CS05", "CS06", "UNKNOWN" ]
-          },
-          "cprAddressUsageId" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "cprAddressUsageId", "nomisAddressUsageCode", "nomisAddressUsageId" ]
       },
       "SysconAddressesAndContactsResponseBody" : {
         "type" : "object",
@@ -2000,23 +2507,6 @@
           }
         },
         "required" : [ "addressesMappings", "contactMappings", "prisonNumber" ]
-      },
-      "SysconContactMapping" : {
-        "type" : "object",
-        "properties" : {
-          "nomisContactId" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "nomisContactType" : {
-            "type" : "string",
-            "enum" : [ "HOME", "BUS", "FAX", "ALTB", "ALTH", "MOBILE", "VISIT", "EMAIL" ]
-          },
-          "cprContactId" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "cprContactId", "nomisContactId", "nomisContactType" ]
       },
       "ProbationCreateAddress" : {
         "type" : "object",
@@ -2172,44 +2662,62 @@
         "properties" : {
           "religionCode" : {
             "type" : "string",
-            "enum" : [ "ADV", "AGNO", "APO", "ATHE", "BAHA", "BAPT", "BLAC", "BUDD", "CALV", "CCOG", "CE", "CHJCLDS", "CHRODX", "CHRST", "CHSC", "CINW", "COFE", "COFI", "COFN", "COFS", "CONG", "COPT", "CSW", "DRU", "EODX", "EORTH", "EPIS", "ETHO", "EVAN", "GOSP", "GROX", "HARE", "HIND", "HNDHAR", "HUM", "JAIN", "JEHV", "JEW", "LUTH", "METH", "MORM", "MOS", "MUSOTH", "NIL", "NONC", "NONP", "OORTH", "ORTH", "OTH", "PAG", "PAGDRU", "PENT", "PRES", "PROT", "QUAK", "RAST", "RC", "RUSS", "SALV", "SATN", "SCIE", "SDAY", "SHIA", "SHIN", "SHNTAO", "SIKH", "SPIR", "SUNI", "TAO", "TPRNTS", "UNIF", "UNIT", "UNKN", "UR", "WELS", "ZORO" ]
+            "description" : "Religion code",
+            "enum" : [ "ADV", "AGNO", "APO", "ATHE", "BAHA", "BAPT", "BLAC", "BUDD", "CALV", "CCOG", "CE", "CHJCLDS", "CHRODX", "CHRST", "CHSC", "CINW", "COFE", "COFI", "COFN", "COFS", "CONG", "COPT", "CSW", "DRU", "EODX", "EORTH", "EPIS", "ETHO", "EVAN", "GOSP", "GROX", "HARE", "HIND", "HNDHAR", "HUM", "JAIN", "JEHV", "JEW", "LUTH", "METH", "MORM", "MOS", "MUSOTH", "NIL", "NONC", "NONP", "OORTH", "ORTH", "OTH", "PAG", "PAGDRU", "PENT", "PRES", "PROT", "QUAK", "RAST", "RC", "RUSS", "SALV", "SATN", "SCIE", "SDAY", "SHIA", "SHIN", "SHNTAO", "SIKH", "SPIR", "SUNI", "TAO", "TPRNTS", "UNIF", "UNIT", "UNKN", "UR", "WELS", "ZORO" ],
+            "example" : "SCIE"
           },
           "religionDescription" : {
-            "type" : [ "string", "null" ]
+            "type" : [ "string", "null" ],
+            "description" : "Description associated with the religion code",
+            "example" : "Scientologist"
           },
           "changeReasonKnown" : {
-            "type" : "boolean"
+            "type" : "boolean",
+            "description" : "Was a reason given for change of religion?"
           },
           "comments" : {
-            "type" : [ "string", "null" ]
+            "type" : [ "string", "null" ],
+            "description" : "Comments describing reason for change of religion"
           },
           "startDate" : {
             "type" : "string",
-            "format" : "date"
+            "format" : "date",
+            "description" : "Date the religion started",
+            "example" : "2024-01-01"
           },
           "endDate" : {
             "type" : [ "string", "null" ],
-            "format" : "date"
+            "format" : "date",
+            "description" : "Date the religion ended",
+            "example" : "2024-12-12"
           },
           "modifyDateTime" : {
             "type" : [ "string", "null" ],
-            "format" : "date-time"
+            "format" : "date-time",
+            "description" : "Date religion was modified",
+            "example" : "2024-01-01T12:00:00"
           },
           "modifyUserId" : {
-            "type" : [ "string", "null" ]
+            "type" : [ "string", "null" ],
+            "description" : "Username of staff member that modified religion"
           },
           "current" : {
-            "type" : "boolean"
+            "type" : "boolean",
+            "description" : "Indicates if the religion is current"
           },
           "createDateTime" : {
             "type" : "string",
-            "format" : "date-time"
+            "format" : "date-time",
+            "description" : "Date religion was created",
+            "example" : "2023-01-01T12:00:00"
           },
           "createUserId" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "Username of staff member that added religion"
           },
           "cprReligionId" : {
-            "type" : [ "string", "null" ]
+            "type" : [ "string", "null" ],
+            "description" : "Unique identifier for the religion"
           }
         },
         "required" : [ "changeReasonKnown", "createDateTime", "createUserId", "current", "religionCode", "startDate" ]
@@ -2840,6 +3348,21 @@
           }
         },
         "required" : [ "addresses", "aliases", "ethnicity", "identifiers", "nationalities", "religion", "religionHistory", "sex", "sexualOrientation", "title" ]
+      },
+      "ReferenceDataResponse" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "active" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "active", "code", "description" ]
       },
       "MatchDetailsResponse" : {
         "type" : "object",

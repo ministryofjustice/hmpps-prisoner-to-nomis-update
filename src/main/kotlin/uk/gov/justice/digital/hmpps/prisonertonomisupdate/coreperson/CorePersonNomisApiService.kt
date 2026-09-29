@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson
 
+import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.reactor.awaitSingleOrNull
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
@@ -7,6 +8,7 @@ import org.springframework.web.reactive.function.client.WebClient
 import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.CorePersonResourceApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CorePersonInsertReligionRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CorePersonMergeRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderBelief
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
@@ -33,4 +35,9 @@ class CorePersonNomisApiService(
       corePersonMergeRequest = corePersonMergeRequest,
     ).awaitSingleOrNull()
   }
+
+  suspend fun insertReligion(toPrisonNumber: String, corePersonInsertReligionRequest: CorePersonInsertReligionRequest): Long = api.insertOffenderReligion(
+    prisonNumber = toPrisonNumber,
+    corePersonInsertReligionRequest = corePersonInsertReligionRequest,
+  ).awaitSingle()
 }

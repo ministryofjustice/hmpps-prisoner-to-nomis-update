@@ -13,6 +13,7 @@ import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import org.springframework.web.reactive.function.client.bodyToMono
 import reactor.core.publisher.Mono
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonReligionReadResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.DuplicateErrorContent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.DuplicateMappingException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ParentEntityNotFoundRetry
@@ -245,3 +246,7 @@ class DuplicateError<E>(
   val moreInfo: E,
   val developerMessage: String? = null,
 )
+
+private fun PrisonReligionReadResponse.toNomisCreateRequest() {
+  TODO("Not yet implemented")
+}

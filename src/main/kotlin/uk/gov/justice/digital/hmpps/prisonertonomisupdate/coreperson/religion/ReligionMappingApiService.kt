@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.util.context.Context
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodilessEntityOrThrowOnConflict
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyWithRetry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.api.ReligionResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ReligionMappingDto
@@ -21,4 +23,14 @@ class ReligionMappingApiService(
   )
 
   suspend fun getByCprIds(crpReligionIds: List<String>): List<ReligionMappingDto> = religionResourceApi.getReligionMappingsByCprIds(crpReligionIds).awaitBodyWithRetry(retrySpec = backoffSpec)
+
+  suspend fun getReligionByCprIdOrNull(cprReligionId: String): ReligionMappingDto? = religionResourceApi
+    .prepare(religionResourceApi.getReligionMappingByCprIdRequestConfig(cprReligionId))
+    .retrieve()
+    .awaitBodyOrNullForNotFound()
+
+  suspend fun createReligionMapping(mapping: ReligionMappingDto) = religionResourceApi
+    .prepare(religionResourceApi.createReligionMappingRequestConfig(mapping))
+    .retrieve()
+    .awaitBodilessEntityOrThrowOnConflict()
 }
