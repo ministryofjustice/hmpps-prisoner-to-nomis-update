@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-09-25.2124.2d131db"
+    "version" : "2026-09-28.2130.f853597"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -14892,6 +14892,16 @@
           },
           "403" : {
             "description" : "Forbidden, requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Conflict, an appointment already exists for the given booking, location, date, and start time.This can occur if the same request is sent twice, e.g. due to a network error. 'moreInfo' contains the eventId of the existing appointment.",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -44576,20 +44586,20 @@
             "type" : [ "integer", "null" ],
             "format" : "int64"
           },
-          "txnEntryDate" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "txnEntryDesc" : {
-            "type" : [ "string", "null" ]
-          },
           "txnEntrySeq" : {
             "type" : "integer",
             "format" : "int32"
           },
+          "txnEntryDate" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
           "txnId" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "txnEntryDesc" : {
+            "type" : [ "string", "null" ]
           },
           "txnReferenceNumber" : {
             "type" : [ "string", "null" ]
