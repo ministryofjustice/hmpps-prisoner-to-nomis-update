@@ -46,7 +46,7 @@ class AppointmentsReconciliationServiceTest {
   private val telemetryClient: TelemetryClient = mock()
 
   private val appointmentsReconciliationService =
-    AppointmentsReconciliationService(telemetryClient, nomisApiService, appointmentsMappingService, appointmentsApiService, 5, 14)
+    AppointmentsReconciliationService(telemetryClient, nomisApiService, appointmentsMappingService, appointmentsApiService, 5)
 
   private val appointmentMappingDto = AppointmentMappingDto(
     appointmentInstanceId = APPOINTMENT_ATTENDEE_ID,
@@ -90,6 +90,35 @@ class AppointmentsReconciliationServiceTest {
 
     verify(nomisApiService, times(1)).getAppointmentIds(eq(listOf(PRISON_CODE)), any(), any(), eq(0), eq(1))
     verifyNoMoreInteractions(nomisApiService)
+  }
+
+  @Test
+  fun `A full recon will batch up DPS calls by date range`() = runTest {
+    whenever(appointmentsApiService.getRolloutPrisons()).thenReturn(
+      listOf(
+        RolloutPrisonPlan(
+          prisonCode = PRISON_CODE,
+          activitiesRolledOut = true,
+          appointmentsRolledOut = true,
+          maxDaysToExpiry = 45,
+          prisonLive = true,
+          externalActivitiesRolledOut = true,
+        ),
+      ),
+    )
+    val ids = PageImpl(listOf(AppointmentIdResponse(999999)), Pageable.ofSize(5), 1)
+    whenever(nomisApiService.getAppointmentIds(eq(listOf(PRISON_CODE)), any(), any(), eq(0), any()))
+      .thenReturn(ids)
+    whenever(appointmentsApiService.searchAppointments(eq(PRISON_CODE), any(), any()))
+      .thenReturn(emptyList())
+
+    appointmentsReconciliationService.generateReconciliationReport(full = true)
+
+    verify(nomisApiService, times(1)).getAppointmentIds(eq(listOf(PRISON_CODE)), any(), any(), eq(0), eq(1))
+    verify(nomisApiService, times(1)).getAppointmentIds(eq(listOf(PRISON_CODE)), any(), any(), eq(0), eq(5))
+    verifyNoMoreInteractions(nomisApiService)
+    verify(appointmentsApiService, times(13)).searchAppointments(eq(PRISON_CODE), any(), any())
+    // 13 times because 12 * 28 = 336 days, just under 11 months, plus one short range at the end makes 13
   }
 
   @Test
