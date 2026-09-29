@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
 import org.springframework.http.HttpStatus.NOT_FOUND
+import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SubAccountBalanceForReconciliation
@@ -34,6 +35,7 @@ import kotlin.collections.mapOf
 const val OFFENDER_NO = "A5678BZ"
 const val OFFENDER_ID = 123456789000L
 
+@TestPropertySource(properties = ["reports.prisoner.balance.reconciliation.include-holds=true"])
 @SpringAPIServiceTest
 @Import(
   PrisonerBalanceReconciliationService::class,
@@ -166,12 +168,29 @@ class PrisonerBalanceReconciliationServiceTest {
     }
 
     @Test
-    fun `will not report a mismatch when accounts if hold balances don't match`() = runTest {
+    fun `will report a mismatch when accounts if hold balances don't match`() = runTest {
       stubBalanceReconciliation(
         nomisPrisonerAccounts(),
         dpsAccount(holdBalance = BigDecimal("0.5")),
       )
-      assertThat(service.checkPrisonerBalance(OFFENDER_ID)).isNull()
+      assertThat(service.checkPrisonerBalance(OFFENDER_ID)?.differences).isEqualTo(
+        listOf(
+          Difference(property = "prisoner-balances.accounts[0].holdBalance: account code 1001", dps = BigDecimal("0.5"), nomis = BigDecimal("0.3")),
+        ),
+      )
+    }
+
+    @Test
+    fun `will report a mismatch when accounts if nomis hold balance is null`() = runTest {
+      stubBalanceReconciliation(
+        nomisPrisonerAccounts(holdBalance = null),
+        dpsAccount(holdBalance = BigDecimal("0.5")),
+      )
+      assertThat(service.checkPrisonerBalance(OFFENDER_ID)?.differences).isEqualTo(
+        listOf(
+          Difference(property = "prisoner-balances.accounts[0].holdBalance: account code 1001", dps = BigDecimal("0.5"), nomis = null),
+        ),
+      )
     }
 
     @Test
@@ -325,18 +344,20 @@ private fun dpsZeroAccount(accountCode: Int = 1001) = dpsAccount(
   holdBalance = BigDecimal.ZERO,
 )
 
-fun nomisPrisonerAccounts(accountCode: Long = 1001, balance: BigDecimal = BigDecimal.valueOf(1.5)) = PrisonerAggregatedAccountsDto(
+fun nomisPrisonerAccounts(accountCode: Long = 1001, balance: BigDecimal = BigDecimal.valueOf(1.5), holdBalance: BigDecimal? = BigDecimal.valueOf(0.3)) = PrisonerAggregatedAccountsDto(
   rootOffenderId = OFFENDER_ID,
   prisonNumber = OFFENDER_NO,
-  accounts = listOf(nomisAccount(accountCode, balance)),
+  accounts = listOf(nomisAccount(accountCode, balance, holdBalance)),
 )
 
 private fun nomisZeroAccount(accountCode: Long = 1001) = AggregatedAccountDto(
   accountCode = accountCode,
   balance = BigDecimal.valueOf(0),
+  holdBalance = BigDecimal.valueOf(0),
 )
 
-private fun nomisAccount(accountCode: Long = 1001, balance: BigDecimal = BigDecimal.valueOf(1.5)) = AggregatedAccountDto(
+private fun nomisAccount(accountCode: Long = 1001, balance: BigDecimal = BigDecimal.valueOf(1.5), holdBalance: BigDecimal? = BigDecimal.valueOf(0.3)) = AggregatedAccountDto(
   accountCode = accountCode,
   balance = balance,
+  holdBalance = holdBalance,
 )
