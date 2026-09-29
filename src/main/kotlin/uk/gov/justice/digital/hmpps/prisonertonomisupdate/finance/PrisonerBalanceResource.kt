@@ -25,7 +25,7 @@ class PrisonerBalanceResource(
   suspend fun manualCheckCaseOffenderId(
     @Schema(description = "Prisoner's rootOffenderId", example = "1234567")
     @PathVariable rootOffenderId: Long,
-  ) = reconciliationService.manualCheckPrisonerBalance(rootOffenderId)
+  ) = reconciliationService.manualCheckPrisonerBalance(rootOffenderId, true)
 
   @GetMapping("/prisoner-balance/reconciliation/{offenderNo}")
   @Operation(
@@ -37,5 +37,5 @@ class PrisonerBalanceResource(
   suspend fun manualCheckCaseOffenderNo(
     @Schema(description = "Prisoner's offenderNo", example = "A3456NZ")
     @PathVariable offenderNo: String,
-  ) = reconciliationService.manualCheckPrisonerBalance(offenderNo)
+  ) = reconciliationService.manualCheckPrisonerBalance(offenderNo, suppressEvents = true)
 }
