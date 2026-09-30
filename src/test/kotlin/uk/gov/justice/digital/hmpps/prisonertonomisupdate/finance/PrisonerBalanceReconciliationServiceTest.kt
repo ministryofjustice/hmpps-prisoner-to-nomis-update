@@ -35,7 +35,6 @@ import kotlin.collections.mapOf
 const val OFFENDER_NO = "A5678BZ"
 const val OFFENDER_ID = 123456789000L
 
-@TestPropertySource(properties = ["reports.prisoner.balance.reconciliation.include-holds=true"])
 @SpringAPIServiceTest
 @Import(
   PrisonerBalanceReconciliationService::class,
@@ -68,6 +67,7 @@ class PrisonerBalanceReconciliationServiceTest {
   }
 
   @Nested
+  @TestPropertySource(properties = ["reports.prisoner.balance.reconciliation.holds=true"])
   inner class CheckMatch {
     private fun stubBalanceReconciliation(nomisBalance: PrisonerAggregatedAccountsDto, dpsBalance: Map<String, SubAccountBalanceForReconciliation>) {
       financeNomisApi.stubGetPrisonerAccounts(OFFENDER_ID, nomisBalance)
@@ -288,6 +288,42 @@ class PrisonerBalanceReconciliationServiceTest {
       )
 
       verifyNoInteractions(telemetryClient)
+    }
+  }
+
+  @Nested
+  @TestPropertySource(properties = ["reports.prisoner.balance.reconciliation.balances=false"])
+  inner class WithBalanceDisabled {
+    private fun stubBalanceReconciliation(nomisBalance: PrisonerAggregatedAccountsDto, dpsBalance: Map<String, SubAccountBalanceForReconciliation>) {
+      financeNomisApi.stubGetPrisonerAccounts(OFFENDER_ID, nomisBalance)
+      dpsApi.stubGetPrisonerAccounts(OFFENDER_NO, dpsBalance)
+    }
+
+    @Test
+    fun `will not report a balance mismatch if balances are disabled`() = runTest {
+      stubBalanceReconciliation(
+        nomisPrisonerAccounts(),
+        dpsAccount(totalBalance = BigDecimal("100")),
+      )
+      assertThat(service.checkPrisonerBalance(OFFENDER_ID)?.differences).isNull()
+    }
+  }
+
+  @Nested
+  @TestPropertySource(properties = ["reports.prisoner.balance.reconciliation.holds=false"])
+  inner class WithHoldsDisabled {
+    private fun stubBalanceReconciliation(nomisBalance: PrisonerAggregatedAccountsDto, dpsBalance: Map<String, SubAccountBalanceForReconciliation>) {
+      financeNomisApi.stubGetPrisonerAccounts(OFFENDER_ID, nomisBalance)
+      dpsApi.stubGetPrisonerAccounts(OFFENDER_NO, dpsBalance)
+    }
+
+    @Test
+    fun `will not report a balance mismatch if holds are disabled`() = runTest {
+      stubBalanceReconciliation(
+        nomisPrisonerAccounts(),
+        dpsAccount(holdBalance = BigDecimal("0.5")),
+      )
+      assertThat(service.checkPrisonerBalance(OFFENDER_ID)?.differences).isNull()
     }
   }
 

@@ -26,7 +26,8 @@ class PrisonerBalanceReconciliationService(
   private val dpsApiService: FinanceDpsApiService,
   @Value($$"${reports.prisoner.balance.reconciliation.page-size:1000}") private val pageSize: Int = 1000,
   @Value($$"${reports.prisoner.balance.reconciliation.thread-count:10}") private val threadCount: Int = 10,
-  @Value($$"${reports.prisoner.balance.reconciliation.include-holds:false}") private val reconcileHolds: Boolean = false,
+  @Value($$"${reports.prisoner.balance.reconciliation.holds:false}") private val reconcileHolds: Boolean = false,
+  @Value($$"${reports.prisoner.balance.reconciliation.balances:true}") private val reconcileBalances: Boolean = true,
 ) {
   private companion object {
     private const val TELEMETRY_PRISONER_PREFIX = "prisoner-balance-reports-reconciliation"
@@ -194,8 +195,16 @@ class PrisonerBalanceReconciliationService(
         if (dpsObj.accountCode != nomisObj.accountCode) {
           differences.add(Difference("$parentProperty.accountCode", dpsObj.accountCode, nomisObj.accountCode))
         }
-        if (dpsObj.balance.compareTo(nomisObj.balance) != 0) {
-          differences.add(Difference("$parentProperty.balance: account code ${nomisObj.accountCode}", dpsObj.balance, nomisObj.balance))
+        if (reconcileBalances) {
+          if (dpsObj.balance.compareTo(nomisObj.balance) != 0) {
+            differences.add(
+              Difference(
+                "$parentProperty.balance: account code ${nomisObj.accountCode}",
+                dpsObj.balance,
+                nomisObj.balance,
+              ),
+            )
+          }
         }
         if (reconcileHolds) {
           if (dpsObj.holdBalance?.compareTo(nomisObj.holdBalance ?: BigDecimal.ZERO) != 0) {
