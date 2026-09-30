@@ -80,7 +80,7 @@ class PrisonerBalanceReconciliationServiceTest {
         nomisPrisonerAccounts(),
         dpsAccount(),
       )
-      assertThat(service.checkPrisonerBalance(OFFENDER_ID)).isNull()
+      assertThat(service.checkPrisonerBalance(OFFENDER_ID, isRetry = true)).isNull()
     }
 
     @Test
@@ -89,7 +89,7 @@ class PrisonerBalanceReconciliationServiceTest {
         nomisPrisonerAccounts().copy(accounts = listOf()),
         dpsAccount(),
       )
-      assertThat(service.checkPrisonerBalance(OFFENDER_ID)?.differences).isEqualTo(
+      assertThat(service.checkPrisonerBalance(OFFENDER_ID, isRetry = true)?.differences).isEqualTo(
         listOf(
           Difference(property = "prisoner-balances.accounts", dps = 1, nomis = 0),
         ),
@@ -104,7 +104,7 @@ class PrisonerBalanceReconciliationServiceTest {
         dpsAccounts,
       )
 
-      assertThat(service.checkPrisonerBalance(OFFENDER_ID)).isNull()
+      assertThat(service.checkPrisonerBalance(OFFENDER_ID, isRetry = true)).isNull()
     }
 
     @Test
@@ -114,7 +114,7 @@ class PrisonerBalanceReconciliationServiceTest {
         dpsAccount(totalBalance = BigDecimal.TEN) + dpsZeroAccount(1002) + dpsZeroAccount(1003),
       )
 
-      assertThat(service.checkPrisonerBalance(OFFENDER_ID)?.differences).isEqualTo(
+      assertThat(service.checkPrisonerBalance(OFFENDER_ID, isRetry = true)?.differences).isEqualTo(
         listOf(
           Difference(property = "prisoner-balances.accounts[0].balance: account code 1001", dps = BigDecimal.TEN, nomis = BigDecimal.valueOf(1.5)),
         ),
@@ -128,7 +128,7 @@ class PrisonerBalanceReconciliationServiceTest {
         dpsAccount(),
       )
 
-      assertThat(service.checkPrisonerBalance(OFFENDER_ID)).isNull()
+      assertThat(service.checkPrisonerBalance(OFFENDER_ID, isRetry = true)).isNull()
     }
 
     @Test
@@ -138,7 +138,7 @@ class PrisonerBalanceReconciliationServiceTest {
         dpsAccount(),
       )
 
-      assertThat(service.checkPrisonerBalance(OFFENDER_ID)?.differences).isEqualTo(
+      assertThat(service.checkPrisonerBalance(OFFENDER_ID, isRetry = true)?.differences).isEqualTo(
         listOf(
           Difference(property = "prisoner-balances.accounts[0].balance: account code 1001", dps = BigDecimal.valueOf(1.5), nomis = BigDecimal.TEN),
         ),
@@ -151,7 +151,7 @@ class PrisonerBalanceReconciliationServiceTest {
         nomisPrisonerAccounts().copy(accounts = listOf(nomisAccount(1001), nomisAccount(1002))),
         dpsAccount(),
       )
-      assertThat(service.checkPrisonerBalance(OFFENDER_ID)?.differences).isEqualTo(
+      assertThat(service.checkPrisonerBalance(OFFENDER_ID, isRetry = true)?.differences).isEqualTo(
         listOf(
           Difference(property = "prisoner-balances.accounts", dps = 1, nomis = 2),
         ),
@@ -164,7 +164,7 @@ class PrisonerBalanceReconciliationServiceTest {
         nomisPrisonerAccounts().copy(accounts = listOf(nomisAccount(1001), nomisAccount(1002))),
         dpsAccount(accountCode = 1002) + dpsAccount(1001),
       )
-      assertThat(service.checkPrisonerBalance(OFFENDER_ID)).isNull()
+      assertThat(service.checkPrisonerBalance(OFFENDER_ID, isRetry = true)).isNull()
     }
 
     @Test
@@ -173,7 +173,7 @@ class PrisonerBalanceReconciliationServiceTest {
         nomisPrisonerAccounts(),
         dpsAccount(holdBalance = BigDecimal("0.5")),
       )
-      assertThat(service.checkPrisonerBalance(OFFENDER_ID)?.differences).isEqualTo(
+      assertThat(service.checkPrisonerBalance(OFFENDER_ID, isRetry = true)?.differences).isEqualTo(
         listOf(
           Difference(property = "prisoner-balances.accounts[0].holdBalance: account code 1001", dps = BigDecimal("0.5"), nomis = BigDecimal("0.3")),
         ),
@@ -186,7 +186,7 @@ class PrisonerBalanceReconciliationServiceTest {
         nomisPrisonerAccounts(holdBalance = null),
         dpsAccount(holdBalance = BigDecimal("0.5")),
       )
-      assertThat(service.checkPrisonerBalance(OFFENDER_ID)?.differences).isEqualTo(
+      assertThat(service.checkPrisonerBalance(OFFENDER_ID, isRetry = true)?.differences).isEqualTo(
         listOf(
           Difference(property = "prisoner-balances.accounts[0].holdBalance: account code 1001", dps = BigDecimal("0.5"), nomis = null),
         ),
@@ -199,7 +199,7 @@ class PrisonerBalanceReconciliationServiceTest {
         nomisPrisonerAccounts(),
         dpsAccount(totalBalance = BigDecimal("100")),
       )
-      assertThat(service.checkPrisonerBalance(OFFENDER_ID)?.differences).isEqualTo(
+      assertThat(service.checkPrisonerBalance(OFFENDER_ID, isRetry = true)?.differences).isEqualTo(
         listOf(
           Difference(property = "prisoner-balances.accounts[0].balance: account code 1001", dps = BigDecimal("100"), nomis = BigDecimal("1.5")),
         ),
@@ -212,7 +212,7 @@ class PrisonerBalanceReconciliationServiceTest {
         nomisPrisonerAccounts(),
         dpsAccount(accountCode = 1234),
       )
-      assertThat(service.checkPrisonerBalance(OFFENDER_ID)?.differences).isEqualTo(
+      assertThat(service.checkPrisonerBalance(OFFENDER_ID, isRetry = true)?.differences).isEqualTo(
         listOf(
           Difference(property = "prisoner-balances.accounts[0].accountCode", dps = 1234, nomis = 1001),
         ),
@@ -223,7 +223,7 @@ class PrisonerBalanceReconciliationServiceTest {
     fun `will return null and report telemetry when nomis account API returns not found`() = runTest {
       financeNomisApi.stubGetPrisonerAccountsWithError(OFFENDER_ID, NOT_FOUND)
 
-      assertThat(service.checkPrisonerBalance(OFFENDER_ID, retry = true)).isNull()
+      assertThat(service.checkPrisonerBalance(OFFENDER_ID, isRetry = true)).isNull()
 
       verify(telemetryClient).trackEvent(
         eq("prisoner-balance-reports-reconciliation-mismatch-error"),
@@ -241,7 +241,7 @@ class PrisonerBalanceReconciliationServiceTest {
       financeNomisApi.stubGetPrisonerAccounts(OFFENDER_ID, nomisPrisonerAccounts())
       dpsApi.stubGetPrisonerAccounts(OFFENDER_NO, status = NOT_FOUND)
 
-      assertThat(service.checkPrisonerBalance(OFFENDER_ID)?.differences).isEqualTo(
+      assertThat(service.checkPrisonerBalance(OFFENDER_ID, isRetry = true)?.differences).isEqualTo(
         listOf(
           Difference(property = "prisoner-balances.accounts", dps = 0, nomis = 1),
         ),
@@ -253,7 +253,7 @@ class PrisonerBalanceReconciliationServiceTest {
       financeNomisApi.stubGetPrisonerAccounts(OFFENDER_ID, nomisPrisonerAccounts().copy(accounts = listOf()))
       dpsApi.stubGetPrisonerAccounts(OFFENDER_NO, status = NOT_FOUND)
 
-      assertThat(service.checkPrisonerBalance(OFFENDER_ID)?.differences).isNull()
+      assertThat(service.checkPrisonerBalance(OFFENDER_ID, isRetry = true)?.differences).isNull()
       verifyNoInteractions(telemetryClient)
     }
 
@@ -262,7 +262,7 @@ class PrisonerBalanceReconciliationServiceTest {
       financeNomisApi.stubGetPrisonerAccounts(OFFENDER_ID, nomisPrisonerAccounts())
       dpsApi.stubGetPrisonerAccounts(OFFENDER_NO, status = INTERNAL_SERVER_ERROR)
 
-      assertThat(service.checkPrisonerBalance(OFFENDER_ID, retry = true)).isNull()
+      assertThat(service.checkPrisonerBalance(OFFENDER_ID, isRetry = true)).isNull()
 
       verify(telemetryClient).trackEvent(
         eq("prisoner-balance-reports-reconciliation-mismatch-error"),
@@ -281,7 +281,7 @@ class PrisonerBalanceReconciliationServiceTest {
         nomisPrisonerAccounts().copy(accounts = listOf(nomisAccount(1001), nomisAccount(1002))),
         dpsAccount(),
       )
-      assertThat(service.checkPrisonerBalance(OFFENDER_ID, suppressEvents = true)?.differences).isEqualTo(
+      assertThat(service.checkPrisonerBalance(OFFENDER_ID, isRetry = true, suppressEvents = true)?.differences).isEqualTo(
         listOf(
           Difference(property = "prisoner-balances.accounts", dps = 1, nomis = 2),
         ),

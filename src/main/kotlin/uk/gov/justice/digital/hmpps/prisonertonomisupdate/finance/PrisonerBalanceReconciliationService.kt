@@ -16,7 +16,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.generateRanges
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import java.math.BigDecimal
 
-private const val RETRY_ERROR_LIMIT = 100
+private const val RETRY_LIMIT = 200
 
 @Service
 class PrisonerBalanceReconciliationService(
@@ -34,12 +34,16 @@ class PrisonerBalanceReconciliationService(
     private val retryRootOffenders = mutableListOf<Long>()
   }
 
-  suspend fun manualCheckPrisonerBalance(rootOffenderId: Long, suppressEvents: Boolean): MismatchPrisonerBalance? = checkPrisonerBalance(rootOffenderId, suppressEvents = suppressEvents)
+  suspend fun manualCheckPrisonerBalance(rootOffenderId: Long, suppressEvents: Boolean): MismatchPrisonerBalance? = checkPrisonerBalance(
+    rootOffenderId,
+    isRetry = true,
+    suppressEvents = suppressEvents,
+  )
 
   suspend fun manualCheckPrisonerBalance(offenderNo: String, suppressEvents: Boolean): MismatchPrisonerBalance? {
     val prisonerDetails = nomisApiService.getPrisonerDetails(offenderNo)
       ?: throw NotFoundException("offenderNo $offenderNo not found")
-    return checkPrisonerBalance(prisonerDetails.rootOffenderId!!, suppressEvents = suppressEvents)
+    return checkPrisonerBalance(prisonerDetails.rootOffenderId!!, isRetry = true, suppressEvents = suppressEvents)
     // rootOffenderId is nullable but there are no nulls in the table in prod
   }
 
@@ -82,12 +86,18 @@ class PrisonerBalanceReconciliationService(
       idRanges = { nomisApiService.getAllPrisonersIdRanges(pageSize.toLong(), activeOnly) },
       idsInRange = { range -> this.getOffenderIdsInRange(range.fromId, range.toId, activeOnly) },
     )
-      .also {
-        retryRootOffenders.forEach { checkPrisonerBalance(it, retry = true) }
+      .let { mainResults ->
+        log.info("Retrying reconciliations for ${retryRootOffenders.size} prisoners")
+        val retriedResults = retryRootOffenders.mapNotNull { checkPrisonerBalance(it, isRetry = true) }
+        ReconciliationResult(
+          itemsChecked = mainResults.itemsChecked,
+          pagesChecked = mainResults.pagesChecked,
+          mismatches = mainResults.mismatches + retriedResults,
+        )
       }
   }
 
-  internal suspend fun checkPrisonerBalance(rootOffenderId: Long, retry: Boolean = false, suppressEvents: Boolean = false): MismatchPrisonerBalance? = runCatching {
+  internal suspend fun checkPrisonerBalance(rootOffenderId: Long, isRetry: Boolean = false, suppressEvents: Boolean = false): MismatchPrisonerBalance? = runCatching {
     val nomisAccounts = financeNomisApiService.getPrisonerAccountsToReconcile(rootOffenderId)
     val dpsAccounts = dpsApiService.getPrisonerAccounts(nomisAccounts.prisonNumber)
     val nomisFields = BalanceFields(
@@ -119,24 +129,29 @@ class PrisonerBalanceReconciliationService(
 
     if (differenceList.isNotEmpty()) {
       // log.info("Differences: ${objectMapper.writeValueAsString(differenceList)}")
-      telemetryClient.trackEventOrSuppress(
-        "$TELEMETRY_PRISONER_PREFIX-mismatch",
-        mapOf(
-          "prisoner" to nomisAccounts.prisonNumber,
-        ) + differenceList.associate { it.property to it.toString() },
-        suppressEvent = suppressEvents,
-      )
-      return MismatchPrisonerBalance(
-        nomis = nomisFields,
-        dps = dpsFields,
-        differences = differenceList,
-      )
+      if (isRetry) {
+        telemetryClient.trackEventOrSuppress(
+          "$TELEMETRY_PRISONER_PREFIX-mismatch",
+          mapOf(
+            "prisoner" to nomisAccounts.prisonNumber,
+          ) + differenceList.associate { it.property to it.toString() },
+          suppressEvent = suppressEvents,
+        )
+        return MismatchPrisonerBalance(
+          nomis = nomisFields,
+          dps = dpsFields,
+          differences = differenceList,
+        )
+      } else {
+        retryRootOffenders.add(rootOffenderId)
+        return null
+      }
     } else {
       return null
     }
   }.onFailure {
     log.error("Unable to match prisoner balances for offenderId={}", rootOffenderId, it)
-    if (retry || retryRootOffenders.size > RETRY_ERROR_LIMIT) {
+    if (isRetry || retryRootOffenders.size > RETRY_LIMIT) {
       telemetryClient.trackEvent(
         "$TELEMETRY_PRISONER_PREFIX-mismatch-error",
         mapOf(
