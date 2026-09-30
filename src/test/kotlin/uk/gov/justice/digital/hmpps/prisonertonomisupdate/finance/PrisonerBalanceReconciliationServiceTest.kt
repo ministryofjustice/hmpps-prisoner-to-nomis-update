@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiServi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 import java.math.BigDecimal
 import java.time.LocalDateTime
+import kotlin.collections.listOf
 import kotlin.collections.mapOf
 
 const val OFFENDER_NO = "A5678BZ"
@@ -292,7 +293,7 @@ class PrisonerBalanceReconciliationServiceTest {
   }
 
   @Nested
-  @TestPropertySource(properties = ["reports.prisoner.balance.reconciliation.balances=false"])
+  @TestPropertySource(properties = ["reports.prisoner.balance.reconciliation.balances=false", "reports.prisoner.balance.reconciliation.holds=true"])
   inner class WithBalanceDisabled {
     private fun stubBalanceReconciliation(nomisBalance: PrisonerAggregatedAccountsDto, dpsBalance: Map<String, SubAccountBalanceForReconciliation>) {
       financeNomisApi.stubGetPrisonerAccounts(OFFENDER_ID, nomisBalance)
@@ -303,9 +304,22 @@ class PrisonerBalanceReconciliationServiceTest {
     fun `will not report a balance mismatch if balances are disabled`() = runTest {
       stubBalanceReconciliation(
         nomisPrisonerAccounts(),
-        dpsAccount(totalBalance = BigDecimal("100")),
+        dpsAccount(totalBalance = BigDecimal("0.5")),
       )
       assertThat(service.checkPrisonerBalance(OFFENDER_ID)?.differences).isNull()
+    }
+
+    @Test
+    fun `will report a holds balance mismatch if balances are disabled`() = runTest {
+      stubBalanceReconciliation(
+        nomisPrisonerAccounts(),
+        dpsAccount(holdBalance = BigDecimal("0.5")),
+      )
+      assertThat(service.checkPrisonerBalance(OFFENDER_ID)?.differences).isEqualTo(
+        listOf(
+          Difference(property = "prisoner-balances.accounts[0].holdBalance: account code 1001", dps = BigDecimal("0.5"), nomis = BigDecimal("0.3")),
+        ),
+      )
     }
   }
 
@@ -318,12 +332,25 @@ class PrisonerBalanceReconciliationServiceTest {
     }
 
     @Test
-    fun `will not report a balance mismatch if holds are disabled`() = runTest {
+    fun `will not report a balance mismatch`() = runTest {
       stubBalanceReconciliation(
         nomisPrisonerAccounts(),
         dpsAccount(holdBalance = BigDecimal("0.5")),
       )
       assertThat(service.checkPrisonerBalance(OFFENDER_ID)?.differences).isNull()
+    }
+
+    @Test
+    fun `will report a balance mismatch if holds are disabled`() = runTest {
+      stubBalanceReconciliation(
+        nomisPrisonerAccounts(),
+        dpsAccount(totalBalance = BigDecimal("0.5")),
+      )
+      assertThat(service.checkPrisonerBalance(OFFENDER_ID)?.differences).isEqualTo(
+        listOf(
+          Difference(property = "prisoner-balances.accounts[0].balance: account code 1001", dps = BigDecimal("0.5"), nomis = BigDecimal("1.5")),
+        ),
+      )
     }
   }
 
@@ -383,7 +410,7 @@ private fun dpsZeroAccount(accountCode: Int = 1001) = dpsAccount(
 fun nomisPrisonerAccounts(accountCode: Long = 1001, balance: BigDecimal = BigDecimal.valueOf(1.5), holdBalance: BigDecimal? = BigDecimal.valueOf(0.3)) = PrisonerAggregatedAccountsDto(
   rootOffenderId = OFFENDER_ID,
   prisonNumber = OFFENDER_NO,
-  accounts = listOf(nomisAccount(accountCode, balance, holdBalance)),
+  accounts = listOf(nomisAccount(accountCode = accountCode, balance = balance, holdBalance = holdBalance)),
 )
 
 private fun nomisZeroAccount(accountCode: Long = 1001) = AggregatedAccountDto(
