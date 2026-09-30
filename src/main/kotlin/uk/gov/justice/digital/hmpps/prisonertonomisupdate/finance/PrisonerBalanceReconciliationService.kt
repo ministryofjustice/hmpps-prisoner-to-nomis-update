@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.Reconciliation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.generateRangesReconciliationReport
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import java.math.BigDecimal
+import java.util.concurrent.ConcurrentHashMap
 
 private const val RETRY_LIMIT = 200
 
@@ -31,7 +32,7 @@ class PrisonerBalanceReconciliationService(
   private companion object {
     private const val TELEMETRY_PRISONER_PREFIX = "prisoner-balance-reports-reconciliation"
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
-    private val retryRootOffenders = mutableListOf<Long>()
+    private val retryRootOffenders = ConcurrentHashMap.newKeySet<Long>()
   }
 
   suspend fun manualCheckPrisonerBalance(rootOffenderId: Long, suppressEvents: Boolean): MismatchPrisonerBalance? = checkPrisonerBalance(
