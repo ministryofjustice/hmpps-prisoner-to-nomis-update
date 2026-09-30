@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency
 
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
+import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.springframework.http.HttpStatus
@@ -15,6 +16,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Ag
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AgencyPhoneNumber
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AgencyResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAgencyEmailAddressRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAgencyEmailAddressResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 
 @Component
@@ -84,6 +87,14 @@ class AgencyNomisApiMockServer(private val jsonMapper: JsonMapper) {
     fun agencyIdsResponse() = AgencyIdsResponse(
       agencyIds = listOf(agencyId()),
     )
+
+    fun createAgencyEmailRequest() = CreateAgencyEmailAddressRequest(
+      emailAddress = "sheffield.crown.court@test.com",
+    )
+
+    fun createAgencyEmailResponse() = CreateAgencyEmailAddressResponse(
+      id = 123456,
+    )
   }
 
   fun stubGetAgency(
@@ -120,6 +131,20 @@ class AgencyNomisApiMockServer(private val jsonMapper: JsonMapper) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value())
+          .withBody(jsonMapper.writeValueAsString(response)),
+      ),
+    )
+  }
+
+  fun stubCreateAgencyEmail(
+    agencyId: String = "SHEFCC",
+    response: CreateAgencyEmailAddressResponse = createAgencyEmailResponse(),
+  ) {
+    nomisApi.stubFor(
+      post(urlPathEqualTo("/agency/$agencyId/email")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.CREATED.value())
           .withBody(jsonMapper.writeValueAsString(response)),
       ),
     )

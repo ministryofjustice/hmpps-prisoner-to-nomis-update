@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension.Companion.agencyRegistersApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension.Companion.courtDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 
@@ -86,6 +87,30 @@ class AgencyRegistersDpsApiServiceTest {
       agencyRegistersApi.verify(
         getRequestedFor(urlPathEqualTo("/legacy/reconciliation/ids/all")),
       )
+    }
+  }
+
+  @Nested
+  inner class GetCourt {
+    @Test
+    fun `will call the get court endpoint`() = runTest {
+      agencyRegistersApi.stubGetCourt("SHEFCC")
+
+      apiService.getCourt("SHEFCC")
+
+      agencyRegistersApi.verify(
+        getRequestedFor(urlPathEqualTo("/courts/id/SHEFCC")),
+      )
+    }
+
+    @Test
+    fun `will return court from the endpoint`() = runTest {
+      agencyRegistersApi.stubGetCourt("SHEFCC", response = courtDto())
+
+      val response = apiService.getCourt("SHEFCC")
+
+      assertThat(response.courtId).isEqualTo("SHEFCC")
+      assertThat(response.courtName).isEqualTo("Sheffield Crown Court")
     }
   }
 }
