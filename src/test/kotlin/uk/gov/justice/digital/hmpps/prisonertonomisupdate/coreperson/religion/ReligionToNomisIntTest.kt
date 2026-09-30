@@ -37,7 +37,7 @@ class ReligionToNomisIntTest(
     inner class WhenNomisCreated {
       @BeforeEach
       fun setUp() {
-        publishReligionCreatedDomainEvent(prisonNumber, cprReligionId, source = "NOMIS")
+        publishReligionCreatedDomainEvent(prisonNumber, cprReligionId, source = "nomis")
         waitForAnyProcessingToComplete("core-person-religion-create-ignored")
       }
 
