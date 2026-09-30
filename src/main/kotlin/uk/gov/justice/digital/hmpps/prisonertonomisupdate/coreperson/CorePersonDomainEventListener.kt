@@ -53,4 +53,4 @@ data class MessageAttributes(val eventSource: EventSource)
 @JsonNaming(value = PropertyNamingStrategies.UpperCamelCaseStrategy::class)
 data class EventSource(val value: String, val type: String)
 
-fun EventSource?.didOriginateInCpr() = this?.value != "NOMIS"
+fun EventSource?.didOriginateInCpr() = this?.value != "nomis"
