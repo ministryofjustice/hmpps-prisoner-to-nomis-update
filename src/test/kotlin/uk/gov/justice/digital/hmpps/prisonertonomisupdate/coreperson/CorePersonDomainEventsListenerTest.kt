@@ -53,6 +53,7 @@ internal class CorePersonDomainEventsListenerTest(@Autowired private val jsonMap
       internal fun `will call religion service with create religion data`() = runTest {
         listener.onMessage(
           rawMessage = religionCreatedMessage("A1234BC", "e312a74d-ca98-4fbc-b212-608bc41558e7"),
+          eventSource = "DPS",
         ).join()
 
         verify(religionService).religionCreated(

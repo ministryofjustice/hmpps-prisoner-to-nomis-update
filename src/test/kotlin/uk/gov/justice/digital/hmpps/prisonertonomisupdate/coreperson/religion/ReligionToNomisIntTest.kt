@@ -115,7 +115,7 @@ class ReligionToNomisIntTest(
     }
   }
 
-  private fun publishReligionCreatedDomainEvent(prisonNumber: String, cprReligionId: String, source: String = "DPS") {
+  private fun publishReligionCreatedDomainEvent(prisonNumber: String, cprReligionId: String, source: String = "core-person-record") {
     val eventType = "core-person-record.prison.religion.created"
     val payload = """
       {
@@ -123,9 +123,6 @@ class ReligionToNomisIntTest(
         "additionalInformation": { "cprReligionId": "$cprReligionId" },
         "personReference": {
           "identifiers": [{ "type": "prisonNumber", "value": "$prisonNumber" }]
-        },
-        "MessageAttributes": {
-          "EventSource": { "Value": "$source", "Type": "String" }
         }
       }
     """.trimIndent()
@@ -137,6 +134,7 @@ class ReligionToNomisIntTest(
         .messageAttributes(
           mapOf(
             "eventType" to MessageAttributeValue.builder().dataType("String").stringValue(eventType).build(),
+            "eventSource" to MessageAttributeValue.builder().dataType("String").stringValue(source).build(),
           ),
         )
         .build(),
