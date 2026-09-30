@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-09-29.2136.3bcc16a"
+    "version" : "2026-09-30.2139.ac7b68c"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -15101,6 +15101,78 @@
           },
           "409" : {
             "description" : "Code already exits",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agency/{agencyId}/email" : {
+      "post" : {
+        "tags" : [ "agency-resource" ],
+        "summary" : "Create an agency email address",
+        "description" : "Creates a new email address for an agency. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "createAgencyEmail",
+        "parameters" : [ {
+          "name" : "agencyId",
+          "in" : "path",
+          "description" : "Agency id (aka agencyId)",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Agency id (aka agencyId)",
+            "example" : "WWI"
+          },
+          "example" : "WWI"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateAgencyEmailAddressRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Agency email address created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CreateAgencyEmailAddressResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Agency not found",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -37341,6 +37413,30 @@
         },
         "required" : [ "code", "description", "listSequence", "typeCode" ]
       },
+      "CreateAgencyEmailAddressResponse" : {
+        "type" : "object",
+        "description" : "A response to creating an agency email address",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Unique NOMIS Id of email address"
+          }
+        },
+        "required" : [ "id" ]
+      },
+      "CreateAgencyEmailAddressRequest" : {
+        "type" : "object",
+        "description" : "A request to create an agency email address",
+        "properties" : {
+          "emailAddress" : {
+            "type" : "string",
+            "description" : "The email address",
+            "example" : "john.smith@internet.co.uk"
+          }
+        },
+        "required" : [ "emailAddress" ]
+      },
       "CreateHearingResponse" : {
         "type" : "object",
         "description" : "Provides the generated hearing ID after creation",
@@ -44681,13 +44777,17 @@
             "type" : [ "integer", "null" ],
             "format" : "int64"
           },
-          "txnId" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
           "txnEntryDate" : {
             "type" : "string",
             "format" : "date-time"
+          },
+          "txnEntrySeq" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "txnId" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "txnEntryDesc" : {
             "type" : [ "string", "null" ]
@@ -44697,10 +44797,6 @@
           },
           "txnEntryAmount" : {
             "type" : "number"
-          },
-          "txnEntrySeq" : {
-            "type" : "integer",
-            "format" : "int32"
           }
         },
         "required" : [ "txnEntryAmount", "txnEntryDate", "txnEntrySeq", "txnId" ]

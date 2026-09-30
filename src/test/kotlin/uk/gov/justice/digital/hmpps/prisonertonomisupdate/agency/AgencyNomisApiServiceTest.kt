@@ -2,7 +2,9 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency
 
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
+import com.github.tomakehurst.wiremock.client.WireMock.equalToJson
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import kotlinx.coroutines.test.runTest
@@ -13,6 +15,8 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import org.springframework.http.HttpStatus
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.createAgencyEmailRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.createAgencyEmailResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
@@ -99,6 +103,46 @@ class AgencyNomisApiServiceTest {
       mockServer.verify(
         getRequestedFor(urlEqualTo("/agency/ids/all?excludeType=INST")),
       )
+    }
+  }
+
+  @Nested
+  inner class CreateAgencyEmail {
+    @Test
+    fun `will pass oauth2 token to endpoint`() = runTest {
+      mockServer.stubCreateAgencyEmail()
+
+      apiService.createAgencyEmail("SHEFCC", createAgencyEmailRequest())
+
+      mockServer.verify(
+        postRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the create agency email endpoint with request`() = runTest {
+      val request = createAgencyEmailRequest()
+      mockServer.stubCreateAgencyEmail(agencyId = "SHEFCC")
+
+      apiService.createAgencyEmail("SHEFCC", request)
+
+      mockServer.verify(
+        postRequestedFor(urlPathEqualTo("/agency/SHEFCC/email"))
+          .withRequestBody(equalToJson("""{"emailAddress":"${request.emailAddress}"}""")),
+      )
+    }
+
+    @Test
+    fun `will return created agency email`() = runTest {
+      mockServer.stubCreateAgencyEmail(
+        agencyId = "SHEFCC",
+        response = createAgencyEmailResponse().copy(id = 123456),
+      )
+
+      val response = apiService.createAgencyEmail("SHEFCC", createAgencyEmailRequest())
+
+      assertThat(response.id).isEqualTo(123456)
     }
   }
 }
