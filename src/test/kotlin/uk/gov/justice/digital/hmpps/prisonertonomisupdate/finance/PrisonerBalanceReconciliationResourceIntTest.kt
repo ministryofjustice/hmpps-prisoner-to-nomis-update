@@ -16,6 +16,7 @@ import org.mockito.kotlin.check
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.reset
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.springframework.beans.factory.annotation.Autowired
@@ -158,6 +159,33 @@ class PrisonerBalanceReconciliationResourceIntTest(
           eq("prisoner-balance-reports-reconciliation-mismatch-error"),
           check {
             assertThat(it).containsEntry("rootOffenderId", "2")
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will retry checkPrisonerBalance after it finds a mismatch the first time`() = runTest {
+        stubBalances(
+          2,
+          nomisPrisonerAccounts().copy(prisonNumber = "A0002NN"),
+          emptyMap(),
+        )
+
+        reconciliationService.generateReconciliationReportBatch(false)
+
+        awaitReportFinished()
+
+        // called once during the initial pass and again during the retry pass
+        financeNomisApi.verify(
+          2,
+          getRequestedFor(urlPathEqualTo("/finance/prisoners/rootOffenderId/2/balance/reconcile")),
+        )
+
+        verify(telemetryClient, times(1)).trackEvent(
+          eq("prisoner-balance-reports-reconciliation-mismatch"),
+          check {
+            assertThat(it).containsEntry("prisoner", "A0002NN")
           },
           isNull(),
         )
