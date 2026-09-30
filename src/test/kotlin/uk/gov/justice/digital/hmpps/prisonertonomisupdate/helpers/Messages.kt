@@ -61,6 +61,7 @@ fun religionCreatedMessage(prisonNumber: String, cprReligionId: String, source: 
         "Token": null, 
         "TopicArn": "arn:aws:sns:eu-west-2:000000000000:hmpps-domain-events", 
         "Message": "{\"eventType\":\"core-person-record.prison.religion.created\", \"additionalInformation\": { \"cprReligionId\":\"$cprReligionId\" },\"personReference\": {\"identifiers\":[{\"type\":\"prisonNumber\", \"value\":\"$prisonNumber\"}]},\"MessageAttributes\":{\"EventSource\":{\"Value\":\"$source\",\"Type\":\"String\"}}}",
+        "MessageAttributes": { "eventSource": {"Type": "String", "Value": "$source"} },
         "SubscribeURL": null, 
         "Timestamp": "2021-03-05T11:23:56.031Z", 
         "SignatureVersion": "1", 
