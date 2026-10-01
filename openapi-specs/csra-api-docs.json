@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-09-28.587.2cd8226"
+    "version" : "2026-09-30.590.1bab121"
   },
   "servers" : [ {
     "url" : "/",
@@ -3486,13 +3486,10 @@
             "example" : "LOW"
           },
           "calculatedLevel" : {
+            "type" : [ "string", "null" ],
             "description" : "The calculated NOMIS level before any review or approval level overrode it.",
-            "example" : "LOW",
-            "oneOf" : [ {
-              "$ref" : "#/components/schemas/CsraLevel"
-            }, {
-              "type" : "null"
-            } ]
+            "enum" : [ "STANDARD", "PEND", "LOW", "MED", "HI" ],
+            "example" : "LOW"
           },
           "assessmentComment" : {
             "type" : [ "string", "null" ],
