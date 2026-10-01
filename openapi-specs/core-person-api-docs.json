@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-09-29.5509.9aa992f"
+    "version" : "2026-10-01.5564.b47a44f"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -325,6 +325,54 @@
         } ]
       }
     },
+    "/syscon-sync/person/{prisonNumber}/address/{cprAddressId}/contact/{cprContactId}" : {
+      "put" : {
+        "tags" : [ "Syscon Sync" ],
+        "description" : "Update prisoner address contact record by Prison Number, address uuid and contact uuid. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
+        "operationId" : "updatePrisonerAddressContact",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "cprAddressId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "cprContactId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PrisonContact"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "No Content",
+            "content" : { }
+          }
+        },
+        "security" : [ {
+          "api-role" : [ ]
+        } ]
+      }
+    },
     "/queue-admin/retry-dlq/{dlqName}" : {
       "put" : {
         "tags" : [ "hmpps-queue-resource" ],
@@ -463,44 +511,6 @@
         "security" : [ {
           "api-role" : [ ]
         } ]
-      }
-    },
-    "/syscon-sync/sexual-orientation/{prisonNumber}" : {
-      "post" : {
-        "tags" : [ "Syscon Sync" ],
-        "description" : "Update the sexual orientation by prison number. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
-        "operationId" : "updateSexualOrientation",
-        "parameters" : [ {
-          "name" : "prisonNumber",
-          "in" : "path",
-          "description" : "The identifier of the offender source system (NOMIS)",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/PrisonSexualOrientation"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "description" : "Sexual Orientation updated in CPR",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "type" : "string"
-                }
-              }
-            }
-          }
-        }
       }
     },
     "/syscon-sync/religion/{prisonNumber}" : {
@@ -785,120 +795,6 @@
         "security" : [ {
           "api-role" : [ ]
         } ]
-      }
-    },
-    "/syscon-sync/nationality/{prisonNumber}" : {
-      "post" : {
-        "tags" : [ "Syscon Sync" ],
-        "description" : "Upserts a nationality record on a matching prison number. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
-        "operationId" : "saveNationality",
-        "parameters" : [ {
-          "name" : "prisonNumber",
-          "in" : "path",
-          "description" : "The identifier of the offender source system (NOMIS)",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/PrisonNationality"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "description" : "Nationality saved in CPR",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "type" : "string"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/syscon-sync/immigration-status/{prisonNumber}" : {
-      "post" : {
-        "tags" : [ "Syscon Sync" ],
-        "description" : "Update the immigration status by prison number. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
-        "operationId" : "updateImmigrationStatus",
-        "parameters" : [ {
-          "name" : "prisonNumber",
-          "in" : "path",
-          "description" : "The identifier of the offender source system (NOMIS)",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/PrisonImmigrationStatus"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "description" : "Immigration status updated in CPR",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "type" : "string"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/syscon-sync/disability-status/{prisonNumber}" : {
-      "post" : {
-        "tags" : [ "Syscon Sync" ],
-        "description" : "Update the disability status by prison number. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
-        "operationId" : "updateDisabilityStatus",
-        "parameters" : [ {
-          "name" : "prisonNumber",
-          "in" : "path",
-          "description" : "The identifier of the offender source system (NOMIS)",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/PrisonDisabilityStatus"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "description" : "Disability status updated in CPR",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "type" : "string"
-                }
-              }
-            }
-          }
-        }
       }
     },
     "/syscon-sync/aliases-identifiers/{prisonNumber}" : {
@@ -1389,6 +1285,37 @@
             }
           }
         }
+      }
+    },
+    "/syscon-sync/person/{prisonNumber}/address/contact/{cprContactId}" : {
+      "delete" : {
+        "tags" : [ "Syscon Sync" ],
+        "description" : "Delete prisoner address contact record by Prison Number and contact uuid. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
+        "operationId" : "deletePrisonerAddressContact",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "cprContactId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content",
+            "content" : { }
+          }
+        },
+        "security" : [ {
+          "api-role" : [ ]
+        } ]
       }
     }
   },
@@ -1978,30 +1905,6 @@
         },
         "required" : [ "religionCode", "userId" ]
       },
-      "PrisonSexualOrientation" : {
-        "type" : "object",
-        "properties" : {
-          "sexualOrientationCode" : {
-            "type" : [ "string", "null" ],
-            "description" : "The sexual orientation code",
-            "example" : "BIS"
-          },
-          "modifyDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The sexual orientation modify date and time",
-            "example" : "2000-01-01 12:00:00",
-            "minLength" : 1
-          },
-          "modifyUserId" : {
-            "type" : "string",
-            "description" : "The sexual orientation modify user id",
-            "example" : "12345",
-            "minLength" : 1
-          }
-        },
-        "required" : [ "modifyDateTime", "modifyUserId" ]
-      },
       "PrisonReligionHistory" : {
         "type" : "object",
         "properties" : {
@@ -2201,79 +2104,6 @@
           }
         },
         "required" : [ "cprAddressUsageId", "nomisAddressUsageCode", "nomisAddressUsageId" ]
-      },
-      "PrisonNationality" : {
-        "type" : "object",
-        "properties" : {
-          "nationalityCode" : {
-            "type" : [ "string", "null" ],
-            "description" : "The nationality code",
-            "example" : "BIS"
-          },
-          "modifyDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The nationality modify date and time",
-            "example" : "2000-01-01 12:00:00"
-          },
-          "modifyUserId" : {
-            "type" : "string",
-            "description" : "The nationality modify user id",
-            "example" : "12345"
-          },
-          "notes" : {
-            "type" : [ "string", "null" ],
-            "description" : "The nationality notes",
-            "example" : "Foo bar"
-          }
-        },
-        "required" : [ "modifyDateTime", "modifyUserId" ]
-      },
-      "PrisonImmigrationStatus" : {
-        "type" : "object",
-        "properties" : {
-          "interestToImmigration" : {
-            "type" : "boolean",
-            "description" : "Flag indicating whether data is an interest to immigration",
-            "example" : true
-          },
-          "modifyDateTime" : {
-            "type" : [ "string", "null" ],
-            "format" : "date-time",
-            "description" : "The immigration status modify date and time",
-            "example" : "2000-01-01 12:00:00",
-            "minLength" : 1
-          },
-          "modifyUserId" : {
-            "type" : [ "string", "null" ],
-            "description" : "The immigration status modify user id",
-            "example" : "12345",
-            "minLength" : 1
-          }
-        },
-        "required" : [ "interestToImmigration", "modifyDateTime", "modifyUserId" ]
-      },
-      "PrisonDisabilityStatus" : {
-        "type" : "object",
-        "properties" : {
-          "disability" : {
-            "type" : "boolean",
-            "description" : "The disability flag",
-            "example" : false
-          },
-          "modifyDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The disability modify date and time",
-            "example" : "2000-01-01 12:00:00"
-          },
-          "modifyUserId" : {
-            "type" : "string",
-            "description" : "The disability modify user id",
-            "example" : "12345"
-          }
-        },
-        "required" : [ "disability", "modifyDateTime", "modifyUserId" ]
       },
       "NomisIdentifierId" : {
         "type" : "object",
