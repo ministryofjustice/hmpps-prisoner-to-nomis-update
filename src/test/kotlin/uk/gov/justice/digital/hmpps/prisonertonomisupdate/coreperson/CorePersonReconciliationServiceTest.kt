@@ -107,8 +107,6 @@ class CorePersonReconciliationServiceTest {
     endDate = LocalDate.parse("2023-01-01"),
     current = true,
     comments = "Some comments",
-    createUsername = "ME",
     createDatetime = LocalDateTime.parse("2025-02-03T10:20:30"),
-    modifyUsername = null,
   )
 }

@@ -203,7 +203,6 @@ class CorePersonReconciliationService(
           !Objects.equals(n.startDate, cpr.startDate) -> "$i-startDate:nomis=${n.startDate}, cpr=${cpr.startDate}"
           !Objects.equals(n.endDate, cpr.endDate) -> "$i-endDate:nomis=${n.endDate}, cpr=${cpr.endDate}"
           n.current != cpr.current -> "$i-current:nomis=${n.current}, cpr=${cpr.current}"
-          n.createUsername != cpr.createUsername -> "$i-createUser:nomis=${n.createUsername}, cpr=${cpr.createUsername}"
           n.createDatetime.notEqualsIgnoringNanos(cpr.createDatetime) -> "$i-createDatetime:nomis=${n.createDatetime}, cpr=${cpr.createDatetime}"
           else -> null
         }
@@ -239,9 +238,7 @@ fun DpsPrisonRecord.toPerson() = PrisonerPerson(
       endDate = it.endDate,
       current = it.current,
       comments = it.comments,
-      createUsername = it.createUserId,
       createDatetime = it.createDateTime,
-      modifyUsername = it.modifyUserId,
     )
   },
 )
@@ -255,9 +252,7 @@ fun List<OffenderBelief>.toPerson() = PrisonerPerson(
       endDate = r.endDate,
       current = i == 0,
       comments = r.comments,
-      createUsername = r.audit.createUsername,
       createDatetime = r.audit.createDatetime,
-      modifyUsername = r.audit.modifyUserId,
     )
   },
 )
@@ -279,7 +274,5 @@ data class PrisonerReligion(
   val endDate: LocalDate?,
   val current: Boolean?,
   val comments: String?,
-  val createUsername: String,
   val createDatetime: LocalDateTime,
-  val modifyUsername: String?,
 )

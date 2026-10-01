@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-10-01.5564.b47a44f"
+    "version" : "2026-10-01.5588.0477e6b"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -133,8 +133,7 @@
         },
         "responses" : {
           "204" : {
-            "description" : "No Content",
-            "content" : { }
+            "description" : "No Content"
           }
         },
         "security" : [ {
@@ -162,8 +161,7 @@
         } ],
         "responses" : {
           "204" : {
-            "description" : "No Content",
-            "content" : { }
+            "description" : "No Content"
           }
         },
         "security" : [ {
@@ -1341,7 +1339,7 @@
         "type" : "object",
         "properties" : {
           "nomisContactId" : {
-            "type" : [ "integer", "null" ],
+            "type" : "integer",
             "format" : "int64",
             "description" : "The nomis contact id",
             "example" : 1234
@@ -1385,7 +1383,7 @@
             "example" : "12345"
           }
         },
-        "required" : [ "createDateTime", "createUserId", "type" ]
+        "required" : [ "createDateTime", "createUserId", "nomisContactId", "type" ]
       },
       "PrisonAddress" : {
         "type" : "object",
@@ -2302,20 +2300,21 @@
         "type" : "object",
         "properties" : {
           "addresses" : {
-            "type" : [ "array", "null" ],
+            "type" : "array",
             "description" : "List of addresses",
             "items" : {
               "$ref" : "#/components/schemas/PrisonAddress"
             }
           },
           "contacts" : {
-            "type" : [ "array", "null" ],
+            "type" : "array",
             "description" : "List of address contacts",
             "items" : {
               "$ref" : "#/components/schemas/PrisonContact"
             }
           }
-        }
+        },
+        "required" : [ "addresses", "contacts" ]
       },
       "SysconAddressesAndContactsResponseBody" : {
         "type" : "object",
