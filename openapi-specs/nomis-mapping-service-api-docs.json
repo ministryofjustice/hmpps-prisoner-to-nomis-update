@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-09-23.845.15027ea"
+    "version" : "2026-10-01.857.d2239ff"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -5799,6 +5799,60 @@
                 }
               }
             }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Indicates a duplicate mapping has been rejected. If Error code = 1409 the body will return a DuplicateErrorResponse",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/core-person/address-usage" : {
+      "post" : {
+        "tags" : [ "core-person-mapping-resource" ],
+        "summary" : "Creates core person address usage mappings for synchronisation",
+        "description" : "Creates core person address usage mappings for synchronisation between NOMIS ids and CPR ids. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "createCorePersonAddressUsageMapping",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CorePersonAddressUsageMappingDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Mapping created",
+            "content" : { }
           },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
@@ -17957,6 +18011,198 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/CorePersonAddressMappingDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access this endpoint is forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Id does not exist in mapping table",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/core-person/address-usage/nomis-address-id/{nomisAddressId}/usage-code/{addressUsageCode}" : {
+      "get" : {
+        "tags" : [ "core-person-mapping-resource" ],
+        "summary" : "Get a core person address usage mapping by nomis address Id and usage code",
+        "description" : "Retrieves the core person address usage mapping by NOMIS Address Id and address usage code. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "getCorePersonAddressUsageMappingByNomisId",
+        "parameters" : [ {
+          "name" : "nomisAddressId",
+          "in" : "path",
+          "description" : "NOMIS address id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS address id",
+            "example" : 12345
+          },
+          "example" : 12345
+        }, {
+          "name" : "addressUsageCode",
+          "in" : "path",
+          "description" : "NOMIS address usage code",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "NOMIS address usage code",
+            "example" : "HOME"
+          },
+          "example" : "HOME"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Core Person address usage mapping data",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CorePersonAddressUsageMappingDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access this endpoint is forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Id does not exist in mapping table",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "core-person-mapping-resource" ],
+        "summary" : "Delete a core person address usage mapping by nomis address Id and usage code",
+        "description" : "Deletes the core person address usage mapping by NOMIS Address Id and address usage code. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "deleteCorePersonAddressUsageMappingByNomisId",
+        "parameters" : [ {
+          "name" : "nomisAddressId",
+          "in" : "path",
+          "description" : "NOMIS address id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS address id",
+            "example" : 12345
+          },
+          "example" : 12345
+        }, {
+          "name" : "addressUsageCode",
+          "in" : "path",
+          "description" : "NOMIS address usage code",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "NOMIS address usage code",
+            "example" : "HOME"
+          },
+          "example" : "HOME"
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Core person address usage mapping deleted",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/core-person/address-usage/cpr-address-usage-id/{cprAddressUsageId}" : {
+      "get" : {
+        "tags" : [ "core-person-mapping-resource" ],
+        "summary" : "Get a core person address usage mapping by cpr address usage Id",
+        "description" : "Retrieves the core person address usage mapping by CPR Address Usage Id. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "getCorePersonAddressUsageMappingByCprId",
+        "parameters" : [ {
+          "name" : "cprAddressUsageId",
+          "in" : "path",
+          "description" : "CPR address usage id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "CPR address usage id",
+            "example" : 12345
+          },
+          "example" : 12345
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Core Person address usage mapping data",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CorePersonAddressUsageMappingDto"
                 }
               }
             }
