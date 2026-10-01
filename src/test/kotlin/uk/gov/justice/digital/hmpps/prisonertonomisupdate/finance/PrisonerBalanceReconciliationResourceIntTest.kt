@@ -91,7 +91,11 @@ class PrisonerBalanceReconciliationResourceIntTest(
 
         verify(telemetryClient).trackEvent(
           eq("prisoner-balance-reports-reconciliation-requested"),
-          check { assertThat(it).containsEntry("activeOnly", "false") },
+          check {
+            assertThat(it).containsEntry("activeOnly", "false")
+            assertThat(it).containsEntry("balances", "true")
+            assertThat(it).containsEntry("holds", "false")
+          },
           isNull(),
         )
 
