@@ -52,7 +52,11 @@ class PrisonerBalanceReconciliationService(
   suspend fun generateReconciliationReportBatch(activeOnly: Boolean) {
     telemetryClient.trackEvent(
       "$TELEMETRY_PRISONER_PREFIX-requested",
-      mapOf("activeOnly" to activeOnly.toString()),
+      mapOf(
+        "activeOnly" to activeOnly,
+        "balances" to reconcileBalances,
+        "holds" to reconcileHolds,
+      ),
     )
 
     runCatching { generateReconciliationReport(activeOnly) }
@@ -60,10 +64,10 @@ class PrisonerBalanceReconciliationService(
         telemetryClient.trackEvent(
           "$TELEMETRY_PRISONER_PREFIX-report",
           mapOf(
-            "activeOnly" to activeOnly.toString(),
-            "balance-count" to it.itemsChecked.toString(),
-            "page-count" to it.pagesChecked.toString(),
-            "mismatch-count" to it.mismatches.size.toString(),
+            "activeOnly" to activeOnly,
+            "balance-count" to it.itemsChecked,
+            "page-count" to it.pagesChecked,
+            "mismatch-count" to it.mismatches.size,
             "success" to "true",
           ),
         )
@@ -136,7 +140,7 @@ class PrisonerBalanceReconciliationService(
           "$TELEMETRY_PRISONER_PREFIX-mismatch",
           mapOf(
             "prisoner" to nomisAccounts.prisonNumber,
-          ) + differenceList.associate { it.property to it.toString() },
+          ) + differenceList.associate { it.property to it },
           suppressEvent = suppressEvents,
         )
         return MismatchPrisonerBalance(
@@ -157,7 +161,7 @@ class PrisonerBalanceReconciliationService(
       telemetryClient.trackEvent(
         "$TELEMETRY_PRISONER_PREFIX-mismatch-error",
         mapOf(
-          "rootOffenderId" to rootOffenderId.toString(),
+          "rootOffenderId" to rootOffenderId,
           "error" to (it.message ?: it.javaClass.name),
         ),
       )
@@ -251,8 +255,8 @@ class PrisonerBalanceReconciliationService(
       telemetryClient.trackEvent(
         "$TELEMETRY_PRISONER_PREFIX-mismatch-page-error",
         mapOf(
-          "fromRootOffenderId" to fromRootOffenderId.toString(),
-          "toRootOffenderId" to toRootOffenderId.toString(),
+          "fromRootOffenderId" to fromRootOffenderId,
+          "toRootOffenderId" to toRootOffenderId,
           "error" to (it.message ?: it.javaClass.name),
         ),
       )
