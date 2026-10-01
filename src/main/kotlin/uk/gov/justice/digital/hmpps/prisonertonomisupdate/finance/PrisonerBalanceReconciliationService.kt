@@ -55,7 +55,8 @@ class PrisonerBalanceReconciliationService(
       mapOf(
         "activeOnly" to activeOnly,
         "balances" to reconcileBalances,
-        "holds" to reconcileHolds),
+        "holds" to reconcileHolds,
+      ),
     )
 
     runCatching { generateReconciliationReport(activeOnly) }
