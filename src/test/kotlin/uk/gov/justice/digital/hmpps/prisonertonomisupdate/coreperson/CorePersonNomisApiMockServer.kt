@@ -13,7 +13,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CorePerson
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.NomisAudit
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderAddress
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderAddressUsage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderBelief
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderPhoneNumber
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -131,6 +133,27 @@ fun corePersonAddress() = OffenderAddress(
   startDate = LocalDate.parse("2020-02-26"),
   endDate = LocalDate.parse("2023-07-15"),
   usages = listOf(),
+)
+
+fun corePersonAddressUsage(code: String = "HOME", active: Boolean = true) = OffenderAddressUsage(
+  addressId = 1234,
+  usage = CodeDescription(code = code, description = "$code Description"),
+  active = active,
+  createdDateTime = LocalDateTime.parse("2025-02-03T10:20:30"),
+  createdByUsername = "ME",
+  lastUpdatedDateTime = null,
+  lastUpdatedByUsername = null,
+)
+
+fun corePersonAddressPhone(number: String = "0114 555 5555", type: String = "HOME", extension: String? = null) = OffenderPhoneNumber(
+  phoneId = 1,
+  number = number,
+  type = CodeDescription(code = type, description = "$type Description"),
+  extension = extension,
+  createdDateTime = LocalDateTime.parse("2025-02-03T10:20:30"),
+  createdByUsername = "ME",
+  lastUpdatedDateTime = null,
+  lastUpdatedByUsername = null,
 )
 
 fun corePerson(prisonNumber: String? = null, religion: String? = null, addresses: List<OffenderAddress>? = null): CorePerson = CorePerson(

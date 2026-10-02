@@ -32,15 +32,14 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.BAD_GATEWAY
 import org.springframework.http.HttpStatus.NOT_FOUND
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalAddressUsage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonReligion
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonReligion.ReligionCode
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.NomisAudit
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderAddressUsage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderBelief
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderPhoneNumber
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.generateOffenderNo
@@ -76,33 +75,6 @@ class CorePersonReconciliationIntTest(
       corePersonNomisApi.verify(getRequestedFor(urlPathMatching("/core-person/A1234BC/reconciliation")))
       cprApi.verify(getRequestedFor(urlPathEqualTo("/person/prison/dps/A1234BC")))
       verify(telemetryClient, never()).trackEvent(anyString(), anyMap(), isNull())
-    }
-
-    @Test
-    fun `should report differences`() = runTest {
-      stubGetCorePerson(prisonNumber = "A1234BC")
-      cprApi.stubGetCorePerson(prisonNumber = "A1234BC", corePersonDto(religion = "ZORO"))
-
-      service.checkCorePersonMatch("A1234BC").also {
-        assertThat(it?.prisonNumber).isEqualTo("A1234BC")
-        assertThat(it?.differences).containsExactly(
-          entry("religion", "nomis=null, cpr=ZORO"),
-          entry("religions", "nomis=0, cpr=1"),
-        )
-      }
-
-      verify(telemetryClient).trackEvent(
-        eq("$TELEMETRY_PREFIX-mismatch"),
-        check {
-          assertThat(it).containsExactlyInAnyOrderEntriesOf(
-            mapOf(
-              "prisonNumber" to "A1234BC",
-              "differences5" to "religion, religions",
-            ),
-          )
-        },
-        isNull(),
-      )
     }
 
     @Test
@@ -143,166 +115,6 @@ class CorePersonReconciliationIntTest(
         },
         isNull(),
       )
-    }
-
-    @Test
-    fun `should report religions differences`() = runTest {
-      corePersonNomisApi.stubGetCorePersonReligions(
-        prisonNumber = "A1234BC",
-        response = listOf(
-          OffenderBelief(
-            beliefId = 12345L,
-            belief = CodeDescription("ZORO", "ZORO Description"),
-            startDate = LocalDate.parse("2024-01-01"),
-            audit = NomisAudit(
-              createDatetime = LocalDateTime.now(),
-              createUsername = "User",
-            ),
-            changeReason = true,
-            comments = "Some comment",
-          ),
-          OffenderBelief(
-            beliefId = 12345L,
-            belief = CodeDescription("DRU", "DRU Description"),
-            startDate = LocalDate.parse("2025-01-01"),
-            audit = NomisAudit(
-              createDatetime = LocalDateTime.now(),
-              createUsername = "User",
-            ),
-            changeReason = true,
-            comments = "Some comment",
-          ),
-        ),
-      )
-      cprApi.stubGetCorePerson(
-        prisonNumber = "A1234BC",
-        corePersonDto(religion = "ZORO").copy(
-          religionHistory = listOf(
-            PrisonReligion(
-              // different religion
-              religionCode = ReligionCode.DRU,
-              religionDescription = "DRU Description",
-              changeReasonKnown = true,
-              comments = "Some comment",
-              startDate = LocalDate.parse("2024-01-01"),
-              createDateTime = LocalDateTime.now(),
-              createUserId = "User",
-              modifyDateTime = LocalDateTime.now(),
-              modifyUserId = "User",
-              current = true,
-            ),
-            PrisonReligion(
-              religionCode = ReligionCode.DRU,
-              religionDescription = "DRU Description",
-              changeReasonKnown = true,
-              comments = "Some comment",
-              // different date
-              startDate = LocalDate.parse("2024-01-01"),
-              createDateTime = LocalDateTime.now(),
-              createUserId = "User",
-              modifyDateTime = LocalDateTime.now(),
-              modifyUserId = "User",
-              current = false,
-            ),
-          ),
-        ),
-      )
-
-      service.checkCorePersonMatch("A1234BC").also {
-        assertThat(it?.prisonNumber).isEqualTo("A1234BC")
-        assertThat(it?.differences).containsExactly(
-          entry("religions", "0-code:nomis=ZORO, cpr=DRU,1-startDate:nomis=2025-01-01, cpr=2024-01-01"),
-        )
-      }
-    }
-
-    @Test
-    fun `should not report address differences when addresses match`() = runTest {
-      corePersonNomisApi.stubGetCorePersonForReconciliation(
-        prisonNumber = "A1234BC",
-        response = corePerson(prisonNumber = "A1234BC", addresses = listOf(corePersonAddress())),
-      )
-      cprApi.stubGetCorePerson(prisonNumber = "A1234BC", corePersonDto(addresses = listOf(canonicalAddress())))
-
-      service.checkCorePersonMatch("A1234BC").also {
-        assertThat(it).isNull()
-      }
-    }
-
-    @Test
-    fun `should ignore address usages and contacts`() = runTest {
-      corePersonNomisApi.stubGetCorePersonForReconciliation(
-        prisonNumber = "A1234BC",
-        response = corePerson(
-          prisonNumber = "A1234BC",
-          addresses = listOf(
-            corePersonAddress().copy(
-              usages = listOf(
-                OffenderAddressUsage(
-                  addressId = 1234,
-                  usage = CodeDescription("HOME", "Home"),
-                  active = true,
-                  createdDateTime = LocalDateTime.parse("2025-02-03T10:20:30"),
-                  createdByUsername = "ME",
-                  lastUpdatedDateTime = null,
-                  lastUpdatedByUsername = null,
-                ),
-              ),
-              phoneNumbers = listOf(
-                OffenderPhoneNumber(
-                  phoneId = 1,
-                  number = "0114 555 5555",
-                  type = CodeDescription("HOME", "Home"),
-                  createdDateTime = LocalDateTime.parse("2025-02-03T10:20:30"),
-                  createdByUsername = "ME",
-                  lastUpdatedDateTime = null,
-                  lastUpdatedByUsername = null,
-                ),
-              ),
-            ),
-          ),
-        ),
-      )
-      cprApi.stubGetCorePerson(
-        prisonNumber = "A1234BC",
-        corePersonDto(addresses = listOf(canonicalAddress().copy(usages = listOf(), contacts = listOf()))),
-      )
-
-      service.checkCorePersonMatch("A1234BC").also {
-        assertThat(it).isNull()
-      }
-    }
-
-    @Test
-    fun `should report address differences`() = runTest {
-      corePersonNomisApi.stubGetCorePersonForReconciliation(
-        prisonNumber = "A1234BC",
-        response = corePerson(prisonNumber = "A1234BC", addresses = listOf(corePersonAddress())),
-      )
-      cprApi.stubGetCorePerson(
-        prisonNumber = "A1234BC",
-        corePersonDto(addresses = listOf(canonicalAddress().copy(postcode = "S1 1AA"))),
-      )
-
-      service.checkCorePersonMatch("A1234BC").also {
-        assertThat(it?.prisonNumber).isEqualTo("A1234BC")
-        assertThat(it?.differences).containsExactly(
-          entry("addresses", "0-postcode:nomis=SW1H 9AJ, cpr=S1 1AA"),
-        )
-      }
-    }
-
-    @Test
-    fun `should report a different number of addresses`() = runTest {
-      corePersonNomisApi.stubGetCorePersonForReconciliation(
-        prisonNumber = "A1234BC",
-        response = corePerson(prisonNumber = "A1234BC", addresses = listOf(corePersonAddress())),
-      )
-      cprApi.stubGetCorePerson(prisonNumber = "A1234BC", corePersonDto())
-
-      service.checkCorePersonMatch("A1234BC").also {
-        assertThat(it?.differences).containsExactly(entry("addresses", "nomis=1, cpr=0"))
-      }
     }
 
     @Test
@@ -431,6 +243,256 @@ class CorePersonReconciliationIntTest(
       }
 
       verifyNoInteractions(telemetryClient)
+    }
+  }
+
+  @Nested
+  inner class ReligionDifferences {
+    @Test
+    fun `should report religion differences`() = runTest {
+      stubGetCorePerson(prisonNumber = "A1234BC")
+      cprApi.stubGetCorePerson(prisonNumber = "A1234BC", corePersonDto(religion = "ZORO"))
+
+      service.checkCorePersonMatch("A1234BC").also {
+        assertThat(it?.prisonNumber).isEqualTo("A1234BC")
+        assertThat(it?.differences).containsExactly(
+          entry("religion", "nomis=null, cpr=ZORO"),
+          entry("religions", "nomis=0, cpr=1"),
+        )
+      }
+
+      verify(telemetryClient).trackEvent(
+        eq("$TELEMETRY_PREFIX-mismatch"),
+        check {
+          assertThat(it).containsExactlyInAnyOrderEntriesOf(
+            mapOf(
+              "prisonNumber" to "A1234BC",
+              "differences5" to "religion, religions",
+            ),
+          )
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `should report religions differences`() = runTest {
+      corePersonNomisApi.stubGetCorePersonReligions(
+        prisonNumber = "A1234BC",
+        response = listOf(
+          OffenderBelief(
+            beliefId = 12345L,
+            belief = CodeDescription("ZORO", "ZORO Description"),
+            startDate = LocalDate.parse("2024-01-01"),
+            audit = NomisAudit(
+              createDatetime = LocalDateTime.now(),
+              createUsername = "User",
+            ),
+            changeReason = true,
+            comments = "Some comment",
+          ),
+          OffenderBelief(
+            beliefId = 12345L,
+            belief = CodeDescription("DRU", "DRU Description"),
+            startDate = LocalDate.parse("2025-01-01"),
+            audit = NomisAudit(
+              createDatetime = LocalDateTime.now(),
+              createUsername = "User",
+            ),
+            changeReason = true,
+            comments = "Some comment",
+          ),
+        ),
+      )
+      cprApi.stubGetCorePerson(
+        prisonNumber = "A1234BC",
+        corePersonDto(religion = "ZORO").copy(
+          religionHistory = listOf(
+            PrisonReligion(
+              // different religion
+              religionCode = ReligionCode.DRU,
+              religionDescription = "DRU Description",
+              changeReasonKnown = true,
+              comments = "Some comment",
+              startDate = LocalDate.parse("2024-01-01"),
+              createDateTime = LocalDateTime.now(),
+              createUserId = "User",
+              modifyDateTime = LocalDateTime.now(),
+              modifyUserId = "User",
+              current = true,
+            ),
+            PrisonReligion(
+              religionCode = ReligionCode.DRU,
+              religionDescription = "DRU Description",
+              changeReasonKnown = true,
+              comments = "Some comment",
+              // different date
+              startDate = LocalDate.parse("2024-01-01"),
+              createDateTime = LocalDateTime.now(),
+              createUserId = "User",
+              modifyDateTime = LocalDateTime.now(),
+              modifyUserId = "User",
+              current = false,
+            ),
+          ),
+        ),
+      )
+
+      service.checkCorePersonMatch("A1234BC").also {
+        assertThat(it?.prisonNumber).isEqualTo("A1234BC")
+        assertThat(it?.differences).containsExactly(
+          entry("religions", "0-code:nomis=ZORO, cpr=DRU,1-startDate:nomis=2025-01-01, cpr=2024-01-01"),
+        )
+      }
+    }
+  }
+
+  @Nested
+  inner class AddressDifferences {
+    @Test
+    fun `should not report address differences when addresses match`() = runTest {
+      corePersonNomisApi.stubGetCorePersonForReconciliation(
+        prisonNumber = "A1234BC",
+        response = corePerson(prisonNumber = "A1234BC", addresses = listOf(corePersonAddress())),
+      )
+      cprApi.stubGetCorePerson(prisonNumber = "A1234BC", corePersonDto(addresses = listOf(canonicalAddress())))
+
+      service.checkCorePersonMatch("A1234BC").also {
+        assertThat(it).isNull()
+      }
+    }
+
+    @Test
+    fun `should not report differences when address usages and contacts match`() = runTest {
+      corePersonNomisApi.stubGetCorePersonForReconciliation(
+        prisonNumber = "A1234BC",
+        response = corePerson(
+          prisonNumber = "A1234BC",
+          addresses = listOf(
+            corePersonAddress().copy(
+              usages = listOf(corePersonAddressUsage(code = "DISC"), corePersonAddressUsage(code = "HOME")),
+              phoneNumbers = listOf(corePersonAddressPhone(type = "MOB", number = "07700 900000"), corePersonAddressPhone()),
+            ),
+          ),
+        ),
+      )
+      cprApi.stubGetCorePerson(
+        prisonNumber = "A1234BC",
+        corePersonDto(
+          addresses = listOf(
+            canonicalAddress().copy(
+              // returned in a different order and using the CPR equivalent of the NOMIS DISC and MOB codes
+              usages = listOf(canonicalAddressUsage(), canonicalAddressUsage(code = CanonicalAddressUsage.Code.RELEASE)),
+              contacts = listOf(canonicalContact(), canonicalContact(type = "MOBILE", value = "07700 900000")),
+            ),
+          ),
+        ),
+      )
+
+      service.checkCorePersonMatch("A1234BC").also {
+        assertThat(it).isNull()
+      }
+    }
+
+    @Test
+    fun `should report address usage differences`() = runTest {
+      corePersonNomisApi.stubGetCorePersonForReconciliation(
+        prisonNumber = "A1234BC",
+        response = corePerson(
+          prisonNumber = "A1234BC",
+          addresses = listOf(corePersonAddress().copy(usages = listOf(corePersonAddressUsage(code = "HOME", active = false)))),
+        ),
+      )
+      cprApi.stubGetCorePerson(
+        prisonNumber = "A1234BC",
+        corePersonDto(addresses = listOf(canonicalAddress().copy(usages = listOf(canonicalAddressUsage(code = CanonicalAddressUsage.Code.DBA, active = true))))),
+      )
+
+      service.checkCorePersonMatch("A1234BC").also {
+        assertThat(it?.differences).containsExactly(
+          entry("addresses", "0-usages:nomis=[HOME/inactive], cpr=[DBA/active]"),
+        )
+      }
+    }
+
+    @Test
+    fun `should report address contact differences`() = runTest {
+      corePersonNomisApi.stubGetCorePersonForReconciliation(
+        prisonNumber = "A1234BC",
+        response = corePerson(
+          prisonNumber = "A1234BC",
+          addresses = listOf(corePersonAddress().copy(phoneNumbers = listOf(corePersonAddressPhone(extension = "123")))),
+        ),
+      )
+      cprApi.stubGetCorePerson(
+        prisonNumber = "A1234BC",
+        corePersonDto(addresses = listOf(canonicalAddress().copy(contacts = listOf(canonicalContact())))),
+      )
+
+      service.checkCorePersonMatch("A1234BC").also {
+        assertThat(it?.differences).containsExactly(
+          entry("addresses", "0-contacts:nomis=[HOME/0114 555 5555/123], cpr=[HOME/0114 555 5555]"),
+        )
+      }
+    }
+
+    @Test
+    fun `should not report address differences when addresses are in a different order`() = runTest {
+      corePersonNomisApi.stubGetCorePersonForReconciliation(
+        prisonNumber = "A1234BC",
+        response = corePerson(
+          prisonNumber = "A1234BC",
+          addresses = listOf(
+            corePersonAddress().copy(addressId = 1, postcode = "S1 1AA"),
+            corePersonAddress().copy(addressId = 2, postcode = "S2 2BB"),
+          ),
+        ),
+      )
+      cprApi.stubGetCorePerson(
+        prisonNumber = "A1234BC",
+        corePersonDto(
+          addresses = listOf(
+            canonicalAddress().copy(postcode = "S2 2BB"),
+            canonicalAddress().copy(postcode = "S1 1AA"),
+          ),
+        ),
+      )
+
+      service.checkCorePersonMatch("A1234BC").also {
+        assertThat(it).isNull()
+      }
+    }
+
+    @Test
+    fun `should report address differences`() = runTest {
+      corePersonNomisApi.stubGetCorePersonForReconciliation(
+        prisonNumber = "A1234BC",
+        response = corePerson(prisonNumber = "A1234BC", addresses = listOf(corePersonAddress())),
+      )
+      cprApi.stubGetCorePerson(
+        prisonNumber = "A1234BC",
+        corePersonDto(addresses = listOf(canonicalAddress().copy(postcode = "S1 1AA"))),
+      )
+
+      service.checkCorePersonMatch("A1234BC").also {
+        assertThat(it?.prisonNumber).isEqualTo("A1234BC")
+        assertThat(it?.differences).containsExactly(
+          entry("addresses", "0-postcode:nomis=SW1H 9AJ, cpr=S1 1AA"),
+        )
+      }
+    }
+
+    @Test
+    fun `should report a different number of addresses`() = runTest {
+      corePersonNomisApi.stubGetCorePersonForReconciliation(
+        prisonNumber = "A1234BC",
+        response = corePerson(prisonNumber = "A1234BC", addresses = listOf(corePersonAddress())),
+      )
+      cprApi.stubGetCorePerson(prisonNumber = "A1234BC", corePersonDto())
+
+      service.checkCorePersonMatch("A1234BC").also {
+        assertThat(it?.differences).containsExactly(entry("addresses", "nomis=1, cpr=0"))
+      }
     }
   }
 
