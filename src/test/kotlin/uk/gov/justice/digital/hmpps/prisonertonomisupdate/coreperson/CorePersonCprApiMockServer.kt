@@ -14,6 +14,9 @@ import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonCprApiExtension.Companion.jsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalAddressStatus
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalAddressUsage
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalContact
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalContactType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalEthnicity
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalIdentifiers
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalNationality
@@ -131,6 +134,18 @@ fun canonicalAddress() = CanonicalAddress(
   county = "Greater London",
   countryCode = CanonicalAddress.CountryCode.GBR,
   comment = "Some comment",
+)
+
+fun canonicalAddressUsage(code: CanonicalAddressUsage.Code = CanonicalAddressUsage.Code.HOME, active: Boolean = true) = CanonicalAddressUsage(
+  isActive = active,
+  code = code,
+  description = "${code.value} Description",
+)
+
+fun canonicalContact(value: String = "0114 555 5555", type: String = "HOME", extension: String? = null) = CanonicalContact(
+  type = CanonicalContactType(code = type, description = "$type Description"),
+  value = value,
+  extension = extension,
 )
 
 fun corePersonDto(nationality: String? = null, religion: String? = null, addresses: List<CanonicalAddress> = listOf()) = DpsPrisonRecord(

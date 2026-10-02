@@ -218,17 +218,17 @@ class CorePersonReconciliationService(
   private fun shouldNotReconcile(fieldName: String): Boolean = !reconciliationFields.contains(fieldName)
 
   private fun appendAddressesDifference(
-    nomisField: List<PrisonerAddress>,
-    cprField: List<PrisonerAddress>,
+    nomisAddresses: List<PrisonerAddress>,
+    cprAddresses: List<PrisonerAddress>,
     differences: MutableMap<String, String>,
   ) {
     val fieldName = "addresses"
     if (shouldNotReconcile(fieldName)) return
-    if (nomisField.size != cprField.size) {
-      differences[fieldName] = "nomis=${nomisField.size}, cpr=${cprField.size}"
+    if (nomisAddresses.size != cprAddresses.size) {
+      differences[fieldName] = "nomis=${nomisAddresses.size}, cpr=${cprAddresses.size}"
     } else {
-      nomisField.mapIndexedNotNull { i, n ->
-        val cpr = cprField[i]
+      nomisAddresses.mapIndexedNotNull { i, n ->
+        val cpr = cprAddresses[i]
         when {
           n.noFixedAbode != cpr.noFixedAbode -> "$i-noFixedAbode:nomis=${n.noFixedAbode}, cpr=${cpr.noFixedAbode}"
           !Objects.equals(n.startDate, cpr.startDate) -> "$i-startDate:nomis=${n.startDate}, cpr=${cpr.startDate}"
@@ -242,6 +242,8 @@ class CorePersonReconciliationService(
           n.county != cpr.county -> "$i-county:nomis=${n.county}, cpr=${cpr.county}"
           n.countryCode != cpr.countryCode -> "$i-countryCode:nomis=${n.countryCode}, cpr=${cpr.countryCode}"
           n.comment != cpr.comment -> "$i-comment:nomis=${n.comment}, cpr=${cpr.comment}"
+          n.usages != cpr.usages -> "$i-usages:nomis=${n.usages}, cpr=${cpr.usages}"
+          n.contacts != cpr.contacts -> "$i-contacts:nomis=${n.contacts}, cpr=${cpr.contacts}"
           else -> null
         }
       }
@@ -266,6 +268,26 @@ class CorePersonReconciliationService(
 
 private fun LocalDateTime?.notEqualsIgnoringNanos(createDatetime: LocalDateTime?): Boolean = !Objects.equals(this?.withNano(0), createDatetime?.withNano(0))
 
+// NOMIS and CPR return addresses in arbitrary order, so sort both sides into the same deterministic order
+private val addressComparator = compareBy<PrisonerAddress, LocalDate?>(nullsFirst()) { it.startDate }
+  .thenBy(nullsFirst()) { it.endDate }
+  .thenBy(nullsFirst()) { it.postcode }
+  .thenBy(nullsFirst()) { it.buildingNumber }
+  .thenBy(nullsFirst()) { it.subBuildingName }
+  .thenBy(nullsFirst()) { it.thoroughfareName }
+  .thenBy(nullsFirst()) { it.dependentLocality }
+  .thenBy(nullsFirst()) { it.postTown }
+  .thenBy(nullsFirst()) { it.county }
+  .thenBy(nullsFirst()) { it.countryCode }
+  .thenBy(nullsFirst()) { it.comment }
+  .thenBy(nullsFirst()) { it.noFixedAbode }
+
+private val usageComparator = compareBy<PrisonerAddressUsage, String?>(nullsFirst()) { it.code }
+
+private val contactComparator = compareBy<PrisonerAddressContact, String?>(nullsFirst()) { it.type }
+  .thenBy(nullsFirst()) { it.value }
+  .thenBy(nullsFirst()) { it.extension }
+
 fun DpsPrisonRecord.toPerson() = PrisonerPerson(
   religion = religion.code?.name,
   religions = religionHistory.map {
@@ -278,7 +300,7 @@ fun DpsPrisonRecord.toPerson() = PrisonerPerson(
       createDatetime = it.createDateTime,
     )
   },
-  addresses = addresses.map { it.toPrisonerAddress() },
+  addresses = addresses.map { it.toPrisonerAddress() }.sortedWith(addressComparator),
 )
 
 private fun CanonicalAddress.toPrisonerAddress() = PrisonerAddress(
@@ -294,6 +316,8 @@ private fun CanonicalAddress.toPrisonerAddress() = PrisonerAddress(
   county = county,
   countryCode = countryCode?.value,
   comment = comment,
+  usages = usages.map { PrisonerAddressUsage(code = it.code?.value, active = it.isActive) }.sortedWith(usageComparator),
+  contacts = contacts.map { PrisonerAddressContact(type = it.type.code, value = it.value, extension = it.extension) }.sortedWith(contactComparator),
 )
 
 fun CorePerson.toPerson() = PrisonerPerson(
@@ -308,7 +332,7 @@ fun CorePerson.toPerson() = PrisonerPerson(
       createDatetime = r.audit.createDatetime,
     )
   } ?: emptyList(),
-  addresses = addresses?.map { it.toPrisonerAddress() } ?: emptyList(),
+  addresses = addresses?.map { it.toPrisonerAddress() }?.sortedWith(addressComparator) ?: emptyList(),
 )
 
 private fun OffenderAddress.toPrisonerAddress() = PrisonerAddress(
@@ -324,7 +348,15 @@ private fun OffenderAddress.toPrisonerAddress() = PrisonerAddress(
   county = county?.description,
   countryCode = country?.code?.toCprCountryCode(),
   comment = comment,
+  usages = usages?.map { PrisonerAddressUsage(code = it.usage.code.toCprAddressUsageCode(), active = it.active) }?.sortedWith(usageComparator) ?: emptyList(),
+  contacts = phoneNumbers?.map { PrisonerAddressContact(type = it.type.code.toCprContactType(), value = it.number, extension = it.extension) }?.sortedWith(contactComparator) ?: emptyList(),
 )
+
+// NOMIS and CPR have slightly different address usage codes so need to translate
+private fun String.toCprAddressUsageCode(): String = if (this == "DISC") "RELEASE" else this
+
+// NOMIS and CPR have slightly different contact type codes so need to translate
+private fun String.toCprContactType(): String = if (this == "MOB") "MOBILE" else this
 
 // NOMIS and CPR have slightly different country codes so need to translate
 private fun String.toCprCountryCode(): String = when (this) {
@@ -366,4 +398,21 @@ data class PrisonerAddress(
   val county: String?,
   val countryCode: String?,
   val comment: String?,
+  val usages: List<PrisonerAddressUsage> = emptyList(),
+  val contacts: List<PrisonerAddressContact> = emptyList(),
 )
+
+data class PrisonerAddressUsage(
+  val code: String?,
+  val active: Boolean,
+) {
+  override fun toString(): String = "$code/${if (active) "active" else "inactive"}"
+}
+
+data class PrisonerAddressContact(
+  val type: String?,
+  val value: String?,
+  val extension: String?,
+) {
+  override fun toString(): String = "$type/$value" + (extension?.let { "/$it" } ?: "")
+}
