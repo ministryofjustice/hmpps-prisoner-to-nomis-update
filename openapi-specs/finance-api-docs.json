@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-09-28.1135.9f70e8a"
+    "version" : "2026-10-01.1144.fe592e1"
   },
   "servers" : [ {
     "url" : "https://prisoner-finance-sync-api-dev.hmpps.service.justice.gov.uk/",
@@ -410,6 +410,16 @@
           },
           "500" : {
             "description" : "Internal Server Error - An unexpected error occurred.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502" : {
+            "description" : "A dependency error occurred.",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -1618,9 +1628,15 @@
             "description" : "The current status of this advance",
             "enum" : [ "ACTIVE", "REPAID", "WRITTEN_OFF" ],
             "example" : "AdvanceStatus.ACTIVE"
+          },
+          "legacyTransactionId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The legacy transaction ID from NOMIS that paid the advance to the prisoner",
+            "example" : 123456
           }
         },
-        "required" : [ "amount", "createdBy", "createdOn", "legacyInformationNumber", "legacyPaymentProfileId", "prisonID", "prisonNumber", "repaymentAmount", "repaymentStartDate", "status" ]
+        "required" : [ "amount", "createdBy", "createdOn", "legacyInformationNumber", "legacyPaymentProfileId", "legacyTransactionId", "prisonID", "prisonNumber", "repaymentAmount", "repaymentStartDate", "status" ]
       },
       "SyncCreateAdvanceRecordResponse" : {
         "type" : "object",
@@ -1862,16 +1878,16 @@
           "transactionType" : {
             "type" : [ "string", "null" ]
           },
+          "legacyTransactionId" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int64"
+          },
           "caseloadId" : {
             "type" : [ "string", "null" ]
           },
           "transactionTimestamp" : {
             "type" : [ "string", "null" ],
             "format" : "date-time"
-          },
-          "legacyTransactionId" : {
-            "type" : [ "integer", "null" ],
-            "format" : "int64"
           },
           "synchronizedTransactionId" : {
             "type" : "string",
