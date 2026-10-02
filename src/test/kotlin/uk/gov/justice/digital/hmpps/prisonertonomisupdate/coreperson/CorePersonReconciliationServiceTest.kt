@@ -91,7 +91,6 @@ class CorePersonReconciliationServiceTest {
       nomis,
       cpr,
       differences,
-      "religions",
     )
 
     if (fieldsEquals) {
