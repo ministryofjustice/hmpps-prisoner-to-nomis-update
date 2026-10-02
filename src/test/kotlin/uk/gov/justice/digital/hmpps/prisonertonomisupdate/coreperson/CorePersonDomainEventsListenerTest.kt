@@ -65,9 +65,22 @@ internal class CorePersonDomainEventsListenerTest(@Autowired private val jsonMap
       }
 
       @Test
-      internal fun `will call core person merge service with create religion data`() = runTest {
+      internal fun `will call core person merge service when the event has a null event source`() = runTest {
         listener.onMessage(
-          rawMessage = corePersonMergeMessage("A1234BC"),
+          rawMessage = corePersonMergeMessage("A1234BC", source = null),
+        ).join()
+
+        verify(corePersonMergeService).mergePerson(
+          check {
+            assertThat(it.personReference.identifiers.first { it.type == "toPrisonNumber" }.value).isEqualTo("A1234BC")
+          },
+        )
+      }
+
+      @Test
+      internal fun `will call core person merge service when the event has an event source`() = runTest {
+        listener.onMessage(
+          rawMessage = corePersonMergeMessage("A1234BC", source = "core-person-record"),
         ).join()
 
         verify(corePersonMergeService).mergePerson(
