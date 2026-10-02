@@ -49,7 +49,7 @@ data class SQSMessage(
 )
 
 // event source is actually lower case here
-data class MessageAttributes(val eventSource: EventSource)
+data class MessageAttributes(val eventSource: EventSource?)
 
 data class EventSource(
   @field:JsonProperty("Value")

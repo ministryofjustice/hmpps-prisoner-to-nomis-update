@@ -55,7 +55,10 @@ class CorePersonReconciliationService(
   suspend fun generateReconciliationReport(activeOnly: Boolean) {
     telemetryClient.trackEvent(
       "$TELEMETRY_CORE_PERSON_PREFIX-requested",
-      mapOf("activeOnly" to activeOnly.toString()),
+      mapOf(
+        "activeOnly" to activeOnly.toString(),
+        "fields" to reconciliationFields.joinToString(),
+      ),
     )
     runCatching {
       generateReconciliationReport(
@@ -70,6 +73,7 @@ class CorePersonReconciliationService(
           "$TELEMETRY_CORE_PERSON_PREFIX-report",
           mapOf(
             "activeOnly" to activeOnly.toString(),
+            "fields" to reconciliationFields.joinToString(),
             "prisoners-count" to it.itemsChecked.toString(),
             "pages-count" to it.pagesChecked.toString(),
             "mismatch-count" to it.mismatches.size.toString(),
@@ -84,7 +88,7 @@ class CorePersonReconciliationService(
       }
   }
 
-  private fun List<MismatchCorePerson>.asPrisonerMap(): Map<String, String> = this.associate { it.prisonNumber to "differences5=${it.differences.keys.asSequence().take(5).joinToString()}" }
+  private fun List<MismatchCorePerson>.asPrisonerMap(): Map<String, String> = associate { it.prisonNumber to "differences5=${it.differences.keys.asSequence().take(5).joinToString()}" }
 
   private suspend fun getNextActiveBookingsForPage(lastBookingId: Long): ReconciliationPageResult<PrisonerIds> = nextBookingsForPage(lastBookingId, activeOnly = true)
 

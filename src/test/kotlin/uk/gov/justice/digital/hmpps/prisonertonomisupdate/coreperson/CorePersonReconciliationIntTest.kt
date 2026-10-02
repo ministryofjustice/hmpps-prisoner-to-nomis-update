@@ -555,7 +555,7 @@ class CorePersonReconciliationIntTest(
 
       verify(telemetryClient).trackEvent(
         eq("coreperson-reports-reconciliation-requested"),
-        check { assertThat(it).containsExactlyEntriesOf(mapOf("activeOnly" to "false")) },
+        check { assertThat(it).containsExactlyEntriesOf(mapOf("activeOnly" to "false", "fields" to "religion, religions, addresses")) },
         isNull(),
       )
 
@@ -568,7 +568,7 @@ class CorePersonReconciliationIntTest(
 
       verify(telemetryClient).trackEvent(
         eq("coreperson-reports-reconciliation-requested"),
-        check { assertThat(it).containsExactlyEntriesOf(mapOf("activeOnly" to "true")) },
+        check { assertThat(it).containsExactlyEntriesOf(mapOf("activeOnly" to "true", "fields" to "religion, religions, addresses")) },
         isNull(),
       )
 
