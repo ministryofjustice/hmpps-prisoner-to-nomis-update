@@ -7,7 +7,7 @@
       "name" : "Move a prisoner Team",
       "email" : "Moveaprisoner-gg@justice.gov.uk"
     },
-    "version" : "2026-09-22.340.a0d4649"
+    "version" : "2026-10-02.358.7865fc3"
   },
   "servers" : [ {
     "url" : "/",
@@ -1264,7 +1264,7 @@
       "post" : {
         "tags" : [ "Active agencies" ],
         "summary" : "Run a legacy clean-up at a prison",
-        "description" : "Snapshots the containers the preview would close for the given window as a job and queues it for processing, returning immediately. Each container is then marked returned or transferred in its own transaction and a `prison-property.container.updated` event published for it, so NOMIS is brought into line. Follow progress with the job endpoints. One job may be in flight per prison. Requires role ROLE_PRISONER_PROPERTY__ADMIN.",
+        "description" : "Snapshots the containers the preview would close as a job and queues it for processing, returning immediately. Each container is then marked removed in its own transaction, by the system user LEGACY_CLEANUP and stamped with the job id, and a `prison-property.container.updated` event published for it, so NOMIS is brought into line. Takes no request body. Follow progress with the job endpoints. One job may be in flight per prison. Requires role ROLE_PRISONER_PROPERTY__ADMIN.",
         "operationId" : "startLegacyCleanup",
         "parameters" : [ {
           "name" : "agencyId",
@@ -1276,16 +1276,6 @@
           },
           "example" : "MDI"
         } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/StartLegacyCleanupRequest"
-              }
-            }
-          },
-          "required" : true
-        },
         "responses" : {
           "202" : {
             "description" : "Clean-up queued; the job is returned",
@@ -1298,7 +1288,7 @@
             }
           },
           "400" : {
-            "description" : "Invalid window, or too many containers at the prison to classify",
+            "description" : "Too many containers at the prison to classify",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -1867,7 +1857,7 @@
       "get" : {
         "tags" : [ "Property containers" ],
         "summary" : "Get a prisoner's whole-property history timeline, newest first",
-        "description" : "Requires role ROLE_PRISONER_PROPERTY__RO. Returns a single interleaved timeline of every event across all of the prisoner's containers, newest first, plus a de-duplicated \"arrived at ...\" item for each prison the prisoner moved into. Prison and location ids are resolved to names, and each container event carries the seal number and acting establishment as at that point in its history. Returns an empty list if the prisoner has no property.",
+        "description" : "Requires role ROLE_PRISONER_PROPERTY__RO. Returns a single interleaved timeline of every event across all of the prisoner's containers, newest first, plus the \"arrived at ...\" items that explain that property - the arrival that began each stay in which property was stored or handled - and the arrival at the prisoner's current prison. Other admissions and transfers in are left out. Prison and location ids are resolved to names, and each container event carries the seal number and acting establishment as at that point in its history. For a prisoner with no property, returns only the arrival at their current prison, if any.",
         "operationId" : "getPrisonerEvents",
         "parameters" : [ {
           "name" : "prisonerNumber",
@@ -1989,7 +1979,7 @@
         }, {
           "name" : "status",
           "in" : "query",
-          "description" : "Filter to these statuses (repeatable). Omit to hide containers that have left active storage.",
+          "description" : "Filter to these statuses (repeatable). Omit to hide containers that have left active storage. The removal statuses (RETURNED, DISPOSED, TRANSFER, CREATED_IN_ERROR, REMOVED) return only containers that left storage that way, never stored ones; REMOVED covers both containers marked inactive in NOMIS and those the legacy clean-up archived.",
           "required" : false,
           "schema" : {
             "type" : "array",
@@ -2336,7 +2326,7 @@
       "get" : {
         "tags" : [ "Active agencies" ],
         "summary" : "Preview what a legacy clean-up would close at a prison",
-        "description" : "Counts the live containers held at the prison whose owner was released, or left for another prison, at least `olderThanDays` days ago - the ones a run with that window would mark returned or transferred - alongside the totals currently shown as due for return / due for transfer out, what is left alone and why, and how old the backlog is. Changes nothing. Requires role ROLE_PRISONER_PROPERTY__ADMIN.",
+        "description" : "Applies the 13-month retention rule to the live containers held at the prison: counts those whose owner was released, died, escaped or absconded, or moved to another prison more than 13 months ago - the ones a run would mark removed - alongside the totals currently shown as due for return / due for transfer out, what is left alone and why (confiscated property and property with a disposal date still to come are never closed), and how old the backlog is. Changes nothing. Requires role ROLE_PRISONER_PROPERTY__ADMIN.",
         "operationId" : "previewLegacyCleanup",
         "parameters" : [ {
           "name" : "agencyId",
@@ -2347,19 +2337,6 @@
             "type" : "string"
           },
           "example" : "MDI"
-        }, {
-          "name" : "olderThanDays",
-          "in" : "query",
-          "description" : "Only count property for people who left at least this many days ago",
-          "required" : false,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int32",
-            "default" : 28,
-            "maximum" : 3650,
-            "minimum" : 1
-          },
-          "example" : 28
         } ],
         "responses" : {
           "200" : {
@@ -2373,7 +2350,7 @@
             }
           },
           "400" : {
-            "description" : "Invalid window, or too many containers at the prison to classify",
+            "description" : "Too many containers at the prison to classify",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -3047,21 +3024,6 @@
         },
         "required" : [ "containerType", "sealNumber", "sourceContainerIds" ]
       },
-      "StartLegacyCleanupRequest" : {
-        "type" : "object",
-        "description" : "Request to run the legacy property clean-up for a prison",
-        "properties" : {
-          "olderThanDays" : {
-            "type" : "integer",
-            "format" : "int32",
-            "default" : 28,
-            "description" : "Only close property for people who left at least this many days ago",
-            "example" : 28,
-            "maximum" : 3650,
-            "minimum" : 1
-          }
-        }
-      },
       "LegacyCleanupItemDto" : {
         "type" : "object",
         "description" : "One container a clean-up job set out to close and what happened to it",
@@ -3076,16 +3038,16 @@
           },
           "action" : {
             "type" : "string",
-            "enum" : [ "RETURN", "TRANSFER" ]
+            "enum" : [ "REMOVE", "RETURN", "TRANSFER" ]
           },
           "plannedEventDate" : {
             "type" : "string",
             "format" : "date",
-            "description" : "The date the closing event is dated to - the release date, or the date the person left"
+            "description" : "The date the closing event is dated to - the date the person left"
           },
           "plannedToPrisonId" : {
             "type" : [ "string", "null" ],
-            "description" : "For TRANSFER, the prison the person is now at",
+            "description" : "The prison the person is now at, when they moved to another prison",
             "example" : "LEI"
           },
           "status" : {
@@ -3120,13 +3082,15 @@
             "enum" : [ "PENDING", "STARTED", "FINISHED" ]
           },
           "olderThanDays" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
+            "description" : "The look-back window in days, for jobs run before the fixed 13-month rule; absent since",
             "example" : 28
           },
           "cutoffDate" : {
             "type" : "string",
-            "format" : "date"
+            "format" : "date",
+            "description" : "People must have left on or before this date for their property to be closed"
           },
           "requestedBy" : {
             "type" : "string",
@@ -3155,13 +3119,20 @@
             "format" : "int32",
             "description" : "Items that have reached a final status (processed, skipped or failed)"
           },
+          "removedRecords" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Containers marked removed"
+          },
           "returnedRecords" : {
             "type" : "integer",
-            "format" : "int32"
+            "format" : "int32",
+            "description" : "Containers marked returned, by jobs run before the 13-month rule"
           },
           "transferredRecords" : {
             "type" : "integer",
-            "format" : "int32"
+            "format" : "int32",
+            "description" : "Containers marked transferred, by jobs run before the 13-month rule"
           },
           "skippedRecords" : {
             "type" : "integer",
@@ -3179,7 +3150,7 @@
             }
           }
         },
-        "required" : [ "cutoffDate", "failedRecords", "id", "olderThanDays", "prisonId", "processedRecords", "requestedAt", "requestedBy", "returnedRecords", "skippedRecords", "status", "totalRecords", "transferredRecords" ]
+        "required" : [ "cutoffDate", "failedRecords", "id", "prisonId", "processedRecords", "removedRecords", "requestedAt", "requestedBy", "returnedRecords", "skippedRecords", "status", "totalRecords", "transferredRecords" ]
       },
       "PageUUID" : {
         "type" : "object",
@@ -3363,6 +3334,11 @@
             "description" : "Id of the user who recorded the event",
             "example" : "AUSER_GEN"
           },
+          "legacyCleanup" : {
+            "type" : "boolean",
+            "description" : "Whether a legacy clean-up job recorded this event - for a REMOVED event, that the record was archived automatically under the 13-month retention rule rather than removed in NOMIS",
+            "example" : false
+          },
           "sealNumber" : {
             "type" : [ "string", "null" ],
             "description" : "Seal number recorded by this event, for events that carry a seal",
@@ -3436,7 +3412,7 @@
             "example" : "SN991234"
           }
         },
-        "required" : [ "containerType", "eventDateTime", "eventType", "eventUserId", "id" ]
+        "required" : [ "containerType", "eventDateTime", "eventType", "eventUserId", "id", "legacyCleanup" ]
       },
       "PrisonerPropertyContainerDto" : {
         "type" : "object",
@@ -3536,7 +3512,7 @@
           },
           "removalOutcome" : {
             "type" : [ "string", "null" ],
-            "description" : "Why the container left active storage (disposed, returned, transferred, combined), if it has",
+            "description" : "Why the container left active storage (disposed, returned, transferred, combined, created in error, or removed), if it has",
             "enum" : [ "DISPOSED", "RETURNED", "TRANSFERRED", "COMBINED", "CREATED_IN_ERROR", "REMOVED" ],
             "example" : "DISPOSED"
           },
@@ -3678,6 +3654,11 @@
             "description" : "Whether the event was generated by the system rather than a user",
             "example" : false
           },
+          "legacyCleanup" : {
+            "type" : "boolean",
+            "description" : "Whether a legacy clean-up job recorded this event - for a REMOVED event, that the record was archived automatically under the 13-month retention rule rather than removed in NOMIS",
+            "example" : false
+          },
           "prisonerName" : {
             "type" : [ "string", "null" ],
             "description" : "Name of the prisoner, for prisoner movement items; null for container events",
@@ -3755,7 +3736,7 @@
             "example" : "Reception Property Store"
           }
         },
-        "required" : [ "eventDateTime", "eventId", "eventUserId", "itemType", "systemGenerated" ]
+        "required" : [ "eventDateTime", "eventId", "eventUserId", "itemType", "legacyCleanup", "systemGenerated" ]
       },
       "PagePrisonerPropertyGroupDto" : {
         "type" : "object",
@@ -3989,19 +3970,19 @@
           "label" : {
             "type" : "string",
             "description" : "Band label",
-            "example" : "91 to 365 days"
+            "example" : "2 to 5 years"
           },
-          "fromDays" : {
+          "fromMonths" : {
             "type" : "integer",
             "format" : "int32",
-            "description" : "Lower bound of the band in days since the person left",
-            "example" : 91
+            "description" : "Lower bound of the band in whole months since the person left",
+            "example" : 24
           },
-          "toDays" : {
+          "toMonths" : {
             "type" : [ "integer", "null" ],
             "format" : "int32",
-            "description" : "Upper bound of the band in days, or null for open-ended",
-            "example" : 365
+            "description" : "Upper bound of the band in whole months, or null for open-ended",
+            "example" : 59
           },
           "containers" : {
             "type" : "integer",
@@ -4010,7 +3991,7 @@
             "example" : 120
           }
         },
-        "required" : [ "containers", "fromDays", "label" ]
+        "required" : [ "containers", "fromMonths", "label" ]
       },
       "CleanupCountDto" : {
         "type" : "object",
@@ -4033,45 +4014,48 @@
       },
       "LegacyCleanupPreviewDto" : {
         "type" : "object",
-        "description" : "What a legacy clean-up would close at a prison for a given look-back window, without changing anything",
+        "description" : "What a legacy clean-up would close at a prison under the 13-month retention rule, without changing anything",
         "properties" : {
           "prisonId" : {
             "type" : "string",
             "description" : "Prison the preview is for",
             "example" : "MDI"
           },
-          "olderThanDays" : {
+          "retentionMonths" : {
             "type" : "integer",
             "format" : "int32",
-            "description" : "The look-back window the preview applied",
-            "example" : 28
+            "description" : "How many months after the person left their property is kept before it is closed",
+            "example" : 13
           },
           "cutoffDate" : {
             "type" : "string",
             "format" : "date",
-            "description" : "People must have left on or before this date to be in scope",
-            "example" : "2026-08-14"
+            "description" : "People must have left on or before this date (13 months ago) for their property to be closed",
+            "example" : "2025-09-02"
           },
           "generatedAt" : {
             "type" : "string",
             "format" : "date-time",
             "description" : "When the preview was generated"
           },
-          "toReturn" : {
+          "toRemove" : {
             "$ref" : "#/components/schemas/CleanupCountDto",
-            "description" : "Containers that would be marked returned: the owner was released on or before the cut-off"
+            "description" : "Containers that would be marked removed: the owner left on or before the cut-off"
           },
-          "toTransfer" : {
-            "$ref" : "#/components/schemas/CleanupCountDto",
-            "description" : "Containers that would be marked transferred: the owner left for another prison on or before the cut-off"
+          "toRemoveByReason" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/CleanupCountDto"
+            },
+            "description" : "The containers that would be marked removed, by why the owner left (released, died, escaped or absconded, or now at another prison)"
           },
           "dueForReturnNow" : {
             "$ref" : "#/components/schemas/CleanupCountDto",
-            "description" : "Containers currently shown as due for return at the prison, whatever the window - the tile the clean-up reduces"
+            "description" : "Containers currently shown as due for return at the prison - the tile the clean-up reduces"
           },
           "dueForTransferOutNow" : {
             "$ref" : "#/components/schemas/CleanupCountDto",
-            "description" : "Containers currently shown as due for transfer out at the prison, whatever the window - the tile the clean-up reduces"
+            "description" : "Containers currently shown as due for transfer out at the prison - the tile the clean-up reduces"
           },
           "candidates" : {
             "$ref" : "#/components/schemas/CleanupCountDto",
@@ -4092,7 +4076,7 @@
             }
           }
         },
-        "required" : [ "ageBands", "candidates", "cutoffDate", "dueForReturnNow", "dueForTransferOutNow", "generatedAt", "ineligible", "olderThanDays", "prisonId", "toReturn", "toTransfer" ]
+        "required" : [ "ageBands", "candidates", "cutoffDate", "dueForReturnNow", "dueForTransferOutNow", "generatedAt", "ineligible", "prisonId", "retentionMonths", "toRemove", "toRemoveByReason" ]
       }
     },
     "securitySchemes" : {
