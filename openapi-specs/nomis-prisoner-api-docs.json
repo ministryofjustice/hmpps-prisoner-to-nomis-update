@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-01.2149.845b306"
+    "version" : "2026-10-05.2154.004875c"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -15588,6 +15588,88 @@
           },
           "409" : {
             "description" : "Code already exits",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agency/{agencyId}/phone" : {
+      "post" : {
+        "tags" : [ "agency-resource" ],
+        "summary" : "Create an agency phone number",
+        "description" : "Creates a new phone number for an agency, stored at the agency level (not the address level). Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "createAgencyPhone",
+        "parameters" : [ {
+          "name" : "agencyId",
+          "in" : "path",
+          "description" : "Agency id ",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Agency id ",
+            "example" : "WWI"
+          },
+          "example" : "WWI"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateAgencyPhoneNumberRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Agency phone number created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CreateAgencyPhoneNumberResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "The request contains bad data, for example the phone type code does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Agency not found",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -37807,8 +37889,8 @@
             "example" : 1123456
           },
           "usage" : {
-            "$ref" : "#/components/schemas/CodeDescription",
-            "description" : "Address usage"
+            "type" : "string",
+            "description" : "Address usage code"
           },
           "active" : {
             "type" : "boolean",
@@ -37939,6 +38021,40 @@
           }
         },
         "required" : [ "code", "description", "listSequence", "typeCode" ]
+      },
+      "CreateAgencyPhoneNumberResponse" : {
+        "type" : "object",
+        "description" : "A response to creating an agency phone number",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Unique NOMIS Id of phone"
+          }
+        },
+        "required" : [ "id" ]
+      },
+      "CreateAgencyPhoneNumberRequest" : {
+        "type" : "object",
+        "description" : "A request to create an agency phone number",
+        "properties" : {
+          "number" : {
+            "type" : "string",
+            "description" : "The number",
+            "example" : "0114 555 555"
+          },
+          "extension" : {
+            "type" : [ "string", "null" ],
+            "description" : "Extension",
+            "example" : "x432"
+          },
+          "typeCode" : {
+            "type" : "string",
+            "description" : "Phone type code",
+            "example" : "BUS"
+          }
+        },
+        "required" : [ "number", "typeCode" ]
       },
       "CreateAgencyEmailAddressResponse" : {
         "type" : "object",

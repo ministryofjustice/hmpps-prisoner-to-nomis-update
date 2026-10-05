@@ -137,7 +137,7 @@ fun corePersonAddress() = OffenderAddress(
 
 fun corePersonAddressUsage(code: String = "HOME", active: Boolean = true) = OffenderAddressUsage(
   addressId = 1234,
-  usage = CodeDescription(code = code, description = "$code Description"),
+  usage = code,
   active = active,
   createdDateTime = LocalDateTime.parse("2025-02-03T10:20:30"),
   createdByUsername = "ME",

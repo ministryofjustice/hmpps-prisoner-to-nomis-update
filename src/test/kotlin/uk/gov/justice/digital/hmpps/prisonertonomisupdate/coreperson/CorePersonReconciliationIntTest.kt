@@ -370,7 +370,7 @@ class CorePersonReconciliationIntTest(
           prisonNumber = "A1234BC",
           addresses = listOf(
             corePersonAddress().copy(
-              usages = listOf(corePersonAddressUsage(code = "DISC"), corePersonAddressUsage(code = "HOME")),
+              usages = listOf(corePersonAddressUsage(code = "RELEASE"), corePersonAddressUsage(code = "HOME")),
               phoneNumbers = listOf(corePersonAddressPhone(type = "MOB", number = "07700 900000"), corePersonAddressPhone()),
             ),
           ),
@@ -381,7 +381,6 @@ class CorePersonReconciliationIntTest(
         corePersonDto(
           addresses = listOf(
             canonicalAddress().copy(
-              // returned in a different order and using the CPR equivalent of the NOMIS DISC and MOB codes
               usages = listOf(canonicalAddressUsage(), canonicalAddressUsage(code = CanonicalAddressUsage.Code.RELEASE)),
               contacts = listOf(canonicalContact(), canonicalContact(type = "MOBILE", value = "07700 900000")),
             ),
