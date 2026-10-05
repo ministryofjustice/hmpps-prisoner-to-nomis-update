@@ -352,12 +352,9 @@ private fun OffenderAddress.toPrisonerAddress() = PrisonerAddress(
   county = county?.description,
   countryCode = country?.code?.toCprCountryCode(),
   comment = comment,
-  usages = usages?.map { PrisonerAddressUsage(code = it.usage.code.toCprAddressUsageCode(), active = it.active) }?.sortedWith(usageComparator) ?: emptyList(),
+  usages = usages?.map { PrisonerAddressUsage(code = it.usage, active = it.active) }?.sortedWith(usageComparator) ?: emptyList(),
   contacts = phoneNumbers?.map { PrisonerAddressContact(type = it.type.code.toCprContactType(), value = it.number, extension = it.extension) }?.sortedWith(contactComparator) ?: emptyList(),
 )
-
-// NOMIS and CPR have slightly different address usage codes so need to translate
-private fun String.toCprAddressUsageCode(): String = if (this == "DISC") "RELEASE" else this
 
 // NOMIS and CPR have slightly different contact type codes so need to translate
 private fun String.toCprContactType(): String = if (this == "MOB") "MOBILE" else this
