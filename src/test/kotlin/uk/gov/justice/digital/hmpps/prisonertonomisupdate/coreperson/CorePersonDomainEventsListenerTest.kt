@@ -19,6 +19,7 @@ import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.json.JsonTest
 import tools.jackson.databind.json.JsonMapper
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.contact.CorePersonContactService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.religion.ReligionService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.contactCreatedMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.contactUpdatedMessage
@@ -31,6 +32,7 @@ internal class CorePersonDomainEventsListenerTest(@Autowired private val jsonMap
   private val religionService: ReligionService = mock()
   private val eventFeatureSwitch: EventFeatureSwitch = mock()
   private val corePersonMergeService: CorePersonMergeService = mock()
+  private val corePersonContactService: CorePersonContactService = mock()
   private val telemetryClient: TelemetryClient = mock()
 
   private val listener =
@@ -39,6 +41,7 @@ internal class CorePersonDomainEventsListenerTest(@Autowired private val jsonMap
       eventFeatureSwitch,
       religionService,
       corePersonMergeService,
+      corePersonContactService,
       telemetryClient,
     )
 
@@ -67,21 +70,49 @@ internal class CorePersonDomainEventsListenerTest(@Autowired private val jsonMap
       }
 
       @Test
-      internal fun `will handle contact created event without calling other services`() = runTest {
+      internal fun `will call contact service with create contact data`() = runTest {
         listener.onMessage(
           rawMessage = contactCreatedMessage("A1234BC", "11111111-2222-3333-4444-555555555555", source = "core-person-record"),
         ).join()
 
+        verify(corePersonContactService).contactCreated(
+          check { it ->
+            assertThat(it.additionalInformation.cprContactId.toString()).isEqualTo("11111111-2222-3333-4444-555555555555")
+            assertThat(it.personReference.identifiers.first { it.type == "prisonNumber" }.value).isEqualTo("A1234BC")
+          },
+          eq(EventSource(value = "core-person-record", type = "String")),
+        )
         verifyNoInteractions(religionService)
         verifyNoInteractions(corePersonMergeService)
       }
 
       @Test
-      internal fun `will handle contact updated event without calling other services`() = runTest {
+      internal fun `will pass the nomis event source to contact service`() = runTest {
+        listener.onMessage(
+          rawMessage = contactCreatedMessage("A1234BC", "11111111-2222-3333-4444-555555555555", source = "nomis"),
+        ).join()
+
+        verify(corePersonContactService).contactCreated(
+          check {
+            assertThat(it.additionalInformation.cprContactId.toString()).isEqualTo("11111111-2222-3333-4444-555555555555")
+          },
+          eq(EventSource(value = "nomis", type = "String")),
+        )
+      }
+
+      @Test
+      internal fun `will call contact service with update contact data`() = runTest {
         listener.onMessage(
           rawMessage = contactUpdatedMessage("A1234BC", "11111111-2222-3333-4444-555555555555", source = "core-person-record"),
         ).join()
 
+        verify(corePersonContactService).contactUpdated(
+          check { it ->
+            assertThat(it.additionalInformation.cprContactId.toString()).isEqualTo("11111111-2222-3333-4444-555555555555")
+            assertThat(it.personReference.identifiers.first { it.type == "prisonNumber" }.value).isEqualTo("A1234BC")
+          },
+          eq(EventSource(value = "core-person-record", type = "String")),
+        )
         verifyNoInteractions(religionService)
         verifyNoInteractions(corePersonMergeService)
       }
@@ -128,9 +159,16 @@ internal class CorePersonDomainEventsListenerTest(@Autowired private val jsonMap
         listener.onMessage(
           rawMessage = corePersonMergeMessage("A1234BC"),
         ).join()
+        listener.onMessage(
+          rawMessage = contactCreatedMessage("A1234BC", "11111111-2222-3333-4444-555555555555"),
+        ).join()
+        listener.onMessage(
+          rawMessage = contactUpdatedMessage("A1234BC", "11111111-2222-3333-4444-555555555555"),
+        ).join()
 
         verifyNoInteractions(religionService)
         verifyNoInteractions(corePersonMergeService)
+        verifyNoInteractions(corePersonContactService)
       }
     }
   }

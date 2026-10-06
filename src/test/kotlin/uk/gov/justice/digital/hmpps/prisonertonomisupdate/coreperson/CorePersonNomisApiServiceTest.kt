@@ -15,6 +15,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CorePersonInsertReligionRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CorePersonMergeRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CorePersonReligionRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateOffenderEmailRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateOffenderPhoneRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import java.time.LocalDate
 
@@ -144,6 +146,89 @@ class CorePersonNomisApiServiceTest {
       val beliefId = apiService.insertReligion(prisonNumber, request)
 
       assertThat(beliefId).isEqualTo(98765L)
+    }
+  }
+
+  @Nested
+  inner class GetRootOffenderId {
+    private val prisonNumber = "A1234BC"
+
+    @Test
+    fun `will request the prisoner details`() = runTest {
+      mockServer.stubGetPrisonerDetails(prisonNumber)
+
+      apiService.getRootOffenderId(prisonNumber)
+
+      mockServer.verify(
+        getRequestedFor(urlPathEqualTo("/prisoners/$prisonNumber")),
+      )
+    }
+
+    @Test
+    fun `will return the root offender id`() = runTest {
+      mockServer.stubGetPrisonerDetails(prisonNumber, rootOffenderId = 98765L)
+
+      val rootOffenderId = apiService.getRootOffenderId(prisonNumber)
+
+      assertThat(rootOffenderId).isEqualTo(98765L)
+    }
+  }
+
+  @Nested
+  inner class CreateOffenderPhone {
+    private val offenderId = 12345L
+    private val request = CreateOffenderPhoneRequest(
+      number = "07700 900000",
+      extension = "123",
+      typeCode = "MOB",
+    )
+
+    @Test
+    fun `will post the phone request`() = runTest {
+      mockServer.stubCreateOffenderPhone(offenderId)
+
+      apiService.createOffenderPhone(offenderId, request)
+
+      mockServer.verify(
+        postRequestedFor(urlPathEqualTo("/core-person/$offenderId/phone"))
+          .withRequestBody(equalToJson(jsonMapper.writeValueAsString(request))),
+      )
+    }
+
+    @Test
+    fun `will return the created phone id`() = runTest {
+      mockServer.stubCreateOffenderPhone(offenderId, phoneId = 98765L)
+
+      val response = apiService.createOffenderPhone(offenderId, request)
+
+      assertThat(response.phoneId).isEqualTo(98765L)
+    }
+  }
+
+  @Nested
+  inner class CreateOffenderEmail {
+    private val offenderId = 12345L
+    private val request = CreateOffenderEmailRequest(email = "test@justice.gov.uk")
+
+    @Test
+    fun `will post the email request`() = runTest {
+      mockServer.stubCreateOffenderEmail(offenderId)
+
+      apiService.createOffenderEmail(offenderId, request)
+
+      mockServer.verify(
+        postRequestedFor(urlPathEqualTo("/core-person/$offenderId/email"))
+          .withRequestBody(equalToJson(jsonMapper.writeValueAsString(request))),
+      )
+    }
+
+    @Test
+    fun `will return the created email address id`() = runTest {
+      mockServer.stubCreateOffenderEmail(offenderId, emailAddressId = 98765L)
+
+      val response = apiService.createOffenderEmail(offenderId, request)
+
+      assertThat(response.emailAddressId).isEqualTo(98765L)
     }
   }
 

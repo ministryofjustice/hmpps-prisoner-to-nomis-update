@@ -11,11 +11,14 @@ import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CorePerson
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateOffenderEmailResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateOffenderPhoneResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.NomisAudit
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderAddressUsage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderBelief
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderPhoneNumber
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -104,6 +107,50 @@ class CorePersonNomisApiMockServer(private val jsonMapper: JsonMapper) {
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value())
           .withBody(beliefId.toString()),
+      ),
+    )
+  }
+
+  fun stubGetPrisonerDetails(prisonNumber: String, rootOffenderId: Long = 12345L) {
+    nomisApi.stubFor(
+      get(urlEqualTo("/prisoners/$prisonNumber")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(
+            jsonMapper.writeValueAsString(
+              PrisonerDetails(
+                offenderNo = prisonNumber,
+                offenderId = rootOffenderId + 1,
+                bookingId = 1,
+                location = "MDI",
+                active = true,
+                rootOffenderId = rootOffenderId,
+              ),
+            ),
+          ),
+      ),
+    )
+  }
+
+  fun stubCreateOffenderPhone(offenderId: Long, phoneId: Long = 54321L) {
+    nomisApi.stubFor(
+      post(urlEqualTo("/core-person/$offenderId/phone")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.CREATED.value())
+          .withBody(jsonMapper.writeValueAsString(CreateOffenderPhoneResponse(phoneId = phoneId))),
+      ),
+    )
+  }
+
+  fun stubCreateOffenderEmail(offenderId: Long, emailAddressId: Long = 54321L) {
+    nomisApi.stubFor(
+      post(urlEqualTo("/core-person/$offenderId/email")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.CREATED.value())
+          .withBody(jsonMapper.writeValueAsString(CreateOffenderEmailResponse(emailAddressId = emailAddressId))),
       ),
     )
   }
