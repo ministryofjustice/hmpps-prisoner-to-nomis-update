@@ -7,11 +7,10 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import tools.jackson.databind.json.JsonMapper
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.contact.CorePersonContactService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.religion.ReligionService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.EventFeatureSwitch
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.DomainEventListenerNoMapping
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PersonReferenceList
-import java.util.UUID
 import java.util.concurrent.CompletableFuture
 
 @Service
@@ -20,6 +19,7 @@ class CorePersonDomainEventListener(
   eventFeatureSwitch: EventFeatureSwitch,
   private val religionService: ReligionService,
   private val corePersonMergeService: CorePersonMergeService,
+  private val corePersonContactService: CorePersonContactService,
   telemetryClient: TelemetryClient,
 ) : DomainEventListenerNoMapping(
   jsonMapper = jsonMapper,
@@ -40,32 +40,12 @@ class CorePersonDomainEventListener(
     when (eventType) {
       "core-person-record.prison.religion.created" -> religionService.religionCreated(message.fromJson(), eventSource)
       "core-person-record.prison.record.merged" -> corePersonMergeService.mergePerson(message.fromJson())
-      "core-person-record.prison.contact.created" -> contactEventReceived(message.fromJson(), eventSource)
-      "core-person-record.prison.contact.updated" -> contactEventReceived(message.fromJson(), eventSource)
+      "core-person-record.prison.contact.created" -> corePersonContactService.contactCreated(message.fromJson(), eventSource)
+      "core-person-record.prison.contact.updated" -> corePersonContactService.contactUpdated(message.fromJson(), eventSource)
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }
   }
-
-  private fun contactEventReceived(event: ContactEvent, eventSource: EventSource?) {
-    log.info(
-      "Received {} event for prisoner {} with cprContactId {} from source {}",
-      event.eventType,
-      event.personReference.identifiers.firstOrNull { it.type == "prisonNumber" }?.value,
-      event.additionalInformation.cprContactId,
-      eventSource?.value,
-    )
-  }
 }
-
-data class ContactEvent(
-  val eventType: String,
-  val additionalInformation: CprContactInfo,
-  val personReference: PersonReferenceList,
-)
-
-data class CprContactInfo(
-  val cprContactId: UUID,
-)
 
 data class SQSMessage(
   @field:JsonProperty("MessageAttributes")
