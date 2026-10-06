@@ -128,7 +128,7 @@ class AgencyNomisApiServiceTest {
       apiService.createAgencyEmail("SHEFCC", request)
 
       mockServer.verify(
-        postRequestedFor(urlPathEqualTo("/agency/SHEFCC/email"))
+        postRequestedFor(urlPathEqualTo("/agency/SHEFCC/emails"))
           .withRequestBody(equalToJson("""{"emailAddress":"${request.emailAddress}"}""")),
       )
     }
