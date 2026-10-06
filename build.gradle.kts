@@ -33,7 +33,7 @@ dependencies {
   implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:3.1.1")
   implementation("org.springframework.boot:spring-boot-jackson2")
 
-  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:7.4.1")
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:7.5.0-beta")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk9")
