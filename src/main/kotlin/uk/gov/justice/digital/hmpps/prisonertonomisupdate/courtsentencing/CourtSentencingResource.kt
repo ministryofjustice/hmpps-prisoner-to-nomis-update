@@ -499,6 +499,40 @@ class CourtSentencingResource(
     forceClone = forceClone,
     forcePreventClone = forcePreventClone,
   )
+
+  @PutMapping("/prisoners/{offenderNo}/court-sentencing/dps-court-case/{courtCaseId}/case-references/repair")
+  @Operation(
+    summary = "Resynchronises case references for a court case from DPS to NOMIS",
+    description = "Used when case references need resynchronising to NOMIS which failed previously, so emergency use only. Requires ROLE_PRISONER_TO_NOMIS__UPDATE__RW",
+    responses = [
+      ApiResponse(
+        responseCode = "200",
+        description = "repair successful",
+      ),
+      ApiResponse(
+        responseCode = "401",
+        description = "Unauthorized to access this endpoint",
+      ),
+      ApiResponse(
+        responseCode = "403",
+        description = "Incorrect permissions to call endpoint",
+      ),
+      ApiResponse(
+        responseCode = "404",
+        description = "Either no mapping found for case or case not found in DPS",
+      ),
+    ],
+  )
+  suspend fun repairCaseReferencesInNomis(
+    @PathVariable
+    offenderNo: String,
+    @Schema(description = "The DPS ID of the court case to have its case references re-synced to NOMIS")
+    @PathVariable
+    courtCaseId: String,
+  ) = courtSentencingRepairService.resynchroniseCaseReferencesToNomis(
+    offenderNo = offenderNo,
+    courtCaseId = courtCaseId,
+  )
 }
 
 @Schema(description = "Court Charge Request")
