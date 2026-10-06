@@ -28,6 +28,7 @@ import tools.jackson.module.kotlin.readValue
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.NOMIS_BOOKING_ID
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.CaseReferenceLegacyData
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.CourtCaseLegacyData
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCourtCase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.ReconciliationCharge
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.ReconciliationCourtAppearance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.ReconciliationCourtCase
@@ -1956,6 +1957,128 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
             .withRequestBody(matchingJsonPath("forcePreventClone", equalTo("true")))
             .withRequestBody(matchingJsonPath("futureAppearance", equalTo("false"))),
         )
+      }
+    }
+  }
+
+  @DisplayName("PUT /prisoners/{offenderNo}/court-sentencing/dps-court-case/{courtCaseId}/case-references/repair")
+  @Nested
+  inner class CaseReferencesRepair {
+
+    @Nested
+    inner class Security {
+      @Test
+      fun `access forbidden when no role`() {
+        webTestClient.put().uri("/prisoners/$OFFENDER_NO/court-sentencing/dps-court-case/$DPS_COURT_CASE_ID/case-references/repair")
+          .headers(setAuthorisation(roles = listOf()))
+          .contentType(MediaType.APPLICATION_JSON)
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access forbidden with wrong role`() {
+        webTestClient.put().uri("/prisoners/$OFFENDER_NO/court-sentencing/dps-court-case/$DPS_COURT_CASE_ID/case-references/repair")
+          .headers(setAuthorisation(roles = listOf("BANANAS")))
+          .contentType(MediaType.APPLICATION_JSON)
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access unauthorised with no auth token`() {
+        webTestClient.put().uri("/prisoners/$OFFENDER_NO/court-sentencing/dps-court-case/$DPS_COURT_CASE_ID/case-references/repair")
+          .contentType(MediaType.APPLICATION_JSON)
+          .exchange()
+          .expectStatus().isUnauthorized
+      }
+    }
+
+    @Nested
+    inner class HappyPath {
+
+      @BeforeEach
+      fun setUp() {
+        courtSentencingApi.stubCourtCaseGet(
+          DPS_COURT_CASE_ID,
+          LegacyCourtCase(
+            courtCaseUuid = DPS_COURT_CASE_ID,
+            prisonerId = OFFENDER_NO,
+            courtId = PRISON_LEI,
+            caseReference = CASE_REFERENCE,
+            startDate = LocalDate.of(2024, 1, 1),
+            active = true,
+            caseReferences = listOf(
+              CaseReferenceLegacyData(
+                offenderCaseReference = CASE_REFERENCE,
+                updatedDate = LocalDateTime.of(2024, 1, 1, 10, 10, 0),
+              ),
+            ),
+          ),
+        )
+        courtSentencingMappingApi.stubGetCourtCaseMappingGivenDpsId(
+          id = DPS_COURT_CASE_ID,
+          nomisCourtCaseId = NOMIS_COURT_CASE_ID,
+        )
+        courtSentencingNomisApi.stubCaseReferenceRefresh(
+          offenderNo = OFFENDER_NO,
+          courtCaseId = NOMIS_COURT_CASE_ID,
+        )
+
+        webTestClient.put().uri("/prisoners/$OFFENDER_NO/court-sentencing/dps-court-case/$DPS_COURT_CASE_ID/case-references/repair")
+          .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_TO_NOMIS__UPDATE__RW")))
+          .contentType(MediaType.APPLICATION_JSON)
+          .exchange()
+          .expectStatus().isOk
+      }
+
+      @Test
+      fun `will callback back to court sentencing service to get more details`() {
+        courtSentencingApi.verify(WireMock.getRequestedFor(urlEqualTo("/legacy/court-case/$DPS_COURT_CASE_ID")))
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        verify(telemetryClient).trackEvent(
+          eq("court-sentencing-repair-case-references-refreshed"),
+          check {
+            assertThat(it["dpsCourtCaseId"]).isEqualTo(DPS_COURT_CASE_ID)
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+          },
+          isNull(),
+        )
+
+        verify(telemetryClient).trackEvent(
+          eq("case-references-refreshed-success"),
+          any(),
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will call nomis api to refresh the case references`() {
+        courtSentencingNomisApi.verify(postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/$NOMIS_COURT_CASE_ID/case-identifiers")))
+      }
+    }
+
+    @Nested
+    inner class WhenMappingDoesNotExistForCourtCase {
+
+      @BeforeEach
+      fun setUp() {
+        courtSentencingApi.stubCourtCaseGet(
+          DPS_COURT_CASE_ID,
+          LegacyCourtCase(
+            courtCaseUuid = DPS_COURT_CASE_ID,
+            prisonerId = OFFENDER_NO,
+            courtId = PRISON_LEI,
+            caseReference = CASE_REFERENCE,
+            startDate = LocalDate.of(2024, 1, 1),
+            active = true,
+            caseReferences = emptyList(),
+          ),
+        )
+        courtSentencingMappingApi.stubGetCaseMappingGivenDpsIdWithError(DPS_COURT_CASE_ID, 404)
       }
     }
   }
