@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-09-30.590.1bab121"
+    "version" : "2026-10-05.602.aa3cb89"
   },
   "servers" : [ {
     "url" : "/",
@@ -1592,7 +1592,7 @@
             "items" : {
               "type" : "string",
               "description" : "A CSRA rating value for filtering the prison prisoner list; NO_RATING matches prisoners with no current rating",
-              "enum" : [ "NO_RATING", "STANDARD", "STANDARD_LEGACY", "HIGH", "HIGH_GENERAL", "HIGH_GENERAL_INTERIM", "HIGH_GENERAL_PROVISIONAL", "HIGH_SPECIFIC", "HIGH_SPECIFIC_PROVISIONAL", "MED", "LOW", "PEND" ]
+              "enum" : [ "NO_RATING", "STANDARD", "STANDARD_LEGACY", "HIGH", "HIGH_GENERAL", "HIGH_GENERAL_INTERIM", "HIGH_GENERAL_PROVISIONAL", "HIGH_SPECIFIC", "HIGH_SPECIFIC_PROVISIONAL", "MED", "LOW" ]
             }
           }
         }, {
@@ -3607,11 +3607,11 @@
           },
           "ratings" : {
             "type" : "array",
-            "description" : "The distinct CSRA rating filter values the prisoner has CSRAs of, ordered to match the UI checkbox sequence: HIGH, HIGH_GENERAL, HIGH_GENERAL_INTERIM, HIGH_GENERAL_PROVISIONAL, HIGH_SPECIFIC, HIGH_SPECIFIC_PROVISIONAL, STANDARD, STANDARD_LEGACY, LOW, MED, PEND.",
+            "description" : "The distinct CSRA rating filter values the prisoner has CSRAs of, ordered to match the UI checkbox sequence: HIGH, HIGH_GENERAL, HIGH_GENERAL_INTERIM, HIGH_GENERAL_PROVISIONAL, HIGH_SPECIFIC, HIGH_SPECIFIC_PROVISIONAL, STANDARD, STANDARD_LEGACY, LOW, MED.",
             "items" : {
               "type" : "string",
               "description" : "A CSRA rating value for filtering the prison prisoner list; NO_RATING matches prisoners with no current rating",
-              "enum" : [ "NO_RATING", "STANDARD", "STANDARD_LEGACY", "HIGH", "HIGH_GENERAL", "HIGH_GENERAL_INTERIM", "HIGH_GENERAL_PROVISIONAL", "HIGH_SPECIFIC", "HIGH_SPECIFIC_PROVISIONAL", "MED", "LOW", "PEND" ]
+              "enum" : [ "NO_RATING", "STANDARD", "STANDARD_LEGACY", "HIGH", "HIGH_GENERAL", "HIGH_GENERAL_INTERIM", "HIGH_GENERAL_PROVISIONAL", "HIGH_SPECIFIC", "HIGH_SPECIFIC_PROVISIONAL", "MED", "LOW" ]
             }
           },
           "establishments" : {
@@ -3683,6 +3683,16 @@
             "description" : "The date the final rating was recorded",
             "example" : "2025-10-11"
           },
+          "finalPrisonId" : {
+            "type" : [ "string", "null" ],
+            "description" : "The prison where the final stage was recorded",
+            "example" : "LEI"
+          },
+          "finalPrisonName" : {
+            "type" : [ "string", "null" ],
+            "description" : "The name of the prison where the final stage was recorded, falling back to the id if it cannot be resolved",
+            "example" : "Leeds (HMP)"
+          },
           "provisionalRating" : {
             "type" : [ "string", "null" ],
             "description" : "The provisional rating when the review has not reached a final outcome yet",
@@ -3699,6 +3709,21 @@
             "format" : "date",
             "description" : "The date the provisional rating was recorded",
             "example" : "2025-10-11"
+          },
+          "provisionalPrisonId" : {
+            "type" : [ "string", "null" ],
+            "description" : "The prison where the provisional or interim stage was recorded",
+            "example" : "LEI"
+          },
+          "provisionalPrisonName" : {
+            "type" : [ "string", "null" ],
+            "description" : "The name of the prison where the provisional or interim stage was recorded, falling back to the id if it cannot be resolved",
+            "example" : "Leeds (HMP)"
+          },
+          "interimReviewer" : {
+            "type" : [ "string", "null" ],
+            "description" : "The username of the reviewer who completed the interim stage. Only present for CSRA reviews with an interim stage: interim reviews are the only CSRA history item the UI shows the reviewer for.",
+            "example" : "NQP56Y"
           },
           "closureReason" : {
             "type" : [ "string", "null" ],
