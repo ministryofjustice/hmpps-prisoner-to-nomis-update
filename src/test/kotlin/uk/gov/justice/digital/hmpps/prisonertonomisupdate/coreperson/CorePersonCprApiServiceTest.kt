@@ -66,4 +66,31 @@ class CorePersonCprApiServiceTest {
       assertThat(response.religion.comments).isEqualTo("Updated religion")
     }
   }
+
+  @Nested
+  inner class GetPrisonerContact {
+    private val prisonNumber = "A1234BC"
+    private val cprContactId = "80bbf11f-1ccc-4ad3-a9f1-7c529645b0a1"
+
+    @Test
+    fun `will call the GET prisoner contact endpoint`() = runTest {
+      corePersonCprApi.stubGetPrisonerContact(prisonNumber, cprContactId)
+
+      apiService.getPrisonerContact(prisonNumber, cprContactId)
+
+      corePersonCprApi.verify(
+        getRequestedFor(urlPathEqualTo("/syscon-sync/person/$prisonNumber/contact/$cprContactId")),
+      )
+    }
+
+    @Test
+    fun `will return the prisoner contact`() = runTest {
+      corePersonCprApi.stubGetPrisonerContact(prisonNumber, cprContactId)
+
+      val response = apiService.getPrisonerContact(prisonNumber, cprContactId)
+
+      assertThat(response.prisonNumber).isEqualTo(prisonNumber)
+      assertThat(response.value).isEqualTo("01234567890")
+    }
+  }
 }

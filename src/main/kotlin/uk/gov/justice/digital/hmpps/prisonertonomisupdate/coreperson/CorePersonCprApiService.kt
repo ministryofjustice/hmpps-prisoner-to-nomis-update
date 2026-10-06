@@ -7,6 +7,7 @@ import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.api.PrisonApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.api.SysconSyncApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.DpsPrisonRecord
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonReligionReadResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
@@ -30,5 +31,9 @@ class CorePersonCprApiService(
 
   suspend fun getReligion(prisonNumber: String, cprReligionId: String): PrisonReligionReadResponse = syncApi
     .getPrisonReligion(prisonNumber, cprReligionId)
+    .awaitSingle()
+
+  suspend fun getPrisonerContact(prisonNumber: String, cprContactId: String): PrisonContact = syncApi
+    .getPrisonerContact(prisonNumber, cprContactId)
     .awaitSingle()
 }

@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-10-02.5608.cdb0f81"
+    "version" : "2026-10-06"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -102,6 +102,41 @@
       }
     },
     "/syscon-sync/person/{prisonNumber}/contact/{cprContactId}" : {
+      "get" : {
+        "tags" : [ "Syscon Sync" ],
+        "description" : "Get a prisoner contact record by Prison Number and contact uuid. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
+        "operationId" : "getPrisonerContact",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "cprContactId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonContact"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "api-role" : [ ]
+        } ]
+      },
       "put" : {
         "tags" : [ "Syscon Sync" ],
         "description" : "Update prisoner contact record by Prison Number and contact uuid. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
@@ -1339,7 +1374,7 @@
         "type" : "object",
         "properties" : {
           "nomisContactId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The nomis contact id",
             "example" : 1234
@@ -1381,9 +1416,19 @@
             "type" : [ "string", "null" ],
             "description" : "The contact modify user id",
             "example" : "12345"
+          },
+          "cprAddressId" : {
+            "type" : [ "string", "null" ],
+            "description" : "The CPR address id of the address owning this contact. Will be null is not owned by an address",
+            "example" : "12345"
+          },
+          "prisonNumber" : {
+            "type" : [ "string", "null" ],
+            "description" : "The prison number of person owning this contact. Will be null if not owned by a person but owned by an address instead",
+            "example" : "12345"
           }
         },
-        "required" : [ "createDateTime", "createUserId", "nomisContactId", "type" ]
+        "required" : [ "createDateTime", "createUserId", "type" ]
       },
       "PrisonAddress" : {
         "type" : "object",

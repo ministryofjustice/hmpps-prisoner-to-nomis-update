@@ -69,6 +69,25 @@ fun religionCreatedMessage(prisonNumber: String, cprReligionId: String, source: 
         "SigningCertURL": "https://sns.us-east-1.amazonaws.com/SimpleNotificationService-0000000000000000000000.pem"}      
 """.trimIndent()
 
+fun contactCreatedMessage(prisonNumber: String, cprContactId: String, source: String = "DPS") = contactMessage("core-person-record.prison.contact.created", prisonNumber, cprContactId, source)
+
+fun contactUpdatedMessage(prisonNumber: String, cprContactId: String, source: String = "DPS") = contactMessage("core-person-record.prison.contact.updated", prisonNumber, cprContactId, source)
+
+private fun contactMessage(eventType: String, prisonNumber: String, cprContactId: String, source: String) = """
+      {
+        "Type": "Notification", 
+        "MessageId": "48e8a79a-0f43-4338-bbd4-b0d745f1f8ec", 
+        "Token": null, 
+        "TopicArn": "arn:aws:sns:eu-west-2:000000000000:hmpps-domain-events", 
+        "Message": "{\"eventType\":\"$eventType\", \"additionalInformation\": { \"cprContactId\":\"$cprContactId\" },\"personReference\": {\"identifiers\":[{\"type\":\"prisonNumber\", \"value\":\"$prisonNumber\"}]}}",
+        "MessageAttributes": { "eventSource": {"Type": "String", "Value": "$source"} },
+        "SubscribeURL": null, 
+        "Timestamp": "2021-03-05T11:23:56.031Z", 
+        "SignatureVersion": "1", 
+        "Signature": "EXAMPLEpH+..", 
+        "SigningCertURL": "https://sns.us-east-1.amazonaws.com/SimpleNotificationService-0000000000000000000000.pem"}      
+""".trimIndent()
+
 // merge events are raised without an event source, so by default the MessageAttributes contain no eventSource
 fun corePersonMergeMessage(prisonNumber: String, source: String? = null) = """
       {
