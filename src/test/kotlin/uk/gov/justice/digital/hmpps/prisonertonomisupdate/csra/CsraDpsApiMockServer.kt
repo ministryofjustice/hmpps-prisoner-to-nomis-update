@@ -110,4 +110,5 @@ fun dpsCsra(
   prisonId = "MDI",
   finalResult = finalResult,
   finalResultDate = LocalDate.parse("2026-01-03"),
+  nextReviewDate = LocalDate.parse("2026-01-04"),
 )
