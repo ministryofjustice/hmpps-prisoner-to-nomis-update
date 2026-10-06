@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-01.857.d2239ff"
+    "version" : "2026-10-06.865.4a41a82"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -5557,60 +5557,6 @@
         }
       }
     },
-    "/mapping/core-person/phone" : {
-      "post" : {
-        "tags" : [ "core-person-mapping-resource" ],
-        "summary" : "Creates core person phone mappings for synchronisation",
-        "description" : "Creates core person phone mappings for synchronisation between NOMIS ids and CPR ids. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "createCorePersonPhoneMapping",
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/CorePersonPhoneMappingDto"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "201" : {
-            "description" : "Mapping created",
-            "content" : { }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Access forbidden for this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "409" : {
-            "description" : "Indicates a duplicate mapping has been rejected. If Error code = 1409 the body will return a DuplicateErrorResponse",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/DuplicateMappingErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/mapping/core-person/migrate" : {
       "post" : {
         "tags" : [ "core-person-mapping-resource" ],
@@ -5719,17 +5665,17 @@
         }
       }
     },
-    "/mapping/core-person/email" : {
+    "/mapping/core-person/contact" : {
       "post" : {
         "tags" : [ "core-person-mapping-resource" ],
-        "summary" : "Creates core person email mappings for synchronisation",
-        "description" : "Creates core person email mappings for synchronisation between NOMIS ids and CPR ids. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "createCorePersonEmailMapping",
+        "summary" : "Creates core person contact mappings for synchronisation",
+        "description" : "Creates core person contact mappings for synchronisation between NOMIS ids and CPR ids. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "createCorePersonContactMapping",
         "requestBody" : {
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/CorePersonEmailAddressMappingDto"
+                "$ref" : "#/components/schemas/CorePersonContactMappingDto"
               }
             }
           },
@@ -16991,176 +16937,6 @@
         }
       }
     },
-    "/mapping/core-person/phone/nomis-phone-id/{nomisPhoneId}" : {
-      "get" : {
-        "tags" : [ "core-person-mapping-resource" ],
-        "summary" : "Get a core person phone mapping by nomis phone Id",
-        "description" : "Retrieves the coreperson phone mapping by NOMIS Phone Id. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getCorePersonPhoneMappingByNomisId",
-        "parameters" : [ {
-          "name" : "nomisPhoneId",
-          "in" : "path",
-          "description" : "NOMIS phone id",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "NOMIS phone id",
-            "example" : 12345
-          },
-          "example" : 12345
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Core Person phone mapping data",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/CorePersonPhoneMappingDto"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Access this endpoint is forbidden",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Id does not exist in mapping table",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete" : {
-        "tags" : [ "core-person-mapping-resource" ],
-        "summary" : "Delete core person phone mapping by nomis phone Id",
-        "description" : "Delete the core person phone mapping by NOMIS Phone Id. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteCorePersonPhoneMappingByNomisId",
-        "parameters" : [ {
-          "name" : "nomisPhoneId",
-          "in" : "path",
-          "description" : "NOMIS phone id",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "NOMIS phone id",
-            "example" : 12345
-          },
-          "example" : 12345
-        } ],
-        "responses" : {
-          "204" : {
-            "description" : "Core person phone mapping deleted",
-            "content" : { }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Access this endpoint is forbidden",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/mapping/core-person/phone/cpr-phone-id/{cprPhoneId}" : {
-      "get" : {
-        "tags" : [ "core-person-mapping-resource" ],
-        "summary" : "Get core person phone mapping by cpr phone Id",
-        "description" : "Retrieves the core person phone mapping by CPR Phone Id. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getPhoneMappingByCprId",
-        "parameters" : [ {
-          "name" : "cprPhoneId",
-          "in" : "path",
-          "description" : "CPR phone id",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "description" : "CPR phone id",
-            "example" : 12345
-          },
-          "example" : 12345
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Core Person phone mapping data",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/CorePersonPhoneMappingDto"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Access this endpoint is forbidden",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Id does not exist in mapping table",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/mapping/core-person/person/nomis-prison-number/{nomisPrisonNumber}" : {
       "get" : {
         "tags" : [ "core-person-mapping-resource" ],
@@ -17538,32 +17314,44 @@
         }
       }
     },
-    "/mapping/core-person/email/nomis-email-address-id/{nomisEmailAddressId}" : {
+    "/mapping/core-person/contact/nomis-contact-id/{nomisContactId}/type/{nomisContactType}" : {
       "get" : {
         "tags" : [ "core-person-mapping-resource" ],
-        "summary" : "Get a core person email mapping by nomis email address Id",
-        "description" : "Retrieves the core person email mapping by NOMIS Email/Internet Address Id. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getCorePersonEmailMappingByNomisId",
+        "summary" : "Get a core person contact mapping by nomis contact Id and contact type",
+        "description" : "Retrieves the core person contact mapping by NOMIS Contact Id and contact type. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "getCorePersonContactMappingByNomisId",
         "parameters" : [ {
-          "name" : "nomisEmailAddressId",
+          "name" : "nomisContactId",
           "in" : "path",
-          "description" : "NOMIS email address id",
+          "description" : "NOMIS contact id",
           "required" : true,
           "schema" : {
             "type" : "integer",
             "format" : "int64",
-            "description" : "NOMIS email address id",
+            "description" : "NOMIS contact id",
             "example" : 12345
           },
           "example" : 12345
+        }, {
+          "name" : "nomisContactType",
+          "in" : "path",
+          "description" : "NOMIS contact type",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "NOMIS contact type",
+            "enum" : [ "PHONE", "EMAIL" ],
+            "example" : "PHONE"
+          },
+          "example" : "PHONE"
         } ],
         "responses" : {
           "200" : {
-            "description" : "Person email mapping data",
+            "description" : "Core Person contact mapping data",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/CorePersonEmailAddressMappingDto"
+                  "$ref" : "#/components/schemas/CorePersonContactMappingDto"
                 }
               }
             }
@@ -17602,25 +17390,37 @@
       },
       "delete" : {
         "tags" : [ "core-person-mapping-resource" ],
-        "summary" : "Delete core person email mapping by nomis email address Id",
-        "description" : "Delete the core person email mapping by NOMIS Email/Internet Address Id. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteCorePersonEmailMappingByNomisId",
+        "summary" : "Delete core person contact mapping by nomis contact Id and contact type",
+        "description" : "Delete the core person contact mapping by NOMIS Contact Id and contact type. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "deleteCorePersonContactMappingByNomisId",
         "parameters" : [ {
-          "name" : "nomisEmailAddressId",
+          "name" : "nomisContactId",
           "in" : "path",
-          "description" : "NOMIS email address id",
+          "description" : "NOMIS contact id",
           "required" : true,
           "schema" : {
             "type" : "integer",
             "format" : "int64",
-            "description" : "NOMIS email address id",
+            "description" : "NOMIS contact id",
             "example" : 12345
           },
           "example" : 12345
+        }, {
+          "name" : "nomisContactType",
+          "in" : "path",
+          "description" : "NOMIS contact type",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "NOMIS contact type",
+            "enum" : [ "PHONE", "EMAIL" ],
+            "example" : "PHONE"
+          },
+          "example" : "PHONE"
         } ],
         "responses" : {
           "204" : {
-            "description" : "Core person email mapping deleted",
+            "description" : "Core person contact mapping deleted",
             "content" : { }
           },
           "401" : {
@@ -17646,31 +17446,31 @@
         }
       }
     },
-    "/mapping/core-person/email/cpr-email-address-id/{cprEmailAddressId}" : {
+    "/mapping/core-person/contact/cpr-contact-id/{cprContactId}" : {
       "get" : {
         "tags" : [ "core-person-mapping-resource" ],
-        "summary" : "Get a core person email mapping by cpr email address Id",
-        "description" : "Retrieves the core person email mapping by CPR Email Address Id. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getCorePersonEmailMappingByDpsId",
+        "summary" : "Get a core person contact mapping by cpr contact Id",
+        "description" : "Retrieves the core person contact mapping by CPR Contact Id. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "getCorePersonContactMappingByCprId",
         "parameters" : [ {
-          "name" : "cprEmailAddressId",
+          "name" : "cprContactId",
           "in" : "path",
-          "description" : "CPR email address id",
+          "description" : "CPR contact id",
           "required" : true,
           "schema" : {
             "type" : "string",
-            "description" : "CPR email address id",
+            "description" : "CPR contact id",
             "example" : 12345
           },
           "example" : 12345
         } ],
         "responses" : {
           "200" : {
-            "description" : "Person Email mapping data",
+            "description" : "Core Person contact mapping data",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/CorePersonEmailAddressMappingDto"
+                  "$ref" : "#/components/schemas/CorePersonContactMappingDto"
                 }
               }
             }
@@ -26687,7 +26487,7 @@
         },
         "required" : [ "addressUsageCode", "cprId", "mappingType", "nomisId", "nomisPrisonNumber" ]
       },
-      "CorePersonEmailAddressMappingDto" : {
+      "CorePersonContactMappingDto" : {
         "type" : "object",
         "properties" : {
           "cprId" : {
@@ -26698,6 +26498,11 @@
             "type" : "integer",
             "format" : "int64",
             "description" : "NOMIS id"
+          },
+          "nomisContactType" : {
+            "type" : "string",
+            "description" : "NOMIS contact type",
+            "enum" : [ "PHONE", "EMAIL" ]
           },
           "nomisPrisonNumber" : {
             "type" : "string",
@@ -26719,7 +26524,7 @@
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
         },
-        "required" : [ "cprId", "mappingType", "nomisId", "nomisPrisonNumber" ]
+        "required" : [ "cprId", "mappingType", "nomisContactType", "nomisId", "nomisPrisonNumber" ]
       },
       "CorePersonMappingIdDto" : {
         "type" : "object",
@@ -26766,18 +26571,11 @@
               "$ref" : "#/components/schemas/CorePersonAddressMappingDto"
             }
           },
-          "phoneNumbers" : {
+          "contacts" : {
             "type" : "array",
-            "description" : "Core Person phone numbers mappings",
+            "description" : "Core Person contact mappings",
             "items" : {
-              "$ref" : "#/components/schemas/CorePersonPhoneMappingDto"
-            }
-          },
-          "emailAddresses" : {
-            "type" : "array",
-            "description" : "Core Person email addresses mappings",
-            "items" : {
-              "$ref" : "#/components/schemas/CorePersonEmailAddressMappingDto"
+              "$ref" : "#/components/schemas/CorePersonContactMappingDto"
             }
           },
           "addressUsages" : {
@@ -26788,41 +26586,7 @@
             }
           }
         },
-        "required" : [ "addressUsages", "addresses", "emailAddresses", "mappingType", "personMapping", "phoneNumbers" ]
-      },
-      "CorePersonPhoneMappingDto" : {
-        "type" : "object",
-        "properties" : {
-          "cprId" : {
-            "type" : "string",
-            "description" : "CPR id"
-          },
-          "nomisId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "NOMIS id"
-          },
-          "nomisPrisonNumber" : {
-            "type" : "string",
-            "description" : "NOMIS prison number aka Offender number"
-          },
-          "label" : {
-            "type" : [ "string", "null" ],
-            "description" : "Label (a timestamp for migrated ids)"
-          },
-          "mappingType" : {
-            "type" : "string",
-            "description" : "Mapping type",
-            "enum" : [ "MIGRATED", "CPR_CREATED", "NOMIS_CREATED" ]
-          },
-          "whenCreated" : {
-            "type" : "string",
-            "description" : "Date time the mapping was created",
-            "example" : "2021-07-05T10:35:17",
-            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
-          }
-        },
-        "required" : [ "cprId", "mappingType", "nomisId", "nomisPrisonNumber" ]
+        "required" : [ "addressUsages", "addresses", "contacts", "mappingType", "personMapping" ]
       },
       "ProfileMappingIdDto" : {
         "type" : "object",

@@ -20,6 +20,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.json.JsonTest
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.religion.ReligionService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.contactCreatedMessage
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.contactUpdatedMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.corePersonMergeMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.religionCreatedMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.EventFeatureSwitch
@@ -62,6 +64,26 @@ internal class CorePersonDomainEventsListenerTest(@Autowired private val jsonMap
           },
           eq(EventSource(value = "core-person-record", type = "String")),
         )
+      }
+
+      @Test
+      internal fun `will handle contact created event without calling other services`() = runTest {
+        listener.onMessage(
+          rawMessage = contactCreatedMessage("A1234BC", "11111111-2222-3333-4444-555555555555", source = "core-person-record"),
+        ).join()
+
+        verifyNoInteractions(religionService)
+        verifyNoInteractions(corePersonMergeService)
+      }
+
+      @Test
+      internal fun `will handle contact updated event without calling other services`() = runTest {
+        listener.onMessage(
+          rawMessage = contactUpdatedMessage("A1234BC", "11111111-2222-3333-4444-555555555555", source = "core-person-record"),
+        ).join()
+
+        verifyNoInteractions(religionService)
+        verifyNoInteractions(corePersonMergeService)
       }
 
       @Test

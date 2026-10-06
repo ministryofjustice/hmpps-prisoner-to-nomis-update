@@ -46,7 +46,9 @@ hmpps.sqs:
       subscribeTopicId: domainevents
       subscribeFilter: >-
         { "eventType":[
-        "core-person-record.prison.religion.created"]}
+        "core-person-record.prison.religion.created",
+        "core-person-record.prison.contact.created",
+        "core-person-record.prison.contact.updated"]}
       dlqMaxReceiveCount: 1
       visibilityTimeout: 120
     visit:
