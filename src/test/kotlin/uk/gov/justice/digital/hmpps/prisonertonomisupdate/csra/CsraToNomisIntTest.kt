@@ -93,6 +93,7 @@ class CsraToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBodyJsonPath("$.evaluationDate", "2026-01-03")
               .withRequestBodyJsonPath("$.calculatedLevel", "STANDARD")
               .withRequestBodyJsonPath("$.status", "A")
+              .withRequestBodyJsonPath("$.nextReviewDate", "2026-01-04")
               .withRequestBodyJsonPath("$.createdBy", "ME"),
           )
         }
@@ -271,7 +272,8 @@ class CsraToNomisIntTest : SqsIntegrationTestBase() {
             .withRequestBodyJsonPath("$.reviewLevel", "STANDARD")
             .withRequestBodyJsonPath("$.status", "A")
             .withRequestBodyJsonPath("$.evaluationDate", "2026-01-03")
-            .withRequestBodyJsonPath("$.evaluationResultCode", "APP"),
+            .withRequestBodyJsonPath("$.evaluationResultCode", "APP")
+            .withRequestBodyJsonPath("$.nextReviewDate", "2026-01-04"),
         )
       }
 

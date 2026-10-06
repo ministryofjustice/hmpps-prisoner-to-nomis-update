@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-05.602.aa3cb89"
+    "version" : "2026-10-06.604.052cbbc"
   },
   "servers" : [ {
     "url" : "/",
@@ -102,6 +102,80 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/PurgeQueueResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/nomis-sync/move/from/{fromPrisonerNumber}/to/{toPrisonerNumber}" : {
+      "put" : {
+        "tags" : [ "NOMIS Migration & Sync" ],
+        "summary" : "Move CSRA reviews from one prisoner to another",
+        "description" : "Moves CSRA reviews from one prisoner to another. Ignores any reviews already moved. Used to implement the booking.moved event. Requires role PRISONER_CSRA__SYNC__RW.",
+        "operationId" : "move",
+        "parameters" : [ {
+          "name" : "fromPrisonerNumber",
+          "in" : "path",
+          "description" : "The prisoner number (NOMIS offender number) to move from",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "The prisoner number (NOMIS offender number) to move from",
+            "example" : "A1234BC"
+          },
+          "example" : "A1234BC"
+        }, {
+          "name" : "toPrisonerNumber",
+          "in" : "path",
+          "description" : "The prisoner number (NOMIS offender number) to move to",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "The prisoner number (NOMIS offender number) to move to",
+            "example" : "A1234BC"
+          },
+          "example" : "A1234BC"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "array",
+                "description" : "List of CSRA review UUIDs to move",
+                "example" : [ "550e8400-e29b-41d4-a716-446655440000" ],
+                "items" : {
+                  "type" : "string",
+                  "format" : "uuid",
+                  "description" : "List of CSRA review UUIDs to move",
+                  "example" : [ "550e8400-e29b-41d4-a716-446655440000" ]
+                }
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "CSRA reviews moved"
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the PRISONER_CSRA__SYNC__RW role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -1927,6 +2001,28 @@
         },
         "required" : [ "messagesFoundCount" ]
       },
+      "ErrorResponse" : {
+        "type" : "object",
+        "properties" : {
+          "status" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "errorCode" : {
+            "type" : [ "string", "null" ]
+          },
+          "userMessage" : {
+            "type" : [ "string", "null" ]
+          },
+          "developerMessage" : {
+            "type" : [ "string", "null" ]
+          },
+          "moreInfo" : {
+            "type" : [ "string", "null" ]
+          }
+        },
+        "required" : [ "status" ]
+      },
       "CsraCurrentRating" : {
         "type" : "object",
         "description" : "A prisoner's current CSRA rating and its supporting detail",
@@ -2136,28 +2232,6 @@
           }
         },
         "required" : [ "category" ]
-      },
-      "ErrorResponse" : {
-        "type" : "object",
-        "properties" : {
-          "status" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "errorCode" : {
-            "type" : [ "string", "null" ]
-          },
-          "userMessage" : {
-            "type" : [ "string", "null" ]
-          },
-          "developerMessage" : {
-            "type" : [ "string", "null" ]
-          },
-          "moreInfo" : {
-            "type" : [ "string", "null" ]
-          }
-        },
-        "required" : [ "status" ]
       },
       "CsraReviewEvidenceSourceSelection" : {
         "type" : "object",
@@ -3400,6 +3474,12 @@
             "format" : "date",
             "description" : "The date the final result was given",
             "example" : "2025-11-24"
+          },
+          "nextReviewDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "The next review date this review set. A DPS review sets one only for a high-risk rating; a review from NOMIS carries whatever NOMIS recorded, which may be set whatever the rating. Null where none was set, or for a NOMIS review migrated before the date was stored.",
+            "example" : "2026-11-24"
           },
           "createdAt" : {
             "type" : "string",
