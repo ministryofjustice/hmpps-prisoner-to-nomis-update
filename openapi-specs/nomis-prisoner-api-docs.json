@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-05.2154.004875c"
+    "version" : "2026-10-05.2158.54f3572"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -9321,7 +9321,169 @@
         }
       }
     },
-    "/agency/{agencyId}/email" : {
+    "/agency/{agencyId}/phones" : {
+      "put" : {
+        "tags" : [ "agency-resource" ],
+        "summary" : "Refreshes the list of agency phone numbers",
+        "description" : "Replaces the existing list of agency-level phone numbers for an agency with the list supplied. Where possible, existing phone numbers are updated in place so their ids are preserved; any extra existing phone numbers are removed and any extra new ones are created. If a requested phone number already exists against one of the agency's addresses it is left unchanged there and is not duplicated at the agency level. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "updateAgencyPhoneNumbers",
+        "parameters" : [ {
+          "name" : "agencyId",
+          "in" : "path",
+          "description" : "Agency id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Agency id",
+            "example" : "WWI"
+          },
+          "example" : "WWI"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateAgencyPhoneNumbersRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Agency phone numbers updated",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AgencyPhoneNumbersResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "The request contains bad data, for example the phone type code does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Agency not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [ "agency-resource" ],
+        "summary" : "Create an agency phone number",
+        "description" : "Creates a new phone number for an agency, stored at the agency level (not the address level). Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "createAgencyPhone",
+        "parameters" : [ {
+          "name" : "agencyId",
+          "in" : "path",
+          "description" : "Agency id ",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Agency id ",
+            "example" : "WWI"
+          },
+          "example" : "WWI"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateAgencyPhoneNumberRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Agency phone number created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CreateAgencyPhoneNumberResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "The request contains bad data, for example the phone type code does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Agency not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agency/{agencyId}/emails" : {
       "put" : {
         "tags" : [ "agency-resource" ],
         "summary" : "Refreshes the list of agency email addresses",
@@ -15588,88 +15750,6 @@
           },
           "409" : {
             "description" : "Code already exits",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/agency/{agencyId}/phone" : {
-      "post" : {
-        "tags" : [ "agency-resource" ],
-        "summary" : "Create an agency phone number",
-        "description" : "Creates a new phone number for an agency, stored at the agency level (not the address level). Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-        "operationId" : "createAgencyPhone",
-        "parameters" : [ {
-          "name" : "agencyId",
-          "in" : "path",
-          "description" : "Agency id ",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "description" : "Agency id ",
-            "example" : "WWI"
-          },
-          "example" : "WWI"
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/CreateAgencyPhoneNumberRequest"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "201" : {
-            "description" : "Agency phone number created",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/CreateAgencyPhoneNumberResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "The request contains bad data, for example the phone type code does not exist",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Agency not found",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -33633,6 +33713,80 @@
         },
         "required" : [ "description" ]
       },
+      "AgencyPhoneNumber" : {
+        "type" : "object",
+        "description" : "The data held in NOMIS about a phone number",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Unique NOMIS Id of number"
+          },
+          "number" : {
+            "type" : "string",
+            "description" : "The number"
+          },
+          "extension" : {
+            "type" : [ "string", "null" ],
+            "description" : "Extension"
+          },
+          "type" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "Phone type"
+          }
+        },
+        "required" : [ "id", "number", "type" ]
+      },
+      "AgencyPhoneNumbersResponse" : {
+        "type" : "object",
+        "description" : "A response to refreshing the list of phone numbers for an agency",
+        "properties" : {
+          "phoneNumbers" : {
+            "type" : "array",
+            "description" : "The list of agency-level phone numbers now held for the agency",
+            "items" : {
+              "$ref" : "#/components/schemas/AgencyPhoneNumber"
+            }
+          }
+        },
+        "required" : [ "phoneNumbers" ]
+      },
+      "UpdateAgencyPhoneNumber" : {
+        "type" : "object",
+        "description" : "A phone number to be held against an agency",
+        "properties" : {
+          "number" : {
+            "type" : "string",
+            "description" : "The number",
+            "example" : "0114 555 555"
+          },
+          "extension" : {
+            "type" : [ "string", "null" ],
+            "description" : "Extension",
+            "example" : "x432"
+          },
+          "typeCode" : {
+            "type" : "string",
+            "description" : "Phone type code",
+            "example" : "BUS"
+          }
+        },
+        "required" : [ "number", "typeCode" ]
+      },
+      "UpdateAgencyPhoneNumbersRequest" : {
+        "type" : "object",
+        "description" : "A request to refresh and replace the list of agency-level phone numbers for an agency",
+        "properties" : {
+          "phoneNumbers" : {
+            "type" : "array",
+            "description" : "The complete list of phone numbers to hold against the agency, replacing any existing agency-level list. Any number that already exists against one of the agency's addresses will be left unchanged there and excluded from the agency-level list",
+            "items" : {
+              "$ref" : "#/components/schemas/UpdateAgencyPhoneNumber"
+            }
+          }
+        },
+        "required" : [ "phoneNumbers" ]
+      },
       "AgencyEmailAddress" : {
         "type" : "object",
         "description" : "The data held in NOMIS about an email address",
@@ -45424,10 +45578,6 @@
             "type" : "integer",
             "format" : "int64"
           },
-          "txnEntryDate" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
           "txnEntryDesc" : {
             "type" : [ "string", "null" ]
           },
@@ -45436,6 +45586,10 @@
           },
           "txnEntryAmount" : {
             "type" : "number"
+          },
+          "txnEntryDate" : {
+            "type" : "string",
+            "format" : "date-time"
           },
           "txnEntrySeq" : {
             "type" : "integer",
@@ -47026,30 +47180,6 @@
           }
         },
         "required" : [ "id", "mailAddress", "phoneNumbers", "primaryAddress", "validatedPAF" ]
-      },
-      "AgencyPhoneNumber" : {
-        "type" : "object",
-        "description" : "The data held in NOMIS about a phone number",
-        "properties" : {
-          "id" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Unique NOMIS Id of number"
-          },
-          "number" : {
-            "type" : "string",
-            "description" : "The number"
-          },
-          "extension" : {
-            "type" : [ "string", "null" ],
-            "description" : "Extension"
-          },
-          "type" : {
-            "$ref" : "#/components/schemas/CodeDescription",
-            "description" : "Phone type"
-          }
-        },
-        "required" : [ "id", "number", "type" ]
       },
       "AgencyResponse" : {
         "type" : "object",

@@ -141,7 +141,7 @@ class AgencyNomisApiMockServer(private val jsonMapper: JsonMapper) {
     response: CreateAgencyEmailAddressResponse = createAgencyEmailResponse(),
   ) {
     nomisApi.stubFor(
-      post(urlPathEqualTo("/agency/$agencyId/email")).willReturn(
+      post(urlPathEqualTo("/agency/$agencyId/emails")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.CREATED.value())
