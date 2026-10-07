@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-05.2618.b343ab2"
+    "version" : "2026-10-06.2629.db3f052"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -3282,6 +3282,81 @@
         }
       }
     },
+    "/hmcts-court-data/hearing-autopopulate-eligibility" : {
+      "post" : {
+        "tags" : [ "hmcts-court-data-controller" ],
+        "summary" : "Is the hearing eligible for autopopulation",
+        "description" : "This endpoint will retrieve hmcts hearing and check if its eligible for the autopopulate journey",
+        "operationId" : "areHmctsHearingsEligibleForAutopopulate",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "array",
+                "items" : {
+                  "$ref" : "#/components/schemas/HmctsHearingIdPair"
+                }
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Returns eligibility details",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/HmctsHearingAutopopulateEligibility"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/HmctsHearingAutopopulateEligibility"
+                  }
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/HmctsHearingAutopopulateEligibility"
+                  }
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not found if no court case at uuid",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/HmctsHearingAutopopulateEligibility"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/event-admin/republish" : {
       "post" : {
         "tags" : [ "event-admin-controller" ],
@@ -5545,6 +5620,14 @@
           "schema" : {
             "type" : "string"
           }
+        }, {
+          "name" : "bookingId",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : ""
+          }
         } ],
         "responses" : {
           "200" : {
@@ -7355,7 +7438,7 @@
             "uniqueItems" : true
           }
         },
-        "required" : [ "eventType", "prisonerId" ]
+        "required" : [ "eventType", "isBreach", "prisonerId" ]
       },
       "LegacyLinkCase" : {
         "type" : "object",
@@ -7457,7 +7540,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:41.027378685"
+            "example" : "07:44:50.685007577"
           },
           "outcomeDispositionCode" : {
             "type" : [ "string", "null" ]
@@ -7836,7 +7919,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:41.027378685"
+            "example" : "07:44:50.685007577"
           },
           "courtCode" : {
             "type" : "string"
@@ -9510,6 +9593,53 @@
         },
         "required" : [ "courtCaseUuid", "lifetimeUuid", "prisonerId" ]
       },
+      "HmctsHearingIdPair" : {
+        "type" : "object",
+        "properties" : {
+          "prisonerNumber" : {
+            "type" : "string"
+          },
+          "hearingId" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        },
+        "required" : [ "hearingId", "prisonerNumber" ]
+      },
+      "HmctsAutopopulateFeature" : {
+        "type" : "object",
+        "properties" : {
+          "type" : {
+            "type" : "string",
+            "enum" : [ "MULTIPLE_CASE_REFERENCES", "REMAND_WARRANT", "SENTENCING_WARRANT", "NEW_REMAND_APPEARANCE_ON_EXISTING_CASE", "NEW_SENTENCING_APPEARANCE_ON_EXISTING_CASE" ]
+          },
+          "enabled" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "enabled", "type" ]
+      },
+      "HmctsHearingAutopopulateEligibility" : {
+        "type" : "object",
+        "properties" : {
+          "features" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/HmctsAutopopulateFeature"
+            }
+          },
+          "existingCaseIdentifier" : {
+            "type" : [ "string", "null" ]
+          },
+          "hasBeenCompleted" : {
+            "type" : "boolean"
+          },
+          "hasWarrantAndPcr" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "features", "hasBeenCompleted", "hasWarrantAndPcr" ]
+      },
       "RepublishEvents" : {
         "type" : "object",
         "properties" : {
@@ -10797,7 +10927,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:41.027378685"
+            "example" : "07:44:50.685007577"
           },
           "courtCode" : {
             "type" : "string"
@@ -11489,7 +11619,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:44:41.027378685"
+            "example" : "07:44:50.685007577"
           },
           "nomisOutcomeCode" : {
             "type" : [ "string", "null" ]
@@ -11568,7 +11698,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:41.027378685"
+            "example" : "07:44:50.685007577"
           },
           "courtId" : {
             "type" : "string"
@@ -11720,7 +11850,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:44:41.027378685"
+            "example" : "07:44:50.685007577"
           },
           "charges" : {
             "type" : "array",
@@ -11757,7 +11887,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:41.027378685"
+            "example" : "07:44:50.685007577"
           },
           "courtId" : {
             "type" : "string"
@@ -12353,7 +12483,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:41.027378685"
+            "example" : "07:44:50.685007577"
           },
           "courtCode" : {
             "type" : [ "string", "null" ]
