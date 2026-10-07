@@ -10,7 +10,7 @@ import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.contact.CorePersonContactService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.religion.ReligionService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.EventFeatureSwitch
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.DomainEventListenerNoMapping
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.DomainEventListener
 import java.util.concurrent.CompletableFuture
 
 @Service
@@ -20,8 +20,10 @@ class CorePersonDomainEventListener(
   private val religionService: ReligionService,
   private val corePersonMergeService: CorePersonMergeService,
   private val corePersonContactService: CorePersonContactService,
+  corePersonRetryService: CorePersonRetryService,
   telemetryClient: TelemetryClient,
-) : DomainEventListenerNoMapping(
+) : DomainEventListener(
+  service = corePersonRetryService,
   jsonMapper = jsonMapper,
   eventFeatureSwitch = eventFeatureSwitch,
   telemetryClient = telemetryClient,

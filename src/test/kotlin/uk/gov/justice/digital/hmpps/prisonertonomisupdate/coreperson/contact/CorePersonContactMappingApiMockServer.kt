@@ -6,10 +6,12 @@ import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
+import com.github.tomakehurst.wiremock.stubbing.Scenario
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CorePersonContactMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 
 @Component
@@ -31,6 +33,30 @@ class CorePersonContactMappingApiMockServer(private val jsonMapper: JsonMapper) 
   fun stubCreateContactMapping() {
     mappingServer.stubFor(
       post(urlEqualTo("/mapping/core-person/contact"))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.CREATED.value()),
+        ),
+    )
+  }
+
+  fun stubCreateContactMappingFollowedBySuccess(status: HttpStatus = HttpStatus.INTERNAL_SERVER_ERROR) {
+    mappingServer.stubFor(
+      post(urlEqualTo("/mapping/core-person/contact"))
+        .inScenario("Retry Mapping Core Person Contact Scenario")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(status.value())
+            .withBody(jsonMapper.writeValueAsString(ErrorResponse(status = status.value()))),
+        ).willSetStateTo("Cause Mapping Core Person Contact Success"),
+    )
+    mappingServer.stubFor(
+      post(urlEqualTo("/mapping/core-person/contact"))
+        .inScenario("Retry Mapping Core Person Contact Scenario")
+        .whenScenarioStateIs("Cause Mapping Core Person Contact Success")
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
