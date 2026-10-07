@@ -18,6 +18,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CorePersonContactMappingDto.NomisContactType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateOffenderEmailRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateOffenderPhoneRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateOffenderEmailRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateOffenderPhoneRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PersonReferenceList
@@ -122,13 +124,56 @@ class CorePersonContactService(
   }
 
   suspend fun contactUpdated(event: ContactEvent, eventSource: EventSource?) {
-    log.info(
-      "Received {} event for prisoner {} with cprContactId {} from source {}",
-      event.eventType,
-      event.personReference.identifiers.firstOrNull { it.type == "prisonNumber" }?.value,
-      event.additionalInformation.cprContactId,
-      eventSource?.value,
+    val entityName = CORE_PERSON_CONTACT.entityName
+
+    val prisonNumber = event.personReference.identifiers.first { it.type == "prisonNumber" }.value
+    val cprContactId = event.additionalInformation.cprContactId.toString()
+    val telemetryMap = mutableMapOf(
+      "prisonNumber" to prisonNumber,
+      "cprContactId" to cprContactId,
     )
+
+    if (!eventSource.didOriginateInCpr()) {
+      telemetryClient.trackEvent("$entityName-update-ignored", telemetryMap)
+      return
+    }
+
+    runCatching {
+      val mapping = mappingApiService.getByCprContactId(cprContactId).also {
+        telemetryMap["nomisContactType"] = it.nomisContactType.value
+        telemetryMap["nomisId"] = it.nomisId.toString()
+      }
+      val cprContact = corePersonCprApiService.getPrisonerContact(prisonNumber, cprContactId)
+      val contactValue = cprContact.value ?: throw IllegalStateException("Contact $cprContactId for $prisonNumber has no value")
+      val cprContactType = if (cprContact.type == PrisonContact.Type.EMAIL) NomisContactType.EMAIL else NomisContactType.PHONE
+      if (cprContactType != mapping.nomisContactType) {
+        throw IllegalStateException("Contact $cprContactId for $prisonNumber has changed from ${mapping.nomisContactType} to $cprContactType")
+      }
+      val rootOffenderId = corePersonNomisApiService.getRootOffenderId(prisonNumber)
+      telemetryMap["rootOffenderId"] = rootOffenderId.toString()
+
+      when (mapping.nomisContactType) {
+        NomisContactType.EMAIL -> corePersonNomisApiService.updateOffenderEmail(
+          rootOffenderId,
+          mapping.nomisId,
+          UpdateOffenderEmailRequest(email = contactValue),
+        )
+        NomisContactType.PHONE -> corePersonNomisApiService.updateOffenderPhone(
+          rootOffenderId,
+          mapping.nomisId,
+          UpdateOffenderPhoneRequest(
+            number = contactValue,
+            extension = cprContact.extension,
+            typeCode = cprContact.type.toNomisPhoneType(),
+          ),
+        )
+      }
+    }.onSuccess {
+      telemetryClient.trackEvent("$entityName-update-success", telemetryMap)
+    }.onFailure { e ->
+      telemetryClient.trackEvent("$entityName-update-failed", telemetryMap + ("reason" to (e.message ?: e.javaClass.name)))
+      throw e
+    }
   }
 
   private inline fun <reified T> String.fromJson(): T = jsonMapper.readValue(this)
