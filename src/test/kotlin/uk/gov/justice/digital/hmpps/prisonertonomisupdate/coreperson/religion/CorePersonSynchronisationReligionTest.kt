@@ -18,11 +18,11 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.json.JsonTest
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonCprApiService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonMappingApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonNomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonRetryQueueService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonSynchronisationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.EventSource
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.contact.CorePersonContactMappingApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalEthnicity
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalIdentifiers
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalReligion
@@ -46,10 +46,9 @@ internal class CorePersonSynchronisationReligionTest(@Autowired jsonMapper: Json
 
   private val telemetryClient: TelemetryClient = mock()
   private val corePersonNomisApiService: CorePersonNomisApiService = mock()
-  private val mapping: ReligionMappingApiService = mock()
+  private val mapping: CorePersonMappingApiService = mock()
   private val corePersonCprApiService: CorePersonCprApiService = mock()
   private val corePersonRetryQueueService: CorePersonRetryQueueService = mock()
-  private val contactMapping: CorePersonContactMappingApiService = mock()
 
   private val synchronisationService =
     CorePersonSynchronisationService(
@@ -57,7 +56,6 @@ internal class CorePersonSynchronisationReligionTest(@Autowired jsonMapper: Json
       corePersonCprApiService,
       corePersonNomisApiService,
       mapping,
-      contactMapping,
       corePersonRetryQueueService,
       jsonMapper,
     )

@@ -5,10 +5,8 @@ import org.springframework.stereotype.Service
 import tools.jackson.databind.json.JsonMapper
 import tools.jackson.module.kotlin.readValue
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.contact.CorePersonContactMappingApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonReligionReadResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.religion.ReligionMappingApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CorePersonContactMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CorePersonContactMappingDto.NomisContactType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ReligionMappingDto
@@ -30,8 +28,7 @@ class CorePersonSynchronisationService(
   private val telemetryClient: TelemetryClient,
   private val corePersonCprApiService: CorePersonCprApiService,
   private val corePersonNomisApiService: CorePersonNomisApiService,
-  private val religionMappingApiService: ReligionMappingApiService,
-  private val contactMappingApiService: CorePersonContactMappingApiService,
+  private val corePersonMappingApiService: CorePersonMappingApiService,
   private val corePersonRetryQueueService: CorePersonRetryQueueService,
   private val jsonMapper: JsonMapper,
 ) : CreateMappingRetryable {
@@ -66,7 +63,7 @@ class CorePersonSynchronisationService(
         eventTelemetry = telemetryMap
 
         checkMappingDoesNotExist {
-          religionMappingApiService.getReligionByCprIdOrNull(cprReligionId)
+          corePersonMappingApiService.getReligionByCprIdOrNull(cprReligionId)
         }
         transform {
           val religion = corePersonCprApiService.getReligion(prisonNumber, cprReligionId)
@@ -80,7 +77,7 @@ class CorePersonSynchronisationService(
             mappingType = ReligionMappingDto.MappingType.DPS_CREATED,
           )
         }
-        saveMapping { religionMappingApiService.createReligionMapping(it) }
+        saveMapping { corePersonMappingApiService.createReligionMapping(it) }
       }
     } else {
       telemetryClient.trackEvent("$entityName-create-ignored", telemetryMap)
@@ -94,7 +91,7 @@ class CorePersonSynchronisationService(
     val toPerson = corePersonCprApiService.getCorePerson(toPrisonNumber)
     val cprReligions = toPerson?.religionHistory.orEmpty()
     val cprReligionIds = cprReligions.map { it.cprReligionId!! }
-    val mappings = religionMappingApiService.getByCprIds(cprReligionIds)
+    val mappings = corePersonMappingApiService.getByCprIds(cprReligionIds)
     val missingMappings = cprReligionIds.toSet() - mappings.map { it.cprId }.toSet()
     if (missingMappings.isNotEmpty()) {
       throw IllegalStateException("Missing religion mappings for cpr religion ids: ${missingMappings.joinToString(", ")}")
@@ -131,7 +128,7 @@ class CorePersonSynchronisationService(
       eventTelemetry = telemetryMap
 
       checkMappingDoesNotExist {
-        contactMappingApiService.getByCprContactIdOrNull(cprContactId)
+        corePersonMappingApiService.getByCprContactIdOrNull(cprContactId)
       }
       transform {
         val cprContact = corePersonCprApiService.getPrisonerContact(prisonNumber, cprContactId)
@@ -165,7 +162,7 @@ class CorePersonSynchronisationService(
           mappingType = CorePersonContactMappingDto.MappingType.CPR_CREATED,
         )
       }
-      saveMapping { contactMappingApiService.createContactMapping(it) }
+      saveMapping { corePersonMappingApiService.createContactMapping(it) }
     }
   }
 
@@ -185,7 +182,7 @@ class CorePersonSynchronisationService(
     }
 
     runCatching {
-      val mapping = contactMappingApiService.getByCprContactId(cprContactId).also {
+      val mapping = corePersonMappingApiService.getByCprContactId(cprContactId).also {
         telemetryMap["nomisContactType"] = it.nomisContactType.value
         telemetryMap["nomisId"] = it.nomisId.toString()
       }
@@ -231,7 +228,7 @@ class CorePersonSynchronisationService(
   }
 
   suspend fun createReligionMapping(message: CreateMappingRetryMessage<ReligionMappingDto>) {
-    religionMappingApiService.createReligionMapping(message.mapping).also {
+    corePersonMappingApiService.createReligionMapping(message.mapping).also {
       telemetryClient.trackEvent(
         "${MappingTypes.CORE_PERSON_RELIGION.entityName}-create-success",
         message.telemetryAttributes,
@@ -240,7 +237,7 @@ class CorePersonSynchronisationService(
   }
 
   suspend fun createContactMapping(message: CreateMappingRetryMessage<CorePersonContactMappingDto>) {
-    contactMappingApiService.createContactMapping(message.mapping).also {
+    corePersonMappingApiService.createContactMapping(message.mapping).also {
       telemetryClient.trackEvent(
         "${MappingTypes.CORE_PERSON_CONTACT.entityName}-create-success",
         message.telemetryAttributes,
