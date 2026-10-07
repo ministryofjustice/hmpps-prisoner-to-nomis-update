@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.contact
 
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -20,6 +21,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonN
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.prisonerContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CorePersonContactMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.withRequestBodyJsonPath
 
 class CorePersonContactToNomisIntTest(
@@ -184,8 +186,166 @@ class CorePersonContactToNomisIntTest(
     }
   }
 
-  private fun publishContactCreatedDomainEvent(prisonNumber: String, cprContactId: String, source: String = "core-person-record") {
-    val eventType = "core-person-record.prison.contact.created"
+  @Nested
+  @DisplayName("core-person-record.prison.contact.updated")
+  inner class ContactUpdated {
+    private val prisonNumber = "A1234BC"
+    private val cprContactId = "11111111-2222-3333-4444-555555555555"
+    private val rootOffenderId = 12345L
+    private val nomisId = 54321L
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of a contact update")
+    inner class WhenNomisUpdated {
+      @BeforeEach
+      fun setUp() {
+        publishContactDomainEvent("core-person-record.prison.contact.updated", prisonNumber, cprContactId, source = "nomis")
+        waitForAnyProcessingToComplete("core-person-contact-update-ignored")
+      }
+
+      @Test
+      fun `will send telemetry event showing the ignore`() {
+        verify(telemetryClient).trackEvent(
+          eq("core-person-contact-update-ignored"),
+          check {
+            assertThat(it).containsEntry("prisonNumber", prisonNumber)
+            assertThat(it).containsEntry("cprContactId", cprContactId)
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    @DisplayName("when CPR is the origin of a contact update")
+    inner class WhenCprUpdated {
+      @Nested
+      @DisplayName("when contact is a phone number")
+      inner class HappyPathPhone {
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetContactMapping(
+            cprContactId,
+            contactMapping(cprContactId).copy(nomisId = nomisId, nomisContactType = CorePersonContactMappingDto.NomisContactType.PHONE),
+          )
+          corePersonCprApi.stubGetPrisonerContact(
+            prisonNumber,
+            cprContactId,
+            prisonerContact(prisonNumber).copy(type = PrisonContact.Type.MOBILE, value = "07700 900000", extension = "123"),
+          )
+          nomisApi.stubGetPrisonerDetails(prisonNumber, rootOffenderId = rootOffenderId)
+          nomisApi.stubUpdateOffenderPhone(rootOffenderId, phoneId = nomisId)
+
+          publishContactDomainEvent("core-person-record.prison.contact.updated", prisonNumber, cprContactId)
+          waitForAnyProcessingToComplete("core-person-contact-update-success")
+        }
+
+        @Test
+        fun `will call CPR to get the contact details`() {
+          corePersonCprApi.verify(
+            getRequestedFor(urlPathEqualTo("/syscon-sync/person/$prisonNumber/contact/$cprContactId")),
+          )
+        }
+
+        @Test
+        fun `will update the phone in NOMIS against the root offender`() {
+          nomisApi.verify(
+            putRequestedFor(urlPathEqualTo("/core-person/$rootOffenderId/phone/$nomisId"))
+              .withRequestBodyJsonPath("number", "07700 900000")
+              .withRequestBodyJsonPath("extension", "123")
+              .withRequestBodyJsonPath("typeCode", "MOB"),
+          )
+        }
+
+        @Test
+        fun `will send success telemetry`() {
+          verify(telemetryClient).trackEvent(
+            eq("core-person-contact-update-success"),
+            check {
+              assertThat(it).containsEntry("prisonNumber", prisonNumber)
+              assertThat(it).containsEntry("cprContactId", cprContactId)
+              assertThat(it).containsEntry("rootOffenderId", rootOffenderId.toString())
+              assertThat(it).containsEntry("nomisContactType", "PHONE")
+              assertThat(it).containsEntry("nomisId", nomisId.toString())
+            },
+            isNull(),
+          )
+        }
+      }
+
+      @Nested
+      @DisplayName("when contact is an email address")
+      inner class HappyPathEmail {
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetContactMapping(
+            cprContactId,
+            contactMapping(cprContactId).copy(nomisId = nomisId, nomisContactType = CorePersonContactMappingDto.NomisContactType.EMAIL),
+          )
+          corePersonCprApi.stubGetPrisonerContact(
+            prisonNumber,
+            cprContactId,
+            prisonerContact(prisonNumber).copy(type = PrisonContact.Type.EMAIL, value = "test@justice.gov.uk"),
+          )
+          nomisApi.stubGetPrisonerDetails(prisonNumber, rootOffenderId = rootOffenderId)
+          nomisApi.stubUpdateOffenderEmail(rootOffenderId, emailAddressId = nomisId)
+
+          publishContactDomainEvent("core-person-record.prison.contact.updated", prisonNumber, cprContactId)
+          waitForAnyProcessingToComplete("core-person-contact-update-success")
+        }
+
+        @Test
+        fun `will update the email in NOMIS against the root offender`() {
+          nomisApi.verify(
+            putRequestedFor(urlPathEqualTo("/core-person/$rootOffenderId/email/$nomisId"))
+              .withRequestBodyJsonPath("email", "test@justice.gov.uk"),
+          )
+        }
+      }
+
+      @Nested
+      @DisplayName("when contact type has changed between phone and email")
+      inner class TypeChanged {
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetContactMapping(
+            cprContactId,
+            contactMapping(cprContactId).copy(nomisId = nomisId, nomisContactType = CorePersonContactMappingDto.NomisContactType.PHONE),
+          )
+          corePersonCprApi.stubGetPrisonerContact(
+            prisonNumber,
+            cprContactId,
+            prisonerContact(prisonNumber).copy(type = PrisonContact.Type.EMAIL, value = "test@justice.gov.uk"),
+          )
+
+          publishContactDomainEvent("core-person-record.prison.contact.updated", prisonNumber, cprContactId)
+          waitForAnyProcessingToComplete("core-person-contact-update-failed")
+        }
+
+        @Test
+        fun `will not update NOMIS`() {
+          nomisApi.verify(0, putRequestedFor(urlPathEqualTo("/core-person/$rootOffenderId/phone/$nomisId")))
+          nomisApi.verify(0, putRequestedFor(urlPathEqualTo("/core-person/$rootOffenderId/email/$nomisId")))
+        }
+
+        @Test
+        fun `will send failure telemetry`() {
+          verify(telemetryClient).trackEvent(
+            eq("core-person-contact-update-failed"),
+            check {
+              assertThat(it).containsEntry("cprContactId", cprContactId)
+              assertThat(it["reason"]).contains("has changed from PHONE to EMAIL")
+            },
+            isNull(),
+          )
+        }
+      }
+    }
+  }
+
+  private fun publishContactCreatedDomainEvent(prisonNumber: String, cprContactId: String, source: String = "core-person-record") = publishContactDomainEvent("core-person-record.prison.contact.created", prisonNumber, cprContactId, source)
+
+  private fun publishContactDomainEvent(eventType: String, prisonNumber: String, cprContactId: String, source: String = "core-person-record") {
     val payload = """
       {
         "eventType": "$eventType",

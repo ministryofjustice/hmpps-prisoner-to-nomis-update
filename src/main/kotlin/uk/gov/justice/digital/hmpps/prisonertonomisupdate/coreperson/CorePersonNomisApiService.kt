@@ -17,6 +17,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Cr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateOffenderPhoneRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateOffenderPhoneResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderBelief
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateOffenderEmailRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateOffenderPhoneRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 
 @Service
@@ -65,4 +67,12 @@ class CorePersonNomisApiService(
   suspend fun createOffenderEmail(offenderId: Long, request: CreateOffenderEmailRequest): CreateOffenderEmailResponse = api
     .createOffenderEmail(offenderId, request)
     .awaitSingle()
+
+  suspend fun updateOffenderPhone(offenderId: Long, phoneId: Long, request: UpdateOffenderPhoneRequest) {
+    api.updateOffenderPhone(offenderId, phoneId, request).awaitSingleOrNull()
+  }
+
+  suspend fun updateOffenderEmail(offenderId: Long, emailAddressId: Long, request: UpdateOffenderEmailRequest) {
+    api.updateOffenderEmail(offenderId, emailAddressId, request).awaitSingleOrNull()
+  }
 }
