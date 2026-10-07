@@ -198,6 +198,38 @@ class CorePersonNomisApiServiceTest {
       )
     }
 
+    @Nested
+    inner class CreateOffenderAddressPhone {
+      private val offenderId = 12345L
+      private val addressId = 67890L
+      private val request = CreateOffenderPhoneRequest(
+        number = "07700 900000",
+        extension = "123",
+        typeCode = "MOB",
+      )
+
+      @Test
+      fun `will post the phone request for an address`() = runTest {
+        mockServer.stubCreateOffenderAddressPhone(offenderId, addressId)
+
+        apiService.createOffenderAddressPhone(offenderId, addressId, request)
+
+        mockServer.verify(
+          postRequestedFor(urlPathEqualTo("/core-person/$offenderId/address/$addressId/phone"))
+            .withRequestBody(equalToJson(jsonMapper.writeValueAsString(request))),
+        )
+      }
+
+      @Test
+      fun `will return the created phone id`() = runTest {
+        mockServer.stubCreateOffenderAddressPhone(offenderId, addressId, phoneId = 98765L)
+
+        val response = apiService.createOffenderAddressPhone(offenderId, addressId, request)
+
+        assertThat(response.phoneId).isEqualTo(98765L)
+      }
+    }
+
     @Test
     fun `will return the created phone id`() = runTest {
       mockServer.stubCreateOffenderPhone(offenderId, phoneId = 98765L)

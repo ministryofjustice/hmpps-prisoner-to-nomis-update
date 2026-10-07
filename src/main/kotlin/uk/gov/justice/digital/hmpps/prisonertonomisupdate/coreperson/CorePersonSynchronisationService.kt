@@ -7,6 +7,7 @@ import tools.jackson.module.kotlin.readValue
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonReligionReadResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ParentEntityNotFoundRetry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CorePersonContactMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CorePersonContactMappingDto.NomisContactType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ReligionMappingDto
@@ -142,14 +143,25 @@ class CorePersonSynchronisationService(
             CreateOffenderEmailRequest(email = contactValue),
           ).emailAddressId
         } else {
-          NomisContactType.PHONE to corePersonNomisApiService.createOffenderPhone(
-            rootOffenderId,
-            CreateOffenderPhoneRequest(
-              number = contactValue,
-              extension = cprContact.extension,
-              typeCode = cprContact.type.toNomisPhoneType(),
-            ),
-          ).phoneId
+          val phoneRequest = CreateOffenderPhoneRequest(
+            number = contactValue,
+            extension = cprContact.extension,
+            typeCode = cprContact.type.toNomisPhoneType(),
+          )
+          if (cprContact.cprAddressId != null) {
+            val mapping = corePersonMappingApiService.getByCprAddressIdOrNull(cprContact.cprAddressId)
+              ?: throw ParentEntityNotFoundRetry("No mapping found for CPR address ID ${cprContact.cprAddressId}")
+            NomisContactType.PHONE to corePersonNomisApiService.createOffenderAddressPhone(
+              rootOffenderId,
+              mapping.nomisId,
+              phoneRequest,
+            ).phoneId
+          } else {
+            NomisContactType.PHONE to corePersonNomisApiService.createOffenderPhone(
+              rootOffenderId,
+              phoneRequest,
+            ).phoneId
+          }
         }
         telemetryMap["nomisContactType"] = nomisContactType.value
         telemetryMap["nomisId"] = nomisId.toString()

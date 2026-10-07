@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonN
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.prisonerContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CorePersonAddressMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CorePersonContactMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.withRequestBodyJsonPath
 
@@ -140,6 +141,72 @@ class CorePersonContactToNomisIntTest(
               assertThat(it).containsEntry("nomisId", nomisId.toString())
             },
             isNull(),
+          )
+        }
+      }
+
+      @Nested
+      @DisplayName("when contact is a phone number associated with an address")
+      inner class HappyPathAddressPhone {
+        private val cprAddressId = "22222222-3333-4444-5555-666666666666"
+        private val nomisAddressId = 67890L
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetContactMapping(cprContactId, mapping = null)
+          mappingApi.stubGetAddressMapping(
+            cprAddressId,
+            mapping = CorePersonAddressMappingDto(
+              cprId = cprAddressId,
+              nomisId = nomisAddressId,
+              nomisPrisonNumber = prisonNumber,
+              mappingType = CorePersonAddressMappingDto.MappingType.CPR_CREATED,
+            ),
+          )
+          corePersonCprApi.stubGetPrisonerContact(
+            prisonNumber,
+            cprContactId,
+            prisonerContact(prisonNumber).copy(
+              type = PrisonContact.Type.MOBILE,
+              value = "07700 900000",
+              extension = "123",
+              cprAddressId = cprAddressId,
+            ),
+          )
+          nomisApi.stubGetPrisonerDetails(prisonNumber, rootOffenderId = rootOffenderId)
+          nomisApi.stubCreateOffenderAddressPhone(rootOffenderId, nomisAddressId, phoneId = nomisId)
+          mappingApi.stubCreateContactMapping()
+
+          publishContactCreatedDomainEvent(prisonNumber, cprContactId)
+          waitForAnyProcessingToComplete("core-person-contact-create-success")
+        }
+
+        @Test
+        fun `will look up the NOMIS address mapping for the CPR address`() {
+          mappingApi.verify(
+            getRequestedFor(urlPathEqualTo("/mapping/core-person/address/cpr-address-id/$cprAddressId")),
+          )
+        }
+
+        @Test
+        fun `will create the phone in NOMIS against the mapped address`() {
+          nomisApi.verify(
+            postRequestedFor(urlPathEqualTo("/core-person/$rootOffenderId/address/$nomisAddressId/phone"))
+              .withRequestBodyJsonPath("number", "07700 900000")
+              .withRequestBodyJsonPath("extension", "123")
+              .withRequestBodyJsonPath("typeCode", "MOB"),
+          )
+        }
+
+        @Test
+        fun `will create the contact mapping for the phone`() {
+          mappingApi.verify(
+            postRequestedFor(urlPathEqualTo("/mapping/core-person/contact"))
+              .withRequestBodyJsonPath("cprId", cprContactId)
+              .withRequestBodyJsonPath("nomisId", nomisId)
+              .withRequestBodyJsonPath("nomisContactType", "PHONE")
+              .withRequestBodyJsonPath("nomisPrisonNumber", prisonNumber)
+              .withRequestBodyJsonPath("mappingType", "CPR_CREATED"),
           )
         }
       }

@@ -10,12 +10,27 @@ import com.github.tomakehurst.wiremock.stubbing.Scenario
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import tools.jackson.databind.json.JsonMapper
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CorePersonAddressMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CorePersonContactMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 
 @Component
 class CorePersonContactMappingApiMockServer(private val jsonMapper: JsonMapper) {
+  fun stubGetAddressMapping(cprAddressId: String, mapping: CorePersonAddressMappingDto? = addressMapping(cprAddressId)) {
+    mappingServer.stubFor(
+      get(urlPathEqualTo("/mapping/core-person/address/cpr-address-id/$cprAddressId"))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(if (mapping == null) HttpStatus.NOT_FOUND.value() else HttpStatus.OK.value())
+            .apply {
+              if (mapping != null) withBody(jsonMapper.writeValueAsString(mapping))
+            },
+        ),
+    )
+  }
+
   fun stubGetContactMapping(cprContactId: String, mapping: CorePersonContactMappingDto? = contactMapping(cprContactId)) {
     mappingServer.stubFor(
       get(urlPathEqualTo("/mapping/core-person/contact/cpr-contact-id/$cprContactId"))
@@ -75,4 +90,11 @@ fun contactMapping(cprContactId: String) = CorePersonContactMappingDto(
   nomisContactType = CorePersonContactMappingDto.NomisContactType.PHONE,
   nomisPrisonNumber = "A1234AA",
   mappingType = CorePersonContactMappingDto.MappingType.CPR_CREATED,
+)
+
+private fun addressMapping(cprAddressId: String) = CorePersonAddressMappingDto(
+  cprId = cprAddressId,
+  nomisId = 12345L,
+  nomisPrisonNumber = "A1234AA",
+  mappingType = CorePersonAddressMappingDto.MappingType.CPR_CREATED,
 )
