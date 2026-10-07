@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.post
+import com.github.tomakehurst.wiremock.client.WireMock.put
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.springframework.http.HttpStatus
@@ -151,6 +152,26 @@ class CorePersonNomisApiMockServer(private val jsonMapper: JsonMapper) {
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.CREATED.value())
           .withBody(jsonMapper.writeValueAsString(CreateOffenderEmailResponse(emailAddressId = emailAddressId))),
+      ),
+    )
+  }
+
+  fun stubUpdateOffenderPhone(offenderId: Long, phoneId: Long) {
+    nomisApi.stubFor(
+      put(urlEqualTo("/core-person/$offenderId/phone/$phoneId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value()),
+      ),
+    )
+  }
+
+  fun stubUpdateOffenderEmail(offenderId: Long, emailAddressId: Long) {
+    nomisApi.stubFor(
+      put(urlEqualTo("/core-person/$offenderId/email/$emailAddressId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value()),
       ),
     )
   }

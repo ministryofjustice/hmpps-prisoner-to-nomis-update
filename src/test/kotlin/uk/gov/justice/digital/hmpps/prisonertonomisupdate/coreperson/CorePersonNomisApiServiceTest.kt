@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson
 import com.github.tomakehurst.wiremock.client.WireMock.equalToJson
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
@@ -17,6 +18,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CorePersonReligionRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateOffenderEmailRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateOffenderPhoneRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateOffenderEmailRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateOffenderPhoneRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import java.time.LocalDate
 
@@ -229,6 +232,48 @@ class CorePersonNomisApiServiceTest {
       val response = apiService.createOffenderEmail(offenderId, request)
 
       assertThat(response.emailAddressId).isEqualTo(98765L)
+    }
+  }
+
+  @Nested
+  inner class UpdateOffenderPhone {
+    private val offenderId = 12345L
+    private val phoneId = 54321L
+    private val request = UpdateOffenderPhoneRequest(
+      number = "07700 900000",
+      extension = "123",
+      typeCode = "MOB",
+    )
+
+    @Test
+    fun `will put the phone request`() = runTest {
+      mockServer.stubUpdateOffenderPhone(offenderId, phoneId)
+
+      apiService.updateOffenderPhone(offenderId, phoneId, request)
+
+      mockServer.verify(
+        putRequestedFor(urlPathEqualTo("/core-person/$offenderId/phone/$phoneId"))
+          .withRequestBody(equalToJson(jsonMapper.writeValueAsString(request))),
+      )
+    }
+  }
+
+  @Nested
+  inner class UpdateOffenderEmail {
+    private val offenderId = 12345L
+    private val emailAddressId = 54321L
+    private val request = UpdateOffenderEmailRequest(email = "test@justice.gov.uk")
+
+    @Test
+    fun `will put the email request`() = runTest {
+      mockServer.stubUpdateOffenderEmail(offenderId, emailAddressId)
+
+      apiService.updateOffenderEmail(offenderId, emailAddressId, request)
+
+      mockServer.verify(
+        putRequestedFor(urlPathEqualTo("/core-person/$offenderId/email/$emailAddressId"))
+          .withRequestBody(equalToJson(jsonMapper.writeValueAsString(request))),
+      )
     }
   }
 
