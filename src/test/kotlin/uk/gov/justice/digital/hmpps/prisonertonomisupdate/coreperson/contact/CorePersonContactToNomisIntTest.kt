@@ -394,6 +394,62 @@ class CorePersonContactToNomisIntTest(
       }
 
       @Nested
+      @DisplayName("when updating a phone number associated with an address")
+      inner class HappyPathAddressPhone {
+        private val cprAddressId = "22222222-3333-4444-5555-666666666666"
+        private val nomisAddressId = 67890L
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetContactMapping(
+            cprContactId,
+            contactMapping(cprContactId).copy(nomisId = nomisId, nomisContactType = CorePersonContactMappingDto.NomisContactType.PHONE),
+          )
+          mappingApi.stubGetAddressMapping(
+            cprAddressId,
+            mapping = CorePersonAddressMappingDto(
+              cprId = cprAddressId,
+              nomisId = nomisAddressId,
+              nomisPrisonNumber = prisonNumber,
+              mappingType = CorePersonAddressMappingDto.MappingType.CPR_CREATED,
+            ),
+          )
+          corePersonCprApi.stubGetPrisonerContact(
+            prisonNumber,
+            cprContactId,
+            prisonerContact(prisonNumber).copy(
+              type = PrisonContact.Type.MOBILE,
+              value = "07700 900000",
+              extension = "123",
+              cprAddressId = cprAddressId,
+            ),
+          )
+          nomisApi.stubGetPrisonerDetails(prisonNumber, rootOffenderId = rootOffenderId)
+          nomisApi.stubUpdateOffenderAddressPhone(rootOffenderId, nomisAddressId, phoneId = nomisId)
+
+          publishContactDomainEvent("core-person-record.prison.contact.updated", prisonNumber, cprContactId)
+          waitForAnyProcessingToComplete("core-person-contact-update-success")
+        }
+
+        @Test
+        fun `will look up the NOMIS address mapping for the CPR address`() {
+          mappingApi.verify(
+            getRequestedFor(urlPathEqualTo("/mapping/core-person/address/cpr-address-id/$cprAddressId")),
+          )
+        }
+
+        @Test
+        fun `will update the phone in NOMIS against the mapped address`() {
+          nomisApi.verify(
+            putRequestedFor(urlPathEqualTo("/core-person/$rootOffenderId/address/$nomisAddressId/phone/$nomisId"))
+              .withRequestBodyJsonPath("number", "07700 900000")
+              .withRequestBodyJsonPath("extension", "123")
+              .withRequestBodyJsonPath("typeCode", "MOB"),
+          )
+        }
+      }
+
+      @Nested
       @DisplayName("when contact is an email address")
       inner class HappyPathEmail {
         @BeforeEach

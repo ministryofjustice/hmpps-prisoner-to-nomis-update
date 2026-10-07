@@ -291,6 +291,30 @@ class CorePersonNomisApiServiceTest {
   }
 
   @Nested
+  inner class UpdateOffenderAddressPhone {
+    private val offenderId = 12345L
+    private val addressId = 67890L
+    private val phoneId = 54321L
+    private val request = UpdateOffenderPhoneRequest(
+      number = "07700 900000",
+      extension = "123",
+      typeCode = "MOB",
+    )
+
+    @Test
+    fun `will put the phone request for an address`() = runTest {
+      mockServer.stubUpdateOffenderAddressPhone(offenderId, addressId, phoneId)
+
+      apiService.updateOffenderAddressPhone(offenderId, addressId, phoneId, request)
+
+      mockServer.verify(
+        putRequestedFor(urlPathEqualTo("/core-person/$offenderId/address/$addressId/phone/$phoneId"))
+          .withRequestBody(equalToJson(jsonMapper.writeValueAsString(request))),
+      )
+    }
+  }
+
+  @Nested
   inner class UpdateOffenderEmail {
     private val offenderId = 12345L
     private val emailAddressId = 54321L
