@@ -163,6 +163,7 @@ val models = listOf(
   ModelConfiguration(
     name = "core-person",
     packageName = "coreperson",
+    testPackageName = "coreperson",
     url = "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk/v3/api-docs",
   ),
   ModelConfiguration(

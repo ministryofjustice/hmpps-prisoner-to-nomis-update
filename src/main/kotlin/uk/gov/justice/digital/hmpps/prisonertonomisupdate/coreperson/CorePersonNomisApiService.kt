@@ -76,6 +76,10 @@ class CorePersonNomisApiService(
     api.updateOffenderPhone(offenderId, phoneId, request).awaitSingleOrNull()
   }
 
+  suspend fun updateOffenderAddressPhone(offenderId: Long, addressId: Long, phoneId: Long, request: UpdateOffenderPhoneRequest) {
+    api.updateOffenderAddressPhone(offenderId, addressId, phoneId, request).awaitSingleOrNull()
+  }
+
   suspend fun updateOffenderEmail(offenderId: Long, emailAddressId: Long, request: UpdateOffenderEmailRequest) {
     api.updateOffenderEmail(offenderId, emailAddressId, request).awaitSingleOrNull()
   }

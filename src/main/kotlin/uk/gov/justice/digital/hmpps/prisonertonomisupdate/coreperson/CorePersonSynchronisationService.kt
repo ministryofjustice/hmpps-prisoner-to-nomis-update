@@ -5,6 +5,8 @@ import org.springframework.stereotype.Service
 import tools.jackson.databind.json.JsonMapper
 import tools.jackson.module.kotlin.readValue
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonSynchronisationService.Companion.MappingTypes.CORE_PERSON_CONTACT
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonSynchronisationService.Companion.MappingTypes.CORE_PERSON_RELIGION
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonReligionReadResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ParentEntityNotFoundRetry
@@ -47,8 +49,6 @@ class CorePersonSynchronisationService(
   }
 
   suspend fun religionCreated(event: ReligionEvent, eventSource: EventSource?) {
-    val entityName = MappingTypes.CORE_PERSON_RELIGION.entityName
-
     val prisonNumber = event.personReference.identifiers.first { it.type == "prisonNumber" }.value
     val cprReligionId = event.additionalInformation.cprReligionId.toString()
     val telemetryMap = mutableMapOf(
@@ -58,7 +58,7 @@ class CorePersonSynchronisationService(
 
     if (eventSource.didOriginateInCpr()) {
       synchronise {
-        name = entityName
+        name = CORE_PERSON_RELIGION.entityName
         telemetryClient = this@CorePersonSynchronisationService.telemetryClient
         retryQueueService = corePersonRetryQueueService
         eventTelemetry = telemetryMap
@@ -81,7 +81,7 @@ class CorePersonSynchronisationService(
         saveMapping { corePersonMappingApiService.createReligionMapping(it) }
       }
     } else {
-      telemetryClient.trackEvent("$entityName-create-ignored", telemetryMap)
+      telemetryClient.trackEvent("${CORE_PERSON_RELIGION.entityName}-create-ignored", telemetryMap)
     }
   }
 
@@ -108,8 +108,6 @@ class CorePersonSynchronisationService(
   }
 
   suspend fun contactCreated(event: ContactEvent, eventSource: EventSource?) {
-    val entityName = MappingTypes.CORE_PERSON_CONTACT.entityName
-
     val prisonNumber = event.personReference.identifiers.first { it.type == "prisonNumber" }.value
     val cprContactId = event.additionalInformation.cprContactId.toString()
     val telemetryMap = mutableMapOf(
@@ -118,12 +116,12 @@ class CorePersonSynchronisationService(
     )
 
     if (!eventSource.didOriginateInCpr()) {
-      telemetryClient.trackEvent("$entityName-create-ignored", telemetryMap)
+      telemetryClient.trackEvent("${CORE_PERSON_CONTACT.entityName}-create-ignored", telemetryMap)
       return
     }
 
     synchronise {
-      name = entityName
+      name = CORE_PERSON_CONTACT.entityName
       telemetryClient = this@CorePersonSynchronisationService.telemetryClient
       retryQueueService = corePersonRetryQueueService
       eventTelemetry = telemetryMap
@@ -179,8 +177,6 @@ class CorePersonSynchronisationService(
   }
 
   suspend fun contactUpdated(event: ContactEvent, eventSource: EventSource?) {
-    val entityName = MappingTypes.CORE_PERSON_CONTACT.entityName
-
     val prisonNumber = event.personReference.identifiers.first { it.type == "prisonNumber" }.value
     val cprContactId = event.additionalInformation.cprContactId.toString()
     val telemetryMap = mutableMapOf(
@@ -189,7 +185,7 @@ class CorePersonSynchronisationService(
     )
 
     if (!eventSource.didOriginateInCpr()) {
-      telemetryClient.trackEvent("$entityName-update-ignored", telemetryMap)
+      telemetryClient.trackEvent("${CORE_PERSON_CONTACT.entityName}-update-ignored", telemetryMap)
       return
     }
 
@@ -213,20 +209,34 @@ class CorePersonSynchronisationService(
           mapping.nomisId,
           UpdateOffenderEmailRequest(email = contactValue),
         )
-        NomisContactType.PHONE -> corePersonNomisApiService.updateOffenderPhone(
-          rootOffenderId,
-          mapping.nomisId,
-          UpdateOffenderPhoneRequest(
+        NomisContactType.PHONE -> {
+          val phoneRequest = UpdateOffenderPhoneRequest(
             number = contactValue,
             extension = cprContact.extension,
             typeCode = cprContact.type.toNomisPhoneType(),
-          ),
-        )
+          )
+          if (cprContact.cprAddressId != null) {
+            val addressMapping = corePersonMappingApiService.getByCprAddressIdOrNull(cprContact.cprAddressId)
+              ?: throw ParentEntityNotFoundRetry("No mapping found for CPR address ID ${cprContact.cprAddressId}")
+            corePersonNomisApiService.updateOffenderAddressPhone(
+              rootOffenderId,
+              addressMapping.nomisId,
+              mapping.nomisId,
+              phoneRequest,
+            )
+          } else {
+            corePersonNomisApiService.updateOffenderPhone(
+              rootOffenderId,
+              mapping.nomisId,
+              phoneRequest,
+            )
+          }
+        }
       }
     }.onSuccess {
-      telemetryClient.trackEvent("$entityName-update-success", telemetryMap)
+      telemetryClient.trackEvent("${CORE_PERSON_CONTACT.entityName}-update-success", telemetryMap)
     }.onFailure { e ->
-      telemetryClient.trackEvent("$entityName-update-failed", telemetryMap + ("reason" to (e.message ?: e.javaClass.name)))
+      telemetryClient.trackEvent("${CORE_PERSON_CONTACT.entityName}-update-failed", telemetryMap + ("reason" to (e.message ?: e.javaClass.name)))
       throw e
     }
   }
@@ -234,15 +244,15 @@ class CorePersonSynchronisationService(
   override suspend fun retryCreateMapping(message: String) {
     val baseMapping: CreateMappingRetryMessage<*> = message.fromJson()
     when (MappingTypes.fromEntityName(baseMapping.entityName)) {
-      MappingTypes.CORE_PERSON_RELIGION -> createReligionMapping(message.fromJson())
-      MappingTypes.CORE_PERSON_CONTACT -> createContactMapping(message.fromJson())
+      CORE_PERSON_RELIGION -> createReligionMapping(message.fromJson())
+      CORE_PERSON_CONTACT -> createContactMapping(message.fromJson())
     }
   }
 
   suspend fun createReligionMapping(message: CreateMappingRetryMessage<ReligionMappingDto>) {
     corePersonMappingApiService.createReligionMapping(message.mapping).also {
       telemetryClient.trackEvent(
-        "${MappingTypes.CORE_PERSON_RELIGION.entityName}-create-success",
+        "${CORE_PERSON_RELIGION.entityName}-create-success",
         message.telemetryAttributes,
       )
     }
@@ -251,7 +261,7 @@ class CorePersonSynchronisationService(
   suspend fun createContactMapping(message: CreateMappingRetryMessage<CorePersonContactMappingDto>) {
     corePersonMappingApiService.createContactMapping(message.mapping).also {
       telemetryClient.trackEvent(
-        "${MappingTypes.CORE_PERSON_CONTACT.entityName}-create-success",
+        "${CORE_PERSON_CONTACT.entityName}-create-success",
         message.telemetryAttributes,
       )
     }
