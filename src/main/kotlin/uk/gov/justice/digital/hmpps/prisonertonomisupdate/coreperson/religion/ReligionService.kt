@@ -118,7 +118,7 @@ class ReligionService(
   suspend fun createReligionMapping(message: CreateMappingRetryMessage<ReligionMappingDto>) {
     mapping.createReligionMapping(message.mapping).also {
       telemetryClient.trackEvent(
-        "coreperson-religion-create-success",
+        "${CORE_PERSON_RELIGION.entityName}-create-success",
         message.telemetryAttributes,
       )
     }

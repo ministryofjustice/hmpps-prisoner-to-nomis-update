@@ -183,6 +183,59 @@ class CorePersonContactToNomisIntTest(
           )
         }
       }
+
+      @Nested
+      @DisplayName("when mapping service fails once")
+      inner class MappingFailure {
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetContactMapping(cprContactId, mapping = null)
+          corePersonCprApi.stubGetPrisonerContact(
+            prisonNumber,
+            cprContactId,
+            prisonerContact(prisonNumber).copy(type = PrisonContact.Type.EMAIL, value = "test@justice.gov.uk"),
+          )
+          nomisApi.stubGetPrisonerDetails(prisonNumber, rootOffenderId = rootOffenderId)
+          nomisApi.stubCreateOffenderEmail(rootOffenderId, emailAddressId = nomisId)
+          mappingApi.stubCreateContactMappingFollowedBySuccess()
+
+          publishContactCreatedDomainEvent(prisonNumber, cprContactId)
+          waitForAnyProcessingToComplete("core-person-contact-create-success")
+        }
+
+        @Test
+        fun `will send telemetry for initial failure`() {
+          verify(telemetryClient).trackEvent(
+            eq("core-person-contact-mapping-create-failed"),
+            check {
+              assertThat(it).containsEntry("cprContactId", cprContactId)
+            },
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `will create the email in NOMIS once`() {
+          nomisApi.verify(1, postRequestedFor(urlPathEqualTo("/core-person/$rootOffenderId/email")))
+        }
+
+        @Test
+        fun `will try to create the mapping twice`() {
+          mappingApi.verify(2, postRequestedFor(urlPathEqualTo("/mapping/core-person/contact")))
+        }
+
+        @Test
+        fun `will eventually send success telemetry`() {
+          verify(telemetryClient).trackEvent(
+            eq("core-person-contact-create-success"),
+            check {
+              assertThat(it).containsEntry("cprContactId", cprContactId)
+              assertThat(it).containsEntry("nomisId", nomisId.toString())
+            },
+            isNull(),
+          )
+        }
+      }
     }
   }
 

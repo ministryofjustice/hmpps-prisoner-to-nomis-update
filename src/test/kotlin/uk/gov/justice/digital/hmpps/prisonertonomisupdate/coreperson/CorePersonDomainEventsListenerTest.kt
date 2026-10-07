@@ -42,8 +42,36 @@ internal class CorePersonDomainEventsListenerTest(@Autowired private val jsonMap
       religionService,
       corePersonMergeService,
       corePersonContactService,
+      CorePersonRetryService(jsonMapper, religionService, corePersonContactService),
       telemetryClient,
     )
+
+  @Nested
+  inner class RetryCreateMapping {
+    @Test
+    internal fun `will route religion mapping retries to the religion service`() = runTest {
+      val retryMessage = """{"mapping":{"cprId":"e312a74d-ca98-4fbc-b212-608bc41558e7"},"telemetryAttributes":{},"entityName":"core-person-religion"}"""
+
+      listener.onMessage(rawMessage = retryMessage(retryMessage)).join()
+
+      verify(religionService).retryCreateMapping(retryMessage)
+      verifyNoInteractions(corePersonContactService)
+    }
+
+    @Test
+    internal fun `will route contact mapping retries to the contact service`() = runTest {
+      val retryMessage = """{"mapping":{"cprId":"11111111-2222-3333-4444-555555555555"},"telemetryAttributes":{},"entityName":"core-person-contact"}"""
+
+      listener.onMessage(rawMessage = retryMessage(retryMessage)).join()
+
+      verify(corePersonContactService).retryCreateMapping(retryMessage)
+      verifyNoInteractions(religionService)
+    }
+
+    private fun retryMessage(message: String) = jsonMapper.writeValueAsString(
+      mapOf("Type" to "RETRY_CREATE_MAPPING", "Message" to message),
+    )
+  }
 
   @Nested
   inner class CorePerson {

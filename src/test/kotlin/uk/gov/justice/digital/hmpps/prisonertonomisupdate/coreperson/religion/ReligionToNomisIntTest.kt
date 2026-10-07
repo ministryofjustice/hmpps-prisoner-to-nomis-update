@@ -112,6 +112,53 @@ class ReligionToNomisIntTest(
           )
         }
       }
+
+      @Nested
+      @DisplayName("when mapping service fails once")
+      inner class MappingFailure {
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetReligionMapping(cprReligionId, mapping = null)
+          CorePersonCprApiExtension.corePersonCprApi.stubGetReligion(prisonNumber, cprReligionId)
+          nomisApi.stubInsertReligion(prisonNumber, beliefId = nomisBeliefId)
+          mappingApi.stubCreateReligionMappingFollowedBySuccess()
+
+          publishReligionCreatedDomainEvent(prisonNumber, cprReligionId)
+          waitForAnyProcessingToComplete("core-person-religion-create-success")
+        }
+
+        @Test
+        fun `will send telemetry for initial failure`() {
+          verify(telemetryClient).trackEvent(
+            eq("core-person-religion-mapping-create-failed"),
+            check {
+              assertThat(it).containsEntry("cprReligionId", cprReligionId)
+            },
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `will create the religion in NOMIS once`() {
+          nomisApi.verify(1, postRequestedFor(urlPathEqualTo("/core-person/$prisonNumber/religion")))
+        }
+
+        @Test
+        fun `will try to create the mapping twice`() {
+          mappingApi.verify(2, postRequestedFor(urlPathEqualTo("/mapping/core-person-religion/religion")))
+        }
+
+        @Test
+        fun `will eventually send success telemetry`() {
+          verify(telemetryClient).trackEvent(
+            eq("core-person-religion-create-success"),
+            check {
+              assertThat(it).containsEntry("cprReligionId", cprReligionId)
+            },
+            isNull(),
+          )
+        }
+      }
     }
   }
 
