@@ -134,9 +134,9 @@ class CorePersonNomisApiMockServer(private val jsonMapper: JsonMapper) {
     )
   }
 
-  fun stubCreateOffenderPhone(offenderId: Long, phoneId: Long = 54321L) {
+  fun stubCreateOffenderPhone(prisonNumber: String, phoneId: Long = 54321L) {
     nomisApi.stubFor(
-      post(urlEqualTo("/core-person/$offenderId/phone")).willReturn(
+      post(urlEqualTo("/core-person/$prisonNumber/phone")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.CREATED.value())
@@ -145,9 +145,9 @@ class CorePersonNomisApiMockServer(private val jsonMapper: JsonMapper) {
     )
   }
 
-  fun stubCreateOffenderAddressPhone(offenderId: Long, addressId: Long, phoneId: Long = 54321L) {
+  fun stubCreateOffenderAddressPhone(prisonNumber: String, addressId: Long, phoneId: Long = 54321L) {
     nomisApi.stubFor(
-      post(urlEqualTo("/core-person/$offenderId/address/$addressId/phone")).willReturn(
+      post(urlEqualTo("/core-person/$prisonNumber/address/$addressId/phone")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.CREATED.value())
@@ -156,9 +156,9 @@ class CorePersonNomisApiMockServer(private val jsonMapper: JsonMapper) {
     )
   }
 
-  fun stubCreateOffenderEmail(offenderId: Long, emailAddressId: Long = 54321L) {
+  fun stubCreateOffenderEmail(prisonNumber: String, emailAddressId: Long = 54321L) {
     nomisApi.stubFor(
-      post(urlEqualTo("/core-person/$offenderId/email")).willReturn(
+      post(urlEqualTo("/core-person/$prisonNumber/email")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.CREATED.value())
@@ -167,9 +167,9 @@ class CorePersonNomisApiMockServer(private val jsonMapper: JsonMapper) {
     )
   }
 
-  fun stubUpdateOffenderPhone(offenderId: Long, phoneId: Long) {
+  fun stubUpdateOffenderPhone(prisonNumber: String, phoneId: Long) {
     nomisApi.stubFor(
-      put(urlEqualTo("/core-person/$offenderId/phone/$phoneId")).willReturn(
+      put(urlEqualTo("/core-person/$prisonNumber/phone/$phoneId")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value()),
@@ -177,9 +177,9 @@ class CorePersonNomisApiMockServer(private val jsonMapper: JsonMapper) {
     )
   }
 
-  fun stubUpdateOffenderAddressPhone(offenderId: Long, addressId: Long, phoneId: Long) {
+  fun stubUpdateOffenderAddressPhone(prisonNumber: String, addressId: Long, phoneId: Long) {
     nomisApi.stubFor(
-      put(urlEqualTo("/core-person/$offenderId/address/$addressId/phone/$phoneId")).willReturn(
+      put(urlEqualTo("/core-person/$prisonNumber/address/$addressId/phone/$phoneId")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value()),
@@ -187,9 +187,9 @@ class CorePersonNomisApiMockServer(private val jsonMapper: JsonMapper) {
     )
   }
 
-  fun stubUpdateOffenderEmail(offenderId: Long, emailAddressId: Long) {
+  fun stubUpdateOffenderEmail(prisonNumber: String, emailAddressId: Long) {
     nomisApi.stubFor(
-      put(urlEqualTo("/core-person/$offenderId/email/$emailAddressId")).willReturn(
+      put(urlEqualTo("/core-person/$prisonNumber/email/$emailAddressId")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value()),

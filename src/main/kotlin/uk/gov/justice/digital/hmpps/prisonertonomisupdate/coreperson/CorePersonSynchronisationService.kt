@@ -132,12 +132,9 @@ class CorePersonSynchronisationService(
       transform {
         val cprContact = corePersonCprApiService.getPrisonerContact(prisonNumber, cprContactId)
         val contactValue = cprContact.value ?: throw IllegalStateException("Contact $cprContactId for $prisonNumber has no value")
-        val rootOffenderId = corePersonNomisApiService.getRootOffenderId(prisonNumber)
-        telemetryMap["rootOffenderId"] = rootOffenderId.toString()
-
         val (nomisContactType, nomisId) = if (cprContact.type == PrisonContact.Type.EMAIL) {
           NomisContactType.EMAIL to corePersonNomisApiService.createOffenderEmail(
-            rootOffenderId,
+            prisonNumber,
             CreateOffenderEmailRequest(email = contactValue),
           ).emailAddressId
         } else {
@@ -150,13 +147,13 @@ class CorePersonSynchronisationService(
             val mapping = corePersonMappingApiService.getByCprAddressIdOrNull(cprContact.cprAddressId)
               ?: throw ParentEntityNotFoundRetry("No mapping found for CPR address ID ${cprContact.cprAddressId}")
             NomisContactType.PHONE to corePersonNomisApiService.createOffenderAddressPhone(
-              rootOffenderId,
+              prisonNumber,
               mapping.nomisId,
               phoneRequest,
             ).phoneId
           } else {
             NomisContactType.PHONE to corePersonNomisApiService.createOffenderPhone(
-              rootOffenderId,
+              prisonNumber,
               phoneRequest,
             ).phoneId
           }
@@ -200,12 +197,9 @@ class CorePersonSynchronisationService(
       if (cprContactType != mapping.nomisContactType) {
         throw IllegalStateException("Contact $cprContactId for $prisonNumber has changed from ${mapping.nomisContactType} to $cprContactType")
       }
-      val rootOffenderId = corePersonNomisApiService.getRootOffenderId(prisonNumber)
-      telemetryMap["rootOffenderId"] = rootOffenderId.toString()
-
       when (mapping.nomisContactType) {
         NomisContactType.EMAIL -> corePersonNomisApiService.updateOffenderEmail(
-          rootOffenderId,
+          prisonNumber,
           mapping.nomisId,
           UpdateOffenderEmailRequest(email = contactValue),
         )
@@ -219,14 +213,14 @@ class CorePersonSynchronisationService(
             val addressMapping = corePersonMappingApiService.getByCprAddressIdOrNull(cprContact.cprAddressId)
               ?: throw ParentEntityNotFoundRetry("No mapping found for CPR address ID ${cprContact.cprAddressId}")
             corePersonNomisApiService.updateOffenderAddressPhone(
-              rootOffenderId,
+              prisonNumber,
               addressMapping.nomisId,
               mapping.nomisId,
               phoneRequest,
             )
           } else {
             corePersonNomisApiService.updateOffenderPhone(
-              rootOffenderId,
+              prisonNumber,
               mapping.nomisId,
               phoneRequest,
             )

@@ -8,7 +8,6 @@ import org.springframework.web.reactive.function.client.WebClient
 import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.CorePersonResourceApi
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.PrisonersResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CorePerson
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CorePersonInsertReligionRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CorePersonMergeRequest
@@ -31,7 +30,6 @@ class CorePersonNomisApiService(
   )
 
   private val api = CorePersonResourceApi(webClient)
-  private val prisonersApi = PrisonersResourceApi(webClient)
 
   suspend fun getPrisonerForReconciliation(prisonNumber: String): CorePerson? = api
     .prepare(api.getOffenderForReconciliationRequestConfig(prisonNumber))
@@ -55,32 +53,27 @@ class CorePersonNomisApiService(
     corePersonInsertReligionRequest = corePersonInsertReligionRequest,
   ).awaitSingle()
 
-  suspend fun getRootOffenderId(prisonNumber: String): Long = prisonersApi
-    .getPrisonerDetails(prisonNumber)
-    .awaitSingle()
-    .rootOffenderId ?: throw IllegalStateException("No root offender id found for $prisonNumber")
-
-  suspend fun createOffenderPhone(offenderId: Long, request: CreateOffenderPhoneRequest): CreateOffenderPhoneResponse = api
-    .createOffenderPhone(offenderId, request)
+  suspend fun createOffenderPhone(prisonNumber: String, request: CreateOffenderPhoneRequest): CreateOffenderPhoneResponse = api
+    .createOffenderPhone(prisonNumber, request)
     .awaitSingle()
 
-  suspend fun createOffenderAddressPhone(offenderId: Long, addressId: Long, request: CreateOffenderPhoneRequest): CreateOffenderPhoneResponse = api
-    .createOffenderAddressPhone(offenderId, addressId, request)
+  suspend fun createOffenderAddressPhone(prisonNumber: String, addressId: Long, request: CreateOffenderPhoneRequest): CreateOffenderPhoneResponse = api
+    .createOffenderAddressPhone(prisonNumber, addressId, request)
     .awaitSingle()
 
-  suspend fun createOffenderEmail(offenderId: Long, request: CreateOffenderEmailRequest): CreateOffenderEmailResponse = api
-    .createOffenderEmail(offenderId, request)
+  suspend fun createOffenderEmail(prisonNumber: String, request: CreateOffenderEmailRequest): CreateOffenderEmailResponse = api
+    .createOffenderEmail(prisonNumber, request)
     .awaitSingle()
 
-  suspend fun updateOffenderPhone(offenderId: Long, phoneId: Long, request: UpdateOffenderPhoneRequest) {
-    api.updateOffenderPhone(offenderId, phoneId, request).awaitSingleOrNull()
+  suspend fun updateOffenderPhone(prisonNumber: String, phoneId: Long, request: UpdateOffenderPhoneRequest) {
+    api.updateOffenderPhone(prisonNumber, phoneId, request).awaitSingleOrNull()
   }
 
-  suspend fun updateOffenderAddressPhone(offenderId: Long, addressId: Long, phoneId: Long, request: UpdateOffenderPhoneRequest) {
-    api.updateOffenderAddressPhone(offenderId, addressId, phoneId, request).awaitSingleOrNull()
+  suspend fun updateOffenderAddressPhone(prisonNumber: String, addressId: Long, phoneId: Long, request: UpdateOffenderPhoneRequest) {
+    api.updateOffenderAddressPhone(prisonNumber, addressId, phoneId, request).awaitSingleOrNull()
   }
 
-  suspend fun updateOffenderEmail(offenderId: Long, emailAddressId: Long, request: UpdateOffenderEmailRequest) {
-    api.updateOffenderEmail(offenderId, emailAddressId, request).awaitSingleOrNull()
+  suspend fun updateOffenderEmail(prisonNumber: String, emailAddressId: Long, request: UpdateOffenderEmailRequest) {
+    api.updateOffenderEmail(prisonNumber, emailAddressId, request).awaitSingleOrNull()
   }
 }
