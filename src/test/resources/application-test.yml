@@ -453,7 +453,7 @@ hmpps.sqs:
       subscribeTopicId: domainevents
       subscribeFilter: >-
         { "eventType":[
-          "oagency.updated"
+          "register.court.email.inserted"
         ]}
       dlqMaxReceiveCount: 2
       visibilityTimeout: 120
