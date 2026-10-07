@@ -153,33 +153,8 @@ class CorePersonNomisApiServiceTest {
   }
 
   @Nested
-  inner class GetRootOffenderId {
-    private val prisonNumber = "A1234BC"
-
-    @Test
-    fun `will request the prisoner details`() = runTest {
-      mockServer.stubGetPrisonerDetails(prisonNumber)
-
-      apiService.getRootOffenderId(prisonNumber)
-
-      mockServer.verify(
-        getRequestedFor(urlPathEqualTo("/prisoners/$prisonNumber")),
-      )
-    }
-
-    @Test
-    fun `will return the root offender id`() = runTest {
-      mockServer.stubGetPrisonerDetails(prisonNumber, rootOffenderId = 98765L)
-
-      val rootOffenderId = apiService.getRootOffenderId(prisonNumber)
-
-      assertThat(rootOffenderId).isEqualTo(98765L)
-    }
-  }
-
-  @Nested
   inner class CreateOffenderPhone {
-    private val offenderId = 12345L
+    private val prisonNumber = "A1234BC"
     private val request = CreateOffenderPhoneRequest(
       number = "07700 900000",
       extension = "123",
@@ -188,19 +163,19 @@ class CorePersonNomisApiServiceTest {
 
     @Test
     fun `will post the phone request`() = runTest {
-      mockServer.stubCreateOffenderPhone(offenderId)
+      mockServer.stubCreateOffenderPhone(prisonNumber)
 
-      apiService.createOffenderPhone(offenderId, request)
+      apiService.createOffenderPhone(prisonNumber, request)
 
       mockServer.verify(
-        postRequestedFor(urlPathEqualTo("/core-person/$offenderId/phone"))
+        postRequestedFor(urlPathEqualTo("/core-person/$prisonNumber/phone"))
           .withRequestBody(equalToJson(jsonMapper.writeValueAsString(request))),
       )
     }
 
     @Nested
     inner class CreateOffenderAddressPhone {
-      private val offenderId = 12345L
+      private val prisonNumber = "A1234BC"
       private val addressId = 67890L
       private val request = CreateOffenderPhoneRequest(
         number = "07700 900000",
@@ -210,21 +185,21 @@ class CorePersonNomisApiServiceTest {
 
       @Test
       fun `will post the phone request for an address`() = runTest {
-        mockServer.stubCreateOffenderAddressPhone(offenderId, addressId)
+        mockServer.stubCreateOffenderAddressPhone(prisonNumber, addressId)
 
-        apiService.createOffenderAddressPhone(offenderId, addressId, request)
+        apiService.createOffenderAddressPhone(prisonNumber, addressId, request)
 
         mockServer.verify(
-          postRequestedFor(urlPathEqualTo("/core-person/$offenderId/address/$addressId/phone"))
+          postRequestedFor(urlPathEqualTo("/core-person/$prisonNumber/address/$addressId/phone"))
             .withRequestBody(equalToJson(jsonMapper.writeValueAsString(request))),
         )
       }
 
       @Test
       fun `will return the created phone id`() = runTest {
-        mockServer.stubCreateOffenderAddressPhone(offenderId, addressId, phoneId = 98765L)
+        mockServer.stubCreateOffenderAddressPhone(prisonNumber, addressId, phoneId = 98765L)
 
-        val response = apiService.createOffenderAddressPhone(offenderId, addressId, request)
+        val response = apiService.createOffenderAddressPhone(prisonNumber, addressId, request)
 
         assertThat(response.phoneId).isEqualTo(98765L)
       }
@@ -232,9 +207,9 @@ class CorePersonNomisApiServiceTest {
 
     @Test
     fun `will return the created phone id`() = runTest {
-      mockServer.stubCreateOffenderPhone(offenderId, phoneId = 98765L)
+      mockServer.stubCreateOffenderPhone(prisonNumber, phoneId = 98765L)
 
-      val response = apiService.createOffenderPhone(offenderId, request)
+      val response = apiService.createOffenderPhone(prisonNumber, request)
 
       assertThat(response.phoneId).isEqualTo(98765L)
     }
@@ -242,26 +217,26 @@ class CorePersonNomisApiServiceTest {
 
   @Nested
   inner class CreateOffenderEmail {
-    private val offenderId = 12345L
+    private val prisonNumber = "A1234BC"
     private val request = CreateOffenderEmailRequest(email = "test@justice.gov.uk")
 
     @Test
     fun `will post the email request`() = runTest {
-      mockServer.stubCreateOffenderEmail(offenderId)
+      mockServer.stubCreateOffenderEmail(prisonNumber)
 
-      apiService.createOffenderEmail(offenderId, request)
+      apiService.createOffenderEmail(prisonNumber, request)
 
       mockServer.verify(
-        postRequestedFor(urlPathEqualTo("/core-person/$offenderId/email"))
+        postRequestedFor(urlPathEqualTo("/core-person/$prisonNumber/email"))
           .withRequestBody(equalToJson(jsonMapper.writeValueAsString(request))),
       )
     }
 
     @Test
     fun `will return the created email address id`() = runTest {
-      mockServer.stubCreateOffenderEmail(offenderId, emailAddressId = 98765L)
+      mockServer.stubCreateOffenderEmail(prisonNumber, emailAddressId = 98765L)
 
-      val response = apiService.createOffenderEmail(offenderId, request)
+      val response = apiService.createOffenderEmail(prisonNumber, request)
 
       assertThat(response.emailAddressId).isEqualTo(98765L)
     }
@@ -269,7 +244,7 @@ class CorePersonNomisApiServiceTest {
 
   @Nested
   inner class UpdateOffenderPhone {
-    private val offenderId = 12345L
+    private val prisonNumber = "A1234BC"
     private val phoneId = 54321L
     private val request = UpdateOffenderPhoneRequest(
       number = "07700 900000",
@@ -279,12 +254,12 @@ class CorePersonNomisApiServiceTest {
 
     @Test
     fun `will put the phone request`() = runTest {
-      mockServer.stubUpdateOffenderPhone(offenderId, phoneId)
+      mockServer.stubUpdateOffenderPhone(prisonNumber, phoneId)
 
-      apiService.updateOffenderPhone(offenderId, phoneId, request)
+      apiService.updateOffenderPhone(prisonNumber, phoneId, request)
 
       mockServer.verify(
-        putRequestedFor(urlPathEqualTo("/core-person/$offenderId/phone/$phoneId"))
+        putRequestedFor(urlPathEqualTo("/core-person/$prisonNumber/phone/$phoneId"))
           .withRequestBody(equalToJson(jsonMapper.writeValueAsString(request))),
       )
     }
@@ -292,7 +267,7 @@ class CorePersonNomisApiServiceTest {
 
   @Nested
   inner class UpdateOffenderAddressPhone {
-    private val offenderId = 12345L
+    private val prisonNumber = "A1234BC"
     private val addressId = 67890L
     private val phoneId = 54321L
     private val request = UpdateOffenderPhoneRequest(
@@ -303,12 +278,12 @@ class CorePersonNomisApiServiceTest {
 
     @Test
     fun `will put the phone request for an address`() = runTest {
-      mockServer.stubUpdateOffenderAddressPhone(offenderId, addressId, phoneId)
+      mockServer.stubUpdateOffenderAddressPhone(prisonNumber, addressId, phoneId)
 
-      apiService.updateOffenderAddressPhone(offenderId, addressId, phoneId, request)
+      apiService.updateOffenderAddressPhone(prisonNumber, addressId, phoneId, request)
 
       mockServer.verify(
-        putRequestedFor(urlPathEqualTo("/core-person/$offenderId/address/$addressId/phone/$phoneId"))
+        putRequestedFor(urlPathEqualTo("/core-person/$prisonNumber/address/$addressId/phone/$phoneId"))
           .withRequestBody(equalToJson(jsonMapper.writeValueAsString(request))),
       )
     }
@@ -316,18 +291,18 @@ class CorePersonNomisApiServiceTest {
 
   @Nested
   inner class UpdateOffenderEmail {
-    private val offenderId = 12345L
+    private val prisonNumber = "A1234BC"
     private val emailAddressId = 54321L
     private val request = UpdateOffenderEmailRequest(email = "test@justice.gov.uk")
 
     @Test
     fun `will put the email request`() = runTest {
-      mockServer.stubUpdateOffenderEmail(offenderId, emailAddressId)
+      mockServer.stubUpdateOffenderEmail(prisonNumber, emailAddressId)
 
-      apiService.updateOffenderEmail(offenderId, emailAddressId, request)
+      apiService.updateOffenderEmail(prisonNumber, emailAddressId, request)
 
       mockServer.verify(
-        putRequestedFor(urlPathEqualTo("/core-person/$offenderId/email/$emailAddressId"))
+        putRequestedFor(urlPathEqualTo("/core-person/$prisonNumber/email/$emailAddressId"))
           .withRequestBody(equalToJson(jsonMapper.writeValueAsString(request))),
       )
     }

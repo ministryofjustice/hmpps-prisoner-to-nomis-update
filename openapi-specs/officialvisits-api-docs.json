@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-02.1295.bb35280"
+    "version" : "2026-10-06.1300.7c693cc"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -7234,7 +7234,7 @@
           "issueType" : {
             "type" : "string",
             "description" : "The issue type",
-            "enum" : [ "PRISONER_NEW_ALERT", "PRISONER_NEW_RESTRICTION", "PRISONER_RELEASED", "PRISONER_TRANSFERRED", "VISITOR_NO_RELATIONSHIP", "VISITOR_NOT_APPROVED", "VISITOR_NOT_OFFICIAL" ]
+            "enum" : [ "PRISONER_NEW_ALERT", "PRISONER_RELEASED", "PRISONER_TRANSFERRED", "VISITOR_NO_RELATIONSHIP", "VISITOR_NOT_APPROVED", "VISITOR_NOT_OFFICIAL" ]
           },
           "issueDetail" : {
             "type" : [ "string", "null" ],

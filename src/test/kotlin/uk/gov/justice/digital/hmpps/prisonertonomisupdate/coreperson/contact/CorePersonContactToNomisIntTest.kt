@@ -35,7 +35,6 @@ class CorePersonContactToNomisIntTest(
   inner class ContactCreated {
     private val prisonNumber = "A1234BC"
     private val cprContactId = "11111111-2222-3333-4444-555555555555"
-    private val rootOffenderId = 12345L
     private val nomisId = 54321L
 
     @Nested
@@ -76,8 +75,8 @@ class CorePersonContactToNomisIntTest(
 
         @Test
         fun `will not create the contact in NOMIS`() {
-          nomisApi.verify(0, postRequestedFor(urlPathEqualTo("/core-person/$rootOffenderId/phone")))
-          nomisApi.verify(0, postRequestedFor(urlPathEqualTo("/core-person/$rootOffenderId/email")))
+          nomisApi.verify(0, postRequestedFor(urlPathEqualTo("/core-person/$prisonNumber/phone")))
+          nomisApi.verify(0, postRequestedFor(urlPathEqualTo("/core-person/$prisonNumber/email")))
         }
       }
 
@@ -92,8 +91,7 @@ class CorePersonContactToNomisIntTest(
             cprContactId,
             prisonerContact(prisonNumber).copy(type = PrisonContact.Type.MOBILE, value = "07700 900000", extension = "123"),
           )
-          nomisApi.stubGetPrisonerDetails(prisonNumber, rootOffenderId = rootOffenderId)
-          nomisApi.stubCreateOffenderPhone(rootOffenderId, phoneId = nomisId)
+          nomisApi.stubCreateOffenderPhone(prisonNumber, phoneId = nomisId)
           mappingApi.stubCreateContactMapping()
 
           publishContactCreatedDomainEvent(prisonNumber, cprContactId)
@@ -110,7 +108,7 @@ class CorePersonContactToNomisIntTest(
         @Test
         fun `will create the phone in NOMIS against the root offender`() {
           nomisApi.verify(
-            postRequestedFor(urlPathEqualTo("/core-person/$rootOffenderId/phone"))
+            postRequestedFor(urlPathEqualTo("/core-person/$prisonNumber/phone"))
               .withRequestBodyJsonPath("number", "07700 900000")
               .withRequestBodyJsonPath("extension", "123")
               .withRequestBodyJsonPath("typeCode", "MOB"),
@@ -136,7 +134,6 @@ class CorePersonContactToNomisIntTest(
             check {
               assertThat(it).containsEntry("prisonNumber", prisonNumber)
               assertThat(it).containsEntry("cprContactId", cprContactId)
-              assertThat(it).containsEntry("rootOffenderId", rootOffenderId.toString())
               assertThat(it).containsEntry("nomisContactType", "PHONE")
               assertThat(it).containsEntry("nomisId", nomisId.toString())
             },
@@ -173,8 +170,7 @@ class CorePersonContactToNomisIntTest(
               cprAddressId = cprAddressId,
             ),
           )
-          nomisApi.stubGetPrisonerDetails(prisonNumber, rootOffenderId = rootOffenderId)
-          nomisApi.stubCreateOffenderAddressPhone(rootOffenderId, nomisAddressId, phoneId = nomisId)
+          nomisApi.stubCreateOffenderAddressPhone(prisonNumber, nomisAddressId, phoneId = nomisId)
           mappingApi.stubCreateContactMapping()
 
           publishContactCreatedDomainEvent(prisonNumber, cprContactId)
@@ -191,7 +187,7 @@ class CorePersonContactToNomisIntTest(
         @Test
         fun `will create the phone in NOMIS against the mapped address`() {
           nomisApi.verify(
-            postRequestedFor(urlPathEqualTo("/core-person/$rootOffenderId/address/$nomisAddressId/phone"))
+            postRequestedFor(urlPathEqualTo("/core-person/$prisonNumber/address/$nomisAddressId/phone"))
               .withRequestBodyJsonPath("number", "07700 900000")
               .withRequestBodyJsonPath("extension", "123")
               .withRequestBodyJsonPath("typeCode", "MOB"),
@@ -222,8 +218,7 @@ class CorePersonContactToNomisIntTest(
             cprContactId,
             prisonerContact(prisonNumber).copy(type = PrisonContact.Type.EMAIL, value = "test@justice.gov.uk"),
           )
-          nomisApi.stubGetPrisonerDetails(prisonNumber, rootOffenderId = rootOffenderId)
-          nomisApi.stubCreateOffenderEmail(rootOffenderId, emailAddressId = nomisId)
+          nomisApi.stubCreateOffenderEmail(prisonNumber, emailAddressId = nomisId)
           mappingApi.stubCreateContactMapping()
 
           publishContactCreatedDomainEvent(prisonNumber, cprContactId)
@@ -233,7 +228,7 @@ class CorePersonContactToNomisIntTest(
         @Test
         fun `will create the email in NOMIS against the root offender`() {
           nomisApi.verify(
-            postRequestedFor(urlPathEqualTo("/core-person/$rootOffenderId/email"))
+            postRequestedFor(urlPathEqualTo("/core-person/$prisonNumber/email"))
               .withRequestBodyJsonPath("email", "test@justice.gov.uk"),
           )
         }
@@ -262,8 +257,7 @@ class CorePersonContactToNomisIntTest(
             cprContactId,
             prisonerContact(prisonNumber).copy(type = PrisonContact.Type.EMAIL, value = "test@justice.gov.uk"),
           )
-          nomisApi.stubGetPrisonerDetails(prisonNumber, rootOffenderId = rootOffenderId)
-          nomisApi.stubCreateOffenderEmail(rootOffenderId, emailAddressId = nomisId)
+          nomisApi.stubCreateOffenderEmail(prisonNumber, emailAddressId = nomisId)
           mappingApi.stubCreateContactMappingFollowedBySuccess()
 
           publishContactCreatedDomainEvent(prisonNumber, cprContactId)
@@ -283,7 +277,7 @@ class CorePersonContactToNomisIntTest(
 
         @Test
         fun `will create the email in NOMIS once`() {
-          nomisApi.verify(1, postRequestedFor(urlPathEqualTo("/core-person/$rootOffenderId/email")))
+          nomisApi.verify(1, postRequestedFor(urlPathEqualTo("/core-person/$prisonNumber/email")))
         }
 
         @Test
@@ -311,7 +305,6 @@ class CorePersonContactToNomisIntTest(
   inner class ContactUpdated {
     private val prisonNumber = "A1234BC"
     private val cprContactId = "11111111-2222-3333-4444-555555555555"
-    private val rootOffenderId = 12345L
     private val nomisId = 54321L
 
     @Nested
@@ -353,8 +346,7 @@ class CorePersonContactToNomisIntTest(
             cprContactId,
             prisonerContact(prisonNumber).copy(type = PrisonContact.Type.MOBILE, value = "07700 900000", extension = "123"),
           )
-          nomisApi.stubGetPrisonerDetails(prisonNumber, rootOffenderId = rootOffenderId)
-          nomisApi.stubUpdateOffenderPhone(rootOffenderId, phoneId = nomisId)
+          nomisApi.stubUpdateOffenderPhone(prisonNumber, phoneId = nomisId)
 
           publishContactDomainEvent("core-person-record.prison.contact.updated", prisonNumber, cprContactId)
           waitForAnyProcessingToComplete("core-person-contact-update-success")
@@ -370,7 +362,7 @@ class CorePersonContactToNomisIntTest(
         @Test
         fun `will update the phone in NOMIS against the root offender`() {
           nomisApi.verify(
-            putRequestedFor(urlPathEqualTo("/core-person/$rootOffenderId/phone/$nomisId"))
+            putRequestedFor(urlPathEqualTo("/core-person/$prisonNumber/phone/$nomisId"))
               .withRequestBodyJsonPath("number", "07700 900000")
               .withRequestBodyJsonPath("extension", "123")
               .withRequestBodyJsonPath("typeCode", "MOB"),
@@ -384,7 +376,6 @@ class CorePersonContactToNomisIntTest(
             check {
               assertThat(it).containsEntry("prisonNumber", prisonNumber)
               assertThat(it).containsEntry("cprContactId", cprContactId)
-              assertThat(it).containsEntry("rootOffenderId", rootOffenderId.toString())
               assertThat(it).containsEntry("nomisContactType", "PHONE")
               assertThat(it).containsEntry("nomisId", nomisId.toString())
             },
@@ -424,8 +415,7 @@ class CorePersonContactToNomisIntTest(
               cprAddressId = cprAddressId,
             ),
           )
-          nomisApi.stubGetPrisonerDetails(prisonNumber, rootOffenderId = rootOffenderId)
-          nomisApi.stubUpdateOffenderAddressPhone(rootOffenderId, nomisAddressId, phoneId = nomisId)
+          nomisApi.stubUpdateOffenderAddressPhone(prisonNumber, nomisAddressId, phoneId = nomisId)
 
           publishContactDomainEvent("core-person-record.prison.contact.updated", prisonNumber, cprContactId)
           waitForAnyProcessingToComplete("core-person-contact-update-success")
@@ -441,7 +431,7 @@ class CorePersonContactToNomisIntTest(
         @Test
         fun `will update the phone in NOMIS against the mapped address`() {
           nomisApi.verify(
-            putRequestedFor(urlPathEqualTo("/core-person/$rootOffenderId/address/$nomisAddressId/phone/$nomisId"))
+            putRequestedFor(urlPathEqualTo("/core-person/$prisonNumber/address/$nomisAddressId/phone/$nomisId"))
               .withRequestBodyJsonPath("number", "07700 900000")
               .withRequestBodyJsonPath("extension", "123")
               .withRequestBodyJsonPath("typeCode", "MOB"),
@@ -463,8 +453,7 @@ class CorePersonContactToNomisIntTest(
             cprContactId,
             prisonerContact(prisonNumber).copy(type = PrisonContact.Type.EMAIL, value = "test@justice.gov.uk"),
           )
-          nomisApi.stubGetPrisonerDetails(prisonNumber, rootOffenderId = rootOffenderId)
-          nomisApi.stubUpdateOffenderEmail(rootOffenderId, emailAddressId = nomisId)
+          nomisApi.stubUpdateOffenderEmail(prisonNumber, emailAddressId = nomisId)
 
           publishContactDomainEvent("core-person-record.prison.contact.updated", prisonNumber, cprContactId)
           waitForAnyProcessingToComplete("core-person-contact-update-success")
@@ -473,7 +462,7 @@ class CorePersonContactToNomisIntTest(
         @Test
         fun `will update the email in NOMIS against the root offender`() {
           nomisApi.verify(
-            putRequestedFor(urlPathEqualTo("/core-person/$rootOffenderId/email/$nomisId"))
+            putRequestedFor(urlPathEqualTo("/core-person/$prisonNumber/email/$nomisId"))
               .withRequestBodyJsonPath("email", "test@justice.gov.uk"),
           )
         }
@@ -500,8 +489,8 @@ class CorePersonContactToNomisIntTest(
 
         @Test
         fun `will not update NOMIS`() {
-          nomisApi.verify(0, putRequestedFor(urlPathEqualTo("/core-person/$rootOffenderId/phone/$nomisId")))
-          nomisApi.verify(0, putRequestedFor(urlPathEqualTo("/core-person/$rootOffenderId/email/$nomisId")))
+          nomisApi.verify(0, putRequestedFor(urlPathEqualTo("/core-person/$prisonNumber/phone/$nomisId")))
+          nomisApi.verify(0, putRequestedFor(urlPathEqualTo("/core-person/$prisonNumber/email/$nomisId")))
         }
 
         @Test
