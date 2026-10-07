@@ -14,6 +14,7 @@ import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension.Companion.agencyIdsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension.Companion.jsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension.Companion.legacyAgencyDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.AgencyEmailDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.AgencyId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.AgencyIdsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.CourtDto
@@ -77,6 +78,11 @@ class AgencyRegistersDpsApiExtension :
 
     fun agencyIdsResponse() = AgencyIdsResponse(agencyIds = listOf(agencyId()))
     fun agencyId() = AgencyId("SHEFCC")
+
+    fun agencyEmailDto() = AgencyEmailDto(
+      id = 1,
+      address = "sheffield.crown.court@test.com",
+    )
 
     fun courtDto() = CourtDto(
       courtId = "SHEFCC",

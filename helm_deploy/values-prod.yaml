@@ -81,6 +81,7 @@ generic-service:
     FEATURE_EVENT_TRANFERMOVEMENTS_PERSON-TRANSFER-PLANNING-REQUESTED-CHANGED: true
     REPORTS_CONTACT-PERSON_PRISONER-CONTACT_RECONCILIATION_PAGE-SIZE: 10
     REPORTS_CONTACT-PERSON_PERSON-CONTACT_RECONCILIATION_PAGE-SIZE: 30
+    FEATURE_EVENT_REGISTER_COURT_EMAIL_INSERTED: false
 
   # The name has max length of 43 chars (Cronjob name max length is 52 chars, including prefix "to-nomis-")
   # The type must exist in enum BatchType

@@ -37,3 +37,22 @@ class AgencyRegistersDomainEventListener(
     }
   }
 }
+
+internal interface SourcedAdditionalData {
+  val source: String
+}
+
+internal interface SourcedEvent {
+  val additionalInformation: SourcedAdditionalData
+}
+
+data class CourtEmailEvent(
+  val eventType: String,
+  override val additionalInformation: CourtEmailAdditionalInformation,
+) : SourcedEvent
+
+data class CourtEmailAdditionalInformation(
+  val courtId: String,
+  val emailId: Long,
+  override val source: String,
+) : SourcedAdditionalData
