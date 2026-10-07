@@ -145,6 +145,17 @@ class CorePersonNomisApiMockServer(private val jsonMapper: JsonMapper) {
     )
   }
 
+  fun stubCreateOffenderAddressPhone(offenderId: Long, addressId: Long, phoneId: Long = 54321L) {
+    nomisApi.stubFor(
+      post(urlEqualTo("/core-person/$offenderId/address/$addressId/phone")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.CREATED.value())
+          .withBody(jsonMapper.writeValueAsString(CreateOffenderPhoneResponse(phoneId = phoneId))),
+      ),
+    )
+  }
+
   fun stubCreateOffenderEmail(offenderId: Long, emailAddressId: Long = 54321L) {
     nomisApi.stubFor(
       post(urlEqualTo("/core-person/$offenderId/email")).willReturn(

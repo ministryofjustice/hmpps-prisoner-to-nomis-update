@@ -64,6 +64,10 @@ class CorePersonNomisApiService(
     .createOffenderPhone(offenderId, request)
     .awaitSingle()
 
+  suspend fun createOffenderAddressPhone(offenderId: Long, addressId: Long, request: CreateOffenderPhoneRequest): CreateOffenderPhoneResponse = api
+    .createOffenderAddressPhone(offenderId, addressId, request)
+    .awaitSingle()
+
   suspend fun createOffenderEmail(offenderId: Long, request: CreateOffenderEmailRequest): CreateOffenderEmailResponse = api
     .createOffenderEmail(offenderId, request)
     .awaitSingle()

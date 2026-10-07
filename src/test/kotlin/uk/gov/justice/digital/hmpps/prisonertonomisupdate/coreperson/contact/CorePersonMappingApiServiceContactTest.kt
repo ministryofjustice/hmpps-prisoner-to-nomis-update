@@ -74,6 +74,40 @@ class CorePersonMappingApiServiceContactTest(
       )
     }
 
+    @Nested
+    inner class GetByCprAddressIdOrNull {
+      private val cprAddressId = "22222222-3333-4444-5555-666666666666"
+
+      @Test
+      fun `will request a mapping by CPR address id`() = runTest {
+        mockServer.stubGetAddressMapping(cprAddressId)
+
+        apiService.getByCprAddressIdOrNull(cprAddressId)
+
+        mockServer.verify(
+          getRequestedFor(urlPathEqualTo("/mapping/core-person/address/cpr-address-id/$cprAddressId")),
+        )
+      }
+
+      @Test
+      fun `will return the mapping`() = runTest {
+        mockServer.stubGetAddressMapping(cprAddressId)
+
+        val mapping = apiService.getByCprAddressIdOrNull(cprAddressId)
+
+        assertThat(mapping?.cprId).isEqualTo(cprAddressId)
+        assertThat(mapping?.nomisId).isEqualTo(12345L)
+        assertThat(mapping?.nomisPrisonNumber).isEqualTo("A1234AA")
+      }
+
+      @Test
+      fun `will return null when the mapping does not exist`() = runTest {
+        mockServer.stubGetAddressMapping(cprAddressId, mapping = null)
+
+        assertThat(apiService.getByCprAddressIdOrNull(cprAddressId)).isNull()
+      }
+    }
+
     @Test
     fun `will return the mapping`() = runTest {
       mockServer.stubGetContactMapping(cprContactId)
