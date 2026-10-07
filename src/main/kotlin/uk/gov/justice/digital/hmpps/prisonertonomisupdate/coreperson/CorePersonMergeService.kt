@@ -3,13 +3,12 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.religion.ReligionService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PersonReferenceList
 
 @Service
 class CorePersonMergeService(
   private val telemetryClient: TelemetryClient,
-  private val religionService: ReligionService,
+  private val corePersonSynchronisationService: CorePersonSynchronisationService,
 ) {
   suspend fun mergePerson(event: MergePersonEvent) {
     val toPrisonNumber = event.prisonNumber()
@@ -24,7 +23,7 @@ class CorePersonMergeService(
       "prisonNumber" to toPrisonNumber,
     )
 
-    religionService.mergeReligions(toPrisonNumber)
+    corePersonSynchronisationService.mergeReligions(toPrisonNumber)
 
     telemetryClient.trackEvent("coreperson-person-merged-success", telemetryMap)
   }

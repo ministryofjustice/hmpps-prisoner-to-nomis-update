@@ -11,14 +11,15 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import tools.jackson.databind.json.JsonMapper
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonMappingApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CorePersonContactMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 
 @SpringAPIServiceTest
-@Import(CorePersonContactMappingApiService::class, CorePersonContactMappingApiMockServer::class, RetryApiService::class)
-class CorePersonContactMappingApiServiceTest(
-  @Autowired private val apiService: CorePersonContactMappingApiService,
+@Import(CorePersonMappingApiService::class, CorePersonContactMappingApiMockServer::class, RetryApiService::class)
+class CorePersonMappingApiServiceContactTest(
+  @Autowired private val apiService: CorePersonMappingApiService,
   @Autowired private val mockServer: CorePersonContactMappingApiMockServer,
   @Autowired private val jsonMapper: JsonMapper,
 ) {

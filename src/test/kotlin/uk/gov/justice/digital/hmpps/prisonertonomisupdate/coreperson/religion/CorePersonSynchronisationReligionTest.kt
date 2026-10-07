@@ -18,8 +18,10 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.json.JsonTest
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonCprApiService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonMappingApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonNomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonRetryQueueService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonSynchronisationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.EventSource
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalEthnicity
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalIdentifiers
@@ -40,21 +42,21 @@ import java.time.LocalDateTime
 import java.util.*
 
 @JsonTest
-internal class ReligionServiceTest(@Autowired jsonMapper: JsonMapper) {
+internal class CorePersonSynchronisationReligionTest(@Autowired jsonMapper: JsonMapper) {
 
   private val telemetryClient: TelemetryClient = mock()
   private val corePersonNomisApiService: CorePersonNomisApiService = mock()
-  private val mapping: ReligionMappingApiService = mock()
+  private val mapping: CorePersonMappingApiService = mock()
   private val corePersonCprApiService: CorePersonCprApiService = mock()
   private val corePersonRetryQueueService: CorePersonRetryQueueService = mock()
 
-  private val religionService =
-    ReligionService(
+  private val synchronisationService =
+    CorePersonSynchronisationService(
       telemetryClient,
       corePersonCprApiService,
+      corePersonNomisApiService,
       mapping,
       corePersonRetryQueueService,
-      corePersonNomisApiService,
       jsonMapper,
     )
 
@@ -81,10 +83,10 @@ internal class ReligionServiceTest(@Autowired jsonMapper: JsonMapper) {
         ),
       )
       whenever(corePersonNomisApiService.insertReligion(any(), any())).thenReturn(12345L)
-      religionService.religionCreated(
-        ReligionService.ReligionEvent(
+      synchronisationService.religionCreated(
+        CorePersonSynchronisationService.ReligionEvent(
           "core-person-record.prison.religion.created",
-          ReligionService.CprReligionCreatedInfo(cprReligionId),
+          CorePersonSynchronisationService.CprReligionCreatedInfo(cprReligionId),
           PersonReferenceList(listOf(PersonReference("prisonNumber", prisonNumber))),
         ),
         EventSource(value = "DPS", type = "String"),
@@ -137,7 +139,7 @@ internal class ReligionServiceTest(@Autowired jsonMapper: JsonMapper) {
       )
 
       // Method under test
-      religionService.mergeReligions(prisonNumber)
+      synchronisationService.mergeReligions(prisonNumber)
 
       verify(corePersonNomisApiService).mergeReligions(
         eq("A1234BC"),
@@ -170,7 +172,7 @@ internal class ReligionServiceTest(@Autowired jsonMapper: JsonMapper) {
       )
 
       // Method under test
-      religionService.mergeReligions(prisonNumber)
+      synchronisationService.mergeReligions(prisonNumber)
 
       verify(corePersonNomisApiService, never()).mergeReligions(any(), any())
     }
@@ -195,7 +197,7 @@ internal class ReligionServiceTest(@Autowired jsonMapper: JsonMapper) {
       )
 
       // Method under test
-      assertThrows<IllegalStateException> { religionService.mergeReligions(prisonNumber) }
+      assertThrows<IllegalStateException> { synchronisationService.mergeReligions(prisonNumber) }
     }
   }
 

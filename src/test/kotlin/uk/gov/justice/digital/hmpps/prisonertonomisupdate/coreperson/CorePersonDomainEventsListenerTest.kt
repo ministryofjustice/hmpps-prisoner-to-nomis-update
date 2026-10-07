@@ -19,8 +19,6 @@ import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.json.JsonTest
 import tools.jackson.databind.json.JsonMapper
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.contact.CorePersonContactService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.religion.ReligionService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.contactCreatedMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.contactUpdatedMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.corePersonMergeMessage
@@ -29,20 +27,18 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.EventFeature
 
 @JsonTest
 internal class CorePersonDomainEventsListenerTest(@Autowired private val jsonMapper: JsonMapper) {
-  private val religionService: ReligionService = mock()
+  private val corePersonSynchronisationService: CorePersonSynchronisationService = mock()
   private val eventFeatureSwitch: EventFeatureSwitch = mock()
   private val corePersonMergeService: CorePersonMergeService = mock()
-  private val corePersonContactService: CorePersonContactService = mock()
   private val telemetryClient: TelemetryClient = mock()
 
   private val listener =
     CorePersonDomainEventListener(
       jsonMapper,
       eventFeatureSwitch,
-      religionService,
+      corePersonSynchronisationService,
       corePersonMergeService,
-      corePersonContactService,
-      CorePersonRetryService(jsonMapper, religionService, corePersonContactService),
+      CorePersonRetryService(corePersonSynchronisationService),
       telemetryClient,
     )
 
@@ -54,8 +50,7 @@ internal class CorePersonDomainEventsListenerTest(@Autowired private val jsonMap
 
       listener.onMessage(rawMessage = retryMessage(retryMessage)).join()
 
-      verify(religionService).retryCreateMapping(retryMessage)
-      verifyNoInteractions(corePersonContactService)
+      verify(corePersonSynchronisationService).retryCreateMapping(retryMessage)
     }
 
     @Test
@@ -64,8 +59,7 @@ internal class CorePersonDomainEventsListenerTest(@Autowired private val jsonMap
 
       listener.onMessage(rawMessage = retryMessage(retryMessage)).join()
 
-      verify(corePersonContactService).retryCreateMapping(retryMessage)
-      verifyNoInteractions(religionService)
+      verify(corePersonSynchronisationService).retryCreateMapping(retryMessage)
     }
 
     private fun retryMessage(message: String) = jsonMapper.writeValueAsString(
@@ -88,7 +82,7 @@ internal class CorePersonDomainEventsListenerTest(@Autowired private val jsonMap
           rawMessage = religionCreatedMessage("A1234BC", "e312a74d-ca98-4fbc-b212-608bc41558e7", source = "core-person-record"),
         ).join()
 
-        verify(religionService).religionCreated(
+        verify(corePersonSynchronisationService).religionCreated(
           check { it ->
             assertThat(it.additionalInformation.cprReligionId.toString()).isEqualTo("e312a74d-ca98-4fbc-b212-608bc41558e7")
             assertThat(it.personReference.identifiers.first { it.type == "prisonNumber" }.value).isEqualTo("A1234BC")
@@ -103,14 +97,13 @@ internal class CorePersonDomainEventsListenerTest(@Autowired private val jsonMap
           rawMessage = contactCreatedMessage("A1234BC", "11111111-2222-3333-4444-555555555555", source = "core-person-record"),
         ).join()
 
-        verify(corePersonContactService).contactCreated(
+        verify(corePersonSynchronisationService).contactCreated(
           check { it ->
             assertThat(it.additionalInformation.cprContactId.toString()).isEqualTo("11111111-2222-3333-4444-555555555555")
             assertThat(it.personReference.identifiers.first { it.type == "prisonNumber" }.value).isEqualTo("A1234BC")
           },
           eq(EventSource(value = "core-person-record", type = "String")),
         )
-        verifyNoInteractions(religionService)
         verifyNoInteractions(corePersonMergeService)
       }
 
@@ -120,7 +113,7 @@ internal class CorePersonDomainEventsListenerTest(@Autowired private val jsonMap
           rawMessage = contactCreatedMessage("A1234BC", "11111111-2222-3333-4444-555555555555", source = "nomis"),
         ).join()
 
-        verify(corePersonContactService).contactCreated(
+        verify(corePersonSynchronisationService).contactCreated(
           check {
             assertThat(it.additionalInformation.cprContactId.toString()).isEqualTo("11111111-2222-3333-4444-555555555555")
           },
@@ -134,14 +127,13 @@ internal class CorePersonDomainEventsListenerTest(@Autowired private val jsonMap
           rawMessage = contactUpdatedMessage("A1234BC", "11111111-2222-3333-4444-555555555555", source = "core-person-record"),
         ).join()
 
-        verify(corePersonContactService).contactUpdated(
+        verify(corePersonSynchronisationService).contactUpdated(
           check { it ->
             assertThat(it.additionalInformation.cprContactId.toString()).isEqualTo("11111111-2222-3333-4444-555555555555")
             assertThat(it.personReference.identifiers.first { it.type == "prisonNumber" }.value).isEqualTo("A1234BC")
           },
           eq(EventSource(value = "core-person-record", type = "String")),
         )
-        verifyNoInteractions(religionService)
         verifyNoInteractions(corePersonMergeService)
       }
 
@@ -194,9 +186,8 @@ internal class CorePersonDomainEventsListenerTest(@Autowired private val jsonMap
           rawMessage = contactUpdatedMessage("A1234BC", "11111111-2222-3333-4444-555555555555"),
         ).join()
 
-        verifyNoInteractions(religionService)
         verifyNoInteractions(corePersonMergeService)
-        verifyNoInteractions(corePersonContactService)
+        verifyNoInteractions(corePersonSynchronisationService)
       }
     }
   }

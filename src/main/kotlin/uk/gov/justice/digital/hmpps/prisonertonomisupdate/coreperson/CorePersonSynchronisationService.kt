@@ -1,21 +1,18 @@
-package uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.contact
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson
 
 import com.microsoft.applicationinsights.TelemetryClient
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import tools.jackson.databind.json.JsonMapper
 import tools.jackson.module.kotlin.readValue
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonCprApiService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonNomisApiService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonRetryQueueService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.EventSource
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.contact.CorePersonContactService.Companion.MappingTypes.CORE_PERSON_CONTACT
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.didOriginateInCpr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonContact
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonReligionReadResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CorePersonContactMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CorePersonContactMappingDto.NomisContactType
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ReligionMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CorePersonInsertReligionRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CorePersonMergeRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CorePersonReligionRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateOffenderEmailRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateOffenderPhoneRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateOffenderEmailRequest
@@ -27,28 +24,90 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
 import java.util.UUID
 
 @Service
-class CorePersonContactService(
+class CorePersonSynchronisationService(
   private val telemetryClient: TelemetryClient,
   private val corePersonCprApiService: CorePersonCprApiService,
   private val corePersonNomisApiService: CorePersonNomisApiService,
-  private val mappingApiService: CorePersonContactMappingApiService,
+  private val corePersonMappingApiService: CorePersonMappingApiService,
   private val corePersonRetryQueueService: CorePersonRetryQueueService,
   private val jsonMapper: JsonMapper,
 ) : CreateMappingRetryable {
   companion object {
     enum class MappingTypes(val entityName: String) {
+      CORE_PERSON_RELIGION("core-person-religion"),
       CORE_PERSON_CONTACT("core-person-contact"),
       ;
 
       companion object {
-        fun fromEntityName(entityName: String) = entries.find { it.entityName == entityName } ?: throw IllegalStateException("Mapping type $entityName does not exist")
+        fun fromEntityName(entityName: String) = entries.find { it.entityName == entityName }
+          ?: throw IllegalStateException("Mapping type $entityName does not exist")
       }
     }
-    val log: Logger = LoggerFactory.getLogger(this::class.java)
+  }
+
+  suspend fun religionCreated(event: ReligionEvent, eventSource: EventSource?) {
+    val entityName = MappingTypes.CORE_PERSON_RELIGION.entityName
+
+    val prisonNumber = event.personReference.identifiers.first { it.type == "prisonNumber" }.value
+    val cprReligionId = event.additionalInformation.cprReligionId.toString()
+    val telemetryMap = mutableMapOf(
+      "prisonNumber" to prisonNumber,
+      "cprReligionId" to cprReligionId,
+    )
+
+    if (eventSource.didOriginateInCpr()) {
+      synchronise {
+        name = entityName
+        telemetryClient = this@CorePersonSynchronisationService.telemetryClient
+        retryQueueService = corePersonRetryQueueService
+        eventTelemetry = telemetryMap
+
+        checkMappingDoesNotExist {
+          corePersonMappingApiService.getReligionByCprIdOrNull(cprReligionId)
+        }
+        transform {
+          val religion = corePersonCprApiService.getReligion(prisonNumber, cprReligionId)
+
+          val nomisBeliefId = corePersonNomisApiService.insertReligion(prisonNumber, religion.toNomisCreateRequest())
+          telemetryMap["nomisBeliefId"] = nomisBeliefId.toString()
+          ReligionMappingDto(
+            cprId = cprReligionId,
+            nomisId = nomisBeliefId,
+            nomisPrisonNumber = prisonNumber,
+            mappingType = ReligionMappingDto.MappingType.DPS_CREATED,
+          )
+        }
+        saveMapping { corePersonMappingApiService.createReligionMapping(it) }
+      }
+    } else {
+      telemetryClient.trackEvent("$entityName-create-ignored", telemetryMap)
+    }
+  }
+
+  suspend fun mergeReligions(toPrisonNumber: String) {
+    val telemetryMap = mutableMapOf(
+      "prisonNumber" to toPrisonNumber,
+    )
+    val toPerson = corePersonCprApiService.getCorePerson(toPrisonNumber)
+    val cprReligions = toPerson?.religionHistory.orEmpty()
+    val cprReligionIds = cprReligions.map { it.cprReligionId!! }
+    val mappings = corePersonMappingApiService.getByCprIds(cprReligionIds)
+    val missingMappings = cprReligionIds.toSet() - mappings.map { it.cprId }.toSet()
+    if (missingMappings.isNotEmpty()) {
+      throw IllegalStateException("Missing religion mappings for cpr religion ids: ${missingMappings.joinToString(", ")}")
+    }
+    val corePersonReligionRequests =
+      mappings.map { outer ->
+        CorePersonReligionRequest(outer.nomisId, cprReligions.first { it.cprReligionId == outer.cprId }.endDate)
+      }
+    if (corePersonReligionRequests.isNotEmpty()) {
+      corePersonNomisApiService.mergeReligions(toPrisonNumber, CorePersonMergeRequest(corePersonReligionRequests))
+    }
+    telemetryClient.trackEvent("coreperson-religions-merged-success", telemetryMap)
   }
 
   suspend fun contactCreated(event: ContactEvent, eventSource: EventSource?) {
-    val entityName = CORE_PERSON_CONTACT.entityName
+    val entityName = MappingTypes.CORE_PERSON_CONTACT.entityName
 
     val prisonNumber = event.personReference.identifiers.first { it.type == "prisonNumber" }.value
     val cprContactId = event.additionalInformation.cprContactId.toString()
@@ -64,12 +123,12 @@ class CorePersonContactService(
 
     synchronise {
       name = entityName
-      telemetryClient = this@CorePersonContactService.telemetryClient
+      telemetryClient = this@CorePersonSynchronisationService.telemetryClient
       retryQueueService = corePersonRetryQueueService
       eventTelemetry = telemetryMap
 
       checkMappingDoesNotExist {
-        mappingApiService.getByCprContactIdOrNull(cprContactId)
+        corePersonMappingApiService.getByCprContactIdOrNull(cprContactId)
       }
       transform {
         val cprContact = corePersonCprApiService.getPrisonerContact(prisonNumber, cprContactId)
@@ -103,28 +162,12 @@ class CorePersonContactService(
           mappingType = CorePersonContactMappingDto.MappingType.CPR_CREATED,
         )
       }
-      saveMapping { mappingApiService.createContactMapping(it) }
-    }
-  }
-
-  override suspend fun retryCreateMapping(message: String) {
-    val baseMapping: CreateMappingRetryMessage<*> = message.fromJson()
-    when (MappingTypes.fromEntityName(baseMapping.entityName)) {
-      CORE_PERSON_CONTACT -> createContactMapping(message.fromJson())
-    }
-  }
-
-  suspend fun createContactMapping(message: CreateMappingRetryMessage<CorePersonContactMappingDto>) {
-    mappingApiService.createContactMapping(message.mapping).also {
-      telemetryClient.trackEvent(
-        "${CORE_PERSON_CONTACT.entityName}-create-success",
-        message.telemetryAttributes,
-      )
+      saveMapping { corePersonMappingApiService.createContactMapping(it) }
     }
   }
 
   suspend fun contactUpdated(event: ContactEvent, eventSource: EventSource?) {
-    val entityName = CORE_PERSON_CONTACT.entityName
+    val entityName = MappingTypes.CORE_PERSON_CONTACT.entityName
 
     val prisonNumber = event.personReference.identifiers.first { it.type == "prisonNumber" }.value
     val cprContactId = event.additionalInformation.cprContactId.toString()
@@ -139,7 +182,7 @@ class CorePersonContactService(
     }
 
     runCatching {
-      val mapping = mappingApiService.getByCprContactId(cprContactId).also {
+      val mapping = corePersonMappingApiService.getByCprContactId(cprContactId).also {
         telemetryMap["nomisContactType"] = it.nomisContactType.value
         telemetryMap["nomisId"] = it.nomisId.toString()
       }
@@ -176,18 +219,60 @@ class CorePersonContactService(
     }
   }
 
+  override suspend fun retryCreateMapping(message: String) {
+    val baseMapping: CreateMappingRetryMessage<*> = message.fromJson()
+    when (MappingTypes.fromEntityName(baseMapping.entityName)) {
+      MappingTypes.CORE_PERSON_RELIGION -> createReligionMapping(message.fromJson())
+      MappingTypes.CORE_PERSON_CONTACT -> createContactMapping(message.fromJson())
+    }
+  }
+
+  suspend fun createReligionMapping(message: CreateMappingRetryMessage<ReligionMappingDto>) {
+    corePersonMappingApiService.createReligionMapping(message.mapping).also {
+      telemetryClient.trackEvent(
+        "${MappingTypes.CORE_PERSON_RELIGION.entityName}-create-success",
+        message.telemetryAttributes,
+      )
+    }
+  }
+
+  suspend fun createContactMapping(message: CreateMappingRetryMessage<CorePersonContactMappingDto>) {
+    corePersonMappingApiService.createContactMapping(message.mapping).also {
+      telemetryClient.trackEvent(
+        "${MappingTypes.CORE_PERSON_CONTACT.entityName}-create-success",
+        message.telemetryAttributes,
+      )
+    }
+  }
+
+  data class ReligionEvent(
+    val eventType: String,
+    val additionalInformation: CprReligionCreatedInfo,
+    val personReference: PersonReferenceList,
+  )
+
+  data class CprReligionCreatedInfo(
+    val cprReligionId: UUID,
+  )
+
+  data class ContactEvent(
+    val eventType: String,
+    val additionalInformation: CprContactInfo,
+    val personReference: PersonReferenceList,
+  )
+
+  data class CprContactInfo(
+    val cprContactId: UUID,
+  )
+
   private inline fun <reified T> String.fromJson(): T = jsonMapper.readValue(this)
 }
 
+private fun PrisonReligionReadResponse.toNomisCreateRequest() = CorePersonInsertReligionRequest(
+  beliefCode = religion.religionCode.value,
+  startDate = religion.startDate,
+  comments = religion.comments,
+)
+
 // NOMIS and CPR have slightly different phone type codes so need to translate
 private fun PrisonContact.Type.toNomisPhoneType(): String = if (this == PrisonContact.Type.MOBILE) "MOB" else value
-
-data class ContactEvent(
-  val eventType: String,
-  val additionalInformation: CprContactInfo,
-  val personReference: PersonReferenceList,
-)
-
-data class CprContactInfo(
-  val cprContactId: UUID,
-)

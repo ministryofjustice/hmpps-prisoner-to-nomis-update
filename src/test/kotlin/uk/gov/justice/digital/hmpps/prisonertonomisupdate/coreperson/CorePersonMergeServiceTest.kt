@@ -10,7 +10,6 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.springframework.boot.test.autoconfigure.json.JsonTest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.religion.ReligionService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PersonReference
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PersonReferenceList
 
@@ -18,8 +17,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PersonReferen
 internal class CorePersonMergeServiceTest {
   private val corePersonNomisApiService: CorePersonNomisApiService = mock()
   private val telemetryClient: TelemetryClient = mock()
-  private val religionService: ReligionService = mock()
-  private val corePersonMergeService = CorePersonMergeService(telemetryClient, religionService)
+  private val corePersonSynchronisationService: CorePersonSynchronisationService = mock()
+  private val corePersonMergeService = CorePersonMergeService(telemetryClient, corePersonSynchronisationService)
 
   @Nested
   inner class PersonMerged {
@@ -45,7 +44,7 @@ internal class CorePersonMergeServiceTest {
           ),
         )
 
-        verify(religionService).mergeReligions(
+        verify(corePersonSynchronisationService).mergeReligions(
           eq("A1234BC"),
         )
       }
