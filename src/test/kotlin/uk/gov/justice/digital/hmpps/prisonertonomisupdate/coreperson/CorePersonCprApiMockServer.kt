@@ -216,4 +216,5 @@ fun corePersonDto(nationality: String? = null, religion: String? = null, address
   } else {
     emptyList()
   },
+  contacts = emptyList(),
 )

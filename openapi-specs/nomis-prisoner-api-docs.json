@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-07.2167.60d92f4"
+    "version" : "2026-10-08.2185.cace372"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -15358,6 +15358,88 @@
         }
       }
     },
+    "/agency/{agencyId}/addresses" : {
+      "post" : {
+        "tags" : [ "agency-resource" ],
+        "summary" : "Create an agency address",
+        "description" : "Creates a new address for an agency. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "createAgencyAddress",
+        "parameters" : [ {
+          "name" : "agencyId",
+          "in" : "path",
+          "description" : "Agency id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Agency id",
+            "example" : "WWI"
+          },
+          "example" : "WWI"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateAgencyAddressRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Agency address created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CreateAgencyAddressResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "The request contains bad data, for example the default BUS address type reference data is missing",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Agency not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/agency-switches/{serviceCode}/agency/{agencyId}" : {
       "get" : {
         "tags" : [ "service-agency-switches-resource" ],
@@ -22761,6 +22843,68 @@
         }
       }
     },
+    "/movements/{offenderNo}/prisoner-locations" : {
+      "get" : {
+        "tags" : [ "offender-prisoner-locations-resource" ],
+        "summary" : "Get bookings and movements for an offender",
+        "description" : "Get bookings and movements for an offender. This is used to migrate prisoner locations to DPS and for reconciliation. Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getOffenderPrisonerLocations",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender number (NOMS ID)",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender number (NOMS ID)",
+            "example" : "A1234BC"
+          },
+          "example" : "A1234BC"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Prisoner locations returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OffenderPrisonerLocationsResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Offender not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/movements/{offenderNo}/court" : {
       "get" : {
         "tags" : [ "offender-court-movements-resource" ],
@@ -24505,6 +24649,18 @@
             "example" : "A1234BC"
           },
           "example" : "A1234BC"
+        }, {
+          "name" : "activeOnly",
+          "in" : "query",
+          "description" : "whether to return just active advances",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false,
+            "description" : "whether to return just active advances",
+            "example" : true
+          },
+          "example" : true
         } ],
         "responses" : {
           "200" : {
@@ -24830,6 +24986,18 @@
             "example" : 123456
           },
           "example" : 123456
+        }, {
+          "name" : "activeOnly",
+          "in" : "query",
+          "description" : "whether to return just active advances",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false,
+            "description" : "whether to return just active advances",
+            "example" : true
+          },
+          "example" : true
         } ],
         "responses" : {
           "200" : {
@@ -25326,6 +25494,56 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/PrisonerAdvanceDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Advance does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/finance/prisoners/advances/active-count" : {
+      "get" : {
+        "tags" : [ "prisoner-advance-resource" ],
+        "summary" : "Get a count of all active prisoner advances",
+        "description" : "Retrieves a count of all prisoner advances that are ACTIVE. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getActiveAdvancesCount",
+        "responses" : {
+          "200" : {
+            "description" : "Advance Information Returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AdvancesCount"
                 }
               }
             }
@@ -38229,6 +38447,64 @@
         },
         "required" : [ "emailAddress" ]
       },
+      "CreateAgencyAddressResponse" : {
+        "type" : "object",
+        "description" : "A response to creating an agency address",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Unique NOMIS Id of address"
+          }
+        },
+        "required" : [ "id" ]
+      },
+      "CreateAgencyAddressRequest" : {
+        "type" : "object",
+        "description" : "A request to create an agency address",
+        "properties" : {
+          "flat" : {
+            "type" : [ "string", "null" ],
+            "description" : "Flat name or number",
+            "example" : "Apartment 3"
+          },
+          "premise" : {
+            "type" : [ "string", "null" ],
+            "description" : "Premise",
+            "example" : "22"
+          },
+          "street" : {
+            "type" : [ "string", "null" ],
+            "description" : "Street",
+            "example" : "West Street"
+          },
+          "locality" : {
+            "type" : [ "string", "null" ],
+            "description" : "Locality",
+            "example" : "Keighley"
+          },
+          "postcode" : {
+            "type" : [ "string", "null" ],
+            "description" : "Post code",
+            "example" : "MK15 2ST"
+          },
+          "city" : {
+            "type" : [ "string", "null" ],
+            "description" : "City description, matched case insensitively. If not found the city will not be set",
+            "example" : "Sheffield"
+          },
+          "county" : {
+            "type" : [ "string", "null" ],
+            "description" : "County description, matched case insensitively. If not found the county will not be set",
+            "example" : "South Yorkshire"
+          },
+          "country" : {
+            "type" : [ "string", "null" ],
+            "description" : "Country description, matched case insensitively. If not found the country will not be set",
+            "example" : "England"
+          }
+        }
+      },
       "CreateHearingResponse" : {
         "type" : "object",
         "description" : "Provides the generated hearing ID after creation",
@@ -43902,6 +44178,145 @@
         },
         "required" : [ "activeBooking", "applicationDate", "applicationStatus", "applicationType", "audit", "bookingId", "eventSubType", "fromDate", "latestBooking", "prisonId", "releaseTime", "returnTime", "tapApplicationId", "toDate" ]
       },
+      "BookingPrisonerLocations" : {
+        "type" : "object",
+        "description" : "Booking prisoner locations",
+        "properties" : {
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Booking ID"
+          },
+          "bookingNumber" : {
+            "type" : "string",
+            "description" : "Booking Number"
+          },
+          "activeBooking" : {
+            "type" : "boolean",
+            "description" : "Whether this is an active booking"
+          },
+          "latestBooking" : {
+            "type" : "boolean",
+            "description" : "Whether this is the latest booking"
+          },
+          "bookingStatus" : {
+            "type" : "string",
+            "description" : "The open/closed flag ",
+            "enum" : [ "CLOSED", "OPEN" ]
+          },
+          "bookingBeginTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The booking begin date "
+          },
+          "bookingEndTime" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "The booking end date "
+          },
+          "movements" : {
+            "type" : "array",
+            "description" : "Movements related to the booking",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonerLocationMovement"
+            }
+          },
+          "audit" : {
+            "$ref" : "#/components/schemas/NomisAudit",
+            "description" : "Audit data associated with the records"
+          }
+        },
+        "required" : [ "activeBooking", "audit", "bookingBeginTime", "bookingId", "bookingNumber", "bookingStatus", "latestBooking", "movements" ]
+      },
+      "MovementLocation" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : [ "string", "null" ]
+          },
+          "type" : {
+            "type" : "string",
+            "enum" : [ "PRISON", "COURT", "OTHER" ]
+          },
+          "description" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "description", "type" ]
+      },
+      "OffenderPrisonerLocationsResponse" : {
+        "type" : "object",
+        "description" : "Offender prisoner locations, with bookings and movements",
+        "properties" : {
+          "bookings" : {
+            "type" : "array",
+            "description" : "List of bookings with their external movements",
+            "items" : {
+              "$ref" : "#/components/schemas/BookingPrisonerLocations"
+            }
+          }
+        },
+        "required" : [ "bookings" ]
+      },
+      "PrisonerLocationMovement" : {
+        "type" : "object",
+        "properties" : {
+          "sequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Movement sequence"
+          },
+          "movementType" : {
+            "type" : "string",
+            "description" : "Movement type",
+            "enum" : [ "ADM", "CRT", "TAP", "TRN", "REL" ]
+          },
+          "directionCode" : {
+            "type" : "string",
+            "description" : "The direction of the movement",
+            "enum" : [ "IN", "OUT" ]
+          },
+          "movementTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Movement time"
+          },
+          "movementReason" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "Movement reason code"
+          },
+          "from" : {
+            "description" : "From location",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/MovementLocation"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "to" : {
+            "description" : "To location",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/MovementLocation"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "scheduleId" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int64",
+            "description" : "Schedule ID"
+          },
+          "commentText" : {
+            "type" : [ "string", "null" ],
+            "description" : "Comment text"
+          },
+          "audit" : {
+            "$ref" : "#/components/schemas/NomisAudit",
+            "description" : "Audit data associated with the records"
+          }
+        },
+        "required" : [ "audit", "directionCode", "movementReason", "movementTime", "movementType", "sequence" ]
+      },
       "BookingCourtMovementIn" : {
         "type" : "object",
         "properties" : {
@@ -45509,7 +45924,7 @@
             "example" : "Advance for personal expenses"
           },
           "informationNumber" : {
-            "type" : [ "string", "null" ],
+            "type" : "string",
             "description" : "The information number",
             "example" : "12345678-1"
           },
@@ -45525,12 +45940,13 @@
             "example" : "2024-06-01T12:00:00"
           },
           "status" : {
-            "type" : [ "string", "null" ],
+            "type" : "string",
             "description" : "The status of the advance",
+            "enum" : [ "ACTIVE", "REPAID", "WRITTEN_OFF", "TODO" ],
             "example" : "ACTIVE"
           }
         },
-        "required" : [ "advanceAmount", "caseloadId", "createDatetime", "createdBy", "id", "prisonNumber", "repaymentAmount", "startDate" ]
+        "required" : [ "advanceAmount", "caseloadId", "createDatetime", "createdBy", "id", "informationNumber", "prisonNumber", "repaymentAmount", "startDate", "status" ]
       },
       "PagedModelLong" : {
         "type" : "object",
@@ -45574,9 +45990,9 @@
             "type" : [ "integer", "null" ],
             "format" : "int64"
           },
-          "txnId" : {
-            "type" : "integer",
-            "format" : "int64"
+          "txnEntryDate" : {
+            "type" : "string",
+            "format" : "date-time"
           },
           "txnEntryDesc" : {
             "type" : [ "string", "null" ]
@@ -45591,12 +46007,24 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "txnEntryDate" : {
-            "type" : "string",
-            "format" : "date-time"
+          "txnId" : {
+            "type" : "integer",
+            "format" : "int64"
           }
         },
         "required" : [ "txnEntryAmount", "txnEntryDate", "txnEntrySeq", "txnId" ]
+      },
+      "AdvancesCount" : {
+        "type" : "object",
+        "properties" : {
+          "activeCount" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The count of active advances",
+            "example" : 3
+          }
+        },
+        "required" : [ "activeCount" ]
       },
       "PrisonAccountBalanceDto" : {
         "type" : "object",
