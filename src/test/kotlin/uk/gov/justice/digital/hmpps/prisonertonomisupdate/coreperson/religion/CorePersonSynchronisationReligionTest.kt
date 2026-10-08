@@ -248,5 +248,6 @@ internal class CorePersonSynchronisationReligionTest(@Autowired jsonMapper: Json
       otherIdentifiers = emptyList(),
     ),
     religionHistory = religions,
+    contacts = emptyList(),
   )
 }
