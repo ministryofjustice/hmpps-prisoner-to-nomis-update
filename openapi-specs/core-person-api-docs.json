@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-10-07.5656.596bd60"
+    "version" : "2026-10-07.5693.6ca7b49"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -205,6 +205,41 @@
       }
     },
     "/syscon-sync/person/{prisonNumber}/address/{cprAddressId}" : {
+      "get" : {
+        "tags" : [ "Syscon Sync" ],
+        "description" : "Get a prisoner address record by Prison Number and address uuid. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
+        "operationId" : "getPrisonerAddress",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "cprAddressId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonAddress"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "api-role" : [ ]
+        } ]
+      },
       "put" : {
         "tags" : [ "Syscon Sync" ],
         "description" : "Update prisoner address record by Prison Number and address uuid. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
@@ -265,8 +300,7 @@
         } ],
         "responses" : {
           "204" : {
-            "description" : "No Content",
-            "content" : { }
+            "description" : "No Content"
           }
         },
         "security" : [ {
@@ -1283,6 +1317,40 @@
         }
       }
     },
+    "/person/prison/{prisonNumber}/addresses" : {
+      "get" : {
+        "tags" : [ "Prison" ],
+        "description" : "Retrieve the prisoner's addresses by Prison Number, most recent first. Role required is **ROLE_CORE_PERSON_RECORD_API__RO**. ",
+        "operationId" : "getAddressesByPrisonNumberDps",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "description" : "The prisoner number",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/CanonicalAddress"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "api-role" : [ ]
+        } ]
+      }
+    },
     "/person/prison/dps/{prisonNumber}" : {
       "get" : {
         "tags" : [ "Prison" ],
@@ -1582,7 +1650,7 @@
         "type" : "object",
         "properties" : {
           "nomisAddressId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "Is nomis address id",
             "example" : 5678
@@ -1707,7 +1775,7 @@
             "example" : "12345"
           }
         },
-        "required" : [ "addressUsage", "contacts", "createDateTime", "createUserId", "isPrimary", "nomisAddressId" ]
+        "required" : [ "addressUsage", "contacts", "createDateTime", "createUserId", "isPrimary" ]
       },
       "PrisonAddressUsage" : {
         "type" : "object",
@@ -3284,9 +3352,16 @@
           "identifiers" : {
             "$ref" : "#/components/schemas/CanonicalIdentifiers",
             "description" : "Person identifiers"
+          },
+          "contacts" : {
+            "type" : "array",
+            "description" : "Person contacts",
+            "items" : {
+              "$ref" : "#/components/schemas/CanonicalContact"
+            }
           }
         },
-        "required" : [ "addresses", "aliases", "ethnicity", "identifiers", "nationalities", "religion", "sex", "sexualOrientation", "title" ]
+        "required" : [ "addresses", "aliases", "contacts", "ethnicity", "identifiers", "nationalities", "religion", "sex", "sexualOrientation", "title" ]
       },
       "CanonicalReligion" : {
         "type" : "object",
@@ -3435,6 +3510,13 @@
             "$ref" : "#/components/schemas/CanonicalIdentifiers",
             "description" : "Person identifiers"
           },
+          "contacts" : {
+            "type" : "array",
+            "description" : "Person contacts",
+            "items" : {
+              "$ref" : "#/components/schemas/CanonicalContact"
+            }
+          },
           "religionHistory" : {
             "type" : "array",
             "items" : {
@@ -3442,7 +3524,7 @@
             }
           }
         },
-        "required" : [ "addresses", "aliases", "ethnicity", "identifiers", "nationalities", "religion", "religionHistory", "sex", "sexualOrientation", "title" ]
+        "required" : [ "addresses", "aliases", "contacts", "ethnicity", "identifiers", "nationalities", "religion", "religionHistory", "sex", "sexualOrientation", "title" ]
       },
       "ReferenceDataResponse" : {
         "type" : "object",
