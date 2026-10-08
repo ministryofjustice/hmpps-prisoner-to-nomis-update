@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-06.1150.9d2f177"
+    "version" : "2026-10-07.1163.dac6682"
   },
   "servers" : [ {
     "url" : "https://prisoner-finance-sync-api-dev.hmpps.service.justice.gov.uk/",
@@ -434,6 +434,150 @@
         } ]
       }
     },
+    "/sync/advances/{advanceId}/write-off" : {
+      "post" : {
+        "tags" : [ "Advances" ],
+        "summary" : "Write off an existing Advance record",
+        "description" : "Write off an existing Advance record",
+        "operationId" : "postAdvanceWriteOff",
+        "parameters" : [ {
+          "name" : "advanceId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SyncCreateAdvanceWriteOffRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "400" : {
+            "description" : "Bad request - invalid input data.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - requires a valid OAuth2 token",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden - requires an appropriate role",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "501" : {
+            "description" : "This endpoint is not yet implemented.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearer-jwt" : [ "ROLE_PRISONER_FINANCE_SYNC__RW" ]
+        } ]
+      }
+    },
+    "/sync/advances/{advanceId}/repay" : {
+      "post" : {
+        "tags" : [ "Advances" ],
+        "summary" : "Repay an existing advance",
+        "description" : "Repay an existing advance",
+        "operationId" : "postAdvanceRepay",
+        "parameters" : [ {
+          "name" : "advanceId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SyncCreateAdvanceRepayRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "400" : {
+            "description" : "Bad request - invalid input data.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - requires a valid OAuth2 token",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden - requires an appropriate role",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "501" : {
+            "description" : "This endpoint is not yet implemented.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearer-jwt" : [ "ROLE_PRISONER_FINANCE_SYNC__RW" ]
+        } ]
+      }
+    },
     "/migrate/prisoner-balances/{prisonNumber}" : {
       "post" : {
         "tags" : [ "NOMIS Sync" ],
@@ -620,6 +764,69 @@
             "application/json" : {
               "schema" : {
                 "$ref" : "#/components/schemas/GeneralLedgerBalancesSyncRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "400" : {
+            "description" : "Bad request - invalid input data.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - requires a valid OAuth2 token",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden - requires an appropriate role",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "501" : {
+            "description" : "This endpoint is not yet implemented.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearer-jwt" : [ "ROLE_PRISONER_FINANCE_SYNC__RW" ]
+        } ]
+      }
+    },
+    "/migrate/advances" : {
+      "post" : {
+        "tags" : [ "Advances" ],
+        "summary" : "Migrate advances",
+        "description" : "Migrate advances",
+        "operationId" : "migrateAdvance",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SyncCreateAdvanceRecordRequest"
               }
             }
           },
@@ -1643,14 +1850,68 @@
         "properties" : {
           "paymentProfileId" : {
             "type" : "integer",
-            "format" : "int64"
+            "format" : "int64",
+            "description" : "The payment profile id from NOMIS",
+            "example" : 123456789
           },
-          "advanceUuid" : {
+          "advanceId" : {
             "type" : "string",
-            "format" : "uuid"
+            "format" : "uuid",
+            "description" : "The advance id from Prisoner Finance",
+            "example" : "de2bc56c-ea73-4f3c-8a37-5a46fdb2d79a"
           }
         },
-        "required" : [ "advanceUuid", "paymentProfileId" ]
+        "required" : [ "advanceId", "paymentProfileId" ]
+      },
+      "SyncCreateAdvanceWriteOffRequest" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "number",
+            "description" : "The amount to be written off",
+            "example" : 5.0
+          },
+          "writeOffDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time of the written off advance",
+            "example" : "2024-06-18T00:00:00.000000"
+          },
+          "writtenOffBy" : {
+            "type" : "string",
+            "description" : "The username that wrote off this advance",
+            "example" : "JOHN_USER"
+          }
+        },
+        "required" : [ "amount", "writeOffDateTime", "writtenOffBy" ]
+      },
+      "SyncCreateAdvanceRepayRequest" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "number",
+            "description" : "The amount paid towards the advance",
+            "example" : 5.0
+          },
+          "transactionId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The transaction id that paid the amount to the advance",
+            "example" : 123456
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The transaction date and time for the advance repayment",
+            "example" : "2024-06-18T00:00:00.000000"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "The username that created this advance repayment",
+            "example" : "JOHN_USER"
+          }
+        },
+        "required" : [ "amount", "createdAt", "createdBy", "transactionId" ]
       },
       "PrisonerAccountPointInTimeBalance" : {
         "type" : "object",
