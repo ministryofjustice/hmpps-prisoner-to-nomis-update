@@ -512,7 +512,7 @@ reports:
   core-person:
     reconciliation:
       page-size: 10
-      fields: religion,religions,addresses
+      fields: religion,religions,addresses,contacts
   official-visits:
     all-missing-nomis-visits:
       reconciliation:

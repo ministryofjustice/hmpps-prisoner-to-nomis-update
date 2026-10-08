@@ -25,6 +25,14 @@ class CorePersonReconciliationServiceTest {
     20,
     "religions",
   )
+  private val contactService = CorePersonReconciliationService(
+    telemetryClient,
+    cprCorePersonApiService,
+    nomisCorePersonApiService,
+    nomisApiService,
+    20,
+    "contacts",
+  )
 
   @Nested
   @ParameterizedClass
@@ -75,6 +83,92 @@ class CorePersonReconciliationServiceTest {
       comparePrisonerReligions(nomis, cpr, fieldsEquals, "createDatetime", nomisDate, cprDate)
     }
   }
+
+  @Nested
+  inner class ContactsDifference {
+    @Test
+    fun `will not report matching contacts`() {
+      val contact = createContact()
+
+      assertContactDifference(listOf(contact), listOf(contact), emptyMap())
+    }
+
+    @Test
+    fun `will report a different number of contacts`() {
+      assertContactDifference(
+        listOf(createContact()),
+        emptyList(),
+        mapOf("contacts" to "nomis=[PHONE/0123456789/123], cpr=[]"),
+      )
+    }
+
+    @Test
+    fun `will report contact type differences`() {
+      assertContactDifference(
+        listOf(createContact()),
+        listOf(createContact().copy(type = "MOBILE")),
+        mapOf("contacts" to "nomis=[PHONE/0123456789/123], cpr=[MOBILE/0123456789/123]"),
+      )
+    }
+
+    @Test
+    fun `will report contact value differences`() {
+      assertContactDifference(
+        listOf(createContact()),
+        listOf(createContact().copy(value = "0987654321")),
+        mapOf("contacts" to "nomis=[PHONE/0123456789/123], cpr=[PHONE/0987654321/123]"),
+      )
+    }
+
+    @Test
+    fun `will report contact extension differences`() {
+      assertContactDifference(
+        listOf(createContact()),
+        listOf(createContact().copy(extension = "456")),
+        mapOf("contacts" to "nomis=[PHONE/0123456789/123], cpr=[PHONE/0123456789/456]"),
+      )
+    }
+
+    @Test
+    fun `will not report contacts when the field is not configured for reconciliation`() {
+      val differences = mutableMapOf<String, String>()
+
+      ReflectionTestUtils.invokeMethod<Void>(
+        service,
+        "appendDifference",
+        listOf(createContact()),
+        emptyList<PrisonerContact>(),
+        differences,
+        "contacts",
+      )
+
+      assertThat(differences).isEmpty()
+    }
+  }
+
+  private fun assertContactDifference(
+    nomis: List<PrisonerContact>,
+    cpr: List<PrisonerContact>,
+    expected: Map<String, String>,
+  ) {
+    val differences = mutableMapOf<String, String>()
+    ReflectionTestUtils.invokeMethod<Void>(
+      contactService,
+      "appendDifference",
+      nomis,
+      cpr,
+      differences,
+      "contacts",
+    )
+
+    assertThat(differences).isEqualTo(expected)
+  }
+
+  private fun createContact(): PrisonerContact = PrisonerContact(
+    type = "PHONE",
+    value = "0123456789",
+    extension = "123",
+  )
 
   private fun comparePrisonerReligions(
     nomis: List<PrisonerReligion>,
