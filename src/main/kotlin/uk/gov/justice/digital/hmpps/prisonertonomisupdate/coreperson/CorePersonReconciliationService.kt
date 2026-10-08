@@ -150,6 +150,7 @@ class CorePersonReconciliationService(
     appendDifference(nomisCorePerson.religion, cprCorePerson.religion, differences, "religion")
     appendReligionsDifference(nomisCorePerson.religions, cprCorePerson.religions, differences)
     appendAddressesDifference(nomisCorePerson.addresses, cprCorePerson.addresses, differences)
+    appendDifference(nomisCorePerson.contacts, cprCorePerson.contacts, differences, "contacts")
 
     val excluded = excludedBookingIds.contains(prisonerId.bookingId)
     return if (!excluded) {
@@ -257,9 +258,9 @@ class CorePersonReconciliationService(
     }
   }
 
-  private fun appendDifference(
-    nomisField: String?,
-    cprField: String?,
+  private fun <T> appendDifference(
+    nomisField: T,
+    cprField: T,
     differences: MutableMap<String, String>,
     fieldName: String,
   ) {
@@ -288,7 +289,7 @@ private val addressComparator = compareBy<PrisonerAddress, LocalDate?>(nullsFirs
 
 private val usageComparator = compareBy<PrisonerAddressUsage, String?>(nullsFirst()) { it.code }
 
-private val contactComparator = compareBy<PrisonerAddressContact, String?>(nullsFirst()) { it.type }
+private val contactComparator = compareBy<PrisonerContact, String?>(nullsFirst()) { it.type }
   .thenBy(nullsFirst()) { it.value }
   .thenBy(nullsFirst()) { it.extension }
 
@@ -305,6 +306,7 @@ fun DpsPrisonRecord.toPerson() = PrisonerPerson(
     )
   },
   addresses = addresses.map { it.toPrisonerAddress() }.sortedWith(addressComparator),
+  contacts = contacts.map { PrisonerContact(type = it.type.code, value = it.value, extension = it.extension) }.sortedWith(contactComparator),
 )
 
 private fun CanonicalAddress.toPrisonerAddress() = PrisonerAddress(
@@ -321,7 +323,7 @@ private fun CanonicalAddress.toPrisonerAddress() = PrisonerAddress(
   countryCode = countryCode?.value,
   comment = comment,
   usages = usages.map { PrisonerAddressUsage(code = it.code?.value, active = it.isActive) }.sortedWith(usageComparator),
-  contacts = contacts.map { PrisonerAddressContact(type = it.type.code, value = it.value, extension = it.extension) }.sortedWith(contactComparator),
+  contacts = contacts.map { PrisonerContact(type = it.type.code, value = it.value, extension = it.extension) }.sortedWith(contactComparator),
 )
 
 fun CorePerson.toPerson() = PrisonerPerson(
@@ -337,6 +339,10 @@ fun CorePerson.toPerson() = PrisonerPerson(
     )
   } ?: emptyList(),
   addresses = addresses?.map { it.toPrisonerAddress() }?.sortedWith(addressComparator) ?: emptyList(),
+  contacts = (
+    phoneNumbers.orEmpty().map { PrisonerContact(type = it.type.code.toCprContactType(), value = it.number, extension = it.extension) } +
+      emailAddresses.orEmpty().map { PrisonerContact(type = "EMAIL", value = it.email, extension = null) }
+    ).sortedWith(contactComparator),
 )
 
 private fun OffenderAddress.toPrisonerAddress() = PrisonerAddress(
@@ -353,7 +359,7 @@ private fun OffenderAddress.toPrisonerAddress() = PrisonerAddress(
   countryCode = country?.code?.toCprCountryCode(),
   comment = comment,
   usages = usages?.map { PrisonerAddressUsage(code = it.usage, active = it.active) }?.sortedWith(usageComparator) ?: emptyList(),
-  contacts = phoneNumbers?.map { PrisonerAddressContact(type = it.type.code.toCprContactType(), value = it.number, extension = it.extension) }?.sortedWith(contactComparator) ?: emptyList(),
+  contacts = phoneNumbers?.map { PrisonerContact(type = it.type.code.toCprContactType(), value = it.number, extension = it.extension) }?.sortedWith(contactComparator) ?: emptyList(),
 )
 
 // NOMIS and CPR have slightly different contact type codes so need to translate
@@ -375,6 +381,7 @@ data class PrisonerPerson(
   val religion: String? = null,
   val religions: List<PrisonerReligion> = emptyList(),
   val addresses: List<PrisonerAddress> = emptyList(),
+  val contacts: List<PrisonerContact> = emptyList(),
 )
 
 data class PrisonerReligion(
@@ -400,7 +407,7 @@ data class PrisonerAddress(
   val countryCode: String?,
   val comment: String?,
   val usages: List<PrisonerAddressUsage> = emptyList(),
-  val contacts: List<PrisonerAddressContact> = emptyList(),
+  val contacts: List<PrisonerContact> = emptyList(),
 )
 
 data class PrisonerAddressUsage(
@@ -410,7 +417,7 @@ data class PrisonerAddressUsage(
   override fun toString(): String = "$code/${if (active) "active" else "inactive"}"
 }
 
-data class PrisonerAddressContact(
+data class PrisonerContact(
   val type: String?,
   val value: String?,
   val extension: String?,

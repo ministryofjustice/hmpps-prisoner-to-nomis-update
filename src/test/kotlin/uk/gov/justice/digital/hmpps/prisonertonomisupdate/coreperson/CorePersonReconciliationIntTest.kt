@@ -40,6 +40,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Bo
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.NomisAudit
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderBelief
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderEmailAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.generateOffenderNo
@@ -496,6 +497,83 @@ class CorePersonReconciliationIntTest(
   }
 
   @Nested
+  inner class ContactDifferences {
+    @Test
+    fun `should not report differences when phones and emails match in a different order`() = runTest {
+      corePersonNomisApi.stubGetCorePersonForReconciliation(
+        prisonNumber = "A1234BC",
+        response = corePerson(prisonNumber = "A1234BC").copy(
+          phoneNumbers = listOf(corePersonAddressPhone(type = "MOB", number = "07700 900000"), corePersonAddressPhone(extension = "123")),
+          emailAddresses = listOf(
+            OffenderEmailAddress(
+              emailAddressId = 1,
+              email = "test@justice.gov.uk",
+              createdDateTime = LocalDateTime.parse("2025-02-03T10:20:30"),
+              createdByUsername = "ME",
+              lastUpdatedDateTime = null,
+              lastUpdatedByUsername = null,
+            ),
+          ),
+        ),
+      )
+      cprApi.stubGetCorePerson(
+        prisonNumber = "A1234BC",
+        response = corePersonDto().copy(
+          contacts = listOf(
+            canonicalContact(type = "EMAIL", value = "test@justice.gov.uk"),
+            canonicalContact(extension = "123"),
+            canonicalContact(type = "MOBILE", value = "07700 900000"),
+          ),
+        ),
+      )
+
+      assertThat(service.checkCorePersonMatch("A1234BC")).isNull()
+      verify(telemetryClient, never()).trackEvent(anyString(), anyMap(), isNull())
+    }
+
+    @Test
+    fun `should report contact differences`() = runTest {
+      corePersonNomisApi.stubGetCorePersonForReconciliation(
+        prisonNumber = "A1234BC",
+        response = corePerson(prisonNumber = "A1234BC").copy(
+          phoneNumbers = listOf(corePersonAddressPhone(extension = "123")),
+        ),
+      )
+      cprApi.stubGetCorePerson(
+        prisonNumber = "A1234BC",
+        response = corePersonDto().copy(contacts = listOf(canonicalContact())),
+      )
+
+      val mismatch = service.checkCorePersonMatch("A1234BC")
+
+      assertThat(mismatch?.differences).containsExactly(
+        entry("contacts", "nomis=[HOME/0114 555 5555/123], cpr=[HOME/0114 555 5555]"),
+      )
+      verify(telemetryClient).trackEvent(
+        eq("$TELEMETRY_PREFIX-mismatch"),
+        check { assertThat(it).containsEntry("differences5", "contacts") },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `should report contacts missing from NOMIS`() = runTest {
+      corePersonNomisApi.stubGetCorePersonForReconciliation(
+        prisonNumber = "A1234BC",
+        response = corePerson(prisonNumber = "A1234BC"),
+      )
+      cprApi.stubGetCorePerson(
+        prisonNumber = "A1234BC",
+        response = corePersonDto().copy(contacts = listOf(canonicalContact(type = "EMAIL", value = "test@justice.gov.uk"))),
+      )
+
+      assertThat(service.checkCorePersonMatch("A1234BC")?.differences).containsExactly(
+        entry("contacts", "nomis=[], cpr=[EMAIL/test@justice.gov.uk]"),
+      )
+    }
+  }
+
+  @Nested
   inner class FullReconciliation {
     @BeforeEach
     fun setUp() {
@@ -554,7 +632,7 @@ class CorePersonReconciliationIntTest(
 
       verify(telemetryClient).trackEvent(
         eq("coreperson-reports-reconciliation-requested"),
-        check { assertThat(it).containsExactlyEntriesOf(mapOf("activeOnly" to "false", "fields" to "religion, religions, addresses")) },
+        check { assertThat(it).containsExactlyEntriesOf(mapOf("activeOnly" to "false", "fields" to "religion, religions, addresses, contacts")) },
         isNull(),
       )
 
@@ -567,7 +645,7 @@ class CorePersonReconciliationIntTest(
 
       verify(telemetryClient).trackEvent(
         eq("coreperson-reports-reconciliation-requested"),
-        check { assertThat(it).containsExactlyEntriesOf(mapOf("activeOnly" to "true", "fields" to "religion, religions, addresses")) },
+        check { assertThat(it).containsExactlyEntriesOf(mapOf("activeOnly" to "true", "fields" to "religion, religions, addresses, contacts")) },
         isNull(),
       )
 
