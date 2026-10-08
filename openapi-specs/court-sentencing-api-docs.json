@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-07.2636.9c08470"
+    "version" : "2026-10-07.2644.5a53c55"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -49,6 +49,9 @@
   }, {
     "name" : "legacy-recall-controller",
     "description" : "GET operation for syncing recall data. This controller is only ever used for syncing DPS recalls to NOMIS."
+  }, {
+    "name" : "document-generation-controller",
+    "description" : "Endpoint for generating documents"
   }, {
     "name" : "court-appearance-schedules-controller",
     "description" : "Court Appearance schedules"
@@ -3374,6 +3377,70 @@
         "responses" : {
           "204" : {
             "description" : "No Content"
+          }
+        }
+      }
+    },
+    "/document-generator/f986" : {
+      "post" : {
+        "tags" : [ "document-generation-controller" ],
+        "summary" : "Create F986 Document",
+        "description" : "This endpoint will create an F986 document",
+        "operationId" : "createF986Document",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateF986"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Returns F986 PDF document stream",
+            "content" : {
+              "application/pdf" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "binary"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad request - no results found based on courtAppearanceUuid",
+            "content" : {
+              "application/pdf" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "binary"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/pdf" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "binary"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/pdf" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "binary"
+                }
+              }
+            }
           }
         }
       }
@@ -7540,7 +7607,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "10:49:47.858455045"
+            "example" : "07:44:42.606515278"
           },
           "outcomeDispositionCode" : {
             "type" : [ "string", "null" ]
@@ -7919,7 +7986,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "10:49:47.858455045"
+            "example" : "07:44:42.606515278"
           },
           "courtCode" : {
             "type" : "string"
@@ -9674,6 +9741,34 @@
         },
         "required" : [ "eventsMetadata" ]
       },
+      "CreateF986" : {
+        "type" : "object",
+        "properties" : {
+          "courtAppearanceUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "courtPremise" : {
+            "type" : [ "string", "null" ]
+          },
+          "courtStreet" : {
+            "type" : [ "string", "null" ]
+          },
+          "courtTown" : {
+            "type" : [ "string", "null" ]
+          },
+          "courtCounty" : {
+            "type" : [ "string", "null" ]
+          },
+          "courtPostalCode" : {
+            "type" : [ "string", "null" ]
+          },
+          "prisonTelephoneNumber" : {
+            "type" : [ "string", "null" ]
+          }
+        },
+        "required" : [ "courtAppearanceUuid" ]
+      },
       "SentenceTypeUpdate" : {
         "type" : "object",
         "properties" : {
@@ -10949,7 +11044,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "10:49:47.858455045"
+            "example" : "07:44:42.606515278"
           },
           "courtCode" : {
             "type" : "string"
@@ -11641,7 +11736,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "10:49:47.858455045"
+            "example" : "07:44:42.606515278"
           },
           "nomisOutcomeCode" : {
             "type" : [ "string", "null" ]
@@ -11720,7 +11815,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "10:49:47.858455045"
+            "example" : "07:44:42.606515278"
           },
           "courtId" : {
             "type" : "string"
@@ -11872,7 +11967,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "10:49:47.858455045"
+            "example" : "07:44:42.606515278"
           },
           "charges" : {
             "type" : "array",
@@ -11909,7 +12004,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "10:49:47.858455045"
+            "example" : "07:44:42.606515278"
           },
           "courtId" : {
             "type" : "string"
@@ -12505,7 +12600,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "10:49:47.858455045"
+            "example" : "07:44:42.606515278"
           },
           "courtCode" : {
             "type" : [ "string", "null" ]
