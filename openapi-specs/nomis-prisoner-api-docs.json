@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-07.2167.60d92f4"
+    "version" : "2026-10-07.2175.b7a58dc"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -24505,6 +24505,18 @@
             "example" : "A1234BC"
           },
           "example" : "A1234BC"
+        }, {
+          "name" : "activeOnly",
+          "in" : "query",
+          "description" : "whether to return just active advances",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false,
+            "description" : "whether to return just active advances",
+            "example" : true
+          },
+          "example" : true
         } ],
         "responses" : {
           "200" : {
@@ -24830,6 +24842,18 @@
             "example" : 123456
           },
           "example" : 123456
+        }, {
+          "name" : "activeOnly",
+          "in" : "query",
+          "description" : "whether to return just active advances",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false,
+            "description" : "whether to return just active advances",
+            "example" : true
+          },
+          "example" : true
         } ],
         "responses" : {
           "200" : {
@@ -25326,6 +25350,56 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/PrisonerAdvanceDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Advance does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/finance/prisoners/advances/active-count" : {
+      "get" : {
+        "tags" : [ "prisoner-advance-resource" ],
+        "summary" : "Get a count of all active prisoner advances",
+        "description" : "Retrieves a count of all prisoner advances that are ACTIVE. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getActiveAdvancesCount",
+        "responses" : {
+          "200" : {
+            "description" : "Advance Information Returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AdvancesCount"
                 }
               }
             }
@@ -45509,7 +45583,7 @@
             "example" : "Advance for personal expenses"
           },
           "informationNumber" : {
-            "type" : [ "string", "null" ],
+            "type" : "string",
             "description" : "The information number",
             "example" : "12345678-1"
           },
@@ -45525,12 +45599,13 @@
             "example" : "2024-06-01T12:00:00"
           },
           "status" : {
-            "type" : [ "string", "null" ],
+            "type" : "string",
             "description" : "The status of the advance",
+            "enum" : [ "ACTIVE", "REPAID", "WRITTEN_OFF", "TODO" ],
             "example" : "ACTIVE"
           }
         },
-        "required" : [ "advanceAmount", "caseloadId", "createDatetime", "createdBy", "id", "prisonNumber", "repaymentAmount", "startDate" ]
+        "required" : [ "advanceAmount", "caseloadId", "createDatetime", "createdBy", "id", "informationNumber", "prisonNumber", "repaymentAmount", "startDate", "status" ]
       },
       "PagedModelLong" : {
         "type" : "object",
@@ -45574,9 +45649,17 @@
             "type" : [ "integer", "null" ],
             "format" : "int64"
           },
+          "txnEntrySeq" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
           "txnId" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "txnEntryDate" : {
+            "type" : "string",
+            "format" : "date-time"
           },
           "txnEntryDesc" : {
             "type" : [ "string", "null" ]
@@ -45586,17 +45669,21 @@
           },
           "txnEntryAmount" : {
             "type" : "number"
-          },
-          "txnEntrySeq" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "txnEntryDate" : {
-            "type" : "string",
-            "format" : "date-time"
           }
         },
         "required" : [ "txnEntryAmount", "txnEntryDate", "txnEntrySeq", "txnId" ]
+      },
+      "AdvancesCount" : {
+        "type" : "object",
+        "properties" : {
+          "activeCount" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The count of active advances",
+            "example" : 3
+          }
+        },
+        "required" : [ "activeCount" ]
       },
       "PrisonAccountBalanceDto" : {
         "type" : "object",
