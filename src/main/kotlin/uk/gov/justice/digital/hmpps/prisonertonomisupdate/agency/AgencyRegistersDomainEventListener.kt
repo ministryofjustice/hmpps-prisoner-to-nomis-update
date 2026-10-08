@@ -33,6 +33,8 @@ class AgencyRegistersDomainEventListener(
   ): CompletableFuture<Void?> = onDomainEvent(rawMessage) { eventType, message ->
     when (eventType) {
       "register.court.email.inserted" -> service.courtEmailInserted(message.fromJson())
+      "register.court.email.amended" -> service.courtEmailAmended(message.fromJson())
+      "register.court.email.deleted" -> service.courtEmailDeleted(message.fromJson())
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }
   }

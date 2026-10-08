@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency
 
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -14,11 +15,14 @@ import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.agencyEmailAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.createAgencyEmailResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.updateAgencyEmailAddressesResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension.Companion.agencyEmailDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension.Companion.courtDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAgencyEmailAddressRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyEmailAddressesRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.jsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.getRequestBody
@@ -96,12 +100,210 @@ class AgencyRegisterToNomisIntTest(
     }
   }
 
+  @Nested
+  @DisplayName("register.court.email.amended")
+  inner class CourtEmailAmended {
+    val dpsEmailId = 12345L
+    val courtId = "SHEFCC"
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of the event")
+    inner class WhenNomisAmended {
+      @BeforeEach
+      fun setUp() {
+        publishCourtEmailAmendedEvent(emailId = dpsEmailId, courtId = courtId, source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the event is ignored`() {
+        verify(telemetryClient).trackEvent(
+          eq("court-email-amended-ignored"),
+          check {
+            assertThat(it["courtId"]).isEqualTo(courtId)
+            assertThat(it["dpsEmailId"]).isEqualTo(dpsEmailId.toString())
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of the event")
+    inner class WhenDpsAmended {
+      private val emails = listOf("court.one@justice.gov.uk", "court.two@justice.gov.uk")
+
+      @Nested
+      inner class HappyPath {
+        @BeforeEach
+        fun setUp() {
+          dpsApi.stubGetCourt(
+            courtId = courtId,
+            response = courtDto().copy(
+              emailAddresses = emails.mapIndexed { index, address ->
+                agencyEmailDto().copy(id = index + 1L, address = address)
+              },
+            ),
+          )
+          nomisApi.stubUpdateAgencyEmailAddresses(
+            agencyId = courtId,
+            response = updateAgencyEmailAddressesResponse().copy(
+              emailAddresses = emails.mapIndexed { index, address ->
+                agencyEmailAddress().copy(id = index + 1L, emailAddress = address)
+              },
+            ),
+          )
+          publishCourtEmailAmendedEvent(emailId = dpsEmailId, courtId = courtId)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will refresh all NOMIS email addresses`() {
+          val request: UpdateAgencyEmailAddressesRequest = NomisApiExtension.nomisApi.getRequestBody(putRequestedFor(urlEqualTo("/agency/$courtId/emails")), jsonMapper)
+          assertThat(request.emailAddresses).containsExactlyElementsOf(emails)
+        }
+
+        @Test
+        fun `will send telemetry event showing success`() {
+          verify(telemetryClient).trackEvent(
+            eq("court-email-amended-success"),
+            check {
+              assertThat(it["courtId"]).isEqualTo(courtId)
+              assertThat(it["dpsEmailId"]).isEqualTo(dpsEmailId.toString())
+              assertThat(it["nomisEmailIds"]).isEqualTo("1, 2")
+            },
+            isNull(),
+          )
+        }
+      }
+    }
+  }
+
+  @Nested
+  @DisplayName("register.court.email.deleted")
+  inner class CourtEmailDeleted {
+    val dpsEmailId = 12345L
+    val courtId = "SHEFCC"
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of the event")
+    inner class WhenNomisDeleted {
+      @BeforeEach
+      fun setUp() {
+        publishCourtEmailDeletedEvent(emailId = dpsEmailId, courtId = courtId, source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the event is ignored`() {
+        verify(telemetryClient).trackEvent(
+          eq("court-email-deleted-ignored"),
+          check {
+            assertThat(it["courtId"]).isEqualTo(courtId)
+            assertThat(it["dpsEmailId"]).isEqualTo(dpsEmailId.toString())
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of the event")
+    inner class WhenDpsDeleted {
+      private val emails = listOf("court.one@justice.gov.uk", "court.two@justice.gov.uk")
+
+      @Nested
+      inner class HappyPath {
+        @BeforeEach
+        fun setUp() {
+          dpsApi.stubGetCourt(
+            courtId = courtId,
+            response = courtDto().copy(
+              emailAddresses = emails.mapIndexed { index, address ->
+                agencyEmailDto().copy(id = index + 1L, address = address)
+              },
+            ),
+          )
+          nomisApi.stubUpdateAgencyEmailAddresses(
+            agencyId = courtId,
+            response = updateAgencyEmailAddressesResponse().copy(
+              emailAddresses = emails.mapIndexed { index, address ->
+                agencyEmailAddress().copy(id = index + 1L, emailAddress = address)
+              },
+            ),
+          )
+          publishCourtEmailDeletedEvent(emailId = dpsEmailId, courtId = courtId)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will refresh all NOMIS email addresses`() {
+          val request: UpdateAgencyEmailAddressesRequest = NomisApiExtension.nomisApi.getRequestBody(putRequestedFor(urlEqualTo("/agency/$courtId/emails")), jsonMapper)
+          assertThat(request.emailAddresses).containsExactlyElementsOf(emails)
+        }
+
+        @Test
+        fun `will send telemetry event showing success`() {
+          verify(telemetryClient).trackEvent(
+            eq("court-email-deleted-success"),
+            check {
+              assertThat(it["courtId"]).isEqualTo(courtId)
+              assertThat(it["dpsEmailId"]).isEqualTo(dpsEmailId.toString())
+              assertThat(it["nomisEmailIds"]).isEqualTo("1, 2")
+            },
+            isNull(),
+          )
+        }
+      }
+    }
+  }
+
   private fun publishCourtEmailInsertedEvent(
     courtId: String,
     emailId: Long,
     source: String = "DPS",
   ) {
     with("register.court.email.inserted") {
+      publishDomainEvent(
+        eventType = this,
+        payload = CourtEmailEvent(
+          eventType = this,
+          additionalInformation = CourtEmailAdditionalInformation(
+            courtId = courtId,
+            emailId = emailId,
+            source = source,
+          ),
+        ),
+      )
+    }
+  }
+
+  private fun publishCourtEmailAmendedEvent(
+    courtId: String,
+    emailId: Long,
+    source: String = "DPS",
+  ) {
+    with("register.court.email.amended") {
+      publishDomainEvent(
+        eventType = this,
+        payload = CourtEmailEvent(
+          eventType = this,
+          additionalInformation = CourtEmailAdditionalInformation(
+            courtId = courtId,
+            emailId = emailId,
+            source = source,
+          ),
+        ),
+      )
+    }
+  }
+
+  private fun publishCourtEmailDeletedEvent(
+    courtId: String,
+    emailId: Long,
+    source: String = "DPS",
+  ) {
+    with("register.court.email.deleted") {
       publishDomainEvent(
         eventType = this,
         payload = CourtEmailEvent(
