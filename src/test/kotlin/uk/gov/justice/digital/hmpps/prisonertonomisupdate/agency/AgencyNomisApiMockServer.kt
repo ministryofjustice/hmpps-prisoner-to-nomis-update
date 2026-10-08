@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.post
+import com.github.tomakehurst.wiremock.client.WireMock.put
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.springframework.http.HttpStatus
@@ -11,6 +12,7 @@ import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AgencyAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AgencyEmailAddress
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AgencyEmailAddressesResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AgencyId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AgencyIdsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AgencyPhoneNumber
@@ -18,6 +20,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Ag
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAgencyEmailAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAgencyEmailAddressResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyEmailAddressesRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 
 @Component
@@ -95,6 +98,14 @@ class AgencyNomisApiMockServer(private val jsonMapper: JsonMapper) {
     fun createAgencyEmailResponse() = CreateAgencyEmailAddressResponse(
       id = 123456,
     )
+
+    fun updateAgencyEmailAddressesRequest() = UpdateAgencyEmailAddressesRequest(
+      emailAddresses = listOf("sheffield.crown.court@test.com"),
+    )
+
+    fun updateAgencyEmailAddressesResponse() = AgencyEmailAddressesResponse(
+      emailAddresses = listOf(agencyEmailAddress()),
+    )
   }
 
   fun stubGetAgency(
@@ -145,6 +156,20 @@ class AgencyNomisApiMockServer(private val jsonMapper: JsonMapper) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.CREATED.value())
+          .withBody(jsonMapper.writeValueAsString(response)),
+      ),
+    )
+  }
+
+  fun stubUpdateAgencyEmailAddresses(
+    agencyId: String = "SHEFCC",
+    response: AgencyEmailAddressesResponse = updateAgencyEmailAddressesResponse(),
+  ) {
+    nomisApi.stubFor(
+      put(urlPathEqualTo("/agency/$agencyId/emails")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
           .withBody(jsonMapper.writeValueAsString(response)),
       ),
     )

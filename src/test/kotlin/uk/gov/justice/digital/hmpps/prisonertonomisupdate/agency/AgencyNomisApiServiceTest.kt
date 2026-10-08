@@ -5,6 +5,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.equalToJson
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import kotlinx.coroutines.test.runTest
@@ -17,6 +18,7 @@ import org.springframework.context.annotation.Import
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.createAgencyEmailRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.createAgencyEmailResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.updateAgencyEmailAddressesRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
@@ -143,6 +145,35 @@ class AgencyNomisApiServiceTest {
       val response = apiService.createAgencyEmail("SHEFCC", createAgencyEmailRequest())
 
       assertThat(response.id).isEqualTo(123456)
+    }
+  }
+
+  @Nested
+  inner class RefreshAgencyEmails {
+    val request = updateAgencyEmailAddressesRequest().copy(emailAddresses = listOf("test@justice.com"))
+
+    @Test
+    internal fun `will pass oauth2 token to endpoint`() = runTest {
+      mockServer.stubUpdateAgencyEmailAddresses(agencyId = "SHEFCC")
+
+      apiService.refreshAgencyEmails("SHEFCC", request)
+
+      mockServer.verify(
+        putRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the refresh agency emails endpoint with request`() = runTest {
+      mockServer.stubUpdateAgencyEmailAddresses(agencyId = "SHEFCC")
+
+      apiService.refreshAgencyEmails("SHEFCC", request)
+
+      mockServer.verify(
+        putRequestedFor(urlPathEqualTo("/agency/SHEFCC/emails"))
+          .withRequestBody(equalToJson("""{"emailAddresses":["test@justice.com"]}""")),
+      )
     }
   }
 }
