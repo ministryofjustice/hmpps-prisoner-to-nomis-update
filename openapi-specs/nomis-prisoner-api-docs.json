@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-08.2185.cace372"
+    "version" : "2026-10-09.2192.9e2f388"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -9227,6 +9227,168 @@
         }
       }
     },
+    "/agency/{agencyId}/addresses" : {
+      "put" : {
+        "tags" : [ "agency-resource" ],
+        "summary" : "Refreshes the list of agency addresses",
+        "description" : "Replaces the existing list of addresses for an agency with the list supplied. Where there is a single existing address and a single requested address they are matched directly and updated in place so the id is preserved. Where there is more than one address, there is no id in the request to correlate addresses with, so existing and requested addresses are instead matched by exact postcode; where more than one address shares the same postcode they are matched in the order the existing addresses were created. A null or blank postcode never matches anything, even another null postcode, to avoid silently reassigning the identity of an unrelated address. Any requested address that cannot be matched to an existing one results in a new address being created, defaulting its address type to BUS; any existing address that is not matched by a requested one is removed. City, county and country are looked up by description, matched case insensitively; if a description does not match any reference data the value is left unset on the address and the lookup failure is recorded in the response telemetry. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "updateAgencyAddresses",
+        "parameters" : [ {
+          "name" : "agencyId",
+          "in" : "path",
+          "description" : "Agency id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Agency id",
+            "example" : "WWI"
+          },
+          "example" : "WWI"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateAgencyAddressesRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Agency addresses updated",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AgencyAddressesResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "The request contains bad data, for example the default BUS address type reference data is missing",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Agency not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [ "agency-resource" ],
+        "summary" : "Create an agency address",
+        "description" : "Creates a new address for an agency. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "createAgencyAddress",
+        "parameters" : [ {
+          "name" : "agencyId",
+          "in" : "path",
+          "description" : "Agency id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Agency id",
+            "example" : "WWI"
+          },
+          "example" : "WWI"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateAgencyAddressRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Agency address created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CreateAgencyAddressResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "The request contains bad data, for example the default BUS address type reference data is missing",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Agency not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/adjudications/adjudication-number/{adjudicationNumber}/repairs" : {
       "put" : {
         "tags" : [ "adjudication-resource" ],
@@ -15347,88 +15509,6 @@
           },
           "409" : {
             "description" : "Code already exits",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/agency/{agencyId}/addresses" : {
-      "post" : {
-        "tags" : [ "agency-resource" ],
-        "summary" : "Create an agency address",
-        "description" : "Creates a new address for an agency. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-        "operationId" : "createAgencyAddress",
-        "parameters" : [ {
-          "name" : "agencyId",
-          "in" : "path",
-          "description" : "Agency id",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "description" : "Agency id",
-            "example" : "WWI"
-          },
-          "example" : "WWI"
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/CreateAgencyAddressRequest"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "201" : {
-            "description" : "Agency address created",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/CreateAgencyAddressResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "The request contains bad data, for example the default BUS address type reference data is missing",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Agency not found",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -34046,6 +34126,186 @@
         },
         "required" : [ "emailAddresses" ]
       },
+      "AgencyAddress" : {
+        "type" : "object",
+        "description" : "The data held in NOMIS about an address",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Unique NOMIS Id of number"
+          },
+          "type" : {
+            "description" : "Address type",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "flat" : {
+            "type" : [ "string", "null" ],
+            "description" : "Flat name or number",
+            "example" : "Apartment 3"
+          },
+          "premise" : {
+            "type" : [ "string", "null" ],
+            "description" : "Premise",
+            "example" : "22"
+          },
+          "street" : {
+            "type" : [ "string", "null" ],
+            "description" : "Street",
+            "example" : "West Street"
+          },
+          "locality" : {
+            "type" : [ "string", "null" ],
+            "description" : "Locality",
+            "example" : "Keighley"
+          },
+          "postcode" : {
+            "type" : [ "string", "null" ],
+            "description" : "Post code",
+            "example" : "MK15 2ST"
+          },
+          "city" : {
+            "description" : "City",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "county" : {
+            "description" : "County",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "country" : {
+            "description" : "Country",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "phoneNumbers" : {
+            "type" : "array",
+            "description" : "List of phone numbers for the address",
+            "items" : {
+              "$ref" : "#/components/schemas/AgencyPhoneNumber"
+            }
+          },
+          "validatedPAF" : {
+            "type" : "boolean",
+            "description" : "true if address validated by Post Office Address file??"
+          },
+          "noFixedAddress" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "true if address not fixed. for example homeless"
+          },
+          "primaryAddress" : {
+            "type" : "boolean",
+            "description" : "true if this is the agency's primary address"
+          },
+          "mailAddress" : {
+            "type" : "boolean",
+            "description" : "true if this is used for mail"
+          },
+          "comment" : {
+            "type" : [ "string", "null" ],
+            "description" : "Free format comment about the address"
+          },
+          "startDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Date address was valid from"
+          },
+          "endDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Date address was valid to"
+          }
+        },
+        "required" : [ "id", "mailAddress", "phoneNumbers", "primaryAddress", "validatedPAF" ]
+      },
+      "AgencyAddressesResponse" : {
+        "type" : "object",
+        "description" : "A response to refreshing the list of addresses for an agency",
+        "properties" : {
+          "addresses" : {
+            "type" : "array",
+            "description" : "The list of addresses now held for the agency",
+            "items" : {
+              "$ref" : "#/components/schemas/AgencyAddress"
+            }
+          }
+        },
+        "required" : [ "addresses" ]
+      },
+      "UpdateAgencyAddress" : {
+        "type" : "object",
+        "description" : "An address to be held against an agency",
+        "properties" : {
+          "flat" : {
+            "type" : [ "string", "null" ],
+            "description" : "Flat name or number",
+            "example" : "Apartment 3"
+          },
+          "premise" : {
+            "type" : [ "string", "null" ],
+            "description" : "Premise",
+            "example" : "22"
+          },
+          "street" : {
+            "type" : [ "string", "null" ],
+            "description" : "Street",
+            "example" : "West Street"
+          },
+          "locality" : {
+            "type" : [ "string", "null" ],
+            "description" : "Locality",
+            "example" : "Keighley"
+          },
+          "postcode" : {
+            "type" : [ "string", "null" ],
+            "description" : "Post code",
+            "example" : "MK15 2ST"
+          },
+          "city" : {
+            "type" : [ "string", "null" ],
+            "description" : "City description, matched case insensitively. If not found the city will not be set",
+            "example" : "Sheffield"
+          },
+          "county" : {
+            "type" : [ "string", "null" ],
+            "description" : "County description, matched case insensitively. If not found the county will not be set",
+            "example" : "South Yorkshire"
+          },
+          "country" : {
+            "type" : [ "string", "null" ],
+            "description" : "Country description, matched case insensitively. If not found the country will not be set",
+            "example" : "England"
+          }
+        }
+      },
+      "UpdateAgencyAddressesRequest" : {
+        "type" : "object",
+        "description" : "A request to refresh and replace the list of addresses for an agency",
+        "properties" : {
+          "addresses" : {
+            "type" : "array",
+            "description" : "The complete list of addresses to hold against the agency, replacing any existing list. If there is a single existing address and a single requested address they are matched directly; otherwise existing and requested addresses are matched by exact postcode, with a null or blank postcode never matching",
+            "items" : {
+              "$ref" : "#/components/schemas/UpdateAgencyAddress"
+            }
+          }
+        },
+        "required" : [ "addresses" ]
+      },
       "Repair" : {
         "type" : "object",
         "properties" : {
@@ -45990,6 +46250,10 @@
             "type" : [ "integer", "null" ],
             "format" : "int64"
           },
+          "txnId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
           "txnEntryDate" : {
             "type" : "string",
             "format" : "date-time"
@@ -46006,10 +46270,6 @@
           "txnEntrySeq" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "txnId" : {
-            "type" : "integer",
-            "format" : "int64"
           }
         },
         "required" : [ "txnEntryAmount", "txnEntryDate", "txnEntrySeq", "txnId" ]
@@ -47502,112 +47762,6 @@
             "type" : "boolean"
           }
         }
-      },
-      "AgencyAddress" : {
-        "type" : "object",
-        "description" : "The data held in NOMIS about an address",
-        "properties" : {
-          "id" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Unique NOMIS Id of number"
-          },
-          "type" : {
-            "description" : "Address type",
-            "oneOf" : [ {
-              "$ref" : "#/components/schemas/CodeDescription"
-            }, {
-              "type" : "null"
-            } ]
-          },
-          "flat" : {
-            "type" : [ "string", "null" ],
-            "description" : "Flat name or number",
-            "example" : "Apartment 3"
-          },
-          "premise" : {
-            "type" : [ "string", "null" ],
-            "description" : "Premise",
-            "example" : "22"
-          },
-          "street" : {
-            "type" : [ "string", "null" ],
-            "description" : "Street",
-            "example" : "West Street"
-          },
-          "locality" : {
-            "type" : [ "string", "null" ],
-            "description" : "Locality",
-            "example" : "Keighley"
-          },
-          "postcode" : {
-            "type" : [ "string", "null" ],
-            "description" : "Post code",
-            "example" : "MK15 2ST"
-          },
-          "city" : {
-            "description" : "City",
-            "oneOf" : [ {
-              "$ref" : "#/components/schemas/CodeDescription"
-            }, {
-              "type" : "null"
-            } ]
-          },
-          "county" : {
-            "description" : "County",
-            "oneOf" : [ {
-              "$ref" : "#/components/schemas/CodeDescription"
-            }, {
-              "type" : "null"
-            } ]
-          },
-          "country" : {
-            "description" : "Country",
-            "oneOf" : [ {
-              "$ref" : "#/components/schemas/CodeDescription"
-            }, {
-              "type" : "null"
-            } ]
-          },
-          "phoneNumbers" : {
-            "type" : "array",
-            "description" : "List of phone numbers for the address",
-            "items" : {
-              "$ref" : "#/components/schemas/AgencyPhoneNumber"
-            }
-          },
-          "validatedPAF" : {
-            "type" : "boolean",
-            "description" : "true if address validated by Post Office Address file??"
-          },
-          "noFixedAddress" : {
-            "type" : [ "boolean", "null" ],
-            "description" : "true if address not fixed. for example homeless"
-          },
-          "primaryAddress" : {
-            "type" : "boolean",
-            "description" : "true if this is the agency's primary address"
-          },
-          "mailAddress" : {
-            "type" : "boolean",
-            "description" : "true if this is used for mail"
-          },
-          "comment" : {
-            "type" : [ "string", "null" ],
-            "description" : "Free format comment about the address"
-          },
-          "startDate" : {
-            "type" : [ "string", "null" ],
-            "format" : "date",
-            "description" : "Date address was valid from"
-          },
-          "endDate" : {
-            "type" : [ "string", "null" ],
-            "format" : "date",
-            "description" : "Date address was valid to"
-          }
-        },
-        "required" : [ "id", "mailAddress", "phoneNumbers", "primaryAddress", "validatedPAF" ]
       },
       "AgencyResponse" : {
         "type" : "object",

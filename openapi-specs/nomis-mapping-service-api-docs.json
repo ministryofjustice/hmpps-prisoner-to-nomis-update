@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-06.865.4a41a82"
+    "version" : "2026-10-09.876.45998bf"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -651,6 +651,50 @@
           },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/person-location/migrate" : {
+      "put" : {
+        "tags" : [ "person-location-migration-resource" ],
+        "summary" : "Creates all mappings for a prisoner's bookings and external movements which are all migrated at the same time",
+        "description" : "Creates mappings for a prisoner's custodial series (bookings) and external movements. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "createPersonLocationMappings",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PersonLocationsMappingDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Mappings created",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -23800,6 +23844,73 @@
           }
         },
         "required" : [ "nomisBookingId", "nomisSanctionSequence" ]
+      },
+      "PersonLocationBookingMappingDto" : {
+        "type" : "object",
+        "description" : "Mappings for a prisoner booking (DPS custodial series) and its external movements",
+        "properties" : {
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS ID of the booking",
+            "example" : 12345
+          },
+          "dpsCustodialSeriesId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS custodial series ID"
+          },
+          "movements" : {
+            "type" : "array",
+            "description" : "Mappings for the booking's external movements",
+            "items" : {
+              "$ref" : "#/components/schemas/PersonLocationMovementMappingDto"
+            }
+          }
+        },
+        "required" : [ "bookingId", "dpsCustodialSeriesId", "movements" ]
+      },
+      "PersonLocationMovementMappingDto" : {
+        "type" : "object",
+        "description" : "Mappings for a single external movement",
+        "properties" : {
+          "nomisMovementSeq" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The NOMIS movement sequence",
+            "example" : 1
+          },
+          "dpsExternalMovementId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS external movement ID"
+          }
+        },
+        "required" : [ "dpsExternalMovementId", "nomisMovementSeq" ]
+      },
+      "PersonLocationsMappingDto" : {
+        "type" : "object",
+        "description" : "Mappings for a prisoner's entire location history",
+        "properties" : {
+          "offenderNo" : {
+            "type" : "string",
+            "description" : "The NOMIS offender number",
+            "example" : "A1234BC"
+          },
+          "bookings" : {
+            "type" : "array",
+            "description" : "The mappings for each booking",
+            "items" : {
+              "$ref" : "#/components/schemas/PersonLocationBookingMappingDto"
+            }
+          },
+          "migrationId" : {
+            "type" : "string",
+            "description" : "The migration unique identifier",
+            "example" : "2025-08-11T15:34:43"
+          }
+        },
+        "required" : [ "bookings", "migrationId", "offenderNo" ]
       },
       "CsraMappingDto" : {
         "type" : "object",
