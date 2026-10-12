@@ -455,7 +455,10 @@ hmpps.sqs:
         { "eventType":[
           "register.court.email.inserted",
           "register.court.email.amended",
-          "register.court.email.deleted"
+          "register.court.email.deleted",
+          "register.court.phone.inserted",
+          "register.court.phone.amended",
+          "register.court.phone.deleted"
         ]}
       dlqMaxReceiveCount: 2
       visibilityTimeout: 120

@@ -18,7 +18,11 @@ import org.springframework.context.annotation.Import
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.createAgencyEmailRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.createAgencyEmailResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.createAgencyPhoneRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.createAgencyPhoneResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.updateAgencyEmailAddressesRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.updateAgencyPhoneNumbersRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.updateAgencyPhoneNumbersResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
@@ -145,6 +149,97 @@ class AgencyNomisApiServiceTest {
       val response = apiService.createAgencyEmail("SHEFCC", createAgencyEmailRequest())
 
       assertThat(response.id).isEqualTo(123456)
+    }
+  }
+
+  @Nested
+  inner class CreateAgencyPhone {
+    @Test
+    fun `will pass oauth2 token to endpoint`() = runTest {
+      mockServer.stubCreateAgencyPhone()
+
+      apiService.createAgencyPhone("SHEFCC", createAgencyPhoneRequest())
+
+      mockServer.verify(
+        postRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the create agency phone endpoint with request`() = runTest {
+      val request = createAgencyPhoneRequest().copy(extension = "123")
+      mockServer.stubCreateAgencyPhone(agencyId = "SHEFCC")
+
+      apiService.createAgencyPhone("SHEFCC", request)
+
+      mockServer.verify(
+        postRequestedFor(urlPathEqualTo("/agency/SHEFCC/phones"))
+          .withRequestBody(equalToJson("""{"number":"0114 555 9898","typeCode":"BUS","extension":"123"}""")),
+      )
+    }
+
+    @Test
+    fun `will return created agency phone`() = runTest {
+      mockServer.stubCreateAgencyPhone(
+        agencyId = "SHEFCC",
+        response = createAgencyPhoneResponse().copy(id = 123456),
+      )
+
+      val response = apiService.createAgencyPhone("SHEFCC", createAgencyPhoneRequest())
+
+      assertThat(response.id).isEqualTo(123456)
+    }
+  }
+
+  @Nested
+  inner class RefreshAgencyPhones {
+    val request = updateAgencyPhoneNumbersRequest()
+
+    @Test
+    fun `will pass oauth2 token to endpoint`() = runTest {
+      mockServer.stubUpdateAgencyPhoneNumbers()
+
+      apiService.refreshAgencyPhones("SHEFCC", request)
+
+      mockServer.verify(
+        putRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the refresh agency phones endpoint with request`() = runTest {
+      mockServer.stubUpdateAgencyPhoneNumbers()
+      val requestWithExtension = request.copy(phoneNumbers = request.phoneNumbers.map { it.copy(extension = "123") })
+
+      apiService.refreshAgencyPhones("SHEFCC", requestWithExtension)
+
+      mockServer.verify(
+        putRequestedFor(urlPathEqualTo("/agency/SHEFCC/phones"))
+          .withRequestBody(equalToJson("""{"phoneNumbers":[{"number":"0114 555 9898","typeCode":"BUS","extension":"123"}]}""")),
+      )
+    }
+
+    @Test
+    fun `will return refreshed agency phones`() = runTest {
+      val expected = updateAgencyPhoneNumbersResponse()
+      mockServer.stubUpdateAgencyPhoneNumbers(response = expected)
+
+      assertThat(apiService.refreshAgencyPhones("SHEFCC", request)).isEqualTo(expected)
+    }
+
+    @Test
+    fun `will refresh with an empty list of phones`() = runTest {
+      mockServer.stubUpdateAgencyPhoneNumbers(response = updateAgencyPhoneNumbersResponse().copy(phoneNumbers = emptyList()))
+
+      val response = apiService.refreshAgencyPhones("SHEFCC", request.copy(phoneNumbers = emptyList()))
+
+      mockServer.verify(
+        putRequestedFor(urlPathEqualTo("/agency/SHEFCC/phones"))
+          .withRequestBody(equalToJson("""{"phoneNumbers":[]}""")),
+      )
+      assertThat(response.phoneNumbers).isEmpty()
     }
   }
 

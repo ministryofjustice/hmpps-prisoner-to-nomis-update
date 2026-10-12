@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency
 
+import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
@@ -16,13 +17,20 @@ import org.springframework.beans.factory.annotation.Autowired
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.agencyEmailAddress
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.agencyPhoneNumber
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.createAgencyEmailResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.createAgencyPhoneResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.updateAgencyEmailAddressesResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.updateAgencyPhoneNumbersResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension.Companion.agencyEmailDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension.Companion.agencyPhoneDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension.Companion.courtDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAgencyEmailAddressRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAgencyPhoneNumberRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyEmailAddressesRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyPhoneNumber
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyPhoneNumbersRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.jsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.getRequestBody
@@ -256,6 +264,292 @@ class AgencyRegisterToNomisIntTest(
         }
       }
     }
+  }
+
+  @Nested
+  @DisplayName("register.court.phone.inserted")
+  inner class CourtPhoneInserted {
+    val dpsPhoneId = 12345L
+    val nomisPhoneId = 8765L
+    val courtId = "SHEFCC"
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of the event")
+    inner class WhenNomisCreated {
+      @BeforeEach
+      fun setUp() {
+        publishCourtPhoneEvent("register.court.phone.inserted", courtId, dpsPhoneId, source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the event is ignored`() {
+        verify(telemetryClient).trackEvent(
+          eq("court-phone-create-ignored"),
+          check {
+            assertThat(it["courtId"]).isEqualTo(courtId)
+            assertThat(it["dpsPhoneId"]).isEqualTo(dpsPhoneId.toString())
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will not call DPS or update NOMIS`() {
+        dpsApi.verify(0, getRequestedFor(urlEqualTo("/courts/id/$courtId")))
+        nomisApi.verify(0, postRequestedFor(urlEqualTo("/agency/$courtId/phones")))
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of the event")
+    inner class WhenDpsCreated {
+      @Nested
+      inner class HappyPath {
+        @BeforeEach
+        fun setUp() {
+          dpsApi.stubGetCourt(
+            courtId = courtId,
+            response = courtDto().copy(
+              phoneNumbers = listOf(agencyPhoneDto(), agencyPhoneDto().copy(id = dpsPhoneId, number = "0114 555 1234")),
+            ),
+          )
+          nomisApi.stubCreateAgencyPhone(agencyId = courtId, response = createAgencyPhoneResponse().copy(id = nomisPhoneId))
+          publishCourtPhoneEvent("register.court.phone.inserted", courtId, dpsPhoneId)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will create only the inserted phone in NOMIS`() {
+          val request: CreateAgencyPhoneNumberRequest = NomisApiExtension.nomisApi.getRequestBody(postRequestedFor(urlEqualTo("/agency/$courtId/phones")), jsonMapper)
+          assertThat(request).isEqualTo(CreateAgencyPhoneNumberRequest(number = "0114 555 1234", typeCode = "BUS"))
+          nomisApi.verify(1, postRequestedFor(urlEqualTo("/agency/$courtId/phones")))
+        }
+
+        @Test
+        fun `will send telemetry event showing success`() {
+          verify(telemetryClient).trackEvent(
+            eq("court-phone-create-success"),
+            check {
+              assertThat(it["courtId"]).isEqualTo(courtId)
+              assertThat(it["dpsPhoneId"]).isEqualTo(dpsPhoneId.toString())
+              assertThat(it["nomisPhoneId"]).isEqualTo(nomisPhoneId.toString())
+            },
+            isNull(),
+          )
+        }
+      }
+    }
+  }
+
+  @Nested
+  @DisplayName("register.court.phone.amended")
+  inner class CourtPhoneAmended {
+    val dpsPhoneId = 12345L
+    val courtId = "SHEFCC"
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of the event")
+    inner class WhenNomisAmended {
+      @BeforeEach
+      fun setUp() {
+        publishCourtPhoneEvent("register.court.phone.amended", courtId, dpsPhoneId, source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the event is ignored`() {
+        verify(telemetryClient).trackEvent(
+          eq("court-phone-amended-ignored"),
+          check {
+            assertThat(it["courtId"]).isEqualTo(courtId)
+            assertThat(it["dpsPhoneId"]).isEqualTo(dpsPhoneId.toString())
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will not call DPS or update NOMIS`() {
+        dpsApi.verify(0, getRequestedFor(urlEqualTo("/courts/id/$courtId")))
+        nomisApi.verify(0, putRequestedFor(urlEqualTo("/agency/$courtId/phones")))
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of the event")
+    inner class WhenDpsAmended {
+      val phones = listOf("0114 555 1234", "0114 555 5678")
+
+      @Nested
+      inner class HappyPath {
+        @BeforeEach
+        fun setUp() {
+          dpsApi.stubGetCourt(
+            courtId = courtId,
+            response = courtDto().copy(
+              phoneNumbers = phones.mapIndexed { index, number -> agencyPhoneDto().copy(id = dpsPhoneId + index, number = number) },
+            ),
+          )
+          nomisApi.stubUpdateAgencyPhoneNumbers(
+            agencyId = courtId,
+            response = updateAgencyPhoneNumbersResponse().copy(
+              phoneNumbers = phones.mapIndexed { index, number -> agencyPhoneNumber().copy(id = index + 1L, number = number) },
+            ),
+          )
+          publishCourtPhoneEvent("register.court.phone.amended", courtId, dpsPhoneId)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will refresh all NOMIS phone numbers`() {
+          val request: UpdateAgencyPhoneNumbersRequest = NomisApiExtension.nomisApi.getRequestBody(putRequestedFor(urlEqualTo("/agency/$courtId/phones")), jsonMapper)
+          assertThat(request.phoneNumbers).containsExactlyElementsOf(phones.map { UpdateAgencyPhoneNumber(number = it, typeCode = "BUS") })
+        }
+
+        @Test
+        fun `will send telemetry event showing success`() {
+          verify(telemetryClient).trackEvent(
+            eq("court-phone-amended-success"),
+            check {
+              assertThat(it["courtId"]).isEqualTo(courtId)
+              assertThat(it["dpsPhoneId"]).isEqualTo(dpsPhoneId.toString())
+              assertThat(it["nomisPhoneIds"]).isEqualTo("1, 2")
+            },
+            isNull(),
+          )
+        }
+      }
+    }
+  }
+
+  @Nested
+  @DisplayName("register.court.phone.deleted")
+  inner class CourtPhoneDeleted {
+    val dpsPhoneId = 12345L
+    val courtId = "SHEFCC"
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of the event")
+    inner class WhenNomisDeleted {
+      @BeforeEach
+      fun setUp() {
+        publishCourtPhoneEvent("register.court.phone.deleted", courtId, dpsPhoneId, source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the event is ignored`() {
+        verify(telemetryClient).trackEvent(
+          eq("court-phone-deleted-ignored"),
+          check {
+            assertThat(it["courtId"]).isEqualTo(courtId)
+            assertThat(it["dpsPhoneId"]).isEqualTo(dpsPhoneId.toString())
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will not call DPS or update NOMIS`() {
+        dpsApi.verify(0, getRequestedFor(urlEqualTo("/courts/id/$courtId")))
+        nomisApi.verify(0, putRequestedFor(urlEqualTo("/agency/$courtId/phones")))
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of the event")
+    inner class WhenDpsDeleted {
+      val phones = listOf("0114 555 1234", "0114 555 5678")
+
+      @Nested
+      inner class HappyPath {
+        @BeforeEach
+        fun setUp() {
+          dpsApi.stubGetCourt(
+            courtId = courtId,
+            response = courtDto().copy(
+              phoneNumbers = phones.mapIndexed { index, number -> agencyPhoneDto().copy(id = index + 1L, number = number) },
+            ),
+          )
+          nomisApi.stubUpdateAgencyPhoneNumbers(
+            agencyId = courtId,
+            response = updateAgencyPhoneNumbersResponse().copy(
+              phoneNumbers = phones.mapIndexed { index, number -> agencyPhoneNumber().copy(id = index + 1L, number = number) },
+            ),
+          )
+          publishCourtPhoneEvent("register.court.phone.deleted", courtId, dpsPhoneId)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will refresh NOMIS with the remaining phone numbers`() {
+          val request: UpdateAgencyPhoneNumbersRequest = NomisApiExtension.nomisApi.getRequestBody(putRequestedFor(urlEqualTo("/agency/$courtId/phones")), jsonMapper)
+          assertThat(request.phoneNumbers).containsExactlyElementsOf(phones.map { UpdateAgencyPhoneNumber(number = it, typeCode = "BUS") })
+        }
+
+        @Test
+        fun `will send telemetry event showing success`() {
+          verify(telemetryClient).trackEvent(
+            eq("court-phone-deleted-success"),
+            check {
+              assertThat(it["courtId"]).isEqualTo(courtId)
+              assertThat(it["dpsPhoneId"]).isEqualTo(dpsPhoneId.toString())
+              assertThat(it["nomisPhoneIds"]).isEqualTo("1, 2")
+            },
+            isNull(),
+          )
+        }
+      }
+
+      @Nested
+      inner class LastPhoneDeleted {
+        @BeforeEach
+        fun setUp() {
+          dpsApi.stubGetCourt(courtId = courtId, response = courtDto().copy(phoneNumbers = emptyList()))
+          nomisApi.stubUpdateAgencyPhoneNumbers(
+            agencyId = courtId,
+            response = updateAgencyPhoneNumbersResponse().copy(phoneNumbers = emptyList()),
+          )
+          publishCourtPhoneEvent("register.court.phone.deleted", courtId, dpsPhoneId)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will remove all NOMIS phone numbers`() {
+          val request: UpdateAgencyPhoneNumbersRequest = NomisApiExtension.nomisApi.getRequestBody(putRequestedFor(urlEqualTo("/agency/$courtId/phones")), jsonMapper)
+          assertThat(request.phoneNumbers).isEmpty()
+        }
+
+        @Test
+        fun `will send telemetry event showing success with no phone ids`() {
+          verify(telemetryClient).trackEvent(
+            eq("court-phone-deleted-success"),
+            check {
+              assertThat(it["courtId"]).isEqualTo(courtId)
+              assertThat(it["dpsPhoneId"]).isEqualTo(dpsPhoneId.toString())
+              assertThat(it["nomisPhoneIds"]).isEmpty()
+            },
+            isNull(),
+          )
+        }
+      }
+    }
+  }
+
+  private fun publishCourtPhoneEvent(
+    eventType: String,
+    courtId: String,
+    phoneId: Long,
+    source: String = "DPS",
+  ) {
+    publishDomainEvent(
+      eventType = eventType,
+      payload = CourtPhoneEvent(
+        eventType = eventType,
+        additionalInformation = CourtPhoneAdditionalInformation(courtId = courtId, phoneId = phoneId, source = source),
+      ),
+    )
   }
 
   private fun publishCourtEmailInsertedEvent(
