@@ -153,7 +153,6 @@ generic-service:
 
 generic-prometheus-alerts:
   businessHoursOnly: true
-  alertSeverity: syscon-nonprod
   sqsNumberAlertQueueMappings:
     coreperson:
       - "syscon-devs-dev-hmpps_prisoner_to_nomis_coreperson_queue"
