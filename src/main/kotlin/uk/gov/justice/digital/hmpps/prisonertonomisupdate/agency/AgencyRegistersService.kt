@@ -4,7 +4,10 @@ import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAgencyEmailAddressRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAgencyPhoneNumberRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyEmailAddressesRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyPhoneNumber
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyPhoneNumbersRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.TelemetryEnabled
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.track
 
@@ -72,6 +75,49 @@ class AgencyRegistersService(
           UpdateAgencyEmailAddressesRequest(emailAddresses = dpsCourt.emailAddresses.map { it.address!! }),
         )
         telemetry["nomisEmailIds"] = response.emailAddresses.map { it.id }.joinToString(", ")
+      }
+    }
+  }
+
+  suspend fun courtPhoneInserted(event: CourtPhoneEvent) {
+    val courtId = event.additionalInformation.courtId
+    val dpsPhoneId = event.additionalInformation.phoneId
+    val telemetry = mutableMapOf(
+      "courtId" to courtId,
+      "dpsPhoneId" to dpsPhoneId.toString(),
+    )
+    if (!event.didOriginateInDPS()) {
+      telemetryClient.trackEvent("court-phone-create-ignored", telemetry)
+    } else {
+      track("court-phone-create", telemetry) {
+        val dpsCourt = dpsService.getCourt(courtId)
+        val agencyPhone = dpsCourt.phoneNumbers.find { it.id == dpsPhoneId }!!
+        val response = nomisApiService.createAgencyPhone(courtId, CreateAgencyPhoneNumberRequest(number = agencyPhone.number!!, typeCode = "BUS"))
+        telemetry["nomisPhoneId"] = response.id.toString()
+      }
+    }
+  }
+
+  suspend fun courtPhoneAmended(event: CourtPhoneEvent) = refreshCourtPhones(event, "court-phone-amended")
+
+  suspend fun courtPhoneDeleted(event: CourtPhoneEvent) = refreshCourtPhones(event, "court-phone-deleted")
+
+  private suspend fun refreshCourtPhones(event: CourtPhoneEvent, telemetryEvent: String) {
+    val courtId = event.additionalInformation.courtId
+    val telemetry = mutableMapOf(
+      "courtId" to courtId,
+      "dpsPhoneId" to event.additionalInformation.phoneId.toString(),
+    )
+    if (!event.didOriginateInDPS()) {
+      telemetryClient.trackEvent("$telemetryEvent-ignored", telemetry)
+    } else {
+      track(telemetryEvent, telemetry) {
+        val dpsCourt = dpsService.getCourt(courtId)
+        val response = nomisApiService.refreshAgencyPhones(
+          courtId,
+          UpdateAgencyPhoneNumbersRequest(phoneNumbers = dpsCourt.phoneNumbers.map { UpdateAgencyPhoneNumber(number = it.number!!, typeCode = "BUS") }),
+        )
+        telemetry["nomisPhoneIds"] = response.phoneNumbers.map { it.id }.joinToString(", ")
       }
     }
   }

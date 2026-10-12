@@ -35,6 +35,9 @@ class AgencyRegistersDomainEventListener(
       "register.court.email.inserted" -> service.courtEmailInserted(message.fromJson())
       "register.court.email.amended" -> service.courtEmailAmended(message.fromJson())
       "register.court.email.deleted" -> service.courtEmailDeleted(message.fromJson())
+      "register.court.phone.inserted" -> service.courtPhoneInserted(message.fromJson())
+      "register.court.phone.amended" -> service.courtPhoneAmended(message.fromJson())
+      "register.court.phone.deleted" -> service.courtPhoneDeleted(message.fromJson())
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }
   }
@@ -56,5 +59,16 @@ data class CourtEmailEvent(
 data class CourtEmailAdditionalInformation(
   val courtId: String,
   val emailId: Long,
+  override val source: String,
+) : SourcedAdditionalData
+
+data class CourtPhoneEvent(
+  val eventType: String,
+  override val additionalInformation: CourtPhoneAdditionalInformation,
+) : SourcedEvent
+
+data class CourtPhoneAdditionalInformation(
+  val courtId: String,
+  val phoneId: Long,
   override val source: String,
 ) : SourcedAdditionalData

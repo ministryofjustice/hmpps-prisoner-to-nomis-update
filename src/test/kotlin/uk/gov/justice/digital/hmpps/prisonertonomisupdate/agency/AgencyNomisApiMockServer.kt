@@ -16,11 +16,16 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Ag
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AgencyId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AgencyIdsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AgencyPhoneNumber
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AgencyPhoneNumbersResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AgencyResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAgencyEmailAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAgencyEmailAddressResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAgencyPhoneNumberRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAgencyPhoneNumberResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyEmailAddressesRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyPhoneNumber
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyPhoneNumbersRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 
 @Component
@@ -106,6 +111,23 @@ class AgencyNomisApiMockServer(private val jsonMapper: JsonMapper) {
     fun updateAgencyEmailAddressesResponse() = AgencyEmailAddressesResponse(
       emailAddresses = listOf(agencyEmailAddress()),
     )
+
+    fun createAgencyPhoneRequest() = CreateAgencyPhoneNumberRequest(
+      number = "0114 555 9898",
+      typeCode = "BUS",
+    )
+
+    fun createAgencyPhoneResponse() = CreateAgencyPhoneNumberResponse(
+      id = 123456,
+    )
+
+    fun updateAgencyPhoneNumbersRequest() = UpdateAgencyPhoneNumbersRequest(
+      phoneNumbers = listOf(UpdateAgencyPhoneNumber(number = "0114 555 9898", typeCode = "BUS")),
+    )
+
+    fun updateAgencyPhoneNumbersResponse() = AgencyPhoneNumbersResponse(
+      phoneNumbers = listOf(agencyPhoneNumber()),
+    )
   }
 
   fun stubGetAgency(
@@ -167,6 +189,34 @@ class AgencyNomisApiMockServer(private val jsonMapper: JsonMapper) {
   ) {
     nomisApi.stubFor(
       put(urlPathEqualTo("/agency/$agencyId/emails")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(jsonMapper.writeValueAsString(response)),
+      ),
+    )
+  }
+
+  fun stubCreateAgencyPhone(
+    agencyId: String = "SHEFCC",
+    response: CreateAgencyPhoneNumberResponse = createAgencyPhoneResponse(),
+  ) {
+    nomisApi.stubFor(
+      post(urlPathEqualTo("/agency/$agencyId/phones")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.CREATED.value())
+          .withBody(jsonMapper.writeValueAsString(response)),
+      ),
+    )
+  }
+
+  fun stubUpdateAgencyPhoneNumbers(
+    agencyId: String = "SHEFCC",
+    response: AgencyPhoneNumbersResponse = updateAgencyPhoneNumbersResponse(),
+  ) {
+    nomisApi.stubFor(
+      put(urlPathEqualTo("/agency/$agencyId/phones")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value())

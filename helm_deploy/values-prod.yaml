@@ -84,6 +84,9 @@ generic-service:
     FEATURE_EVENT_REGISTER_COURT_EMAIL_INSERTED: false
     FEATURE_EVENT_REGISTER_COURT_EMAIL_AMENDED: false
     FEATURE_EVENT_REGISTER_COURT_EMAIL_DELETED: false
+    FEATURE_EVENT_REGISTER_COURT_PHONE_INSERTED: false
+    FEATURE_EVENT_REGISTER_COURT_PHONE_AMENDED: false
+    FEATURE_EVENT_REGISTER_COURT_PHONE_DELETED: false
 
   # The name has max length of 43 chars (Cronjob name max length is 52 chars, including prefix "to-nomis-")
   # The type must exist in enum BatchType

@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegisters
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.AgencyEmailDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.AgencyId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.AgencyIdsResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.AgencyPhoneDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.CourtDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.LegacyAgencyAddressDto
@@ -82,6 +83,11 @@ class AgencyRegistersDpsApiExtension :
     fun agencyEmailDto() = AgencyEmailDto(
       id = 1,
       address = "sheffield.crown.court@test.com",
+    )
+
+    fun agencyPhoneDto() = AgencyPhoneDto(
+      id = 1,
+      number = "0114 555 9898",
     )
 
     fun courtDto() = CourtDto(
