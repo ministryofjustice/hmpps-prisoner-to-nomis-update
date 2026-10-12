@@ -152,7 +152,7 @@ internal class CorePersonSynchronisationReligionTest(@Autowired jsonMapper: Json
       )
 
       verify(telemetryClient).trackEvent(
-        eq("core-person-religions-merged-success"),
+        eq("core-person-religion-merged-success"),
         check {
           assertThat(it["prisonNumber"]).isEqualTo(prisonNumber)
         },
@@ -161,7 +161,7 @@ internal class CorePersonSynchronisationReligionTest(@Autowired jsonMapper: Json
     }
 
     @Test
-    fun `should not call the nomis api when there are no religions`() = runTest {
+    fun `should not call the nomis api or mapping service when there are no religions`() = runTest {
       val prisonNumber = "A1234BC"
       whenever(corePersonCprApiService.getCorePerson(prisonNumber)).thenReturn(
         personRecord(prisonNumber),
@@ -178,7 +178,7 @@ internal class CorePersonSynchronisationReligionTest(@Autowired jsonMapper: Json
       verify(mapping, never()).getByCprIds(any())
 
       verify(telemetryClient).trackEvent(
-        eq("core-person-religions-merged-ignored"),
+        eq("core-person-religion-merge-ignored"),
         check {
           assertThat(it["prisonNumber"]).isEqualTo(prisonNumber)
         },
