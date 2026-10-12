@@ -152,7 +152,7 @@ internal class CorePersonSynchronisationReligionTest(@Autowired jsonMapper: Json
       )
 
       verify(telemetryClient).trackEvent(
-        eq("coreperson-religions-merged-success"),
+        eq("core-person-religions-merged-success"),
         check {
           assertThat(it["prisonNumber"]).isEqualTo(prisonNumber)
         },
@@ -175,6 +175,15 @@ internal class CorePersonSynchronisationReligionTest(@Autowired jsonMapper: Json
       synchronisationService.mergeReligions(prisonNumber)
 
       verify(corePersonNomisApiService, never()).mergeReligions(any(), any())
+      verify(mapping, never()).getByCprIds(any())
+
+      verify(telemetryClient).trackEvent(
+        eq("core-person-religions-merged-ignored"),
+        check {
+          assertThat(it["prisonNumber"]).isEqualTo(prisonNumber)
+        },
+        isNull(),
+      )
     }
 
     @Test
