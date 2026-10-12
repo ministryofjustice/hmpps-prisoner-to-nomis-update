@@ -236,7 +236,7 @@ class CorePersonResourceIntTest(
           .exchange()
 
         verify(telemetryClient).trackEvent(
-          eq("coreperson-religions-merged-success"),
+          eq("core-person-religion-merged-success"),
           check {
             assertThat(it["prisonNumber"]).isEqualTo(prisonNumber)
           },

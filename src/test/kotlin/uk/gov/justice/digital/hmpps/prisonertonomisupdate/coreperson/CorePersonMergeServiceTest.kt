@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
+import org.mockito.kotlin.isNull
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
@@ -27,6 +28,14 @@ internal class CorePersonMergeServiceTest {
     inner class NoPrisonNumber {
       @Test
       fun `should log when no prison number is provided`() = runTest {
+        corePersonMergeService.mergePerson(
+          CorePersonMergeService.MergePersonEvent(
+            "core-person-record.prison.record.merged",
+            PersonReferenceList(emptyList()),
+          ),
+        )
+        verify(telemetryClient).trackEvent(eq("coreperson-person-merged-no-prison-number"), any(), isNull())
+        verify(corePersonNomisApiService, never()).mergeReligions(any(), any())
       }
     }
 

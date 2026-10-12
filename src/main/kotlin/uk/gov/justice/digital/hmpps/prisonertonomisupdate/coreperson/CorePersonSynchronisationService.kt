@@ -91,6 +91,10 @@ class CorePersonSynchronisationService(
     )
     val toPerson = corePersonCprApiService.getCorePerson(toPrisonNumber)
     val cprReligions = toPerson?.religionHistory.orEmpty()
+    if (cprReligions.isEmpty()) {
+      telemetryClient.trackEvent("${CORE_PERSON_RELIGION.entityName}-merge-ignored", telemetryMap)
+      return
+    }
     val cprReligionIds = cprReligions.map { it.cprReligionId!! }
     val mappings = corePersonMappingApiService.getByCprIds(cprReligionIds)
     val missingMappings = cprReligionIds.toSet() - mappings.map { it.cprId }.toSet()
@@ -104,7 +108,7 @@ class CorePersonSynchronisationService(
     if (corePersonReligionRequests.isNotEmpty()) {
       corePersonNomisApiService.mergeReligions(toPrisonNumber, CorePersonMergeRequest(corePersonReligionRequests))
     }
-    telemetryClient.trackEvent("coreperson-religions-merged-success", telemetryMap)
+    telemetryClient.trackEvent("${CORE_PERSON_RELIGION.entityName}-merged-success", telemetryMap)
   }
 
   suspend fun contactCreated(event: ContactEvent, eventSource: EventSource?) {
