@@ -289,6 +289,10 @@ private val addressComparator = compareBy<PrisonerAddress, LocalDate?>(nullsFirs
 
 private val usageComparator = compareBy<PrisonerAddressUsage, String?>(nullsFirst()) { it.code }
 
+private val religionComparator = compareBy<PrisonerReligion, LocalDate?>(nullsFirst()) { it.startDate }
+  .thenBy(nullsFirst()) { it.createDatetime }
+  .thenBy(nullsFirst()) { it.endDate }
+
 private val contactComparator = compareBy<PrisonerContact, String?>(nullsFirst()) { it.type }
   .thenBy(nullsFirst()) { it.value }
   .thenBy(nullsFirst()) { it.extension }
@@ -304,7 +308,7 @@ fun DpsPrisonRecord.toPerson() = PrisonerPerson(
       comments = it.comments,
       createDatetime = it.createDateTime,
     )
-  },
+  }.sortedWith(religionComparator),
   addresses = addresses.map { it.toPrisonerAddress() }.sortedWith(addressComparator),
   contacts = contacts.map { PrisonerContact(type = it.type.code, value = it.value, extension = it.extension) }.sortedWith(contactComparator),
 )
@@ -337,7 +341,7 @@ fun CorePerson.toPerson() = PrisonerPerson(
       comments = r.comments,
       createDatetime = r.audit.createDatetime,
     )
-  } ?: emptyList(),
+  }?.sortedWith(religionComparator) ?: emptyList(),
   addresses = addresses?.map { it.toPrisonerAddress() }?.sortedWith(addressComparator) ?: emptyList(),
   contacts = (
     phoneNumbers.orEmpty().map { PrisonerContact(type = it.type.code.toCprContactType(), value = it.number, extension = it.extension) } +
