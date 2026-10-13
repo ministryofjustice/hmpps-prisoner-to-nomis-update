@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-08.1164.ecee621"
+    "version" : "2026-10-12.1173.e3235a2"
   },
   "servers" : [ {
     "url" : "https://prisoner-finance-sync-api-dev.hmpps.service.justice.gov.uk/",
@@ -1651,9 +1651,13 @@
             "type" : "string",
             "format" : "date-time",
             "description" : "The time the hold was released according to NOMIS"
+          },
+          "releaseTransactionId" : {
+            "type" : "integer",
+            "format" : "int64"
           }
         },
-        "required" : [ "releaseDateTime" ]
+        "required" : [ "releaseDateTime", "releaseTransactionId" ]
       },
       "SyncReleasedHoldResponse" : {
         "type" : "object",
