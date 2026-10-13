@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNul
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.AgencyResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AgencyIdsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AgencyResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAgencyAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAgencyEmailAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAgencyPhoneNumberRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyEmailAddressesRequest
@@ -33,4 +34,5 @@ class AgencyNomisApiService(
   suspend fun refreshAgencyEmails(agencyId: String, request: UpdateAgencyEmailAddressesRequest) = api.updateAgencyEmailAddresses(agencyId, request).awaitSingle()
   suspend fun createAgencyPhone(agencyId: String, request: CreateAgencyPhoneNumberRequest) = api.createAgencyPhone(agencyId, request).awaitSingle()
   suspend fun refreshAgencyPhones(agencyId: String, request: UpdateAgencyPhoneNumbersRequest) = api.updateAgencyPhoneNumbers(agencyId, request).awaitSingle()
+  suspend fun createAgencyAddress(agencyId: String, request: CreateAgencyAddressRequest) = api.createAgencyAddress(agencyId, request).awaitSingle()
 }
