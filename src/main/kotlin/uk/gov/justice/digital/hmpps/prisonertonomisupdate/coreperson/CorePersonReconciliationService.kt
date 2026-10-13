@@ -3,6 +3,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson
 
 import com.microsoft.applicationinsights.TelemetryClient
+import com.sun.org.apache.xerces.internal.jaxp.datatype.XMLGregorianCalendarImpl.createDateTime
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
@@ -274,18 +275,10 @@ class CorePersonReconciliationService(
 private fun LocalDateTime?.notEqualsIgnoringNanos(createDatetime: LocalDateTime?): Boolean = !Objects.equals(this?.withNano(0), createDatetime?.withNano(0))
 
 // NOMIS and CPR return addresses in arbitrary order, so sort both sides into the same deterministic order
-private val addressComparator = compareBy<PrisonerAddress, LocalDate?>(nullsFirst()) { it.startDate }
+private val addressComparator = compareBy<PrisonerAddress, LocalDateTime?>(nullsFirst()) { it.createdDateTime }
+  .thenBy(nullsFirst()) { it.startDate }
   .thenBy(nullsFirst()) { it.endDate }
   .thenBy(nullsFirst()) { it.postcode }
-  .thenBy(nullsFirst()) { it.buildingNumber }
-  .thenBy(nullsFirst()) { it.subBuildingName }
-  .thenBy(nullsFirst()) { it.thoroughfareName }
-  .thenBy(nullsFirst()) { it.dependentLocality }
-  .thenBy(nullsFirst()) { it.postTown }
-  .thenBy(nullsFirst()) { it.county }
-  .thenBy(nullsFirst()) { it.countryCode }
-  .thenBy(nullsFirst()) { it.comment }
-  .thenBy(nullsFirst()) { it.noFixedAbode }
 
 private val usageComparator = compareBy<PrisonerAddressUsage, String?>(nullsFirst()) { it.code }
 
@@ -326,6 +319,7 @@ private fun CanonicalAddress.toPrisonerAddress() = PrisonerAddress(
   county = county,
   countryCode = countryCode?.value,
   comment = comment,
+  createdDateTime = createDateTime,
   usages = usages.map { PrisonerAddressUsage(code = it.code?.value, active = it.isActive) }.sortedWith(usageComparator),
   contacts = contacts.map { PrisonerContact(type = it.type.code, value = it.value, extension = it.extension) }.sortedWith(contactComparator),
 )
@@ -362,6 +356,7 @@ private fun OffenderAddress.toPrisonerAddress() = PrisonerAddress(
   county = county?.description,
   countryCode = country?.code?.toCprCountryCode(),
   comment = comment,
+  createdDateTime = createdDateTime,
   usages = usages?.map { PrisonerAddressUsage(code = it.usage, active = it.active) }?.sortedWith(usageComparator) ?: emptyList(),
   contacts = phoneNumbers?.map { PrisonerContact(type = it.type.code.toCprContactType(), value = it.number, extension = it.extension) }?.sortedWith(contactComparator) ?: emptyList(),
 )
@@ -410,6 +405,7 @@ data class PrisonerAddress(
   val county: String?,
   val countryCode: String?,
   val comment: String?,
+  val createdDateTime: LocalDateTime?,
   val usages: List<PrisonerAddressUsage> = emptyList(),
   val contacts: List<PrisonerContact> = emptyList(),
 )
