@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.transactions
 
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo

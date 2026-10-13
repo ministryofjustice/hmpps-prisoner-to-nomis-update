@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalCoroutinesApi::class)
 
-package uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.transactions
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.assertj.core.api.Assertions.assertThat
@@ -20,6 +20,7 @@ import org.mockito.kotlin.isNull
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.springframework.beans.factory.annotation.Autowired
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiExtension.Companion.prisonerTransaction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import java.util.UUID

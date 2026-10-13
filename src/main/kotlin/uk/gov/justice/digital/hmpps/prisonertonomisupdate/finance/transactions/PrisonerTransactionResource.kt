@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.transactions
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.media.Content

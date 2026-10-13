@@ -65,8 +65,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonR
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.CSIPReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csra.CsraReconciliationService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.PrisonerBalanceReconciliationService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.PrisonerTransactionReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.prisonerbalances.PrisonerBalanceReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.transactions.PrisonerTransactionReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives.IncentivesReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.IncidentsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.LocationsReconciliationService

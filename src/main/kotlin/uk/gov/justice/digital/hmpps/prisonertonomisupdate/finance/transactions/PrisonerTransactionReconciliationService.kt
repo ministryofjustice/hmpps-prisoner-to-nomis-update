@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.transactions
 
 import com.microsoft.applicationinsights.TelemetryClient
 import kotlinx.coroutines.Dispatchers
@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.GeneralLedgerEntry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.OffenderTransaction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SyncOffenderTransactionResponse
