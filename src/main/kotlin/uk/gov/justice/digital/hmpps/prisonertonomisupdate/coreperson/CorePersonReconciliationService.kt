@@ -3,7 +3,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson
 
 import com.microsoft.applicationinsights.TelemetryClient
-import com.sun.org.apache.xerces.internal.jaxp.datatype.XMLGregorianCalendarImpl.createDateTime
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
