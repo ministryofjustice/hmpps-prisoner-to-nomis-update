@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-09-30.579.8d8d990"
+    "version" : "2026-10-12.600.71590e2"
   },
   "servers" : [ {
     "url" : "https://prison-register-dev.hmpps.service.justice.gov.uk",
@@ -500,7 +500,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/UpdatePhoneNumberDto"
+                "$ref" : "#/components/schemas/CreateOrUpdatePhoneNumberDto"
               }
             }
           },
@@ -663,7 +663,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/UpdateEmailAddressDto"
+                "$ref" : "#/components/schemas/CreateOrUpdateEmailAddressDto"
               }
             }
           },
@@ -1476,7 +1476,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/UpdatePhoneNumberDto"
+                "$ref" : "#/components/schemas/CreateOrUpdatePhoneNumberDto"
               }
             }
           },
@@ -1639,7 +1639,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/UpdateEmailAddressDto"
+                "$ref" : "#/components/schemas/CreateOrUpdateEmailAddressDto"
               }
             }
           },
@@ -2136,7 +2136,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/UpdatePhoneNumberDto"
+                "$ref" : "#/components/schemas/CreateOrUpdatePhoneNumberDto"
               }
             }
           },
@@ -2299,7 +2299,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/UpdateEmailAddressDto"
+                "$ref" : "#/components/schemas/CreateOrUpdateEmailAddressDto"
               }
             }
           },
@@ -2796,7 +2796,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/UpdatePhoneNumberDto"
+                "$ref" : "#/components/schemas/CreateOrUpdatePhoneNumberDto"
               }
             }
           },
@@ -3293,7 +3293,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/UpdatePhoneNumberDto"
+                "$ref" : "#/components/schemas/CreateOrUpdatePhoneNumberDto"
               }
             }
           },
@@ -3456,7 +3456,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/UpdateEmailAddressDto"
+                "$ref" : "#/components/schemas/CreateOrUpdateEmailAddressDto"
               }
             }
           },
@@ -3953,7 +3953,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/UpdatePhoneNumberDto"
+                "$ref" : "#/components/schemas/CreateOrUpdatePhoneNumberDto"
               }
             }
           },
@@ -4116,7 +4116,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/UpdateEmailAddressDto"
+                "$ref" : "#/components/schemas/CreateOrUpdateEmailAddressDto"
               }
             }
           },
@@ -4530,7 +4530,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/UpdatePhoneNumberDto"
+                "$ref" : "#/components/schemas/CreateOrUpdatePhoneNumberDto"
               }
             }
           },
@@ -4624,7 +4624,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/UpdateEmailAddressDto"
+                "$ref" : "#/components/schemas/CreateOrUpdateEmailAddressDto"
               }
             }
           },
@@ -5089,7 +5089,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/UpdatePhoneNumberDto"
+                "$ref" : "#/components/schemas/CreateOrUpdatePhoneNumberDto"
               }
             }
           },
@@ -5183,7 +5183,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/UpdateEmailAddressDto"
+                "$ref" : "#/components/schemas/CreateOrUpdateEmailAddressDto"
               }
             }
           },
@@ -5474,7 +5474,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/UpdatePhoneNumberDto"
+                "$ref" : "#/components/schemas/CreateOrUpdatePhoneNumberDto"
               }
             }
           },
@@ -5568,7 +5568,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/UpdateEmailAddressDto"
+                "$ref" : "#/components/schemas/CreateOrUpdateEmailAddressDto"
               }
             }
           },
@@ -6003,7 +6003,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/UpdatePhoneNumberDto"
+                "$ref" : "#/components/schemas/CreateOrUpdatePhoneNumberDto"
               }
             }
           },
@@ -6294,7 +6294,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/UpdatePhoneNumberDto"
+                "$ref" : "#/components/schemas/CreateOrUpdatePhoneNumberDto"
               }
             }
           },
@@ -6388,7 +6388,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/UpdateEmailAddressDto"
+                "$ref" : "#/components/schemas/CreateOrUpdateEmailAddressDto"
               }
             }
           },
@@ -6666,7 +6666,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/UpdatePhoneNumberDto"
+                "$ref" : "#/components/schemas/CreateOrUpdatePhoneNumberDto"
               }
             }
           },
@@ -6760,7 +6760,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/UpdateEmailAddressDto"
+                "$ref" : "#/components/schemas/CreateOrUpdateEmailAddressDto"
               }
             }
           },
@@ -7806,7 +7806,7 @@
         },
         "required" : [ "active", "addresses", "emailAddresses", "phoneNumbers", "probationOfficeId", "probationOfficeName" ]
       },
-      "UpdatePhoneNumberDto" : {
+      "CreateOrUpdatePhoneNumberDto" : {
         "type" : "object",
         "description" : "Phone Number Update Record",
         "properties" : {
@@ -7820,7 +7820,7 @@
         },
         "required" : [ "number" ]
       },
-      "UpdateEmailAddressDto" : {
+      "CreateOrUpdateEmailAddressDto" : {
         "type" : "object",
         "description" : "Email Address Update Record",
         "properties" : {
@@ -9162,14 +9162,14 @@
             "type" : "array",
             "description" : "Email addresses",
             "items" : {
-              "$ref" : "#/components/schemas/UpdateEmailAddressDto"
+              "$ref" : "#/components/schemas/CreateOrUpdateEmailAddressDto"
             }
           },
           "phoneNumbers" : {
             "type" : "array",
             "description" : "Phone numbers",
             "items" : {
-              "$ref" : "#/components/schemas/UpdatePhoneNumberDto"
+              "$ref" : "#/components/schemas/CreateOrUpdatePhoneNumberDto"
             }
           }
         },
@@ -9347,14 +9347,14 @@
             "type" : "array",
             "description" : "Email addresses",
             "items" : {
-              "$ref" : "#/components/schemas/UpdateEmailAddressDto"
+              "$ref" : "#/components/schemas/CreateOrUpdateEmailAddressDto"
             }
           },
           "phoneNumbers" : {
             "type" : "array",
             "description" : "Phone numbers",
             "items" : {
-              "$ref" : "#/components/schemas/UpdatePhoneNumberDto"
+              "$ref" : "#/components/schemas/CreateOrUpdatePhoneNumberDto"
             }
           }
         },
@@ -9456,14 +9456,14 @@
             "type" : "array",
             "description" : "Email addresses",
             "items" : {
-              "$ref" : "#/components/schemas/UpdateEmailAddressDto"
+              "$ref" : "#/components/schemas/CreateOrUpdateEmailAddressDto"
             }
           },
           "phoneNumbers" : {
             "type" : "array",
             "description" : "Phone numbers",
             "items" : {
-              "$ref" : "#/components/schemas/UpdatePhoneNumberDto"
+              "$ref" : "#/components/schemas/CreateOrUpdatePhoneNumberDto"
             }
           }
         },
@@ -9731,7 +9731,7 @@
             "type" : "array",
             "description" : "Phone numbers",
             "items" : {
-              "$ref" : "#/components/schemas/UpdatePhoneNumberDto"
+              "$ref" : "#/components/schemas/CreateOrUpdatePhoneNumberDto"
             }
           }
         },
@@ -9834,14 +9834,14 @@
             "type" : "array",
             "description" : "Email addresses",
             "items" : {
-              "$ref" : "#/components/schemas/UpdateEmailAddressDto"
+              "$ref" : "#/components/schemas/CreateOrUpdateEmailAddressDto"
             }
           },
           "phoneNumbers" : {
             "type" : "array",
             "description" : "Phone numbers",
             "items" : {
-              "$ref" : "#/components/schemas/UpdatePhoneNumberDto"
+              "$ref" : "#/components/schemas/CreateOrUpdatePhoneNumberDto"
             }
           }
         },
@@ -9944,14 +9944,14 @@
             "type" : "array",
             "description" : "Email addresses",
             "items" : {
-              "$ref" : "#/components/schemas/UpdateEmailAddressDto"
+              "$ref" : "#/components/schemas/CreateOrUpdateEmailAddressDto"
             }
           },
           "phoneNumbers" : {
             "type" : "array",
             "description" : "Phone numbers",
             "items" : {
-              "$ref" : "#/components/schemas/UpdatePhoneNumberDto"
+              "$ref" : "#/components/schemas/CreateOrUpdatePhoneNumberDto"
             }
           }
         },
