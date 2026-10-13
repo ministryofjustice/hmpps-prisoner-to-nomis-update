@@ -2,7 +2,9 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency
 
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.AgencyAddressDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAgencyAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAgencyEmailAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAgencyPhoneNumberRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyEmailAddressesRequest
@@ -121,6 +123,61 @@ class AgencyRegistersService(
       }
     }
   }
+
+  suspend fun courtAddressInserted(event: CourtAddressEvent) {
+    val courtId = event.additionalInformation.courtId
+    val dpsAddressId = event.additionalInformation.addressId
+    val telemetry = mutableMapOf(
+      "courtId" to courtId,
+      "dpsAddressId" to dpsAddressId.toString(),
+    )
+    if (!event.didOriginateInDPS()) {
+      telemetryClient.trackEvent("court-address-create-ignored", telemetry)
+    } else {
+      track("court-address-create", telemetry) {
+        val dpsCourt = dpsService.getCourt(courtId)
+        val agencyAddress = dpsCourt.addresses.find { it.id == dpsAddressId }!!
+        val response = nomisApiService.createAgencyAddress(courtId, agencyAddress.toCreateAgencyAddressRequest())
+        telemetry["nomisAddressId"] = response.id.toString()
+      }
+    }
+  }
+  suspend fun courtAddressAmended(@Suppress("unused") event: CourtAddressEvent): Nothing = TODO()
+  suspend fun courtAddressDeleted(@Suppress("unused") event: CourtAddressEvent): Nothing = TODO()
 }
 
 private fun SourcedEvent.didOriginateInDPS() = this.additionalInformation.source == "DPS"
+private fun AgencyAddressDto.toCreateAgencyAddressRequest(): CreateAgencyAddressRequest {
+  val line1AddressParts = this.addressLine1?.split(',')?.map { it.trim() } ?: emptyList()
+  var flat: String? = null
+  var premise: String? = null
+  var street: String? = null
+
+  // prefer using street, then spill over to premise, then finally flat (a few agency addresses in NOMIS do indeed use flat)
+  when (line1AddressParts.size) {
+    0 -> {}
+
+    1 -> street = line1AddressParts[0]
+
+    2 -> {
+      premise = line1AddressParts[0]
+      street = line1AddressParts[1]
+    }
+
+    else -> {
+      flat = line1AddressParts[0]
+      premise = line1AddressParts[1]
+      street = line1AddressParts.subList(2, line1AddressParts.size).joinToString(", ")
+    }
+  }
+  return CreateAgencyAddressRequest(
+    flat = flat,
+    premise = premise,
+    street = street,
+    locality = this.addressLine2,
+    postcode = this.postcode,
+    city = this.town,
+    county = this.county,
+    country = this.country,
+  )
+}

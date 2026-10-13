@@ -18,6 +18,7 @@ import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.agencyEmailAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.agencyPhoneNumber
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.createAgencyAddressResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.createAgencyEmailResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.createAgencyPhoneResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.updateAgencyEmailAddressesResponse
@@ -25,7 +26,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiM
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension.Companion.agencyEmailDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension.Companion.agencyPhoneDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension.Companion.courtDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.AgencyAddressDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAgencyAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAgencyEmailAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAgencyPhoneNumberRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyEmailAddressesRequest
@@ -535,6 +538,184 @@ class AgencyRegisterToNomisIntTest(
         }
       }
     }
+  }
+
+  @Nested
+  @DisplayName("register.court.address.inserted")
+  inner class CourtAddressInserted {
+    val dpsAddressId = 12345L
+    val nomisAddressId = 8765L
+    val courtId = "SHEFCC"
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of the event")
+    inner class WhenNomisCreated {
+      @BeforeEach
+      fun setUp() {
+        publishCourtAddressEvent("register.court.address.inserted", courtId, dpsAddressId, source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the event is ignored`() {
+        verify(telemetryClient).trackEvent(
+          eq("court-address-create-ignored"),
+          check {
+            assertThat(it["courtId"]).isEqualTo(courtId)
+            assertThat(it["dpsAddressId"]).isEqualTo(dpsAddressId.toString())
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will not call DPS or update NOMIS`() {
+        dpsApi.verify(0, getRequestedFor(urlEqualTo("/courts/id/$courtId")))
+        nomisApi.verify(0, postRequestedFor(urlEqualTo("/agency/$courtId/addresses")))
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of the event")
+    inner class WhenDpsCreated {
+      @Nested
+      inner class HappyPath {
+        private val expectedAddress = CreateAgencyAddressRequest(
+          street = "The Law Courts",
+          locality = "50 West Bar",
+          postcode = "S3 8PH",
+          city = "Sheffield",
+          county = "South Yorkshire",
+          country = "England",
+        )
+
+        @BeforeEach
+        fun setUp() {
+          nomisApi.stubCreateAgencyAddress(agencyId = courtId, response = createAgencyAddressResponse().copy(id = nomisAddressId))
+        }
+
+        private fun insertAddress(addressLine1: String?, addressLine2: String?) {
+          dpsApi.stubGetCourt(
+            courtId = courtId,
+            response = courtDto().copy(
+              addresses = listOf(
+                AgencyAddressDto(id = 1, addressLine1 = "Another court address"),
+                AgencyAddressDto(
+                  id = dpsAddressId,
+                  addressLine1 = addressLine1,
+                  addressLine2 = addressLine2,
+                  postcode = "S3 8PH",
+                  town = "Sheffield",
+                  county = "South Yorkshire",
+                  country = "England",
+                ),
+              ),
+            ),
+          )
+          publishCourtAddressEvent("register.court.address.inserted", courtId, dpsAddressId)
+          waitForAnyProcessingToComplete()
+        }
+
+        private fun assertNomisAddress(expected: CreateAgencyAddressRequest) {
+          val request: CreateAgencyAddressRequest = NomisApiExtension.nomisApi.getRequestBody(postRequestedFor(urlEqualTo("/agency/$courtId/addresses")), jsonMapper)
+          assertThat(request).isEqualTo(expected)
+          nomisApi.verify(1, postRequestedFor(urlEqualTo("/agency/$courtId/addresses")))
+        }
+
+        @Nested
+        inner class BothAddressLinesNull {
+          @BeforeEach
+          fun setUp() {
+            insertAddress(addressLine1 = null, addressLine2 = null)
+          }
+
+          @Test
+          fun `will create only the inserted address in NOMIS with no street or locality`() {
+            assertNomisAddress(expectedAddress.copy(flat = null, premise = null, street = null, locality = null))
+          }
+        }
+
+        @Nested
+        inner class NeitherAddressLineContainsCommas {
+          @BeforeEach
+          fun setUp() {
+            insertAddress(addressLine1 = "The Law Courts", addressLine2 = "50 West Bar")
+          }
+
+          @Test
+          fun `will create only the inserted address in NOMIS with street and locality`() {
+            assertNomisAddress(expectedAddress.copy(flat = null, premise = null, street = "The Law Courts", locality = "50 West Bar"))
+          }
+
+          @Test
+          fun `will send telemetry event showing success`() {
+            verify(telemetryClient).trackEvent(
+              eq("court-address-create-success"),
+              check {
+                assertThat(it["courtId"]).isEqualTo(courtId)
+                assertThat(it["dpsAddressId"]).isEqualTo(dpsAddressId.toString())
+                assertThat(it["nomisAddressId"]).isEqualTo(nomisAddressId.toString())
+              },
+              isNull(),
+            )
+          }
+        }
+
+        @Nested
+        inner class AddressLine1ContainsOneComma {
+          @BeforeEach
+          fun setUp() {
+            insertAddress(addressLine1 = "The Law Courts, 50 West Bar", addressLine2 = "Sheffield City Centre")
+          }
+
+          @Test
+          fun `will split address line 1 between premise and street`() {
+            assertNomisAddress(expectedAddress.copy(flat = null, premise = "The Law Courts", street = "50 West Bar", locality = "Sheffield City Centre"))
+          }
+        }
+
+        @Nested
+        inner class AddressLine1ContainsTwoCommas {
+          @BeforeEach
+          fun setUp() {
+            insertAddress(addressLine1 = "Floor 2, The Law Courts, 50 West Bar", addressLine2 = "Sheffield City Centre")
+          }
+
+          @Test
+          fun `will split address line 1 between flat, premise and street`() {
+            assertNomisAddress(expectedAddress.copy(flat = "Floor 2", premise = "The Law Courts", street = "50 West Bar", locality = "Sheffield City Centre"))
+          }
+        }
+
+        @Nested
+        inner class AddressLine1ContainsThreeCommas {
+          @BeforeEach
+          fun setUp() {
+            insertAddress(addressLine1 = "Floor 2, The Law Courts, 50 West Bar, Justice Area", addressLine2 = "Sheffield City Centre")
+          }
+
+          @Test
+          fun `will split address line 1 between flat, premise and street`() {
+            assertNomisAddress(expectedAddress.copy(flat = "Floor 2", premise = "The Law Courts", street = "50 West Bar, Justice Area", locality = "Sheffield City Centre"))
+          }
+        }
+      }
+    }
+  }
+
+  private fun publishCourtAddressEvent(
+    eventType: String,
+    courtId: String,
+    addressId: Long,
+    source: String = "DPS",
+  ) {
+    publishDomainEvent(
+      eventType = eventType,
+      payload = CourtAddressEvent(
+        eventType = eventType,
+        additionalInformation = CourtAddressAdditionalInformation(courtId = courtId, addressId = addressId, source = source),
+      ),
+    )
   }
 
   private fun publishCourtPhoneEvent(

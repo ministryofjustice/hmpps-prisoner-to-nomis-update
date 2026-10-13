@@ -16,6 +16,8 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import org.springframework.http.HttpStatus
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.createAgencyAddressRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.createAgencyAddressResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.createAgencyEmailRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.createAgencyEmailResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.createAgencyPhoneRequest
@@ -269,6 +271,55 @@ class AgencyNomisApiServiceTest {
         putRequestedFor(urlPathEqualTo("/agency/SHEFCC/emails"))
           .withRequestBody(equalToJson("""{"emailAddresses":["test@justice.com"]}""")),
       )
+    }
+  }
+
+  @Nested
+  inner class CreateAgencyAddress {
+    @Test
+    fun `will pass oauth2 token to endpoint`() = runTest {
+      mockServer.stubCreateAgencyAddress(agencyId = "SHEFCC")
+
+      apiService.createAgencyAddress("SHEFCC", createAgencyAddressRequest())
+
+      mockServer.verify(
+        postRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the create agency address endpoint with request`() = runTest {
+      val request = createAgencyAddressRequest().copy(
+        flat = null,
+        premise = "Sheffield Combined Crt Centre",
+        street = "The Law Courts",
+        locality = "50 West Bar",
+        postcode = "S3 8PH",
+        city = "Sheffield",
+        county = "South Yorkshire",
+        country = "England",
+      )
+      mockServer.stubCreateAgencyAddress(agencyId = "SHEFCC")
+
+      apiService.createAgencyAddress("SHEFCC", request)
+
+      mockServer.verify(
+        postRequestedFor(urlPathEqualTo("/agency/SHEFCC/addresses"))
+          .withRequestBody(equalToJson("""{"flat":null,"premise":"Sheffield Combined Crt Centre","street":"The Law Courts","locality":"50 West Bar","postcode":"S3 8PH","city":"Sheffield","county":"South Yorkshire","country":"England"}""")),
+      )
+    }
+
+    @Test
+    fun `will return created agency address`() = runTest {
+      mockServer.stubCreateAgencyAddress(
+        agencyId = "SHEFCC",
+        response = createAgencyAddressResponse().copy(id = 123456),
+      )
+
+      val response = apiService.createAgencyAddress("SHEFCC", createAgencyAddressRequest())
+
+      assertThat(response.id).isEqualTo(123456)
     }
   }
 }
