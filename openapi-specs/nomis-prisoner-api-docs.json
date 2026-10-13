@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-09.2192.9e2f388"
+    "version" : "2026-10-12.2201.1416b51"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -22923,12 +22923,12 @@
         }
       }
     },
-    "/movements/{offenderNo}/prisoner-locations" : {
+    "/movements/{offenderNo}/person-locations" : {
       "get" : {
-        "tags" : [ "offender-prisoner-locations-resource" ],
+        "tags" : [ "offender-person-locations-resource" ],
         "summary" : "Get bookings and movements for an offender",
-        "description" : "Get bookings and movements for an offender. This is used to migrate prisoner locations to DPS and for reconciliation. Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-        "operationId" : "getOffenderPrisonerLocations",
+        "description" : "Get bookings and movements for an offender. This is used to migrate person locations to DPS and for reconciliation. Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getOffenderPersonLocations",
         "parameters" : [ {
           "name" : "offenderNo",
           "in" : "path",
@@ -22943,11 +22943,11 @@
         } ],
         "responses" : {
           "200" : {
-            "description" : "Prisoner locations returned",
+            "description" : "Person locations returned",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/OffenderPrisonerLocationsResponse"
+                  "$ref" : "#/components/schemas/OffenderPersonLocationsResponse"
                 }
               }
             }
@@ -44438,9 +44438,9 @@
         },
         "required" : [ "activeBooking", "applicationDate", "applicationStatus", "applicationType", "audit", "bookingId", "eventSubType", "fromDate", "latestBooking", "prisonId", "releaseTime", "returnTime", "tapApplicationId", "toDate" ]
       },
-      "BookingPrisonerLocations" : {
+      "BookingPersonLocations" : {
         "type" : "object",
-        "description" : "Booking prisoner locations",
+        "description" : "Booking person locations",
         "properties" : {
           "bookingId" : {
             "type" : "integer",
@@ -44478,7 +44478,7 @@
             "type" : "array",
             "description" : "Movements related to the booking",
             "items" : {
-              "$ref" : "#/components/schemas/PrisonerLocationMovement"
+              "$ref" : "#/components/schemas/PersonLocationMovement"
             }
           },
           "audit" : {
@@ -44504,21 +44504,21 @@
         },
         "required" : [ "description", "type" ]
       },
-      "OffenderPrisonerLocationsResponse" : {
+      "OffenderPersonLocationsResponse" : {
         "type" : "object",
-        "description" : "Offender prisoner locations, with bookings and movements",
+        "description" : "Offender person locations, with bookings and movements",
         "properties" : {
           "bookings" : {
             "type" : "array",
             "description" : "List of bookings with their external movements",
             "items" : {
-              "$ref" : "#/components/schemas/BookingPrisonerLocations"
+              "$ref" : "#/components/schemas/BookingPersonLocations"
             }
           }
         },
         "required" : [ "bookings" ]
       },
-      "PrisonerLocationMovement" : {
+      "PersonLocationMovement" : {
         "type" : "object",
         "properties" : {
           "sequence" : {
@@ -46254,10 +46254,6 @@
             "type" : "integer",
             "format" : "int64"
           },
-          "txnEntryDate" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
           "txnEntryDesc" : {
             "type" : [ "string", "null" ]
           },
@@ -46270,6 +46266,10 @@
           "txnEntrySeq" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "txnEntryDate" : {
+            "type" : "string",
+            "format" : "date-time"
           }
         },
         "required" : [ "txnEntryAmount", "txnEntryDate", "txnEntrySeq", "txnId" ]
