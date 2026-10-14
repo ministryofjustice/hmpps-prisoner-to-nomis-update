@@ -19,6 +19,7 @@ import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.agencyAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.agencyEmailAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.agencyPhoneNumber
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.agencyResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.createAgencyAddressResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.createAgencyEmailResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.createAgencyPhoneResponse
@@ -28,11 +29,13 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiM
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension.Companion.agencyEmailDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension.Companion.agencyPhoneDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension.Companion.courtDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension.Companion.legacyAgencyDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.AgencyAddressDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAgencyAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAgencyEmailAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAgencyPhoneNumberRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAgencyRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyAddressesRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyEmailAddressesRequest
@@ -47,6 +50,83 @@ class AgencyRegisterToNomisIntTest(
   private val nomisApi: AgencyNomisApiMockServer,
 ) : SqsIntegrationTestBase() {
   private val dpsApi = AgencyRegistersDpsApiExtension.agencyRegistersApi
+
+  @Nested
+  @DisplayName("register.court.inserted")
+  inner class CourtInserted {
+    val courtId = "SHEFCC"
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of the event")
+    inner class WhenNomisCreated {
+
+      @BeforeEach
+      fun setUp() {
+        publishCourtInsertedEvent(courtId = courtId, source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the event is ignored`() {
+        verify(telemetryClient).trackEvent(
+          eq("court-create-ignored"),
+          check {
+            assertThat(it["courtId"]).isEqualTo(courtId)
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of the event")
+    inner class WhenDpsCreated {
+
+      @Nested
+      inner class HappyPath {
+
+        @BeforeEach
+        fun setUp() {
+          dpsApi.stubGetAgency(agencyId = courtId, response = legacyAgencyDto())
+          nomisApi.stubCreateAgency(response = agencyResponse().copy(agencyId = courtId))
+          publishCourtInsertedEvent(courtId = courtId)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will create agency in NOMIS`() {
+          val request: CreateAgencyRequest = NomisApiExtension.nomisApi.getRequestBody(postRequestedFor(urlEqualTo("/agency")), jsonMapper)
+          assertThat(request.agencyId).isEqualTo(courtId)
+          assertThat(request.description).isEqualTo("Sheffield Crown Ct")
+          assertThat(request.typeCode).isEqualTo("CRT")
+          assertThat(request.active).isTrue()
+          assertThat(request.localAuthorityCodes).containsExactly("00CG")
+          assertThat(request.longDescription).isEqualTo("Sheffield Crown Court")
+          assertThat(request.contactName).isEqualTo("JANE SMITH")
+          assertThat(request.courtTypeCode).isEqualTo("CC")
+          assertThat(request.disabilityAccessCode).isEqualTo("WHEEL")
+          assertThat(request.areaCode).isEqualTo("52")
+          assertThat(request.subAreaCode).isEqualTo("SHEFF")
+          assertThat(request.regionCode).isEqualTo("NEAST")
+          assertThat(request.nomsRegionCode).isEqualTo("YOHUM")
+          assertThat(request.cjitCode).isEqualTo("C00SH00")
+          assertThat(request.payrollRegionCode).isEqualTo("YP")
+        }
+
+        @Test
+        fun `will send telemetry event showing success`() {
+          verify(telemetryClient).trackEvent(
+            eq("court-create-success"),
+            check {
+              assertThat(it["courtId"]).isEqualTo(courtId)
+              assertThat(it["nomisAgencyId"]).isEqualTo(courtId)
+            },
+            isNull(),
+          )
+        }
+      }
+    }
+  }
 
   @Nested
   @DisplayName("register.court.email.inserted")
@@ -958,6 +1038,22 @@ class AgencyRegisterToNomisIntTest(
       payload = CourtPhoneEvent(
         eventType = eventType,
         additionalInformation = CourtPhoneAdditionalInformation(courtId = courtId, phoneId = phoneId, source = source),
+      ),
+    )
+  }
+
+  private fun publishCourtInsertedEvent(
+    courtId: String,
+    source: String = "DPS",
+  ) {
+    publishDomainEvent(
+      eventType = "register.court.inserted",
+      payload = CourtEvent(
+        eventType = "register.court.inserted",
+        additionalInformation = CourtAdditionalInformation(
+          courtId = courtId,
+          source = source,
+        ),
       ),
     )
   }

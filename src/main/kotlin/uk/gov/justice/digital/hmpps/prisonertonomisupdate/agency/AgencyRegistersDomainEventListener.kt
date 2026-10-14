@@ -32,6 +32,7 @@ class AgencyRegistersDomainEventListener(
     rawMessage: String,
   ): CompletableFuture<Void?> = onDomainEvent(rawMessage) { eventType, message ->
     when (eventType) {
+      "register.court.inserted" -> service.courtInserted(message.fromJson())
       "register.court.email.inserted" -> service.courtEmailInserted(message.fromJson())
       "register.court.email.amended" -> service.courtEmailAmended(message.fromJson())
       "register.court.email.deleted" -> service.courtEmailDeleted(message.fromJson())
@@ -53,6 +54,16 @@ internal interface SourcedAdditionalData {
 internal interface SourcedEvent {
   val additionalInformation: SourcedAdditionalData
 }
+
+data class CourtEvent(
+  val eventType: String,
+  override val additionalInformation: CourtAdditionalInformation,
+) : SourcedEvent
+
+data class CourtAdditionalInformation(
+  val courtId: String,
+  override val source: String,
+) : SourcedAdditionalData
 
 data class CourtEmailEvent(
   val eventType: String,
