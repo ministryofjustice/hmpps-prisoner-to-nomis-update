@@ -141,7 +141,7 @@ class CsraReconciliationServiceTest {
       )
       assertThat(service.checkCsra(CSRA_OFFENDER_NO)?.differences).isEqualTo(
         listOf(
-          Difference(property = "assessmentDate", nomis = LocalDate.parse("2024-06-01"), dps = LocalDate.parse("2024-01-01"), dpsId = CSRA_DPS_ID, nomisId = "1-1"),
+          Difference(property = "date", nomis = LocalDate.parse("2024-06-01"), dps = LocalDate.parse("2024-01-01"), dpsId = CSRA_DPS_ID, nomisId = "1-1"),
         ),
       )
     }
