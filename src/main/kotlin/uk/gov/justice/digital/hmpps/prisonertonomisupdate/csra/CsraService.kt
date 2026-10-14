@@ -121,8 +121,8 @@ fun CsraDomainEvent.asTelemetry() = mutableMapOf(
 private fun CsraReviewDetail.toNomisCreateRequest() = CsraCreateDto(
   assessmentDate = assessmentDate,
   type = type.toNomisAssessmentType(),
-  calculatedLevel = finalResult?.toNomisLevel() ?: interimResult?.toNomisLevel() ?: AssessmentLevel.STANDARD,
-  reviewLevel = finalResult?.toNomisLevel(),
+  calculatedLevel = finalResult?.toGenericLevel() ?: interimResult?.toGenericLevel() ?: AssessmentLevel.STANDARD,
+  reviewLevel = finalResult?.toGenericLevel(),
   evaluationDate = finalResultDate,
   evaluationResultCode = finalResult?.let { EvaluationResultCode.APP },
   // DPS does not hold a numeric CSRA score for a review, only a rating/level, so this is not populated
@@ -135,7 +135,7 @@ private fun CsraReviewDetail.toNomisCreateRequest() = CsraCreateDto(
 )
 
 private fun CsraReviewDetail.toNomisUpdateRequest() = CsraUpdateDto(
-  reviewLevel = finalResult?.toNomisLevel(),
+  reviewLevel = finalResult?.toGenericLevel(),
   evaluationDate = finalResultDate,
   evaluationResultCode = EvaluationResultCode.APP,
   status = if (finalResult != null) AssessmentStatusType.A else AssessmentStatusType.P,
@@ -155,14 +155,14 @@ private fun CsraReviewDetail.Type.toNomisAssessmentType(): AssessmentType = when
   CsraReviewDetail.Type.CSRA_REVIEW -> AssessmentType.CSRREV
 }
 
-private fun CsraReviewDetail.FinalResult.toNomisLevel(): AssessmentLevel = when (this) {
+private fun CsraReviewDetail.FinalResult.toGenericLevel(): AssessmentLevel = when (this) {
   CsraReviewDetail.FinalResult.HIGH -> AssessmentLevel.HI
   CsraReviewDetail.FinalResult.HIGH_GENERAL -> AssessmentLevel.HI
   CsraReviewDetail.FinalResult.HIGH_SPECIFIC -> AssessmentLevel.HI
   CsraReviewDetail.FinalResult.STANDARD -> AssessmentLevel.STANDARD
 }
 
-private fun CsraReviewDetail.InterimResult.toNomisLevel(): AssessmentLevel = when (this) {
+private fun CsraReviewDetail.InterimResult.toGenericLevel(): AssessmentLevel = when (this) {
   CsraReviewDetail.InterimResult.HIGH -> AssessmentLevel.HI
   CsraReviewDetail.InterimResult.HIGH_GENERAL -> AssessmentLevel.HI
   CsraReviewDetail.InterimResult.HIGH_SPECIFIC -> AssessmentLevel.HI

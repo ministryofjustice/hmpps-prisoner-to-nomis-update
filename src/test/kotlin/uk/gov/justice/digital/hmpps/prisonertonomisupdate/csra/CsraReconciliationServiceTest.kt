@@ -86,6 +86,15 @@ class CsraReconciliationServiceTest {
     }
 
     @Test
+    fun `will not report a mismatch when there is no rating`() = runTest {
+      stubCsraReconciliation(
+        null,
+        dpsCsra(CSRA_DPS_ID, status = CsraCurrentRating.Status.NO_RATING),
+      )
+      assertThat(service.checkCsra(CSRA_OFFENDER_NO)).isNull()
+    }
+
+    @Test
     fun `will report an extra DPS csra`() = runTest {
       stubCsraReconciliation(
         null,
@@ -119,20 +128,20 @@ class CsraReconciliationServiceTest {
       )
       assertThat(service.checkCsra(CSRA_OFFENDER_NO)?.differences).isEqualTo(
         listOf(
-          Difference(property = "level", dps = "HI", nomis = "STANDARD", dpsId = CSRA_DPS_ID, nomisId = "1-1"),
+          Difference(property = "level", dps = "HIGH", nomis = "STANDARD", dpsId = CSRA_DPS_ID, nomisId = "1-1"),
         ),
       )
     }
 
     @Test
-    fun `will report an assessment date mismatch`() = runTest {
+    fun `will report a date mismatch`() = runTest {
       stubCsraReconciliation(
-        nomisCsra(assessmentDate = LocalDate.parse("2024-06-01")),
+        nomisCsra(date = LocalDate.parse("2024-06-01")),
         dpsCsra(CSRA_DPS_ID),
       )
       assertThat(service.checkCsra(CSRA_OFFENDER_NO)?.differences).isEqualTo(
         listOf(
-          Difference(property = "assessmentDate", nomis = LocalDate.parse("2024-06-01"), dps = LocalDate.parse("2024-01-01"), dpsId = CSRA_DPS_ID, nomisId = "1-1"),
+          Difference(property = "date", nomis = LocalDate.parse("2024-06-01"), dps = LocalDate.parse("2024-01-01"), dpsId = CSRA_DPS_ID, nomisId = "1-1"),
         ),
       )
     }
@@ -179,12 +188,13 @@ class CsraReconciliationServiceTest {
 }
 
 fun nomisCsra(
-  assessmentDate: LocalDate = LocalDate.parse("2024-01-01"),
+  date: LocalDate = LocalDate.parse("2024-01-01"),
   calculatedLevel: AssessmentLevel = AssessmentLevel.STANDARD,
 ) = CsraGetDto(
   bookingId = 1,
   sequence = 1,
-  assessmentDate = assessmentDate,
+  assessmentDate = LocalDate.parse("2020-01-01"),
+  evaluationDate = date,
   type = AssessmentType.CSRREV,
   status = AssessmentStatusType.A,
   assessmentStaffId = 1,
@@ -197,12 +207,13 @@ fun nomisCsra(
 fun dpsCsra(
   uuid: String,
   rating: CsraCurrentRating.Rating = CsraCurrentRating.Rating.STANDARD,
+  status: CsraCurrentRating.Status = CsraCurrentRating.Status.COMPLETE,
 ) = CsraCurrentRating(
   reviewId = UUID.fromString(uuid),
   type = CsraCurrentRating.Type.CSRA_REVIEW,
   rating = rating,
   prisonerNumber = CSRA_OFFENDER_NO,
-  status = CsraCurrentRating.Status.COMPLETE,
+  status = status,
   provisional = false,
   inheritedAfterTransfer = false,
   riskTo = emptyList(),

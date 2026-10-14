@@ -74,26 +74,28 @@ class CsraReconciliationService(
     val nomisCsra = csraNomisApiService.getCurrentCsraForPrisonerOrNull(offenderNo)
     val dpsCsra = csraDpsApiService.getCsraCurrent(offenderNo)
 
-    val nomisField = nomisCsra?.let {
-      fun deriveClassification(): String? {
-        val derivedLevel = it.reviewLevel ?: it.overrideLevel ?: it.calculatedLevel
-        return if (derivedLevel == AssessmentLevel.PEND) null else derivedLevel.toString()
+    val nomisField = nomisCsra?.let { csra ->
+      fun deriveClassification(): AssessmentLevel? = csra.reviewLevel
+        ?: csra.overrideLevel
+        ?: csra.calculatedLevel
+          ?.takeUnless { it == AssessmentLevel.PEND }
+
+      CsraDetailFields(
+        id = "${csra.bookingId}-${csra.sequence}",
+        date = csra.evaluationDate,
+        level = deriveClassification()?.toGenericLevel(),
+      )
+    }
+
+    val dpsField = dpsCsra
+      ?.takeIf { it.status != CsraCurrentRating.Status.NO_RATING }
+      ?.let {
+        CsraDetailFields(
+          id = it.reviewId.toString(),
+          date = it.finalDate,
+          level = it.toGenericLevel(),
+        )
       }
-
-      CsraDetailFields(
-        id = "${it.bookingId}-${it.sequence}",
-        assessmentDate = it.assessmentDate,
-        level = deriveClassification(),
-      )
-    }
-
-    val dpsField = dpsCsra?.let {
-      CsraDetailFields(
-        id = it.reviewId.toString(),
-        assessmentDate = it.finalDate ?: it.provisionalDate ?: it.startedAt?.toLocalDate(),
-        level = it.toNomisLevel()?.toString(),
-      )
-    }
 
     val differenceList = compareObjects(dpsField, nomisField)
 
@@ -131,12 +133,12 @@ class CsraReconciliationService(
 
     val differences = mutableListOf<Difference>()
 
-    if (dpsDetail.assessmentDate != nomisDetail.assessmentDate) {
+    if (dpsDetail.date != nomisDetail.date) {
       differences.add(
         Difference(
-          "assessmentDate",
-          dpsDetail.assessmentDate,
-          nomisDetail.assessmentDate,
+          "date",
+          dpsDetail.date,
+          nomisDetail.date,
           dpsDetail.id,
           nomisDetail.id,
         ),
@@ -186,9 +188,24 @@ class CsraReconciliationService(
   )
 }
 
-private fun CsraCurrentRating.toNomisLevel(): AssessmentLevel? = when (rating) {
-  CsraCurrentRating.Rating.HIGH, CsraCurrentRating.Rating.HIGH_GENERAL, CsraCurrentRating.Rating.HIGH_SPECIFIC -> AssessmentLevel.HI
-  CsraCurrentRating.Rating.STANDARD -> AssessmentLevel.STANDARD
+fun AssessmentLevel.toGenericLevel() = when (this) {
+  AssessmentLevel.HI -> "HIGH"
+
+  AssessmentLevel.STANDARD,
+  AssessmentLevel.LOW,
+  AssessmentLevel.MED,
+  -> "STANDARD"
+
+  AssessmentLevel.PEND -> null
+}
+
+private fun CsraCurrentRating.toGenericLevel(): String? = when (rating) {
+  CsraCurrentRating.Rating.HIGH,
+  CsraCurrentRating.Rating.HIGH_GENERAL,
+  CsraCurrentRating.Rating.HIGH_SPECIFIC,
+  -> "HIGH"
+
+  CsraCurrentRating.Rating.STANDARD -> "STANDARD"
   null -> null
 }
 
@@ -201,7 +218,7 @@ data class MismatchCsra(
 data class CsraDetailFields(
   val id: String,
   val sequence: Int? = null,
-  val assessmentDate: LocalDate?,
+  val date: LocalDate?,
   val level: String?,
 )
 
