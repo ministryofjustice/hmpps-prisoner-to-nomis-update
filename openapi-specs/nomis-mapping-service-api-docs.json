@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-13.881.6f5f865"
+    "version" : "2026-10-14.885.84448e6"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -1474,6 +1474,73 @@
           },
           "403" : {
             "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/core-person-religion/religion/{prisonNumber}/cpr-ids" : {
+      "put" : {
+        "tags" : [ "religion-resource" ],
+        "summary" : "Update prisonNumber on religion mappings by cpr ids",
+        "description" : "Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "updatePrisonNumberOnReligionMappingsByCprIds",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "description" : "Prison number",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prison number",
+            "example" : 1234
+          },
+          "example" : 1234
+        }, {
+          "name" : "ids",
+          "in" : "query",
+          "description" : "Cpr religion ids",
+          "required" : true,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "example" : "802dfae7-45f0-4c22-b369-bfe7da5e54e2"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Mapping data",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ReligionMappingDto"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access this endpoint is forbidden",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -24681,6 +24748,34 @@
         },
         "required" : [ "bookings", "migrationId", "offenderNo" ]
       },
+      "ReligionMappingDto" : {
+        "type" : "object",
+        "properties" : {
+          "cprId" : {
+            "type" : "string"
+          },
+          "nomisId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "nomisPrisonNumber" : {
+            "type" : "string"
+          },
+          "label" : {
+            "type" : [ "string", "null" ]
+          },
+          "mappingType" : {
+            "type" : "string",
+            "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          }
+        },
+        "required" : [ "cprId", "mappingType", "nomisId", "nomisPrisonNumber" ]
+      },
       "CaseNoteMappingDto" : {
         "type" : "object",
         "description" : "Case note mapping",
@@ -26880,34 +26975,6 @@
           }
         },
         "required" : [ "cprId", "mappingType", "nomisPrisonNumber", "religions" ]
-      },
-      "ReligionMappingDto" : {
-        "type" : "object",
-        "properties" : {
-          "cprId" : {
-            "type" : "string"
-          },
-          "nomisId" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "nomisPrisonNumber" : {
-            "type" : "string"
-          },
-          "label" : {
-            "type" : [ "string", "null" ]
-          },
-          "mappingType" : {
-            "type" : "string",
-            "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
-          },
-          "whenCreated" : {
-            "type" : "string",
-            "example" : "2021-07-05T10:35:17",
-            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
-          }
-        },
-        "required" : [ "cprId", "mappingType", "nomisId", "nomisPrisonNumber" ]
       },
       "ContactPersonPrisonerMappingsDto" : {
         "type" : "object",

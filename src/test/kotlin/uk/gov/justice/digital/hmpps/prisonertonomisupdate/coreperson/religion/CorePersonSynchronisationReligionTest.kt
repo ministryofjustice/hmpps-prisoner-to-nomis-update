@@ -134,13 +134,17 @@ internal class CorePersonSynchronisationReligionTest(@Autowired jsonMapper: Json
       whenever(corePersonCprApiService.getCorePerson(prisonNumber)).thenReturn(
         personRecord(prisonNumber, cprReligions),
       )
-      whenever(mapping.getByCprIds(cprReligions.map { it.cprReligionId!! })).thenReturn(
+      whenever(mapping.updatePrisonNumberOnReligionMappingsByCprIds(prisonNumber, cprReligions.map { it.cprReligionId!! })).thenReturn(
         mappings,
       )
 
       // Method under test
       synchronisationService.mergeReligions(prisonNumber)
 
+      verify(mapping).updatePrisonNumberOnReligionMappingsByCprIds(
+        eq(prisonNumber),
+        eq(cprReligions.map { it.cprReligionId!! }),
+      )
       verify(corePersonNomisApiService).mergeReligions(
         eq("A1234BC"),
         check {
@@ -167,7 +171,7 @@ internal class CorePersonSynchronisationReligionTest(@Autowired jsonMapper: Json
         personRecord(prisonNumber),
       )
 
-      whenever(mapping.getByCprIds(any())).thenReturn(
+      whenever(mapping.updatePrisonNumberOnReligionMappingsByCprIds(any(), any())).thenReturn(
         emptyList(),
       )
 
@@ -175,7 +179,7 @@ internal class CorePersonSynchronisationReligionTest(@Autowired jsonMapper: Json
       synchronisationService.mergeReligions(prisonNumber)
 
       verify(corePersonNomisApiService, never()).mergeReligions(any(), any())
-      verify(mapping, never()).getByCprIds(any())
+      verify(mapping, never()).updatePrisonNumberOnReligionMappingsByCprIds(any(), any())
 
       verify(telemetryClient).trackEvent(
         eq("core-person-religion-merge-ignored"),
@@ -201,7 +205,7 @@ internal class CorePersonSynchronisationReligionTest(@Autowired jsonMapper: Json
         ),
       )
 
-      whenever(mapping.getByCprIds(any())).thenReturn(
+      whenever(mapping.updatePrisonNumberOnReligionMappingsByCprIds(any(), any())).thenReturn(
         emptyList(),
       )
 
