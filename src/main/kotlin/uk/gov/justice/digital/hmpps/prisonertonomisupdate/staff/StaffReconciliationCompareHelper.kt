@@ -24,6 +24,9 @@ data class StaffAccountSummary(
   val dpsRoles: List<String>,
   val lastLoggedIn: LocalDateTime?,
   val activeCaseloadId: String?,
+  // TODO add in when returned from staffapi
+  // val adminCaseloads: List<String>,
+  // val memberCaseloads: List<String>,
 )
 
 // Nomis conversions

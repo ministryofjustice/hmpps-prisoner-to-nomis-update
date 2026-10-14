@@ -8,7 +8,9 @@ import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import tools.jackson.databind.json.JsonMapper
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AdminCaseloadResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CaseloadResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.MemberCaseloadResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.NomisAudit
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PageMetadata
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PagedModelStaffIdResponse
@@ -19,6 +21,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.St
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.StaffIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.StaffIdsPage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 @Component
@@ -125,6 +128,23 @@ fun staffAccount() = StaffAccount(
         RoleResponse(code = "DPS_CODE_1", name = "Dps Role 1", audit = audit()),
         RoleResponse(code = "DPS_CODE_2", name = "Dps Role 2", audit = audit()),
       ),
+      audit = audit(),
+    ),
+  ),
+  adminCaseloads = listOf(
+    AdminCaseloadResponse(
+      caseloadId = "LEI",
+      active = true,
+      expiryDate = LocalDate.parse("2029-08-01"),
+      audit = audit()
+    )
+  ),
+  memberCaseloads = listOf(
+    MemberCaseloadResponse(
+      caseloadId = "MDI",
+      active = true,
+      startDate = LocalDate.parse("2022-06-02"),
+      expiryDate = LocalDate.parse("2030-12-22"),
       audit = audit(),
     ),
   ),
