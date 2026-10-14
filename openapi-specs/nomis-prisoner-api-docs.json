@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-12.2201.1416b51"
+    "version" : "2026-10-13.2213.8741ca5"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -15509,6 +15509,76 @@
           },
           "409" : {
             "description" : "Code already exits",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agency" : {
+      "post" : {
+        "tags" : [ "agency-resource" ],
+        "summary" : "Creates an agency",
+        "description" : "Creates a new agency, for example a court or probation office. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "createAgency",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateAgencyRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Agency created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AgencyResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "The request contains bad data, for example a reference data code that does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Agency with this id already exists",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -38649,6 +38719,246 @@
         },
         "required" : [ "code", "description", "listSequence", "typeCode" ]
       },
+      "AgencyResponse" : {
+        "type" : "object",
+        "description" : "A response to get an agency that is not a prison",
+        "properties" : {
+          "agencyId" : {
+            "type" : "string",
+            "description" : "The agency id",
+            "example" : "LCSY02"
+          },
+          "description" : {
+            "type" : "string",
+            "description" : "Name of agency",
+            "example" : "Blackburn YOT"
+          },
+          "longDescription" : {
+            "type" : [ "string", "null" ],
+            "description" : "Description of agency",
+            "example" : "Blackburn YOT"
+          },
+          "district" : {
+            "description" : "Geographic district",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "type" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "Agency type"
+          },
+          "active" : {
+            "type" : "boolean",
+            "description" : "Indicates if still used",
+            "example" : true
+          },
+          "deactivationDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Date no longer active",
+            "example" : "2020-01-01"
+          },
+          "updateAllowed" : {
+            "type" : "boolean",
+            "description" : "Indicates if data is allowed to be updated",
+            "example" : true
+          },
+          "contactName" : {
+            "type" : [ "string", "null" ],
+            "description" : "Name of contact at agency",
+            "example" : "John Smith"
+          },
+          "courtType" : {
+            "description" : "Court type",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "disabilityAccessCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "Disability access code",
+            "example" : "Y"
+          },
+          "area" : {
+            "description" : "Area",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "subArea" : {
+            "description" : "Sub-Area",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "region" : {
+            "description" : "Region",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "nomsRegion" : {
+            "description" : "NOMS Region",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "payrollRegion" : {
+            "description" : "Payroll Region",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "cjitCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "CJIT code",
+            "example" : "D62L087"
+          },
+          "localAuthorities" : {
+            "type" : "array",
+            "description" : "Local Authorities",
+            "items" : {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }
+          },
+          "addresses" : {
+            "type" : "array",
+            "description" : "Addresses",
+            "items" : {
+              "$ref" : "#/components/schemas/AgencyAddress"
+            }
+          },
+          "phones" : {
+            "type" : "array",
+            "description" : "Phone numbers",
+            "items" : {
+              "$ref" : "#/components/schemas/AgencyPhoneNumber"
+            }
+          },
+          "emailAddresses" : {
+            "type" : "array",
+            "description" : "Email addresses",
+            "items" : {
+              "$ref" : "#/components/schemas/AgencyEmailAddress"
+            }
+          }
+        },
+        "required" : [ "active", "addresses", "agencyId", "description", "emailAddresses", "localAuthorities", "phones", "type", "updateAllowed" ]
+      },
+      "CreateAgencyRequest" : {
+        "type" : "object",
+        "description" : "A request to create an agency",
+        "properties" : {
+          "agencyId" : {
+            "type" : "string",
+            "description" : "The agency id",
+            "example" : "LCSY02",
+            "minLength" : 1
+          },
+          "description" : {
+            "type" : "string",
+            "description" : "Name of agency",
+            "example" : "Blackburn YOT",
+            "minLength" : 1
+          },
+          "longDescription" : {
+            "type" : [ "string", "null" ],
+            "description" : "Description of agency",
+            "example" : "Blackburn YOT"
+          },
+          "typeCode" : {
+            "type" : "string",
+            "description" : "Agency type code",
+            "example" : "CRT",
+            "minLength" : 1
+          },
+          "active" : {
+            "type" : "boolean",
+            "description" : "Indicates if still used",
+            "example" : true
+          },
+          "deactivationDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Date no longer active",
+            "example" : "2020-01-01"
+          },
+          "contactName" : {
+            "type" : [ "string", "null" ],
+            "description" : "Name of contact at agency",
+            "example" : "John Smith"
+          },
+          "courtTypeCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "Court type code, only relevant for agencies of type CRT",
+            "example" : "CO"
+          },
+          "disabilityAccessCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "Disability access code",
+            "example" : "Y"
+          },
+          "areaCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "Area code",
+            "example" : "LOND"
+          },
+          "subAreaCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "Sub-Area code",
+            "example" : "BRENT"
+          },
+          "regionCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "Geographic region code",
+            "example" : "LOND"
+          },
+          "districtCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "Geographic district code",
+            "example" : "LOND"
+          },
+          "nomsRegionCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "NOMS region code",
+            "example" : "LOND"
+          },
+          "cjitCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "CJIT code",
+            "example" : "D62L087"
+          },
+          "payrollRegionCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "Payroll region code",
+            "example" : "LOND"
+          },
+          "localAuthorityCodes" : {
+            "type" : "array",
+            "description" : "Local authority codes, with a maximum of one allowed",
+            "example" : [ "BRENT" ],
+            "items" : {
+              "type" : "string"
+            }
+          }
+        },
+        "required" : [ "active", "agencyId", "description", "localAuthorityCodes", "typeCode" ]
+      },
       "CreateAgencyPhoneNumberResponse" : {
         "type" : "object",
         "description" : "A response to creating an agency phone number",
@@ -39675,6 +39985,32 @@
         },
         "required" : [ "ids" ]
       },
+      "AdminCaseloadResponse" : {
+        "type" : "object",
+        "properties" : {
+          "caseloadId" : {
+            "type" : "string",
+            "description" : "Caseload id",
+            "example" : "MDI"
+          },
+          "active" : {
+            "type" : "boolean",
+            "description" : "Whether the caseload is active",
+            "example" : true
+          },
+          "expiryDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "The expiry date",
+            "example" : "2023-12-31"
+          },
+          "audit" : {
+            "$ref" : "#/components/schemas/NomisAudit",
+            "description" : "Audit data associated with the user caseload"
+          }
+        },
+        "required" : [ "active", "audit", "caseloadId" ]
+      },
       "CaseloadResponse" : {
         "type" : "object",
         "properties" : {
@@ -39696,6 +40032,38 @@
           }
         },
         "required" : [ "audit", "caseloadId", "roles" ]
+      },
+      "MemberCaseloadResponse" : {
+        "type" : "object",
+        "properties" : {
+          "caseloadId" : {
+            "type" : "string",
+            "description" : "Caseload id",
+            "example" : "MDI"
+          },
+          "active" : {
+            "type" : "boolean",
+            "description" : "Whether the caseload is active",
+            "example" : true
+          },
+          "startDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The start date",
+            "example" : "2023-12-31"
+          },
+          "expiryDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "The expiry date",
+            "example" : "2023-12-31"
+          },
+          "audit" : {
+            "$ref" : "#/components/schemas/NomisAudit",
+            "description" : "Audit data associated with the user caseload"
+          }
+        },
+        "required" : [ "active", "audit", "caseloadId", "startDate" ]
       },
       "RoleResponse" : {
         "type" : "object",
@@ -39758,12 +40126,26 @@
               "$ref" : "#/components/schemas/CaseloadResponse"
             }
           },
+          "adminCaseloads" : {
+            "type" : "array",
+            "description" : "Caseloads the user administers",
+            "items" : {
+              "$ref" : "#/components/schemas/AdminCaseloadResponse"
+            }
+          },
+          "memberCaseloads" : {
+            "type" : "array",
+            "description" : "Caseloads the user is a member of",
+            "items" : {
+              "$ref" : "#/components/schemas/MemberCaseloadResponse"
+            }
+          },
           "audit" : {
             "$ref" : "#/components/schemas/NomisAudit",
             "description" : "Audit data associated with the account"
           }
         },
-        "required" : [ "audit", "caseloads", "sourceCode", "status", "typeCode", "username" ]
+        "required" : [ "adminCaseloads", "audit", "caseloads", "memberCaseloads", "sourceCode", "status", "typeCode", "username" ]
       },
       "StaffDetails" : {
         "type" : "object",
@@ -46250,9 +46632,17 @@
             "type" : [ "integer", "null" ],
             "format" : "int64"
           },
+          "txnEntrySeq" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
           "txnId" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "txnEntryDate" : {
+            "type" : "string",
+            "format" : "date-time"
           },
           "txnEntryDesc" : {
             "type" : [ "string", "null" ]
@@ -46262,14 +46652,6 @@
           },
           "txnEntryAmount" : {
             "type" : "number"
-          },
-          "txnEntrySeq" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "txnEntryDate" : {
-            "type" : "string",
-            "format" : "date-time"
           }
         },
         "required" : [ "txnEntryAmount", "txnEntryDate", "txnEntrySeq", "txnId" ]
@@ -47762,147 +48144,6 @@
             "type" : "boolean"
           }
         }
-      },
-      "AgencyResponse" : {
-        "type" : "object",
-        "description" : "A response to get an agency that is not a prison",
-        "properties" : {
-          "agencyId" : {
-            "type" : "string",
-            "description" : "The agency id",
-            "example" : "LCSY02"
-          },
-          "description" : {
-            "type" : "string",
-            "description" : "Name of agency",
-            "example" : "Blackburn YOT"
-          },
-          "longDescription" : {
-            "type" : [ "string", "null" ],
-            "description" : "Description of agency",
-            "example" : "Blackburn YOT"
-          },
-          "district" : {
-            "description" : "Geographic district",
-            "oneOf" : [ {
-              "$ref" : "#/components/schemas/CodeDescription"
-            }, {
-              "type" : "null"
-            } ]
-          },
-          "type" : {
-            "$ref" : "#/components/schemas/CodeDescription",
-            "description" : "Agency type"
-          },
-          "active" : {
-            "type" : "boolean",
-            "description" : "Indicates if still used",
-            "example" : true
-          },
-          "deactivationDate" : {
-            "type" : [ "string", "null" ],
-            "format" : "date",
-            "description" : "Date no longer active",
-            "example" : "2020-01-01"
-          },
-          "updateAllowed" : {
-            "type" : "boolean",
-            "description" : "Indicates if data is allowed to be updated",
-            "example" : true
-          },
-          "contactName" : {
-            "type" : [ "string", "null" ],
-            "description" : "Name of contact at agency",
-            "example" : "John Smith"
-          },
-          "courtType" : {
-            "description" : "Court type",
-            "oneOf" : [ {
-              "$ref" : "#/components/schemas/CodeDescription"
-            }, {
-              "type" : "null"
-            } ]
-          },
-          "disabilityAccessCode" : {
-            "type" : [ "string", "null" ],
-            "description" : "Disability access code",
-            "example" : "Y"
-          },
-          "area" : {
-            "description" : "Area",
-            "oneOf" : [ {
-              "$ref" : "#/components/schemas/CodeDescription"
-            }, {
-              "type" : "null"
-            } ]
-          },
-          "subArea" : {
-            "description" : "Sub-Area",
-            "oneOf" : [ {
-              "$ref" : "#/components/schemas/CodeDescription"
-            }, {
-              "type" : "null"
-            } ]
-          },
-          "region" : {
-            "description" : "Region",
-            "oneOf" : [ {
-              "$ref" : "#/components/schemas/CodeDescription"
-            }, {
-              "type" : "null"
-            } ]
-          },
-          "nomsRegion" : {
-            "description" : "NOMS Region",
-            "oneOf" : [ {
-              "$ref" : "#/components/schemas/CodeDescription"
-            }, {
-              "type" : "null"
-            } ]
-          },
-          "payrollRegion" : {
-            "description" : "Payroll Region",
-            "oneOf" : [ {
-              "$ref" : "#/components/schemas/CodeDescription"
-            }, {
-              "type" : "null"
-            } ]
-          },
-          "cjitCode" : {
-            "type" : [ "string", "null" ],
-            "description" : "CJIT code",
-            "example" : "D62L087"
-          },
-          "localAuthorities" : {
-            "type" : "array",
-            "description" : "Local Authorities",
-            "items" : {
-              "$ref" : "#/components/schemas/CodeDescription"
-            }
-          },
-          "addresses" : {
-            "type" : "array",
-            "description" : "Addresses",
-            "items" : {
-              "$ref" : "#/components/schemas/AgencyAddress"
-            }
-          },
-          "phones" : {
-            "type" : "array",
-            "description" : "Phone numbers",
-            "items" : {
-              "$ref" : "#/components/schemas/AgencyPhoneNumber"
-            }
-          },
-          "emailAddresses" : {
-            "type" : "array",
-            "description" : "Email addresses",
-            "items" : {
-              "$ref" : "#/components/schemas/AgencyEmailAddress"
-            }
-          }
-        },
-        "required" : [ "active", "addresses", "agencyId", "description", "emailAddresses", "localAuthorities", "phones", "type", "updateAllowed" ]
       },
       "AgencyId" : {
         "type" : "object",
