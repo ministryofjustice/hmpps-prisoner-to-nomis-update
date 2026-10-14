@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-12.2665.c21d4f8"
+    "version" : "2026-10-13.2673.cad8cee"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -4938,6 +4938,54 @@
         }
       }
     },
+    "/person/{prisonerId}/unconfirmed-sentence-fix-court-cases" : {
+      "get" : {
+        "tags" : [ "person-controller" ],
+        "summary" : "retrieve unconfirmed sentence fix court cases for person",
+        "description" : "This endpoint will retrieve unconfirmed sentence fix court cases for person",
+        "operationId" : "unconfirmedSentenceFixCourtCases",
+        "parameters" : [ {
+          "name" : "prisonerId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns unconfirmed sentence fix court cases for person",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UnconfirmedCourtCases"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UnconfirmedCourtCases"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UnconfirmedCourtCases"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/person/{prisonerId}/sentences-to-chain-to" : {
       "get" : {
         "tags" : [ "person-controller" ],
@@ -7521,7 +7569,7 @@
             "uniqueItems" : true
           }
         },
-        "required" : [ "eventType", "isBreach", "prisonerId" ]
+        "required" : [ "eventType", "prisonerId" ]
       },
       "LegacyLinkCase" : {
         "type" : "object",
@@ -7623,7 +7671,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:41.841196628"
+            "example" : "07:44:41.341233073"
           },
           "outcomeDispositionCode" : {
             "type" : [ "string", "null" ]
@@ -8002,7 +8050,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:41.841196628"
+            "example" : "07:44:41.341233073"
           },
           "courtCode" : {
             "type" : "string"
@@ -10716,6 +10764,59 @@
         },
         "required" : [ "dateOfBirth", "firstName", "lastName", "personId" ]
       },
+      "UnconfirmedCourtCase" : {
+        "type" : "object",
+        "properties" : {
+          "courtCaseUuid" : {
+            "type" : "string"
+          },
+          "caseReference" : {
+            "type" : [ "string", "null" ]
+          },
+          "courtCode" : {
+            "type" : "string"
+          },
+          "sentencingHearingDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "sentences" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/UnconfirmedSentence"
+            }
+          }
+        },
+        "required" : [ "courtCaseUuid", "courtCode", "sentences", "sentencingHearingDate" ]
+      },
+      "UnconfirmedCourtCases" : {
+        "type" : "object",
+        "properties" : {
+          "courtCases" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/UnconfirmedCourtCase"
+            }
+          }
+        },
+        "required" : [ "courtCases" ]
+      },
+      "UnconfirmedSentence" : {
+        "type" : "object",
+        "properties" : {
+          "sentenceUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "offenceCode" : {
+            "type" : "string"
+          },
+          "sentenceServeType" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "offenceCode", "sentenceServeType", "sentenceUuid" ]
+      },
       "AppearanceToChainTo" : {
         "type" : "object",
         "properties" : {
@@ -11060,7 +11161,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:41.841196628"
+            "example" : "07:44:41.341233073"
           },
           "courtCode" : {
             "type" : "string"
@@ -11752,7 +11853,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:44:41.841196628"
+            "example" : "07:44:41.341233073"
           },
           "nomisOutcomeCode" : {
             "type" : [ "string", "null" ]
@@ -11831,7 +11932,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:41.841196628"
+            "example" : "07:44:41.341233073"
           },
           "courtId" : {
             "type" : "string"
@@ -11983,7 +12084,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:44:41.841196628"
+            "example" : "07:44:41.341233073"
           },
           "charges" : {
             "type" : "array",
@@ -12020,7 +12121,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:41.841196628"
+            "example" : "07:44:41.341233073"
           },
           "courtId" : {
             "type" : "string"
@@ -12616,7 +12717,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:41.841196628"
+            "example" : "07:44:41.341233073"
           },
           "courtCode" : {
             "type" : [ "string", "null" ]
