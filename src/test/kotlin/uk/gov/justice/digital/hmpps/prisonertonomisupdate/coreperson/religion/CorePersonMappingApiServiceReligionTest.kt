@@ -86,7 +86,7 @@ class CorePersonMappingApiServiceReligionTest {
       assertThat(mappings[0].nomisPrisonNumber).isEqualTo(prisonNumber)
       assertThat(mappings[1].cprId).isEqualTo(cprReligionIds[1])
       assertThat(mappings[1].nomisId).isEqualTo(10001L)
-      assertThat(mappings[0].nomisPrisonNumber).isEqualTo(prisonNumber)
+      assertThat(mappings[1].nomisPrisonNumber).isEqualTo(prisonNumber)
     }
   }
 
