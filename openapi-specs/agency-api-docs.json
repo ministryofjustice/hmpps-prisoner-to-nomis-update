@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-12.600.71590e2"
+    "version" : "2026-10-13.604.7f5ea48"
   },
   "servers" : [ {
     "url" : "https://prison-register-dev.hmpps.service.justice.gov.uk",
@@ -6903,6 +6903,92 @@
           },
           "404" : {
             "description" : "Approved Premises Id not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reference-data/suggestions/towns" : {
+      "get" : {
+        "tags" : [ "reference-data-controller" ],
+        "summary" : "Get all town suggestions",
+        "description" : "Returns all town suggestions as a flat list of code and description",
+        "operationId" : "getTownSuggestions",
+        "responses" : {
+          "200" : {
+            "description" : "Successful Operation",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/CodeDescription"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the HMPPS_REGISTERS_API__MAINTAIN__RW role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reference-data/suggestions/counties" : {
+      "get" : {
+        "tags" : [ "reference-data-controller" ],
+        "summary" : "Get all county suggestions",
+        "description" : "Returns all county suggestions as a flat list of code and description",
+        "operationId" : "getCountySuggestions",
+        "responses" : {
+          "200" : {
+            "description" : "Successful Operation",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/CodeDescription"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the HMPPS_REGISTERS_API__MAINTAIN__RW role",
             "content" : {
               "application/json" : {
                 "schema" : {
