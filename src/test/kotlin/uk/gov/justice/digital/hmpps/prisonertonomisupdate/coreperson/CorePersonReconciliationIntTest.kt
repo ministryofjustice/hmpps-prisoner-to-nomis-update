@@ -90,7 +90,7 @@ class CorePersonReconciliationIntTest(
         check {
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
-              "reason" to ("Excluding reconciliation mismatches for bookingId 1234567"),
+              "reason" to ("Excluding reconciliation mismatches for bookingId 1234567 and prisoner A1234BC"),
             ),
           )
         },
@@ -110,7 +110,7 @@ class CorePersonReconciliationIntTest(
         check {
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
-              "reason" to ("No reconciliation mismatches found for excluded bookingId 1234567. Remove from exclusion file."),
+              "reason" to ("No reconciliation mismatches found for excluded bookingId 1234567 and prisoner A1234BC. Remove from exclusion file."),
             ),
           )
         },
