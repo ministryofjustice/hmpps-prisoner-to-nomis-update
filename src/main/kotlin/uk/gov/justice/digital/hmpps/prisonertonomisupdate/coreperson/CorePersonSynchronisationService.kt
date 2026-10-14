@@ -96,7 +96,7 @@ class CorePersonSynchronisationService(
       return
     }
     val cprReligionIds = cprReligions.map { it.cprReligionId!! }
-    val mappings = corePersonMappingApiService.getByCprIds(cprReligionIds)
+    val mappings = corePersonMappingApiService.updatePrisonNumberOnReligionMappingsByCprIds(toPrisonNumber, cprReligionIds)
     val missingMappings = cprReligionIds.toSet() - mappings.map { it.cprId }.toSet()
     if (missingMappings.isNotEmpty()) {
       throw IllegalStateException("Missing religion mappings for cpr religion ids: ${missingMappings.joinToString(", ")}")
