@@ -47,10 +47,6 @@ class CorePersonMappingApiService(
     .getAddressMappingByCprId(cprAddressId)
     .awaitBodyOrNullForNotFound()
 
-  suspend fun getByCprIds(cprReligionIds: List<String>): List<ReligionMappingDto> = religionApi
-    .getReligionMappingsByCprIds(cprReligionIds)
-    .awaitBodyWithRetry(retrySpec = religionBackoffSpec)
-
   suspend fun updatePrisonNumberOnReligionMappingsByCprIds(prisonNumber: String, cprReligionIds: List<String>): List<ReligionMappingDto> = religionApi
     .updatePrisonNumberOnReligionMappingsByCprIds(prisonNumber, cprReligionIds)
     .awaitBodyWithRetry(retrySpec = religionBackoffSpec)

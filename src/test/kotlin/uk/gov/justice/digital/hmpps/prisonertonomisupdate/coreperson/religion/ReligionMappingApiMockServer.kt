@@ -18,17 +18,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtens
 
 @Component
 class ReligionMappingApiMockServer(private val jsonMapper: JsonMapper) {
-  fun stubGetReligionMappings(mappings: List<ReligionMappingDto>, prisonNumber: String = "A1234AA") {
-    mappingServer.stubFor(
-      get(urlPathEqualTo("/mapping/core-person-religion/religion/cpr-ids"))
-        .willReturn(
-          aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withStatus(HttpStatus.OK.value())
-            .withBody(jsonMapper.writeValueAsString(mappings)),
-        ),
-    )
-  }
 
   fun stubUpdatePrisonNumberOnReligionMappings(mappings: List<ReligionMappingDto>, prisonNumber: String = "A1234AA") {
     mappingServer.stubFor(
