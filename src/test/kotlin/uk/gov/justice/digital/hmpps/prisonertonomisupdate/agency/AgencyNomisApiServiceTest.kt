@@ -22,6 +22,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiM
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.createAgencyEmailResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.createAgencyPhoneRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.createAgencyPhoneResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.updateAgencyAddressesRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.updateAgencyAddressesResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.updateAgencyEmailAddressesRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.updateAgencyPhoneNumbersRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.updateAgencyPhoneNumbersResponse
@@ -271,6 +273,56 @@ class AgencyNomisApiServiceTest {
         putRequestedFor(urlPathEqualTo("/agency/SHEFCC/emails"))
           .withRequestBody(equalToJson("""{"emailAddresses":["test@justice.com"]}""")),
       )
+    }
+  }
+
+  @Nested
+  inner class RefreshAgencyAddresses {
+    val request = updateAgencyAddressesRequest()
+
+    @Test
+    fun `will pass oauth2 token to endpoint`() = runTest {
+      mockServer.stubUpdateAgencyAddresses()
+
+      apiService.refreshAgencyAddresses("SHEFCC", request)
+
+      mockServer.verify(
+        putRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the refresh agency addresses endpoint with request`() = runTest {
+      mockServer.stubUpdateAgencyAddresses()
+
+      apiService.refreshAgencyAddresses("SHEFCC", request)
+
+      mockServer.verify(
+        putRequestedFor(urlPathEqualTo("/agency/SHEFCC/addresses"))
+          .withRequestBody(equalToJson("""{"addresses":[{"flat":null,"premise":"Sheffield Combined Crt Centre","street":"The Law Courts","locality":"50 West Bar","postcode":"S3 8PH","city":"Sheffield","county":"South Yorkshire","country":"England"}]}""")),
+      )
+    }
+
+    @Test
+    fun `will return refreshed agency addresses`() = runTest {
+      val expected = updateAgencyAddressesResponse()
+      mockServer.stubUpdateAgencyAddresses(response = expected)
+
+      assertThat(apiService.refreshAgencyAddresses("SHEFCC", request)).isEqualTo(expected)
+    }
+
+    @Test
+    fun `will refresh with an empty list of addresses`() = runTest {
+      mockServer.stubUpdateAgencyAddresses(response = updateAgencyAddressesResponse().copy(addresses = emptyList()))
+
+      val response = apiService.refreshAgencyAddresses("SHEFCC", request.copy(addresses = emptyList()))
+
+      mockServer.verify(
+        putRequestedFor(urlPathEqualTo("/agency/SHEFCC/addresses"))
+          .withRequestBody(equalToJson("""{"addresses":[]}""")),
+      )
+      assertThat(response.addresses).isEmpty()
     }
   }
 
