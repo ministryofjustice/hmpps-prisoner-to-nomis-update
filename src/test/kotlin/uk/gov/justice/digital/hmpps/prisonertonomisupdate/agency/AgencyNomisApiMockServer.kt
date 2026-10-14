@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AgencyAddress
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AgencyAddressesResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AgencyEmailAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AgencyEmailAddressesResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AgencyId
@@ -25,6 +26,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Cr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAgencyEmailAddressResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAgencyPhoneNumberRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAgencyPhoneNumberResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyAddress
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyAddressesRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyEmailAddressesRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyPhoneNumber
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyPhoneNumbersRequest
@@ -145,6 +148,24 @@ class AgencyNomisApiMockServer(private val jsonMapper: JsonMapper) {
     fun createAgencyAddressResponse() = CreateAgencyAddressResponse(
       id = 123456,
     )
+
+    fun updateAgencyAddressesRequest() = UpdateAgencyAddressesRequest(
+      addresses = listOf(
+        UpdateAgencyAddress(
+          premise = "Sheffield Combined Crt Centre",
+          street = "The Law Courts",
+          locality = "50 West Bar",
+          postcode = "S3 8PH",
+          city = "Sheffield",
+          county = "South Yorkshire",
+          country = "England",
+        ),
+      ),
+    )
+
+    fun updateAgencyAddressesResponse() = AgencyAddressesResponse(
+      addresses = listOf(agencyAddress()),
+    )
   }
 
   fun stubGetAgency(
@@ -251,6 +272,20 @@ class AgencyNomisApiMockServer(private val jsonMapper: JsonMapper) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.CREATED.value())
+          .withBody(jsonMapper.writeValueAsString(response)),
+      ),
+    )
+  }
+
+  fun stubUpdateAgencyAddresses(
+    agencyId: String = "SHEFCC",
+    response: AgencyAddressesResponse = updateAgencyAddressesResponse(),
+  ) {
+    nomisApi.stubFor(
+      put(urlPathEqualTo("/agency/$agencyId/addresses")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
           .withBody(jsonMapper.writeValueAsString(response)),
       ),
     )

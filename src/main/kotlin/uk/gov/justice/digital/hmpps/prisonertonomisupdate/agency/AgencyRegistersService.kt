@@ -7,6 +7,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAgencyAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAgencyEmailAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAgencyPhoneNumberRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyAddress
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyAddressesRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyEmailAddressesRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyPhoneNumber
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyPhoneNumbersRequest
@@ -142,11 +144,46 @@ class AgencyRegistersService(
       }
     }
   }
-  suspend fun courtAddressAmended(@Suppress("unused") event: CourtAddressEvent): Nothing = TODO()
-  suspend fun courtAddressDeleted(@Suppress("unused") event: CourtAddressEvent): Nothing = TODO()
+
+  suspend fun courtAddressAmended(event: CourtAddressEvent) = refreshCourtAddresses(event, "court-address-amended")
+
+  suspend fun courtAddressDeleted(event: CourtAddressEvent) = refreshCourtAddresses(event, "court-address-deleted")
+
+  private suspend fun refreshCourtAddresses(event: CourtAddressEvent, telemetryEvent: String) {
+    val courtId = event.additionalInformation.courtId
+    val telemetry = mutableMapOf(
+      "courtId" to courtId,
+      "dpsAddressId" to event.additionalInformation.addressId.toString(),
+    )
+    if (!event.didOriginateInDPS()) {
+      telemetryClient.trackEvent("$telemetryEvent-ignored", telemetry)
+    } else {
+      track(telemetryEvent, telemetry) {
+        val dpsCourt = dpsService.getCourt(courtId)
+        val response = nomisApiService.refreshAgencyAddresses(
+          courtId,
+          UpdateAgencyAddressesRequest(addresses = dpsCourt.addresses.map { it.toUpdateAgencyAddress() }),
+        )
+        telemetry["nomisAddressIds"] = response.addresses.map { it.id }.joinToString(", ")
+      }
+    }
+  }
 }
 
 private fun SourcedEvent.didOriginateInDPS() = this.additionalInformation.source == "DPS"
+private fun AgencyAddressDto.toUpdateAgencyAddress(): UpdateAgencyAddress = toCreateAgencyAddressRequest().let {
+  UpdateAgencyAddress(
+    flat = it.flat,
+    premise = it.premise,
+    street = it.street,
+    locality = it.locality,
+    postcode = it.postcode,
+    city = it.city,
+    county = it.county,
+    country = it.country,
+  )
+}
+
 private fun AgencyAddressDto.toCreateAgencyAddressRequest(): CreateAgencyAddressRequest {
   val line1AddressParts = this.addressLine1?.split(',')?.map { it.trim() } ?: emptyList()
   var flat: String? = null
