@@ -4,6 +4,7 @@ import com.github.tomakehurst.wiremock.client.CountMatchingStrategy
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.post
+import com.github.tomakehurst.wiremock.client.WireMock.put
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
@@ -17,9 +18,18 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtens
 
 @Component
 class ReligionMappingApiMockServer(private val jsonMapper: JsonMapper) {
-  fun stubGetReligionMappings(mappings: List<ReligionMappingDto>) {
+  fun stubGetReligionMappings(mappings: List<ReligionMappingDto>, prisonNumber: String = "A1234AA") {
     mappingServer.stubFor(
       get(urlPathEqualTo("/mapping/core-person-religion/religion/cpr-ids"))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.OK.value())
+            .withBody(jsonMapper.writeValueAsString(mappings)),
+        ),
+    )
+    mappingServer.stubFor(
+      put(urlPathEqualTo("/mapping/core-person-religion/religion/$prisonNumber/cpr-ids"))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")

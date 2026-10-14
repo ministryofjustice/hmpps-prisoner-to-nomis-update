@@ -203,7 +203,7 @@ class CorePersonResourceIntTest(
           prisonNumber = prisonNumber,
           response = corePersonDto().copy(religionHistory = religionHistory),
         )
-        mappingServer.stubGetReligionMappings(religionMappingDto)
+        mappingServer.stubGetReligionMappings(religionMappingDto, prisonNumber)
         corePersonNomisApi.stubMergeCorePersonReligions(prisonNumber)
       }
 
