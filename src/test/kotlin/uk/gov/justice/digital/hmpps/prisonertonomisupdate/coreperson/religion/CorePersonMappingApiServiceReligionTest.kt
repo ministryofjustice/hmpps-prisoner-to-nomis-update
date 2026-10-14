@@ -4,6 +4,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.equalToJson
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.havingExactly
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
@@ -82,6 +83,40 @@ class CorePersonMappingApiServiceReligionTest {
       assertThat(mappings[0].nomisPrisonNumber).isEqualTo("A1234AA")
       assertThat(mappings[1].cprId).isEqualTo(cprReligionIds[1])
       assertThat(mappings[1].nomisId).isEqualTo(10001L)
+    }
+  }
+
+  @Nested
+  inner class UpdatePrisonNumberOnReligionMappingsByCprIds {
+    private val prisonNumber = "A1234AA"
+    private val cprReligionIds = listOf(
+      "802dfae7-45f0-4c22-b369-bfe7da5e54e2",
+      "9bc3e4f5-0c11-4aa7-a3b8-2d6cc7f4e1a1",
+    )
+
+    @Test
+    fun `will update prison numbers on religion mappings`() = runTest {
+      val mappings = cprReligionIds.mapIndexed { index, cprReligionId ->
+        ReligionMappingDto(
+          cprId = cprReligionId,
+          nomisId = 10000L + index,
+          nomisPrisonNumber = prisonNumber,
+          mappingType = ReligionMappingDto.MappingType.MIGRATED,
+          label = null,
+          whenCreated = null,
+        )
+      }
+      mockServer.stubUpdatePrisonNumberOnReligionMappings(mappings = mappings, prisonNumber = prisonNumber)
+
+      val result = apiService.updatePrisonNumberOnReligionMappingsByCprIds(prisonNumber, cprReligionIds)
+
+      assertThat(result).hasSize(2)
+      assertThat(result[0].nomisPrisonNumber).isEqualTo(prisonNumber)
+      assertThat(result[1].nomisPrisonNumber).isEqualTo(prisonNumber)
+      mockServer.verify(
+        putRequestedFor(urlPathEqualTo("/mapping/core-person-religion/religion/$prisonNumber/cpr-ids"))
+          .withQueryParam("ids", havingExactly(*cprReligionIds.toTypedArray())),
+      )
     }
   }
 

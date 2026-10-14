@@ -28,6 +28,9 @@ class ReligionMappingApiMockServer(private val jsonMapper: JsonMapper) {
             .withBody(jsonMapper.writeValueAsString(mappings)),
         ),
     )
+  }
+
+  fun stubUpdatePrisonNumberOnReligionMappings(mappings: List<ReligionMappingDto>, prisonNumber: String = "A1234AA") {
     mappingServer.stubFor(
       put(urlPathEqualTo("/mapping/core-person-religion/religion/$prisonNumber/cpr-ids"))
         .willReturn(
