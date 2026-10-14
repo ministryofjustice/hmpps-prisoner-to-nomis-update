@@ -136,8 +136,8 @@ fun staffAccount() = StaffAccount(
       caseloadId = "LEI",
       active = true,
       expiryDate = LocalDate.parse("2029-08-01"),
-      audit = audit()
-    )
+      audit = audit(),
+    ),
   ),
   memberCaseloads = listOf(
     MemberCaseloadResponse(
