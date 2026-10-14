@@ -175,7 +175,7 @@ class CorePersonReconciliationService(
         telemetryClient.trackEventOrSuppress(
           "$TELEMETRY_CORE_PERSON_PREFIX-excluded-offender-resolved",
           mapOf(
-            "reason" to ("No reconciliation mismatches found for excluded bookingId ${prisonerId.bookingId}. Remove from exclusion file."),
+            "reason" to ("No reconciliation mismatches found for excluded bookingId ${prisonerId.bookingId} and prisoner ${prisonerId.offenderNo}. Remove from exclusion file."),
           ),
           suppressEvent = suppressEvents,
         )
@@ -183,7 +183,7 @@ class CorePersonReconciliationService(
         telemetryClient.trackEventOrSuppress(
           "$TELEMETRY_CORE_PERSON_PREFIX-excluded-offender",
           mapOf(
-            "reason" to ("Excluding reconciliation mismatches for bookingId ${prisonerId.bookingId}"),
+            "reason" to ("Excluding reconciliation mismatches for bookingId ${prisonerId.bookingId} and prisoner ${prisonerId.offenderNo}"),
           ),
           suppressEvent = suppressEvents,
         )
@@ -284,6 +284,7 @@ private val usageComparator = compareBy<PrisonerAddressUsage, String?>(nullsFirs
 private val religionComparator = compareBy<PrisonerReligion, LocalDate?>(nullsFirst()) { it.startDate }
   .thenBy(nullsFirst()) { it.createDatetime }
   .thenBy(nullsFirst()) { it.endDate }
+  .thenBy(nullsFirst()) { it.modifyDatetime }
 
 private val contactComparator = compareBy<PrisonerContact, String?>(nullsFirst()) { it.type }
   .thenBy(nullsFirst()) { it.value }
@@ -299,6 +300,7 @@ fun DpsPrisonRecord.toPerson() = PrisonerPerson(
       current = it.current,
       comments = it.comments,
       createDatetime = it.createDateTime,
+      modifyDatetime = it.modifyDateTime,
     )
   }.sortedWith(religionComparator),
   addresses = addresses.map { it.toPrisonerAddress() }.sortedWith(addressComparator),
@@ -333,6 +335,7 @@ fun CorePerson.toPerson() = PrisonerPerson(
       current = i == 0,
       comments = r.comments,
       createDatetime = r.audit.createDatetime,
+      modifyDatetime = r.audit.modifyDatetime,
     )
   }?.sortedWith(religionComparator) ?: emptyList(),
   addresses = addresses?.map { it.toPrisonerAddress() }?.sortedWith(addressComparator) ?: emptyList(),
@@ -389,6 +392,7 @@ data class PrisonerReligion(
   val current: Boolean?,
   val comments: String?,
   val createDatetime: LocalDateTime,
+  val modifyDatetime: LocalDateTime?,
 )
 
 data class PrisonerAddress(

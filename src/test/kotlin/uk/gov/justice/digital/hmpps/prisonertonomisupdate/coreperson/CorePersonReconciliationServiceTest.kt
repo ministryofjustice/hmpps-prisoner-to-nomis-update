@@ -201,5 +201,6 @@ class CorePersonReconciliationServiceTest {
     current = true,
     comments = "Some comments",
     createDatetime = LocalDateTime.parse("2025-02-03T10:20:30"),
+    modifyDatetime = null,
   )
 }
