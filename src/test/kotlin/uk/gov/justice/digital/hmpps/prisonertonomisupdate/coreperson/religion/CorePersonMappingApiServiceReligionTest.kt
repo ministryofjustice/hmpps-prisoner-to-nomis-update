@@ -52,12 +52,41 @@ class CorePersonMappingApiServiceReligionTest {
       }
       mockServer.stubUpdatePrisonNumberOnReligionMappings(mappings = mappings, prisonNumber = prisonNumber)
 
-      apiService.updatePrisonNumberOnReligionMappingsByCprIds(prisonNumber, cprReligionIds)
+      val result = apiService.updatePrisonNumberOnReligionMappingsByCprIds(prisonNumber, cprReligionIds)
 
+      assertThat(result).hasSize(2)
+      assertThat(result[0].nomisPrisonNumber).isEqualTo(prisonNumber)
+      assertThat(result[1].nomisPrisonNumber).isEqualTo(prisonNumber)
       mockServer.verify(
         putRequestedFor(urlPathEqualTo("/mapping/core-person-religion/religion/$prisonNumber/cpr-ids"))
           .withQueryParam("ids", havingExactly(*cprReligionIds.toTypedArray())),
       )
+    }
+
+    @Test
+    fun `will return mapping data`() = runTest {
+      mockServer.stubUpdatePrisonNumberOnReligionMappings(
+        mappings = cprReligionIds.mapIndexed { index, cprReligionId ->
+          ReligionMappingDto(
+            cprId = cprReligionId,
+            nomisId = 10000L + index,
+            nomisPrisonNumber = "A1234AA",
+            mappingType = ReligionMappingDto.MappingType.MIGRATED,
+            label = null,
+            whenCreated = null,
+          )
+        },
+      )
+
+      val mappings = apiService.updatePrisonNumberOnReligionMappingsByCprIds(prisonNumber, cprReligionIds)
+
+      assertThat(mappings).hasSize(2)
+      assertThat(mappings[0].cprId).isEqualTo(cprReligionIds[0])
+      assertThat(mappings[0].nomisId).isEqualTo(10000L)
+      assertThat(mappings[0].nomisPrisonNumber).isEqualTo(prisonNumber)
+      assertThat(mappings[1].cprId).isEqualTo(cprReligionIds[1])
+      assertThat(mappings[1].nomisId).isEqualTo(10001L)
+      assertThat(mappings[0].nomisPrisonNumber).isEqualTo(prisonNumber)
     }
   }
 
