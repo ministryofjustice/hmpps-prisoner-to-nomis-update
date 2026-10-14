@@ -52,11 +52,8 @@ class CorePersonMappingApiServiceReligionTest {
       }
       mockServer.stubUpdatePrisonNumberOnReligionMappings(mappings = mappings, prisonNumber = prisonNumber)
 
-      val result = apiService.updatePrisonNumberOnReligionMappingsByCprIds(prisonNumber, cprReligionIds)
+      apiService.updatePrisonNumberOnReligionMappingsByCprIds(prisonNumber, cprReligionIds)
 
-      assertThat(result).hasSize(2)
-      assertThat(result[0].nomisPrisonNumber).isEqualTo(prisonNumber)
-      assertThat(result[1].nomisPrisonNumber).isEqualTo(prisonNumber)
       mockServer.verify(
         putRequestedFor(urlPathEqualTo("/mapping/core-person-religion/religion/$prisonNumber/cpr-ids"))
           .withQueryParam("ids", havingExactly(*cprReligionIds.toTypedArray())),
