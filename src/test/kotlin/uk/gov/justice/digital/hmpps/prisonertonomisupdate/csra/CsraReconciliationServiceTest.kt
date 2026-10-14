@@ -193,7 +193,7 @@ fun nomisCsra(
 ) = CsraGetDto(
   bookingId = 1,
   sequence = 1,
-  assessmentDate = date,
+  assessmentDate = LocalDate.parse("2020-01-01"),
   evaluationDate = date,
   type = AssessmentType.CSRREV,
   status = AssessmentStatusType.A,

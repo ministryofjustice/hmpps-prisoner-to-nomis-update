@@ -136,7 +136,7 @@ class CsraReconciliationService(
     if (dpsDetail.date != nomisDetail.date) {
       differences.add(
         Difference(
-          "assessmentDate",
+          "date",
           dpsDetail.date,
           nomisDetail.date,
           dpsDetail.id,
