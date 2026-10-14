@@ -3,10 +3,12 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.AgencyAddressDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.LegacyAgencyDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAgencyAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAgencyEmailAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAgencyPhoneNumberRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAgencyRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyAddressesRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyEmailAddressesRequest
@@ -21,6 +23,22 @@ class AgencyRegistersService(
   private val dpsService: AgencyRegistersDpsApiService,
   private val nomisApiService: AgencyNomisApiService,
 ) : TelemetryEnabled {
+
+  suspend fun courtInserted(event: CourtEvent) {
+    val courtId = event.additionalInformation.courtId
+    val telemetry = mutableMapOf(
+      "courtId" to courtId,
+    )
+    if (!event.didOriginateInDPS()) {
+      telemetryClient.trackEvent("court-create-ignored", telemetry)
+    } else {
+      track("court-create", telemetry) {
+        val dpsAgency = requireNotNull(dpsService.getAgency(courtId)) { "Agency $courtId not found in DPS" }
+        val response = nomisApiService.createAgency(dpsAgency.toCreateAgencyRequest(courtId))
+        telemetry["nomisAgencyId"] = response.agencyId
+      }
+    }
+  }
 
   suspend fun courtEmailInserted(event: CourtEmailEvent) {
     val courtId = event.additionalInformation.courtId
@@ -171,6 +189,34 @@ class AgencyRegistersService(
 }
 
 private fun SourcedEvent.didOriginateInDPS() = this.additionalInformation.source == "DPS"
+
+private fun LegacyAgencyDto.toCreateAgencyRequest(agencyId: String): CreateAgencyRequest = CreateAgencyRequest(
+  agencyId = agencyId,
+  description = name,
+  typeCode = "CRT",
+  active = active,
+  localAuthorityCodes = listOfNotNull(localAuthorityCode),
+  longDescription = description,
+  deactivationDate = inactiveDate,
+  contactName = contact,
+  courtTypeCode = courtTypeCode,
+  disabilityAccessCode = when (accessibleAccess) {
+    LegacyAgencyDto.AccessibleAccess.WHEELCHAIR_ACCESS -> "WHEEL"
+    LegacyAgencyDto.AccessibleAccess.ACCESSIBLE -> "Y"
+    LegacyAgencyDto.AccessibleAccess.NONE -> "N"
+    LegacyAgencyDto.AccessibleAccess.BY_ARRANGEMENT_ONLY -> "BA"
+    null -> null
+  },
+  areaCode = areaCode,
+  subAreaCode = subareaCode,
+  // NOMIS swaps the naming around: Legacy's regionCode is NOMIS's nomsRegionCode, and Legacy's
+  // geographicalAreaCode is NOMIS's regionCode
+  regionCode = geographicalAreaCode,
+  nomsRegionCode = regionCode,
+  cjitCode = cjitCode,
+  payrollRegionCode = payrollRegionCode,
+)
+
 private fun AgencyAddressDto.toUpdateAgencyAddress(): UpdateAgencyAddress = toCreateAgencyAddressRequest().let {
   UpdateAgencyAddress(
     flat = it.flat,

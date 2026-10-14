@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Cr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAgencyEmailAddressResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAgencyPhoneNumberRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAgencyPhoneNumberResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAgencyRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyAddressesRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyEmailAddressesRequest
@@ -99,6 +100,24 @@ class AgencyNomisApiMockServer(private val jsonMapper: JsonMapper) {
     )
     fun agencyIdsResponse() = AgencyIdsResponse(
       agencyIds = listOf(agencyId()),
+    )
+
+    fun createAgencyRequest() = CreateAgencyRequest(
+      agencyId = "SHEFCC",
+      description = "Sheffield Crown Ct",
+      typeCode = "CRT",
+      active = true,
+      localAuthorityCodes = listOf("00CG"),
+      longDescription = "Sheffield Crown Court",
+      contactName = "JANE SMITH",
+      courtTypeCode = "CC",
+      disabilityAccessCode = "WHEEL",
+      areaCode = "52",
+      subAreaCode = "SHEFF",
+      regionCode = "NEAST",
+      nomsRegionCode = "YOHUM",
+      payrollRegionCode = "YP",
+      cjitCode = "C00SH00",
     )
 
     fun createAgencyEmailRequest() = CreateAgencyEmailAddressRequest(
@@ -202,6 +221,19 @@ class AgencyNomisApiMockServer(private val jsonMapper: JsonMapper) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value())
+          .withBody(jsonMapper.writeValueAsString(response)),
+      ),
+    )
+  }
+
+  fun stubCreateAgency(
+    response: AgencyResponse = agencyResponse(),
+  ) {
+    nomisApi.stubFor(
+      post(urlPathEqualTo("/agency")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.CREATED.value())
           .withBody(jsonMapper.writeValueAsString(response)),
       ),
     )

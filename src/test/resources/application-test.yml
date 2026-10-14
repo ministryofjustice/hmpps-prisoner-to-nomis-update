@@ -453,6 +453,7 @@ hmpps.sqs:
       subscribeTopicId: domainevents
       subscribeFilter: >-
         { "eventType":[
+          "register.court.inserted",
           "register.court.email.inserted",
           "register.court.email.amended",
           "register.court.email.deleted",
