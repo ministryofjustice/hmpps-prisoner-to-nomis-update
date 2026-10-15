@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-13.2673.cad8cee"
+    "version" : "2026-10-14.2699.b773b49"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -500,14 +500,35 @@
           }
         } ],
         "responses" : {
-          "204" : {
-            "description" : "Fix applied"
+          "200" : {
+            "description" : "Fix applied",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PersonFixManyChargesToSentence"
+                }
+              }
+            }
           },
           "401" : {
-            "description" : "Unauthorised"
+            "description" : "Unauthorised",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PersonFixManyChargesToSentence"
+                }
+              }
+            }
           },
           "403" : {
-            "description" : "Forbidden"
+            "description" : "Forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PersonFixManyChargesToSentence"
+                }
+              }
+            }
           }
         }
       }
@@ -3381,12 +3402,20 @@
         }
       }
     },
-    "/document-generator/f986" : {
+    "/document-generator/f986/person/{prisonerId}" : {
       "post" : {
         "tags" : [ "document-generation-controller" ],
         "summary" : "Create F986 Document",
         "description" : "This endpoint will create an F986 document",
         "operationId" : "createF986Document",
+        "parameters" : [ {
+          "name" : "prisonerId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -6026,6 +6055,111 @@
         }
       }
     },
+    "/document-generator/f986/person/{prisonerId}/eligible-appearances" : {
+      "get" : {
+        "tags" : [ "document-generation-controller" ],
+        "summary" : "Get F986 eligible appearances",
+        "description" : "Returns the active court appearances for a prisoner that have FINE sentence type, most recent first",
+        "operationId" : "getF986EligibleCourtAppearances",
+        "parameters" : [ {
+          "name" : "prisonerId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns court appearances with fine sentence",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/F986EligibleCourtAppearance"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/F986EligibleCourtAppearance"
+                  }
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/F986EligibleCourtAppearance"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/document-generator/f986/person/{prisonerId}/eligible-appearances/exists" : {
+      "get" : {
+        "tags" : [ "document-generation-controller" ],
+        "summary" : "Check F986 eligible appearances exist",
+        "description" : "Counts the active court appearances for a prisoner that have FINE sentence type",
+        "operationId" : "hasF986EligibleCourtAppearances",
+        "parameters" : [ {
+          "name" : "prisonerId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns true or false",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "boolean"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "boolean"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/court-case/{prisonerId}/recallable-court-cases" : {
       "get" : {
         "tags" : [ "court-case-controller" ],
@@ -7349,6 +7483,15 @@
         },
         "required" : [ "messagesFoundCount" ]
       },
+      "PersonFixManyChargesToSentence" : {
+        "type" : "object",
+        "properties" : {
+          "anyConsecutiveToFixes" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "anyConsecutiveToFixes" ]
+      },
       "LegacyCreateFine" : {
         "type" : "object",
         "properties" : {
@@ -7567,6 +7710,9 @@
               "type" : "string"
             },
             "uniqueItems" : true
+          },
+          "hasUnconfirmedConsecutiveToFix" : {
+            "type" : [ "boolean", "null" ]
           }
         },
         "required" : [ "eventType", "prisonerId" ]
@@ -7671,7 +7817,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:41.341233073"
+            "example" : "07:42:44.319835406"
           },
           "outcomeDispositionCode" : {
             "type" : [ "string", "null" ]
@@ -8050,7 +8196,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:41.341233073"
+            "example" : "07:42:44.319835406"
           },
           "courtCode" : {
             "type" : "string"
@@ -10811,6 +10957,9 @@
           "offenceCode" : {
             "type" : "string"
           },
+          "chargeLegacyOffenceDescription" : {
+            "type" : [ "string", "null" ]
+          },
           "sentenceServeType" : {
             "type" : "string"
           }
@@ -11161,7 +11310,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:41.341233073"
+            "example" : "07:42:44.319835406"
           },
           "courtCode" : {
             "type" : "string"
@@ -11853,7 +12002,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:44:41.341233073"
+            "example" : "07:42:44.319835406"
           },
           "nomisOutcomeCode" : {
             "type" : [ "string", "null" ]
@@ -11932,7 +12081,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:41.341233073"
+            "example" : "07:42:44.319835406"
           },
           "courtId" : {
             "type" : "string"
@@ -12084,7 +12233,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:44:41.341233073"
+            "example" : "07:42:44.319835406"
           },
           "charges" : {
             "type" : "array",
@@ -12121,7 +12270,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:41.341233073"
+            "example" : "07:42:44.319835406"
           },
           "courtId" : {
             "type" : "string"
@@ -12171,6 +12320,32 @@
           }
         },
         "required" : [ "courtAppearanceUuid", "createdAt", "immigrationDetentionRecordType", "immigrationDetentionUuid", "prisonerId", "recordDate", "source" ]
+      },
+      "F986EligibleCourtAppearance" : {
+        "type" : "object",
+        "properties" : {
+          "appearanceUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "warrantDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "courtCode" : {
+            "type" : "string"
+          },
+          "caseReference" : {
+            "type" : [ "string", "null" ]
+          },
+          "offenceCodes" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        },
+        "required" : [ "appearanceUuid", "courtCode", "offenceCodes", "warrantDate" ]
       },
       "RecallableCourtCase" : {
         "type" : "object",
@@ -12717,7 +12892,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:41.341233073"
+            "example" : "07:42:44.319835406"
           },
           "courtCode" : {
             "type" : [ "string", "null" ]
@@ -12867,6 +13042,9 @@
             "type" : "integer",
             "format" : "int64"
           },
+          "anyConsecutiveToFixes" : {
+            "type" : "boolean"
+          },
           "last" : {
             "type" : "boolean"
           },
@@ -12900,7 +13078,7 @@
             "type" : "boolean"
           }
         },
-        "required" : [ "prisonerCourtCaseTotal" ]
+        "required" : [ "anyConsecutiveToFixes", "prisonerCourtCaseTotal" ]
       },
       "SortObject" : {
         "type" : "object",
