@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-14.2218.2cdcc7e"
+    "version" : "2026-10-14.2223.fe7983c"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -32647,7 +32647,7 @@
           "deactivateDate" : {
             "type" : [ "string", "null" ],
             "format" : "date",
-            "description" : "The deactivation date, defaults to today",
+            "description" : "The deactivation date, if not active",
             "example" : "2024-12-31"
           },
           "reasonCode" : {
@@ -38317,6 +38317,23 @@
           "active" : {
             "type" : [ "boolean", "null" ],
             "description" : "Whether location is activated"
+          },
+          "deactivateDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "The deactivation date, if not active",
+            "example" : "2024-12-31"
+          },
+          "reasonCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "The reason code for deactivation, reference data 'LIV_UN_RSN'",
+            "enum" : [ "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L" ]
+          },
+          "reactivateDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "The expected reactivation date if any",
+            "example" : "2024-12-31"
           },
           "profiles" : {
             "type" : [ "array", "null" ],
@@ -46807,6 +46824,10 @@
             "type" : "string",
             "format" : "date-time"
           },
+          "txnEntrySeq" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
           "txnEntryDesc" : {
             "type" : [ "string", "null" ]
           },
@@ -46815,10 +46836,6 @@
           },
           "txnEntryAmount" : {
             "type" : "number"
-          },
-          "txnEntrySeq" : {
-            "type" : "integer",
-            "format" : "int32"
           }
         },
         "required" : [ "txnEntryAmount", "txnEntryDate", "txnEntrySeq", "txnId" ]
