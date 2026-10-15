@@ -32,6 +32,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Up
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyEmailAddressesRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyPhoneNumber
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyPhoneNumbersRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 
 @Component
@@ -106,6 +107,22 @@ class AgencyNomisApiMockServer(private val jsonMapper: JsonMapper) {
       agencyId = "SHEFCC",
       description = "Sheffield Crown Ct",
       typeCode = "CRT",
+      active = true,
+      localAuthorityCodes = listOf("00CG"),
+      longDescription = "Sheffield Crown Court",
+      contactName = "JANE SMITH",
+      courtTypeCode = "CC",
+      disabilityAccessCode = "WHEEL",
+      areaCode = "52",
+      subAreaCode = "SHEFF",
+      regionCode = "NEAST",
+      nomsRegionCode = "YOHUM",
+      payrollRegionCode = "YP",
+      cjitCode = "C00SH00",
+    )
+
+    fun updateAgencyRequest() = UpdateAgencyRequest(
+      description = "Sheffield Crown Ct",
       active = true,
       localAuthorityCodes = listOf("00CG"),
       longDescription = "Sheffield Crown Court",
@@ -234,6 +251,20 @@ class AgencyNomisApiMockServer(private val jsonMapper: JsonMapper) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.CREATED.value())
+          .withBody(jsonMapper.writeValueAsString(response)),
+      ),
+    )
+  }
+
+  fun stubUpdateAgency(
+    agencyId: String = "SHEFCC",
+    response: AgencyResponse = agencyResponse(),
+  ) {
+    nomisApi.stubFor(
+      put(urlPathEqualTo("/agency/$agencyId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
           .withBody(jsonMapper.writeValueAsString(response)),
       ),
     )

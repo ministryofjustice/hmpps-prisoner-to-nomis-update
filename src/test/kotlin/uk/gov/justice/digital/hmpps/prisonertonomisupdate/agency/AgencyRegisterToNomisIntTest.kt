@@ -41,6 +41,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Up
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyEmailAddressesRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyPhoneNumber
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyPhoneNumbersRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.jsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.getRequestBody
@@ -117,6 +118,81 @@ class AgencyRegisterToNomisIntTest(
         fun `will send telemetry event showing success`() {
           verify(telemetryClient).trackEvent(
             eq("court-create-success"),
+            check {
+              assertThat(it["courtId"]).isEqualTo(courtId)
+              assertThat(it["nomisAgencyId"]).isEqualTo(courtId)
+            },
+            isNull(),
+          )
+        }
+      }
+    }
+  }
+
+  @Nested
+  @DisplayName("register.court.amended")
+  inner class CourtAmended {
+    val courtId = "SHEFCC"
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of the event")
+    inner class WhenNomisCreated {
+
+      @BeforeEach
+      fun setUp() {
+        publishCourtAmendedEvent(courtId = courtId, source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the event is ignored`() {
+        verify(telemetryClient).trackEvent(
+          eq("court-amend-ignored"),
+          check {
+            assertThat(it["courtId"]).isEqualTo(courtId)
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of the event")
+    inner class WhenDpsCreated {
+
+      @Nested
+      inner class HappyPath {
+
+        @BeforeEach
+        fun setUp() {
+          dpsApi.stubGetAgency(agencyId = courtId, response = legacyAgencyDto())
+          nomisApi.stubUpdateAgency(agencyId = courtId, response = agencyResponse().copy(agencyId = courtId))
+          publishCourtAmendedEvent(courtId = courtId)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will update NOMIS`() {
+          val request: UpdateAgencyRequest = NomisApiExtension.nomisApi.getRequestBody(putRequestedFor(urlEqualTo("/agency/$courtId")), jsonMapper)
+          assertThat(request.description).isEqualTo("Sheffield Crown Ct")
+          assertThat(request.active).isTrue()
+          assertThat(request.localAuthorityCodes).containsExactly("00CG")
+          assertThat(request.longDescription).isEqualTo("Sheffield Crown Court")
+          assertThat(request.contactName).isEqualTo("JANE SMITH")
+          assertThat(request.courtTypeCode).isEqualTo("CC")
+          assertThat(request.disabilityAccessCode).isEqualTo("WHEEL")
+          assertThat(request.areaCode).isEqualTo("52")
+          assertThat(request.subAreaCode).isEqualTo("SHEFF")
+          assertThat(request.regionCode).isEqualTo("NEAST")
+          assertThat(request.nomsRegionCode).isEqualTo("YOHUM")
+          assertThat(request.cjitCode).isEqualTo("C00SH00")
+          assertThat(request.payrollRegionCode).isEqualTo("YP")
+        }
+
+        @Test
+        fun `will send telemetry event showing success`() {
+          verify(telemetryClient).trackEvent(
+            eq("court-amend-success"),
             check {
               assertThat(it["courtId"]).isEqualTo(courtId)
               assertThat(it["nomisAgencyId"]).isEqualTo(courtId)
@@ -1050,6 +1126,22 @@ class AgencyRegisterToNomisIntTest(
       eventType = "register.court.inserted",
       payload = CourtEvent(
         eventType = "register.court.inserted",
+        additionalInformation = CourtAdditionalInformation(
+          courtId = courtId,
+          source = source,
+        ),
+      ),
+    )
+  }
+
+  private fun publishCourtAmendedEvent(
+    courtId: String,
+    source: String = "DPS",
+  ) {
+    publishDomainEvent(
+      eventType = "register.court.amended",
+      payload = CourtEvent(
+        eventType = "register.court.amended",
         additionalInformation = CourtAdditionalInformation(
           courtId = courtId,
           source = source,

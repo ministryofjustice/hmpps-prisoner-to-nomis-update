@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Up
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyEmailAddressesRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyPhoneNumber
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyPhoneNumbersRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.TelemetryEnabled
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.track
 
@@ -35,6 +36,22 @@ class AgencyRegistersService(
       track("court-create", telemetry) {
         val dpsAgency = requireNotNull(dpsService.getAgency(courtId)) { "Agency $courtId not found in DPS" }
         val response = nomisApiService.createAgency(dpsAgency.toCreateAgencyRequest(courtId))
+        telemetry["nomisAgencyId"] = response.agencyId
+      }
+    }
+  }
+
+  suspend fun courtAmended(event: CourtEvent) {
+    val courtId = event.additionalInformation.courtId
+    val telemetry = mutableMapOf(
+      "courtId" to courtId,
+    )
+    if (!event.didOriginateInDPS()) {
+      telemetryClient.trackEvent("court-amend-ignored", telemetry)
+    } else {
+      track("court-amend", telemetry) {
+        val dpsAgency = requireNotNull(dpsService.getAgency(courtId)) { "Agency $courtId not found in DPS" }
+        val response = nomisApiService.updateAgency(courtId, dpsAgency.toUpdateAgencyRequest())
         telemetry["nomisAgencyId"] = response.agencyId
       }
     }
@@ -200,13 +217,7 @@ private fun LegacyAgencyDto.toCreateAgencyRequest(agencyId: String): CreateAgenc
   deactivationDate = inactiveDate,
   contactName = contact,
   courtTypeCode = courtTypeCode,
-  disabilityAccessCode = when (accessibleAccess) {
-    LegacyAgencyDto.AccessibleAccess.WHEELCHAIR_ACCESS -> "WHEEL"
-    LegacyAgencyDto.AccessibleAccess.ACCESSIBLE -> "Y"
-    LegacyAgencyDto.AccessibleAccess.NONE -> "N"
-    LegacyAgencyDto.AccessibleAccess.BY_ARRANGEMENT_ONLY -> "BA"
-    null -> null
-  },
+  disabilityAccessCode = accessibleAccess.toDisabilityAccessCode(),
   areaCode = areaCode,
   subAreaCode = subareaCode,
   // NOMIS swaps the naming around: Legacy's regionCode is NOMIS's nomsRegionCode, and Legacy's
@@ -216,6 +227,33 @@ private fun LegacyAgencyDto.toCreateAgencyRequest(agencyId: String): CreateAgenc
   cjitCode = cjitCode,
   payrollRegionCode = payrollRegionCode,
 )
+
+private fun LegacyAgencyDto.toUpdateAgencyRequest(): UpdateAgencyRequest = UpdateAgencyRequest(
+  description = name,
+  active = active,
+  localAuthorityCodes = listOfNotNull(localAuthorityCode),
+  longDescription = description,
+  deactivationDate = inactiveDate,
+  contactName = contact,
+  courtTypeCode = courtTypeCode,
+  disabilityAccessCode = accessibleAccess.toDisabilityAccessCode(),
+  areaCode = areaCode,
+  subAreaCode = subareaCode,
+  // NOMIS swaps the naming around: Legacy's regionCode is NOMIS's nomsRegionCode, and Legacy's
+  // geographicalAreaCode is NOMIS's regionCode
+  regionCode = geographicalAreaCode,
+  nomsRegionCode = regionCode,
+  cjitCode = cjitCode,
+  payrollRegionCode = payrollRegionCode,
+)
+
+private fun LegacyAgencyDto.AccessibleAccess?.toDisabilityAccessCode(): String? = when (this) {
+  LegacyAgencyDto.AccessibleAccess.WHEELCHAIR_ACCESS -> "WHEEL"
+  LegacyAgencyDto.AccessibleAccess.ACCESSIBLE -> "Y"
+  LegacyAgencyDto.AccessibleAccess.NONE -> "N"
+  LegacyAgencyDto.AccessibleAccess.BY_ARRANGEMENT_ONLY -> "BA"
+  null -> null
+}
 
 private fun AgencyAddressDto.toUpdateAgencyAddress(): UpdateAgencyAddress = toCreateAgencyAddressRequest().let {
   UpdateAgencyAddress(
