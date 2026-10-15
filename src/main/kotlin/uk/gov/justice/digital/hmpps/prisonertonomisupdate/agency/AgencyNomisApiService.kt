@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Cr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyAddressesRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyEmailAddressesRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyPhoneNumbersRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 
 @Service
@@ -33,6 +34,7 @@ class AgencyNomisApiService(
   suspend fun getAgency(agencyId: String): AgencyResponse? = api.prepare(api.getAgencyRequestConfig(agencyId)).retrieve().awaitBodyOrNullForNotFound(retrySpec)
   suspend fun getAgencyIds(): AgencyIdsResponse = api.getAllAgencies(excludeType = listOf("INST")).retryWhen(retrySpec).awaitSingle()
   suspend fun createAgency(request: CreateAgencyRequest) = api.createAgency(request).awaitSingle()
+  suspend fun updateAgency(agencyId: String, request: UpdateAgencyRequest) = api.updateAgency(agencyId, request).awaitSingle()
   suspend fun createAgencyEmail(agencyId: String, request: CreateAgencyEmailAddressRequest) = api.createAgencyEmail(agencyId, request).awaitSingle()
   suspend fun refreshAgencyEmails(agencyId: String, request: UpdateAgencyEmailAddressesRequest) = api.updateAgencyEmailAddresses(agencyId, request).awaitSingle()
   suspend fun createAgencyPhone(agencyId: String, request: CreateAgencyPhoneNumberRequest) = api.createAgencyPhone(agencyId, request).awaitSingle()

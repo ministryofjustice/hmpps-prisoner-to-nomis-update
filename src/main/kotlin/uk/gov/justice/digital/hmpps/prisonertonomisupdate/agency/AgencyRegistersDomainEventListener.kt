@@ -33,6 +33,7 @@ class AgencyRegistersDomainEventListener(
   ): CompletableFuture<Void?> = onDomainEvent(rawMessage) { eventType, message ->
     when (eventType) {
       "register.court.inserted" -> service.courtInserted(message.fromJson())
+      "register.court.amended" -> service.courtAmended(message.fromJson())
       "register.court.email.inserted" -> service.courtEmailInserted(message.fromJson())
       "register.court.email.amended" -> service.courtEmailAmended(message.fromJson())
       "register.court.email.deleted" -> service.courtEmailDeleted(message.fromJson())

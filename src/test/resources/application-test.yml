@@ -454,6 +454,7 @@ hmpps.sqs:
       subscribeFilter: >-
         { "eventType":[
           "register.court.inserted",
+          "register.court.amended",
           "register.court.email.inserted",
           "register.court.email.amended",
           "register.court.email.deleted",
