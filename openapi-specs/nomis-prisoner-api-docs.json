@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-14.2218.2cdcc7e"
+    "version" : "2026-10-15.2237.51733e8"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -25769,12 +25769,75 @@
         "parameters" : [ {
           "name" : "advanceId",
           "in" : "path",
-          "description" : "Id",
+          "description" : "Advance Id aka offender payment profile id",
           "required" : true,
           "schema" : {
             "type" : "integer",
             "format" : "int64",
-            "description" : "Id",
+            "description" : "Advance Id aka offender payment profile id",
+            "example" : 123456789
+          },
+          "example" : 123456789
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Advance Information Returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonerAdvanceDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Advance does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/finance/prisoners/advances/deduction-id/{deductionId}" : {
+      "get" : {
+        "tags" : [ "prisoner-advance-resource" ],
+        "summary" : "Get a prisoner advance by offender deduction id",
+        "description" : "Retrieves a prisoner advance identified by an associated offender deduction id. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getAdvanceByDeductionId",
+        "parameters" : [ {
+          "name" : "deductionId",
+          "in" : "path",
+          "description" : "Offender deduction Id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Offender deduction Id",
             "example" : 123456789
           },
           "example" : 123456789
@@ -32647,7 +32710,7 @@
           "deactivateDate" : {
             "type" : [ "string", "null" ],
             "format" : "date",
-            "description" : "The deactivation date, defaults to today",
+            "description" : "The deactivation date, if not active",
             "example" : "2024-12-31"
           },
           "reasonCode" : {
@@ -33962,11 +34025,6 @@
       "UpdateOffenderAddressRequest" : {
         "type" : "object",
         "properties" : {
-          "typeCode" : {
-            "type" : [ "string", "null" ],
-            "description" : "Address reference code",
-            "example" : "HOME"
-          },
           "flat" : {
             "type" : [ "string", "null" ],
             "description" : "Flat name or number",
@@ -33992,15 +34050,15 @@
             "description" : "Post code",
             "example" : "MK15 2ST"
           },
-          "cityCode" : {
+          "city" : {
             "type" : [ "string", "null" ],
-            "description" : "City reference code",
-            "example" : "25343"
+            "description" : "City description, matched case insensitively. If not found the city will not be set",
+            "example" : "Sheffield"
           },
-          "countyCode" : {
+          "county" : {
             "type" : [ "string", "null" ],
-            "description" : "County reference code",
-            "example" : "S.YORKSHIRE"
+            "description" : "County description, matched case insensitively. If not found the county will not be set",
+            "example" : "South Yorkshire"
           },
           "countryCode" : {
             "type" : [ "string", "null" ],
@@ -34032,10 +34090,6 @@
             "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Date address was valid to"
-          },
-          "validatedPAF" : {
-            "type" : [ "boolean", "null" ],
-            "description" : "true if address validated by PAF"
           }
         },
         "required" : [ "mailAddress", "primaryAddress" ]
@@ -38318,6 +38372,23 @@
             "type" : [ "boolean", "null" ],
             "description" : "Whether location is activated"
           },
+          "deactivateDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "The deactivation date, if not active",
+            "example" : "2024-12-31"
+          },
+          "reasonCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "The reason code for deactivation, reference data 'LIV_UN_RSN'",
+            "enum" : [ "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L" ]
+          },
+          "reactivateDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "The expected reactivation date if any",
+            "example" : "2024-12-31"
+          },
           "profiles" : {
             "type" : [ "array", "null" ],
             "description" : "Profiles",
@@ -38793,11 +38864,6 @@
       "CreateOffenderAddressRequest" : {
         "type" : "object",
         "properties" : {
-          "typeCode" : {
-            "type" : [ "string", "null" ],
-            "description" : "Address reference code",
-            "example" : "HOME"
-          },
           "flat" : {
             "type" : [ "string", "null" ],
             "description" : "Flat name or number",
@@ -38823,15 +38889,15 @@
             "description" : "Post code",
             "example" : "MK15 2ST"
           },
-          "cityCode" : {
+          "city" : {
             "type" : [ "string", "null" ],
-            "description" : "City reference code",
-            "example" : "25343"
+            "description" : "City description, matched case insensitively. If not found the city will not be set",
+            "example" : "Sheffield"
           },
-          "countyCode" : {
+          "county" : {
             "type" : [ "string", "null" ],
-            "description" : "County reference code",
-            "example" : "S.YORKSHIRE"
+            "description" : "County description, matched case insensitively. If not found the county will not be set",
+            "example" : "South Yorkshire"
           },
           "countryCode" : {
             "type" : [ "string", "null" ],
@@ -46799,6 +46865,10 @@
             "type" : [ "integer", "null" ],
             "format" : "int64"
           },
+          "txnEntrySeq" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
           "txnId" : {
             "type" : "integer",
             "format" : "int64"
@@ -46815,10 +46885,6 @@
           },
           "txnEntryAmount" : {
             "type" : "number"
-          },
-          "txnEntrySeq" : {
-            "type" : "integer",
-            "format" : "int32"
           }
         },
         "required" : [ "txnEntryAmount", "txnEntryDate", "txnEntrySeq", "txnId" ]

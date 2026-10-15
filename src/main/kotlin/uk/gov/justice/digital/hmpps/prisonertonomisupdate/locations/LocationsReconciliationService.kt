@@ -300,9 +300,9 @@ class LocationsReconciliationService(
     if (
       !dps.active &&
       dps.deactivatedReason != LegacyLocation.DeactivatedReason.OTHER &&
-      toReasonCode(dps).toString() != nomis.reasonCode.toString()
+      toUpdateReasonCode(dps).toString() != nomis.reasonCode.toString()
     ) {
-      return "Deactivated reason mismatch dps=${toReasonCode(dps)} nomis=${nomis.reasonCode}"
+      return "Deactivated reason mismatch dps=${toUpdateReasonCode(dps)} nomis=${nomis.reasonCode}"
     }
     if (dps.proposedReactivationDate != null && dps.proposedReactivationDate != nomis.reactivateDate) {
       return "Reactivation date mismatch dps=${dps.proposedReactivationDate} nomis=${nomis.reactivateDate}"

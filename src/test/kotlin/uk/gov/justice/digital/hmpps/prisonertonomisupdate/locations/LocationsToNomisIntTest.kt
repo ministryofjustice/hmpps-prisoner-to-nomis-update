@@ -178,6 +178,9 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
                   "comment" : "Not to be used",
                   "tracking" : false,
                   "active" : true,
+                  "deactivateDate": "2024-02-01",
+                  "reasonCode": "I",
+                  "reactivateDate": "2024-02-14",
                   "profiles" : [
                     { "profileType" : "SUP_LVL_TYPE", "profileCode" : "S" },
                     { "profileType" : "HOU_UNIT_ATT", "profileCode" : "NSMC" }
