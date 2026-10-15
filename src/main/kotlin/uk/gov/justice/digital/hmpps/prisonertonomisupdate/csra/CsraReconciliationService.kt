@@ -82,7 +82,7 @@ class CsraReconciliationService(
 
       CsraDetailFields(
         id = "${csra.bookingId}-${csra.sequence}",
-        date = csra.evaluationDate,
+        date = csra.evaluationDate ?: csra.assessmentDate,
         level = deriveClassification()?.toGenericLevel(),
       )
     }

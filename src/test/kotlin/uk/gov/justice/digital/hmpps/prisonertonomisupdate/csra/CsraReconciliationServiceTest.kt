@@ -136,7 +136,7 @@ class CsraReconciliationServiceTest {
     @Test
     fun `will report a date mismatch`() = runTest {
       stubCsraReconciliation(
-        nomisCsra(date = LocalDate.parse("2024-06-01")),
+        nomisCsra(evaluationDate = LocalDate.parse("2024-06-01")),
         dpsCsra(CSRA_DPS_ID),
       )
       assertThat(service.checkCsra(CSRA_OFFENDER_NO)?.differences).isEqualTo(
@@ -144,6 +144,15 @@ class CsraReconciliationServiceTest {
           Difference(property = "date", nomis = LocalDate.parse("2024-06-01"), dps = LocalDate.parse("2024-01-01"), dpsId = CSRA_DPS_ID, nomisId = "1-1"),
         ),
       )
+    }
+
+    @Test
+    fun `will not report a missing evaluation date, defaulting to assessment date`() = runTest {
+      stubCsraReconciliation(
+        nomisCsra(evaluationDate = null, assessmentDate = LocalDate.parse("2024-01-01")),
+        dpsCsra(CSRA_DPS_ID),
+      )
+      assertThat(service.checkCsra(CSRA_OFFENDER_NO)?.differences).isNull()
     }
   }
 
@@ -188,13 +197,14 @@ class CsraReconciliationServiceTest {
 }
 
 fun nomisCsra(
-  date: LocalDate = LocalDate.parse("2024-01-01"),
+  assessmentDate: LocalDate = LocalDate.parse("2020-01-01"),
+  evaluationDate: LocalDate? = LocalDate.parse("2024-01-01"),
   calculatedLevel: AssessmentLevel = AssessmentLevel.STANDARD,
 ) = CsraGetDto(
   bookingId = 1,
   sequence = 1,
-  assessmentDate = LocalDate.parse("2020-01-01"),
-  evaluationDate = date,
+  assessmentDate = assessmentDate,
+  evaluationDate = evaluationDate,
   type = AssessmentType.CSRREV,
   status = AssessmentStatusType.A,
   assessmentStaffId = 1,
