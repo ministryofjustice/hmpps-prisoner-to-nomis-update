@@ -205,6 +205,9 @@ class LocationsService(
     unitType = instance.residentialHousingType?.let { CreateLocationRequest.UnitType.valueOf(toUnitType(it)) },
     tracking = instance.internalMovementAllowed,
     active = instance.active,
+    deactivateDate = instance.deactivatedDate,
+    reasonCode = toCreateReasonCode(instance),
+    reactivateDate = instance.proposedReactivationDate,
     profiles = instance.attributes?.map { toAttribute(it) },
     usages = instance.usage?.map { toUsage(it) },
   )
@@ -354,7 +357,7 @@ class LocationsService(
     tracking = instance.internalMovementAllowed,
     active = instance.active,
     deactivateDate = instance.deactivatedDate,
-    reasonCode = toReasonCode(instance),
+    reasonCode = toUpdateReasonCode(instance),
     reactivateDate = instance.proposedReactivationDate,
     profiles = instance.attributes?.map { toAttribute(it) },
     usages = instance.usage?.map { toUsage(it) },
@@ -445,7 +448,17 @@ class LocationsService(
   private inline fun <reified T> String.fromJson(): T = jsonMapper.readValue(this)
 }
 
-fun toReasonCode(instance: LegacyLocation): UpdateLocationRequest.ReasonCode? = when (instance.deactivatedReason) {
+fun toCreateReasonCode(instance: LegacyLocation): CreateLocationRequest.ReasonCode? = when (instance.deactivatedReason) {
+  LegacyLocation.DeactivatedReason.REFURBISHMENT -> CreateLocationRequest.ReasonCode.D
+  LegacyLocation.DeactivatedReason.OTHER -> CreateLocationRequest.ReasonCode.F
+  LegacyLocation.DeactivatedReason.MAINTENANCE -> CreateLocationRequest.ReasonCode.G
+  LegacyLocation.DeactivatedReason.STAFF_SHORTAGE -> CreateLocationRequest.ReasonCode.H
+  LegacyLocation.DeactivatedReason.MOTHBALLED -> CreateLocationRequest.ReasonCode.I
+  LegacyLocation.DeactivatedReason.DAMAGED -> CreateLocationRequest.ReasonCode.J
+  else -> null
+}
+
+fun toUpdateReasonCode(instance: LegacyLocation): UpdateLocationRequest.ReasonCode? = when (instance.deactivatedReason) {
   LegacyLocation.DeactivatedReason.REFURBISHMENT -> UpdateLocationRequest.ReasonCode.D
   LegacyLocation.DeactivatedReason.OTHER -> UpdateLocationRequest.ReasonCode.F
   LegacyLocation.DeactivatedReason.MAINTENANCE -> UpdateLocationRequest.ReasonCode.G
