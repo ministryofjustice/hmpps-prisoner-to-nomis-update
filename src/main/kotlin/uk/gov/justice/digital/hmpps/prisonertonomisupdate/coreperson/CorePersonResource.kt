@@ -10,18 +10,15 @@ import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonMergeService.MergePersonEvent
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PersonReference
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PersonReferenceList
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
 @RestController
 @Tag(name = "Core Person Update Resource")
 class CorePersonResource(
   private val reconciliationService: CorePersonReconciliationService,
-  private val corePersonMergeService: CorePersonMergeService,
 ) {
 
   @PreAuthorize("hasRole('PRISONER_TO_NOMIS__UPDATE__RW')")
@@ -74,11 +71,11 @@ class CorePersonResource(
   ) = reconciliationService.checkCorePersonMatch(prisonNumber, suppressEvents = true)
 
   @PreAuthorize("hasRole('PRISONER_TO_NOMIS__UPDATE__RW')")
-  @PostMapping("/core-person/prisoner/{prisonNumberTo}/merge")
+  @PostMapping("/core-person/reconciliation")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @Operation(
-    summary = "Temporary endpoint to merge a prisoner",
-    description = """After a prisoner merge in core person record, obtain the definitive prisoner details and write back to nomis.
+    summary = "Run a core person reconciliation",
+    description = """Run a core person reconciliation for all or all active prisoners.
       Requires PRISONER_TO_NOMIS__UPDATE__RW""",
     responses = [
       ApiResponse(
@@ -103,23 +100,8 @@ class CorePersonResource(
       ),
     ],
   )
-  // TODO temporary endpoint to call into the merge a prisoner functionality, to be removed once cpr is raising events.
-  suspend fun updateOffenderByPrisonNumberAfterMerge(
-    @Schema(description = "Prison number aka noms id / offender id display", example = "A1234BC")
-    @PathVariable prisonNumberTo: String,
-  ) {
-    corePersonMergeService.mergePerson(
-      event = MergePersonEvent(
-        eventType = "core-person-record.prison.record.merged",
-        personReference = PersonReferenceList(
-          identifiers = listOf(
-            PersonReference(
-              type = "toPrisonNumber",
-              value = prisonNumberTo,
-            ),
-          ),
-        ),
-      ),
-    )
-  }
+  suspend fun reconciliation(
+    @RequestParam
+    @Schema(description = "reconciliation only the active prisoners or all prisoners", required = true)activeOnly: Boolean,
+  ) = reconciliationService.generateReconciliationReport(activeOnly = activeOnly)
 }
