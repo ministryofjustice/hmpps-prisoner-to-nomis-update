@@ -1,7 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson
 
-import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
-import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.entry
 import org.junit.jupiter.api.BeforeEach
@@ -19,19 +17,11 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonReligion
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonReligion.ReligionCode
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonReligion.ReligionCode.BAHA
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.religion.ReligionMappingApiMockServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ReligionMappingDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ReligionMappingDto.MappingType.MIGRATED
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CorePersonMergeRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CorePersonReligionRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.NomisAudit
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderBelief
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiMockServer
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -148,16 +138,16 @@ class CorePersonResourceIntTest(
     }
   }
 
-  @DisplayName("POST /core-person/prisoner/{prisonNumberTo}/merge")
+  @DisplayName("POST /core-person/reconciliation")
   @Nested
-  inner class UpdateOffenderByPrisonNumberAfterMerge {
+  inner class RunReconciliation {
     private val prisonNumber = "A1234KT"
 
     @Nested
     inner class Security {
       @Test
       fun `access forbidden when no role`() {
-        webTestClient.post().uri("/core-person/prisoner/$prisonNumber/merge")
+        webTestClient.post().uri("/core-person/reconciliation?activeOnly=true")
           .headers(setAuthorisation(roles = listOf()))
           .exchange()
           .expectStatus().isForbidden
@@ -165,7 +155,7 @@ class CorePersonResourceIntTest(
 
       @Test
       fun `access forbidden with wrong role`() {
-        webTestClient.post().uri("/core-person/prisoner/$prisonNumber/merge")
+        webTestClient.post().uri("/core-person/reconciliation?activeOnly=true")
           .headers(setAuthorisation(roles = listOf("BANANAS")))
           .exchange()
           .expectStatus().isForbidden
@@ -173,7 +163,7 @@ class CorePersonResourceIntTest(
 
       @Test
       fun `access unauthorised with no auth token`() {
-        webTestClient.post().uri("/core-person/prisoner/$prisonNumber/merge")
+        webTestClient.post().uri("/core-person/reconciliation?activeOnly=true")
           .exchange()
           .expectStatus().isUnauthorized
       }
@@ -182,90 +172,24 @@ class CorePersonResourceIntTest(
     @Nested
     inner class HappyPath {
 
-      val religionHistory = listOf(
-        prisonReligion(
-          cprReligionId = "ab77e4c0-e55f-4551-85a7-a379cb2674b2",
-          startDate = LocalDate.parse("2024-06-30"),
-        ),
-      )
-      val religionMappingDto = listOf(
-        ReligionMappingDto(
-          cprId = religionHistory[0].cprReligionId!!,
-          nomisId = 10001L,
-          nomisPrisonNumber = prisonNumber,
-          mappingType = MIGRATED,
-        ),
-      )
-
       @BeforeEach
       fun setup() {
-        corePersonCprApi.stubGetCorePerson(
-          prisonNumber = prisonNumber,
-          response = corePersonDto().copy(religionHistory = religionHistory),
-        )
-        mappingServer.stubUpdatePrisonNumberOnReligionMappings(religionMappingDto, prisonNumber)
-        corePersonNomisApi.stubMergeCorePersonReligions(prisonNumber)
       }
 
       @Test
-      fun `will merge religions in NOMIS`() {
-        webTestClient.post().uri("/core-person/prisoner/$prisonNumber/merge")
-          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
-          .exchange()
-          .expectStatus().isNoContent
-
-        val corePersonMergeRequest: CorePersonMergeRequest = NomisApiMockServer.getRequestBody(
-          postRequestedFor(urlPathEqualTo("/core-person/$prisonNumber/merge")),
-        )
-
-        assertThat(corePersonMergeRequest).isEqualTo(
-          CorePersonMergeRequest(
-            listOf(
-              CorePersonReligionRequest(
-                beliefId = religionMappingDto[0].nomisId,
-              ),
-            ),
-          ),
-        )
-      }
-
-      @Test
-      fun `will track telemetry for the merge`() {
-        webTestClient.post().uri("/core-person/prisoner/$prisonNumber/merge")
+      fun `will track telemetry for the reconciliation`() {
+        webTestClient.post().uri("/core-person/reconciliation?activeOnly=true")
           .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
           .exchange()
 
         verify(telemetryClient).trackEvent(
-          eq("core-person-religion-merged-success"),
+          eq("coreperson-reports-reconciliation-report"),
           check {
-            assertThat(it["prisonNumber"]).isEqualTo(prisonNumber)
-          },
-          isNull(),
-        )
-        verify(telemetryClient).trackEvent(
-          eq("coreperson-person-merged-success"),
-          check {
-            assertThat(it["prisonNumber"]).isEqualTo(prisonNumber)
+            assertThat(it["activeOnly"]).isEqualTo("true")
           },
           isNull(),
         )
       }
     }
   }
-
-  private fun prisonReligion(
-    cprReligionId: String,
-    endDate: LocalDate? = null,
-    startDate: LocalDate,
-    code: ReligionCode = BAHA,
-  ) = PrisonReligion(
-    cprReligionId = cprReligionId,
-    religionCode = code,
-    changeReasonKnown = false,
-    startDate = startDate,
-    endDate = endDate,
-    current = endDate == null,
-    createDateTime = LocalDateTime.parse("2025-02-03T10:20:30"),
-    createUserId = "abcdef",
-  )
 }
