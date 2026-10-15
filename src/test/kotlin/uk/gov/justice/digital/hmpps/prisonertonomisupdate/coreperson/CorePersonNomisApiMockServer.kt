@@ -12,6 +12,7 @@ import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CorePerson
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateOffenderAddressResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateOffenderEmailResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateOffenderPhoneResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.NomisAudit
@@ -130,6 +131,17 @@ class CorePersonNomisApiMockServer(private val jsonMapper: JsonMapper) {
               ),
             ),
           ),
+      ),
+    )
+  }
+
+  fun stubCreateOffenderAddress(prisonNumber: String, addressId: Long = 54321L) {
+    nomisApi.stubFor(
+      post(urlEqualTo("/core-person/$prisonNumber/address")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.CREATED.value())
+          .withBody(jsonMapper.writeValueAsString(CreateOffenderAddressResponse(addressId = addressId))),
       ),
     )
   }

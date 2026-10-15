@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-15.2237.51733e8"
+    "version" : "2026-10-15.2242.cd5acff"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -9054,6 +9054,59 @@
           },
           "404" : {
             "description" : "Agency not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "agency-resource" ],
+        "summary" : "Deletes an agency",
+        "description" : "Deletes an agency along with its addresses, phone numbers, email addresses and local authority. For emergency use only - for a manual repair. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "deleteAgency",
+        "parameters" : [ {
+          "name" : "agencyId",
+          "in" : "path",
+          "description" : "Agency id (aka agencyId)",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Agency id (aka agencyId)",
+            "example" : "WWI"
+          },
+          "example" : "WWI"
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Agency deleted or did not exist"
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Agency can not be deleted as it is still referenced by other records, for example offender bookings, course activities or agency internal locations",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -46858,6 +46911,13 @@
       "PrisonerHoldProjection" : {
         "type" : "object",
         "properties" : {
+          "txnEntryDate" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "txnEntryDesc" : {
+            "type" : [ "string", "null" ]
+          },
           "clientUniqueRef" : {
             "type" : [ "string", "null" ]
           },
@@ -46872,13 +46932,6 @@
           "txnId" : {
             "type" : "integer",
             "format" : "int64"
-          },
-          "txnEntryDate" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "txnEntryDesc" : {
-            "type" : [ "string", "null" ]
           },
           "txnReferenceNumber" : {
             "type" : [ "string", "null" ]
