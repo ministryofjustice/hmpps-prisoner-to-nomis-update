@@ -47,9 +47,9 @@ class AgencyRegistersService(
       "courtId" to courtId,
     )
     if (!event.didOriginateInDPS()) {
-      telemetryClient.trackEvent("court-amend-ignored", telemetry)
+      telemetryClient.trackEvent("court-updated-ignored", telemetry)
     } else {
-      track("court-amend", telemetry) {
+      track("court-updated", telemetry) {
         val dpsAgency = requireNotNull(dpsService.getAgency(courtId)) { "Agency $courtId not found in DPS" }
         val response = nomisApiService.updateAgency(courtId, dpsAgency.toUpdateAgencyRequest())
         telemetry["nomisAgencyId"] = response.agencyId

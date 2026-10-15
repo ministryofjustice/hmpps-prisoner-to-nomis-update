@@ -147,7 +147,7 @@ class AgencyRegisterToNomisIntTest(
       @Test
       fun `will send telemetry event showing the event is ignored`() {
         verify(telemetryClient).trackEvent(
-          eq("court-amend-ignored"),
+          eq("court-updated-ignored"),
           check {
             assertThat(it["courtId"]).isEqualTo(courtId)
           },
@@ -192,7 +192,7 @@ class AgencyRegisterToNomisIntTest(
         @Test
         fun `will send telemetry event showing success`() {
           verify(telemetryClient).trackEvent(
-            eq("court-amend-success"),
+            eq("court-updated-success"),
             check {
               assertThat(it["courtId"]).isEqualTo(courtId)
               assertThat(it["nomisAgencyId"]).isEqualTo(courtId)
