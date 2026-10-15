@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-13.604.7f5ea48"
+    "version" : "2026-10-14.610.144253f"
   },
   "servers" : [ {
     "url" : "https://prison-register-dev.hmpps.service.justice.gov.uk",
@@ -6963,6 +6963,237 @@
         "summary" : "Get all county suggestions",
         "description" : "Returns all county suggestions as a flat list of code and description",
         "operationId" : "getCountySuggestions",
+        "responses" : {
+          "200" : {
+            "description" : "Successful Operation",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/CodeDescription"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the HMPPS_REGISTERS_API__MAINTAIN__RW role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reference-data/subareas" : {
+      "get" : {
+        "tags" : [ "reference-data-controller" ],
+        "summary" : "Get subareas by area",
+        "description" : "Returns subareas with the given parent area code as a flat list of code and description",
+        "operationId" : "getSubareasByArea",
+        "parameters" : [ {
+          "name" : "area",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Successful Operation",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/CodeDescription"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the HMPPS_REGISTERS_API__MAINTAIN__RW role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reference-data/regions" : {
+      "get" : {
+        "tags" : [ "reference-data-controller" ],
+        "summary" : "Get all regions",
+        "description" : "Returns all regions as a flat list of code and description",
+        "operationId" : "getRegions",
+        "responses" : {
+          "200" : {
+            "description" : "Successful Operation",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/CodeDescription"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the HMPPS_REGISTERS_API__MAINTAIN__RW role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reference-data/payroll-regions" : {
+      "get" : {
+        "tags" : [ "reference-data-controller" ],
+        "summary" : "Get all payroll regions",
+        "description" : "Returns all payroll regions as a flat list of code and description",
+        "operationId" : "getPayrollRegions",
+        "responses" : {
+          "200" : {
+            "description" : "Successful Operation",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/CodeDescription"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the HMPPS_REGISTERS_API__MAINTAIN__RW role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reference-data/local-authorities" : {
+      "get" : {
+        "tags" : [ "reference-data-controller" ],
+        "summary" : "Get all local authorities",
+        "description" : "Returns all local authorities as a flat list of code and description",
+        "operationId" : "getLocalAuthorities",
+        "responses" : {
+          "200" : {
+            "description" : "Successful Operation",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/CodeDescription"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the HMPPS_REGISTERS_API__MAINTAIN__RW role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reference-data/areas" : {
+      "get" : {
+        "tags" : [ "reference-data-controller" ],
+        "summary" : "Get areas",
+        "description" : "Returns areas as a flat list of code and description, optionally filtered by parent region code",
+        "operationId" : "getAreas",
+        "parameters" : [ {
+          "name" : "region",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
         "responses" : {
           "200" : {
             "description" : "Successful Operation",
