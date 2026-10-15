@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-06.604.052cbbc"
+    "version" : "2026-10-14.622.fd9be45"
   },
   "servers" : [ {
     "url" : "/",
@@ -478,7 +478,7 @@
             }
           },
           "409" : {
-            "description" : "The assessment has been closed or archived by a prisoner movement and can no longer be edited",
+            "description" : "The assessment has been closed or archived by a prisoner movement, or cancelled by a user, and can no longer be edited",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -577,7 +577,7 @@
             }
           },
           "409" : {
-            "description" : "The assessment has been closed or archived by a prisoner movement and can no longer be edited",
+            "description" : "The assessment has been closed or archived by a prisoner movement, or cancelled by a user, and can no longer be edited",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -676,7 +676,7 @@
             }
           },
           "409" : {
-            "description" : "The assessment has been closed or archived by a prisoner movement and can no longer be edited",
+            "description" : "The assessment has been closed or archived by a prisoner movement, or cancelled by a user, and can no longer be edited",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -1079,6 +1079,105 @@
           },
           "409" : {
             "description" : "An assessment is already in progress for this prisoner",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/csra-review/prisoner/{prisonerNumber}/assessment/{assessmentId}/cancel" : {
+      "post" : {
+        "tags" : [ "CSRA Assessment" ],
+        "summary" : "Cancels an unrated initial CSRA assessment",
+        "description" : "Archives an in-progress initial assessment before any provisional rating has been submitted. Answers are retained but no longer returned. Leaves the prisoner's current rating unchanged and allows a new assessment to be started. Repeating a successful cancellation returns the current rating without another audit. Requires role ROLE_CSRA_REVIEW__RW",
+        "operationId" : "cancelAssessment",
+        "parameters" : [ {
+          "name" : "prisonerNumber",
+          "in" : "path",
+          "description" : "The prisoner number",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "A1234BC"
+        }, {
+          "name" : "assessmentId",
+          "in" : "path",
+          "description" : "The in-progress assessment id returned by current-rating",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CsraAssessmentCancelRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "The assessment is cancelled; returns the current rating",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CsraCurrentRating"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid request - no prison supplied",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CsraCurrentRating"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CsraCurrentRating"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing ROLE_CSRA_REVIEW__RW or prison not active (PrisonNotActive). ROLE_PRISONER_CSRA__ROLLOUT_OVERRIDE bypasses the rollout check",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CsraCurrentRating"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "No such initial assessment for this prisoner",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CsraCurrentRating"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "CsraAssessmentNotCancellable: a rating has been submitted or the assessment is complete. CsraReviewNotWritable: a prisoner movement has already closed or archived it",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -3280,6 +3379,19 @@
         },
         "required" : [ "prisonId" ]
       },
+      "CsraAssessmentCancelRequest" : {
+        "type" : "object",
+        "description" : "What is needed to cancel an unrated initial CSRA assessment",
+        "properties" : {
+          "prisonId" : {
+            "type" : "string",
+            "description" : "The prison requesting cancellation, used for the rollout check",
+            "example" : "LEI",
+            "minLength" : 1
+          }
+        },
+        "required" : [ "prisonId" ]
+      },
       "DlqMessage" : {
         "type" : "object",
         "properties" : {
@@ -3808,7 +3920,7 @@
           "closureReason" : {
             "type" : [ "string", "null" ],
             "description" : "The reason the review was closed or archived. Only present if the review was closed or archived.",
-            "enum" : [ "NOT_COMPLETED_PRISONER_TRANSFER", "NOT_COMPLETED_PRISONER_RELEASE" ]
+            "enum" : [ "CANCELLED", "NOT_COMPLETED_PRISONER_TRANSFER", "NOT_COMPLETED_PRISONER_RELEASE" ]
           },
           "riskTo" : {
             "type" : "array",
