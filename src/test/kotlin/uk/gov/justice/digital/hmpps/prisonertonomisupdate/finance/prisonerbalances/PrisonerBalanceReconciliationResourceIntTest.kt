@@ -337,8 +337,9 @@ class PrisonerBalanceReconciliationResourceIntTest(
           .jsonPath("nomis.prisonNumber").isEqualTo(OFFENDER_NO)
           .jsonPath("dps.prisonNumber").isEqualTo(OFFENDER_NO)
           .jsonPath("dps.accounts[0].accountCode").isEqualTo(1001)
-          .jsonPath("differences[0].property").isEqualTo("prisoner-balances.accounts")
-          .jsonPath("differences[0].dps").isEqualTo(1)
+          .jsonPath("differences.length()").isEqualTo(1)
+          .jsonPath("differences[0].property").isEqualTo("prisoner-balances.accounts[1001].balance")
+          .jsonPath("differences[0].dps").isEqualTo(1.5)
           .jsonPath("differences[0].nomis").isEqualTo(0)
 
         // events suppressed when calling from endpoint
@@ -429,8 +430,9 @@ class PrisonerBalanceReconciliationResourceIntTest(
           .jsonPath("nomis.prisonNumber").isEqualTo(OFFENDER_NO)
           .jsonPath("dps.prisonNumber").isEqualTo(OFFENDER_NO)
           .jsonPath("dps.accounts[0].accountCode").isEqualTo(1001)
-          .jsonPath("differences[0].property").isEqualTo("prisoner-balances.accounts")
-          .jsonPath("differences[0].dps").isEqualTo(1)
+          .jsonPath("differences.length()").isEqualTo(1)
+          .jsonPath("differences[0].property").isEqualTo("prisoner-balances.accounts[1001].balance")
+          .jsonPath("differences[0].dps").isEqualTo(1.5)
           .jsonPath("differences[0].nomis").isEqualTo(0)
 
         verifyNoInteractions(telemetryClient)

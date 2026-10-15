@@ -248,7 +248,7 @@ class PrisonerBalanceReconciliationServiceTest {
     }
 
     @Test
-    fun `will return null and report telemetry when dps API returns not found`() = runTest {
+    fun `will report differences and telemetry when dps API returns not found`() = runTest {
       financeNomisApi.stubGetPrisonerAccounts(OFFENDER_ID, nomisPrisonerAccounts())
       dpsApi.stubGetPrisonerAccounts(OFFENDER_NO, status = NOT_FOUND)
 
@@ -257,6 +257,16 @@ class PrisonerBalanceReconciliationServiceTest {
           Difference(property = "prisoner-balances.accounts[1001].balance", dps = BigDecimal.ZERO, nomis = BigDecimal.valueOf(1.5)),
           Difference(property = "prisoner-balances.accounts[1001].holdBalance", dps = null, nomis = BigDecimal.valueOf(0.3)),
         ),
+      )
+
+      verify(telemetryClient).trackEvent(
+        eq("prisoner-balance-reports-reconciliation-mismatch"),
+        check {
+          assertThat(it).containsEntry("prisoner", OFFENDER_NO)
+          assertThat(it).containsEntry("prisoner-balances.accounts[1001].balance", "Difference(property=prisoner-balances.accounts[1001].balance, dps=0, nomis=1.5, id=null)")
+          assertThat(it).containsEntry("prisoner-balances.accounts[1001].holdBalance", "Difference(property=prisoner-balances.accounts[1001].holdBalance, dps=null, nomis=0.3, id=null)")
+        },
+        isNull(),
       )
     }
 
