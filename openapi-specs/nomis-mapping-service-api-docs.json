@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-14.885.84448e6"
+    "version" : "2026-10-14.888.7d56334"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -3323,6 +3323,63 @@
           "204" : {
             "description" : "All mappings deleted",
             "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/person-location/nomis-booking-ids/get-list" : {
+      "post" : {
+        "tags" : [ "person-location-migration-resource" ],
+        "summary" : "Retrieves the custodial series and external movement mappings for the supplied NOMIS booking ids",
+        "description" : "Bookings without a mapping are omitted from the response. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "getPersonLocationMappingsByBookingIds",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "integer",
+                  "format" : "int64"
+                }
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Mappings returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/PersonLocationBookingMappingDto"
+                  }
+                }
+              }
+            }
           },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
