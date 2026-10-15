@@ -31,6 +31,41 @@ class CorePersonContactMappingApiMockServer(private val jsonMapper: JsonMapper) 
     )
   }
 
+  fun stubCreateAddressMapping() {
+    mappingServer.stubFor(
+      post(urlEqualTo("/mapping/core-person/address"))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.CREATED.value()),
+        ),
+    )
+  }
+
+  fun stubCreateAddressMappingFollowedBySuccess(status: HttpStatus = HttpStatus.INTERNAL_SERVER_ERROR) {
+    mappingServer.stubFor(
+      post(urlEqualTo("/mapping/core-person/address"))
+        .inScenario("Retry Mapping Core Person Address Scenario")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(status.value())
+            .withBody(jsonMapper.writeValueAsString(ErrorResponse(status = status.value()))),
+        ).willSetStateTo("Cause Mapping Core Person Address Success"),
+    )
+    mappingServer.stubFor(
+      post(urlEqualTo("/mapping/core-person/address"))
+        .inScenario("Retry Mapping Core Person Address Scenario")
+        .whenScenarioStateIs("Cause Mapping Core Person Address Success")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.CREATED.value()),
+        ),
+    )
+  }
+
   fun stubGetContactMapping(cprContactId: String, mapping: CorePersonContactMappingDto? = contactMapping(cprContactId)) {
     mappingServer.stubFor(
       get(urlPathEqualTo("/mapping/core-person/contact/cpr-contact-id/$cprContactId"))

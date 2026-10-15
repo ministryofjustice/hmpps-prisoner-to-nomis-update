@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-10-14.5862.1e5f63f"
+    "version" : "2026-10-15.5889.43c2f9b"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -591,6 +591,63 @@
         } ]
       }
     },
+    "/person/prison/{prisonNumber}/addresses/{addressId}/phone-numbers/{phoneNumberId}" : {
+      "put" : {
+        "tags" : [ "Prison" ],
+        "description" : "Update phone number for a prisoner's address by Prison Number and address id. Role required is **ROLE_CORE_PERSON_RECORD_API__PRISON_RW**. ",
+        "operationId" : "updateAddressPhoneNumbersByPrisonNumber",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "A1234AA"
+        }, {
+          "name" : "addressId",
+          "in" : "path",
+          "description" : "The address id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "phoneNumberId",
+          "in" : "path",
+          "description" : "The phone number id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PrisonContactRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonContactResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "api-role" : [ ]
+        } ]
+      }
+    },
     "/person/prison/dps/{prisonNumber}/religion" : {
       "put" : {
         "tags" : [ "Prison" ],
@@ -1129,7 +1186,7 @@
       "get" : {
         "tags" : [ "Prison" ],
         "description" : "Retrieve the prisoner's addresses by Prison Number, most recent first. Role required is **ROLE_CORE_PERSON_RECORD_API__RO**. ",
-        "operationId" : "getAddressesByPrisonNumberDps",
+        "operationId" : "getAddressesByPrisonNumber",
         "parameters" : [ {
           "name" : "prisonNumber",
           "in" : "path",
@@ -1161,7 +1218,7 @@
       "post" : {
         "tags" : [ "Prison" ],
         "description" : "Add an address for the prisoner by Prison Number. Role required is **ROLE_CORE_PERSON_RECORD_API__PRISON_RW**. ",
-        "operationId" : "createAddressByPrisonNumberDps",
+        "operationId" : "createAddressByPrisonNumber",
         "parameters" : [ {
           "name" : "prisonNumber",
           "in" : "path",
@@ -1202,7 +1259,7 @@
       "post" : {
         "tags" : [ "Prison" ],
         "description" : "Add phone numbers for a prisoner's address by Prison Number and address id. Role required is **ROLE_CORE_PERSON_RECORD_API__PRISON_RW**. ",
-        "operationId" : "createAddressPhoneNumbersByPrisonNumberDps",
+        "operationId" : "createAddressPhoneNumbersByPrisonNumber",
         "parameters" : [ {
           "name" : "prisonNumber",
           "in" : "path",
@@ -1874,7 +1931,7 @@
         "type" : "object",
         "properties" : {
           "nomisAddressUsageId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The nomis address usage id",
             "example" : 5678
@@ -1913,7 +1970,7 @@
             "example" : "12345"
           }
         },
-        "required" : [ "addressUsageCode", "createDateTime", "createUserId", "isActive", "nomisAddressUsageId" ]
+        "required" : [ "addressUsageCode", "createDateTime", "createUserId", "isActive" ]
       },
       "RetryDlqResult" : {
         "type" : "object",

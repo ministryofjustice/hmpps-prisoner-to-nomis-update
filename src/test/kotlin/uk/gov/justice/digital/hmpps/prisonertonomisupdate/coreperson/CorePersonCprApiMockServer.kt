@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.Canon
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalSexualOrientation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalTitle
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.DpsPrisonRecord
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonReligion
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonReligionReadResponse
@@ -98,6 +99,21 @@ class CorePersonCprApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubGetPrisonerAddress(
+    prisonNumber: String,
+    cprAddressId: String,
+    response: PrisonAddress = prisonerAddress(),
+  ) {
+    stubFor(
+      get("/syscon-sync/person/$prisonNumber/address/$cprAddressId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(response),
+      ),
+    )
+  }
+
   fun stubGetPrisonerContact(
     prisonNumber: String,
     cprContactId: String,
@@ -131,6 +147,28 @@ fun prisonReligionReadResponse(prisonNumber: String, cprReligionId: String) = Pr
     comments = "Updated religion",
     cprReligionId = cprReligionId,
   ),
+)
+
+fun prisonerAddress() = PrisonAddress(
+  isPrimary = true,
+  isMail = false,
+  addressUsage = listOf(),
+  contacts = listOf(),
+  createDateTime = LocalDateTime.parse("2025-02-03T10:20:30"),
+  createUserId = "ME",
+  noFixedAbode = false,
+  startDate = LocalDate.parse("2020-02-26"),
+  endDate = LocalDate.parse("2023-07-15"),
+  postcode = "SW1H 9AJ",
+  subBuildingName = "Sub building 2",
+  buildingName = "Big House",
+  buildingNumber = "102",
+  thoroughfareName = "Petty France",
+  dependentLocality = "Westminster",
+  postTown = "London",
+  county = "Greater London",
+  countryCode = PrisonAddress.CountryCode.GBR,
+  comment = "Some comment",
 )
 
 fun prisonerContact(prisonNumber: String) = PrisonContact(

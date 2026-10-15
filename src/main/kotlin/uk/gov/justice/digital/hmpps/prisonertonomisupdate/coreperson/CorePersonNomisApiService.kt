@@ -11,6 +11,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.Core
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CorePerson
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CorePersonInsertReligionRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CorePersonMergeRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateOffenderAddressRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateOffenderAddressResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateOffenderEmailRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateOffenderEmailResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateOffenderPhoneRequest
@@ -52,6 +54,10 @@ class CorePersonNomisApiService(
     prisonNumber = toPrisonNumber,
     corePersonInsertReligionRequest = corePersonInsertReligionRequest,
   ).awaitSingle()
+
+  suspend fun createOffenderAddress(prisonNumber: String, request: CreateOffenderAddressRequest): CreateOffenderAddressResponse = api
+    .createOffenderAddress(prisonNumber, request)
+    .awaitSingle()
 
   suspend fun createOffenderPhone(prisonNumber: String, request: CreateOffenderPhoneRequest): CreateOffenderPhoneResponse = api
     .createOffenderPhone(prisonNumber, request)
