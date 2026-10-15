@@ -5,17 +5,21 @@ import org.springframework.stereotype.Service
 import tools.jackson.databind.json.JsonMapper
 import tools.jackson.module.kotlin.readValue
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonSynchronisationService.Companion.MappingTypes.CORE_PERSON_ADDRESS
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonSynchronisationService.Companion.MappingTypes.CORE_PERSON_CONTACT
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonSynchronisationService.Companion.MappingTypes.CORE_PERSON_RELIGION
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonReligionReadResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ParentEntityNotFoundRetry
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CorePersonAddressMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CorePersonContactMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CorePersonContactMappingDto.NomisContactType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ReligionMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CorePersonInsertReligionRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CorePersonMergeRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CorePersonReligionRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateOffenderAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateOffenderEmailRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateOffenderPhoneRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateOffenderEmailRequest
@@ -38,6 +42,7 @@ class CorePersonSynchronisationService(
   companion object {
     enum class MappingTypes(val entityName: String) {
       CORE_PERSON_RELIGION("core-person-religion"),
+      CORE_PERSON_ADDRESS("core-person-address"),
       CORE_PERSON_CONTACT("core-person-contact"),
       ;
 
@@ -109,6 +114,45 @@ class CorePersonSynchronisationService(
       corePersonNomisApiService.mergeReligions(toPrisonNumber, CorePersonMergeRequest(corePersonReligionRequests))
     }
     telemetryClient.trackEvent("${CORE_PERSON_RELIGION.entityName}-merged-success", telemetryMap)
+  }
+
+  suspend fun addressCreated(event: AddressEvent, eventSource: EventSource?) {
+    val prisonNumber = event.personReference.identifiers.first { it.type == "prisonNumber" }.value
+    val cprAddressId = event.additionalInformation.cprAddressId.toString()
+    val telemetryMap = mutableMapOf(
+      "prisonNumber" to prisonNumber,
+      "cprAddressId" to cprAddressId,
+    )
+
+    if (!eventSource.didOriginateInCpr()) {
+      telemetryClient.trackEvent("${CORE_PERSON_ADDRESS.entityName}-create-ignored", telemetryMap)
+      return
+    }
+
+    synchronise {
+      name = CORE_PERSON_ADDRESS.entityName
+      telemetryClient = this@CorePersonSynchronisationService.telemetryClient
+      retryQueueService = corePersonRetryQueueService
+      eventTelemetry = telemetryMap
+
+      checkMappingDoesNotExist {
+        corePersonMappingApiService.getByCprAddressIdOrNull(cprAddressId)
+      }
+      transform {
+        val cprAddress = corePersonCprApiService.getPrisonerAddress(prisonNumber, cprAddressId)
+        // TODO: need to handle address usage creation too
+        val nomisAddressId = corePersonNomisApiService.createOffenderAddress(prisonNumber, cprAddress.toNomisCreateRequest()).addressId
+        telemetryMap["nomisAddressId"] = nomisAddressId.toString()
+
+        CorePersonAddressMappingDto(
+          cprId = cprAddressId,
+          nomisId = nomisAddressId,
+          nomisPrisonNumber = prisonNumber,
+          mappingType = CorePersonAddressMappingDto.MappingType.CPR_CREATED,
+        )
+      }
+      saveMapping { corePersonMappingApiService.createAddressMapping(it) }
+    }
   }
 
   suspend fun contactCreated(event: ContactEvent, eventSource: EventSource?) {
@@ -243,7 +287,17 @@ class CorePersonSynchronisationService(
     val baseMapping: CreateMappingRetryMessage<*> = message.fromJson()
     when (MappingTypes.fromEntityName(baseMapping.entityName)) {
       CORE_PERSON_RELIGION -> createReligionMapping(message.fromJson())
+      CORE_PERSON_ADDRESS -> createAddressMapping(message.fromJson())
       CORE_PERSON_CONTACT -> createContactMapping(message.fromJson())
+    }
+  }
+
+  suspend fun createAddressMapping(message: CreateMappingRetryMessage<CorePersonAddressMappingDto>) {
+    corePersonMappingApiService.createAddressMapping(message.mapping).also {
+      telemetryClient.trackEvent(
+        "${CORE_PERSON_ADDRESS.entityName}-create-success",
+        message.telemetryAttributes,
+      )
     }
   }
 
@@ -285,6 +339,16 @@ class CorePersonSynchronisationService(
     val cprContactId: UUID,
   )
 
+  data class AddressEvent(
+    val eventType: String,
+    val additionalInformation: CprAddressInfo,
+    val personReference: PersonReferenceList,
+  )
+
+  data class CprAddressInfo(
+    val cprAddressId: UUID,
+  )
+
   private inline fun <reified T> String.fromJson(): T = jsonMapper.readValue(this)
 }
 
@@ -293,6 +357,30 @@ private fun PrisonReligionReadResponse.toNomisCreateRequest() = CorePersonInsert
   startDate = religion.startDate,
   comments = religion.comments,
 )
+
+private fun PrisonAddress.toNomisCreateRequest() = CreateOffenderAddressRequest(
+  primaryAddress = isPrimary,
+  mailAddress = isMail ?: false,
+  flat = subBuildingName,
+  premise = buildingName,
+  street = thoroughfareName,
+  locality = dependentLocality,
+  postcode = postcode,
+  city = postTown,
+  county = county,
+  countryCode = countryCode?.value?.toNomisCountryCode(),
+  noFixedAddress = noFixedAbode,
+  comment = comment,
+  startDate = startDate,
+  endDate = endDate,
+)
+
+// NOMIS and CPR have slightly different country codes so need to translate
+private fun String.toNomisCountryCode(): String = when (this) {
+  "IMN" -> "IOM"
+  "ROU" -> "ROM"
+  else -> this
+}
 
 // NOMIS and CPR have slightly different phone type codes so need to translate
 private fun PrisonContact.Type.toNomisPhoneType(): String = if (this == PrisonContact.Type.MOBILE) "MOB" else value

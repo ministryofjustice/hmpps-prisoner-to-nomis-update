@@ -39,6 +39,7 @@ class CorePersonDomainEventListener(
     when (eventType) {
       "core-person-record.prison.religion.created" -> corePersonSynchronisationService.religionCreated(message.fromJson(), eventSource)
       "core-person-record.prison.record.merged" -> corePersonMergeService.mergePerson(message.fromJson())
+      "core-person-record.prison.address.created" -> corePersonSynchronisationService.addressCreated(message.fromJson(), eventSource)
       "core-person-record.prison.contact.created" -> corePersonSynchronisationService.contactCreated(message.fromJson(), eventSource)
       "core-person-record.prison.contact.updated" -> corePersonSynchronisationService.contactUpdated(message.fromJson(), eventSource)
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
