@@ -110,7 +110,7 @@ class PrisonerBalanceReconciliationService(
     val dpsAccounts = dpsApiService.getPrisonerAccounts(nomisAccounts.prisonNumber)
     val nomisFields = BalanceFields(
       prisonNumber = nomisAccounts.prisonNumber,
-      accounts = nomisAccounts.accounts.filter { it.balance.compareTo(BigDecimal.ZERO) != 0 }
+      accounts = nomisAccounts.accounts
         .map {
           AccountFields(
             accountCode = it.accountCode.toInt(),
@@ -121,7 +121,7 @@ class PrisonerBalanceReconciliationService(
     )
     val dpsFields = BalanceFields(
       prisonNumber = nomisAccounts.prisonNumber,
-      accounts = dpsAccounts.filter { it.value.totalBalance.compareTo(BigDecimal.ZERO) != 0 }
+      accounts = dpsAccounts
         .map {
           AccountFields(
             accountCode = it.key.toInt(),
@@ -136,7 +136,7 @@ class PrisonerBalanceReconciliationService(
     // log.info("$rootOffenderId compared\n$dpsFields with\n$nomisFields with result\n$differenceList")
 
     if (differenceList.isNotEmpty()) {
-      // log.info("Differences: ${objectMapper.writeValueAsString(differenceList)}")
+      log.info("Prisoner balance differences: $differenceList")
       if (isRetry) {
         telemetryClient.trackEventOrSuppress(
           "$TELEMETRY_PRISONER_PREFIX-mismatch",
@@ -172,21 +172,6 @@ class PrisonerBalanceReconciliationService(
     }
   }.getOrNull()
 
-  private fun <T> compareLists(dpsList: List<T>, nomisList: List<T>, parentProperty: String): List<Difference> {
-    val differences = mutableListOf<Difference>()
-    val maxSize = maxOf(dpsList.size, nomisList.size)
-    if (dpsList.size != nomisList.size) {
-      differences.add(Difference(parentProperty, dpsList.size, nomisList.size))
-    } else {
-      for (i in 0 until maxSize) {
-        val dpsObj = dpsList.getOrNull(i)
-        val nomisObj = nomisList.getOrNull(i)
-        differences.addAll(compareObjects(dpsObj, nomisObj, "$parentProperty[$i]"))
-      }
-    }
-    return differences
-  }
-
   private fun compareObjects(dpsObj: Any?, nomisObj: Any?, parentProperty: String): List<Difference> {
     if (dpsObj == null && nomisObj == null) return emptyList()
     if (dpsObj == null || nomisObj == null || dpsObj::class != nomisObj::class) return listOf(Difference(parentProperty, dpsObj, nomisObj))
@@ -200,16 +185,8 @@ class PrisonerBalanceReconciliationService(
         if (dpsObj.prisonNumber != nomisObj.prisonNumber) {
           differences.add(Difference("$parentProperty.prisonNumber", dpsObj.prisonNumber, nomisObj.prisonNumber))
         }
-        val sortedDpsAccounts = dpsObj.accounts.sortedWith(
-          compareBy<AccountFields> { it.accountCode }
-            .thenBy { it.balance },
-        )
-        val sortedNomisAccounts = nomisObj.accounts.sortedWith(
-          compareBy<AccountFields> { it.accountCode }
-            .thenBy { it.balance },
-        )
 
-        differences.addAll(compareLists(sortedDpsAccounts, sortedNomisAccounts, "$parentProperty.accounts"))
+        differences.addAll(compareAccounts(dpsObj.accounts, nomisObj.accounts, "$parentProperty.accounts"))
       }
 
       is AccountFields -> {
@@ -235,6 +212,47 @@ class PrisonerBalanceReconciliationService(
         }
       }
     }
+    return differences
+  }
+
+  private fun compareAccounts(dpsAccounts: List<AccountFields>, nomisAccounts: List<AccountFields>, parentProperty: String): List<Difference> {
+    val differences = mutableListOf<Difference>()
+
+    val dpsAccountsByCode = dpsAccounts.associateBy { it.accountCode }
+    val nomisAccountsByCode = nomisAccounts.associateBy { it.accountCode }
+
+    (dpsAccountsByCode.keys + nomisAccountsByCode.keys)
+      .sorted()
+      .forEach { accountCode ->
+        val dpsAccount = dpsAccountsByCode[accountCode]
+        val nomisAccount = nomisAccountsByCode[accountCode]
+
+        val dpsBalance = dpsAccount?.balance ?: BigDecimal.ZERO
+        val nomisBalance = nomisAccount?.balance ?: BigDecimal.ZERO
+        val dpsHoldBalance = dpsAccount?.holdBalance ?: BigDecimal.ZERO
+        val nomisHoldBalance = nomisAccount?.holdBalance ?: BigDecimal.ZERO
+
+        if (reconcileBalances && dpsBalance.compareTo(nomisBalance) != 0) {
+          differences.add(
+            Difference(
+              "$parentProperty[$accountCode].balance",
+              dpsBalance,
+              nomisBalance,
+            ),
+          )
+        }
+
+        if (reconcileHolds && dpsHoldBalance.compareTo(nomisHoldBalance) != 0) {
+          differences.add(
+            Difference(
+              "$parentProperty[$accountCode].holdBalance",
+              dpsAccount?.holdBalance,
+              nomisAccount?.holdBalance,
+            ),
+          )
+        }
+      }
+
     return differences
   }
 
