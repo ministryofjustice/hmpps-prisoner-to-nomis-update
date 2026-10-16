@@ -109,7 +109,7 @@ class CorePersonAddressToNomisIntTest(
             postRequestedFor(urlPathEqualTo("/core-person/$prisonNumber/address"))
               .withRequestBodyJsonPath("primaryAddress", true)
               .withRequestBodyJsonPath("mailAddress", false)
-              .withRequestBodyJsonPath("flat", "Sub building 2")
+              .withRequestBodyJsonPath("flat", "102")
               .withRequestBodyJsonPath("premise", "Big House")
               .withRequestBodyJsonPath("street", "Petty France")
               .withRequestBodyJsonPath("locality", "Westminster")
