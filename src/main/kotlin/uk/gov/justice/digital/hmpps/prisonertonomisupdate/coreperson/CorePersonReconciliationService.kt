@@ -211,7 +211,7 @@ class CorePersonReconciliationService(
           !Objects.equals(n.startDate, cpr.startDate) -> "$i-startDate:nomis=${n.startDate}, cpr=${cpr.startDate}"
           !Objects.equals(n.endDate, cpr.endDate) -> "$i-endDate:nomis=${n.endDate}, cpr=${cpr.endDate}"
           n.postcode != cpr.postcode -> "$i-postcode:nomis=${n.postcode}, cpr=${cpr.postcode}"
-          n.subBuildingName != cpr.subBuildingName -> "$i-subBuildingName:nomis=${n.subBuildingName}, cpr=${cpr.subBuildingName}"
+          n.buildingNumber != cpr.buildingNumber -> "$i-buildingNumber:nomis=${n.buildingNumber}, cpr=${cpr.buildingNumber}"
           n.buildingName != cpr.buildingName -> "$i-buildingName:nomis=${n.buildingName}, cpr=${cpr.buildingName}"
           n.thoroughfareName != cpr.thoroughfareName -> "$i-thoroughfareName:nomis=${n.thoroughfareName}, cpr=${cpr.thoroughfareName}"
           n.dependentLocality != cpr.dependentLocality -> "$i-dependentLocality:nomis=${n.dependentLocality}, cpr=${cpr.dependentLocality}"
@@ -284,7 +284,7 @@ private fun CanonicalAddress.toPrisonerAddress() = PrisonerAddress(
   startDate = startDate?.let { LocalDate.parse(it) },
   endDate = endDate?.let { LocalDate.parse(it) },
   postcode = postcode,
-  subBuildingName = subBuildingName,
+  buildingNumber = buildingNumber,
   buildingName = buildingName,
   thoroughfareName = thoroughfareName,
   dependentLocality = dependentLocality,
@@ -322,7 +322,7 @@ private fun OffenderAddress.toPrisonerAddress() = PrisonerAddress(
   startDate = startDate,
   endDate = endDate,
   postcode = postcode,
-  subBuildingName = flat,
+  buildingNumber = flat,
   buildingName = premise,
   thoroughfareName = street,
   dependentLocality = locality,
@@ -372,7 +372,7 @@ data class PrisonerAddress(
   val startDate: LocalDate?,
   val endDate: LocalDate?,
   val postcode: String?,
-  val subBuildingName: String?,
+  val buildingNumber: String?,
   val buildingName: String?,
   val thoroughfareName: String?,
   val dependentLocality: String?,
