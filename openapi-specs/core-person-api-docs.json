@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-10-15.5889.43c2f9b"
+    "version" : "2026-10-16.5900.02c81c3"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -542,6 +542,40 @@
         } ]
       }
     },
+    "/person/prison/{prisonNumber}/religion" : {
+      "put" : {
+        "tags" : [ "Prison" ],
+        "description" : "Update the prisoner's religion by Prison Number. Role required is **ROLE_CORE_PERSON_RECORD_API__PRISON_RW**. ",
+        "operationId" : "updateReligionHistoryByPrisonNumber",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "A1234AA"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PrisonReligionInsertRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        },
+        "security" : [ {
+          "api-role" : [ ]
+        } ]
+      }
+    },
     "/person/prison/{prisonNumber}/contacts/{contactId}" : {
       "put" : {
         "tags" : [ "Prison" ],
@@ -591,11 +625,11 @@
         } ]
       }
     },
-    "/person/prison/{prisonNumber}/addresses/{addressId}/phone-numbers/{phoneNumberId}" : {
+    "/person/prison/{prisonNumber}/addresses/{addressId}/contacts/{contactId}" : {
       "put" : {
         "tags" : [ "Prison" ],
-        "description" : "Update phone number for a prisoner's address by Prison Number and address id. Role required is **ROLE_CORE_PERSON_RECORD_API__PRISON_RW**. ",
-        "operationId" : "updateAddressPhoneNumbersByPrisonNumber",
+        "description" : "Update contacts for a prisoner's address by Prison Number and address id. Role required is **ROLE_CORE_PERSON_RECORD_API__PRISON_RW**. ",
+        "operationId" : "updateAddressContactsByPrisonNumber",
         "parameters" : [ {
           "name" : "prisonNumber",
           "in" : "path",
@@ -613,9 +647,9 @@
             "type" : "string"
           }
         }, {
-          "name" : "phoneNumberId",
+          "name" : "contactId",
           "in" : "path",
-          "description" : "The phone number id",
+          "description" : "The contact id",
           "required" : true,
           "schema" : {
             "type" : "string"
@@ -641,40 +675,6 @@
                 }
               }
             }
-          }
-        },
-        "security" : [ {
-          "api-role" : [ ]
-        } ]
-      }
-    },
-    "/person/prison/dps/{prisonNumber}/religion" : {
-      "put" : {
-        "tags" : [ "Prison" ],
-        "description" : "Update the prisoner's religion by Prison Number. Role required is **ROLE_CORE_PERSON_RECORD_API__PRISON_RW**. ",
-        "operationId" : "updateReligionHistoryByPrisonNumberDps",
-        "parameters" : [ {
-          "name" : "prisonNumber",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          },
-          "example" : "A1234AA"
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/PrisonReligionInsertRequest"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "204" : {
-            "description" : "No Content"
           }
         },
         "security" : [ {
@@ -1255,11 +1255,11 @@
         } ]
       }
     },
-    "/person/prison/{prisonNumber}/addresses/{addressId}/phone-numbers" : {
+    "/person/prison/{prisonNumber}/addresses/{addressId}/contacts" : {
       "post" : {
         "tags" : [ "Prison" ],
-        "description" : "Add phone numbers for a prisoner's address by Prison Number and address id. Role required is **ROLE_CORE_PERSON_RECORD_API__PRISON_RW**. ",
-        "operationId" : "createAddressPhoneNumbersByPrisonNumber",
+        "description" : "Add contacts to a prisoner's address by Prison Number and address id. Role required is **ROLE_CORE_PERSON_RECORD_API__PRISON_RW**. ",
+        "operationId" : "createAddressContactsByPrisonNumber",
         "parameters" : [ {
           "name" : "prisonNumber",
           "in" : "path",
@@ -1500,45 +1500,11 @@
         }
       }
     },
-    "/person/prison/dps/{prisonNumber}" : {
-      "get" : {
-        "tags" : [ "Prison" ],
-        "description" : "**NOTE: Use this only if you want to retrieve Prison Religion history & Alias References.**\n\nRetrieve person record by Prison Number. Role required is **ROLE_CORE_PERSON_RECORD_API__RO** . For Identifiers the crn, prisonNumber, defendantId, cids come from all records related to this person. The other Identifiers come from just this person **cprUUID is not supplied on this endpoint.** In addition to the person data being returned, the response also includes a list of the prison religions associated with the person and a prison specific representation of alias & identifiers.",
-        "operationId" : "getByPrisonNumberDps",
-        "parameters" : [ {
-          "name" : "prisonNumber",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          },
-          "example" : "A1234AA"
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/DpsPrisonRecord"
-                }
-              }
-            }
-          },
-          "301" : {
-            "description" : "Permanent Redirect"
-          }
-        },
-        "security" : [ {
-          "api-role" : [ ]
-        } ]
-      }
-    },
-    "/person/prison/dps/{prisonNumber}/religion-history" : {
+    "/person/prison/{prisonNumber}/religion-history" : {
       "get" : {
         "tags" : [ "Prison" ],
         "description" : "Retrieve prison religion history by Prison Number. Role required is **ROLE_CORE_PERSON_RECORD_API__RO**. ",
-        "operationId" : "getReligionHistoryByPrisonNumberDps",
+        "operationId" : "getReligionHistoryByPrisonNumber",
         "parameters" : [ {
           "name" : "prisonNumber",
           "in" : "path",
@@ -1568,7 +1534,7 @@
         } ]
       }
     },
-    "/person/prison/dps/religion-codes" : {
+    "/person/prison/religion-codes" : {
       "get" : {
         "tags" : [ "Prison" ],
         "description" : "Retrieve list of prison religion codes. Role required is **ROLE_CORE_PERSON_RECORD_API__RO**. ",
@@ -1594,6 +1560,40 @@
                 }
               }
             }
+          }
+        },
+        "security" : [ {
+          "api-role" : [ ]
+        } ]
+      }
+    },
+    "/person/prison/dps/{prisonNumber}" : {
+      "get" : {
+        "tags" : [ "Prison" ],
+        "description" : "**NOTE: Use this only if you want to retrieve Prison Religion history & Alias References.**\n\nRetrieve person record by Prison Number. Role required is **ROLE_CORE_PERSON_RECORD_API__RO** . For Identifiers the crn, prisonNumber, defendantId, cids come from all records related to this person. The other Identifiers come from just this person **cprUUID is not supplied on this endpoint.** In addition to the person data being returned, the response also includes a list of the prison religions associated with the person and a prison specific representation of alias & identifiers.",
+        "operationId" : "getByPrisonNumberDps",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "A1234AA"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DpsPrisonRecord"
+                }
+              }
+            }
+          },
+          "301" : {
+            "description" : "Permanent Redirect"
           }
         },
         "security" : [ {
@@ -2292,6 +2292,28 @@
           }
         }
       },
+      "PrisonReligionInsertRequest" : {
+        "type" : "object",
+        "description" : "Insert to prisoner religion",
+        "properties" : {
+          "religionCode" : {
+            "type" : "string",
+            "description" : "The religion code",
+            "enum" : [ "ADV", "AGNO", "APO", "ATHE", "BAHA", "BAPT", "BLAC", "BUDD", "CALV", "CCOG", "CE", "CHJCLDS", "CHRODX", "CHRST", "CHSC", "CINW", "COFE", "COFI", "COFN", "COFS", "CONG", "COPT", "CSW", "DRU", "EODX", "EORTH", "EPIS", "ETHO", "EVAN", "GOSP", "GROX", "HARE", "HIND", "HNDHAR", "HUM", "JAIN", "JEHV", "JEW", "LUTH", "METH", "MORM", "MOS", "MUSOTH", "NIL", "NONC", "NONP", "OORTH", "ORTH", "OTH", "PAG", "PAGDRU", "PENT", "PRES", "PROT", "QUAK", "RAST", "RC", "RUSS", "SALV", "SATN", "SCIE", "SDAY", "SHIA", "SHIN", "SHNTAO", "SIKH", "SPIR", "SUNI", "TAO", "TPRNTS", "UNIF", "UNIT", "UNKN", "UR", "WELS", "ZORO" ],
+            "example" : "ZORO"
+          },
+          "comment" : {
+            "type" : [ "string", "null" ],
+            "description" : "Reason for the religion change",
+            "example" : "Some information"
+          },
+          "userId" : {
+            "type" : "string",
+            "description" : "The user who made the change"
+          }
+        },
+        "required" : [ "religionCode", "userId" ]
+      },
       "PrisonContactRequest" : {
         "type" : "object",
         "description" : "Create or update a prisoner contact",
@@ -2379,28 +2401,6 @@
           }
         },
         "required" : [ "contactId", "type", "value" ]
-      },
-      "PrisonReligionInsertRequest" : {
-        "type" : "object",
-        "description" : "Insert to prisoner religion",
-        "properties" : {
-          "religionCode" : {
-            "type" : "string",
-            "description" : "The religion code",
-            "enum" : [ "ADV", "AGNO", "APO", "ATHE", "BAHA", "BAPT", "BLAC", "BUDD", "CALV", "CCOG", "CE", "CHJCLDS", "CHRODX", "CHRST", "CHSC", "CINW", "COFE", "COFI", "COFN", "COFS", "CONG", "COPT", "CSW", "DRU", "EODX", "EORTH", "EPIS", "ETHO", "EVAN", "GOSP", "GROX", "HARE", "HIND", "HNDHAR", "HUM", "JAIN", "JEHV", "JEW", "LUTH", "METH", "MORM", "MOS", "MUSOTH", "NIL", "NONC", "NONP", "OORTH", "ORTH", "OTH", "PAG", "PAGDRU", "PENT", "PRES", "PROT", "QUAK", "RAST", "RC", "RUSS", "SALV", "SATN", "SCIE", "SDAY", "SHIA", "SHIN", "SHNTAO", "SIKH", "SPIR", "SUNI", "TAO", "TPRNTS", "UNIF", "UNIT", "UNKN", "UR", "WELS", "ZORO" ],
-            "example" : "ZORO"
-          },
-          "comment" : {
-            "type" : [ "string", "null" ],
-            "description" : "Reason for the religion change",
-            "example" : "Some information"
-          },
-          "userId" : {
-            "type" : "string",
-            "description" : "The user who made the change"
-          }
-        },
-        "required" : [ "religionCode", "userId" ]
       },
       "PrisonReligionHistory" : {
         "type" : "object",
@@ -3730,6 +3730,21 @@
           }
         }
       },
+      "ReferenceDataResponse" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "active" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "active", "code", "description" ]
+      },
       "DpsPrisonRecord" : {
         "type" : "object",
         "properties" : {
@@ -3828,21 +3843,6 @@
           }
         },
         "required" : [ "addresses", "aliases", "contacts", "ethnicity", "identifiers", "nationalities", "religion", "religionHistory", "sex", "sexualOrientation", "title" ]
-      },
-      "ReferenceDataResponse" : {
-        "type" : "object",
-        "properties" : {
-          "code" : {
-            "type" : "string"
-          },
-          "description" : {
-            "type" : "string"
-          },
-          "active" : {
-            "type" : "boolean"
-          }
-        },
-        "required" : [ "active", "code", "description" ]
       },
       "MatchDetailsResponse" : {
         "type" : "object",
