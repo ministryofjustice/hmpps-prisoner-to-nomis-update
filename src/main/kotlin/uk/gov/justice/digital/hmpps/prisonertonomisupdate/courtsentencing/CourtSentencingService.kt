@@ -694,18 +694,16 @@ class CourtSentencingService(
     }
   }
 
-  suspend fun createChargeMappingsRetry(message: CreateMappingRetryMessage<CourtCaseBatchUpdateAndCreateMappingsWrapper>) = with(message) {
-    createChargeMappingsAndNotifyClonedCases(
-      mappingsWrapper = mapping,
-      offenderNo = mapping.offenderNo,
-      telemetry = telemetryAttributes,
-    ).also {
-      telemetryClient.trackEvent(
-        "charge-create-mapping-retry-success",
-        telemetryAttributes,
-        null,
-      )
-    }
+  suspend fun createChargeMappingsRetry(message: CreateMappingRetryMessage<CourtChargeBatchUpdateMappingDto>) = with(message) {
+    courtCaseMappingService.createChargeBatchUpdateMapping(
+      this.mapping.also {
+        telemetryClient.trackEvent(
+          "charge-create-mapping-retry-success",
+          telemetryAttributes,
+          null,
+        )
+      },
+    )
   }
 
   suspend fun createAppearanceMappingsRetry(message: CreateMappingRetryMessage<CourtCaseBatchUpdateAndCreateMappingsWrapper>) = with(message) {
