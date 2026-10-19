@@ -6,8 +6,10 @@ import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.api.CourtResourceApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.api.HospitalResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.api.LegacySyncResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.CourtDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.HospitalDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.LegacyAgencyDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
@@ -23,8 +25,11 @@ class AgencyRegistersDpsApiService(
 
   private val api = LegacySyncResourceApi(webClient)
   private val courtApi = CourtResourceApi(webClient)
+  private val hospitalApi = HospitalResourceApi(webClient)
 
-  suspend fun getAgency(agencyId: String): LegacyAgencyDto? = api.prepare(api.getAgencyDetailsRequestConfig(agencyId)).retrieve().awaitBodyOrNullForNotFound(retrySpec)
+  suspend fun getAgency(agencyId: String): LegacyAgencyDto? = api.prepare(api.getAgencyRequestConfig(agencyId)).retrieve().awaitBodyOrNullForNotFound(retrySpec)
+  suspend fun getAgencyForReconciliation(agencyId: String): LegacyAgencyDto? = api.prepare(api.getAgencyDetailsRequestConfig(agencyId)).retrieve().awaitBodyOrNullForNotFound(retrySpec)
   suspend fun getAgencyIds() = api.getAllAgencyIds().retryWhen(retrySpec).awaitSingle()
   suspend fun getCourt(agencyId: String): CourtDto = courtApi.getCourtFromId(agencyId).awaitSingle()
+  suspend fun getHospital(agencyId: String): HospitalDto = hospitalApi.getHospitalFromId(agencyId).awaitSingle()
 }

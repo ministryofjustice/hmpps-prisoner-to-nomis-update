@@ -202,6 +202,51 @@ class AgencyNomisApiMockServer(private val jsonMapper: JsonMapper) {
     fun updateAgencyAddressesResponse() = AgencyAddressesResponse(
       addresses = listOf(agencyAddress()),
     )
+
+    fun hospitalAgencyResponse() = AgencyResponse(
+      agencyId = "HHOSP1",
+      description = "Hallamshire Hospital",
+      type = CodeDescription(code = "HSHOSP", description = "Hospital"),
+      active = true,
+      updateAllowed = true,
+      localAuthorities = listOf(CodeDescription(code = "00CG", description = "Sheffield City Council")),
+      addresses = emptyList(),
+      phones = emptyList(),
+      emailAddresses = emptyList(),
+      longDescription = "Hallamshire Hospital, Sheffield",
+      deactivationDate = null,
+      area = CodeDescription(code = "52", description = "South Yorkshire"),
+      region = CodeDescription(code = "NEAST", description = "North East"),
+      nomsRegion = CodeDescription(code = "YOHUM", description = "Yorkshire and Humberside"),
+      payrollRegion = CodeDescription(code = "YP", description = "Young People"),
+      cjitCode = "C00SH00",
+    )
+
+    fun createHospitalAgencyRequest() = CreateAgencyRequest(
+      agencyId = "HHOSP1",
+      description = "Hallamshire Hospital",
+      typeCode = "HSHOSP",
+      active = true,
+      localAuthorityCodes = listOf("00CG"),
+      longDescription = "Hallamshire Hospital, Sheffield",
+      areaCode = "52",
+      regionCode = "NEAST",
+      nomsRegionCode = "YOHUM",
+      payrollRegionCode = "YP",
+      cjitCode = "C00SH00",
+    )
+
+    fun updateHospitalAgencyRequest() = UpdateAgencyRequest(
+      description = "Hallamshire Hospital",
+      active = true,
+      localAuthorityCodes = listOf("00CG"),
+      longDescription = "Hallamshire Hospital, Sheffield",
+      areaCode = "52",
+      regionCode = "NEAST",
+      nomsRegionCode = "YOHUM",
+      payrollRegionCode = "YP",
+      cjitCode = "C00SH00",
+    )
   }
 
   fun stubGetAgency(

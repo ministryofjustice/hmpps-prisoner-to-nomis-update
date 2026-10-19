@@ -43,9 +43,9 @@ class AgencyRegistersReconciliationIntTest(
 
       nomisApi.stubGetAgency("SHEFCC", agencyResponse().copy(agencyId = "SHEFCC", description = "Sheffield Crown Court"))
       nomisApi.stubGetAgency("SHEFMC", agencyResponse().copy(agencyId = "SHEFMC", description = "Sheffield Magistrates Court"))
-      dpsApi.stubGetAgency("SHEFCC", legacyAgencyDto().copy(name = "Sheffield Crown Court"))
-      dpsApi.stubGetAgency("SHEFMC", legacyAgencyDto().copy(name = "Sheffield Magistrates Court"))
-      dpsApi.stubGetAgency("SHEFYC", legacyAgencyDto().copy(name = "Sheffield Youth Court"))
+      dpsApi.stubGetAgencyForReconciliation("SHEFCC", legacyAgencyDto().copy(name = "Sheffield Crown Court"))
+      dpsApi.stubGetAgencyForReconciliation("SHEFMC", legacyAgencyDto().copy(name = "Sheffield Magistrates Court"))
+      dpsApi.stubGetAgencyForReconciliation("SHEFYC", legacyAgencyDto().copy(name = "Sheffield Youth Court"))
     }
 
     @Test

@@ -45,7 +45,7 @@ class AgencyRegistersDpsApiServiceTest {
       apiService.getAgency("SHEFCC")
 
       agencyRegistersApi.verify(
-        getRequestedFor(urlPathEqualTo("/legacy/reconciliation/SHEFCC")),
+        getRequestedFor(urlPathEqualTo("/legacy/SHEFCC")),
       )
     }
 
@@ -61,6 +61,34 @@ class AgencyRegistersDpsApiServiceTest {
       agencyRegistersApi.stubGetAgency("SHEFCC", errorHttpStatus = HttpStatus.NOT_FOUND)
 
       assertThat(apiService.getAgency("SHEFCC")).isNull()
+    }
+  }
+
+  @Nested
+  inner class GetAgencyForReconciliation {
+    @Test
+    fun `will call the endpoint`() = runTest {
+      agencyRegistersApi.stubGetAgencyForReconciliation("SHEFCC")
+
+      apiService.getAgencyForReconciliation("SHEFCC")
+
+      agencyRegistersApi.verify(
+        getRequestedFor(urlPathEqualTo("/legacy/reconciliation/SHEFCC")),
+      )
+    }
+
+    @Test
+    fun `will return agency from the endpoint`() = runTest {
+      agencyRegistersApi.stubGetAgencyForReconciliation("SHEFCC")
+
+      assertThat(apiService.getAgencyForReconciliation("SHEFCC")).isNotNull
+    }
+
+    @Test
+    fun `will return null from the endpoint when not found`() = runTest {
+      agencyRegistersApi.stubGetAgencyForReconciliation("SHEFCC", errorHttpStatus = HttpStatus.NOT_FOUND)
+
+      assertThat(apiService.getAgencyForReconciliation("SHEFCC")).isNull()
     }
   }
 

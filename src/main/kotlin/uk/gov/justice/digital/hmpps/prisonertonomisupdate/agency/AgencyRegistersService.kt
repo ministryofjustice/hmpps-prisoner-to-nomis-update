@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.AgencyAddressDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.LegacyAgencyAddressDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.LegacyAgencyDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAgencyAddressRequest
@@ -34,8 +35,8 @@ class AgencyRegistersService(
       telemetryClient.trackEvent("court-create-ignored", telemetry)
     } else {
       track("court-create", telemetry) {
-        val dpsAgency = requireNotNull(dpsService.getAgency(courtId)) { "Agency $courtId not found in DPS" }
-        val response = nomisApiService.createAgency(dpsAgency.toCreateAgencyRequest(courtId))
+        val dpsAgency = requireNotNull(dpsService.getAgency(courtId)) { "Court $courtId not found in DPS" }
+        val response = nomisApiService.createAgency(dpsAgency.toCreateAgencyRequest(courtId, typeCode = "CRT"))
         telemetry["nomisAgencyId"] = response.agencyId
       }
     }
@@ -50,7 +51,7 @@ class AgencyRegistersService(
       telemetryClient.trackEvent("court-updated-ignored", telemetry)
     } else {
       track("court-updated", telemetry) {
-        val dpsAgency = requireNotNull(dpsService.getAgency(courtId)) { "Agency $courtId not found in DPS" }
+        val dpsAgency = requireNotNull(dpsService.getAgency(courtId)) { "Court $courtId not found in DPS" }
         val response = nomisApiService.updateAgency(courtId, dpsAgency.toUpdateAgencyRequest())
         telemetry["nomisAgencyId"] = response.agencyId
       }
@@ -68,9 +69,9 @@ class AgencyRegistersService(
       telemetryClient.trackEvent("court-email-create-ignored", telemetry)
     } else {
       track("court-email-create", telemetry) {
-        val dpsCourt = dpsService.getCourt(courtId)
-        val agencyEmail = dpsCourt.emailAddresses.find { it.id == dpsEmailId }!!
-        val response = nomisApiService.createAgencyEmail(courtId, CreateAgencyEmailAddressRequest(emailAddress = agencyEmail.address!!))
+        val dpsAgency = requireNotNull(dpsService.getAgency(courtId)) { "Court $courtId not found in DPS" }
+        val agencyEmail = requireNotNull(dpsAgency.emailAddresses.find { it.id == dpsEmailId }) { "Email $dpsEmailId not found on court $courtId in DPS" }
+        val response = nomisApiService.createAgencyEmail(courtId, CreateAgencyEmailAddressRequest(emailAddress = agencyEmail.address))
         telemetry["nomisEmailId"] = response.id.toString()
       }
     }
@@ -87,10 +88,10 @@ class AgencyRegistersService(
       telemetryClient.trackEvent("court-email-amended-ignored", telemetry)
     } else {
       track("court-email-amended", telemetry) {
-        val dpsCourt = dpsService.getCourt(courtId)
+        val dpsAgency = requireNotNull(dpsService.getAgency(courtId)) { "Court $courtId not found in DPS" }
         val response = nomisApiService.refreshAgencyEmails(
           courtId,
-          UpdateAgencyEmailAddressesRequest(emailAddresses = dpsCourt.emailAddresses.map { it.address!! }),
+          UpdateAgencyEmailAddressesRequest(emailAddresses = dpsAgency.emailAddresses.map { it.address }),
         )
         telemetry["nomisEmailIds"] = response.emailAddresses.map { it.id }.joinToString(", ")
       }
@@ -108,10 +109,10 @@ class AgencyRegistersService(
       telemetryClient.trackEvent("court-email-deleted-ignored", telemetry)
     } else {
       track("court-email-deleted", telemetry) {
-        val dpsCourt = dpsService.getCourt(courtId)
+        val dpsAgency = requireNotNull(dpsService.getAgency(courtId)) { "Court $courtId not found in DPS" }
         val response = nomisApiService.refreshAgencyEmails(
           courtId,
-          UpdateAgencyEmailAddressesRequest(emailAddresses = dpsCourt.emailAddresses.map { it.address!! }),
+          UpdateAgencyEmailAddressesRequest(emailAddresses = dpsAgency.emailAddresses.map { it.address }),
         )
         telemetry["nomisEmailIds"] = response.emailAddresses.map { it.id }.joinToString(", ")
       }
@@ -129,9 +130,9 @@ class AgencyRegistersService(
       telemetryClient.trackEvent("court-phone-create-ignored", telemetry)
     } else {
       track("court-phone-create", telemetry) {
-        val dpsCourt = dpsService.getCourt(courtId)
-        val agencyPhone = dpsCourt.phoneNumbers.find { it.id == dpsPhoneId }!!
-        val response = nomisApiService.createAgencyPhone(courtId, CreateAgencyPhoneNumberRequest(number = agencyPhone.number!!, typeCode = "BUS"))
+        val dpsAgency = requireNotNull(dpsService.getAgency(courtId)) { "Court $courtId not found in DPS" }
+        val agencyPhone = requireNotNull(dpsAgency.phoneNumbers.find { it.id == dpsPhoneId }) { "Phone $dpsPhoneId not found on court $courtId in DPS" }
+        val response = nomisApiService.createAgencyPhone(courtId, CreateAgencyPhoneNumberRequest(number = agencyPhone.number, typeCode = "BUS"))
         telemetry["nomisPhoneId"] = response.id.toString()
       }
     }
@@ -151,10 +152,10 @@ class AgencyRegistersService(
       telemetryClient.trackEvent("$telemetryEvent-ignored", telemetry)
     } else {
       track(telemetryEvent, telemetry) {
-        val dpsCourt = dpsService.getCourt(courtId)
+        val dpsAgency = requireNotNull(dpsService.getAgency(courtId)) { "Court $courtId not found in DPS" }
         val response = nomisApiService.refreshAgencyPhones(
           courtId,
-          UpdateAgencyPhoneNumbersRequest(phoneNumbers = dpsCourt.phoneNumbers.map { UpdateAgencyPhoneNumber(number = it.number!!, typeCode = "BUS") }),
+          UpdateAgencyPhoneNumbersRequest(phoneNumbers = dpsAgency.phoneNumbers.map { UpdateAgencyPhoneNumber(number = it.number, typeCode = "BUS") }),
         )
         telemetry["nomisPhoneIds"] = response.phoneNumbers.map { it.id }.joinToString(", ")
       }
@@ -172,8 +173,8 @@ class AgencyRegistersService(
       telemetryClient.trackEvent("court-address-create-ignored", telemetry)
     } else {
       track("court-address-create", telemetry) {
-        val dpsCourt = dpsService.getCourt(courtId)
-        val agencyAddress = dpsCourt.addresses.find { it.id == dpsAddressId }!!
+        val dpsAgency = requireNotNull(dpsService.getAgency(courtId)) { "Court $courtId not found in DPS" }
+        val agencyAddress = requireNotNull(dpsAgency.addresses.find { it.id == dpsAddressId }) { "Address $dpsAddressId not found on court $courtId in DPS" }
         val response = nomisApiService.createAgencyAddress(courtId, agencyAddress.toCreateAgencyAddressRequest())
         telemetry["nomisAddressId"] = response.id.toString()
       }
@@ -194,10 +195,128 @@ class AgencyRegistersService(
       telemetryClient.trackEvent("$telemetryEvent-ignored", telemetry)
     } else {
       track(telemetryEvent, telemetry) {
-        val dpsCourt = dpsService.getCourt(courtId)
+        val dpsAgency = requireNotNull(dpsService.getAgency(courtId)) { "Court $courtId not found in DPS" }
         val response = nomisApiService.refreshAgencyAddresses(
           courtId,
-          UpdateAgencyAddressesRequest(addresses = dpsCourt.addresses.map { it.toUpdateAgencyAddress() }),
+          UpdateAgencyAddressesRequest(addresses = dpsAgency.addresses.map { it.toUpdateAgencyAddress() }),
+        )
+        telemetry["nomisAddressIds"] = response.addresses.map { it.id }.joinToString(", ")
+      }
+    }
+  }
+
+  suspend fun hospitalInserted(event: HospitalEvent) {
+    val hospitalId = event.additionalInformation.hospitalId
+    val telemetry = mutableMapOf(
+      "hospitalId" to hospitalId,
+    )
+    if (!event.didOriginateInDPS()) {
+      telemetryClient.trackEvent("hospital-create-ignored", telemetry)
+    } else {
+      track("hospital-create", telemetry) {
+        val dpsAgency = requireNotNull(dpsService.getAgency(hospitalId)) { "Hospital $hospitalId not found in DPS" }
+        val response = nomisApiService.createAgency(dpsAgency.toCreateAgencyRequest(hospitalId, typeCode = "HSHOSP"))
+        telemetry["nomisAgencyId"] = response.agencyId
+      }
+    }
+  }
+
+  suspend fun hospitalAmended(event: HospitalEvent) {
+    val hospitalId = event.additionalInformation.hospitalId
+    val telemetry = mutableMapOf(
+      "hospitalId" to hospitalId,
+    )
+    if (!event.didOriginateInDPS()) {
+      telemetryClient.trackEvent("hospital-updated-ignored", telemetry)
+    } else {
+      track("hospital-updated", telemetry) {
+        val dpsAgency = requireNotNull(dpsService.getAgency(hospitalId)) { "Hospital $hospitalId not found in DPS" }
+        val response = nomisApiService.updateAgency(hospitalId, dpsAgency.toUpdateAgencyRequest())
+        telemetry["nomisAgencyId"] = response.agencyId
+      }
+    }
+  }
+
+  suspend fun hospitalPhoneInserted(event: HospitalPhoneEvent) {
+    val hospitalId = event.additionalInformation.hospitalId
+    val dpsPhoneId = event.additionalInformation.phoneId
+    val telemetry = mutableMapOf(
+      "hospitalId" to hospitalId,
+      "dpsPhoneId" to dpsPhoneId.toString(),
+    )
+    if (!event.didOriginateInDPS()) {
+      telemetryClient.trackEvent("hospital-phone-create-ignored", telemetry)
+    } else {
+      track("hospital-phone-create", telemetry) {
+        val dpsAgency = requireNotNull(dpsService.getAgency(hospitalId)) { "Hospital $hospitalId not found in DPS" }
+        val agencyPhone = requireNotNull(dpsAgency.phoneNumbers.find { it.id == dpsPhoneId }) { "Phone $dpsPhoneId not found on hospital $hospitalId in DPS" }
+        val response = nomisApiService.createAgencyPhone(hospitalId, CreateAgencyPhoneNumberRequest(number = agencyPhone.number, typeCode = "BUS"))
+        telemetry["nomisPhoneId"] = response.id.toString()
+      }
+    }
+  }
+
+  suspend fun hospitalPhoneAmended(event: HospitalPhoneEvent) = refreshHospitalPhones(event, "hospital-phone-amended")
+
+  suspend fun hospitalPhoneDeleted(event: HospitalPhoneEvent) = refreshHospitalPhones(event, "hospital-phone-deleted")
+
+  private suspend fun refreshHospitalPhones(event: HospitalPhoneEvent, telemetryEvent: String) {
+    val hospitalId = event.additionalInformation.hospitalId
+    val telemetry = mutableMapOf(
+      "hospitalId" to hospitalId,
+      "dpsPhoneId" to event.additionalInformation.phoneId.toString(),
+    )
+    if (!event.didOriginateInDPS()) {
+      telemetryClient.trackEvent("$telemetryEvent-ignored", telemetry)
+    } else {
+      track(telemetryEvent, telemetry) {
+        val dpsAgency = requireNotNull(dpsService.getAgency(hospitalId)) { "Hospital $hospitalId not found in DPS" }
+        val response = nomisApiService.refreshAgencyPhones(
+          hospitalId,
+          UpdateAgencyPhoneNumbersRequest(phoneNumbers = dpsAgency.phoneNumbers.map { UpdateAgencyPhoneNumber(number = it.number, typeCode = "BUS") }),
+        )
+        telemetry["nomisPhoneIds"] = response.phoneNumbers.map { it.id }.joinToString(", ")
+      }
+    }
+  }
+
+  suspend fun hospitalAddressInserted(event: HospitalAddressEvent) {
+    val hospitalId = event.additionalInformation.hospitalId
+    val dpsAddressId = event.additionalInformation.addressId
+    val telemetry = mutableMapOf(
+      "hospitalId" to hospitalId,
+      "dpsAddressId" to dpsAddressId.toString(),
+    )
+    if (!event.didOriginateInDPS()) {
+      telemetryClient.trackEvent("hospital-address-create-ignored", telemetry)
+    } else {
+      track("hospital-address-create", telemetry) {
+        val dpsAgency = requireNotNull(dpsService.getAgency(hospitalId)) { "Hospital $hospitalId not found in DPS" }
+        val agencyAddress = requireNotNull(dpsAgency.addresses.find { it.id == dpsAddressId }) { "Address $dpsAddressId not found on hospital $hospitalId in DPS" }
+        val response = nomisApiService.createAgencyAddress(hospitalId, agencyAddress.toCreateAgencyAddressRequest())
+        telemetry["nomisAddressId"] = response.id.toString()
+      }
+    }
+  }
+
+  suspend fun hospitalAddressAmended(event: HospitalAddressEvent) = refreshHospitalAddresses(event, "hospital-address-amended")
+
+  suspend fun hospitalAddressDeleted(event: HospitalAddressEvent) = refreshHospitalAddresses(event, "hospital-address-deleted")
+
+  private suspend fun refreshHospitalAddresses(event: HospitalAddressEvent, telemetryEvent: String) {
+    val hospitalId = event.additionalInformation.hospitalId
+    val telemetry = mutableMapOf(
+      "hospitalId" to hospitalId,
+      "dpsAddressId" to event.additionalInformation.addressId.toString(),
+    )
+    if (!event.didOriginateInDPS()) {
+      telemetryClient.trackEvent("$telemetryEvent-ignored", telemetry)
+    } else {
+      track(telemetryEvent, telemetry) {
+        val dpsAgency = requireNotNull(dpsService.getAgency(hospitalId)) { "Hospital $hospitalId not found in DPS" }
+        val response = nomisApiService.refreshAgencyAddresses(
+          hospitalId,
+          UpdateAgencyAddressesRequest(addresses = dpsAgency.addresses.map { it.toUpdateAgencyAddress() }),
         )
         telemetry["nomisAddressIds"] = response.addresses.map { it.id }.joinToString(", ")
       }
@@ -207,10 +326,10 @@ class AgencyRegistersService(
 
 private fun SourcedEvent.didOriginateInDPS() = this.additionalInformation.source == "DPS"
 
-private fun LegacyAgencyDto.toCreateAgencyRequest(agencyId: String): CreateAgencyRequest = CreateAgencyRequest(
+private fun LegacyAgencyDto.toCreateAgencyRequest(agencyId: String, typeCode: String): CreateAgencyRequest = CreateAgencyRequest(
   agencyId = agencyId,
   description = name,
-  typeCode = "CRT",
+  typeCode = typeCode,
   active = active,
   localAuthorityCodes = listOfNotNull(localAuthorityCode),
   longDescription = description,
@@ -268,8 +387,46 @@ private fun AgencyAddressDto.toUpdateAgencyAddress(): UpdateAgencyAddress = toCr
   )
 }
 
-private fun AgencyAddressDto.toCreateAgencyAddressRequest(): CreateAgencyAddressRequest {
-  val line1AddressParts = this.addressLine1?.split(',')?.map { it.trim() } ?: emptyList()
+private fun LegacyAgencyAddressDto.toUpdateAgencyAddress(): UpdateAgencyAddress = toCreateAgencyAddressRequest().let {
+  UpdateAgencyAddress(
+    flat = it.flat,
+    premise = it.premise,
+    street = it.street,
+    locality = it.locality,
+    postcode = it.postcode,
+    city = it.city,
+    county = it.county,
+    country = it.country,
+  )
+}
+
+private fun AgencyAddressDto.toCreateAgencyAddressRequest(): CreateAgencyAddressRequest = createAgencyAddressRequest(
+  addressLine1 = addressLine1,
+  addressLine2 = addressLine2,
+  postcode = postcode,
+  town = town,
+  county = county,
+  country = country,
+)
+
+private fun LegacyAgencyAddressDto.toCreateAgencyAddressRequest(): CreateAgencyAddressRequest = createAgencyAddressRequest(
+  addressLine1 = addressLine1,
+  addressLine2 = addressLine2,
+  postcode = postcode,
+  town = town,
+  county = county,
+  country = country,
+)
+
+private fun createAgencyAddressRequest(
+  addressLine1: String?,
+  addressLine2: String?,
+  postcode: String?,
+  town: String?,
+  county: String?,
+  country: String?,
+): CreateAgencyAddressRequest {
+  val line1AddressParts = addressLine1?.split(',')?.map { it.trim() } ?: emptyList()
   var flat: String? = null
   var premise: String? = null
   var street: String? = null
@@ -295,10 +452,10 @@ private fun AgencyAddressDto.toCreateAgencyAddressRequest(): CreateAgencyAddress
     flat = flat,
     premise = premise,
     street = street,
-    locality = this.addressLine2,
-    postcode = this.postcode,
-    city = this.town,
-    county = this.county,
-    country = this.country,
+    locality = addressLine2,
+    postcode = postcode,
+    city = town,
+    county = county,
+    country = country,
   )
 }

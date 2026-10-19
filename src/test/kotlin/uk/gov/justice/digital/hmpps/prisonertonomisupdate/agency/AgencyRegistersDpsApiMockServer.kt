@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.AgencyIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.AgencyPhoneDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.CourtDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.ErrorResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.HospitalDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.LegacyAgencyAddressDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.LegacyAgencyDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.LegacyAgencyEmailDto
@@ -98,6 +99,15 @@ class AgencyRegistersDpsApiExtension :
       emailAddresses = emptyList(),
       phoneNumbers = emptyList(),
     )
+
+    fun hospitalDto() = HospitalDto(
+      hospitalId = "HHOSP1",
+      hospitalName = "Hallamshire Hospital",
+      active = true,
+      highSecurity = false,
+      addresses = emptyList(),
+      phoneNumbers = emptyList(),
+    )
   }
 
   override fun beforeAll(context: ExtensionContext) {
@@ -132,7 +142,7 @@ class AgencyRegistersDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubGetAgency(agencyId: String, response: LegacyAgencyDto = legacyAgencyDto()) {
     stubFor(
-      get("/legacy/reconciliation/$agencyId").willReturn(
+      get("/legacy/$agencyId").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(jsonMapper.writeValueAsString(response))
@@ -141,6 +151,26 @@ class AgencyRegistersDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
   fun stubGetAgency(agencyId: String, errorHttpStatus: HttpStatus) {
+    stubFor(
+      get("/legacy/$agencyId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(jsonMapper.writeValueAsString(ErrorResponse(status = errorHttpStatus.value())))
+          .withStatus(errorHttpStatus.value()),
+      ),
+    )
+  }
+  fun stubGetAgencyForReconciliation(agencyId: String, response: LegacyAgencyDto = legacyAgencyDto()) {
+    stubFor(
+      get("/legacy/reconciliation/$agencyId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(jsonMapper.writeValueAsString(response))
+          .withStatus(200),
+      ),
+    )
+  }
+  fun stubGetAgencyForReconciliation(agencyId: String, errorHttpStatus: HttpStatus) {
     stubFor(
       get("/legacy/reconciliation/$agencyId").willReturn(
         aResponse()
@@ -164,6 +194,17 @@ class AgencyRegistersDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   fun stubGetCourt(courtId: String, response: CourtDto = AgencyRegistersDpsApiExtension.courtDto()) {
     stubFor(
       get("/courts/id/$courtId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(jsonMapper.writeValueAsString(response))
+          .withStatus(200),
+      ),
+    )
+  }
+
+  fun stubGetHospital(hospitalId: String, response: HospitalDto = AgencyRegistersDpsApiExtension.hospitalDto()) {
+    stubFor(
+      get("/hospitals/id/$hospitalId").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(jsonMapper.writeValueAsString(response))
