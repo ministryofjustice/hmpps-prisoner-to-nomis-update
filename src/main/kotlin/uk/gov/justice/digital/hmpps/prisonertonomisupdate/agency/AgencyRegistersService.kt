@@ -374,10 +374,15 @@ private fun LegacyAgencyDto.toUpdateAgencyRequest(): UpdateAgencyRequest = Updat
 )
 
 private fun LegacyAgencyDto.AccessibleAccess?.toDisabilityAccessCode(): String? = when (this) {
-  LegacyAgencyDto.AccessibleAccess.WHEELCHAIR_ACCESS -> "WHEEL"
+  // NOMIS reference data as Wheelchair Access is "WC", NOMIS data has incorrectly used WHEEL (for the one agency with this set). So prefer the correct value
+  LegacyAgencyDto.AccessibleAccess.WHEELCHAIR_ACCESS -> "WC"
+
   LegacyAgencyDto.AccessibleAccess.ACCESSIBLE -> "Y"
+
   LegacyAgencyDto.AccessibleAccess.NONE -> "N"
+
   LegacyAgencyDto.AccessibleAccess.BY_ARRANGEMENT_ONLY -> "BA"
+
   null -> null
 }
 
