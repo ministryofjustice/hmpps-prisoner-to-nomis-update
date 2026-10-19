@@ -95,6 +95,7 @@ class CourtSentencingService(
     COURT_APPEARANCE("court-appearance"),
     COURT_APPEARANCE_RECALL("court-appearance-recall"),
     COURT_APPEARANCE_RECALL_UPDATE("court-appearance-recall-update"),
+    COURT_APPEARANCE_COURT_CHARGE("court-appearance-court-charge"),
     COURT_CHARGE("charge"),
     SENTENCE("sentence"),
     SENTENCE_DELETED("sentence-deleted"),
@@ -632,7 +633,7 @@ class CourtSentencingService(
               telemetryClient = telemetryClient,
               retryQueueService = courtSentencingRetryQueueService,
               eventTelemetry = telemetryMap,
-              name = EntityType.COURT_CHARGE.displayName,
+              name = EntityType.COURT_APPEARANCE_COURT_CHARGE.displayName,
               postMapping = { courtCaseMappingService.createChargeBatchUpdateMapping(it) },
               log = log,
             )
@@ -694,16 +695,30 @@ class CourtSentencingService(
     }
   }
 
-  suspend fun createChargeMappingsRetry(message: CreateMappingRetryMessage<CourtChargeBatchUpdateMappingDto>) = with(message) {
+  suspend fun updateAppearanceCreateChargeMappingsRetry(message: CreateMappingRetryMessage<CourtChargeBatchUpdateMappingDto>) = with(message) {
     courtCaseMappingService.createChargeBatchUpdateMapping(
       this.mapping.also {
         telemetryClient.trackEvent(
-          "charge-create-mapping-retry-success",
+          "court-appearance-charge-create-mapping-retry-success",
           telemetryAttributes,
           null,
         )
       },
     )
+  }
+
+  suspend fun createChargeMappingsRetry(message: CreateMappingRetryMessage<CourtCaseBatchUpdateAndCreateMappingsWrapper>) = with(message) {
+    createAppearanceMappingsAndNotifyClonedCases(
+      mappingsWrapper = mapping,
+      offenderNo = mapping.offenderNo,
+      telemetry = telemetryAttributes,
+    ).also {
+      telemetryClient.trackEvent(
+        "charge-create-mapping-retry-success",
+        telemetryAttributes,
+        null,
+      )
+    }
   }
 
   suspend fun createAppearanceMappingsRetry(message: CreateMappingRetryMessage<CourtCaseBatchUpdateAndCreateMappingsWrapper>) = with(message) {
@@ -866,6 +881,8 @@ class CourtSentencingService(
       EntityType.COURT_APPEARANCE_RECALL_UPDATE.displayName -> recallMappingAndDPSSynchronisationHandler.updateMappingsAndNotifyDPSRetry(
         message.fromJson(),
       )
+
+      EntityType.COURT_APPEARANCE_COURT_CHARGE.displayName -> updateAppearanceCreateChargeMappingsRetry(message.fromJson())
 
       EntityType.COURT_CHARGE.displayName -> createChargeMappingsRetry(message.fromJson())
 
