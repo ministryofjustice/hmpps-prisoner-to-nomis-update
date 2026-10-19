@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-19.616.dbc08a7"
+    "version" : "2026-10-19.618.2526f1d"
   },
   "servers" : [ {
     "url" : "https://prison-register-dev.hmpps.service.justice.gov.uk",
@@ -7725,7 +7725,7 @@
         "tags" : [ "public-api-resource" ],
         "summary" : "Get details of an agency",
         "description" : "Details of a single agency of any type (court, hospital, police custody suite, probation office, approved premises, prison or other agency)",
-        "operationId" : "getAgency_1",
+        "operationId" : "getPublicAgency",
         "parameters" : [ {
           "name" : "agencyId",
           "in" : "path",
