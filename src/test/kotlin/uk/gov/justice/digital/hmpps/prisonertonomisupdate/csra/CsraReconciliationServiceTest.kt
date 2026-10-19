@@ -134,6 +134,19 @@ class CsraReconciliationServiceTest {
     }
 
     @Test
+    fun `a HI level trumps a STD level`() = runTest {
+      stubCsraReconciliation(
+        nomisCsra(calculatedLevel = AssessmentLevel.HI, reviewLevel = AssessmentLevel.STANDARD),
+        dpsCsra(CSRA_DPS_ID, rating = CsraCurrentRating.Rating.STANDARD),
+      )
+      assertThat(service.checkCsra(CSRA_OFFENDER_NO)?.differences).isEqualTo(
+        listOf(
+          Difference(property = "level", dps = "STANDARD", nomis = "HIGH", dpsId = CSRA_DPS_ID, nomisId = "1-1"),
+        ),
+      )
+    }
+
+    @Test
     fun `will report a date mismatch`() = runTest {
       stubCsraReconciliation(
         nomisCsra(evaluationDate = LocalDate.parse("2024-06-01")),
@@ -200,6 +213,7 @@ fun nomisCsra(
   assessmentDate: LocalDate = LocalDate.parse("2020-01-01"),
   evaluationDate: LocalDate? = LocalDate.parse("2024-01-01"),
   calculatedLevel: AssessmentLevel = AssessmentLevel.STANDARD,
+  reviewLevel: AssessmentLevel? = null,
 ) = CsraGetDto(
   bookingId = 1,
   sequence = 1,
@@ -212,6 +226,7 @@ fun nomisCsra(
   createdBy = "T.SMITH",
   sections = emptyList(),
   calculatedLevel = calculatedLevel,
+  reviewLevel = reviewLevel,
 )
 
 fun dpsCsra(
