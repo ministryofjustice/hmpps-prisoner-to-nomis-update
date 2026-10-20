@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.AgencyAddressDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.LegacyAgencyAddressDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.LegacyAgencyDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.LegacyAgencyType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAgencyAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAgencyEmailAddressRequest
@@ -215,7 +216,7 @@ class AgencyRegistersService(
     } else {
       track("hospital-create", telemetry) {
         val dpsAgency = requireNotNull(dpsService.getAgency(hospitalId)) { "Hospital $hospitalId not found in DPS" }
-        val response = nomisApiService.createAgency(dpsAgency.toCreateAgencyRequest(hospitalId, typeCode = "HSHOSP"))
+        val response = nomisApiService.createAgency(dpsAgency.toCreateAgencyRequest(hospitalId, typeCode = dpsAgency.agencyType.toHospitalTypeCode(hospitalId)))
         telemetry["nomisAgencyId"] = response.agencyId
       }
     }
@@ -325,6 +326,12 @@ class AgencyRegistersService(
 }
 
 private fun SourcedEvent.didOriginateInDPS() = this.additionalInformation.source == "DPS"
+
+private fun LegacyAgencyType.toHospitalTypeCode(hospitalId: String): String = when (this) {
+  LegacyAgencyType.HOSPITAL -> "HOSPITAL"
+  LegacyAgencyType.SECURE_HOSPITAL -> "HSHOSP"
+  else -> throw IllegalStateException("Unexpected agency type $this for hospital $hospitalId")
+}
 
 private fun LegacyAgencyDto.toCreateAgencyRequest(agencyId: String, typeCode: String): CreateAgencyRequest = CreateAgencyRequest(
   agencyId = agencyId,

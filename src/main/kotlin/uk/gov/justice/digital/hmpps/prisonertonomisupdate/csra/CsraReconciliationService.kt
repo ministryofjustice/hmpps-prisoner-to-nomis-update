@@ -70,15 +70,34 @@ class CsraReconciliationService(
     idsInRange = { range -> this.getOffenderNosInRange(range.fromId, range.toId, activeOnly) },
   )
 
+  private val levelPriorities = listOf(AssessmentLevel.HI, AssessmentLevel.STANDARD, AssessmentLevel.MED, AssessmentLevel.LOW)
+
   internal suspend fun checkCsra(offenderNo: String): MismatchCsra? = runCatching {
     val nomisCsra = csraNomisApiService.getCurrentCsraForPrisonerOrNull(offenderNo)
     val dpsCsra = csraDpsApiService.getCsraCurrent(offenderNo)
 
     val nomisField = nomisCsra?.let { csra ->
-      fun deriveClassification(): AssessmentLevel? = csra.reviewLevel
-        ?: csra.overrideLevel
-        ?: csra.calculatedLevel
-          ?.takeUnless { it == AssessmentLevel.PEND }
+
+      /**
+       * Function copied from the dps service
+       */
+      fun resolveNomisLevel(calculatedLevel: AssessmentLevel?, reviewLevel: AssessmentLevel?, approvedLevel: AssessmentLevel?): AssessmentLevel? {
+        if (approvedLevel != null && approvedLevel != AssessmentLevel.PEND) return approvedLevel
+
+        return when {
+          reviewLevel != null && calculatedLevel != null ->
+            levelPriorities.firstNotNullOfOrNull { rank -> rank.takeIf { it == reviewLevel || it == calculatedLevel } }
+          reviewLevel != null -> reviewLevel
+          calculatedLevel != AssessmentLevel.PEND -> calculatedLevel
+          else -> null
+        }
+      }
+
+      fun deriveClassification(): AssessmentLevel? = resolveNomisLevel(
+        calculatedLevel = (csra.overrideLevel ?: csra.calculatedLevel),
+        reviewLevel = csra.reviewLevel,
+        approvedLevel = csra.approvedLevel,
+      )
 
       CsraDetailFields(
         id = "${csra.bookingId}-${csra.sequence}",

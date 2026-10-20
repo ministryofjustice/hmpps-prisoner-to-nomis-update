@@ -1136,7 +1136,7 @@ class AgencyRegisterToNomisIntTest(
           val request: CreateAgencyRequest = NomisApiExtension.nomisApi.getRequestBody(postRequestedFor(urlEqualTo("/agency")), jsonMapper)
           assertThat(request.agencyId).isEqualTo(hospitalId)
           assertThat(request.description).isEqualTo("Hallamshire Hospital")
-          assertThat(request.typeCode).isEqualTo("HSHOSP")
+          assertThat(request.typeCode).isEqualTo("HOSPITAL")
           assertThat(request.active).isTrue()
           assertThat(request.localAuthorityCodes).containsExactly("00CG")
           assertThat(request.longDescription).isEqualTo("Hallamshire Hospital, Sheffield")

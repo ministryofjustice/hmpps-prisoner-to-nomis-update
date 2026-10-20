@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-10-16.5900.02c81c3"
+    "version" : "2026-10-19.5952.b0369ae"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -1930,6 +1930,10 @@
       "PrisonAddressUsage" : {
         "type" : "object",
         "properties" : {
+          "cprAddressUsageId" : {
+            "type" : [ "string", "null" ],
+            "description" : "The CPR address usage id of the address"
+          },
           "nomisAddressUsageId" : {
             "type" : [ "integer", "null" ],
             "format" : "int64",
@@ -2917,14 +2921,6 @@
             "description" : "Is the address type verified",
             "examples" : [ false, true ]
           },
-          "usages" : {
-            "type" : "array",
-            "deprecated" : true,
-            "description" : "Legacy list of address usages kept for provider compatibility during migration",
-            "items" : {
-              "$ref" : "#/components/schemas/ProbationCreateAddressUsage"
-            }
-          },
           "usage" : {
             "description" : "The address usage",
             "oneOf" : [ {
@@ -2941,7 +2937,7 @@
             }
           }
         },
-        "required" : [ "contacts", "noFixedAbode", "startDate", "statusCode", "typeVerified", "usages" ]
+        "required" : [ "contacts", "noFixedAbode", "startDate", "statusCode", "typeVerified" ]
       },
       "ProbationCreateAddressContact" : {
         "type" : "object",
@@ -3003,9 +2999,9 @@
             "description" : "The address sub building name. Previously `flat` in Prison API",
             "example" : "3B"
           },
-          "buildingNumber" : {
+          "buildingName" : {
             "type" : [ "string", "null" ],
-            "description" : "The address building number. Previously `premise` in Prison API",
+            "description" : "The address building name. Previously `premise` in Prison API",
             "example" : "Liverpool Prison"
           },
           "thoroughfareName" : {

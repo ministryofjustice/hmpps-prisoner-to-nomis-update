@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-12.1173.e3235a2"
+    "version" : "2026-10-16.1203.a75040b"
   },
   "servers" : [ {
     "url" : "https://prisoner-finance-sync-api-dev.hmpps.service.justice.gov.uk/",
@@ -532,6 +532,16 @@
           "required" : true
         },
         "responses" : {
+          "201" : {
+            "description" : "Advance repayment created.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncAdvanceRepayResponse"
+                }
+              }
+            }
+          },
           "400" : {
             "description" : "Bad request - invalid input data.",
             "content" : {
@@ -562,8 +572,28 @@
               }
             }
           },
-          "501" : {
-            "description" : "This endpoint is not yet implemented.",
+          "404" : {
+            "description" : "Not found - advance Id not found",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error - An unexpected error occurred.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502" : {
+            "description" : "A dependency error occurred.",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -1913,9 +1943,38 @@
             "type" : "string",
             "description" : "The username that created this advance repayment",
             "example" : "JOHN_USER"
+          },
+          "description" : {
+            "type" : "string",
+            "description" : "The description on the advance repayment transaction",
+            "example" : "Deduction-ADV-08052026 D D"
+          },
+          "entrySequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The entry sequence from the offender transactions table in NOMIS",
+            "example" : 1
+          },
+          "caseloadId" : {
+            "type" : "string",
+            "description" : "The caseload ID for the prison which receives the payment",
+            "example" : "LEI",
+            "pattern" : "^[A-Za-z0-9]{3}$"
           }
         },
-        "required" : [ "amount", "createdAt", "createdBy", "transactionId" ]
+        "required" : [ "amount", "caseloadId", "createdAt", "createdBy", "description", "entrySequence", "transactionId" ]
+      },
+      "SyncAdvanceRepayResponse" : {
+        "type" : "object",
+        "properties" : {
+          "repaymentTransactionId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The repayment transaction id from Prisoner Finance",
+            "example" : "de2bc56c-ea73-4f3c-8a37-5a46fdb2d79a"
+          }
+        },
+        "required" : [ "repaymentTransactionId" ]
       },
       "PrisonerAccountPointInTimeBalance" : {
         "type" : "object",
@@ -2140,19 +2199,19 @@
             "type" : "string",
             "format" : "uuid"
           },
-          "transactionType" : {
-            "type" : [ "string", "null" ]
-          },
-          "legacyTransactionId" : {
-            "type" : [ "integer", "null" ],
-            "format" : "int64"
-          },
           "caseloadId" : {
             "type" : [ "string", "null" ]
           },
           "transactionTimestamp" : {
             "type" : [ "string", "null" ],
             "format" : "date-time"
+          },
+          "legacyTransactionId" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int64"
+          },
+          "transactionType" : {
+            "type" : [ "string", "null" ]
           },
           "synchronizedTransactionId" : {
             "type" : "string",
