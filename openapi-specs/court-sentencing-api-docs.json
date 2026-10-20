@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-16.2708.a5a11dc"
+    "version" : "2026-10-19.2721.436a81e"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -123,6 +123,35 @@
     "description" : "Sentence Type Updates"
   } ],
   "paths" : {
+    "/sentence/confirm-consecutive-to-sentence-fix" : {
+      "put" : {
+        "tags" : [ "sentence-controller" ],
+        "summary" : "Confirm consecutive to sentence fixes",
+        "description" : "This endpoint will mark unconfirmed consecutive to sentence fixes to confirmed",
+        "operationId" : "confirmConsecutiveToSentenceFixes",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ConfirmConsecutiveToSentenceFixes"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "confirmed consecutive to sentence fixes"
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token"
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role"
+          }
+        }
+      }
+    },
     "/sentence-type/{sentenceTypeUuid}" : {
       "get" : {
         "tags" : [ "sentence-type-controller" ],
@@ -6581,6 +6610,57 @@
         }
       }
     },
+    "/court-case/multiple/unconfirmed-sentence-fix-court-cases" : {
+      "get" : {
+        "tags" : [ "court-case-controller" ],
+        "summary" : "retrieve unconfirmed sentence fix court cases for court case UUIDS",
+        "description" : "This endpoint will retrieve unconfirmed sentence fix court cases for court case UUIDs",
+        "operationId" : "getUnconfirmedSentenceFixCourtCasesByUuids",
+        "parameters" : [ {
+          "name" : "courtCaseUuids",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns unconfirmed sentence fix court cases for court case uuids",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UnconfirmedCourtCases"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UnconfirmedCourtCases"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UnconfirmedCourtCases"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/court-appearance-subtype/{courtAppearanceSubtypeUuid}" : {
       "get" : {
         "tags" : [ "court-appearance-subtype-controller" ],
@@ -7247,6 +7327,19 @@
   },
   "components" : {
     "schemas" : {
+      "ConfirmConsecutiveToSentenceFixes" : {
+        "type" : "object",
+        "properties" : {
+          "sentenceUuids" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        },
+        "required" : [ "sentenceUuids" ]
+      },
       "CreateSentenceType" : {
         "type" : "object",
         "properties" : {
@@ -7817,7 +7910,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "08:00:09.23903954"
+            "example" : "07:45:36.823412594"
           },
           "outcomeDispositionCode" : {
             "type" : [ "string", "null" ]
@@ -8196,7 +8289,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "08:00:09.23903954"
+            "example" : "07:45:36.823412594"
           },
           "courtCode" : {
             "type" : "string"
@@ -11310,7 +11403,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "08:00:09.23903954"
+            "example" : "07:45:36.823412594"
           },
           "courtCode" : {
             "type" : "string"
@@ -12002,7 +12095,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "08:00:09.23903954"
+            "example" : "07:45:36.823412594"
           },
           "nomisOutcomeCode" : {
             "type" : [ "string", "null" ]
@@ -12081,7 +12174,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "08:00:09.23903954"
+            "example" : "07:45:36.823412594"
           },
           "courtId" : {
             "type" : "string"
@@ -12233,7 +12326,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "08:00:09.23903954"
+            "example" : "07:45:36.823412594"
           },
           "charges" : {
             "type" : "array",
@@ -12270,7 +12363,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "08:00:09.23903954"
+            "example" : "07:45:36.823412594"
           },
           "courtId" : {
             "type" : "string"
@@ -12772,9 +12865,12 @@
           },
           "canBreach" : {
             "type" : "boolean"
+          },
+          "hasUnconfirmedConsecutiveToFixSentences" : {
+            "type" : "boolean"
           }
         },
-        "required" : [ "allAppearancesHaveRecall", "appearanceCount", "canAppeal", "canBreach", "caseReferences", "courtCaseStatus", "courtCaseUuid", "firstDayInCustody", "firstDayInCustodyWarrantType", "latestCourtAppearance", "mergedFromCases", "prisonerId" ]
+        "required" : [ "allAppearancesHaveRecall", "appearanceCount", "canAppeal", "canBreach", "caseReferences", "courtCaseStatus", "courtCaseUuid", "firstDayInCustody", "firstDayInCustodyWarrantType", "hasUnconfirmedConsecutiveToFixSentences", "latestCourtAppearance", "mergedFromCases", "prisonerId" ]
       },
       "PagedLatestCourtAppearance" : {
         "type" : "object",
@@ -12892,7 +12988,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "08:00:09.23903954"
+            "example" : "07:45:36.823412594"
           },
           "courtCode" : {
             "type" : [ "string", "null" ]
