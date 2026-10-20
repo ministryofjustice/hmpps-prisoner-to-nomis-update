@@ -7,7 +7,7 @@
       "name" : "Move a prisoner Team",
       "email" : "Moveaprisoner-gg@justice.gov.uk"
     },
-    "version" : "2026-10-02.358.7865fc3"
+    "version" : "2026-10-16.377.09fca9e"
   },
   "servers" : [ {
     "url" : "/",
@@ -1792,8 +1792,8 @@
     "/property-containers/prisoner/{prisonerNumber}/summary" : {
       "get" : {
         "tags" : [ "Property containers" ],
-        "summary" : "Get a prisoner's property summary counts for the profile tile",
-        "description" : "Requires role ROLE_PRISONER_PROPERTY__RO. Returns just the totals a prisoner-profile \"Property containers\" tile needs, over the person's active (not removed) containers: how many are held at their current establishment (from prisoner-search) versus other establishments, how many are due to be transferred in or out, and how many are overdue for disposal or return - plus whether they have ever had any property recorded. The current establishment (and its name) is null when the prisoner is released or in transit.",
+        "summary" : "Get a prisoner's property summary counts for the profile card, as seen from a prison",
+        "description" : "Requires role ROLE_PRISONER_PROPERTY__RO. Returns the totals a prisoner-profile \"Property containers\" card needs, worked out for the prison the member of staff is viewing from (prisonId - their active caseload), using the statuses the property service shows. Counts the containers held at that prison and how many are due to transfer out, be returned or be disposed of; property held at other prisons and property due to transfer in are only counted when the prisoner is held at that prison. When to show the card: only when the member of staff's active caseload is in activeAgencies on /info; then when prisonerHeldHere is true or heldAtThisPrison is above 0, however the prisoner was found (including global search, and prisoners in transit or released). Otherwise the prison holds nothing for this person and no card is shown.",
         "operationId" : "getPrisonerSummary",
         "parameters" : [ {
           "name" : "prisonerNumber",
@@ -1805,6 +1805,16 @@
             "pattern" : "([a-zA-Z][0-9]{4}[a-zA-Z]{2})"
           },
           "example" : "A1234BC"
+        }, {
+          "name" : "prisonId",
+          "in" : "query",
+          "description" : "The prison the member of staff is viewing from: their active caseload",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "pattern" : "^[A-Z]{2}I|ZZGHI$"
+          },
+          "example" : "LEI"
         } ],
         "responses" : {
           "200" : {
@@ -1818,7 +1828,7 @@
             }
           },
           "400" : {
-            "description" : "Invalid prisoner number",
+            "description" : "Invalid prisoner number, or prison id missing or invalid",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -3537,61 +3547,76 @@
       },
       "PrisonerPropertySummaryDto" : {
         "type" : "object",
-        "description" : "A single prisoner's property totals for the profile \"Property containers\" tile. All counts are for the person's active (not removed) containers, split by where they are held relative to the prisoner's current establishment (resolved from prisoner-search). Carries everything the candidate tile designs need so the profile can render either the simple two-count layout or the fuller breakdown.",
+        "description" : "A single prisoner's property totals for the profile \"Property containers\" card, from the point of view of the prison the member of staff is viewing from. Counts are over the person's active (not removed) containers and use the status the property service shows for each one, so the card agrees with the prisoner's property page at that prison. Property held at other prisons, and property due to transfer in, is only counted when the prisoner is held at the viewing prison; otherwise only the viewing prison's own containers are counted.",
         "properties" : {
+          "prisonId" : {
+            "type" : "string",
+            "description" : "The prison the counts are worked out for: the member of staff's active caseload",
+            "example" : "LEI"
+          },
+          "prisonName" : {
+            "type" : [ "string", "null" ],
+            "description" : "The viewing prison's name (prison-register), or null if unknown",
+            "example" : "Leeds (HMP)"
+          },
+          "prisonerHeldHere" : {
+            "type" : "boolean",
+            "description" : "Whether the prisoner is currently held at the viewing prison",
+            "example" : true
+          },
           "currentEstablishmentId" : {
             "type" : [ "string", "null" ],
             "description" : "The prisoner's current establishment id (prisoner-search), or null if they are released or in transit",
-            "example" : "IWI"
+            "example" : "LEI"
           },
           "currentEstablishmentName" : {
             "type" : [ "string", "null" ],
-            "description" : "The prisoner's current establishment name (prison-register), or null if unknown/released/in transit",
-            "example" : "Isle of Wight (HMP)"
+            "description" : "The prisoner's current establishment name (prison-register), or null if unknown, released or in transit",
+            "example" : "Leeds (HMP)"
           },
-          "heldInCurrentEstablishment" : {
+          "heldAtThisPrison" : {
             "type" : "integer",
             "format" : "int32",
-            "description" : "Active containers physically held at the prisoner's current establishment",
+            "description" : "Active containers held at the viewing prison",
             "example" : 2
           },
-          "heldInOtherEstablishments" : {
+          "dueToTransferOut" : {
             "type" : "integer",
             "format" : "int32",
-            "description" : "Active containers held at any other establishment",
-            "example" : 3
-          },
-          "dueForTransferIn" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "Active containers held elsewhere that are due to be transferred in to the current establishment (their owner was received here). A subset of those held in other establishments.",
-            "example" : 3
-          },
-          "dueForTransferOut" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "Active containers held at the current establishment that are due to be transferred out (status DUE_FOR_TRANSFER_OUT)",
+            "description" : "Containers held at the viewing prison that are due to transfer out, because their owner has moved on or is in transit",
             "example" : 0
           },
-          "overdueForDisposal" : {
+          "dueToBeReturned" : {
             "type" : "integer",
             "format" : "int32",
-            "description" : "Active containers whose proposed disposal date has arisen (today or earlier)",
+            "description" : "Containers held at the viewing prison that are due to be returned, because their owner has been released or is about to be",
             "example" : 1
           },
-          "overdueForReturn" : {
+          "dueToBeDisposed" : {
             "type" : "integer",
             "format" : "int32",
-            "description" : "Active containers flagged due for return following the prisoner's release (status DUE_FOR_RETURN)",
+            "description" : "Containers held at the viewing prison whose proposed disposal date has arisen (today or earlier)",
             "example" : 1
+          },
+          "heldAtOtherPrisons" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Active containers held at other prisons. Only counted when the prisoner is held at the viewing prison, otherwise 0.",
+            "example" : 3
+          },
+          "dueToTransferIn" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Containers due to transfer in to the viewing prison: those held at other prisons that now need to follow the prisoner here, plus any already sent here and not yet logged on arrival. Only counted when the prisoner is held at the viewing prison, otherwise 0.",
+            "example" : 3
           },
           "hasEverHadProperty" : {
             "type" : "boolean",
-            "description" : "Whether the prisoner has any recorded property at all (including containers that have since been returned, disposed or transferred). Lets the tile distinguish \"never had property\" from \"no longer has any\".",
+            "description" : "Whether the prisoner has any recorded property at all, at any prison (including containers since returned, disposed or transferred). Lets the card tell \"never had property\" apart from \"no longer has any\".",
             "example" : true
           }
         },
-        "required" : [ "dueForTransferIn", "dueForTransferOut", "hasEverHadProperty", "heldInCurrentEstablishment", "heldInOtherEstablishments", "overdueForDisposal", "overdueForReturn" ]
+        "required" : [ "dueToBeDisposed", "dueToBeReturned", "dueToTransferIn", "dueToTransferOut", "hasEverHadProperty", "heldAtOtherPrisons", "heldAtThisPrison", "prisonId", "prisonerHeldHere" ]
       },
       "PrisonerTimelineItemDto" : {
         "type" : "object",
