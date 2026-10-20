@@ -34,6 +34,7 @@ class AgencyRegistersDomainEventListener(
     when (eventType) {
       "register.court.inserted" -> service.courtInserted(message.fromJson())
       "register.court.amended" -> service.courtAmended(message.fromJson())
+      "register.court.deleted" -> service.courtDeleted(message.fromJson())
       "register.court.email.inserted" -> service.courtEmailInserted(message.fromJson())
       "register.court.email.amended" -> service.courtEmailAmended(message.fromJson())
       "register.court.email.deleted" -> service.courtEmailDeleted(message.fromJson())
@@ -45,6 +46,7 @@ class AgencyRegistersDomainEventListener(
       "register.court.address.deleted" -> service.courtAddressDeleted(message.fromJson())
       "register.hospital.inserted" -> service.hospitalInserted(message.fromJson())
       "register.hospital.amended" -> service.hospitalAmended(message.fromJson())
+      "register.hospital.deleted" -> service.hospitalDeleted(message.fromJson())
       "register.hospital.phone.inserted" -> service.hospitalPhoneInserted(message.fromJson())
       "register.hospital.phone.amended" -> service.hospitalPhoneAmended(message.fromJson())
       "register.hospital.phone.deleted" -> service.hospitalPhoneDeleted(message.fromJson())

@@ -35,6 +35,7 @@ class AgencyNomisApiService(
   suspend fun getAgencyIds(): AgencyIdsResponse = api.getAllAgencies(excludeType = listOf("INST")).retryWhen(retrySpec).awaitSingle()
   suspend fun createAgency(request: CreateAgencyRequest) = api.createAgency(request).awaitSingle()
   suspend fun updateAgency(agencyId: String, request: UpdateAgencyRequest) = api.updateAgency(agencyId, request).awaitSingle()
+  suspend fun deleteAgency(agencyId: String) = api.deleteAgency(agencyId).awaitSingle()
   suspend fun createAgencyEmail(agencyId: String, request: CreateAgencyEmailAddressRequest) = api.createAgencyEmail(agencyId, request).awaitSingle()
   suspend fun refreshAgencyEmails(agencyId: String, request: UpdateAgencyEmailAddressesRequest) = api.updateAgencyEmailAddresses(agencyId, request).awaitSingle()
   suspend fun createAgencyPhone(agencyId: String, request: CreateAgencyPhoneNumberRequest) = api.createAgencyPhone(agencyId, request).awaitSingle()
