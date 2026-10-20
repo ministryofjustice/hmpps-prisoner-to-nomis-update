@@ -17,3 +17,5 @@
 !**/PrisonUserEmail.kt
 !**/PrisonUserReconciliationResponse.kt
 !**/PrisonUserRole.kt
+!**/ReconciliationUserCaseloadAdministrator.kt
+!**/ReconciliationUserCaseloadMember.kt

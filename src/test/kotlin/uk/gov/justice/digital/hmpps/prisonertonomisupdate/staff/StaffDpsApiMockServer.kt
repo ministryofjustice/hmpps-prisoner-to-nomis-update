@@ -18,6 +18,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.staff.model.PrisonUser
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.staff.model.PrisonUserEmail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.staff.model.PrisonUserReconciliationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.staff.model.PrisonUserRole
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.staff.model.ReconciliationUserCaseloadAdministrator
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.staff.model.ReconciliationUserCaseloadMember
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -155,6 +158,29 @@ fun prisonUserAccount() = PrisonUserAccount(
       caseloadId = "NWEB",
       createdTimestamp = LocalDateTime.parse("2020-12-04T10:42:43"),
       createdBy = "JIM_BEAM4",
+    ),
+  ),
+  administrationCaseloads = listOf(
+    ReconciliationUserCaseloadAdministrator(
+      caseloadId = "LEI",
+      active = true,
+      expiryDate = LocalDate.parse("2029-08-01"),
+      createdTimestamp = LocalDateTime.parse("2016-08-01T10:55:00"),
+      createdBy = "KOFEADDY",
+      modifiedTimestamp = LocalDateTime.parse("2017-08-01T10:55:00"),
+      modifiedBy = "KOFE_MOD",
+    ),
+  ),
+  memberCaseloads = listOf(
+    ReconciliationUserCaseloadMember(
+      caseloadId = "MDI",
+      active = true,
+      startDate = LocalDate.parse("2022-06-02"),
+      expiryDate = LocalDate.parse("2030-12-22"),
+      createdTimestamp = LocalDateTime.parse("2016-08-01T10:55:00"),
+      createdBy = "KOFEADDY",
+      modifiedTimestamp = LocalDateTime.parse("2017-08-01T10:55:00"),
+      modifiedBy = "KOFE_MOD",
     ),
   ),
 )
