@@ -213,6 +213,192 @@ class AgencyRegistersService(
     }
   }
 
+  suspend fun policeCustodySuiteInserted(event: PoliceCustodySuiteEvent) {
+    val policeCustodySuiteId = event.additionalInformation.policeCustodySuiteId
+    val telemetry = mutableMapOf(
+      "policeCustodySuiteId" to policeCustodySuiteId,
+    )
+    if (!event.didOriginateInDPS()) {
+      telemetryClient.trackEvent("police-custody-suite-created-ignored", telemetry)
+    } else {
+      track("police-custody-suite-created", telemetry) {
+        val dpsAgency = requireNotNull(dpsService.getAgency(policeCustodySuiteId)) { "Police custody suite $policeCustodySuiteId not found in DPS" }
+        val response = nomisApiService.createAgency(dpsAgency.toCreateAgencyRequest(policeCustodySuiteId, typeCode = "POLICE"))
+        telemetry["nomisAgencyId"] = response.agencyId
+      }
+    }
+  }
+
+  suspend fun policeCustodySuiteAmended(event: PoliceCustodySuiteEvent) {
+    val policeCustodySuiteId = event.additionalInformation.policeCustodySuiteId
+    val telemetry = mutableMapOf(
+      "policeCustodySuiteId" to policeCustodySuiteId,
+    )
+    if (!event.didOriginateInDPS()) {
+      telemetryClient.trackEvent("police-custody-suite-updated-ignored", telemetry)
+    } else {
+      track("police-custody-suite-updated", telemetry) {
+        val dpsAgency = requireNotNull(dpsService.getAgency(policeCustodySuiteId)) { "Police custody suite $policeCustodySuiteId not found in DPS" }
+        val response = nomisApiService.updateAgency(policeCustodySuiteId, dpsAgency.toUpdateAgencyRequest(typeCode = "POLICE"))
+        telemetry["nomisAgencyId"] = response.agencyId
+      }
+    }
+  }
+
+  suspend fun policeCustodySuiteDeleted(event: PoliceCustodySuiteEvent) = deleteAgency(
+    agencyId = event.additionalInformation.policeCustodySuiteId,
+    agencyIdName = "policeCustodySuiteId",
+    telemetryEvent = "police-custody-suite-deleted",
+    sourcedEvent = event,
+  )
+
+  suspend fun policeCustodySuiteEmailInserted(event: PoliceCustodySuiteEmailEvent) {
+    val policeCustodySuiteId = event.additionalInformation.policeCustodySuiteId
+    val dpsEmailId = event.additionalInformation.emailId
+    val telemetry = mutableMapOf(
+      "policeCustodySuiteId" to policeCustodySuiteId,
+      "dpsEmailId" to dpsEmailId.toString(),
+    )
+    if (!event.didOriginateInDPS()) {
+      telemetryClient.trackEvent("police-custody-suite-email-created-ignored", telemetry)
+    } else {
+      track("police-custody-suite-email-created", telemetry) {
+        val dpsAgency = requireNotNull(dpsService.getAgency(policeCustodySuiteId)) { "Police custody suite $policeCustodySuiteId not found in DPS" }
+        val agencyEmail = requireNotNull(dpsAgency.emailAddresses.find { it.id == dpsEmailId }) { "Email $dpsEmailId not found on police custody suite $policeCustodySuiteId in DPS" }
+        val response = nomisApiService.createAgencyEmail(policeCustodySuiteId, CreateAgencyEmailAddressRequest(emailAddress = agencyEmail.address))
+        telemetry["nomisEmailId"] = response.id.toString()
+      }
+    }
+  }
+
+  suspend fun policeCustodySuiteEmailAmended(event: PoliceCustodySuiteEmailEvent) {
+    val policeCustodySuiteId = event.additionalInformation.policeCustodySuiteId
+    val dpsEmailId = event.additionalInformation.emailId
+    val telemetry = mutableMapOf(
+      "policeCustodySuiteId" to policeCustodySuiteId,
+      "dpsEmailId" to dpsEmailId.toString(),
+    )
+    if (!event.didOriginateInDPS()) {
+      telemetryClient.trackEvent("police-custody-suite-email-updated-ignored", telemetry)
+    } else {
+      track("police-custody-suite-email-updated", telemetry) {
+        val dpsAgency = requireNotNull(dpsService.getAgency(policeCustodySuiteId)) { "Police custody suite $policeCustodySuiteId not found in DPS" }
+        val response = nomisApiService.refreshAgencyEmails(
+          policeCustodySuiteId,
+          UpdateAgencyEmailAddressesRequest(emailAddresses = dpsAgency.emailAddresses.map { it.address }),
+        )
+        telemetry["nomisEmailIds"] = response.emailAddresses.map { it.id }.joinToString(", ")
+      }
+    }
+  }
+
+  suspend fun policeCustodySuiteEmailDeleted(event: PoliceCustodySuiteEmailEvent) {
+    val policeCustodySuiteId = event.additionalInformation.policeCustodySuiteId
+    val dpsEmailId = event.additionalInformation.emailId
+    val telemetry = mutableMapOf(
+      "policeCustodySuiteId" to policeCustodySuiteId,
+      "dpsEmailId" to dpsEmailId.toString(),
+    )
+    if (!event.didOriginateInDPS()) {
+      telemetryClient.trackEvent("police-custody-suite-email-deleted-ignored", telemetry)
+    } else {
+      track("police-custody-suite-email-deleted", telemetry) {
+        val dpsAgency = requireNotNull(dpsService.getAgency(policeCustodySuiteId)) { "Police custody suite $policeCustodySuiteId not found in DPS" }
+        val response = nomisApiService.refreshAgencyEmails(
+          policeCustodySuiteId,
+          UpdateAgencyEmailAddressesRequest(emailAddresses = dpsAgency.emailAddresses.map { it.address }),
+        )
+        telemetry["nomisEmailIds"] = response.emailAddresses.map { it.id }.joinToString(", ")
+      }
+    }
+  }
+
+  suspend fun policeCustodySuitePhoneInserted(event: PoliceCustodySuitePhoneEvent) {
+    val policeCustodySuiteId = event.additionalInformation.policeCustodySuiteId
+    val dpsPhoneId = event.additionalInformation.phoneId
+    val telemetry = mutableMapOf(
+      "policeCustodySuiteId" to policeCustodySuiteId,
+      "dpsPhoneId" to dpsPhoneId.toString(),
+    )
+    if (!event.didOriginateInDPS()) {
+      telemetryClient.trackEvent("police-custody-suite-phone-created-ignored", telemetry)
+    } else {
+      track("police-custody-suite-phone-created", telemetry) {
+        val dpsAgency = requireNotNull(dpsService.getAgency(policeCustodySuiteId)) { "Police custody suite $policeCustodySuiteId not found in DPS" }
+        val agencyPhone = requireNotNull(dpsAgency.phoneNumbers.find { it.id == dpsPhoneId }) { "Phone $dpsPhoneId not found on police custody suite $policeCustodySuiteId in DPS" }
+        val response = nomisApiService.createAgencyPhone(policeCustodySuiteId, CreateAgencyPhoneNumberRequest(number = agencyPhone.number, typeCode = "BUS"))
+        telemetry["nomisPhoneId"] = response.id.toString()
+      }
+    }
+  }
+
+  suspend fun policeCustodySuitePhoneAmended(event: PoliceCustodySuitePhoneEvent) = refreshPoliceCustodySuitePhones(event, "police-custody-suite-phone-updated")
+
+  suspend fun policeCustodySuitePhoneDeleted(event: PoliceCustodySuitePhoneEvent) = refreshPoliceCustodySuitePhones(event, "police-custody-suite-phone-deleted")
+
+  private suspend fun refreshPoliceCustodySuitePhones(event: PoliceCustodySuitePhoneEvent, telemetryEvent: String) {
+    val policeCustodySuiteId = event.additionalInformation.policeCustodySuiteId
+    val telemetry = mutableMapOf(
+      "policeCustodySuiteId" to policeCustodySuiteId,
+      "dpsPhoneId" to event.additionalInformation.phoneId.toString(),
+    )
+    if (!event.didOriginateInDPS()) {
+      telemetryClient.trackEvent("$telemetryEvent-ignored", telemetry)
+    } else {
+      track(telemetryEvent, telemetry) {
+        val dpsAgency = requireNotNull(dpsService.getAgency(policeCustodySuiteId)) { "Police custody suite $policeCustodySuiteId not found in DPS" }
+        val response = nomisApiService.refreshAgencyPhones(
+          policeCustodySuiteId,
+          UpdateAgencyPhoneNumbersRequest(phoneNumbers = dpsAgency.phoneNumbers.map { UpdateAgencyPhoneNumber(number = it.number, typeCode = "BUS") }),
+        )
+        telemetry["nomisPhoneIds"] = response.phoneNumbers.map { it.id }.joinToString(", ")
+      }
+    }
+  }
+
+  suspend fun policeCustodySuiteAddressInserted(event: PoliceCustodySuiteAddressEvent) {
+    val policeCustodySuiteId = event.additionalInformation.policeCustodySuiteId
+    val dpsAddressId = event.additionalInformation.addressId
+    val telemetry = mutableMapOf(
+      "policeCustodySuiteId" to policeCustodySuiteId,
+      "dpsAddressId" to dpsAddressId.toString(),
+    )
+    if (!event.didOriginateInDPS()) {
+      telemetryClient.trackEvent("police-custody-suite-address-created-ignored", telemetry)
+    } else {
+      track("police-custody-suite-address-created", telemetry) {
+        val dpsAgency = requireNotNull(dpsService.getAgency(policeCustodySuiteId)) { "Police custody suite $policeCustodySuiteId not found in DPS" }
+        val agencyAddress = requireNotNull(dpsAgency.addresses.find { it.id == dpsAddressId }) { "Address $dpsAddressId not found on police custody suite $policeCustodySuiteId in DPS" }
+        val response = nomisApiService.createAgencyAddress(policeCustodySuiteId, agencyAddress.toCreateAgencyAddressRequest())
+        telemetry["nomisAddressId"] = response.id.toString()
+      }
+    }
+  }
+
+  suspend fun policeCustodySuiteAddressAmended(event: PoliceCustodySuiteAddressEvent) = refreshPoliceCustodySuiteAddresses(event, "police-custody-suite-address-updated")
+
+  suspend fun policeCustodySuiteAddressDeleted(event: PoliceCustodySuiteAddressEvent) = refreshPoliceCustodySuiteAddresses(event, "police-custody-suite-address-deleted")
+
+  private suspend fun refreshPoliceCustodySuiteAddresses(event: PoliceCustodySuiteAddressEvent, telemetryEvent: String) {
+    val policeCustodySuiteId = event.additionalInformation.policeCustodySuiteId
+    val telemetry = mutableMapOf(
+      "policeCustodySuiteId" to policeCustodySuiteId,
+      "dpsAddressId" to event.additionalInformation.addressId.toString(),
+    )
+    if (!event.didOriginateInDPS()) {
+      telemetryClient.trackEvent("$telemetryEvent-ignored", telemetry)
+    } else {
+      track(telemetryEvent, telemetry) {
+        val dpsAgency = requireNotNull(dpsService.getAgency(policeCustodySuiteId)) { "Police custody suite $policeCustodySuiteId not found in DPS" }
+        val response = nomisApiService.refreshAgencyAddresses(
+          policeCustodySuiteId,
+          UpdateAgencyAddressesRequest(addresses = dpsAgency.addresses.map { it.toUpdateAgencyAddress() }),
+        )
+        telemetry["nomisAddressIds"] = response.addresses.map { it.id }.joinToString(", ")
+      }
+    }
+  }
+
   suspend fun hospitalInserted(event: HospitalEvent) {
     val hospitalId = event.additionalInformation.hospitalId
     val telemetry = mutableMapOf(

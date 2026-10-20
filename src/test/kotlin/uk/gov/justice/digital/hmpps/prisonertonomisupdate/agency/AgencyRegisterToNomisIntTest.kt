@@ -1931,10 +1931,1023 @@ class AgencyRegisterToNomisIntTest(
     }
   }
 
+  @Nested
+  @DisplayName("register.policecustodysuite.inserted")
+  inner class PoliceCustodySuiteInserted {
+    val policeCustodySuiteId = "SHEFPOL"
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of the event")
+    inner class WhenNomisCreated {
+
+      @BeforeEach
+      fun setUp() {
+        publishPoliceCustodySuiteInsertedEvent(policeCustodySuiteId = policeCustodySuiteId, source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the event is ignored`() {
+        verify(telemetryClient).trackEvent(
+          eq("police-custody-suite-created-ignored"),
+          check {
+            assertThat(it["policeCustodySuiteId"]).isEqualTo(policeCustodySuiteId)
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of the event")
+    inner class WhenDpsCreated {
+
+      @Nested
+      inner class HappyPath {
+
+        @BeforeEach
+        fun setUp() {
+          dpsApi.stubGetAgency(agencyId = policeCustodySuiteId, response = policeCustodySuiteLegacyAgencyDto())
+          nomisApi.stubCreateAgency(response = agencyResponse().copy(agencyId = policeCustodySuiteId))
+          publishPoliceCustodySuiteInsertedEvent(policeCustodySuiteId = policeCustodySuiteId)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will create agency in NOMIS`() {
+          val request: CreateAgencyRequest = NomisApiExtension.nomisApi.getRequestBody(postRequestedFor(urlEqualTo("/agency")), jsonMapper)
+          assertThat(request.agencyId).isEqualTo(policeCustodySuiteId)
+          assertThat(request.description).isEqualTo("Sheffield Custody Suite")
+          assertThat(request.typeCode).isEqualTo("POLICE")
+          assertThat(request.active).isTrue()
+          assertThat(request.localAuthorityCodes).containsExactly("00CG")
+          assertThat(request.longDescription).isEqualTo("Sheffield Custody Suite, Sheffield")
+          assertThat(request.contactName).isEqualTo("JANE SMITH")
+          assertThat(request.disabilityAccessCode).isEqualTo("WC")
+          assertThat(request.areaCode).isEqualTo("52")
+          assertThat(request.subAreaCode).isEqualTo("SHEFF")
+          assertThat(request.regionCode).isEqualTo("NEAST")
+          assertThat(request.nomsRegionCode).isEqualTo("YOHUM")
+          assertThat(request.cjitCode).isEqualTo("C00SH00")
+          assertThat(request.payrollRegionCode).isEqualTo("YP")
+        }
+
+        @Test
+        fun `will send telemetry event showing success`() {
+          verify(telemetryClient).trackEvent(
+            eq("police-custody-suite-created-success"),
+            check {
+              assertThat(it["policeCustodySuiteId"]).isEqualTo(policeCustodySuiteId)
+              assertThat(it["nomisAgencyId"]).isEqualTo(policeCustodySuiteId)
+            },
+            isNull(),
+          )
+        }
+      }
+    }
+  }
+
+  @Nested
+  @DisplayName("register.policecustodysuite.amended")
+  inner class PoliceCustodySuiteAmended {
+    val policeCustodySuiteId = "SHEFPOL"
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of the event")
+    inner class WhenNomisCreated {
+
+      @BeforeEach
+      fun setUp() {
+        publishPoliceCustodySuiteAmendedEvent(policeCustodySuiteId = policeCustodySuiteId, source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the event is ignored`() {
+        verify(telemetryClient).trackEvent(
+          eq("police-custody-suite-updated-ignored"),
+          check {
+            assertThat(it["policeCustodySuiteId"]).isEqualTo(policeCustodySuiteId)
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of the event")
+    inner class WhenDpsCreated {
+
+      @Nested
+      inner class HappyPath {
+
+        @BeforeEach
+        fun setUp() {
+          dpsApi.stubGetAgency(agencyId = policeCustodySuiteId, response = policeCustodySuiteLegacyAgencyDto())
+          nomisApi.stubUpdateAgency(agencyId = policeCustodySuiteId, response = agencyResponse().copy(agencyId = policeCustodySuiteId))
+          publishPoliceCustodySuiteAmendedEvent(policeCustodySuiteId = policeCustodySuiteId)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will update NOMIS`() {
+          val request: UpdateAgencyRequest = NomisApiExtension.nomisApi.getRequestBody(putRequestedFor(urlEqualTo("/agency/$policeCustodySuiteId")), jsonMapper)
+          assertThat(request.description).isEqualTo("Sheffield Custody Suite")
+          assertThat(request.typeCode).isEqualTo("POLICE")
+          assertThat(request.active).isTrue()
+          assertThat(request.localAuthorityCodes).containsExactly("00CG")
+          assertThat(request.longDescription).isEqualTo("Sheffield Custody Suite, Sheffield")
+          assertThat(request.contactName).isEqualTo("JANE SMITH")
+          assertThat(request.disabilityAccessCode).isEqualTo("WC")
+          assertThat(request.areaCode).isEqualTo("52")
+          assertThat(request.subAreaCode).isEqualTo("SHEFF")
+          assertThat(request.regionCode).isEqualTo("NEAST")
+          assertThat(request.nomsRegionCode).isEqualTo("YOHUM")
+          assertThat(request.cjitCode).isEqualTo("C00SH00")
+          assertThat(request.payrollRegionCode).isEqualTo("YP")
+        }
+
+        @Test
+        fun `will send telemetry event showing success`() {
+          verify(telemetryClient).trackEvent(
+            eq("police-custody-suite-updated-success"),
+            check {
+              assertThat(it["policeCustodySuiteId"]).isEqualTo(policeCustodySuiteId)
+              assertThat(it["nomisAgencyId"]).isEqualTo(policeCustodySuiteId)
+            },
+            isNull(),
+          )
+        }
+      }
+    }
+  }
+
+  @Nested
+  @DisplayName("register.policecustodysuite.deleted")
+  inner class PoliceCustodySuiteDeleted {
+    val policeCustodySuiteId = "SHEFPOL"
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of the event")
+    inner class WhenNomisDeleted {
+      @BeforeEach
+      fun setUp() {
+        publishPoliceCustodySuiteDeletedEvent(policeCustodySuiteId = policeCustodySuiteId, source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will ignore the event`() {
+        nomisApi.verify(0, deleteRequestedFor(urlEqualTo("/agency/$policeCustodySuiteId")))
+        verify(telemetryClient).trackEvent(
+          eq("police-custody-suite-deleted-ignored"),
+          check { assertThat(it["policeCustodySuiteId"]).isEqualTo(policeCustodySuiteId) },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of the event")
+    inner class WhenDpsDeleted {
+      @BeforeEach
+      fun setUp() {
+        nomisApi.stubDeleteAgency(agencyId = policeCustodySuiteId)
+        publishPoliceCustodySuiteDeletedEvent(policeCustodySuiteId = policeCustodySuiteId)
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will delete agency in NOMIS`() {
+        nomisApi.verify(deleteRequestedFor(urlEqualTo("/agency/$policeCustodySuiteId")))
+      }
+
+      @Test
+      fun `will send telemetry event showing success`() {
+        verify(telemetryClient).trackEvent(
+          eq("police-custody-suite-deleted-success"),
+          check { assertThat(it["policeCustodySuiteId"]).isEqualTo(policeCustodySuiteId) },
+          isNull(),
+        )
+      }
+    }
+  }
+
+  @Nested
+  @DisplayName("register.policecustodysuite.email.inserted")
+  inner class PoliceCustodySuiteEmailInserted {
+    val dpsEmailId = 12345L
+    val nomisEmailId = 8765L
+    val policeCustodySuiteId = "SHEFPOL"
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of the event")
+    inner class WhenNomisCreated {
+
+      @BeforeEach
+      fun setUp() {
+        publishPoliceCustodySuiteEmailInsertedEvent(emailId = dpsEmailId, policeCustodySuiteId = policeCustodySuiteId, source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the event is ignored`() {
+        verify(telemetryClient).trackEvent(
+          eq("police-custody-suite-email-created-ignored"),
+          check {
+            assertThat(it["policeCustodySuiteId"]).isEqualTo(policeCustodySuiteId)
+            assertThat(it["dpsEmailId"]).isEqualTo(dpsEmailId.toString())
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of the event")
+    inner class WhenDpsCreated {
+
+      @Nested
+      inner class HappyPath {
+
+        @BeforeEach
+        fun setUp() {
+          dpsApi.stubGetAgency(
+            policeCustodySuiteId,
+            policeCustodySuiteLegacyAgencyDto().copy(emailAddresses = listOf(legacyAgencyEmailDto().copy(id = dpsEmailId, address = "test@justice.gov.uk"))),
+          )
+          nomisApi.stubCreateAgencyEmail(agencyId = policeCustodySuiteId, response = createAgencyEmailResponse().copy(id = nomisEmailId))
+          publishPoliceCustodySuiteEmailInsertedEvent(emailId = dpsEmailId, policeCustodySuiteId = policeCustodySuiteId)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will update NOMIS`() {
+          val request: CreateAgencyEmailAddressRequest = NomisApiExtension.nomisApi.getRequestBody(postRequestedFor(urlEqualTo("/agency/$policeCustodySuiteId/emails")), jsonMapper)
+          assertThat(request.emailAddress).isEqualTo("test@justice.gov.uk")
+        }
+
+        @Test
+        fun `will send telemetry event showing success`() {
+          verify(telemetryClient).trackEvent(
+            eq("police-custody-suite-email-created-success"),
+            check {
+              assertThat(it["policeCustodySuiteId"]).isEqualTo(policeCustodySuiteId)
+              assertThat(it["dpsEmailId"]).isEqualTo(dpsEmailId.toString())
+              assertThat(it["nomisEmailId"]).isEqualTo(nomisEmailId.toString())
+            },
+            isNull(),
+          )
+        }
+      }
+    }
+  }
+
+  @Nested
+  @DisplayName("register.policecustodysuite.email.amended")
+  inner class PoliceCustodySuiteEmailAmended {
+    val dpsEmailId = 12345L
+    val policeCustodySuiteId = "SHEFPOL"
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of the event")
+    inner class WhenNomisAmended {
+      @BeforeEach
+      fun setUp() {
+        publishPoliceCustodySuiteEmailAmendedEvent(emailId = dpsEmailId, policeCustodySuiteId = policeCustodySuiteId, source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the event is ignored`() {
+        verify(telemetryClient).trackEvent(
+          eq("police-custody-suite-email-updated-ignored"),
+          check {
+            assertThat(it["policeCustodySuiteId"]).isEqualTo(policeCustodySuiteId)
+            assertThat(it["dpsEmailId"]).isEqualTo(dpsEmailId.toString())
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of the event")
+    inner class WhenDpsAmended {
+      private val emails = listOf("custody.one@justice.gov.uk", "custody.two@justice.gov.uk")
+
+      @Nested
+      inner class HappyPath {
+        @BeforeEach
+        fun setUp() {
+          dpsApi.stubGetAgency(
+            agencyId = policeCustodySuiteId,
+            response = policeCustodySuiteLegacyAgencyDto().copy(
+              emailAddresses = emails.mapIndexed { index, address ->
+                legacyAgencyEmailDto().copy(id = index + 1L, address = address)
+              },
+            ),
+          )
+          nomisApi.stubUpdateAgencyEmailAddresses(
+            agencyId = policeCustodySuiteId,
+            response = updateAgencyEmailAddressesResponse().copy(
+              emailAddresses = emails.mapIndexed { index, address ->
+                agencyEmailAddress().copy(id = index + 1L, emailAddress = address)
+              },
+            ),
+          )
+          publishPoliceCustodySuiteEmailAmendedEvent(emailId = dpsEmailId, policeCustodySuiteId = policeCustodySuiteId)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will refresh all NOMIS email addresses`() {
+          val request: UpdateAgencyEmailAddressesRequest = NomisApiExtension.nomisApi.getRequestBody(putRequestedFor(urlEqualTo("/agency/$policeCustodySuiteId/emails")), jsonMapper)
+          assertThat(request.emailAddresses).containsExactlyElementsOf(emails)
+        }
+
+        @Test
+        fun `will send telemetry event showing success`() {
+          verify(telemetryClient).trackEvent(
+            eq("police-custody-suite-email-updated-success"),
+            check {
+              assertThat(it["policeCustodySuiteId"]).isEqualTo(policeCustodySuiteId)
+              assertThat(it["dpsEmailId"]).isEqualTo(dpsEmailId.toString())
+              assertThat(it["nomisEmailIds"]).isEqualTo("1, 2")
+            },
+            isNull(),
+          )
+        }
+      }
+    }
+  }
+
+  @Nested
+  @DisplayName("register.policecustodysuite.email.deleted")
+  inner class PoliceCustodySuiteEmailDeleted {
+    val dpsEmailId = 12345L
+    val policeCustodySuiteId = "SHEFPOL"
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of the event")
+    inner class WhenNomisDeleted {
+      @BeforeEach
+      fun setUp() {
+        publishPoliceCustodySuiteEmailDeletedEvent(emailId = dpsEmailId, policeCustodySuiteId = policeCustodySuiteId, source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the event is ignored`() {
+        verify(telemetryClient).trackEvent(
+          eq("police-custody-suite-email-deleted-ignored"),
+          check {
+            assertThat(it["policeCustodySuiteId"]).isEqualTo(policeCustodySuiteId)
+            assertThat(it["dpsEmailId"]).isEqualTo(dpsEmailId.toString())
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of the event")
+    inner class WhenDpsDeleted {
+      private val emails = listOf("custody.one@justice.gov.uk", "custody.two@justice.gov.uk")
+
+      @Nested
+      inner class HappyPath {
+        @BeforeEach
+        fun setUp() {
+          dpsApi.stubGetAgency(
+            agencyId = policeCustodySuiteId,
+            response = policeCustodySuiteLegacyAgencyDto().copy(
+              emailAddresses = emails.mapIndexed { index, address ->
+                legacyAgencyEmailDto().copy(id = index + 1L, address = address)
+              },
+            ),
+          )
+          nomisApi.stubUpdateAgencyEmailAddresses(
+            agencyId = policeCustodySuiteId,
+            response = updateAgencyEmailAddressesResponse().copy(
+              emailAddresses = emails.mapIndexed { index, address ->
+                agencyEmailAddress().copy(id = index + 1L, emailAddress = address)
+              },
+            ),
+          )
+          publishPoliceCustodySuiteEmailDeletedEvent(emailId = dpsEmailId, policeCustodySuiteId = policeCustodySuiteId)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will refresh all NOMIS email addresses`() {
+          val request: UpdateAgencyEmailAddressesRequest = NomisApiExtension.nomisApi.getRequestBody(putRequestedFor(urlEqualTo("/agency/$policeCustodySuiteId/emails")), jsonMapper)
+          assertThat(request.emailAddresses).containsExactlyElementsOf(emails)
+        }
+
+        @Test
+        fun `will send telemetry event showing success`() {
+          verify(telemetryClient).trackEvent(
+            eq("police-custody-suite-email-deleted-success"),
+            check {
+              assertThat(it["policeCustodySuiteId"]).isEqualTo(policeCustodySuiteId)
+              assertThat(it["dpsEmailId"]).isEqualTo(dpsEmailId.toString())
+              assertThat(it["nomisEmailIds"]).isEqualTo("1, 2")
+            },
+            isNull(),
+          )
+        }
+      }
+    }
+  }
+
+  @Nested
+  @DisplayName("register.policecustodysuite.phone.inserted")
+  inner class PoliceCustodySuitePhoneInserted {
+    val dpsPhoneId = 12345L
+    val nomisPhoneId = 8765L
+    val policeCustodySuiteId = "SHEFPOL"
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of the event")
+    inner class WhenNomisCreated {
+      @BeforeEach
+      fun setUp() {
+        publishPoliceCustodySuitePhoneEvent("register.policecustodysuite.phone.inserted", policeCustodySuiteId, dpsPhoneId, source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the event is ignored`() {
+        verify(telemetryClient).trackEvent(
+          eq("police-custody-suite-phone-created-ignored"),
+          check {
+            assertThat(it["policeCustodySuiteId"]).isEqualTo(policeCustodySuiteId)
+            assertThat(it["dpsPhoneId"]).isEqualTo(dpsPhoneId.toString())
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will not call DPS or update NOMIS`() {
+        dpsApi.verify(0, getRequestedFor(urlEqualTo("/legacy/$policeCustodySuiteId")))
+        nomisApi.verify(0, postRequestedFor(urlEqualTo("/agency/$policeCustodySuiteId/phones")))
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of the event")
+    inner class WhenDpsCreated {
+      @Nested
+      inner class HappyPath {
+        @BeforeEach
+        fun setUp() {
+          dpsApi.stubGetAgency(
+            agencyId = policeCustodySuiteId,
+            response = policeCustodySuiteLegacyAgencyDto().copy(
+              phoneNumbers = listOf(legacyAgencyPhoneDto(), legacyAgencyPhoneDto().copy(id = dpsPhoneId, number = "0114 555 1234")),
+            ),
+          )
+          nomisApi.stubCreateAgencyPhone(agencyId = policeCustodySuiteId, response = createAgencyPhoneResponse().copy(id = nomisPhoneId))
+          publishPoliceCustodySuitePhoneEvent("register.policecustodysuite.phone.inserted", policeCustodySuiteId, dpsPhoneId)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will create only the inserted phone in NOMIS`() {
+          val request: CreateAgencyPhoneNumberRequest = NomisApiExtension.nomisApi.getRequestBody(postRequestedFor(urlEqualTo("/agency/$policeCustodySuiteId/phones")), jsonMapper)
+          assertThat(request).isEqualTo(CreateAgencyPhoneNumberRequest(number = "0114 555 1234", typeCode = "BUS"))
+          nomisApi.verify(1, postRequestedFor(urlEqualTo("/agency/$policeCustodySuiteId/phones")))
+        }
+
+        @Test
+        fun `will send telemetry event showing success`() {
+          verify(telemetryClient).trackEvent(
+            eq("police-custody-suite-phone-created-success"),
+            check {
+              assertThat(it["policeCustodySuiteId"]).isEqualTo(policeCustodySuiteId)
+              assertThat(it["dpsPhoneId"]).isEqualTo(dpsPhoneId.toString())
+              assertThat(it["nomisPhoneId"]).isEqualTo(nomisPhoneId.toString())
+            },
+            isNull(),
+          )
+        }
+      }
+    }
+  }
+
+  @Nested
+  @DisplayName("register.policecustodysuite.phone.amended")
+  inner class PoliceCustodySuitePhoneAmended {
+    val dpsPhoneId = 12345L
+    val policeCustodySuiteId = "SHEFPOL"
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of the event")
+    inner class WhenNomisAmended {
+      @BeforeEach
+      fun setUp() {
+        publishPoliceCustodySuitePhoneEvent("register.policecustodysuite.phone.amended", policeCustodySuiteId, dpsPhoneId, source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the event is ignored`() {
+        verify(telemetryClient).trackEvent(
+          eq("police-custody-suite-phone-updated-ignored"),
+          check {
+            assertThat(it["policeCustodySuiteId"]).isEqualTo(policeCustodySuiteId)
+            assertThat(it["dpsPhoneId"]).isEqualTo(dpsPhoneId.toString())
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will not call DPS or update NOMIS`() {
+        dpsApi.verify(0, getRequestedFor(urlEqualTo("/legacy/$policeCustodySuiteId")))
+        nomisApi.verify(0, putRequestedFor(urlEqualTo("/agency/$policeCustodySuiteId/phones")))
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of the event")
+    inner class WhenDpsAmended {
+      val phones = listOf("0114 555 1234", "0114 555 5678")
+
+      @Nested
+      inner class HappyPath {
+        @BeforeEach
+        fun setUp() {
+          dpsApi.stubGetAgency(
+            agencyId = policeCustodySuiteId,
+            response = policeCustodySuiteLegacyAgencyDto().copy(
+              phoneNumbers = phones.mapIndexed { index, number -> legacyAgencyPhoneDto().copy(id = dpsPhoneId + index, number = number) },
+            ),
+          )
+          nomisApi.stubUpdateAgencyPhoneNumbers(
+            agencyId = policeCustodySuiteId,
+            response = updateAgencyPhoneNumbersResponse().copy(
+              phoneNumbers = phones.mapIndexed { index, number -> agencyPhoneNumber().copy(id = index + 1L, number = number) },
+            ),
+          )
+          publishPoliceCustodySuitePhoneEvent("register.policecustodysuite.phone.amended", policeCustodySuiteId, dpsPhoneId)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will refresh all NOMIS phone numbers`() {
+          val request: UpdateAgencyPhoneNumbersRequest = NomisApiExtension.nomisApi.getRequestBody(putRequestedFor(urlEqualTo("/agency/$policeCustodySuiteId/phones")), jsonMapper)
+          assertThat(request.phoneNumbers).containsExactlyElementsOf(phones.map { UpdateAgencyPhoneNumber(number = it, typeCode = "BUS") })
+        }
+
+        @Test
+        fun `will send telemetry event showing success`() {
+          verify(telemetryClient).trackEvent(
+            eq("police-custody-suite-phone-updated-success"),
+            check {
+              assertThat(it["policeCustodySuiteId"]).isEqualTo(policeCustodySuiteId)
+              assertThat(it["dpsPhoneId"]).isEqualTo(dpsPhoneId.toString())
+              assertThat(it["nomisPhoneIds"]).isEqualTo("1, 2")
+            },
+            isNull(),
+          )
+        }
+      }
+    }
+  }
+
+  @Nested
+  @DisplayName("register.policecustodysuite.phone.deleted")
+  inner class PoliceCustodySuitePhoneDeleted {
+    val dpsPhoneId = 12345L
+    val policeCustodySuiteId = "SHEFPOL"
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of the event")
+    inner class WhenNomisDeleted {
+      @BeforeEach
+      fun setUp() {
+        publishPoliceCustodySuitePhoneEvent("register.policecustodysuite.phone.deleted", policeCustodySuiteId, dpsPhoneId, source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the event is ignored`() {
+        verify(telemetryClient).trackEvent(
+          eq("police-custody-suite-phone-deleted-ignored"),
+          check {
+            assertThat(it["policeCustodySuiteId"]).isEqualTo(policeCustodySuiteId)
+            assertThat(it["dpsPhoneId"]).isEqualTo(dpsPhoneId.toString())
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will not call DPS or update NOMIS`() {
+        dpsApi.verify(0, getRequestedFor(urlEqualTo("/legacy/$policeCustodySuiteId")))
+        nomisApi.verify(0, putRequestedFor(urlEqualTo("/agency/$policeCustodySuiteId/phones")))
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of the event")
+    inner class WhenDpsDeleted {
+      val phones = listOf("0114 555 1234", "0114 555 5678")
+
+      @Nested
+      inner class HappyPath {
+        @BeforeEach
+        fun setUp() {
+          dpsApi.stubGetAgency(
+            agencyId = policeCustodySuiteId,
+            response = policeCustodySuiteLegacyAgencyDto().copy(
+              phoneNumbers = phones.mapIndexed { index, number -> legacyAgencyPhoneDto().copy(id = index + 1L, number = number) },
+            ),
+          )
+          nomisApi.stubUpdateAgencyPhoneNumbers(
+            agencyId = policeCustodySuiteId,
+            response = updateAgencyPhoneNumbersResponse().copy(
+              phoneNumbers = phones.mapIndexed { index, number -> agencyPhoneNumber().copy(id = index + 1L, number = number) },
+            ),
+          )
+          publishPoliceCustodySuitePhoneEvent("register.policecustodysuite.phone.deleted", policeCustodySuiteId, dpsPhoneId)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will refresh NOMIS with the remaining phone numbers`() {
+          val request: UpdateAgencyPhoneNumbersRequest = NomisApiExtension.nomisApi.getRequestBody(putRequestedFor(urlEqualTo("/agency/$policeCustodySuiteId/phones")), jsonMapper)
+          assertThat(request.phoneNumbers).containsExactlyElementsOf(phones.map { UpdateAgencyPhoneNumber(number = it, typeCode = "BUS") })
+        }
+
+        @Test
+        fun `will send telemetry event showing success`() {
+          verify(telemetryClient).trackEvent(
+            eq("police-custody-suite-phone-deleted-success"),
+            check {
+              assertThat(it["policeCustodySuiteId"]).isEqualTo(policeCustodySuiteId)
+              assertThat(it["dpsPhoneId"]).isEqualTo(dpsPhoneId.toString())
+              assertThat(it["nomisPhoneIds"]).isEqualTo("1, 2")
+            },
+            isNull(),
+          )
+        }
+      }
+
+      @Nested
+      inner class LastPhoneDeleted {
+        @BeforeEach
+        fun setUp() {
+          dpsApi.stubGetAgency(agencyId = policeCustodySuiteId, response = policeCustodySuiteLegacyAgencyDto().copy(phoneNumbers = emptyList()))
+          nomisApi.stubUpdateAgencyPhoneNumbers(
+            agencyId = policeCustodySuiteId,
+            response = updateAgencyPhoneNumbersResponse().copy(phoneNumbers = emptyList()),
+          )
+          publishPoliceCustodySuitePhoneEvent("register.policecustodysuite.phone.deleted", policeCustodySuiteId, dpsPhoneId)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will remove all NOMIS phone numbers`() {
+          val request: UpdateAgencyPhoneNumbersRequest = NomisApiExtension.nomisApi.getRequestBody(putRequestedFor(urlEqualTo("/agency/$policeCustodySuiteId/phones")), jsonMapper)
+          assertThat(request.phoneNumbers).isEmpty()
+        }
+
+        @Test
+        fun `will send telemetry event showing success with no phone ids`() {
+          verify(telemetryClient).trackEvent(
+            eq("police-custody-suite-phone-deleted-success"),
+            check {
+              assertThat(it["policeCustodySuiteId"]).isEqualTo(policeCustodySuiteId)
+              assertThat(it["dpsPhoneId"]).isEqualTo(dpsPhoneId.toString())
+              assertThat(it["nomisPhoneIds"]).isEmpty()
+            },
+            isNull(),
+          )
+        }
+      }
+    }
+  }
+
+  @Nested
+  @DisplayName("register.policecustodysuite.address.inserted")
+  inner class PoliceCustodySuiteAddressInserted {
+    val dpsAddressId = 12345L
+    val nomisAddressId = 8765L
+    val policeCustodySuiteId = "SHEFPOL"
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of the event")
+    inner class WhenNomisCreated {
+      @BeforeEach
+      fun setUp() {
+        publishPoliceCustodySuiteAddressEvent("register.policecustodysuite.address.inserted", policeCustodySuiteId, dpsAddressId, source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the event is ignored`() {
+        verify(telemetryClient).trackEvent(
+          eq("police-custody-suite-address-created-ignored"),
+          check {
+            assertThat(it["policeCustodySuiteId"]).isEqualTo(policeCustodySuiteId)
+            assertThat(it["dpsAddressId"]).isEqualTo(dpsAddressId.toString())
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will not call DPS or update NOMIS`() {
+        dpsApi.verify(0, getRequestedFor(urlEqualTo("/legacy/$policeCustodySuiteId")))
+        nomisApi.verify(0, postRequestedFor(urlEqualTo("/agency/$policeCustodySuiteId/addresses")))
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of the event")
+    inner class WhenDpsCreated {
+      @Nested
+      inner class HappyPath {
+        private val expectedAddress = CreateAgencyAddressRequest(
+          street = "The Custody Suite",
+          locality = "50 West Bar",
+          postcode = "S3 8PH",
+          city = "Sheffield",
+          county = "South Yorkshire",
+          country = "England",
+        )
+
+        @BeforeEach
+        fun setUp() {
+          nomisApi.stubCreateAgencyAddress(agencyId = policeCustodySuiteId, response = createAgencyAddressResponse().copy(id = nomisAddressId))
+          dpsApi.stubGetAgency(
+            agencyId = policeCustodySuiteId,
+            response = policeCustodySuiteLegacyAgencyDto().copy(
+              addresses = listOf(
+                legacyAgencyAddressDto().copy(id = 1, addressLine1 = "Another custody suite address", addressLine2 = null, town = null, county = null, postcode = null, country = null),
+                legacyAgencyAddressDto().copy(
+                  id = dpsAddressId,
+                  addressLine1 = "The Custody Suite",
+                  addressLine2 = "50 West Bar",
+                  postcode = "S3 8PH",
+                  town = "Sheffield",
+                  county = "South Yorkshire",
+                  country = "England",
+                ),
+              ),
+            ),
+          )
+          publishPoliceCustodySuiteAddressEvent("register.policecustodysuite.address.inserted", policeCustodySuiteId, dpsAddressId)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will create only the inserted address in NOMIS`() {
+          val request: CreateAgencyAddressRequest = NomisApiExtension.nomisApi.getRequestBody(postRequestedFor(urlEqualTo("/agency/$policeCustodySuiteId/addresses")), jsonMapper)
+          assertThat(request).isEqualTo(expectedAddress)
+          nomisApi.verify(1, postRequestedFor(urlEqualTo("/agency/$policeCustodySuiteId/addresses")))
+        }
+
+        @Test
+        fun `will send telemetry event showing success`() {
+          verify(telemetryClient).trackEvent(
+            eq("police-custody-suite-address-created-success"),
+            check {
+              assertThat(it["policeCustodySuiteId"]).isEqualTo(policeCustodySuiteId)
+              assertThat(it["dpsAddressId"]).isEqualTo(dpsAddressId.toString())
+              assertThat(it["nomisAddressId"]).isEqualTo(nomisAddressId.toString())
+            },
+            isNull(),
+          )
+        }
+      }
+    }
+  }
+
+  @Nested
+  @DisplayName("register.policecustodysuite.address.amended")
+  inner class PoliceCustodySuiteAddressAmended {
+    val dpsAddressId = 12345L
+    val policeCustodySuiteId = "SHEFPOL"
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of the event")
+    inner class WhenNomisAmended {
+      @BeforeEach
+      fun setUp() {
+        publishPoliceCustodySuiteAddressEvent("register.policecustodysuite.address.amended", policeCustodySuiteId, dpsAddressId, source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the event is ignored`() {
+        verify(telemetryClient).trackEvent(
+          eq("police-custody-suite-address-updated-ignored"),
+          check {
+            assertThat(it["policeCustodySuiteId"]).isEqualTo(policeCustodySuiteId)
+            assertThat(it["dpsAddressId"]).isEqualTo(dpsAddressId.toString())
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will not call DPS or update NOMIS`() {
+        dpsApi.verify(0, getRequestedFor(urlEqualTo("/legacy/$policeCustodySuiteId")))
+        nomisApi.verify(0, putRequestedFor(urlEqualTo("/agency/$policeCustodySuiteId/addresses")))
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of the event")
+    inner class WhenDpsAmended {
+      @Nested
+      inner class HappyPath {
+        private val address = legacyAgencyAddressDto().copy(
+          id = dpsAddressId,
+          addressLine1 = "The Custody Suite",
+          addressLine2 = "50 West Bar",
+          postcode = "S3 8PH",
+          town = "Sheffield",
+          county = "South Yorkshire",
+          country = "England",
+        )
+        private val expectedAddress = UpdateAgencyAddress(
+          street = "The Custody Suite",
+          locality = "50 West Bar",
+          postcode = "S3 8PH",
+          city = "Sheffield",
+          county = "South Yorkshire",
+          country = "England",
+        )
+
+        @BeforeEach
+        fun setUp() {
+          dpsApi.stubGetAgency(
+            agencyId = policeCustodySuiteId,
+            response = policeCustodySuiteLegacyAgencyDto().copy(addresses = listOf(address)),
+          )
+          nomisApi.stubUpdateAgencyAddresses(
+            agencyId = policeCustodySuiteId,
+            response = updateAgencyAddressesResponse().copy(addresses = listOf(agencyAddress().copy(id = 1))),
+          )
+          publishPoliceCustodySuiteAddressEvent("register.policecustodysuite.address.amended", policeCustodySuiteId, dpsAddressId)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will refresh all NOMIS addresses using the same mapping as creation`() {
+          val request: UpdateAgencyAddressesRequest = NomisApiExtension.nomisApi.getRequestBody(putRequestedFor(urlEqualTo("/agency/$policeCustodySuiteId/addresses")), jsonMapper)
+          assertThat(request.addresses).containsExactly(expectedAddress)
+        }
+
+        @Test
+        fun `will send telemetry event showing success`() {
+          verify(telemetryClient).trackEvent(
+            eq("police-custody-suite-address-updated-success"),
+            check {
+              assertThat(it["policeCustodySuiteId"]).isEqualTo(policeCustodySuiteId)
+              assertThat(it["dpsAddressId"]).isEqualTo(dpsAddressId.toString())
+              assertThat(it["nomisAddressIds"]).isEqualTo("1")
+            },
+            isNull(),
+          )
+        }
+      }
+    }
+  }
+
+  @Nested
+  @DisplayName("register.policecustodysuite.address.deleted")
+  inner class PoliceCustodySuiteAddressDeleted {
+    val dpsAddressId = 12345L
+    val policeCustodySuiteId = "SHEFPOL"
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of the event")
+    inner class WhenNomisDeleted {
+      @BeforeEach
+      fun setUp() {
+        publishPoliceCustodySuiteAddressEvent("register.policecustodysuite.address.deleted", policeCustodySuiteId, dpsAddressId, source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the event is ignored`() {
+        verify(telemetryClient).trackEvent(
+          eq("police-custody-suite-address-deleted-ignored"),
+          check {
+            assertThat(it["policeCustodySuiteId"]).isEqualTo(policeCustodySuiteId)
+            assertThat(it["dpsAddressId"]).isEqualTo(dpsAddressId.toString())
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will not call DPS or update NOMIS`() {
+        dpsApi.verify(0, getRequestedFor(urlEqualTo("/legacy/$policeCustodySuiteId")))
+        nomisApi.verify(0, putRequestedFor(urlEqualTo("/agency/$policeCustodySuiteId/addresses")))
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of the event")
+    inner class WhenDpsDeleted {
+      @Nested
+      inner class HappyPath {
+        @BeforeEach
+        fun setUp() {
+          dpsApi.stubGetAgency(
+            agencyId = policeCustodySuiteId,
+            response = policeCustodySuiteLegacyAgencyDto().copy(
+              addresses = listOf(
+                legacyAgencyAddressDto().copy(id = 1, addressLine1 = "The Custody Suite", addressLine2 = null, town = null, county = null, postcode = "S3 8PH", country = null),
+                legacyAgencyAddressDto().copy(id = 2, addressLine1 = "Another custody suite address", addressLine2 = null, town = null, county = null, postcode = "S1 2AB", country = null),
+              ),
+            ),
+          )
+          nomisApi.stubUpdateAgencyAddresses(
+            agencyId = policeCustodySuiteId,
+            response = updateAgencyAddressesResponse().copy(addresses = listOf(agencyAddress().copy(id = 1), agencyAddress().copy(id = 2))),
+          )
+          publishPoliceCustodySuiteAddressEvent("register.policecustodysuite.address.deleted", policeCustodySuiteId, dpsAddressId)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will refresh NOMIS with the remaining addresses`() {
+          val request: UpdateAgencyAddressesRequest = NomisApiExtension.nomisApi.getRequestBody(putRequestedFor(urlEqualTo("/agency/$policeCustodySuiteId/addresses")), jsonMapper)
+          assertThat(request.addresses).containsExactly(
+            UpdateAgencyAddress(street = "The Custody Suite", postcode = "S3 8PH"),
+            UpdateAgencyAddress(street = "Another custody suite address", postcode = "S1 2AB"),
+          )
+        }
+
+        @Test
+        fun `will send telemetry event showing success`() {
+          verify(telemetryClient).trackEvent(
+            eq("police-custody-suite-address-deleted-success"),
+            check {
+              assertThat(it["policeCustodySuiteId"]).isEqualTo(policeCustodySuiteId)
+              assertThat(it["dpsAddressId"]).isEqualTo(dpsAddressId.toString())
+              assertThat(it["nomisAddressIds"]).isEqualTo("1, 2")
+            },
+            isNull(),
+          )
+        }
+      }
+
+      @Nested
+      inner class LastAddressDeleted {
+        @BeforeEach
+        fun setUp() {
+          dpsApi.stubGetAgency(agencyId = policeCustodySuiteId, response = policeCustodySuiteLegacyAgencyDto().copy(addresses = emptyList()))
+          nomisApi.stubUpdateAgencyAddresses(
+            agencyId = policeCustodySuiteId,
+            response = updateAgencyAddressesResponse().copy(addresses = emptyList()),
+          )
+          publishPoliceCustodySuiteAddressEvent("register.policecustodysuite.address.deleted", policeCustodySuiteId, dpsAddressId)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will remove all NOMIS addresses`() {
+          val request: UpdateAgencyAddressesRequest = NomisApiExtension.nomisApi.getRequestBody(putRequestedFor(urlEqualTo("/agency/$policeCustodySuiteId/addresses")), jsonMapper)
+          assertThat(request.addresses).isEmpty()
+        }
+
+        @Test
+        fun `will send telemetry event showing success with no address ids`() {
+          verify(telemetryClient).trackEvent(
+            eq("police-custody-suite-address-deleted-success"),
+            check {
+              assertThat(it["policeCustodySuiteId"]).isEqualTo(policeCustodySuiteId)
+              assertThat(it["dpsAddressId"]).isEqualTo(dpsAddressId.toString())
+              assertThat(it["nomisAddressIds"]).isEmpty()
+            },
+            isNull(),
+          )
+        }
+      }
+    }
+  }
+
   private fun hospitalLegacyAgencyDto() = legacyAgencyDto().copy(
     agencyType = LegacyAgencyType.HOSPITAL,
     name = "Hallamshire Hospital",
     description = "Hallamshire Hospital, Sheffield",
+  )
+
+  private fun policeCustodySuiteLegacyAgencyDto() = legacyAgencyDto().copy(
+    agencyType = LegacyAgencyType.POLICE_CUSTODY_SUITE,
+    name = "Sheffield Custody Suite",
+    description = "Sheffield Custody Suite, Sheffield",
+    courtTypeCode = null,
   )
 
   private fun publishCourtAddressEvent(
@@ -2139,6 +3152,141 @@ class AgencyRegisterToNomisIntTest(
           eventType = this,
           additionalInformation = CourtEmailAdditionalInformation(
             courtId = courtId,
+            emailId = emailId,
+            source = source,
+          ),
+        ),
+      )
+    }
+  }
+
+  private fun publishPoliceCustodySuiteAddressEvent(
+    eventType: String,
+    policeCustodySuiteId: String,
+    addressId: Long,
+    source: String = "DPS",
+  ) {
+    publishDomainEvent(
+      eventType = eventType,
+      payload = PoliceCustodySuiteAddressEvent(
+        eventType = eventType,
+        additionalInformation = PoliceCustodySuiteAddressAdditionalInformation(policeCustodySuiteId = policeCustodySuiteId, addressId = addressId, source = source),
+      ),
+    )
+  }
+
+  private fun publishPoliceCustodySuitePhoneEvent(
+    eventType: String,
+    policeCustodySuiteId: String,
+    phoneId: Long,
+    source: String = "DPS",
+  ) {
+    publishDomainEvent(
+      eventType = eventType,
+      payload = PoliceCustodySuitePhoneEvent(
+        eventType = eventType,
+        additionalInformation = PoliceCustodySuitePhoneAdditionalInformation(policeCustodySuiteId = policeCustodySuiteId, phoneId = phoneId, source = source),
+      ),
+    )
+  }
+
+  private fun publishPoliceCustodySuiteInsertedEvent(
+    policeCustodySuiteId: String,
+    source: String = "DPS",
+  ) {
+    publishDomainEvent(
+      eventType = "register.policecustodysuite.inserted",
+      payload = PoliceCustodySuiteEvent(
+        eventType = "register.policecustodysuite.inserted",
+        additionalInformation = PoliceCustodySuiteAdditionalInformation(
+          policeCustodySuiteId = policeCustodySuiteId,
+          source = source,
+        ),
+      ),
+    )
+  }
+
+  private fun publishPoliceCustodySuiteAmendedEvent(
+    policeCustodySuiteId: String,
+    source: String = "DPS",
+  ) {
+    publishDomainEvent(
+      eventType = "register.policecustodysuite.amended",
+      payload = PoliceCustodySuiteEvent(
+        eventType = "register.policecustodysuite.amended",
+        additionalInformation = PoliceCustodySuiteAdditionalInformation(
+          policeCustodySuiteId = policeCustodySuiteId,
+          source = source,
+        ),
+      ),
+    )
+  }
+
+  private fun publishPoliceCustodySuiteDeletedEvent(
+    policeCustodySuiteId: String,
+    source: String = "DPS",
+  ) {
+    publishDomainEvent(
+      eventType = "register.policecustodysuite.deleted",
+      payload = PoliceCustodySuiteEvent(
+        eventType = "register.policecustodysuite.deleted",
+        additionalInformation = PoliceCustodySuiteAdditionalInformation(policeCustodySuiteId = policeCustodySuiteId, source = source),
+      ),
+    )
+  }
+
+  private fun publishPoliceCustodySuiteEmailInsertedEvent(
+    policeCustodySuiteId: String,
+    emailId: Long,
+    source: String = "DPS",
+  ) {
+    with("register.policecustodysuite.email.inserted") {
+      publishDomainEvent(
+        eventType = this,
+        payload = PoliceCustodySuiteEmailEvent(
+          eventType = this,
+          additionalInformation = PoliceCustodySuiteEmailAdditionalInformation(
+            policeCustodySuiteId = policeCustodySuiteId,
+            emailId = emailId,
+            source = source,
+          ),
+        ),
+      )
+    }
+  }
+
+  private fun publishPoliceCustodySuiteEmailAmendedEvent(
+    policeCustodySuiteId: String,
+    emailId: Long,
+    source: String = "DPS",
+  ) {
+    with("register.policecustodysuite.email.amended") {
+      publishDomainEvent(
+        eventType = this,
+        payload = PoliceCustodySuiteEmailEvent(
+          eventType = this,
+          additionalInformation = PoliceCustodySuiteEmailAdditionalInformation(
+            policeCustodySuiteId = policeCustodySuiteId,
+            emailId = emailId,
+            source = source,
+          ),
+        ),
+      )
+    }
+  }
+
+  private fun publishPoliceCustodySuiteEmailDeletedEvent(
+    policeCustodySuiteId: String,
+    emailId: Long,
+    source: String = "DPS",
+  ) {
+    with("register.policecustodysuite.email.deleted") {
+      publishDomainEvent(
+        eventType = this,
+        payload = PoliceCustodySuiteEmailEvent(
+          eventType = this,
+          additionalInformation = PoliceCustodySuiteEmailAdditionalInformation(
+            policeCustodySuiteId = policeCustodySuiteId,
             emailId = emailId,
             source = source,
           ),
