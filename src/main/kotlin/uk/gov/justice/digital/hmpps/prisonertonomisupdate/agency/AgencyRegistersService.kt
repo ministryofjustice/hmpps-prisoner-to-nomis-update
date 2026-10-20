@@ -399,6 +399,192 @@ class AgencyRegistersService(
     }
   }
 
+  suspend fun probationOfficeInserted(event: ProbationOfficeEvent) {
+    val probationOfficeId = event.additionalInformation.probationOfficeId
+    val telemetry = mutableMapOf(
+      "probationOfficeId" to probationOfficeId,
+    )
+    if (!event.didOriginateInDPS()) {
+      telemetryClient.trackEvent("probation-office-created-ignored", telemetry)
+    } else {
+      track("probation-office-created", telemetry) {
+        val dpsAgency = requireNotNull(dpsService.getAgency(probationOfficeId)) { "Probation office $probationOfficeId not found in DPS" }
+        val response = nomisApiService.createAgency(dpsAgency.toCreateAgencyRequest(probationOfficeId, typeCode = "COMM"))
+        telemetry["nomisAgencyId"] = response.agencyId
+      }
+    }
+  }
+
+  suspend fun probationOfficeAmended(event: ProbationOfficeEvent) {
+    val probationOfficeId = event.additionalInformation.probationOfficeId
+    val telemetry = mutableMapOf(
+      "probationOfficeId" to probationOfficeId,
+    )
+    if (!event.didOriginateInDPS()) {
+      telemetryClient.trackEvent("probation-office-updated-ignored", telemetry)
+    } else {
+      track("probation-office-updated", telemetry) {
+        val dpsAgency = requireNotNull(dpsService.getAgency(probationOfficeId)) { "Probation office $probationOfficeId not found in DPS" }
+        val response = nomisApiService.updateAgency(probationOfficeId, dpsAgency.toUpdateAgencyRequest(typeCode = "COMM"))
+        telemetry["nomisAgencyId"] = response.agencyId
+      }
+    }
+  }
+
+  suspend fun probationOfficeDeleted(event: ProbationOfficeEvent) = deleteAgency(
+    agencyId = event.additionalInformation.probationOfficeId,
+    agencyIdName = "probationOfficeId",
+    telemetryEvent = "probation-office-deleted",
+    sourcedEvent = event,
+  )
+
+  suspend fun probationOfficeEmailInserted(event: ProbationOfficeEmailEvent) {
+    val probationOfficeId = event.additionalInformation.probationOfficeId
+    val dpsEmailId = event.additionalInformation.emailId
+    val telemetry = mutableMapOf(
+      "probationOfficeId" to probationOfficeId,
+      "dpsEmailId" to dpsEmailId.toString(),
+    )
+    if (!event.didOriginateInDPS()) {
+      telemetryClient.trackEvent("probation-office-email-created-ignored", telemetry)
+    } else {
+      track("probation-office-email-created", telemetry) {
+        val dpsAgency = requireNotNull(dpsService.getAgency(probationOfficeId)) { "Probation office $probationOfficeId not found in DPS" }
+        val agencyEmail = requireNotNull(dpsAgency.emailAddresses.find { it.id == dpsEmailId }) { "Email $dpsEmailId not found on probation office $probationOfficeId in DPS" }
+        val response = nomisApiService.createAgencyEmail(probationOfficeId, CreateAgencyEmailAddressRequest(emailAddress = agencyEmail.address))
+        telemetry["nomisEmailId"] = response.id.toString()
+      }
+    }
+  }
+
+  suspend fun probationOfficeEmailAmended(event: ProbationOfficeEmailEvent) {
+    val probationOfficeId = event.additionalInformation.probationOfficeId
+    val dpsEmailId = event.additionalInformation.emailId
+    val telemetry = mutableMapOf(
+      "probationOfficeId" to probationOfficeId,
+      "dpsEmailId" to dpsEmailId.toString(),
+    )
+    if (!event.didOriginateInDPS()) {
+      telemetryClient.trackEvent("probation-office-email-updated-ignored", telemetry)
+    } else {
+      track("probation-office-email-updated", telemetry) {
+        val dpsAgency = requireNotNull(dpsService.getAgency(probationOfficeId)) { "Probation office $probationOfficeId not found in DPS" }
+        val response = nomisApiService.refreshAgencyEmails(
+          probationOfficeId,
+          UpdateAgencyEmailAddressesRequest(emailAddresses = dpsAgency.emailAddresses.map { it.address }),
+        )
+        telemetry["nomisEmailIds"] = response.emailAddresses.map { it.id }.joinToString(", ")
+      }
+    }
+  }
+
+  suspend fun probationOfficeEmailDeleted(event: ProbationOfficeEmailEvent) {
+    val probationOfficeId = event.additionalInformation.probationOfficeId
+    val dpsEmailId = event.additionalInformation.emailId
+    val telemetry = mutableMapOf(
+      "probationOfficeId" to probationOfficeId,
+      "dpsEmailId" to dpsEmailId.toString(),
+    )
+    if (!event.didOriginateInDPS()) {
+      telemetryClient.trackEvent("probation-office-email-deleted-ignored", telemetry)
+    } else {
+      track("probation-office-email-deleted", telemetry) {
+        val dpsAgency = requireNotNull(dpsService.getAgency(probationOfficeId)) { "Probation office $probationOfficeId not found in DPS" }
+        val response = nomisApiService.refreshAgencyEmails(
+          probationOfficeId,
+          UpdateAgencyEmailAddressesRequest(emailAddresses = dpsAgency.emailAddresses.map { it.address }),
+        )
+        telemetry["nomisEmailIds"] = response.emailAddresses.map { it.id }.joinToString(", ")
+      }
+    }
+  }
+
+  suspend fun probationOfficePhoneInserted(event: ProbationOfficePhoneEvent) {
+    val probationOfficeId = event.additionalInformation.probationOfficeId
+    val dpsPhoneId = event.additionalInformation.phoneId
+    val telemetry = mutableMapOf(
+      "probationOfficeId" to probationOfficeId,
+      "dpsPhoneId" to dpsPhoneId.toString(),
+    )
+    if (!event.didOriginateInDPS()) {
+      telemetryClient.trackEvent("probation-office-phone-created-ignored", telemetry)
+    } else {
+      track("probation-office-phone-created", telemetry) {
+        val dpsAgency = requireNotNull(dpsService.getAgency(probationOfficeId)) { "Probation office $probationOfficeId not found in DPS" }
+        val agencyPhone = requireNotNull(dpsAgency.phoneNumbers.find { it.id == dpsPhoneId }) { "Phone $dpsPhoneId not found on probation office $probationOfficeId in DPS" }
+        val response = nomisApiService.createAgencyPhone(probationOfficeId, CreateAgencyPhoneNumberRequest(number = agencyPhone.number, typeCode = "BUS"))
+        telemetry["nomisPhoneId"] = response.id.toString()
+      }
+    }
+  }
+
+  suspend fun probationOfficePhoneAmended(event: ProbationOfficePhoneEvent) = refreshProbationOfficePhones(event, "probation-office-phone-updated")
+
+  suspend fun probationOfficePhoneDeleted(event: ProbationOfficePhoneEvent) = refreshProbationOfficePhones(event, "probation-office-phone-deleted")
+
+  private suspend fun refreshProbationOfficePhones(event: ProbationOfficePhoneEvent, telemetryEvent: String) {
+    val probationOfficeId = event.additionalInformation.probationOfficeId
+    val telemetry = mutableMapOf(
+      "probationOfficeId" to probationOfficeId,
+      "dpsPhoneId" to event.additionalInformation.phoneId.toString(),
+    )
+    if (!event.didOriginateInDPS()) {
+      telemetryClient.trackEvent("$telemetryEvent-ignored", telemetry)
+    } else {
+      track(telemetryEvent, telemetry) {
+        val dpsAgency = requireNotNull(dpsService.getAgency(probationOfficeId)) { "Probation office $probationOfficeId not found in DPS" }
+        val response = nomisApiService.refreshAgencyPhones(
+          probationOfficeId,
+          UpdateAgencyPhoneNumbersRequest(phoneNumbers = dpsAgency.phoneNumbers.map { UpdateAgencyPhoneNumber(number = it.number, typeCode = "BUS") }),
+        )
+        telemetry["nomisPhoneIds"] = response.phoneNumbers.map { it.id }.joinToString(", ")
+      }
+    }
+  }
+
+  suspend fun probationOfficeAddressInserted(event: ProbationOfficeAddressEvent) {
+    val probationOfficeId = event.additionalInformation.probationOfficeId
+    val dpsAddressId = event.additionalInformation.addressId
+    val telemetry = mutableMapOf(
+      "probationOfficeId" to probationOfficeId,
+      "dpsAddressId" to dpsAddressId.toString(),
+    )
+    if (!event.didOriginateInDPS()) {
+      telemetryClient.trackEvent("probation-office-address-created-ignored", telemetry)
+    } else {
+      track("probation-office-address-created", telemetry) {
+        val dpsAgency = requireNotNull(dpsService.getAgency(probationOfficeId)) { "Probation office $probationOfficeId not found in DPS" }
+        val agencyAddress = requireNotNull(dpsAgency.addresses.find { it.id == dpsAddressId }) { "Address $dpsAddressId not found on probation office $probationOfficeId in DPS" }
+        val response = nomisApiService.createAgencyAddress(probationOfficeId, agencyAddress.toCreateAgencyAddressRequest())
+        telemetry["nomisAddressId"] = response.id.toString()
+      }
+    }
+  }
+
+  suspend fun probationOfficeAddressAmended(event: ProbationOfficeAddressEvent) = refreshProbationOfficeAddresses(event, "probation-office-address-updated")
+
+  suspend fun probationOfficeAddressDeleted(event: ProbationOfficeAddressEvent) = refreshProbationOfficeAddresses(event, "probation-office-address-deleted")
+
+  private suspend fun refreshProbationOfficeAddresses(event: ProbationOfficeAddressEvent, telemetryEvent: String) {
+    val probationOfficeId = event.additionalInformation.probationOfficeId
+    val telemetry = mutableMapOf(
+      "probationOfficeId" to probationOfficeId,
+      "dpsAddressId" to event.additionalInformation.addressId.toString(),
+    )
+    if (!event.didOriginateInDPS()) {
+      telemetryClient.trackEvent("$telemetryEvent-ignored", telemetry)
+    } else {
+      track(telemetryEvent, telemetry) {
+        val dpsAgency = requireNotNull(dpsService.getAgency(probationOfficeId)) { "Probation office $probationOfficeId not found in DPS" }
+        val response = nomisApiService.refreshAgencyAddresses(
+          probationOfficeId,
+          UpdateAgencyAddressesRequest(addresses = dpsAgency.addresses.map { it.toUpdateAgencyAddress() }),
+        )
+        telemetry["nomisAddressIds"] = response.addresses.map { it.id }.joinToString(", ")
+      }
+    }
+  }
+
   suspend fun hospitalInserted(event: HospitalEvent) {
     val hospitalId = event.additionalInformation.hospitalId
     val telemetry = mutableMapOf(
