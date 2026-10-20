@@ -53,7 +53,7 @@ class AgencyRegistersService(
     } else {
       track("court-updated", telemetry) {
         val dpsAgency = requireNotNull(dpsService.getAgency(courtId)) { "Court $courtId not found in DPS" }
-        val response = nomisApiService.updateAgency(courtId, dpsAgency.toUpdateAgencyRequest())
+        val response = nomisApiService.updateAgency(courtId, dpsAgency.toUpdateAgencyRequest(typeCode = "CRT"))
         telemetry["nomisAgencyId"] = response.agencyId
       }
     }
@@ -232,7 +232,7 @@ class AgencyRegistersService(
     } else {
       track("hospital-updated", telemetry) {
         val dpsAgency = requireNotNull(dpsService.getAgency(hospitalId)) { "Hospital $hospitalId not found in DPS" }
-        val response = nomisApiService.updateAgency(hospitalId, dpsAgency.toUpdateAgencyRequest())
+        val response = nomisApiService.updateAgency(hospitalId, dpsAgency.toUpdateAgencyRequest(typeCode = dpsAgency.agencyType.toHospitalTypeCode(hospitalId)))
         telemetry["nomisAgencyId"] = response.agencyId
       }
     }
@@ -354,7 +354,7 @@ private fun LegacyAgencyDto.toCreateAgencyRequest(agencyId: String, typeCode: St
   payrollRegionCode = payrollRegionCode,
 )
 
-private fun LegacyAgencyDto.toUpdateAgencyRequest(): UpdateAgencyRequest = UpdateAgencyRequest(
+private fun LegacyAgencyDto.toUpdateAgencyRequest(typeCode: String): UpdateAgencyRequest = UpdateAgencyRequest(
   description = name,
   active = active,
   localAuthorityCodes = listOfNotNull(localAuthorityCode),
@@ -371,6 +371,7 @@ private fun LegacyAgencyDto.toUpdateAgencyRequest(): UpdateAgencyRequest = Updat
   nomsRegionCode = regionCode,
   cjitCode = cjitCode,
   payrollRegionCode = payrollRegionCode,
+  typeCode = typeCode,
 )
 
 private fun LegacyAgencyDto.AccessibleAccess?.toDisabilityAccessCode(): String? = when (this) {

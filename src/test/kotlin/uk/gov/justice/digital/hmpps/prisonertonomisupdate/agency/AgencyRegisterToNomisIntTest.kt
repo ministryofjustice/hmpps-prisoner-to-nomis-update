@@ -1212,6 +1212,7 @@ class AgencyRegisterToNomisIntTest(
         fun `will update NOMIS`() {
           val request: UpdateAgencyRequest = NomisApiExtension.nomisApi.getRequestBody(putRequestedFor(urlEqualTo("/agency/$hospitalId")), jsonMapper)
           assertThat(request.description).isEqualTo("Hallamshire Hospital")
+          assertThat(request.typeCode).isEqualTo("HOSPITAL")
           assertThat(request.active).isTrue()
           assertThat(request.localAuthorityCodes).containsExactly("00CG")
           assertThat(request.longDescription).isEqualTo("Hallamshire Hospital, Sheffield")
@@ -1236,6 +1237,16 @@ class AgencyRegisterToNomisIntTest(
             },
             isNull(),
           )
+        }
+
+        @Test
+        fun `will update NOMIS when the agency type changes to HOSPITAL`() {
+          dpsApi.stubGetAgency(agencyId = hospitalId, response = hospitalLegacyAgencyDto().copy(agencyType = LegacyAgencyType.HOSPITAL))
+          publishHospitalAmendedEvent(hospitalId = hospitalId)
+          waitForAnyProcessingToComplete(times = 2)
+
+          val request: UpdateAgencyRequest = NomisApiExtension.nomisApi.getRequestBody(putRequestedFor(urlEqualTo("/agency/$hospitalId")), jsonMapper)
+          assertThat(request.typeCode).isEqualTo("HOSPITAL")
         }
       }
     }

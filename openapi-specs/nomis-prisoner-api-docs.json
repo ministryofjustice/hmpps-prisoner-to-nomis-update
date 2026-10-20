@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-16.2246.6b33463"
+    "version" : "2026-10-20.2258.e4772b2"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -8987,7 +8987,7 @@
       "put" : {
         "tags" : [ "agency-resource" ],
         "summary" : "Updates the core details of an agency",
-        "description" : "Replaces the core, non-collection details of an agency, for example its description or active status. Addresses, phone numbers and email addresses are managed via their own endpoints. The agency's type can not be changed. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "description" : "Replaces the core, non-collection details of an agency, for example its description, type or active status. Addresses, phone numbers and email addresses are managed via their own endpoints. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
         "operationId" : "updateAgency",
         "parameters" : [ {
           "name" : "agencyId",
@@ -10830,7 +10830,7 @@
       "post" : {
         "tags" : [ "visits-configuration-resource" ],
         "summary" : "Create a visit time slot",
-        "description" : "Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "description" : "Creates the visit day if it does not already exist. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
         "operationId" : "createVisitTimeSlot",
         "parameters" : [ {
           "name" : "prisonId",
@@ -34566,6 +34566,12 @@
             "description" : "Description of agency",
             "example" : "Blackburn YOT"
           },
+          "typeCode" : {
+            "type" : "string",
+            "description" : "Agency type code",
+            "example" : "CRT",
+            "minLength" : 1
+          },
           "active" : {
             "type" : "boolean",
             "description" : "Indicates if still used",
@@ -34636,7 +34642,7 @@
             }
           }
         },
-        "required" : [ "active", "description", "localAuthorityCodes" ]
+        "required" : [ "active", "description", "localAuthorityCodes", "typeCode" ]
       },
       "AgencyPhoneNumbersResponse" : {
         "type" : "object",
@@ -46918,10 +46924,6 @@
             "type" : [ "integer", "null" ],
             "format" : "int64"
           },
-          "txnEntrySeq" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
           "txnId" : {
             "type" : "integer",
             "format" : "int64"
@@ -46938,6 +46940,10 @@
           },
           "txnEntryAmount" : {
             "type" : "number"
+          },
+          "txnEntrySeq" : {
+            "type" : "integer",
+            "format" : "int32"
           }
         },
         "required" : [ "txnEntryAmount", "txnEntryDate", "txnEntrySeq", "txnId" ]
