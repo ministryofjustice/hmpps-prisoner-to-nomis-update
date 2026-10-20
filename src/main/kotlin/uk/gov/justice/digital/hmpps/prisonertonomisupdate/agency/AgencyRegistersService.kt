@@ -59,6 +59,13 @@ class AgencyRegistersService(
     }
   }
 
+  suspend fun courtDeleted(event: CourtEvent) = deleteAgency(
+    agencyId = event.additionalInformation.courtId,
+    agencyIdName = "courtId",
+    telemetryEvent = "court-deleted",
+    sourcedEvent = event,
+  )
+
   suspend fun courtEmailInserted(event: CourtEmailEvent) {
     val courtId = event.additionalInformation.courtId
     val dpsEmailId = event.additionalInformation.emailId
@@ -234,6 +241,29 @@ class AgencyRegistersService(
         val dpsAgency = requireNotNull(dpsService.getAgency(hospitalId)) { "Hospital $hospitalId not found in DPS" }
         val response = nomisApiService.updateAgency(hospitalId, dpsAgency.toUpdateAgencyRequest(typeCode = dpsAgency.agencyType.toHospitalTypeCode(hospitalId)))
         telemetry["nomisAgencyId"] = response.agencyId
+      }
+    }
+  }
+
+  suspend fun hospitalDeleted(event: HospitalEvent) = deleteAgency(
+    agencyId = event.additionalInformation.hospitalId,
+    agencyIdName = "hospitalId",
+    telemetryEvent = "hospital-deleted",
+    sourcedEvent = event,
+  )
+
+  private suspend fun deleteAgency(
+    agencyId: String,
+    agencyIdName: String,
+    telemetryEvent: String,
+    sourcedEvent: SourcedEvent,
+  ) {
+    val telemetry = mutableMapOf(agencyIdName to agencyId)
+    if (!sourcedEvent.didOriginateInDPS()) {
+      telemetryClient.trackEvent("$telemetryEvent-ignored", telemetry)
+    } else {
+      track(telemetryEvent, telemetry) {
+        nomisApiService.deleteAgency(agencyId)
       }
     }
   }

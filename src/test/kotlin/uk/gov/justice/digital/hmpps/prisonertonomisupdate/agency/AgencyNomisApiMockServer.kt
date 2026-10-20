@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency
 
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import com.github.tomakehurst.wiremock.client.WireMock.delete
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.put
@@ -313,6 +314,15 @@ class AgencyNomisApiMockServer(private val jsonMapper: JsonMapper) {
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value())
           .withBody(jsonMapper.writeValueAsString(response)),
+      ),
+    )
+  }
+
+  fun stubDeleteAgency(agencyId: String = "SHEFCC") {
+    nomisApi.stubFor(
+      delete(urlPathEqualTo("/agency/$agencyId")).willReturn(
+        aResponse()
+          .withStatus(HttpStatus.NO_CONTENT.value()),
       ),
     )
   }

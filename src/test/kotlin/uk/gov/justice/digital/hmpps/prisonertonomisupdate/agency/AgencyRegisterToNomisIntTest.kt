@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency
 
+import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
@@ -201,6 +202,57 @@ class AgencyRegisterToNomisIntTest(
             isNull(),
           )
         }
+      }
+    }
+  }
+
+  @Nested
+  @DisplayName("register.court.deleted")
+  inner class CourtDeleted {
+    val courtId = "SHEFCC"
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of the event")
+    inner class WhenNomisDeleted {
+      @BeforeEach
+      fun setUp() {
+        publishCourtDeletedEvent(courtId = courtId, source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will ignore the event`() {
+        nomisApi.verify(0, deleteRequestedFor(urlEqualTo("/agency/$courtId")))
+        verify(telemetryClient).trackEvent(
+          eq("court-deleted-ignored"),
+          check { assertThat(it["courtId"]).isEqualTo(courtId) },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of the event")
+    inner class WhenDpsDeleted {
+      @BeforeEach
+      fun setUp() {
+        nomisApi.stubDeleteAgency(agencyId = courtId)
+        publishCourtDeletedEvent(courtId = courtId)
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will delete agency in NOMIS`() {
+        nomisApi.verify(deleteRequestedFor(urlEqualTo("/agency/$courtId")))
+      }
+
+      @Test
+      fun `will send telemetry event showing success`() {
+        verify(telemetryClient).trackEvent(
+          eq("court-deleted-success"),
+          check { assertThat(it["courtId"]).isEqualTo(courtId) },
+          isNull(),
+        )
       }
     }
   }
@@ -1253,6 +1305,57 @@ class AgencyRegisterToNomisIntTest(
   }
 
   @Nested
+  @DisplayName("register.hospital.deleted")
+  inner class HospitalDeleted {
+    val hospitalId = "HHOSP1"
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of the event")
+    inner class WhenNomisDeleted {
+      @BeforeEach
+      fun setUp() {
+        publishHospitalDeletedEvent(hospitalId = hospitalId, source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will ignore the event`() {
+        nomisApi.verify(0, deleteRequestedFor(urlEqualTo("/agency/$hospitalId")))
+        verify(telemetryClient).trackEvent(
+          eq("hospital-deleted-ignored"),
+          check { assertThat(it["hospitalId"]).isEqualTo(hospitalId) },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of the event")
+    inner class WhenDpsDeleted {
+      @BeforeEach
+      fun setUp() {
+        nomisApi.stubDeleteAgency(agencyId = hospitalId)
+        publishHospitalDeletedEvent(hospitalId = hospitalId)
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will delete agency in NOMIS`() {
+        nomisApi.verify(deleteRequestedFor(urlEqualTo("/agency/$hospitalId")))
+      }
+
+      @Test
+      fun `will send telemetry event showing success`() {
+        verify(telemetryClient).trackEvent(
+          eq("hospital-deleted-success"),
+          check { assertThat(it["hospitalId"]).isEqualTo(hospitalId) },
+          isNull(),
+        )
+      }
+    }
+  }
+
+  @Nested
   @DisplayName("register.hospital.phone.inserted")
   inner class HospitalPhoneInserted {
     val dpsPhoneId = 12345L
@@ -1896,6 +1999,19 @@ class AgencyRegisterToNomisIntTest(
     )
   }
 
+  private fun publishCourtDeletedEvent(
+    courtId: String,
+    source: String = "DPS",
+  ) {
+    publishDomainEvent(
+      eventType = "register.court.deleted",
+      payload = CourtEvent(
+        eventType = "register.court.deleted",
+        additionalInformation = CourtAdditionalInformation(courtId = courtId, source = source),
+      ),
+    )
+  }
+
   private fun publishHospitalAddressEvent(
     eventType: String,
     hospitalId: String,
@@ -1954,6 +2070,19 @@ class AgencyRegisterToNomisIntTest(
           hospitalId = hospitalId,
           source = source,
         ),
+      ),
+    )
+  }
+
+  private fun publishHospitalDeletedEvent(
+    hospitalId: String,
+    source: String = "DPS",
+  ) {
+    publishDomainEvent(
+      eventType = "register.hospital.deleted",
+      payload = HospitalEvent(
+        eventType = "register.hospital.deleted",
+        additionalInformation = HospitalAdditionalInformation(hospitalId = hospitalId, source = source),
       ),
     )
   }

@@ -456,6 +456,7 @@ hmpps.sqs:
         { "eventType":[
           "register.court.inserted",
           "register.court.amended",
+          "register.court.deleted",
           "register.court.email.inserted",
           "register.court.email.amended",
           "register.court.email.deleted",
@@ -467,6 +468,7 @@ hmpps.sqs:
           "register.court.address.deleted",
           "register.hospital.inserted",
           "register.hospital.amended",
+          "register.hospital.deleted",
           "register.hospital.phone.inserted",
           "register.hospital.phone.amended",
           "register.hospital.phone.deleted",
