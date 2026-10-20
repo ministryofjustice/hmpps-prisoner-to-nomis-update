@@ -12,13 +12,16 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AdminCaseloadResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CaseloadResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.MemberCaseloadResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RoleResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.StaffDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.staff.model.PrisonUserAccount
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.staff.model.PrisonUserReconciliationResponse
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 @SpringAPIServiceTest
@@ -263,6 +266,90 @@ class StaffReconciliationServiceTest {
             entry("accounts[0].activeCaseloadId", "nomis=LEI, dps=MDI"),
           )
         }
+
+        @Test
+        fun `will report a mismatch when staff user account active admin caseloads don't match`() = runTest {
+          val nomisStaffAccount = staffAccount().copy(
+            adminCaseloads = listOf(
+              AdminCaseloadResponse(
+                caseloadId = "MDI",
+                active = true,
+                expiryDate = LocalDate.parse("2029-08-01"),
+                audit = audit(),
+              ),
+            ),
+          )
+          stubStaffReconciliation(nomisStaffDetails().copy(accounts = listOf(nomisStaffAccount)), dpsStaffDetails())
+          assertThat(service.checkStaffMatch(1234)!!.differences).containsExactly(
+            entry("accounts[0].activeAdminCaseloads", "nomis=[MDI], dps=[LEI]"),
+          )
+        }
+
+        @Test
+        fun `will report a mismatch when staff user account inactive admin caseloads don't match`() = runTest {
+          val nomisStaffAccount = staffAccount().copy(
+            adminCaseloads = listOf(
+              AdminCaseloadResponse(caseloadId = "LEI", active = true, expiryDate = LocalDate.parse("2029-08-01"), audit = audit()),
+              AdminCaseloadResponse(caseloadId = "MDI", active = false, expiryDate = LocalDate.parse("2029-08-01"), audit = audit()),
+            ),
+          )
+          stubStaffReconciliation(nomisStaffDetails().copy(accounts = listOf(nomisStaffAccount)), dpsStaffDetails())
+          assertThat(service.checkStaffMatch(1234)!!.differences).containsExactly(
+            entry("accounts[0].inactiveAdminCaseloads", "nomis=[MDI], dps=[]"),
+          )
+        }
+      }
+
+      @Test
+      fun `will report a mismatch when staff user account active member caseloads don't match`() = runTest {
+        val nomisStaffAccount = staffAccount().copy(
+          memberCaseloads = listOf(
+            MemberCaseloadResponse(
+              caseloadId = "MDI",
+              active = true,
+              startDate = LocalDate.parse("2022-06-02"),
+              expiryDate = LocalDate.parse("2030-12-22"),
+              audit = audit(),
+            ),
+            MemberCaseloadResponse(
+              caseloadId = "LEI",
+              active = true,
+              startDate = LocalDate.parse("2022-06-02"),
+              expiryDate = LocalDate.parse("2030-12-22"),
+              audit = audit(),
+            ),
+          ),
+        )
+        stubStaffReconciliation(nomisStaffDetails().copy(accounts = listOf(nomisStaffAccount)), dpsStaffDetails())
+        assertThat(service.checkStaffMatch(1234)!!.differences).containsExactly(
+          entry("accounts[0].activeMemberCaseloads", "nomis=[LEI, MDI], dps=[MDI]"),
+        )
+      }
+
+      @Test
+      fun `will report a mismatch when staff user account inactive member caseloads don't match`() = runTest {
+        val nomisStaffAccount = staffAccount().copy(
+          memberCaseloads = listOf(
+            MemberCaseloadResponse(
+              caseloadId = "MDI",
+              active = true,
+              startDate = LocalDate.parse("2022-06-02"),
+              expiryDate = LocalDate.parse("2030-12-22"),
+              audit = audit(),
+            ),
+            MemberCaseloadResponse(
+              caseloadId = "LEI",
+              active = false,
+              startDate = LocalDate.parse("2022-06-02"),
+              expiryDate = LocalDate.parse("2030-12-22"),
+              audit = audit(),
+            ),
+          ),
+        )
+        stubStaffReconciliation(nomisStaffDetails().copy(accounts = listOf(nomisStaffAccount)), dpsStaffDetails())
+        assertThat(service.checkStaffMatch(1234)!!.differences).containsExactly(
+          entry("accounts[0].inactiveMemberCaseloads", "nomis=[LEI], dps=[]"),
+        )
       }
     }
   }

@@ -24,9 +24,10 @@ data class StaffAccountSummary(
   val dpsRoles: List<String>,
   val lastLoggedIn: LocalDateTime?,
   val activeCaseloadId: String?,
-  // TODO add in when returned from staffapi
-  // val adminCaseloads: List<String>,
-  // val memberCaseloads: List<String>,
+  val activeAdminCaseloads: List<String>,
+  val inactiveAdminCaseloads: List<String>,
+  val activeMemberCaseloads: List<String>,
+  val inactiveMemberCaseloads: List<String>,
 )
 
 // Nomis conversions
@@ -46,6 +47,10 @@ fun StaffAccount.toStaffAccountSummary() = StaffAccountSummary(
   dpsRoles = caseloads.firstOrNull { it.caseloadId == DPS_CASELOAD }?.roles?.map { it.code }.orEmpty(),
   lastLoggedIn = lastLoggedIn,
   activeCaseloadId = activeCaseloadId,
+  activeAdminCaseloads = adminCaseloads.filter { it.active }.map { it.caseloadId },
+  inactiveAdminCaseloads = adminCaseloads.filter { !it.active }.map { it.caseloadId },
+  activeMemberCaseloads = memberCaseloads.filter { it.active }.map { it.caseloadId },
+  inactiveMemberCaseloads = memberCaseloads.filter { !it.active }.map { it.caseloadId },
 )
 
 // DPS conversions
@@ -65,6 +70,10 @@ fun PrisonUserAccount.toStaffAccountSummary() = StaffAccountSummary(
   dpsRoles = roles.map { it.roleCode },
   lastLoggedIn = lastLoggedIn,
   activeCaseloadId = activeCaseloadId,
+  activeAdminCaseloads = administrationCaseloads.filter { it.active }.map { it.caseloadId },
+  inactiveAdminCaseloads = administrationCaseloads.filter { !it.active }.map { it.caseloadId },
+  activeMemberCaseloads = memberCaseloads.filter { it.active }.map { it.caseloadId },
+  inactiveMemberCaseloads = memberCaseloads.filter { !it.active }.map { it.caseloadId },
 )
 fun PrisonUserReconciliationResponse.Status.mapDps(): String = when (this) {
   PrisonUserReconciliationResponse.Status.ACTIVE -> "ACTIVE"
@@ -110,6 +119,10 @@ private fun appendAccountsDifferences(nomisAccounts: List<StaffAccountSummary>, 
       nomis.dpsRoles.toSet() != dps.dpsRoles.toSet() -> differences["accounts[$i].dpsRoles"] = "nomis=${nomis.dpsRoles.sorted()}, dps=${dps.dpsRoles.sorted()}"
       nomis.lastLoggedIn != dps.lastLoggedIn -> differences["accounts[$i].lastLoggedIn"] = "nomis=${nomis.lastLoggedIn}, dps=${dps.lastLoggedIn}"
       nomis.activeCaseloadId != dps.activeCaseloadId -> differences["accounts[$i].activeCaseloadId"] = "nomis=${nomis.activeCaseloadId}, dps=${dps.activeCaseloadId}"
+      nomis.activeAdminCaseloads.toSet() != dps.activeAdminCaseloads.toSet() -> differences["accounts[$i].activeAdminCaseloads"] = "nomis=${nomis.activeAdminCaseloads.sorted()}, dps=${dps.activeAdminCaseloads.sorted()}"
+      nomis.inactiveAdminCaseloads.toSet() != dps.inactiveAdminCaseloads.toSet() -> differences["accounts[$i].inactiveAdminCaseloads"] = "nomis=${nomis.inactiveAdminCaseloads.sorted()}, dps=${dps.inactiveAdminCaseloads.sorted()}"
+      nomis.activeMemberCaseloads.toSet() != dps.activeMemberCaseloads.toSet() -> differences["accounts[$i].activeMemberCaseloads"] = "nomis=${nomis.activeMemberCaseloads.sorted()}, dps=${dps.activeMemberCaseloads.sorted()}"
+      nomis.inactiveMemberCaseloads.toSet() != dps.inactiveMemberCaseloads.toSet() -> differences["accounts[$i].inactiveMemberCaseloads"] = "nomis=${nomis.inactiveMemberCaseloads.sorted()}, dps=${dps.inactiveMemberCaseloads.sorted()}"
       else -> null
     }
   }
