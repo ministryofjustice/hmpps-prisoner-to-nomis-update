@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-15.891.134fe84"
+    "version" : "2026-10-16.894.0c9503e"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -26740,6 +26740,13 @@
             "description" : "Date time the mapping was created",
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          },
+          "addressUsageMappings" : {
+            "type" : [ "array", "null" ],
+            "description" : "Address usage mappings, only sent and not returned in the get calls",
+            "items" : {
+              "$ref" : "#/components/schemas/CorePersonAddressUsageMappingDto"
+            }
           }
         },
         "required" : [ "cprId", "mappingType", "nomisId", "nomisPrisonNumber" ]
