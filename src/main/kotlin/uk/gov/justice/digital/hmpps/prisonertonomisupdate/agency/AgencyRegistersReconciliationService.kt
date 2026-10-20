@@ -164,6 +164,7 @@ private fun AgencyResponse.asCoreDetails(): AgencyCoreDetails = AgencyCoreDetail
   courtTypeCode = courtType?.code,
   disabilityAccessCode = when (disabilityAccessCode) {
     "WHEEL" -> LegacyAgencyDto.AccessibleAccess.WHEELCHAIR_ACCESS.name
+    "WC" -> LegacyAgencyDto.AccessibleAccess.WHEELCHAIR_ACCESS.name
     "Y", "Yes" -> LegacyAgencyDto.AccessibleAccess.ACCESSIBLE.name
     "N", "No" -> LegacyAgencyDto.AccessibleAccess.NONE.name
     "BA" -> LegacyAgencyDto.AccessibleAccess.BY_ARRANGEMENT_ONLY.name
