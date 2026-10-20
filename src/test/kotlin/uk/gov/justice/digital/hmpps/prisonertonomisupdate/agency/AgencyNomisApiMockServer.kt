@@ -123,6 +123,7 @@ class AgencyNomisApiMockServer(private val jsonMapper: JsonMapper) {
 
     fun updateAgencyRequest() = UpdateAgencyRequest(
       description = "Sheffield Crown Ct",
+      typeCode = "CRT",
       active = true,
       localAuthorityCodes = listOf("00CG"),
       longDescription = "Sheffield Crown Court",
@@ -238,6 +239,7 @@ class AgencyNomisApiMockServer(private val jsonMapper: JsonMapper) {
 
     fun updateHospitalAgencyRequest() = UpdateAgencyRequest(
       description = "Hallamshire Hospital",
+      typeCode = "HOSPITAL",
       active = true,
       localAuthorityCodes = listOf("00CG"),
       longDescription = "Hallamshire Hospital, Sheffield",
