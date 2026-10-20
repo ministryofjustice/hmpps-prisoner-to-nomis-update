@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-14.610.144253f"
+    "version" : "2026-10-19.618.2526f1d"
   },
   "servers" : [ {
     "url" : "https://prison-register-dev.hmpps.service.justice.gov.uk",
@@ -7013,6 +7013,18 @@
           "schema" : {
             "type" : "string"
           }
+        }, {
+          "name" : "active-only",
+          "in" : "query",
+          "description" : "When true (the default) only active subareas are returned",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : true,
+            "description" : "When true (the default) only active subareas are returned",
+            "example" : true
+          },
+          "example" : true
         } ],
         "responses" : {
           "200" : {
@@ -7057,6 +7069,19 @@
         "summary" : "Get all regions",
         "description" : "Returns all regions as a flat list of code and description",
         "operationId" : "getRegions",
+        "parameters" : [ {
+          "name" : "active-only",
+          "in" : "query",
+          "description" : "When true (the default) only active regions are returned",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : true,
+            "description" : "When true (the default) only active regions are returned",
+            "example" : true
+          },
+          "example" : true
+        } ],
         "responses" : {
           "200" : {
             "description" : "Successful Operation",
@@ -7100,6 +7125,19 @@
         "summary" : "Get all payroll regions",
         "description" : "Returns all payroll regions as a flat list of code and description",
         "operationId" : "getPayrollRegions",
+        "parameters" : [ {
+          "name" : "active-only",
+          "in" : "query",
+          "description" : "When true (the default) only active payroll regions are returned",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : true,
+            "description" : "When true (the default) only active payroll regions are returned",
+            "example" : true
+          },
+          "example" : true
+        } ],
         "responses" : {
           "200" : {
             "description" : "Successful Operation",
@@ -7143,6 +7181,19 @@
         "summary" : "Get all local authorities",
         "description" : "Returns all local authorities as a flat list of code and description",
         "operationId" : "getLocalAuthorities",
+        "parameters" : [ {
+          "name" : "active-only",
+          "in" : "query",
+          "description" : "When true (the default) only active local authorities are returned",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : true,
+            "description" : "When true (the default) only active local authorities are returned",
+            "example" : true
+          },
+          "example" : true
+        } ],
         "responses" : {
           "200" : {
             "description" : "Successful Operation",
@@ -7193,6 +7244,18 @@
           "schema" : {
             "type" : "string"
           }
+        }, {
+          "name" : "active-only",
+          "in" : "query",
+          "description" : "When true (the default) only active areas are returned",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : true,
+            "description" : "When true (the default) only active areas are returned",
+            "example" : true
+          },
+          "example" : true
         } ],
         "responses" : {
           "200" : {
@@ -7453,6 +7516,70 @@
         }
       }
     },
+    "/legacy/{agencyId}" : {
+      "get" : {
+        "tags" : [ "legacy-sync-resource" ],
+        "summary" : "Returns details of an agency of any type",
+        "description" : "Returns the details of any agency (court, hospital, probation office, approved premises, police custody suite, or generic agency) as a LegacyAgencyDto. Role required is ROLE_HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
+        "operationId" : "getAgency",
+        "parameters" : [ {
+          "name" : "agencyId",
+          "in" : "path",
+          "description" : "NOMIS Agency Id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "NOMIS Agency Id",
+            "example" : "SHEFCC",
+            "maxLength" : 6,
+            "minLength" : 2
+          },
+          "example" : "SHEFCC"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Agency details returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LegacyAgencyDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Incorrect permissions to retrieve agency details",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Agency not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/legacy/reconciliation/{agencyId}" : {
       "get" : {
         "tags" : [ "legacy-sync-resource" ],
@@ -7598,7 +7725,7 @@
         "tags" : [ "public-api-resource" ],
         "summary" : "Get details of an agency",
         "description" : "Details of a single agency of any type (court, hospital, police custody suite, probation office, approved premises, prison or other agency)",
-        "operationId" : "getAgency",
+        "operationId" : "getPublicAgency",
         "parameters" : [ {
           "name" : "agencyId",
           "in" : "path",
@@ -9789,6 +9916,12 @@
       "LegacyAgencyAddressDto" : {
         "type" : "object",
         "properties" : {
+          "id" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int64",
+            "description" : "Database Id",
+            "example" : 123
+          },
           "addressLine1" : {
             "type" : [ "string", "null" ],
             "description" : "Address line 1",
@@ -9928,6 +10061,12 @@
       "LegacyAgencyEmailDto" : {
         "type" : "object",
         "properties" : {
+          "id" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int64",
+            "description" : "Database Id",
+            "example" : 123
+          },
           "address" : {
             "type" : "string",
             "description" : "Email address",
@@ -9939,6 +10078,12 @@
       "LegacyAgencyPhoneDto" : {
         "type" : "object",
         "properties" : {
+          "id" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int64",
+            "description" : "Database Id",
+            "example" : 123
+          },
           "number" : {
             "type" : "string",
             "description" : "Phone number",
