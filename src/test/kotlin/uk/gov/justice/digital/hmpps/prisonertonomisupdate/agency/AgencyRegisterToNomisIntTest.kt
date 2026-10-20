@@ -72,7 +72,7 @@ class AgencyRegisterToNomisIntTest(
       @Test
       fun `will send telemetry event showing the event is ignored`() {
         verify(telemetryClient).trackEvent(
-          eq("court-create-ignored"),
+          eq("court-created-ignored"),
           check {
             assertThat(it["courtId"]).isEqualTo(courtId)
           },
@@ -119,7 +119,7 @@ class AgencyRegisterToNomisIntTest(
         @Test
         fun `will send telemetry event showing success`() {
           verify(telemetryClient).trackEvent(
-            eq("court-create-success"),
+            eq("court-created-success"),
             check {
               assertThat(it["courtId"]).isEqualTo(courtId)
               assertThat(it["nomisAgencyId"]).isEqualTo(courtId)
@@ -277,7 +277,7 @@ class AgencyRegisterToNomisIntTest(
       @Test
       fun `will send telemetry event showing the event is ignored`() {
         verify(telemetryClient).trackEvent(
-          eq("court-email-create-ignored"),
+          eq("court-email-created-ignored"),
           check {
             assertThat(it["courtId"]).isEqualTo(courtId)
             assertThat(it["dpsEmailId"]).isEqualTo(dpsEmailId.toString())
@@ -311,7 +311,7 @@ class AgencyRegisterToNomisIntTest(
         @Test
         fun `will send telemetry event showing success`() {
           verify(telemetryClient).trackEvent(
-            eq("court-email-create-success"),
+            eq("court-email-created-success"),
             check {
               assertThat(it["courtId"]).isEqualTo(courtId)
               assertThat(it["dpsEmailId"]).isEqualTo(dpsEmailId.toString())
@@ -342,7 +342,7 @@ class AgencyRegisterToNomisIntTest(
       @Test
       fun `will send telemetry event showing the event is ignored`() {
         verify(telemetryClient).trackEvent(
-          eq("court-email-amended-ignored"),
+          eq("court-email-updated-ignored"),
           check {
             assertThat(it["courtId"]).isEqualTo(courtId)
             assertThat(it["dpsEmailId"]).isEqualTo(dpsEmailId.toString())
@@ -390,7 +390,7 @@ class AgencyRegisterToNomisIntTest(
         @Test
         fun `will send telemetry event showing success`() {
           verify(telemetryClient).trackEvent(
-            eq("court-email-amended-success"),
+            eq("court-email-updated-success"),
             check {
               assertThat(it["courtId"]).isEqualTo(courtId)
               assertThat(it["dpsEmailId"]).isEqualTo(dpsEmailId.toString())
@@ -501,7 +501,7 @@ class AgencyRegisterToNomisIntTest(
       @Test
       fun `will send telemetry event showing the event is ignored`() {
         verify(telemetryClient).trackEvent(
-          eq("court-phone-create-ignored"),
+          eq("court-phone-created-ignored"),
           check {
             assertThat(it["courtId"]).isEqualTo(courtId)
             assertThat(it["dpsPhoneId"]).isEqualTo(dpsPhoneId.toString())
@@ -545,7 +545,7 @@ class AgencyRegisterToNomisIntTest(
         @Test
         fun `will send telemetry event showing success`() {
           verify(telemetryClient).trackEvent(
-            eq("court-phone-create-success"),
+            eq("court-phone-created-success"),
             check {
               assertThat(it["courtId"]).isEqualTo(courtId)
               assertThat(it["dpsPhoneId"]).isEqualTo(dpsPhoneId.toString())
@@ -576,7 +576,7 @@ class AgencyRegisterToNomisIntTest(
       @Test
       fun `will send telemetry event showing the event is ignored`() {
         verify(telemetryClient).trackEvent(
-          eq("court-phone-amended-ignored"),
+          eq("court-phone-updated-ignored"),
           check {
             assertThat(it["courtId"]).isEqualTo(courtId)
             assertThat(it["dpsPhoneId"]).isEqualTo(dpsPhoneId.toString())
@@ -626,7 +626,7 @@ class AgencyRegisterToNomisIntTest(
         @Test
         fun `will send telemetry event showing success`() {
           verify(telemetryClient).trackEvent(
-            eq("court-phone-amended-success"),
+            eq("court-phone-updated-success"),
             check {
               assertThat(it["courtId"]).isEqualTo(courtId)
               assertThat(it["dpsPhoneId"]).isEqualTo(dpsPhoneId.toString())
@@ -772,7 +772,7 @@ class AgencyRegisterToNomisIntTest(
       @Test
       fun `will send telemetry event showing the event is ignored`() {
         verify(telemetryClient).trackEvent(
-          eq("court-address-create-ignored"),
+          eq("court-address-created-ignored"),
           check {
             assertThat(it["courtId"]).isEqualTo(courtId)
             assertThat(it["dpsAddressId"]).isEqualTo(dpsAddressId.toString())
@@ -863,7 +863,7 @@ class AgencyRegisterToNomisIntTest(
           @Test
           fun `will send telemetry event showing success`() {
             verify(telemetryClient).trackEvent(
-              eq("court-address-create-success"),
+              eq("court-address-created-success"),
               check {
                 assertThat(it["courtId"]).isEqualTo(courtId)
                 assertThat(it["dpsAddressId"]).isEqualTo(dpsAddressId.toString())
@@ -934,7 +934,7 @@ class AgencyRegisterToNomisIntTest(
       @Test
       fun `will send telemetry event showing the event is ignored`() {
         verify(telemetryClient).trackEvent(
-          eq("court-address-amended-ignored"),
+          eq("court-address-updated-ignored"),
           check {
             assertThat(it["courtId"]).isEqualTo(courtId)
             assertThat(it["dpsAddressId"]).isEqualTo(dpsAddressId.toString())
@@ -1012,7 +1012,7 @@ class AgencyRegisterToNomisIntTest(
         @Test
         fun `will send telemetry event showing success`() {
           verify(telemetryClient).trackEvent(
-            eq("court-address-amended-success"),
+            eq("court-address-updated-success"),
             check {
               assertThat(it["courtId"]).isEqualTo(courtId)
               assertThat(it["dpsAddressId"]).isEqualTo(dpsAddressId.toString())
@@ -1159,7 +1159,7 @@ class AgencyRegisterToNomisIntTest(
       @Test
       fun `will send telemetry event showing the event is ignored`() {
         verify(telemetryClient).trackEvent(
-          eq("hospital-create-ignored"),
+          eq("hospital-created-ignored"),
           check {
             assertThat(it["hospitalId"]).isEqualTo(hospitalId)
           },
@@ -1206,7 +1206,7 @@ class AgencyRegisterToNomisIntTest(
         @Test
         fun `will send telemetry event showing success`() {
           verify(telemetryClient).trackEvent(
-            eq("hospital-create-success"),
+            eq("hospital-created-success"),
             check {
               assertThat(it["hospitalId"]).isEqualTo(hospitalId)
               assertThat(it["nomisAgencyId"]).isEqualTo(hospitalId)
@@ -1374,7 +1374,7 @@ class AgencyRegisterToNomisIntTest(
       @Test
       fun `will send telemetry event showing the event is ignored`() {
         verify(telemetryClient).trackEvent(
-          eq("hospital-phone-create-ignored"),
+          eq("hospital-phone-created-ignored"),
           check {
             assertThat(it["hospitalId"]).isEqualTo(hospitalId)
             assertThat(it["dpsPhoneId"]).isEqualTo(dpsPhoneId.toString())
@@ -1418,7 +1418,7 @@ class AgencyRegisterToNomisIntTest(
         @Test
         fun `will send telemetry event showing success`() {
           verify(telemetryClient).trackEvent(
-            eq("hospital-phone-create-success"),
+            eq("hospital-phone-created-success"),
             check {
               assertThat(it["hospitalId"]).isEqualTo(hospitalId)
               assertThat(it["dpsPhoneId"]).isEqualTo(dpsPhoneId.toString())
@@ -1449,7 +1449,7 @@ class AgencyRegisterToNomisIntTest(
       @Test
       fun `will send telemetry event showing the event is ignored`() {
         verify(telemetryClient).trackEvent(
-          eq("hospital-phone-amended-ignored"),
+          eq("hospital-phone-updated-ignored"),
           check {
             assertThat(it["hospitalId"]).isEqualTo(hospitalId)
             assertThat(it["dpsPhoneId"]).isEqualTo(dpsPhoneId.toString())
@@ -1499,7 +1499,7 @@ class AgencyRegisterToNomisIntTest(
         @Test
         fun `will send telemetry event showing success`() {
           verify(telemetryClient).trackEvent(
-            eq("hospital-phone-amended-success"),
+            eq("hospital-phone-updated-success"),
             check {
               assertThat(it["hospitalId"]).isEqualTo(hospitalId)
               assertThat(it["dpsPhoneId"]).isEqualTo(dpsPhoneId.toString())
@@ -1645,7 +1645,7 @@ class AgencyRegisterToNomisIntTest(
       @Test
       fun `will send telemetry event showing the event is ignored`() {
         verify(telemetryClient).trackEvent(
-          eq("hospital-address-create-ignored"),
+          eq("hospital-address-created-ignored"),
           check {
             assertThat(it["hospitalId"]).isEqualTo(hospitalId)
             assertThat(it["dpsAddressId"]).isEqualTo(dpsAddressId.toString())
@@ -1709,7 +1709,7 @@ class AgencyRegisterToNomisIntTest(
         @Test
         fun `will send telemetry event showing success`() {
           verify(telemetryClient).trackEvent(
-            eq("hospital-address-create-success"),
+            eq("hospital-address-created-success"),
             check {
               assertThat(it["hospitalId"]).isEqualTo(hospitalId)
               assertThat(it["dpsAddressId"]).isEqualTo(dpsAddressId.toString())
@@ -1740,7 +1740,7 @@ class AgencyRegisterToNomisIntTest(
       @Test
       fun `will send telemetry event showing the event is ignored`() {
         verify(telemetryClient).trackEvent(
-          eq("hospital-address-amended-ignored"),
+          eq("hospital-address-updated-ignored"),
           check {
             assertThat(it["hospitalId"]).isEqualTo(hospitalId)
             assertThat(it["dpsAddressId"]).isEqualTo(dpsAddressId.toString())
@@ -1802,7 +1802,7 @@ class AgencyRegisterToNomisIntTest(
         @Test
         fun `will send telemetry event showing success`() {
           verify(telemetryClient).trackEvent(
-            eq("hospital-address-amended-success"),
+            eq("hospital-address-updated-success"),
             check {
               assertThat(it["hospitalId"]).isEqualTo(hospitalId)
               assertThat(it["dpsAddressId"]).isEqualTo(dpsAddressId.toString())
