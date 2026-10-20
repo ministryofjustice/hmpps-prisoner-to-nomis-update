@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-14.610.144253f"
+    "version" : "2026-10-16.614.9ec0f87"
   },
   "servers" : [ {
     "url" : "https://prison-register-dev.hmpps.service.justice.gov.uk",
@@ -7013,6 +7013,18 @@
           "schema" : {
             "type" : "string"
           }
+        }, {
+          "name" : "active-only",
+          "in" : "query",
+          "description" : "When true (the default) only active subareas are returned",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : true,
+            "description" : "When true (the default) only active subareas are returned",
+            "example" : true
+          },
+          "example" : true
         } ],
         "responses" : {
           "200" : {
@@ -7057,6 +7069,19 @@
         "summary" : "Get all regions",
         "description" : "Returns all regions as a flat list of code and description",
         "operationId" : "getRegions",
+        "parameters" : [ {
+          "name" : "active-only",
+          "in" : "query",
+          "description" : "When true (the default) only active regions are returned",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : true,
+            "description" : "When true (the default) only active regions are returned",
+            "example" : true
+          },
+          "example" : true
+        } ],
         "responses" : {
           "200" : {
             "description" : "Successful Operation",
@@ -7100,6 +7125,19 @@
         "summary" : "Get all payroll regions",
         "description" : "Returns all payroll regions as a flat list of code and description",
         "operationId" : "getPayrollRegions",
+        "parameters" : [ {
+          "name" : "active-only",
+          "in" : "query",
+          "description" : "When true (the default) only active payroll regions are returned",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : true,
+            "description" : "When true (the default) only active payroll regions are returned",
+            "example" : true
+          },
+          "example" : true
+        } ],
         "responses" : {
           "200" : {
             "description" : "Successful Operation",
@@ -7143,6 +7181,19 @@
         "summary" : "Get all local authorities",
         "description" : "Returns all local authorities as a flat list of code and description",
         "operationId" : "getLocalAuthorities",
+        "parameters" : [ {
+          "name" : "active-only",
+          "in" : "query",
+          "description" : "When true (the default) only active local authorities are returned",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : true,
+            "description" : "When true (the default) only active local authorities are returned",
+            "example" : true
+          },
+          "example" : true
+        } ],
         "responses" : {
           "200" : {
             "description" : "Successful Operation",
@@ -7193,6 +7244,18 @@
           "schema" : {
             "type" : "string"
           }
+        }, {
+          "name" : "active-only",
+          "in" : "query",
+          "description" : "When true (the default) only active areas are returned",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : true,
+            "description" : "When true (the default) only active areas are returned",
+            "example" : true
+          },
+          "example" : true
         } ],
         "responses" : {
           "200" : {
