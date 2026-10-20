@@ -474,7 +474,19 @@ hmpps.sqs:
           "register.hospital.phone.deleted",
           "register.hospital.address.inserted",
           "register.hospital.address.amended",
-          "register.hospital.address.deleted"
+          "register.hospital.address.deleted",
+          "register.policecustodysuite.inserted",
+          "register.policecustodysuite.amended",
+          "register.policecustodysuite.deleted",
+          "register.policecustodysuite.email.inserted",
+          "register.policecustodysuite.email.amended",
+          "register.policecustodysuite.email.deleted",
+          "register.policecustodysuite.phone.inserted",
+          "register.policecustodysuite.phone.amended",
+          "register.policecustodysuite.phone.deleted",
+          "register.policecustodysuite.address.inserted",
+          "register.policecustodysuite.address.amended",
+          "register.policecustodysuite.address.deleted"
         ]}
       dlqMaxReceiveCount: 2
       visibilityTimeout: 120

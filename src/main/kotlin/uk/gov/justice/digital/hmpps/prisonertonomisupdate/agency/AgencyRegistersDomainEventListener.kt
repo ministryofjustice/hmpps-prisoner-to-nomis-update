@@ -53,6 +53,18 @@ class AgencyRegistersDomainEventListener(
       "register.hospital.address.inserted" -> service.hospitalAddressInserted(message.fromJson())
       "register.hospital.address.amended" -> service.hospitalAddressAmended(message.fromJson())
       "register.hospital.address.deleted" -> service.hospitalAddressDeleted(message.fromJson())
+      "register.policecustodysuite.inserted" -> service.policeCustodySuiteInserted(message.fromJson())
+      "register.policecustodysuite.amended" -> service.policeCustodySuiteAmended(message.fromJson())
+      "register.policecustodysuite.deleted" -> service.policeCustodySuiteDeleted(message.fromJson())
+      "register.policecustodysuite.email.inserted" -> service.policeCustodySuiteEmailInserted(message.fromJson())
+      "register.policecustodysuite.email.amended" -> service.policeCustodySuiteEmailAmended(message.fromJson())
+      "register.policecustodysuite.email.deleted" -> service.policeCustodySuiteEmailDeleted(message.fromJson())
+      "register.policecustodysuite.phone.inserted" -> service.policeCustodySuitePhoneInserted(message.fromJson())
+      "register.policecustodysuite.phone.amended" -> service.policeCustodySuitePhoneAmended(message.fromJson())
+      "register.policecustodysuite.phone.deleted" -> service.policeCustodySuitePhoneDeleted(message.fromJson())
+      "register.policecustodysuite.address.inserted" -> service.policeCustodySuiteAddressInserted(message.fromJson())
+      "register.policecustodysuite.address.amended" -> service.policeCustodySuiteAddressAmended(message.fromJson())
+      "register.policecustodysuite.address.deleted" -> service.policeCustodySuiteAddressDeleted(message.fromJson())
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }
   }
@@ -137,6 +149,49 @@ data class HospitalAddressEvent(
 
 data class HospitalAddressAdditionalInformation(
   val hospitalId: String,
+  val addressId: Long,
+  override val source: String,
+) : SourcedAdditionalData
+
+data class PoliceCustodySuiteEvent(
+  val eventType: String,
+  override val additionalInformation: PoliceCustodySuiteAdditionalInformation,
+) : SourcedEvent
+
+data class PoliceCustodySuiteAdditionalInformation(
+  val policeCustodySuiteId: String,
+  override val source: String,
+) : SourcedAdditionalData
+
+data class PoliceCustodySuiteEmailEvent(
+  val eventType: String,
+  override val additionalInformation: PoliceCustodySuiteEmailAdditionalInformation,
+) : SourcedEvent
+
+data class PoliceCustodySuiteEmailAdditionalInformation(
+  val policeCustodySuiteId: String,
+  val emailId: Long,
+  override val source: String,
+) : SourcedAdditionalData
+
+data class PoliceCustodySuitePhoneEvent(
+  val eventType: String,
+  override val additionalInformation: PoliceCustodySuitePhoneAdditionalInformation,
+) : SourcedEvent
+
+data class PoliceCustodySuitePhoneAdditionalInformation(
+  val policeCustodySuiteId: String,
+  val phoneId: Long,
+  override val source: String,
+) : SourcedAdditionalData
+
+data class PoliceCustodySuiteAddressEvent(
+  val eventType: String,
+  override val additionalInformation: PoliceCustodySuiteAddressAdditionalInformation,
+) : SourcedEvent
+
+data class PoliceCustodySuiteAddressAdditionalInformation(
+  val policeCustodySuiteId: String,
   val addressId: Long,
   override val source: String,
 ) : SourcedAdditionalData
