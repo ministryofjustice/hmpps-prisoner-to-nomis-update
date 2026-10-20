@@ -61,7 +61,7 @@ class AgencyRegistersReconciliationService(
 
   suspend fun checkMatch(agencyId: String): MismatchAgency? {
     val nomisAgency = runCatching { nomisApiService.getAgency(agencyId) }.getOrNull()
-    val dpsAgency = runCatching { dpsApiService.getAgency(agencyId) }.getOrNull()
+    val dpsAgency = runCatching { dpsApiService.getAgencyForReconciliation(agencyId) }.getOrNull()
 
     return when {
       nomisAgency == null -> MismatchAgency(agencyId, "Missing in NOMIS")

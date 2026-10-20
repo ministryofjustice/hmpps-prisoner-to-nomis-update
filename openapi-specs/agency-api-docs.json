@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-16.614.9ec0f87"
+    "version" : "2026-10-19.618.2526f1d"
   },
   "servers" : [ {
     "url" : "https://prison-register-dev.hmpps.service.justice.gov.uk",
@@ -7516,6 +7516,70 @@
         }
       }
     },
+    "/legacy/{agencyId}" : {
+      "get" : {
+        "tags" : [ "legacy-sync-resource" ],
+        "summary" : "Returns details of an agency of any type",
+        "description" : "Returns the details of any agency (court, hospital, probation office, approved premises, police custody suite, or generic agency) as a LegacyAgencyDto. Role required is ROLE_HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
+        "operationId" : "getAgency",
+        "parameters" : [ {
+          "name" : "agencyId",
+          "in" : "path",
+          "description" : "NOMIS Agency Id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "NOMIS Agency Id",
+            "example" : "SHEFCC",
+            "maxLength" : 6,
+            "minLength" : 2
+          },
+          "example" : "SHEFCC"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Agency details returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LegacyAgencyDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Incorrect permissions to retrieve agency details",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Agency not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/legacy/reconciliation/{agencyId}" : {
       "get" : {
         "tags" : [ "legacy-sync-resource" ],
@@ -7661,7 +7725,7 @@
         "tags" : [ "public-api-resource" ],
         "summary" : "Get details of an agency",
         "description" : "Details of a single agency of any type (court, hospital, police custody suite, probation office, approved premises, prison or other agency)",
-        "operationId" : "getAgency",
+        "operationId" : "getPublicAgency",
         "parameters" : [ {
           "name" : "agencyId",
           "in" : "path",
@@ -9852,6 +9916,12 @@
       "LegacyAgencyAddressDto" : {
         "type" : "object",
         "properties" : {
+          "id" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int64",
+            "description" : "Database Id",
+            "example" : 123
+          },
           "addressLine1" : {
             "type" : [ "string", "null" ],
             "description" : "Address line 1",
@@ -9991,6 +10061,12 @@
       "LegacyAgencyEmailDto" : {
         "type" : "object",
         "properties" : {
+          "id" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int64",
+            "description" : "Database Id",
+            "example" : 123
+          },
           "address" : {
             "type" : "string",
             "description" : "Email address",
@@ -10002,6 +10078,12 @@
       "LegacyAgencyPhoneDto" : {
         "type" : "object",
         "properties" : {
+          "id" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int64",
+            "description" : "Database Id",
+            "example" : 123
+          },
           "number" : {
             "type" : "string",
             "description" : "Phone number",

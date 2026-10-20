@@ -43,6 +43,14 @@ class AgencyRegistersDomainEventListener(
       "register.court.address.inserted" -> service.courtAddressInserted(message.fromJson())
       "register.court.address.amended" -> service.courtAddressAmended(message.fromJson())
       "register.court.address.deleted" -> service.courtAddressDeleted(message.fromJson())
+      "register.hospital.inserted" -> service.hospitalInserted(message.fromJson())
+      "register.hospital.amended" -> service.hospitalAmended(message.fromJson())
+      "register.hospital.phone.inserted" -> service.hospitalPhoneInserted(message.fromJson())
+      "register.hospital.phone.amended" -> service.hospitalPhoneAmended(message.fromJson())
+      "register.hospital.phone.deleted" -> service.hospitalPhoneDeleted(message.fromJson())
+      "register.hospital.address.inserted" -> service.hospitalAddressInserted(message.fromJson())
+      "register.hospital.address.amended" -> service.hospitalAddressAmended(message.fromJson())
+      "register.hospital.address.deleted" -> service.hospitalAddressDeleted(message.fromJson())
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }
   }
@@ -95,6 +103,38 @@ data class CourtAddressEvent(
 
 data class CourtAddressAdditionalInformation(
   val courtId: String,
+  val addressId: Long,
+  override val source: String,
+) : SourcedAdditionalData
+
+data class HospitalEvent(
+  val eventType: String,
+  override val additionalInformation: HospitalAdditionalInformation,
+) : SourcedEvent
+
+data class HospitalAdditionalInformation(
+  val hospitalId: String,
+  override val source: String,
+) : SourcedAdditionalData
+
+data class HospitalPhoneEvent(
+  val eventType: String,
+  override val additionalInformation: HospitalPhoneAdditionalInformation,
+) : SourcedEvent
+
+data class HospitalPhoneAdditionalInformation(
+  val hospitalId: String,
+  val phoneId: Long,
+  override val source: String,
+) : SourcedAdditionalData
+
+data class HospitalAddressEvent(
+  val eventType: String,
+  override val additionalInformation: HospitalAddressAdditionalInformation,
+) : SourcedEvent
+
+data class HospitalAddressAdditionalInformation(
+  val hospitalId: String,
   val addressId: Long,
   override val source: String,
 ) : SourcedAdditionalData

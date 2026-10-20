@@ -23,14 +23,15 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiM
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.createAgencyAddressResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.createAgencyEmailResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.createAgencyPhoneResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.hospitalAgencyResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.updateAgencyAddressesResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.updateAgencyEmailAddressesResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.updateAgencyPhoneNumbersResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension.Companion.agencyEmailDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension.Companion.agencyPhoneDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension.Companion.courtDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension.Companion.legacyAgencyAddressDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension.Companion.legacyAgencyDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.AgencyAddressDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension.Companion.legacyAgencyEmailDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension.Companion.legacyAgencyPhoneDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.LegacyAgencyType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAgencyAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAgencyEmailAddressRequest
@@ -243,7 +244,7 @@ class AgencyRegisterToNomisIntTest(
 
         @BeforeEach
         fun setUp() {
-          dpsApi.stubGetCourt(courtId = courtId, response = courtDto().copy(emailAddresses = listOf(agencyEmailDto().copy(id = dpsEmailId, address = "test@justice.gov.uk"))))
+          dpsApi.stubGetAgency(courtId, legacyAgencyDto().copy(emailAddresses = listOf(legacyAgencyEmailDto().copy(id = dpsEmailId, address = "test@justice.gov.uk"))))
           nomisApi.stubCreateAgencyEmail(agencyId = courtId, response = createAgencyEmailResponse().copy(id = nomisEmailId))
           publishCourtEmailInsertedEvent(emailId = dpsEmailId, courtId = courtId)
           waitForAnyProcessingToComplete()
@@ -308,11 +309,11 @@ class AgencyRegisterToNomisIntTest(
       inner class HappyPath {
         @BeforeEach
         fun setUp() {
-          dpsApi.stubGetCourt(
-            courtId = courtId,
-            response = courtDto().copy(
+          dpsApi.stubGetAgency(
+            agencyId = courtId,
+            response = legacyAgencyDto().copy(
               emailAddresses = emails.mapIndexed { index, address ->
-                agencyEmailDto().copy(id = index + 1L, address = address)
+                legacyAgencyEmailDto().copy(id = index + 1L, address = address)
               },
             ),
           )
@@ -387,11 +388,11 @@ class AgencyRegisterToNomisIntTest(
       inner class HappyPath {
         @BeforeEach
         fun setUp() {
-          dpsApi.stubGetCourt(
-            courtId = courtId,
-            response = courtDto().copy(
+          dpsApi.stubGetAgency(
+            agencyId = courtId,
+            response = legacyAgencyDto().copy(
               emailAddresses = emails.mapIndexed { index, address ->
-                agencyEmailDto().copy(id = index + 1L, address = address)
+                legacyAgencyEmailDto().copy(id = index + 1L, address = address)
               },
             ),
           )
@@ -459,7 +460,7 @@ class AgencyRegisterToNomisIntTest(
 
       @Test
       fun `will not call DPS or update NOMIS`() {
-        dpsApi.verify(0, getRequestedFor(urlEqualTo("/courts/id/$courtId")))
+        dpsApi.verify(0, getRequestedFor(urlEqualTo("/legacy/$courtId")))
         nomisApi.verify(0, postRequestedFor(urlEqualTo("/agency/$courtId/phones")))
       }
     }
@@ -471,10 +472,10 @@ class AgencyRegisterToNomisIntTest(
       inner class HappyPath {
         @BeforeEach
         fun setUp() {
-          dpsApi.stubGetCourt(
-            courtId = courtId,
-            response = courtDto().copy(
-              phoneNumbers = listOf(agencyPhoneDto(), agencyPhoneDto().copy(id = dpsPhoneId, number = "0114 555 1234")),
+          dpsApi.stubGetAgency(
+            agencyId = courtId,
+            response = legacyAgencyDto().copy(
+              phoneNumbers = listOf(legacyAgencyPhoneDto(), legacyAgencyPhoneDto().copy(id = dpsPhoneId, number = "0114 555 1234")),
             ),
           )
           nomisApi.stubCreateAgencyPhone(agencyId = courtId, response = createAgencyPhoneResponse().copy(id = nomisPhoneId))
@@ -534,7 +535,7 @@ class AgencyRegisterToNomisIntTest(
 
       @Test
       fun `will not call DPS or update NOMIS`() {
-        dpsApi.verify(0, getRequestedFor(urlEqualTo("/courts/id/$courtId")))
+        dpsApi.verify(0, getRequestedFor(urlEqualTo("/legacy/$courtId")))
         nomisApi.verify(0, putRequestedFor(urlEqualTo("/agency/$courtId/phones")))
       }
     }
@@ -548,10 +549,10 @@ class AgencyRegisterToNomisIntTest(
       inner class HappyPath {
         @BeforeEach
         fun setUp() {
-          dpsApi.stubGetCourt(
-            courtId = courtId,
-            response = courtDto().copy(
-              phoneNumbers = phones.mapIndexed { index, number -> agencyPhoneDto().copy(id = dpsPhoneId + index, number = number) },
+          dpsApi.stubGetAgency(
+            agencyId = courtId,
+            response = legacyAgencyDto().copy(
+              phoneNumbers = phones.mapIndexed { index, number -> legacyAgencyPhoneDto().copy(id = dpsPhoneId + index, number = number) },
             ),
           )
           nomisApi.stubUpdateAgencyPhoneNumbers(
@@ -615,7 +616,7 @@ class AgencyRegisterToNomisIntTest(
 
       @Test
       fun `will not call DPS or update NOMIS`() {
-        dpsApi.verify(0, getRequestedFor(urlEqualTo("/courts/id/$courtId")))
+        dpsApi.verify(0, getRequestedFor(urlEqualTo("/legacy/$courtId")))
         nomisApi.verify(0, putRequestedFor(urlEqualTo("/agency/$courtId/phones")))
       }
     }
@@ -629,10 +630,10 @@ class AgencyRegisterToNomisIntTest(
       inner class HappyPath {
         @BeforeEach
         fun setUp() {
-          dpsApi.stubGetCourt(
-            courtId = courtId,
-            response = courtDto().copy(
-              phoneNumbers = phones.mapIndexed { index, number -> agencyPhoneDto().copy(id = index + 1L, number = number) },
+          dpsApi.stubGetAgency(
+            agencyId = courtId,
+            response = legacyAgencyDto().copy(
+              phoneNumbers = phones.mapIndexed { index, number -> legacyAgencyPhoneDto().copy(id = index + 1L, number = number) },
             ),
           )
           nomisApi.stubUpdateAgencyPhoneNumbers(
@@ -669,7 +670,7 @@ class AgencyRegisterToNomisIntTest(
       inner class LastPhoneDeleted {
         @BeforeEach
         fun setUp() {
-          dpsApi.stubGetCourt(courtId = courtId, response = courtDto().copy(phoneNumbers = emptyList()))
+          dpsApi.stubGetAgency(agencyId = courtId, response = legacyAgencyDto().copy(phoneNumbers = emptyList()))
           nomisApi.stubUpdateAgencyPhoneNumbers(
             agencyId = courtId,
             response = updateAgencyPhoneNumbersResponse().copy(phoneNumbers = emptyList()),
@@ -730,7 +731,7 @@ class AgencyRegisterToNomisIntTest(
 
       @Test
       fun `will not call DPS or update NOMIS`() {
-        dpsApi.verify(0, getRequestedFor(urlEqualTo("/courts/id/$courtId")))
+        dpsApi.verify(0, getRequestedFor(urlEqualTo("/legacy/$courtId")))
         nomisApi.verify(0, postRequestedFor(urlEqualTo("/agency/$courtId/addresses")))
       }
     }
@@ -755,12 +756,12 @@ class AgencyRegisterToNomisIntTest(
         }
 
         private fun insertAddress(addressLine1: String?, addressLine2: String?) {
-          dpsApi.stubGetCourt(
-            courtId = courtId,
-            response = courtDto().copy(
+          dpsApi.stubGetAgency(
+            agencyId = courtId,
+            response = legacyAgencyDto().copy(
               addresses = listOf(
-                AgencyAddressDto(id = 1, addressLine1 = "Another court address"),
-                AgencyAddressDto(
+                legacyAgencyAddressDto().copy(id = 1, addressLine1 = "Another court address", addressLine2 = null, town = null, county = null, postcode = null, country = null),
+                legacyAgencyAddressDto().copy(
                   id = dpsAddressId,
                   addressLine1 = addressLine1,
                   addressLine2 = addressLine2,
@@ -892,7 +893,7 @@ class AgencyRegisterToNomisIntTest(
 
       @Test
       fun `will not call DPS or update NOMIS`() {
-        dpsApi.verify(0, getRequestedFor(urlEqualTo("/courts/id/$courtId")))
+        dpsApi.verify(0, getRequestedFor(urlEqualTo("/legacy/$courtId")))
         nomisApi.verify(0, putRequestedFor(urlEqualTo("/agency/$courtId/addresses")))
       }
     }
@@ -902,7 +903,7 @@ class AgencyRegisterToNomisIntTest(
     inner class WhenDpsAmended {
       @Nested
       inner class HappyPath {
-        private val address = AgencyAddressDto(
+        private val address = legacyAgencyAddressDto().copy(
           id = dpsAddressId,
           addressLine1 = "The Law Courts",
           addressLine2 = "50 West Bar",
@@ -922,15 +923,15 @@ class AgencyRegisterToNomisIntTest(
 
         @BeforeEach
         fun setUp() {
-          dpsApi.stubGetCourt(
-            courtId = courtId,
-            response = courtDto().copy(
+          dpsApi.stubGetAgency(
+            agencyId = courtId,
+            response = legacyAgencyDto().copy(
               addresses = listOf(
                 address,
                 address.copy(id = 2, addressLine1 = " The Law Courts , 50 West Bar "),
                 address.copy(id = 3, addressLine1 = " Floor 2 , The Law Courts , 50 West Bar "),
                 address.copy(id = 4, addressLine1 = "Floor 2, The Law Courts, 50 West Bar, Justice Area"),
-                AgencyAddressDto(id = 5),
+                legacyAgencyAddressDto().copy(id = 5, addressLine1 = null, addressLine2 = null, town = null, county = null, postcode = null, country = null),
               ),
             ),
           )
@@ -1001,7 +1002,7 @@ class AgencyRegisterToNomisIntTest(
 
       @Test
       fun `will not call DPS or update NOMIS`() {
-        dpsApi.verify(0, getRequestedFor(urlEqualTo("/courts/id/$courtId")))
+        dpsApi.verify(0, getRequestedFor(urlEqualTo("/legacy/$courtId")))
         nomisApi.verify(0, putRequestedFor(urlEqualTo("/agency/$courtId/addresses")))
       }
     }
@@ -1013,12 +1014,12 @@ class AgencyRegisterToNomisIntTest(
       inner class HappyPath {
         @BeforeEach
         fun setUp() {
-          dpsApi.stubGetCourt(
-            courtId = courtId,
-            response = courtDto().copy(
+          dpsApi.stubGetAgency(
+            agencyId = courtId,
+            response = legacyAgencyDto().copy(
               addresses = listOf(
-                AgencyAddressDto(id = 1, addressLine1 = "The Law Courts", postcode = "S3 8PH"),
-                AgencyAddressDto(id = 2, addressLine1 = "Another court address", postcode = "S1 2AB"),
+                legacyAgencyAddressDto().copy(id = 1, addressLine1 = "The Law Courts", addressLine2 = null, town = null, county = null, postcode = "S3 8PH", country = null),
+                legacyAgencyAddressDto().copy(id = 2, addressLine1 = "Another court address", addressLine2 = null, town = null, county = null, postcode = "S1 2AB", country = null),
               ),
             ),
           )
@@ -1057,7 +1058,7 @@ class AgencyRegisterToNomisIntTest(
       inner class LastAddressDeleted {
         @BeforeEach
         fun setUp() {
-          dpsApi.stubGetCourt(courtId = courtId, response = courtDto().copy(addresses = emptyList()))
+          dpsApi.stubGetAgency(agencyId = courtId, response = legacyAgencyDto().copy(addresses = emptyList()))
           nomisApi.stubUpdateAgencyAddresses(
             agencyId = courtId,
             response = updateAgencyAddressesResponse().copy(addresses = emptyList()),
@@ -1087,6 +1088,740 @@ class AgencyRegisterToNomisIntTest(
       }
     }
   }
+
+  @Nested
+  @DisplayName("register.hospital.inserted")
+  inner class HospitalInserted {
+    val hospitalId = "HHOSP1"
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of the event")
+    inner class WhenNomisCreated {
+
+      @BeforeEach
+      fun setUp() {
+        publishHospitalInsertedEvent(hospitalId = hospitalId, source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the event is ignored`() {
+        verify(telemetryClient).trackEvent(
+          eq("hospital-create-ignored"),
+          check {
+            assertThat(it["hospitalId"]).isEqualTo(hospitalId)
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of the event")
+    inner class WhenDpsCreated {
+
+      @Nested
+      inner class HappyPath {
+
+        @BeforeEach
+        fun setUp() {
+          dpsApi.stubGetAgency(agencyId = hospitalId, response = hospitalLegacyAgencyDto())
+          nomisApi.stubCreateAgency(response = hospitalAgencyResponse().copy(agencyId = hospitalId))
+          publishHospitalInsertedEvent(hospitalId = hospitalId)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will create agency in NOMIS`() {
+          val request: CreateAgencyRequest = NomisApiExtension.nomisApi.getRequestBody(postRequestedFor(urlEqualTo("/agency")), jsonMapper)
+          assertThat(request.agencyId).isEqualTo(hospitalId)
+          assertThat(request.description).isEqualTo("Hallamshire Hospital")
+          assertThat(request.typeCode).isEqualTo("HOSPITAL")
+          assertThat(request.active).isTrue()
+          assertThat(request.localAuthorityCodes).containsExactly("00CG")
+          assertThat(request.longDescription).isEqualTo("Hallamshire Hospital, Sheffield")
+          assertThat(request.contactName).isEqualTo("JANE SMITH")
+          assertThat(request.courtTypeCode).isEqualTo("CC")
+          assertThat(request.disabilityAccessCode).isEqualTo("WHEEL")
+          assertThat(request.areaCode).isEqualTo("52")
+          assertThat(request.subAreaCode).isEqualTo("SHEFF")
+          assertThat(request.regionCode).isEqualTo("NEAST")
+          assertThat(request.nomsRegionCode).isEqualTo("YOHUM")
+          assertThat(request.cjitCode).isEqualTo("C00SH00")
+          assertThat(request.payrollRegionCode).isEqualTo("YP")
+        }
+
+        @Test
+        fun `will send telemetry event showing success`() {
+          verify(telemetryClient).trackEvent(
+            eq("hospital-create-success"),
+            check {
+              assertThat(it["hospitalId"]).isEqualTo(hospitalId)
+              assertThat(it["nomisAgencyId"]).isEqualTo(hospitalId)
+            },
+            isNull(),
+          )
+        }
+      }
+    }
+  }
+
+  @Nested
+  @DisplayName("register.hospital.amended")
+  inner class HospitalAmended {
+    val hospitalId = "HHOSP1"
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of the event")
+    inner class WhenNomisCreated {
+
+      @BeforeEach
+      fun setUp() {
+        publishHospitalAmendedEvent(hospitalId = hospitalId, source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the event is ignored`() {
+        verify(telemetryClient).trackEvent(
+          eq("hospital-updated-ignored"),
+          check {
+            assertThat(it["hospitalId"]).isEqualTo(hospitalId)
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of the event")
+    inner class WhenDpsCreated {
+
+      @Nested
+      inner class HappyPath {
+
+        @BeforeEach
+        fun setUp() {
+          dpsApi.stubGetAgency(agencyId = hospitalId, response = hospitalLegacyAgencyDto())
+          nomisApi.stubUpdateAgency(agencyId = hospitalId, response = hospitalAgencyResponse().copy(agencyId = hospitalId))
+          publishHospitalAmendedEvent(hospitalId = hospitalId)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will update NOMIS`() {
+          val request: UpdateAgencyRequest = NomisApiExtension.nomisApi.getRequestBody(putRequestedFor(urlEqualTo("/agency/$hospitalId")), jsonMapper)
+          assertThat(request.description).isEqualTo("Hallamshire Hospital")
+          assertThat(request.active).isTrue()
+          assertThat(request.localAuthorityCodes).containsExactly("00CG")
+          assertThat(request.longDescription).isEqualTo("Hallamshire Hospital, Sheffield")
+          assertThat(request.contactName).isEqualTo("JANE SMITH")
+          assertThat(request.courtTypeCode).isEqualTo("CC")
+          assertThat(request.disabilityAccessCode).isEqualTo("WHEEL")
+          assertThat(request.areaCode).isEqualTo("52")
+          assertThat(request.subAreaCode).isEqualTo("SHEFF")
+          assertThat(request.regionCode).isEqualTo("NEAST")
+          assertThat(request.nomsRegionCode).isEqualTo("YOHUM")
+          assertThat(request.cjitCode).isEqualTo("C00SH00")
+          assertThat(request.payrollRegionCode).isEqualTo("YP")
+        }
+
+        @Test
+        fun `will send telemetry event showing success`() {
+          verify(telemetryClient).trackEvent(
+            eq("hospital-updated-success"),
+            check {
+              assertThat(it["hospitalId"]).isEqualTo(hospitalId)
+              assertThat(it["nomisAgencyId"]).isEqualTo(hospitalId)
+            },
+            isNull(),
+          )
+        }
+      }
+    }
+  }
+
+  @Nested
+  @DisplayName("register.hospital.phone.inserted")
+  inner class HospitalPhoneInserted {
+    val dpsPhoneId = 12345L
+    val nomisPhoneId = 8765L
+    val hospitalId = "HHOSP1"
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of the event")
+    inner class WhenNomisCreated {
+      @BeforeEach
+      fun setUp() {
+        publishHospitalPhoneEvent("register.hospital.phone.inserted", hospitalId, dpsPhoneId, source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the event is ignored`() {
+        verify(telemetryClient).trackEvent(
+          eq("hospital-phone-create-ignored"),
+          check {
+            assertThat(it["hospitalId"]).isEqualTo(hospitalId)
+            assertThat(it["dpsPhoneId"]).isEqualTo(dpsPhoneId.toString())
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will not call DPS or update NOMIS`() {
+        dpsApi.verify(0, getRequestedFor(urlEqualTo("/legacy/$hospitalId")))
+        nomisApi.verify(0, postRequestedFor(urlEqualTo("/agency/$hospitalId/phones")))
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of the event")
+    inner class WhenDpsCreated {
+      @Nested
+      inner class HappyPath {
+        @BeforeEach
+        fun setUp() {
+          dpsApi.stubGetAgency(
+            agencyId = hospitalId,
+            response = hospitalLegacyAgencyDto().copy(
+              phoneNumbers = listOf(legacyAgencyPhoneDto(), legacyAgencyPhoneDto().copy(id = dpsPhoneId, number = "0114 555 1234")),
+            ),
+          )
+          nomisApi.stubCreateAgencyPhone(agencyId = hospitalId, response = createAgencyPhoneResponse().copy(id = nomisPhoneId))
+          publishHospitalPhoneEvent("register.hospital.phone.inserted", hospitalId, dpsPhoneId)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will create only the inserted phone in NOMIS`() {
+          val request: CreateAgencyPhoneNumberRequest = NomisApiExtension.nomisApi.getRequestBody(postRequestedFor(urlEqualTo("/agency/$hospitalId/phones")), jsonMapper)
+          assertThat(request).isEqualTo(CreateAgencyPhoneNumberRequest(number = "0114 555 1234", typeCode = "BUS"))
+          nomisApi.verify(1, postRequestedFor(urlEqualTo("/agency/$hospitalId/phones")))
+        }
+
+        @Test
+        fun `will send telemetry event showing success`() {
+          verify(telemetryClient).trackEvent(
+            eq("hospital-phone-create-success"),
+            check {
+              assertThat(it["hospitalId"]).isEqualTo(hospitalId)
+              assertThat(it["dpsPhoneId"]).isEqualTo(dpsPhoneId.toString())
+              assertThat(it["nomisPhoneId"]).isEqualTo(nomisPhoneId.toString())
+            },
+            isNull(),
+          )
+        }
+      }
+    }
+  }
+
+  @Nested
+  @DisplayName("register.hospital.phone.amended")
+  inner class HospitalPhoneAmended {
+    val dpsPhoneId = 12345L
+    val hospitalId = "HHOSP1"
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of the event")
+    inner class WhenNomisAmended {
+      @BeforeEach
+      fun setUp() {
+        publishHospitalPhoneEvent("register.hospital.phone.amended", hospitalId, dpsPhoneId, source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the event is ignored`() {
+        verify(telemetryClient).trackEvent(
+          eq("hospital-phone-amended-ignored"),
+          check {
+            assertThat(it["hospitalId"]).isEqualTo(hospitalId)
+            assertThat(it["dpsPhoneId"]).isEqualTo(dpsPhoneId.toString())
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will not call DPS or update NOMIS`() {
+        dpsApi.verify(0, getRequestedFor(urlEqualTo("/legacy/$hospitalId")))
+        nomisApi.verify(0, putRequestedFor(urlEqualTo("/agency/$hospitalId/phones")))
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of the event")
+    inner class WhenDpsAmended {
+      val phones = listOf("0114 555 1234", "0114 555 5678")
+
+      @Nested
+      inner class HappyPath {
+        @BeforeEach
+        fun setUp() {
+          dpsApi.stubGetAgency(
+            agencyId = hospitalId,
+            response = hospitalLegacyAgencyDto().copy(
+              phoneNumbers = phones.mapIndexed { index, number -> legacyAgencyPhoneDto().copy(id = dpsPhoneId + index, number = number) },
+            ),
+          )
+          nomisApi.stubUpdateAgencyPhoneNumbers(
+            agencyId = hospitalId,
+            response = updateAgencyPhoneNumbersResponse().copy(
+              phoneNumbers = phones.mapIndexed { index, number -> agencyPhoneNumber().copy(id = index + 1L, number = number) },
+            ),
+          )
+          publishHospitalPhoneEvent("register.hospital.phone.amended", hospitalId, dpsPhoneId)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will refresh all NOMIS phone numbers`() {
+          val request: UpdateAgencyPhoneNumbersRequest = NomisApiExtension.nomisApi.getRequestBody(putRequestedFor(urlEqualTo("/agency/$hospitalId/phones")), jsonMapper)
+          assertThat(request.phoneNumbers).containsExactlyElementsOf(phones.map { UpdateAgencyPhoneNumber(number = it, typeCode = "BUS") })
+        }
+
+        @Test
+        fun `will send telemetry event showing success`() {
+          verify(telemetryClient).trackEvent(
+            eq("hospital-phone-amended-success"),
+            check {
+              assertThat(it["hospitalId"]).isEqualTo(hospitalId)
+              assertThat(it["dpsPhoneId"]).isEqualTo(dpsPhoneId.toString())
+              assertThat(it["nomisPhoneIds"]).isEqualTo("1, 2")
+            },
+            isNull(),
+          )
+        }
+      }
+    }
+  }
+
+  @Nested
+  @DisplayName("register.hospital.phone.deleted")
+  inner class HospitalPhoneDeleted {
+    val dpsPhoneId = 12345L
+    val hospitalId = "HHOSP1"
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of the event")
+    inner class WhenNomisDeleted {
+      @BeforeEach
+      fun setUp() {
+        publishHospitalPhoneEvent("register.hospital.phone.deleted", hospitalId, dpsPhoneId, source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the event is ignored`() {
+        verify(telemetryClient).trackEvent(
+          eq("hospital-phone-deleted-ignored"),
+          check {
+            assertThat(it["hospitalId"]).isEqualTo(hospitalId)
+            assertThat(it["dpsPhoneId"]).isEqualTo(dpsPhoneId.toString())
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will not call DPS or update NOMIS`() {
+        dpsApi.verify(0, getRequestedFor(urlEqualTo("/legacy/$hospitalId")))
+        nomisApi.verify(0, putRequestedFor(urlEqualTo("/agency/$hospitalId/phones")))
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of the event")
+    inner class WhenDpsDeleted {
+      val phones = listOf("0114 555 1234", "0114 555 5678")
+
+      @Nested
+      inner class HappyPath {
+        @BeforeEach
+        fun setUp() {
+          dpsApi.stubGetAgency(
+            agencyId = hospitalId,
+            response = hospitalLegacyAgencyDto().copy(
+              phoneNumbers = phones.mapIndexed { index, number -> legacyAgencyPhoneDto().copy(id = index + 1L, number = number) },
+            ),
+          )
+          nomisApi.stubUpdateAgencyPhoneNumbers(
+            agencyId = hospitalId,
+            response = updateAgencyPhoneNumbersResponse().copy(
+              phoneNumbers = phones.mapIndexed { index, number -> agencyPhoneNumber().copy(id = index + 1L, number = number) },
+            ),
+          )
+          publishHospitalPhoneEvent("register.hospital.phone.deleted", hospitalId, dpsPhoneId)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will refresh NOMIS with the remaining phone numbers`() {
+          val request: UpdateAgencyPhoneNumbersRequest = NomisApiExtension.nomisApi.getRequestBody(putRequestedFor(urlEqualTo("/agency/$hospitalId/phones")), jsonMapper)
+          assertThat(request.phoneNumbers).containsExactlyElementsOf(phones.map { UpdateAgencyPhoneNumber(number = it, typeCode = "BUS") })
+        }
+
+        @Test
+        fun `will send telemetry event showing success`() {
+          verify(telemetryClient).trackEvent(
+            eq("hospital-phone-deleted-success"),
+            check {
+              assertThat(it["hospitalId"]).isEqualTo(hospitalId)
+              assertThat(it["dpsPhoneId"]).isEqualTo(dpsPhoneId.toString())
+              assertThat(it["nomisPhoneIds"]).isEqualTo("1, 2")
+            },
+            isNull(),
+          )
+        }
+      }
+
+      @Nested
+      inner class LastPhoneDeleted {
+        @BeforeEach
+        fun setUp() {
+          dpsApi.stubGetAgency(agencyId = hospitalId, response = hospitalLegacyAgencyDto().copy(phoneNumbers = emptyList()))
+          nomisApi.stubUpdateAgencyPhoneNumbers(
+            agencyId = hospitalId,
+            response = updateAgencyPhoneNumbersResponse().copy(phoneNumbers = emptyList()),
+          )
+          publishHospitalPhoneEvent("register.hospital.phone.deleted", hospitalId, dpsPhoneId)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will remove all NOMIS phone numbers`() {
+          val request: UpdateAgencyPhoneNumbersRequest = NomisApiExtension.nomisApi.getRequestBody(putRequestedFor(urlEqualTo("/agency/$hospitalId/phones")), jsonMapper)
+          assertThat(request.phoneNumbers).isEmpty()
+        }
+
+        @Test
+        fun `will send telemetry event showing success with no phone ids`() {
+          verify(telemetryClient).trackEvent(
+            eq("hospital-phone-deleted-success"),
+            check {
+              assertThat(it["hospitalId"]).isEqualTo(hospitalId)
+              assertThat(it["dpsPhoneId"]).isEqualTo(dpsPhoneId.toString())
+              assertThat(it["nomisPhoneIds"]).isEmpty()
+            },
+            isNull(),
+          )
+        }
+      }
+    }
+  }
+
+  @Nested
+  @DisplayName("register.hospital.address.inserted")
+  inner class HospitalAddressInserted {
+    val dpsAddressId = 12345L
+    val nomisAddressId = 8765L
+    val hospitalId = "HHOSP1"
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of the event")
+    inner class WhenNomisCreated {
+      @BeforeEach
+      fun setUp() {
+        publishHospitalAddressEvent("register.hospital.address.inserted", hospitalId, dpsAddressId, source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the event is ignored`() {
+        verify(telemetryClient).trackEvent(
+          eq("hospital-address-create-ignored"),
+          check {
+            assertThat(it["hospitalId"]).isEqualTo(hospitalId)
+            assertThat(it["dpsAddressId"]).isEqualTo(dpsAddressId.toString())
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will not call DPS or update NOMIS`() {
+        dpsApi.verify(0, getRequestedFor(urlEqualTo("/legacy/$hospitalId")))
+        nomisApi.verify(0, postRequestedFor(urlEqualTo("/agency/$hospitalId/addresses")))
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of the event")
+    inner class WhenDpsCreated {
+      @Nested
+      inner class HappyPath {
+        private val expectedAddress = CreateAgencyAddressRequest(
+          street = "The Law Courts",
+          locality = "50 West Bar",
+          postcode = "S3 8PH",
+          city = "Sheffield",
+          county = "South Yorkshire",
+          country = "England",
+        )
+
+        @BeforeEach
+        fun setUp() {
+          nomisApi.stubCreateAgencyAddress(agencyId = hospitalId, response = createAgencyAddressResponse().copy(id = nomisAddressId))
+          dpsApi.stubGetAgency(
+            agencyId = hospitalId,
+            response = hospitalLegacyAgencyDto().copy(
+              addresses = listOf(
+                legacyAgencyAddressDto().copy(id = 1, addressLine1 = "Another hospital address", addressLine2 = null, town = null, county = null, postcode = null, country = null),
+                legacyAgencyAddressDto().copy(
+                  id = dpsAddressId,
+                  addressLine1 = "The Law Courts",
+                  addressLine2 = "50 West Bar",
+                  postcode = "S3 8PH",
+                  town = "Sheffield",
+                  county = "South Yorkshire",
+                  country = "England",
+                ),
+              ),
+            ),
+          )
+          publishHospitalAddressEvent("register.hospital.address.inserted", hospitalId, dpsAddressId)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will create only the inserted address in NOMIS`() {
+          val request: CreateAgencyAddressRequest = NomisApiExtension.nomisApi.getRequestBody(postRequestedFor(urlEqualTo("/agency/$hospitalId/addresses")), jsonMapper)
+          assertThat(request).isEqualTo(expectedAddress)
+          nomisApi.verify(1, postRequestedFor(urlEqualTo("/agency/$hospitalId/addresses")))
+        }
+
+        @Test
+        fun `will send telemetry event showing success`() {
+          verify(telemetryClient).trackEvent(
+            eq("hospital-address-create-success"),
+            check {
+              assertThat(it["hospitalId"]).isEqualTo(hospitalId)
+              assertThat(it["dpsAddressId"]).isEqualTo(dpsAddressId.toString())
+              assertThat(it["nomisAddressId"]).isEqualTo(nomisAddressId.toString())
+            },
+            isNull(),
+          )
+        }
+      }
+    }
+  }
+
+  @Nested
+  @DisplayName("register.hospital.address.amended")
+  inner class HospitalAddressAmended {
+    val dpsAddressId = 12345L
+    val hospitalId = "HHOSP1"
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of the event")
+    inner class WhenNomisAmended {
+      @BeforeEach
+      fun setUp() {
+        publishHospitalAddressEvent("register.hospital.address.amended", hospitalId, dpsAddressId, source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the event is ignored`() {
+        verify(telemetryClient).trackEvent(
+          eq("hospital-address-amended-ignored"),
+          check {
+            assertThat(it["hospitalId"]).isEqualTo(hospitalId)
+            assertThat(it["dpsAddressId"]).isEqualTo(dpsAddressId.toString())
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will not call DPS or update NOMIS`() {
+        dpsApi.verify(0, getRequestedFor(urlEqualTo("/legacy/$hospitalId")))
+        nomisApi.verify(0, putRequestedFor(urlEqualTo("/agency/$hospitalId/addresses")))
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of the event")
+    inner class WhenDpsAmended {
+      @Nested
+      inner class HappyPath {
+        private val address = legacyAgencyAddressDto().copy(
+          id = dpsAddressId,
+          addressLine1 = "The Law Courts",
+          addressLine2 = "50 West Bar",
+          postcode = "S3 8PH",
+          town = "Sheffield",
+          county = "South Yorkshire",
+          country = "England",
+        )
+        private val expectedAddress = UpdateAgencyAddress(
+          street = "The Law Courts",
+          locality = "50 West Bar",
+          postcode = "S3 8PH",
+          city = "Sheffield",
+          county = "South Yorkshire",
+          country = "England",
+        )
+
+        @BeforeEach
+        fun setUp() {
+          dpsApi.stubGetAgency(
+            agencyId = hospitalId,
+            response = hospitalLegacyAgencyDto().copy(addresses = listOf(address)),
+          )
+          nomisApi.stubUpdateAgencyAddresses(
+            agencyId = hospitalId,
+            response = updateAgencyAddressesResponse().copy(addresses = listOf(agencyAddress().copy(id = 1))),
+          )
+          publishHospitalAddressEvent("register.hospital.address.amended", hospitalId, dpsAddressId)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will refresh all NOMIS addresses using the same mapping as creation`() {
+          val request: UpdateAgencyAddressesRequest = NomisApiExtension.nomisApi.getRequestBody(putRequestedFor(urlEqualTo("/agency/$hospitalId/addresses")), jsonMapper)
+          assertThat(request.addresses).containsExactly(expectedAddress)
+        }
+
+        @Test
+        fun `will send telemetry event showing success`() {
+          verify(telemetryClient).trackEvent(
+            eq("hospital-address-amended-success"),
+            check {
+              assertThat(it["hospitalId"]).isEqualTo(hospitalId)
+              assertThat(it["dpsAddressId"]).isEqualTo(dpsAddressId.toString())
+              assertThat(it["nomisAddressIds"]).isEqualTo("1")
+            },
+            isNull(),
+          )
+        }
+      }
+    }
+  }
+
+  @Nested
+  @DisplayName("register.hospital.address.deleted")
+  inner class HospitalAddressDeleted {
+    val dpsAddressId = 12345L
+    val hospitalId = "HHOSP1"
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of the event")
+    inner class WhenNomisDeleted {
+      @BeforeEach
+      fun setUp() {
+        publishHospitalAddressEvent("register.hospital.address.deleted", hospitalId, dpsAddressId, source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the event is ignored`() {
+        verify(telemetryClient).trackEvent(
+          eq("hospital-address-deleted-ignored"),
+          check {
+            assertThat(it["hospitalId"]).isEqualTo(hospitalId)
+            assertThat(it["dpsAddressId"]).isEqualTo(dpsAddressId.toString())
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will not call DPS or update NOMIS`() {
+        dpsApi.verify(0, getRequestedFor(urlEqualTo("/legacy/$hospitalId")))
+        nomisApi.verify(0, putRequestedFor(urlEqualTo("/agency/$hospitalId/addresses")))
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of the event")
+    inner class WhenDpsDeleted {
+      @Nested
+      inner class HappyPath {
+        @BeforeEach
+        fun setUp() {
+          dpsApi.stubGetAgency(
+            agencyId = hospitalId,
+            response = hospitalLegacyAgencyDto().copy(
+              addresses = listOf(
+                legacyAgencyAddressDto().copy(id = 1, addressLine1 = "The Law Courts", addressLine2 = null, town = null, county = null, postcode = "S3 8PH", country = null),
+                legacyAgencyAddressDto().copy(id = 2, addressLine1 = "Another hospital address", addressLine2 = null, town = null, county = null, postcode = "S1 2AB", country = null),
+              ),
+            ),
+          )
+          nomisApi.stubUpdateAgencyAddresses(
+            agencyId = hospitalId,
+            response = updateAgencyAddressesResponse().copy(addresses = listOf(agencyAddress().copy(id = 1), agencyAddress().copy(id = 2))),
+          )
+          publishHospitalAddressEvent("register.hospital.address.deleted", hospitalId, dpsAddressId)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will refresh NOMIS with the remaining addresses`() {
+          val request: UpdateAgencyAddressesRequest = NomisApiExtension.nomisApi.getRequestBody(putRequestedFor(urlEqualTo("/agency/$hospitalId/addresses")), jsonMapper)
+          assertThat(request.addresses).containsExactly(
+            UpdateAgencyAddress(street = "The Law Courts", postcode = "S3 8PH"),
+            UpdateAgencyAddress(street = "Another hospital address", postcode = "S1 2AB"),
+          )
+        }
+
+        @Test
+        fun `will send telemetry event showing success`() {
+          verify(telemetryClient).trackEvent(
+            eq("hospital-address-deleted-success"),
+            check {
+              assertThat(it["hospitalId"]).isEqualTo(hospitalId)
+              assertThat(it["dpsAddressId"]).isEqualTo(dpsAddressId.toString())
+              assertThat(it["nomisAddressIds"]).isEqualTo("1, 2")
+            },
+            isNull(),
+          )
+        }
+      }
+
+      @Nested
+      inner class LastAddressDeleted {
+        @BeforeEach
+        fun setUp() {
+          dpsApi.stubGetAgency(agencyId = hospitalId, response = hospitalLegacyAgencyDto().copy(addresses = emptyList()))
+          nomisApi.stubUpdateAgencyAddresses(
+            agencyId = hospitalId,
+            response = updateAgencyAddressesResponse().copy(addresses = emptyList()),
+          )
+          publishHospitalAddressEvent("register.hospital.address.deleted", hospitalId, dpsAddressId)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will remove all NOMIS addresses`() {
+          val request: UpdateAgencyAddressesRequest = NomisApiExtension.nomisApi.getRequestBody(putRequestedFor(urlEqualTo("/agency/$hospitalId/addresses")), jsonMapper)
+          assertThat(request.addresses).isEmpty()
+        }
+
+        @Test
+        fun `will send telemetry event showing success with no address ids`() {
+          verify(telemetryClient).trackEvent(
+            eq("hospital-address-deleted-success"),
+            check {
+              assertThat(it["hospitalId"]).isEqualTo(hospitalId)
+              assertThat(it["dpsAddressId"]).isEqualTo(dpsAddressId.toString())
+              assertThat(it["nomisAddressIds"]).isEmpty()
+            },
+            isNull(),
+          )
+        }
+      }
+    }
+  }
+
+  private fun hospitalLegacyAgencyDto() = legacyAgencyDto().copy(
+    agencyType = LegacyAgencyType.HOSPITAL,
+    name = "Hallamshire Hospital",
+    description = "Hallamshire Hospital, Sheffield",
+  )
 
   private fun publishCourtAddressEvent(
     eventType: String,
@@ -1144,6 +1879,68 @@ class AgencyRegisterToNomisIntTest(
         eventType = "register.court.amended",
         additionalInformation = CourtAdditionalInformation(
           courtId = courtId,
+          source = source,
+        ),
+      ),
+    )
+  }
+
+  private fun publishHospitalAddressEvent(
+    eventType: String,
+    hospitalId: String,
+    addressId: Long,
+    source: String = "DPS",
+  ) {
+    publishDomainEvent(
+      eventType = eventType,
+      payload = HospitalAddressEvent(
+        eventType = eventType,
+        additionalInformation = HospitalAddressAdditionalInformation(hospitalId = hospitalId, addressId = addressId, source = source),
+      ),
+    )
+  }
+
+  private fun publishHospitalPhoneEvent(
+    eventType: String,
+    hospitalId: String,
+    phoneId: Long,
+    source: String = "DPS",
+  ) {
+    publishDomainEvent(
+      eventType = eventType,
+      payload = HospitalPhoneEvent(
+        eventType = eventType,
+        additionalInformation = HospitalPhoneAdditionalInformation(hospitalId = hospitalId, phoneId = phoneId, source = source),
+      ),
+    )
+  }
+
+  private fun publishHospitalInsertedEvent(
+    hospitalId: String,
+    source: String = "DPS",
+  ) {
+    publishDomainEvent(
+      eventType = "register.hospital.inserted",
+      payload = HospitalEvent(
+        eventType = "register.hospital.inserted",
+        additionalInformation = HospitalAdditionalInformation(
+          hospitalId = hospitalId,
+          source = source,
+        ),
+      ),
+    )
+  }
+
+  private fun publishHospitalAmendedEvent(
+    hospitalId: String,
+    source: String = "DPS",
+  ) {
+    publishDomainEvent(
+      eventType = "register.hospital.amended",
+      payload = HospitalEvent(
+        eventType = "register.hospital.amended",
+        additionalInformation = HospitalAdditionalInformation(
+          hospitalId = hospitalId,
           source = source,
         ),
       ),

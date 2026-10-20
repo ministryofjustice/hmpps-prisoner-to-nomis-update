@@ -524,7 +524,7 @@ class AgencyRegistersReconciliationServiceTest {
 
     fun stubAgency(nomisAgency: AgencyResponse, dpsAgency: LegacyAgencyDto) {
       nomisApi.stubGetAgency(agencyId, response = nomisAgency)
-      dpsApi.stubGetAgency(agencyId, response = dpsAgency)
+      dpsApi.stubGetAgencyForReconciliation(agencyId, response = dpsAgency)
     }
   }
 }

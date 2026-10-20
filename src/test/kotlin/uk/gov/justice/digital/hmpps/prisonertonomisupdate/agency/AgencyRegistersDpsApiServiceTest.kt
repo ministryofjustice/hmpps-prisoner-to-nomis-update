@@ -13,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension.Companion.agencyRegistersApi
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension.Companion.courtDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 
@@ -45,7 +44,7 @@ class AgencyRegistersDpsApiServiceTest {
       apiService.getAgency("SHEFCC")
 
       agencyRegistersApi.verify(
-        getRequestedFor(urlPathEqualTo("/legacy/reconciliation/SHEFCC")),
+        getRequestedFor(urlPathEqualTo("/legacy/SHEFCC")),
       )
     }
 
@@ -61,6 +60,34 @@ class AgencyRegistersDpsApiServiceTest {
       agencyRegistersApi.stubGetAgency("SHEFCC", errorHttpStatus = HttpStatus.NOT_FOUND)
 
       assertThat(apiService.getAgency("SHEFCC")).isNull()
+    }
+  }
+
+  @Nested
+  inner class GetAgencyForReconciliation {
+    @Test
+    fun `will call the endpoint`() = runTest {
+      agencyRegistersApi.stubGetAgencyForReconciliation("SHEFCC")
+
+      apiService.getAgencyForReconciliation("SHEFCC")
+
+      agencyRegistersApi.verify(
+        getRequestedFor(urlPathEqualTo("/legacy/reconciliation/SHEFCC")),
+      )
+    }
+
+    @Test
+    fun `will return agency from the endpoint`() = runTest {
+      agencyRegistersApi.stubGetAgencyForReconciliation("SHEFCC")
+
+      assertThat(apiService.getAgencyForReconciliation("SHEFCC")).isNotNull
+    }
+
+    @Test
+    fun `will return null from the endpoint when not found`() = runTest {
+      agencyRegistersApi.stubGetAgencyForReconciliation("SHEFCC", errorHttpStatus = HttpStatus.NOT_FOUND)
+
+      assertThat(apiService.getAgencyForReconciliation("SHEFCC")).isNull()
     }
   }
 
@@ -87,30 +114,6 @@ class AgencyRegistersDpsApiServiceTest {
       agencyRegistersApi.verify(
         getRequestedFor(urlPathEqualTo("/legacy/reconciliation/ids/all")),
       )
-    }
-  }
-
-  @Nested
-  inner class GetCourt {
-    @Test
-    fun `will call the get court endpoint`() = runTest {
-      agencyRegistersApi.stubGetCourt("SHEFCC")
-
-      apiService.getCourt("SHEFCC")
-
-      agencyRegistersApi.verify(
-        getRequestedFor(urlPathEqualTo("/courts/id/SHEFCC")),
-      )
-    }
-
-    @Test
-    fun `will return court from the endpoint`() = runTest {
-      agencyRegistersApi.stubGetCourt("SHEFCC", response = courtDto())
-
-      val response = apiService.getCourt("SHEFCC")
-
-      assertThat(response.courtId).isEqualTo("SHEFCC")
-      assertThat(response.courtName).isEqualTo("Sheffield Crown Court")
     }
   }
 }

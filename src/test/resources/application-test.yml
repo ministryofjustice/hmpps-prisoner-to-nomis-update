@@ -464,7 +464,15 @@ hmpps.sqs:
           "register.court.phone.deleted",
           "register.court.address.inserted",
           "register.court.address.amended",
-          "register.court.address.deleted"
+          "register.court.address.deleted",
+          "register.hospital.inserted",
+          "register.hospital.amended",
+          "register.hospital.phone.inserted",
+          "register.hospital.phone.amended",
+          "register.hospital.phone.deleted",
+          "register.hospital.address.inserted",
+          "register.hospital.address.amended",
+          "register.hospital.address.deleted"
         ]}
       dlqMaxReceiveCount: 2
       visibilityTimeout: 120
