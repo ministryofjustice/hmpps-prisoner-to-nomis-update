@@ -92,18 +92,20 @@ class CsraReconciliationService(
           else -> null
         }
       }
+      // TODO - maybe move this logic into a DPS endpoint for recon ^
 
-      fun deriveClassification(): AssessmentLevel? = resolveNomisLevel(
+      resolveNomisLevel(
         calculatedLevel = (csra.overrideLevel ?: csra.calculatedLevel),
         reviewLevel = csra.reviewLevel,
         approvedLevel = csra.approvedLevel,
       )
-
-      CsraDetailFields(
-        id = "${csra.bookingId}-${csra.sequence}",
-        date = csra.evaluationDate ?: csra.assessmentDate,
-        level = deriveClassification()?.toGenericLevel(),
-      )
+        ?.let {
+          CsraDetailFields(
+            id = "${csra.bookingId}-${csra.sequence}",
+            date = csra.evaluationDate ?: csra.assessmentDate,
+            level = it.toGenericLevel(),
+          )
+        }
     }
 
     val dpsField = dpsCsra

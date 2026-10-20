@@ -147,6 +147,15 @@ class CsraReconciliationServiceTest {
     }
 
     @Test
+    fun `a Nomis PEND level is ignored`() = runTest {
+      stubCsraReconciliation(
+        nomisCsra(calculatedLevel = AssessmentLevel.PEND, reviewLevel = null),
+        dpsCsra(CSRA_DPS_ID, status = CsraCurrentRating.Status.NO_RATING),
+      )
+      assertThat(service.checkCsra(CSRA_OFFENDER_NO)?.differences).isNull()
+    }
+
+    @Test
     fun `will report a date mismatch`() = runTest {
       stubCsraReconciliation(
         nomisCsra(evaluationDate = LocalDate.parse("2024-06-01")),
