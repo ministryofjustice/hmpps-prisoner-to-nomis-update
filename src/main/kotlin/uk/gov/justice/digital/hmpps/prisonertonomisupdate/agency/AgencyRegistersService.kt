@@ -399,6 +399,192 @@ class AgencyRegistersService(
     }
   }
 
+  suspend fun approvedPremisesInserted(event: ApprovedPremisesEvent) {
+    val approvedPremisesId = event.additionalInformation.approvedPremisesId
+    val telemetry = mutableMapOf(
+      "approvedPremisesId" to approvedPremisesId,
+    )
+    if (!event.didOriginateInDPS()) {
+      telemetryClient.trackEvent("approved-premises-created-ignored", telemetry)
+    } else {
+      track("approved-premises-created", telemetry) {
+        val dpsAgency = requireNotNull(dpsService.getAgency(approvedPremisesId)) { "Approved premises $approvedPremisesId not found in DPS" }
+        val response = nomisApiService.createAgency(dpsAgency.toCreateAgencyRequest(approvedPremisesId, typeCode = "APPR"))
+        telemetry["nomisAgencyId"] = response.agencyId
+      }
+    }
+  }
+
+  suspend fun approvedPremisesAmended(event: ApprovedPremisesEvent) {
+    val approvedPremisesId = event.additionalInformation.approvedPremisesId
+    val telemetry = mutableMapOf(
+      "approvedPremisesId" to approvedPremisesId,
+    )
+    if (!event.didOriginateInDPS()) {
+      telemetryClient.trackEvent("approved-premises-updated-ignored", telemetry)
+    } else {
+      track("approved-premises-updated", telemetry) {
+        val dpsAgency = requireNotNull(dpsService.getAgency(approvedPremisesId)) { "Approved premises $approvedPremisesId not found in DPS" }
+        val response = nomisApiService.updateAgency(approvedPremisesId, dpsAgency.toUpdateAgencyRequest(typeCode = "APPR"))
+        telemetry["nomisAgencyId"] = response.agencyId
+      }
+    }
+  }
+
+  suspend fun approvedPremisesDeleted(event: ApprovedPremisesEvent) = deleteAgency(
+    agencyId = event.additionalInformation.approvedPremisesId,
+    agencyIdName = "approvedPremisesId",
+    telemetryEvent = "approved-premises-deleted",
+    sourcedEvent = event,
+  )
+
+  suspend fun approvedPremisesEmailInserted(event: ApprovedPremisesEmailEvent) {
+    val approvedPremisesId = event.additionalInformation.approvedPremisesId
+    val dpsEmailId = event.additionalInformation.emailId
+    val telemetry = mutableMapOf(
+      "approvedPremisesId" to approvedPremisesId,
+      "dpsEmailId" to dpsEmailId.toString(),
+    )
+    if (!event.didOriginateInDPS()) {
+      telemetryClient.trackEvent("approved-premises-email-created-ignored", telemetry)
+    } else {
+      track("approved-premises-email-created", telemetry) {
+        val dpsAgency = requireNotNull(dpsService.getAgency(approvedPremisesId)) { "Approved premises $approvedPremisesId not found in DPS" }
+        val agencyEmail = requireNotNull(dpsAgency.emailAddresses.find { it.id == dpsEmailId }) { "Email $dpsEmailId not found on approved premises $approvedPremisesId in DPS" }
+        val response = nomisApiService.createAgencyEmail(approvedPremisesId, CreateAgencyEmailAddressRequest(emailAddress = agencyEmail.address))
+        telemetry["nomisEmailId"] = response.id.toString()
+      }
+    }
+  }
+
+  suspend fun approvedPremisesEmailAmended(event: ApprovedPremisesEmailEvent) {
+    val approvedPremisesId = event.additionalInformation.approvedPremisesId
+    val dpsEmailId = event.additionalInformation.emailId
+    val telemetry = mutableMapOf(
+      "approvedPremisesId" to approvedPremisesId,
+      "dpsEmailId" to dpsEmailId.toString(),
+    )
+    if (!event.didOriginateInDPS()) {
+      telemetryClient.trackEvent("approved-premises-email-updated-ignored", telemetry)
+    } else {
+      track("approved-premises-email-updated", telemetry) {
+        val dpsAgency = requireNotNull(dpsService.getAgency(approvedPremisesId)) { "Approved premises $approvedPremisesId not found in DPS" }
+        val response = nomisApiService.refreshAgencyEmails(
+          approvedPremisesId,
+          UpdateAgencyEmailAddressesRequest(emailAddresses = dpsAgency.emailAddresses.map { it.address }),
+        )
+        telemetry["nomisEmailIds"] = response.emailAddresses.map { it.id }.joinToString(", ")
+      }
+    }
+  }
+
+  suspend fun approvedPremisesEmailDeleted(event: ApprovedPremisesEmailEvent) {
+    val approvedPremisesId = event.additionalInformation.approvedPremisesId
+    val dpsEmailId = event.additionalInformation.emailId
+    val telemetry = mutableMapOf(
+      "approvedPremisesId" to approvedPremisesId,
+      "dpsEmailId" to dpsEmailId.toString(),
+    )
+    if (!event.didOriginateInDPS()) {
+      telemetryClient.trackEvent("approved-premises-email-deleted-ignored", telemetry)
+    } else {
+      track("approved-premises-email-deleted", telemetry) {
+        val dpsAgency = requireNotNull(dpsService.getAgency(approvedPremisesId)) { "Approved premises $approvedPremisesId not found in DPS" }
+        val response = nomisApiService.refreshAgencyEmails(
+          approvedPremisesId,
+          UpdateAgencyEmailAddressesRequest(emailAddresses = dpsAgency.emailAddresses.map { it.address }),
+        )
+        telemetry["nomisEmailIds"] = response.emailAddresses.map { it.id }.joinToString(", ")
+      }
+    }
+  }
+
+  suspend fun approvedPremisesPhoneInserted(event: ApprovedPremisesPhoneEvent) {
+    val approvedPremisesId = event.additionalInformation.approvedPremisesId
+    val dpsPhoneId = event.additionalInformation.phoneId
+    val telemetry = mutableMapOf(
+      "approvedPremisesId" to approvedPremisesId,
+      "dpsPhoneId" to dpsPhoneId.toString(),
+    )
+    if (!event.didOriginateInDPS()) {
+      telemetryClient.trackEvent("approved-premises-phone-created-ignored", telemetry)
+    } else {
+      track("approved-premises-phone-created", telemetry) {
+        val dpsAgency = requireNotNull(dpsService.getAgency(approvedPremisesId)) { "Approved premises $approvedPremisesId not found in DPS" }
+        val agencyPhone = requireNotNull(dpsAgency.phoneNumbers.find { it.id == dpsPhoneId }) { "Phone $dpsPhoneId not found on approved premises $approvedPremisesId in DPS" }
+        val response = nomisApiService.createAgencyPhone(approvedPremisesId, CreateAgencyPhoneNumberRequest(number = agencyPhone.number, typeCode = "BUS"))
+        telemetry["nomisPhoneId"] = response.id.toString()
+      }
+    }
+  }
+
+  suspend fun approvedPremisesPhoneAmended(event: ApprovedPremisesPhoneEvent) = refreshApprovedPremisesPhones(event, "approved-premises-phone-updated")
+
+  suspend fun approvedPremisesPhoneDeleted(event: ApprovedPremisesPhoneEvent) = refreshApprovedPremisesPhones(event, "approved-premises-phone-deleted")
+
+  private suspend fun refreshApprovedPremisesPhones(event: ApprovedPremisesPhoneEvent, telemetryEvent: String) {
+    val approvedPremisesId = event.additionalInformation.approvedPremisesId
+    val telemetry = mutableMapOf(
+      "approvedPremisesId" to approvedPremisesId,
+      "dpsPhoneId" to event.additionalInformation.phoneId.toString(),
+    )
+    if (!event.didOriginateInDPS()) {
+      telemetryClient.trackEvent("$telemetryEvent-ignored", telemetry)
+    } else {
+      track(telemetryEvent, telemetry) {
+        val dpsAgency = requireNotNull(dpsService.getAgency(approvedPremisesId)) { "Approved premises $approvedPremisesId not found in DPS" }
+        val response = nomisApiService.refreshAgencyPhones(
+          approvedPremisesId,
+          UpdateAgencyPhoneNumbersRequest(phoneNumbers = dpsAgency.phoneNumbers.map { UpdateAgencyPhoneNumber(number = it.number, typeCode = "BUS") }),
+        )
+        telemetry["nomisPhoneIds"] = response.phoneNumbers.map { it.id }.joinToString(", ")
+      }
+    }
+  }
+
+  suspend fun approvedPremisesAddressInserted(event: ApprovedPremisesAddressEvent) {
+    val approvedPremisesId = event.additionalInformation.approvedPremisesId
+    val dpsAddressId = event.additionalInformation.addressId
+    val telemetry = mutableMapOf(
+      "approvedPremisesId" to approvedPremisesId,
+      "dpsAddressId" to dpsAddressId.toString(),
+    )
+    if (!event.didOriginateInDPS()) {
+      telemetryClient.trackEvent("approved-premises-address-created-ignored", telemetry)
+    } else {
+      track("approved-premises-address-created", telemetry) {
+        val dpsAgency = requireNotNull(dpsService.getAgency(approvedPremisesId)) { "Approved premises $approvedPremisesId not found in DPS" }
+        val agencyAddress = requireNotNull(dpsAgency.addresses.find { it.id == dpsAddressId }) { "Address $dpsAddressId not found on approved premises $approvedPremisesId in DPS" }
+        val response = nomisApiService.createAgencyAddress(approvedPremisesId, agencyAddress.toCreateAgencyAddressRequest())
+        telemetry["nomisAddressId"] = response.id.toString()
+      }
+    }
+  }
+
+  suspend fun approvedPremisesAddressAmended(event: ApprovedPremisesAddressEvent) = refreshApprovedPremisesAddresses(event, "approved-premises-address-updated")
+
+  suspend fun approvedPremisesAddressDeleted(event: ApprovedPremisesAddressEvent) = refreshApprovedPremisesAddresses(event, "approved-premises-address-deleted")
+
+  private suspend fun refreshApprovedPremisesAddresses(event: ApprovedPremisesAddressEvent, telemetryEvent: String) {
+    val approvedPremisesId = event.additionalInformation.approvedPremisesId
+    val telemetry = mutableMapOf(
+      "approvedPremisesId" to approvedPremisesId,
+      "dpsAddressId" to event.additionalInformation.addressId.toString(),
+    )
+    if (!event.didOriginateInDPS()) {
+      telemetryClient.trackEvent("$telemetryEvent-ignored", telemetry)
+    } else {
+      track(telemetryEvent, telemetry) {
+        val dpsAgency = requireNotNull(dpsService.getAgency(approvedPremisesId)) { "Approved premises $approvedPremisesId not found in DPS" }
+        val response = nomisApiService.refreshAgencyAddresses(
+          approvedPremisesId,
+          UpdateAgencyAddressesRequest(addresses = dpsAgency.addresses.map { it.toUpdateAgencyAddress() }),
+        )
+        telemetry["nomisAddressIds"] = response.addresses.map { it.id }.joinToString(", ")
+      }
+    }
+  }
+
   suspend fun probationOfficeInserted(event: ProbationOfficeEvent) {
     val probationOfficeId = event.additionalInformation.probationOfficeId
     val telemetry = mutableMapOf(
