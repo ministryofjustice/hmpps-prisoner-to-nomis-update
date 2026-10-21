@@ -65,6 +65,18 @@ class AgencyRegistersDomainEventListener(
       "register.policecustodysuite.address.inserted" -> service.policeCustodySuiteAddressInserted(message.fromJson())
       "register.policecustodysuite.address.amended" -> service.policeCustodySuiteAddressAmended(message.fromJson())
       "register.policecustodysuite.address.deleted" -> service.policeCustodySuiteAddressDeleted(message.fromJson())
+      "register.approvedpremises.inserted" -> service.approvedPremisesInserted(message.fromJson())
+      "register.approvedpremises.amended" -> service.approvedPremisesAmended(message.fromJson())
+      "register.approvedpremises.deleted" -> service.approvedPremisesDeleted(message.fromJson())
+      "register.approvedpremises.email.inserted" -> service.approvedPremisesEmailInserted(message.fromJson())
+      "register.approvedpremises.email.amended" -> service.approvedPremisesEmailAmended(message.fromJson())
+      "register.approvedpremises.email.deleted" -> service.approvedPremisesEmailDeleted(message.fromJson())
+      "register.approvedpremises.phone.inserted" -> service.approvedPremisesPhoneInserted(message.fromJson())
+      "register.approvedpremises.phone.amended" -> service.approvedPremisesPhoneAmended(message.fromJson())
+      "register.approvedpremises.phone.deleted" -> service.approvedPremisesPhoneDeleted(message.fromJson())
+      "register.approvedpremises.address.inserted" -> service.approvedPremisesAddressInserted(message.fromJson())
+      "register.approvedpremises.address.amended" -> service.approvedPremisesAddressAmended(message.fromJson())
+      "register.approvedpremises.address.deleted" -> service.approvedPremisesAddressDeleted(message.fromJson())
       "register.probationoffice.inserted" -> service.probationOfficeInserted(message.fromJson())
       "register.probationoffice.amended" -> service.probationOfficeAmended(message.fromJson())
       "register.probationoffice.deleted" -> service.probationOfficeDeleted(message.fromJson())
@@ -204,6 +216,49 @@ data class PoliceCustodySuiteAddressEvent(
 
 data class PoliceCustodySuiteAddressAdditionalInformation(
   val policeCustodySuiteId: String,
+  val addressId: Long,
+  override val source: String,
+) : SourcedAdditionalData
+
+data class ApprovedPremisesEvent(
+  val eventType: String,
+  override val additionalInformation: ApprovedPremisesAdditionalInformation,
+) : SourcedEvent
+
+data class ApprovedPremisesAdditionalInformation(
+  val approvedPremisesId: String,
+  override val source: String,
+) : SourcedAdditionalData
+
+data class ApprovedPremisesEmailEvent(
+  val eventType: String,
+  override val additionalInformation: ApprovedPremisesEmailAdditionalInformation,
+) : SourcedEvent
+
+data class ApprovedPremisesEmailAdditionalInformation(
+  val approvedPremisesId: String,
+  val emailId: Long,
+  override val source: String,
+) : SourcedAdditionalData
+
+data class ApprovedPremisesPhoneEvent(
+  val eventType: String,
+  override val additionalInformation: ApprovedPremisesPhoneAdditionalInformation,
+) : SourcedEvent
+
+data class ApprovedPremisesPhoneAdditionalInformation(
+  val approvedPremisesId: String,
+  val phoneId: Long,
+  override val source: String,
+) : SourcedAdditionalData
+
+data class ApprovedPremisesAddressEvent(
+  val eventType: String,
+  override val additionalInformation: ApprovedPremisesAddressAdditionalInformation,
+) : SourcedEvent
+
+data class ApprovedPremisesAddressAdditionalInformation(
+  val approvedPremisesId: String,
   val addressId: Long,
   override val source: String,
 ) : SourcedAdditionalData
