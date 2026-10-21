@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-16.2712.51ccd5d"
+    "version" : "2026-10-20.2728.a37107d"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -123,6 +123,35 @@
     "description" : "Sentence Type Updates"
   } ],
   "paths" : {
+    "/sentence/confirm-consecutive-to-sentence-fix" : {
+      "put" : {
+        "tags" : [ "sentence-controller" ],
+        "summary" : "Confirm consecutive to sentence fixes",
+        "description" : "This endpoint will mark unconfirmed consecutive to sentence fixes to confirmed",
+        "operationId" : "confirmConsecutiveToSentenceFixes",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ConfirmConsecutiveToSentenceFixes"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "confirmed consecutive to sentence fixes"
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token"
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role"
+          }
+        }
+      }
+    },
     "/sentence-type/{sentenceTypeUuid}" : {
       "get" : {
         "tags" : [ "sentence-type-controller" ],
@@ -5015,6 +5044,54 @@
         }
       }
     },
+    "/person/{prisonerId}/status" : {
+      "get" : {
+        "tags" : [ "person-controller" ],
+        "summary" : "Retrieve person status indicators",
+        "description" : "isOnRemand is true when an active court case has a latest appearance outcome of type REMAND",
+        "operationId" : "getPersonStatus",
+        "parameters" : [ {
+          "name" : "prisonerId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns person status indicators",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PersonStatus"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PersonStatus"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PersonStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/person/{prisonerId}/sentences-to-chain-to" : {
       "get" : {
         "tags" : [ "person-controller" ],
@@ -5289,6 +5366,66 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/CourtAppearanceSchedulesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/person/{prisonerId}/charges" : {
+      "get" : {
+        "tags" : [ "person-controller" ],
+        "summary" : "retrieve charges for person",
+        "description" : "This endpoint will retrieve charges for person",
+        "operationId" : "charges",
+        "parameters" : [ {
+          "name" : "prisonerId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "statuses",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "default" : [ "ACTIVE" ],
+            "items" : {
+              "type" : "string",
+              "enum" : [ "ACTIVE", "INACTIVE" ]
+            }
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns charges for person",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PersonCharges"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PersonCharges"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PersonCharges"
                 }
               }
             }
@@ -7298,6 +7435,19 @@
   },
   "components" : {
     "schemas" : {
+      "ConfirmConsecutiveToSentenceFixes" : {
+        "type" : "object",
+        "properties" : {
+          "sentenceUuids" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        },
+        "required" : [ "sentenceUuids" ]
+      },
       "CreateSentenceType" : {
         "type" : "object",
         "properties" : {
@@ -7868,7 +8018,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:41.676859248"
+            "example" : "07:44:41.033910731"
           },
           "outcomeDispositionCode" : {
             "type" : [ "string", "null" ]
@@ -8247,7 +8397,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:41.676859248"
+            "example" : "07:44:41.033910731"
           },
           "courtCode" : {
             "type" : "string"
@@ -11017,6 +11167,16 @@
         },
         "required" : [ "offenceCode", "sentenceServeType", "sentenceUuid" ]
       },
+      "PersonStatus" : {
+        "type" : "object",
+        "description" : "Status indicators for a person",
+        "properties" : {
+          "isOnRemand" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "isOnRemand" ]
+      },
       "AppearanceToChainTo" : {
         "type" : "object",
         "properties" : {
@@ -11361,7 +11521,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:41.676859248"
+            "example" : "07:44:41.033910731"
           },
           "courtCode" : {
             "type" : "string"
@@ -11630,6 +11790,167 @@
           }
         },
         "required" : [ "courtCaseDocuments" ]
+      },
+      "PersonCharge" : {
+        "type" : "object",
+        "properties" : {
+          "chargeUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "offenceCode" : {
+            "type" : "string"
+          },
+          "offenceStartDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date"
+          },
+          "offenceEndDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date"
+          },
+          "outcome" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/ChargeOutcome"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "aggravatingFactors" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AggravatingFactor"
+            }
+          },
+          "legacyData" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/ChargeLegacyData"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "findingOfDomesticAbuse" : {
+            "type" : [ "boolean", "null" ]
+          },
+          "sentence" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PersonSentence"
+            }, {
+              "type" : "null"
+            } ]
+          }
+        },
+        "required" : [ "aggravatingFactors", "chargeUuid", "offenceCode" ]
+      },
+      "PersonCharges" : {
+        "type" : "object",
+        "properties" : {
+          "charges" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PersonCharge"
+            }
+          }
+        },
+        "required" : [ "charges" ]
+      },
+      "PersonPeriodLength" : {
+        "type" : "object",
+        "properties" : {
+          "years" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int32"
+          },
+          "months" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int32"
+          },
+          "weeks" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int32"
+          },
+          "days" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int32"
+          },
+          "periodOrder" : {
+            "type" : "string"
+          },
+          "periodLengthType" : {
+            "type" : "string",
+            "enum" : [ "SENTENCE_LENGTH", "CUSTODIAL_TERM", "LICENCE_PERIOD", "TARIFF_LENGTH", "TERM_LENGTH", "OVERALL_SENTENCE_LENGTH", "BREACH_OF_SUPERVISION_REQUIREMENTS", "BREACH_OF_IMPRISONABLE_OFFENCE", "UNSUPPORTED" ]
+          },
+          "legacyData" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PeriodLengthLegacyData"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "periodLengthUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        },
+        "required" : [ "periodLengthType", "periodLengthUuid", "periodOrder" ]
+      },
+      "PersonSentence" : {
+        "type" : "object",
+        "properties" : {
+          "sentenceUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "chargeNumber" : {
+            "type" : [ "string", "null" ]
+          },
+          "sentenceServeType" : {
+            "type" : "string"
+          },
+          "sentenceType" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/SentenceType"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "convictionDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date"
+          },
+          "fineAmount" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/FineAmount"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "legacyData" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/SentenceLegacyData"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "consecutiveToSentenceUuid" : {
+            "type" : [ "string", "null" ],
+            "format" : "uuid"
+          },
+          "hasRecall" : {
+            "type" : "boolean"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "ACTIVE", "DUPLICATE", "DELETED", "MANY_CHARGES_DATA_FIX", "INACTIVE" ]
+          },
+          "periodLengths" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PersonPeriodLength"
+            }
+          }
+        },
+        "required" : [ "hasRecall", "periodLengths", "sentenceServeType", "sentenceUuid", "status" ]
       },
       "PersonCourtCaseCount" : {
         "type" : "object",
@@ -12053,7 +12374,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:44:41.676859248"
+            "example" : "07:44:41.033910731"
           },
           "nomisOutcomeCode" : {
             "type" : [ "string", "null" ]
@@ -12132,7 +12453,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:41.676859248"
+            "example" : "07:44:41.033910731"
           },
           "courtId" : {
             "type" : "string"
@@ -12284,7 +12605,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:44:41.676859248"
+            "example" : "07:44:41.033910731"
           },
           "charges" : {
             "type" : "array",
@@ -12321,7 +12642,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:41.676859248"
+            "example" : "07:44:41.033910731"
           },
           "courtId" : {
             "type" : "string"
@@ -12946,7 +13267,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:44:41.676859248"
+            "example" : "07:44:41.033910731"
           },
           "courtCode" : {
             "type" : [ "string", "null" ]
