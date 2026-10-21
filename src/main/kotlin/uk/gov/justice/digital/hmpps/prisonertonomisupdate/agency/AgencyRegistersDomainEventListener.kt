@@ -89,6 +89,18 @@ class AgencyRegistersDomainEventListener(
       "register.probationoffice.address.inserted" -> service.probationOfficeAddressInserted(message.fromJson())
       "register.probationoffice.address.amended" -> service.probationOfficeAddressAmended(message.fromJson())
       "register.probationoffice.address.deleted" -> service.probationOfficeAddressDeleted(message.fromJson())
+      "register.otheragencies.inserted" -> service.otherAgencyInserted(message.fromJson())
+      "register.otheragencies.amended" -> service.otherAgencyAmended(message.fromJson())
+      "register.otheragencies.deleted" -> service.otherAgencyDeleted(message.fromJson())
+      "register.otheragencies.email.inserted" -> service.otherAgencyEmailInserted(message.fromJson())
+      "register.otheragencies.email.amended" -> service.otherAgencyEmailAmended(message.fromJson())
+      "register.otheragencies.email.deleted" -> service.otherAgencyEmailDeleted(message.fromJson())
+      "register.otheragencies.phone.inserted" -> service.otherAgencyPhoneInserted(message.fromJson())
+      "register.otheragencies.phone.amended" -> service.otherAgencyPhoneAmended(message.fromJson())
+      "register.otheragencies.phone.deleted" -> service.otherAgencyPhoneDeleted(message.fromJson())
+      "register.otheragencies.address.inserted" -> service.otherAgencyAddressInserted(message.fromJson())
+      "register.otheragencies.address.amended" -> service.otherAgencyAddressAmended(message.fromJson())
+      "register.otheragencies.address.deleted" -> service.otherAgencyAddressDeleted(message.fromJson())
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }
   }
@@ -302,6 +314,49 @@ data class ProbationOfficeAddressEvent(
 
 data class ProbationOfficeAddressAdditionalInformation(
   val probationOfficeId: String,
+  val addressId: Long,
+  override val source: String,
+) : SourcedAdditionalData
+
+data class OtherAgencyEvent(
+  val eventType: String,
+  override val additionalInformation: OtherAgencyAdditionalInformation,
+) : SourcedEvent
+
+data class OtherAgencyAdditionalInformation(
+  val otherAgencyId: String,
+  override val source: String,
+) : SourcedAdditionalData
+
+data class OtherAgencyEmailEvent(
+  val eventType: String,
+  override val additionalInformation: OtherAgencyEmailAdditionalInformation,
+) : SourcedEvent
+
+data class OtherAgencyEmailAdditionalInformation(
+  val otherAgencyId: String,
+  val emailId: Long,
+  override val source: String,
+) : SourcedAdditionalData
+
+data class OtherAgencyPhoneEvent(
+  val eventType: String,
+  override val additionalInformation: OtherAgencyPhoneAdditionalInformation,
+) : SourcedEvent
+
+data class OtherAgencyPhoneAdditionalInformation(
+  val otherAgencyId: String,
+  val phoneId: Long,
+  override val source: String,
+) : SourcedAdditionalData
+
+data class OtherAgencyAddressEvent(
+  val eventType: String,
+  override val additionalInformation: OtherAgencyAddressAdditionalInformation,
+) : SourcedEvent
+
+data class OtherAgencyAddressAdditionalInformation(
+  val otherAgencyId: String,
   val addressId: Long,
   override val source: String,
 ) : SourcedAdditionalData
