@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-10-19.5952.b0369ae"
+    "version" : "2026-10-20.5973.1df09da"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -719,6 +719,46 @@
         }
       }
     },
+    "/syscon-sync/person/{toPrisonNumber}/merge" : {
+      "post" : {
+        "tags" : [ "Syscon Sync" ],
+        "description" : "Processes a prisoner merge record by Prison Number. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
+        "operationId" : "processPrisonMerge",
+        "parameters" : [ {
+          "name" : "toPrisonNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PrisonMerge"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SysconPersonMergeResponseBody"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "api-role" : [ ]
+        } ]
+      }
+    },
     "/syscon-sync/person/{prisonNumber}/religion" : {
       "post" : {
         "tags" : [ "Syscon Sync" ],
@@ -752,39 +792,6 @@
                 }
               }
             }
-          }
-        },
-        "security" : [ {
-          "api-role" : [ ]
-        } ]
-      }
-    },
-    "/syscon-sync/person/{prisonNumber}/merge" : {
-      "post" : {
-        "tags" : [ "Syscon Sync" ],
-        "description" : "Processes a prisoner merge record by Prison Number. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
-        "operationId" : "processPrisonMerge",
-        "parameters" : [ {
-          "name" : "prisonNumber",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/PrisonMerge"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "204" : {
-            "description" : "No Content"
           }
         },
         "security" : [ {
@@ -2512,29 +2519,25 @@
         },
         "required" : [ "prisonNumber", "religionMappings" ]
       },
-      "PrisonReligionMapping" : {
+      "PrisonAddressesAndContactsRequest" : {
         "type" : "object",
         "properties" : {
-          "nomisReligionId" : {
-            "type" : "string"
+          "addresses" : {
+            "type" : "array",
+            "description" : "List of addresses",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonAddress"
+            }
           },
-          "cprReligionId" : {
-            "type" : "string"
+          "contacts" : {
+            "type" : "array",
+            "description" : "List of address contacts",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonContact"
+            }
           }
         },
-        "required" : [ "cprReligionId", "nomisReligionId" ]
-      },
-      "PrisonReligionSaveResponse" : {
-        "type" : "object",
-        "properties" : {
-          "prisonNumber" : {
-            "type" : "string"
-          },
-          "religionMappings" : {
-            "$ref" : "#/components/schemas/PrisonReligionMapping"
-          }
-        },
-        "required" : [ "prisonNumber", "religionMappings" ]
+        "required" : [ "addresses", "contacts" ]
       },
       "PrisonMerge" : {
         "type" : "object",
@@ -2543,26 +2546,17 @@
             "type" : "string",
             "description" : "The prison number of the person being merged from",
             "example" : "A1234BC"
+          },
+          "toPrisonAddressesAndContactsRequest" : {
+            "description" : "The merged addresses and contacts to overwrite on the person being merged to",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PrisonAddressesAndContactsRequest"
+            }, {
+              "type" : "null"
+            } ]
           }
         },
         "required" : [ "fromPrisonNumber" ]
-      },
-      "SysconContactMapping" : {
-        "type" : "object",
-        "properties" : {
-          "nomisContactId" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "nomisContactType" : {
-            "type" : "string",
-            "enum" : [ "HOME", "BUS", "FAX", "ALTB", "ALTH", "MOBILE", "VISIT", "EMAIL" ]
-          },
-          "cprContactId" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "cprContactId", "nomisContactId", "nomisContactType" ]
       },
       "SysconAddressMapping" : {
         "type" : "object",
@@ -2605,6 +2599,80 @@
           }
         },
         "required" : [ "cprAddressUsageId", "nomisAddressUsageCode", "nomisAddressUsageId" ]
+      },
+      "SysconAddressesAndContactsResponseBody" : {
+        "type" : "object",
+        "properties" : {
+          "prisonNumber" : {
+            "type" : "string"
+          },
+          "addressesMappings" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SysconAddressMapping"
+            }
+          },
+          "contactMappings" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SysconContactMapping"
+            }
+          }
+        },
+        "required" : [ "addressesMappings", "contactMappings", "prisonNumber" ]
+      },
+      "SysconContactMapping" : {
+        "type" : "object",
+        "properties" : {
+          "nomisContactId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "nomisContactType" : {
+            "type" : "string",
+            "enum" : [ "HOME", "BUS", "FAX", "ALTB", "ALTH", "MOBILE", "VISIT", "EMAIL" ]
+          },
+          "cprContactId" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "cprContactId", "nomisContactId", "nomisContactType" ]
+      },
+      "SysconPersonMergeResponseBody" : {
+        "type" : "object",
+        "properties" : {
+          "toPrisonNumber" : {
+            "type" : "string"
+          },
+          "sysconAddressesAndContactsResponseBody" : {
+            "$ref" : "#/components/schemas/SysconAddressesAndContactsResponseBody"
+          }
+        },
+        "required" : [ "sysconAddressesAndContactsResponseBody", "toPrisonNumber" ]
+      },
+      "PrisonReligionMapping" : {
+        "type" : "object",
+        "properties" : {
+          "nomisReligionId" : {
+            "type" : "string"
+          },
+          "cprReligionId" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "cprReligionId", "nomisReligionId" ]
+      },
+      "PrisonReligionSaveResponse" : {
+        "type" : "object",
+        "properties" : {
+          "prisonNumber" : {
+            "type" : "string"
+          },
+          "religionMappings" : {
+            "$ref" : "#/components/schemas/PrisonReligionMapping"
+          }
+        },
+        "required" : [ "prisonNumber", "religionMappings" ]
       },
       "NomisIdentifierId" : {
         "type" : "object",
@@ -2798,47 +2866,6 @@
           }
         },
         "required" : [ "cprIdentifierId", "nomisIdentifierId" ]
-      },
-      "PrisonAddressesAndContactsRequest" : {
-        "type" : "object",
-        "properties" : {
-          "addresses" : {
-            "type" : "array",
-            "description" : "List of addresses",
-            "items" : {
-              "$ref" : "#/components/schemas/PrisonAddress"
-            }
-          },
-          "contacts" : {
-            "type" : "array",
-            "description" : "List of address contacts",
-            "items" : {
-              "$ref" : "#/components/schemas/PrisonContact"
-            }
-          }
-        },
-        "required" : [ "addresses", "contacts" ]
-      },
-      "SysconAddressesAndContactsResponseBody" : {
-        "type" : "object",
-        "properties" : {
-          "prisonNumber" : {
-            "type" : "string"
-          },
-          "addressesMappings" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/SysconAddressMapping"
-            }
-          },
-          "contactMappings" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/SysconContactMapping"
-            }
-          }
-        },
-        "required" : [ "addressesMappings", "contactMappings", "prisonNumber" ]
       },
       "ProbationCreateAddress" : {
         "type" : "object",
