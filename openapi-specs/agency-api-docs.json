@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-19.618.2526f1d"
+    "version" : "2026-10-20.625.e5fe4f5"
   },
   "servers" : [ {
     "url" : "https://prison-register-dev.hmpps.service.justice.gov.uk",
@@ -5726,7 +5726,7 @@
       "post" : {
         "tags" : [ "legacy-sync-resource" ],
         "summary" : "Creates or updates an agency of any type",
-        "description" : "Used for synchronising data from NOMIS. This creates an agency, or updates it if it already exists. Role required is ROLE_HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
+        "description" : "Used for synchronising data from NOMIS. This creates an agency, or updates it if it already exists, and publishes the corresponding agency-type domain event with source NOMIS. Role required is ROLE_HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "createOrUpdateAgency",
         "parameters" : [ {
           "name" : "agencyId",
@@ -7673,6 +7673,63 @@
           },
           "403" : {
             "description" : "Incorrect permissions to retrieve agency IDs",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/legacy/agency/{agencyId}/is-used" : {
+      "get" : {
+        "tags" : [ "legacy-sync-resource" ],
+        "summary" : "Checks whether an agency id is already in use by any agency type",
+        "description" : "Checks prisons, courts, hospitals, probation offices, approved premises, police custody suites and generic agencies for the given id. Role required is ROLE_HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
+        "operationId" : "isAgencyIdUsed",
+        "parameters" : [ {
+          "name" : "agencyId",
+          "in" : "path",
+          "description" : "NOMIS Agency Id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "NOMIS Agency Id",
+            "example" : "SHEFCC",
+            "maxLength" : 6,
+            "minLength" : 2
+          },
+          "example" : "SHEFCC"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Agency id is in use; the matching agency name and type are returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LegacyAgencyUsageDto"
+                }
+              }
+            }
+          },
+          "204" : {
+            "description" : "Agency id is not in use"
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Incorrect permissions to check agency usage",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -10461,6 +10518,28 @@
           }
         },
         "required" : [ "agencyIds" ]
+      },
+      "LegacyAgencyUsageDto" : {
+        "type" : "object",
+        "description" : "Agency that is using a given agency id",
+        "properties" : {
+          "agencyId" : {
+            "type" : "string",
+            "description" : "NOMIS Agency Id",
+            "example" : "SHEFCC"
+          },
+          "name" : {
+            "type" : "string",
+            "description" : "Name",
+            "example" : "Sheffield Crown Court"
+          },
+          "legacyType" : {
+            "$ref" : "#/components/schemas/LegacyAgencyType",
+            "description" : "Agency Type",
+            "example" : "COURT"
+          }
+        },
+        "required" : [ "agencyId", "legacyType", "name" ]
       },
       "AgencySummaryDto" : {
         "type" : "object",
