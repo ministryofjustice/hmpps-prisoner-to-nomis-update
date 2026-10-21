@@ -486,7 +486,19 @@ hmpps.sqs:
           "register.policecustodysuite.phone.deleted",
           "register.policecustodysuite.address.inserted",
           "register.policecustodysuite.address.amended",
-          "register.policecustodysuite.address.deleted"
+          "register.policecustodysuite.address.deleted",
+          "register.probationoffice.inserted",
+          "register.probationoffice.amended",
+          "register.probationoffice.deleted",
+          "register.probationoffice.email.inserted",
+          "register.probationoffice.email.amended",
+          "register.probationoffice.email.deleted",
+          "register.probationoffice.phone.inserted",
+          "register.probationoffice.phone.amended",
+          "register.probationoffice.phone.deleted",
+          "register.probationoffice.address.inserted",
+          "register.probationoffice.address.amended",
+          "register.probationoffice.address.deleted"
         ]}
       dlqMaxReceiveCount: 2
       visibilityTimeout: 120

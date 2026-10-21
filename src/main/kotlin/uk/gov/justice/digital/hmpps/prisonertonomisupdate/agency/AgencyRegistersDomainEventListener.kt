@@ -65,6 +65,18 @@ class AgencyRegistersDomainEventListener(
       "register.policecustodysuite.address.inserted" -> service.policeCustodySuiteAddressInserted(message.fromJson())
       "register.policecustodysuite.address.amended" -> service.policeCustodySuiteAddressAmended(message.fromJson())
       "register.policecustodysuite.address.deleted" -> service.policeCustodySuiteAddressDeleted(message.fromJson())
+      "register.probationoffice.inserted" -> service.probationOfficeInserted(message.fromJson())
+      "register.probationoffice.amended" -> service.probationOfficeAmended(message.fromJson())
+      "register.probationoffice.deleted" -> service.probationOfficeDeleted(message.fromJson())
+      "register.probationoffice.email.inserted" -> service.probationOfficeEmailInserted(message.fromJson())
+      "register.probationoffice.email.amended" -> service.probationOfficeEmailAmended(message.fromJson())
+      "register.probationoffice.email.deleted" -> service.probationOfficeEmailDeleted(message.fromJson())
+      "register.probationoffice.phone.inserted" -> service.probationOfficePhoneInserted(message.fromJson())
+      "register.probationoffice.phone.amended" -> service.probationOfficePhoneAmended(message.fromJson())
+      "register.probationoffice.phone.deleted" -> service.probationOfficePhoneDeleted(message.fromJson())
+      "register.probationoffice.address.inserted" -> service.probationOfficeAddressInserted(message.fromJson())
+      "register.probationoffice.address.amended" -> service.probationOfficeAddressAmended(message.fromJson())
+      "register.probationoffice.address.deleted" -> service.probationOfficeAddressDeleted(message.fromJson())
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }
   }
@@ -192,6 +204,49 @@ data class PoliceCustodySuiteAddressEvent(
 
 data class PoliceCustodySuiteAddressAdditionalInformation(
   val policeCustodySuiteId: String,
+  val addressId: Long,
+  override val source: String,
+) : SourcedAdditionalData
+
+data class ProbationOfficeEvent(
+  val eventType: String,
+  override val additionalInformation: ProbationOfficeAdditionalInformation,
+) : SourcedEvent
+
+data class ProbationOfficeAdditionalInformation(
+  val probationOfficeId: String,
+  override val source: String,
+) : SourcedAdditionalData
+
+data class ProbationOfficeEmailEvent(
+  val eventType: String,
+  override val additionalInformation: ProbationOfficeEmailAdditionalInformation,
+) : SourcedEvent
+
+data class ProbationOfficeEmailAdditionalInformation(
+  val probationOfficeId: String,
+  val emailId: Long,
+  override val source: String,
+) : SourcedAdditionalData
+
+data class ProbationOfficePhoneEvent(
+  val eventType: String,
+  override val additionalInformation: ProbationOfficePhoneAdditionalInformation,
+) : SourcedEvent
+
+data class ProbationOfficePhoneAdditionalInformation(
+  val probationOfficeId: String,
+  val phoneId: Long,
+  override val source: String,
+) : SourcedAdditionalData
+
+data class ProbationOfficeAddressEvent(
+  val eventType: String,
+  override val additionalInformation: ProbationOfficeAddressAdditionalInformation,
+) : SourcedEvent
+
+data class ProbationOfficeAddressAdditionalInformation(
+  val probationOfficeId: String,
   val addressId: Long,
   override val source: String,
 ) : SourcedAdditionalData
