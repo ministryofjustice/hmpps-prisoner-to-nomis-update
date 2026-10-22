@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-20.2258.e4772b2"
+    "version" : "2026-10-21.2267.dd4fc9c"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -46804,6 +46804,10 @@
         },
         "required" : [ "accounts", "prisonNumber", "rootOffenderId" ]
       },
+      "AdjustmentReason" : {
+        "type" : "string",
+        "enum" : [ "P", "WRT" ]
+      },
       "PrisonerAdvanceDto" : {
         "type" : "object",
         "properties" : {
@@ -46862,6 +46866,26 @@
             "description" : "The information number",
             "example" : "12345678-1"
           },
+          "deductionAmount" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int64",
+            "description" : "How much has been paid off so far, in pence",
+            "example" : 1130
+          },
+          "adjustmentReason" : {
+            "description" : "The reason code for the adjustment",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/AdjustmentReason"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "adjustmentAmount" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int64",
+            "description" : "How much has been written off so far, in pence",
+            "example" : 1020
+          },
           "createdBy" : {
             "type" : "string",
             "description" : "The user who created the advance",
@@ -46917,17 +46941,6 @@
       "PrisonerHoldProjection" : {
         "type" : "object",
         "properties" : {
-          "clientUniqueRef" : {
-            "type" : [ "string", "null" ]
-          },
-          "holdNumber" : {
-            "type" : [ "integer", "null" ],
-            "format" : "int64"
-          },
-          "txnId" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
           "txnEntryDate" : {
             "type" : "string",
             "format" : "date-time"
@@ -46941,9 +46954,20 @@
           "txnEntryAmount" : {
             "type" : "number"
           },
+          "clientUniqueRef" : {
+            "type" : [ "string", "null" ]
+          },
+          "holdNumber" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int64"
+          },
           "txnEntrySeq" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "txnId" : {
+            "type" : "integer",
+            "format" : "int64"
           }
         },
         "required" : [ "txnEntryAmount", "txnEntryDate", "txnEntrySeq", "txnId" ]
