@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-19.1209.7e4d065"
+    "version" : "2026-10-21.1216.3137b3c"
   },
   "servers" : [ {
     "url" : "https://prisoner-finance-sync-api-dev.hmpps.service.justice.gov.uk/",
@@ -460,6 +460,16 @@
           "required" : true
         },
         "responses" : {
+          "201" : {
+            "description" : "Advance record written off.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncAdvanceWriteOffResponse"
+                }
+              }
+            }
+          },
           "400" : {
             "description" : "Bad request - invalid input data.",
             "content" : {
@@ -490,8 +500,28 @@
               }
             }
           },
-          "501" : {
-            "description" : "This endpoint is not yet implemented.",
+          "404" : {
+            "description" : "Not Found - Advance was not found.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error - An unexpected error occurred.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502" : {
+            "description" : "The Advance Service is not available or throwing an error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -1900,11 +1930,6 @@
       "SyncCreateAdvanceWriteOffRequest" : {
         "type" : "object",
         "properties" : {
-          "amount" : {
-            "type" : "number",
-            "description" : "The amount to be written off",
-            "example" : 5.0
-          },
           "writeOffDateTime" : {
             "type" : "string",
             "format" : "date-time",
@@ -1915,9 +1940,37 @@
             "type" : "string",
             "description" : "The username that wrote off this advance",
             "example" : "JOHN_USER"
+          },
+          "writtenOffAmount" : {
+            "type" : "number",
+            "description" : "The amount written off",
+            "example" : 10.1
           }
         },
-        "required" : [ "amount", "writeOffDateTime", "writtenOffBy" ]
+        "required" : [ "writeOffDateTime", "writtenOffAmount", "writtenOffBy" ]
+      },
+      "SyncAdvanceWriteOffResponse" : {
+        "type" : "object",
+        "properties" : {
+          "advanceId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The advance id from Prisoner Finance",
+            "example" : "de2bc56c-ea73-4f3c-8a37-5a46fdb2d79a"
+          },
+          "advanceStatus" : {
+            "type" : "string",
+            "description" : "The status of the advance",
+            "enum" : [ "ACTIVE", "REPAID", "WRITTEN_OFF" ],
+            "example" : "WRITTEN_OFF"
+          },
+          "writtenOffAmount" : {
+            "type" : "number",
+            "description" : "The amount written off",
+            "example" : 10.1
+          }
+        },
+        "required" : [ "advanceId", "advanceStatus", "writtenOffAmount" ]
       },
       "SyncCreateAdvanceRepayRequest" : {
         "type" : "object",
