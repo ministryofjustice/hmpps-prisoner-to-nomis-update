@@ -136,7 +136,7 @@ class CsraReconciliationServiceTest {
     @Test
     fun `a HI level trumps a STD level`() = runTest {
       stubCsraReconciliation(
-        nomisCsra(calculatedLevel = AssessmentLevel.HI, reviewLevel = AssessmentLevel.STANDARD),
+        nomisCsra(calculatedLevel = AssessmentLevel.HI, overrideLevel = AssessmentLevel.STANDARD),
         dpsCsra(CSRA_DPS_ID, rating = CsraCurrentRating.Rating.STANDARD),
       )
       assertThat(service.checkCsra(CSRA_OFFENDER_NO)?.differences).isEqualTo(
@@ -149,7 +149,7 @@ class CsraReconciliationServiceTest {
     @Test
     fun `a Nomis PEND level is ignored`() = runTest {
       stubCsraReconciliation(
-        nomisCsra(calculatedLevel = AssessmentLevel.PEND, reviewLevel = null),
+        nomisCsra(calculatedLevel = AssessmentLevel.PEND, overrideLevel = null, reviewLevel = null),
         dpsCsra(CSRA_DPS_ID, status = CsraCurrentRating.Status.NO_RATING),
       )
       assertThat(service.checkCsra(CSRA_OFFENDER_NO)?.differences).isNull()
@@ -222,6 +222,7 @@ fun nomisCsra(
   assessmentDate: LocalDate = LocalDate.parse("2020-01-01"),
   evaluationDate: LocalDate? = LocalDate.parse("2024-01-01"),
   calculatedLevel: AssessmentLevel = AssessmentLevel.STANDARD,
+  overrideLevel: AssessmentLevel? = null,
   reviewLevel: AssessmentLevel? = null,
 ) = CsraGetDto(
   bookingId = 1,
@@ -235,6 +236,7 @@ fun nomisCsra(
   createdBy = "T.SMITH",
   sections = emptyList(),
   calculatedLevel = calculatedLevel,
+  overrideLevel = overrideLevel,
   reviewLevel = reviewLevel,
 )
 

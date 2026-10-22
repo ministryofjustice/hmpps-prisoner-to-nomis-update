@@ -81,24 +81,23 @@ class CsraReconciliationService(
       /**
        * Function copied from the dps service
        */
-      fun resolveNomisLevel(calculatedLevel: AssessmentLevel?, reviewLevel: AssessmentLevel?, approvedLevel: AssessmentLevel?): AssessmentLevel? {
-        if (approvedLevel != null && approvedLevel != AssessmentLevel.PEND) return approvedLevel
+      fun resolveNomisLevel(calculatedLevel: AssessmentLevel?, overrideLevel: AssessmentLevel?, reviewLevel: AssessmentLevel?): AssessmentLevel? {
+        if (reviewLevel != null && reviewLevel != AssessmentLevel.PEND) return reviewLevel
+
+        if (overrideLevel != null && calculatedLevel != null) {
+          // Where both are PEND neither ranks, and NOMIS falls through to the override's bare PEND.
+          levelPriorities.firstOrNull { it == overrideLevel || it == calculatedLevel }?.let { return it }
+        }
 
         return when {
-          reviewLevel != null && calculatedLevel != null ->
-            levelPriorities.firstNotNullOfOrNull { rank -> rank.takeIf { it == reviewLevel || it == calculatedLevel } }
-          reviewLevel != null -> reviewLevel
+          overrideLevel != null -> overrideLevel
           calculatedLevel != AssessmentLevel.PEND -> calculatedLevel
           else -> null
         }
       }
       // TODO - maybe move this logic into a DPS endpoint for recon ^
 
-      resolveNomisLevel(
-        calculatedLevel = (csra.overrideLevel ?: csra.calculatedLevel),
-        reviewLevel = csra.reviewLevel,
-        approvedLevel = csra.approvedLevel,
-      )
+      resolveNomisLevel(csra.calculatedLevel, csra.overrideLevel, csra.reviewLevel)
         ?.let {
           CsraDetailFields(
             id = "${csra.bookingId}-${csra.sequence}",
