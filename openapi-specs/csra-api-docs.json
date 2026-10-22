@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-14.622.fd9be45"
+    "version" : "2026-10-22.639.6c0213c"
   },
   "servers" : [ {
     "url" : "/",
@@ -179,6 +179,16 @@
                 }
               }
             }
+          },
+          "409" : {
+            "description" : "ConcurrentUpdate: a DPS user or event changed one of the reviews at the same time - retry the move, which skips reviews already moved",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -270,7 +280,7 @@
             }
           },
           "409" : {
-            "description" : "The review has been closed or archived by a prisoner movement and can no longer be edited",
+            "description" : "CsraReviewNotWritable: the review has been closed or archived by a prisoner movement and can no longer be edited. ConcurrentUpdate: another request changed it at the same time - re-read it and try again",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -369,7 +379,7 @@
             }
           },
           "409" : {
-            "description" : "The review has been closed or archived by a prisoner movement and can no longer be edited",
+            "description" : "CsraReviewNotWritable: the review has been closed or archived by a prisoner movement and can no longer be edited. ConcurrentUpdate: another request changed it at the same time - re-read it and try again",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -478,7 +488,7 @@
             }
           },
           "409" : {
-            "description" : "The assessment has been closed or archived by a prisoner movement, or cancelled by a user, and can no longer be edited",
+            "description" : "CsraReviewNotWritable: the assessment has been closed or archived by a prisoner movement, or cancelled by a user, and can no longer be edited. StaleAnswersVersion: the version sent is not the stage's current version. ConcurrentUpdate: another request changed it at the same time - re-read it and try again",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -577,7 +587,7 @@
             }
           },
           "409" : {
-            "description" : "The assessment has been closed or archived by a prisoner movement, or cancelled by a user, and can no longer be edited",
+            "description" : "CsraReviewNotWritable: the assessment has been closed or archived by a prisoner movement, or cancelled by a user, and can no longer be edited. ConcurrentUpdate: another request changed it at the same time - re-read it and try again",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -593,7 +603,7 @@
       "put" : {
         "tags" : [ "CSRA Assessment" ],
         "summary" : "Submits the final (Day 2) stage of an initial CSRA assessment",
-        "description" : "Records the final answers and rating, setting the prisoner's final CSRA result and, for a high-risk rating, the next review date. Requires role ROLE_CSRA_REVIEW__RW",
+        "description" : "Records the final answers and rating, setting the prisoner's final CSRA result and, for a high-risk rating, the next review date. Any supplied next review date must be in the future. Requires role ROLE_CSRA_REVIEW__RW",
         "operationId" : "submitFinal_1",
         "parameters" : [ {
           "name" : "prisonerNumber",
@@ -618,7 +628,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/CsraAssessmentStageRequest"
+                "$ref" : "#/components/schemas/CsraAssessmentFinalStageRequest"
               }
             }
           },
@@ -636,7 +646,7 @@
             }
           },
           "400" : {
-            "description" : "Invalid request, or the rating conflicts with a mandatory high-risk offence trigger",
+            "description" : "Invalid request, including a next review date that is not in the future, or the rating conflicts with a mandatory high-risk offence trigger",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -676,7 +686,7 @@
             }
           },
           "409" : {
-            "description" : "The assessment has been closed or archived by a prisoner movement, or cancelled by a user, and can no longer be edited",
+            "description" : "CsraReviewNotWritable: the assessment has been closed or archived by a prisoner movement, or cancelled by a user, and can no longer be edited. ConcurrentUpdate: another request changed it at the same time - re-read it and try again",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -840,7 +850,7 @@
             }
           },
           "409" : {
-            "description" : "The review has been closed or archived by a prisoner movement and can no longer be updated",
+            "description" : "CsraReviewNotWritable: the review has been closed or archived by a prisoner movement and can no longer be updated. ConcurrentUpdate: a DPS user or event changed the same review at the same time - retry the sync, which re-reads it",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -919,6 +929,16 @@
           },
           "403" : {
             "description" : "Missing required role. Requires the PRISONER_CSRA__SYNC__RW role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "ConcurrentUpdate: a DPS user or event changed one of the prisoner's reviews at the same time - retry the migration",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -1177,7 +1197,7 @@
             }
           },
           "409" : {
-            "description" : "CsraAssessmentNotCancellable: a rating has been submitted or the assessment is complete. CsraReviewNotWritable: a prisoner movement has already closed or archived it",
+            "description" : "CsraAssessmentNotCancellable: a rating has been submitted or the assessment is complete. CsraReviewNotWritable: a prisoner movement has already closed or archived it. ConcurrentUpdate: another request changed it at the same time, which includes a second cancellation sent at the same moment (a double click) - re-read it and try again",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -2978,6 +2998,119 @@
             "items" : {
               "$ref" : "#/components/schemas/CsraVulnerabilityDetail"
             }
+          }
+        },
+        "required" : [ "assessmentComment", "offenceEvidence", "prisonId", "rating", "riskTo", "vulnerabilities" ]
+      },
+      "CsraAssessmentFinalStageRequest" : {
+        "type" : "object",
+        "description" : "The answers and rating confirmed for the final stage of an initial CSRA assessment",
+        "properties" : {
+          "rating" : {
+            "type" : "string",
+            "description" : "The outcome of a CSRA review",
+            "enum" : [ "HIGH", "HIGH_GENERAL", "HIGH_SPECIFIC", "STANDARD" ]
+          },
+          "prisonId" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "assessmentComment" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "dpsChecked" : {
+            "type" : [ "boolean", "null" ]
+          },
+          "perChecked" : {
+            "type" : [ "boolean", "null" ]
+          },
+          "warrantChecked" : {
+            "type" : [ "boolean", "null" ]
+          },
+          "pncChecked" : {
+            "type" : [ "boolean", "null" ]
+          },
+          "offenceMurderManslaughter" : {
+            "type" : [ "boolean", "null" ]
+          },
+          "offenceAssistingSuicide" : {
+            "type" : [ "boolean", "null" ]
+          },
+          "offenceSexualAssault" : {
+            "type" : [ "boolean", "null" ]
+          },
+          "offenceRepeatedViolence" : {
+            "type" : [ "boolean", "null" ]
+          },
+          "offencePrejudiceMotivated" : {
+            "type" : [ "boolean", "null" ]
+          },
+          "offenceArson" : {
+            "type" : [ "boolean", "null" ]
+          },
+          "offenceKidnapHostage" : {
+            "type" : [ "boolean", "null" ]
+          },
+          "offenceEvidence" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CsraOffenceEvidence"
+            }
+          },
+          "officerSpokeToPrisoner" : {
+            "type" : [ "boolean", "null" ]
+          },
+          "likelyToHarmCellmate" : {
+            "type" : [ "boolean", "null" ]
+          },
+          "likelyToHarmCellmateDetail" : {
+            "type" : [ "string", "null" ]
+          },
+          "significantlyVulnerable" : {
+            "type" : [ "boolean", "null" ]
+          },
+          "significantlyVulnerableDetail" : {
+            "type" : [ "string", "null" ]
+          },
+          "causeForConcernSharing" : {
+            "type" : [ "boolean", "null" ]
+          },
+          "causeForConcernSharingDetail" : {
+            "type" : [ "string", "null" ]
+          },
+          "otherHighRiskIndicators" : {
+            "type" : [ "boolean", "null" ]
+          },
+          "otherHighRiskIndicatorsDetail" : {
+            "type" : [ "string", "null" ]
+          },
+          "seenByHealthcare" : {
+            "type" : [ "boolean", "null" ]
+          },
+          "healthcareIncreasedRisk" : {
+            "type" : [ "boolean", "null" ]
+          },
+          "healthcareIncreasedRiskDetail" : {
+            "type" : [ "string", "null" ]
+          },
+          "riskTo" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CsraRiskToDetail"
+            }
+          },
+          "vulnerabilities" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CsraVulnerabilityDetail"
+            }
+          },
+          "nextReviewDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "The date the next review is due, defaulting to 12 months from submission date. Only used when a HIGH level rating is given and must be in the future.",
+            "example" : "2027-06-01"
           }
         },
         "required" : [ "assessmentComment", "offenceEvidence", "prisonId", "rating", "riskTo", "vulnerabilities" ]
