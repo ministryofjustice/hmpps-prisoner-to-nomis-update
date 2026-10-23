@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-22.639.6c0213c"
+    "version" : "2026-10-22.641.cdff804"
   },
   "servers" : [ {
     "url" : "/",
@@ -3298,6 +3298,15 @@
               "type" : "null"
             } ]
           },
+          "overrideLevel" : {
+            "description" : "The override CSRA level (NOMIS OVERRIDED_SUP_LEVEL_TYPE)",
+            "example" : "STANDARD",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CsraLevel"
+            }, {
+              "type" : "null"
+            } ]
+          },
           "score" : {
             "type" : "number",
             "description" : "Score",
@@ -3597,6 +3606,12 @@
             "enum" : [ "STANDARD", "PEND", "LOW", "MED", "HI" ],
             "example" : "STANDARD"
           },
+          "overrideResult" : {
+            "type" : [ "string", "null" ],
+            "description" : "The level the assessor chose in place of the calculated level, where they overrode it",
+            "enum" : [ "STANDARD", "PEND", "LOW", "MED", "HI" ],
+            "example" : "STANDARD"
+          },
           "approvedResult" : {
             "type" : [ "string", "null" ],
             "description" : "The level approved for this review — NOMIS's reviewed level, which is what it displays as the approved result",
@@ -3815,6 +3830,12 @@
             "description" : "The calculated NOMIS level before any review or approval level overrode it.",
             "enum" : [ "STANDARD", "PEND", "LOW", "MED", "HI" ],
             "example" : "LOW"
+          },
+          "overrideLevel" : {
+            "type" : [ "string", "null" ],
+            "description" : "The level the assessor chose in place of the calculated level, where they overrode it.",
+            "enum" : [ "STANDARD", "PEND", "LOW", "MED", "HI" ],
+            "example" : "STANDARD"
           },
           "assessmentComment" : {
             "type" : [ "string", "null" ],

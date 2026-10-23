@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-10-20.5973.1df09da"
+    "version" : "2026-10-22.6011.4d29dfc"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -1531,6 +1531,46 @@
                   "items" : {
                     "$ref" : "#/components/schemas/PrisonReligion"
                   }
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "api-role" : [ ]
+        } ]
+      }
+    },
+    "/person/prison/{prisonNumber}/image" : {
+      "get" : {
+        "tags" : [ "Prison" ],
+        "description" : "Retrieve image data (as bytes) by prison number from Prison API.This is a proxy endpoint to prison api. Role required is **ROLE_CORE_PERSON_RECORD_API__RO**.",
+        "operationId" : "getMainBookingImageDataByNo",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "A1234AA"
+        }, {
+          "name" : "fullSizeImage",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "image/jpeg" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "binary"
                 }
               }
             }

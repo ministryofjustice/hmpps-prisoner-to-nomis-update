@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-21.2741.eb035c8"
+    "version" : "2026-10-22.2753.fcfa285"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -79,6 +79,9 @@
   }, {
     "name" : "Aggravating Factors",
     "description" : "Aggravating factors are used to determine the seriousness of an offence and the appropriate sentence. They are used in conjunction with mitigating factors to determine the overall seriousness of an offence."
+  }, {
+    "name" : "hmcts-result-code-controller",
+    "description" : "Hmcts Result Codes"
   }, {
     "name" : "sentence-type-controller",
     "description" : "Sentence Type"
@@ -1819,6 +1822,75 @@
         }
       }
     },
+    "/hmcts-result-code/{hmctsResultCodeUuid}" : {
+      "put" : {
+        "tags" : [ "hmcts-result-code-controller" ],
+        "summary" : "Update hmcts result code",
+        "description" : "This endpoint will update hmcts result code that will be used to map court data to charge outcome",
+        "operationId" : "updateHmctsResultCode",
+        "parameters" : [ {
+          "name" : "hmctsResultCodeUuid",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateHmctsResultCode"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/HmctsResultCode"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/HmctsResultCode"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/HmctsResultCode"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FieldErrorErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/court-case/{courtCaseUuid}" : {
       "get" : {
         "tags" : [ "court-case-controller" ],
@@ -3328,6 +3400,66 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/SaveImmigrationDetentionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/hmcts-result-code" : {
+      "post" : {
+        "tags" : [ "hmcts-result-code-controller" ],
+        "summary" : "Create hmcts result code",
+        "description" : "This endpoint will create a new hmcts result code that will be used to map court data to charge outcome",
+        "operationId" : "createHmctsResultCode",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateHmctsResultCode"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/HmctsResultCode"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/HmctsResultCode"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/HmctsResultCode"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FieldErrorErrorResponse"
                 }
               }
             }
@@ -6154,6 +6286,187 @@
         }
       }
     },
+    "/hmcts-result-code/{outcomeUuid}" : {
+      "get" : {
+        "tags" : [ "hmcts-result-code-controller" ],
+        "summary" : "Get hmcts result code by UUID",
+        "description" : "This endpoint will retrieve hmcts result code by UUID",
+        "operationId" : "getHmctsResultCodeByUuid",
+        "parameters" : [ {
+          "name" : "outcomeUuid",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns hmcts result code",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/HmctsResultCode"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/HmctsResultCode"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/HmctsResultCode"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not found if no hmcts result code at uuid",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/HmctsResultCode"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/hmcts-result-code/uuid/multiple" : {
+      "get" : {
+        "tags" : [ "hmcts-result-code-controller" ],
+        "summary" : "get all hmcts result codes by uuids",
+        "description" : "This endpoint will get all hmcts result codes by uuids",
+        "operationId" : "getHmctsResultCodesByIds",
+        "parameters" : [ {
+          "name" : "uuids",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns hmcts result codes",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/HmctsResultCode"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/HmctsResultCode"
+                  }
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/HmctsResultCode"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/hmcts-result-code/status" : {
+      "get" : {
+        "tags" : [ "hmcts-result-code-controller" ],
+        "summary" : "Get all hmcts result codes by statuses",
+        "description" : "This endpoint will get all hmcts result codes by statuses",
+        "operationId" : "getAllHmctsResultCodes",
+        "parameters" : [ {
+          "name" : "statuses",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "ACTIVE", "INACTIVE" ]
+            }
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns hmcts result codes",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/HmctsResultCode"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/HmctsResultCode"
+                  }
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/HmctsResultCode"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/hmcts-court-data/{courtHearingId}/prisoner/{prisonerNumber}/appearance" : {
       "get" : {
         "tags" : [ "hmcts-court-data-controller" ],
@@ -8046,7 +8359,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:42:41.582759122"
+            "example" : "07:42:39.743489065"
           },
           "outcomeDispositionCode" : {
             "type" : [ "string", "null" ]
@@ -8219,6 +8532,85 @@
           }
         },
         "required" : [ "immigrationDetentionUuid" ]
+      },
+      "CreateHmctsResultCode" : {
+        "type" : "object",
+        "properties" : {
+          "resultUuid" : {
+            "type" : [ "string", "null" ],
+            "format" : "uuid"
+          },
+          "resultName" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "resultCode" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "outcomeUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "ACTIVE", "INACTIVE" ]
+          }
+        },
+        "required" : [ "outcomeUuid", "resultCode", "resultName", "status" ]
+      },
+      "ChargeOutcome" : {
+        "type" : "object",
+        "properties" : {
+          "outcomeUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "outcomeName" : {
+            "type" : "string"
+          },
+          "nomisCode" : {
+            "type" : "string"
+          },
+          "outcomeType" : {
+            "type" : "string"
+          },
+          "displayOrder" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "dispositionCode" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "ACTIVE", "INACTIVE" ]
+          }
+        },
+        "required" : [ "displayOrder", "dispositionCode", "nomisCode", "outcomeName", "outcomeType", "outcomeUuid", "status" ]
+      },
+      "HmctsResultCode" : {
+        "type" : "object",
+        "properties" : {
+          "resultUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "resultName" : {
+            "type" : "string"
+          },
+          "resultCode" : {
+            "type" : "string"
+          },
+          "outcome" : {
+            "$ref" : "#/components/schemas/ChargeOutcome"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "ACTIVE", "INACTIVE" ]
+          }
+        },
+        "required" : [ "outcome", "resultCode", "resultName", "resultUuid", "status" ]
       },
       "AggravatingFactor" : {
         "type" : "object",
@@ -8425,7 +8817,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:42:41.582759122"
+            "example" : "07:42:39.743489065"
           },
           "courtCode" : {
             "type" : "string"
@@ -8666,7 +9058,9 @@
             "minLength" : 1
           },
           "hmctsCode" : {
-            "type" : [ "string", "null" ]
+            "type" : [ "string", "null" ],
+            "deprecated" : true,
+            "description" : "HMCTS Code no longer required, remove after frontend update"
           },
           "status" : {
             "type" : "string",
@@ -8674,39 +9068,6 @@
           }
         },
         "required" : [ "displayOrder", "dispositionCode", "nomisCode", "outcomeName", "outcomeType", "status" ]
-      },
-      "ChargeOutcome" : {
-        "type" : "object",
-        "properties" : {
-          "outcomeUuid" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "outcomeName" : {
-            "type" : "string"
-          },
-          "nomisCode" : {
-            "type" : "string"
-          },
-          "outcomeType" : {
-            "type" : "string"
-          },
-          "displayOrder" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "dispositionCode" : {
-            "type" : "string"
-          },
-          "hmctsCode" : {
-            "type" : [ "string", "null" ]
-          },
-          "status" : {
-            "type" : "string",
-            "enum" : [ "ACTIVE", "INACTIVE" ]
-          }
-        },
-        "required" : [ "displayOrder", "dispositionCode", "nomisCode", "outcomeName", "outcomeType", "outcomeUuid", "status" ]
       },
       "CreateAppearanceOutcome" : {
         "type" : "object",
@@ -11360,6 +11721,9 @@
           "hmctsChargeId" : {
             "type" : [ "string", "null" ],
             "format" : "uuid"
+          },
+          "value" : {
+            "type" : [ "number", "null" ]
           }
         },
         "required" : [ "aggravatingFactors", "chargeUuid", "createdAt", "offenceCode" ]
@@ -11549,7 +11913,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:42:41.582759122"
+            "example" : "07:42:39.743489065"
           },
           "courtCode" : {
             "type" : "string"
@@ -12402,7 +12766,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:42:41.582759122"
+            "example" : "07:42:39.743489065"
           },
           "nomisOutcomeCode" : {
             "type" : [ "string", "null" ]
@@ -12481,7 +12845,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:42:41.582759122"
+            "example" : "07:42:39.743489065"
           },
           "courtId" : {
             "type" : "string"
@@ -12633,7 +12997,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:42:41.582759122"
+            "example" : "07:42:39.743489065"
           },
           "charges" : {
             "type" : "array",
@@ -12670,7 +13034,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:42:41.582759122"
+            "example" : "07:42:39.743489065"
           },
           "courtId" : {
             "type" : "string"
@@ -13312,7 +13676,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:42:41.582759122"
+            "example" : "07:42:39.743489065"
           },
           "courtCode" : {
             "type" : [ "string", "null" ]

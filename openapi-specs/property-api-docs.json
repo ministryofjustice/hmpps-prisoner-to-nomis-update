@@ -7,7 +7,7 @@
       "name" : "Move a prisoner Team",
       "email" : "Moveaprisoner-gg@justice.gov.uk"
     },
-    "version" : "2026-10-16.377.09fca9e"
+    "version" : "2026-10-22.382.a85170f"
   },
   "servers" : [ {
     "url" : "/",
@@ -3610,13 +3610,25 @@
             "description" : "Containers due to transfer in to the viewing prison: those held at other prisons that now need to follow the prisoner here, plus any already sent here and not yet logged on arrival. Only counted when the prisoner is held at the viewing prison, otherwise 0.",
             "example" : 3
           },
+          "dueToBeReturnedAtOtherPrisons" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Containers held at other prisons that are due to be returned, because the prisoner has been released or is about to be. Not counted in dueToTransferIn, as the property is not coming here. Only counted when the prisoner is held at the viewing prison, otherwise 0.",
+            "example" : 1
+          },
+          "dueToBeDisposedAtOtherPrisons" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Containers held at other prisons whose proposed disposal date has arisen (today or earlier). Not counted in dueToTransferIn. Only counted when the prisoner is held at the viewing prison, otherwise 0.",
+            "example" : 1
+          },
           "hasEverHadProperty" : {
             "type" : "boolean",
             "description" : "Whether the prisoner has any recorded property at all, at any prison (including containers since returned, disposed or transferred). Lets the card tell \"never had property\" apart from \"no longer has any\".",
             "example" : true
           }
         },
-        "required" : [ "dueToBeDisposed", "dueToBeReturned", "dueToTransferIn", "dueToTransferOut", "hasEverHadProperty", "heldAtOtherPrisons", "heldAtThisPrison", "prisonId", "prisonerHeldHere" ]
+        "required" : [ "dueToBeDisposed", "dueToBeDisposedAtOtherPrisons", "dueToBeReturned", "dueToBeReturnedAtOtherPrisons", "dueToTransferIn", "dueToTransferOut", "hasEverHadProperty", "heldAtOtherPrisons", "heldAtThisPrison", "prisonId", "prisonerHeldHere" ]
       },
       "PrisonerTimelineItemDto" : {
         "type" : "object",
