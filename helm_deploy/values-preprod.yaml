@@ -98,6 +98,14 @@ generic-service:
       type: AGENCY_RECON
       schedule: "30 6 * * *"
       suspend: false
+    - name: allocations-recon
+      type: ALLOCATION_RECON
+      schedule: "5 7 * * *"
+      suspend: true
+    - name: attendances-recon
+      type: ATTENDANCE_RECON
+      schedule: "5 1 * * *"
+      suspend: true
     - name: core-person-recon
       type: CORE_PERSON_FULL_RECON
       schedule: "30 12 * * *"
