@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-21.1216.3137b3c"
+    "version" : "2026-10-22.1224.47f4b93"
   },
   "servers" : [ {
     "url" : "https://prisoner-finance-sync-api-dev.hmpps.service.justice.gov.uk/",
@@ -30,6 +30,171 @@
     "description" : "Endpoints exclusively for NOMIS synchronization. Do not use for other client integrations."
   } ],
   "paths" : {
+    "/sync/subscriptions" : {
+      "post" : {
+        "tags" : [ "Subscriptions" ],
+        "summary" : "Create a new subscription record for a prisoner",
+        "description" : "Create a new subscription record for a prisoner",
+        "operationId" : "createSubscription",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SyncCreateSubscriptionRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Subscription record created",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncCreateSubscriptionResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad request - invalid input data.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - requires a valid OAuth2 token",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden - requires an appropriate role",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "501" : {
+            "description" : "This endpoint is not yet implemented.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearer-jwt" : [ "ROLE_PRISONER_FINANCE_SYNC__RW" ]
+        } ]
+      }
+    },
+    "/sync/subscriptions/{subscriptionId}/update" : {
+      "post" : {
+        "tags" : [ "Subscriptions" ],
+        "summary" : "Update a subscription record for a prisoner",
+        "description" : "Update a subscription record for a prisoner",
+        "operationId" : "updateSubscription",
+        "parameters" : [ {
+          "name" : "subscriptionId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SyncUpdateSubscriptionRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Subscription record updated",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncUpdateSubscriptionResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad request - invalid input data.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - requires a valid OAuth2 token",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden - requires an appropriate role",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Subscription not found",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "501" : {
+            "description" : "This endpoint is not yet implemented.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearer-jwt" : [ "ROLE_PRISONER_FINANCE_SYNC__RW" ]
+        } ]
+      }
+    },
     "/sync/offender-transactions" : {
       "post" : {
         "tags" : [ "NOMIS Sync" ],
@@ -1381,6 +1546,136 @@
   },
   "components" : {
     "schemas" : {
+      "SyncCreateSubscriptionRequest" : {
+        "type" : "object",
+        "properties" : {
+          "legacyPaymentProfileId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The payment profile ID",
+            "example" : 123456789
+          },
+          "amount" : {
+            "type" : "number",
+            "description" : "The amount paid weekly",
+            "example" : 0.5
+          },
+          "dayOfPayment" : {
+            "type" : "string",
+            "description" : "The day the payment is made weekly",
+            "enum" : [ "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY" ],
+            "example" : "MONDAY"
+          },
+          "startDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The start date of the subscription",
+            "example" : "2026-12-03"
+          },
+          "endDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "The end date of the subscription",
+            "example" : "2026-13-04"
+          },
+          "subscriptionType" : {
+            "type" : "string",
+            "description" : "The transaction type on the payment profile",
+            "example" : "TELE"
+          },
+          "reference" : {
+            "type" : [ "string", "null" ],
+            "description" : "The reference on the payment profile",
+            "example" : "REF"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "The user that created the subscription",
+            "example" : "TEST_USER"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The time that the subscription was created",
+            "example" : "2023-07-01T12:00:00Z"
+          },
+          "prisonId" : {
+            "type" : "string",
+            "description" : "The caseload ID of the prison",
+            "example" : "LEI"
+          },
+          "prisonNumber" : {
+            "type" : "string",
+            "description" : "The prison number of the offender that has the subscription",
+            "example" : "AE12345"
+          },
+          "subAccountCode" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The sub-account that the subscription payment is debited from",
+            "example" : 2101
+          }
+        },
+        "required" : [ "amount", "createdAt", "createdBy", "dayOfPayment", "legacyPaymentProfileId", "prisonId", "prisonNumber", "startDate", "subAccountCode", "subscriptionType" ]
+      },
+      "SyncCreateSubscriptionResponse" : {
+        "type" : "object",
+        "properties" : {
+          "subscriptionId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The subscription ID in Prisoner Finance",
+            "example" : "de2bc56c-ea73-4f3c-8a37-5a46fdb2d79b"
+          }
+        },
+        "required" : [ "subscriptionId" ]
+      },
+      "ErrorResponse" : {
+        "type" : "object",
+        "properties" : {
+          "status" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "errorCode" : {
+            "type" : [ "string", "null" ]
+          },
+          "userMessage" : {
+            "type" : [ "string", "null" ]
+          },
+          "developerMessage" : {
+            "type" : [ "string", "null" ]
+          },
+          "moreInfo" : {
+            "type" : [ "string", "null" ]
+          }
+        },
+        "required" : [ "status" ]
+      },
+      "SyncUpdateSubscriptionRequest" : {
+        "type" : "object",
+        "properties" : {
+          "endDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The subscription end date",
+            "example" : "2026-07-01"
+          }
+        },
+        "required" : [ "endDate" ]
+      },
+      "SyncUpdateSubscriptionResponse" : {
+        "type" : "object",
+        "properties" : {
+          "endDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The updated subscription end date",
+            "example" : "2026-07-01"
+          }
+        },
+        "required" : [ "endDate" ]
+      },
       "GeneralLedgerEntry" : {
         "type" : "object",
         "description" : "Represents a general ledger entry.",
@@ -1587,28 +1882,6 @@
           }
         },
         "required" : [ "action", "requestId", "synchronizedTransactionId" ]
-      },
-      "ErrorResponse" : {
-        "type" : "object",
-        "properties" : {
-          "status" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "errorCode" : {
-            "type" : [ "string", "null" ]
-          },
-          "userMessage" : {
-            "type" : [ "string", "null" ]
-          },
-          "developerMessage" : {
-            "type" : [ "string", "null" ]
-          },
-          "moreInfo" : {
-            "type" : [ "string", "null" ]
-          }
-        },
-        "required" : [ "status" ]
       },
       "SyncCreateHoldRequest" : {
         "type" : "object",
@@ -2255,16 +2528,16 @@
           "transactionType" : {
             "type" : [ "string", "null" ]
           },
-          "legacyTransactionId" : {
-            "type" : [ "integer", "null" ],
-            "format" : "int64"
-          },
           "caseloadId" : {
             "type" : [ "string", "null" ]
           },
           "transactionTimestamp" : {
             "type" : [ "string", "null" ],
             "format" : "date-time"
+          },
+          "legacyTransactionId" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int64"
           },
           "synchronizedTransactionId" : {
             "type" : "string",
