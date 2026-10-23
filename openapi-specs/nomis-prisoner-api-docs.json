@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-21.2267.dd4fc9c"
+    "version" : "2026-10-22.2277.02d048a"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -24986,11 +24986,11 @@
         "parameters" : [ {
           "name" : "prisonNumber",
           "in" : "path",
-          "description" : "prisonNumber",
+          "description" : "Prison number aka noms id / offender id display",
           "required" : true,
           "schema" : {
             "type" : "string",
-            "description" : "prisonNumber",
+            "description" : "Prison number aka noms id / offender id display",
             "example" : "A1234BC"
           },
           "example" : "A1234BC"
@@ -25322,24 +25322,24 @@
         "parameters" : [ {
           "name" : "rootOffenderId",
           "in" : "path",
-          "description" : "root offender id",
+          "description" : "The root offender id",
           "required" : true,
           "schema" : {
             "type" : "integer",
             "format" : "int64",
-            "description" : "root offender id",
+            "description" : "The root offender id",
             "example" : 123456
           },
           "example" : 123456
         }, {
           "name" : "activeOnly",
           "in" : "query",
-          "description" : "whether to return just active advances",
+          "description" : "Whether to return just active advances",
           "required" : false,
           "schema" : {
             "type" : "boolean",
             "default" : false,
-            "description" : "whether to return just active advances",
+            "description" : "Whether to return just active advances",
             "example" : true
           },
           "example" : true
@@ -46902,9 +46902,15 @@
             "description" : "The status of the advance",
             "enum" : [ "ACTIVE", "REPAID", "WRITTEN_OFF" ],
             "example" : "ACTIVE"
+          },
+          "advanceCreateTransactionId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The transaction id for the advance creation",
+            "example" : 123456789
           }
         },
-        "required" : [ "advanceAmount", "caseloadId", "createDatetime", "createdBy", "id", "informationNumber", "prisonNumber", "repaymentAmount", "startDate", "status" ]
+        "required" : [ "advanceAmount", "advanceCreateTransactionId", "caseloadId", "createDatetime", "createdBy", "id", "informationNumber", "prisonNumber", "repaymentAmount", "startDate", "status" ]
       },
       "PagedModelLong" : {
         "type" : "object",
@@ -46941,25 +46947,19 @@
       "PrisonerHoldProjection" : {
         "type" : "object",
         "properties" : {
-          "txnEntryDate" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "txnEntryDesc" : {
-            "type" : [ "string", "null" ]
-          },
-          "txnReferenceNumber" : {
-            "type" : [ "string", "null" ]
-          },
-          "txnEntryAmount" : {
-            "type" : "number"
-          },
           "clientUniqueRef" : {
             "type" : [ "string", "null" ]
           },
           "holdNumber" : {
             "type" : [ "integer", "null" ],
             "format" : "int64"
+          },
+          "txnEntryAmount" : {
+            "type" : "number"
+          },
+          "txnEntryDate" : {
+            "type" : "string",
+            "format" : "date-time"
           },
           "txnEntrySeq" : {
             "type" : "integer",
@@ -46968,6 +46968,12 @@
           "txnId" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "txnReferenceNumber" : {
+            "type" : [ "string", "null" ]
+          },
+          "txnEntryDesc" : {
+            "type" : [ "string", "null" ]
           }
         },
         "required" : [ "txnEntryAmount", "txnEntryDate", "txnEntrySeq", "txnId" ]
