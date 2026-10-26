@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-16.894.0c9503e"
+    "version" : "2026-10-23.910.a04af57"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -5650,8 +5650,8 @@
     "/mapping/core-person/replace" : {
       "post" : {
         "tags" : [ "core-person-mapping-resource" ],
-        "summary" : "Replaces alias and identifier mappings.",
-        "description" : "Creates lists of alias and identifier mappings and removes the previous supplied set.\n      This does not add or remove any data from any associated parent CorePersonMappingDto entry. \n      Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "summary" : "Replaces addresses and contacts mappings.",
+        "description" : "Creates lists of addresses and contacts mappings and removes the previous supplied set.\n      This does not add or remove any data from any associated parent CorePersonMappingDto entry. \n      Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
         "operationId" : "replaceCorePersonMappings",
         "requestBody" : {
           "content" : {
@@ -5718,6 +5718,100 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/core-person/merge" : {
+      "post" : {
+        "tags" : [ "core-person-mapping-resource" ],
+        "summary" : "Replaces mappings for a merge",
+        "description" : "Replaces mappings for a merge with the provided mappings on the to person. The mappings of the from person will be deleted \n      Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "merge",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CorePersonMergeMappingsDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Mappings replaced",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/core-person/mappings/by-nomis-ids" : {
+      "post" : {
+        "tags" : [ "core-person-mapping-resource" ],
+        "summary" : "Get mapping by nomis ids",
+        "description" : "Retrieves mappings by nomis ids. \n    Used during a merge to find existing corresponding cpr ids. \n    These can then be passed these to the cpr service and allow cpr to maintain them.\n    Maintaining cpr ids allows down stream services to continue to use them.\n    Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "getMappingsFromNomisIds",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CorePersonMappingsByNomisIdsRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Mapping data",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CorePersonMappingsResult"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access this endpoint is forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -26917,6 +27011,132 @@
           }
         },
         "required" : [ "cprId", "mappingType", "nomisBookingId", "nomisPrisonNumber", "nomisProfileType" ]
+      },
+      "CorePersonMergeMappingsDto" : {
+        "type" : "object",
+        "description" : "Mappings for a Core Person and its associated child entities after it has been merged to.",
+        "properties" : {
+          "toNomisPrisonNumber" : {
+            "type" : "string",
+            "description" : "NOMIS Prison number aka Offender number of the person being merged to"
+          },
+          "fromNomisPrisonNumber" : {
+            "type" : "string",
+            "description" : "NOMIS Prison number aka Offender number of the person being merged from"
+          },
+          "addresses" : {
+            "type" : "array",
+            "description" : "Core Person address mappings of the person being merged to",
+            "items" : {
+              "$ref" : "#/components/schemas/CorePersonAddressMappingDto"
+            }
+          },
+          "contacts" : {
+            "type" : "array",
+            "description" : "Core Person contact mappings of the person being merged to",
+            "items" : {
+              "$ref" : "#/components/schemas/CorePersonContactMappingDto"
+            }
+          },
+          "addressUsages" : {
+            "type" : "array",
+            "description" : "Core Person address usage mappings of the person being merged to",
+            "items" : {
+              "$ref" : "#/components/schemas/CorePersonAddressUsageMappingDto"
+            }
+          }
+        },
+        "required" : [ "addressUsages", "addresses", "contacts", "fromNomisPrisonNumber", "toNomisPrisonNumber" ]
+      },
+      "AddressUsageByNomisIdRequest" : {
+        "type" : "object",
+        "description" : "Request for an address usage mapping on nomis id",
+        "properties" : {
+          "nomisId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS id"
+          },
+          "addressUsageCode" : {
+            "type" : "string",
+            "description" : "NOMIS address usage code"
+          }
+        },
+        "required" : [ "addressUsageCode", "nomisId" ]
+      },
+      "ContactByNomisIdRequest" : {
+        "type" : "object",
+        "description" : "Request for a contact mapping on nomis id",
+        "properties" : {
+          "nomisId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS id"
+          },
+          "nomisContactType" : {
+            "type" : "string",
+            "description" : "NOMIS contact type",
+            "enum" : [ "PHONE", "EMAIL" ]
+          }
+        },
+        "required" : [ "nomisContactType", "nomisId" ]
+      },
+      "CorePersonMappingsByNomisIdsRequest" : {
+        "type" : "object",
+        "description" : "Request for mappings on nomis ids",
+        "properties" : {
+          "addresses" : {
+            "type" : "array",
+            "description" : "Address mappings with requested nomis ids",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          },
+          "contacts" : {
+            "type" : "array",
+            "description" : "Contacts with requested nomis ids",
+            "items" : {
+              "$ref" : "#/components/schemas/ContactByNomisIdRequest"
+            }
+          },
+          "addressUsages" : {
+            "type" : "array",
+            "description" : "Address usages with requested nomis ids",
+            "items" : {
+              "$ref" : "#/components/schemas/AddressUsageByNomisIdRequest"
+            }
+          }
+        },
+        "required" : [ "addressUsages", "addresses", "contacts" ]
+      },
+      "CorePersonMappingsResult" : {
+        "type" : "object",
+        "description" : "Lists of mappings requested directly by ids",
+        "properties" : {
+          "addresses" : {
+            "type" : "array",
+            "description" : "List of address mappings requested",
+            "items" : {
+              "$ref" : "#/components/schemas/CorePersonAddressMappingDto"
+            }
+          },
+          "contacts" : {
+            "type" : "array",
+            "description" : "List of contact mappings requested",
+            "items" : {
+              "$ref" : "#/components/schemas/CorePersonContactMappingDto"
+            }
+          },
+          "addressUsages" : {
+            "type" : "array",
+            "description" : "List of address usage mappings requested",
+            "items" : {
+              "$ref" : "#/components/schemas/CorePersonAddressUsageMappingDto"
+            }
+          }
+        },
+        "required" : [ "addressUsages", "addresses", "contacts" ]
       },
       "OffenderIdentifierMappingDto" : {
         "type" : "object",
