@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-22.2277.02d048a"
+    "version" : "2026-10-26.2288.9a9db86"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -24850,7 +24850,7 @@
       "get" : {
         "tags" : [ "prisoner-balance-resource" ],
         "summary" : "Get a prisoner's finance details by their prison number",
-        "description" : "Retrieves a prisoner's trust account details for aggregated caseloads. Zero account balances are not returned. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "description" : "Retrieves a prisoner's trust account, hold and advance details for aggregated caseloads. Zero account balances are not returned. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
         "operationId" : "getAggregatedAccountsForPrisonNumber",
         "parameters" : [ {
           "name" : "prisonNumber",
@@ -25184,7 +25184,7 @@
       "get" : {
         "tags" : [ "prisoner-balance-resource" ],
         "summary" : "Get a prisoner's finance details by their root offender id",
-        "description" : "Retrieves a prisoner's trust account details for aggregated caseloads. Zero account balances are not returned. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "description" : "Retrieves a prisoner's trust account, hold and advance details for aggregated caseloads. Zero account balances are not returned. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
         "operationId" : "getAggregatedAccountsForId",
         "parameters" : [ {
           "name" : "rootOffenderId",
@@ -38988,6 +38988,14 @@
             "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Date address was valid to"
+          },
+          "addressUsages" : {
+            "type" : [ "array", "null" ],
+            "description" : "Set of address usages",
+            "items" : {
+              "type" : "string"
+            },
+            "uniqueItems" : true
           }
         },
         "required" : [ "mailAddress", "primaryAddress" ]
@@ -39848,7 +39856,8 @@
             "type" : "integer",
             "format" : "int64"
           }
-        }
+        },
+        "required" : [ "number", "size", "totalElements", "totalPages" ]
       },
       "PagedModelVisitTimeSlotIdResponse" : {
         "type" : "object",
@@ -39862,7 +39871,8 @@
           "page" : {
             "$ref" : "#/components/schemas/PageMetadata"
           }
-        }
+        },
+        "required" : [ "content", "page" ]
       },
       "VisitTimeSlotIdResponse" : {
         "type" : "object",
@@ -40519,7 +40529,8 @@
           "page" : {
             "$ref" : "#/components/schemas/PageMetadata"
           }
-        }
+        },
+        "required" : [ "content", "page" ]
       },
       "StaffIdResponse" : {
         "type" : "object",
@@ -43567,7 +43578,8 @@
           "page" : {
             "$ref" : "#/components/schemas/PageMetadata"
           }
-        }
+        },
+        "required" : [ "content", "page" ]
       },
       "VisitIdsPage" : {
         "type" : "object",
@@ -46695,6 +46707,10 @@
         },
         "required" : [ "amount", "caseloadId", "createdBy", "id", "prisonNumber", "startDate", "transactionType" ]
       },
+      "AdjustmentReason" : {
+        "type" : "string",
+        "enum" : [ "P", "WRT" ]
+      },
       "AggregatedAccountDto" : {
         "type" : "object",
         "properties" : {
@@ -46716,97 +46732,6 @@
           }
         },
         "required" : [ "accountCode", "balance" ]
-      },
-      "PrisonerAggregatedAccountsDto" : {
-        "type" : "object",
-        "properties" : {
-          "rootOffenderId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The root offender Id",
-            "example" : 12345
-          },
-          "prisonNumber" : {
-            "type" : "string",
-            "description" : "The prison Number",
-            "example" : "A1234BC"
-          },
-          "accounts" : {
-            "type" : "array",
-            "description" : "The aggregated prisoner accounts",
-            "items" : {
-              "$ref" : "#/components/schemas/AggregatedAccountDto"
-            }
-          }
-        },
-        "required" : [ "accounts", "prisonNumber", "rootOffenderId" ]
-      },
-      "PrisonerAccountDto" : {
-        "type" : "object",
-        "properties" : {
-          "prisonId" : {
-            "type" : "string",
-            "description" : "The id of the prison",
-            "example" : "MDI"
-          },
-          "lastTransactionId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The id of the last transaction associated with the balance",
-            "example" : 123
-          },
-          "transactionDate" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The date and time of the last transaction"
-          },
-          "accountCode" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The account code for the balance entry",
-            "example" : 2101
-          },
-          "balance" : {
-            "type" : "number",
-            "description" : "The account balance",
-            "example" : 12.5
-          },
-          "holdBalance" : {
-            "type" : [ "number", "null" ],
-            "description" : "The amount on hold",
-            "example" : 12.5
-          }
-        },
-        "required" : [ "accountCode", "balance", "lastTransactionId", "prisonId", "transactionDate" ]
-      },
-      "PrisonerBalanceDto" : {
-        "type" : "object",
-        "description" : "Finance details for a prisoner",
-        "properties" : {
-          "rootOffenderId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The root offender Id",
-            "example" : 12345
-          },
-          "prisonNumber" : {
-            "type" : "string",
-            "description" : "The prison Number",
-            "example" : "A1234BC"
-          },
-          "accounts" : {
-            "type" : "array",
-            "description" : "The accounts associated with the prisoner",
-            "items" : {
-              "$ref" : "#/components/schemas/PrisonerAccountDto"
-            }
-          }
-        },
-        "required" : [ "accounts", "prisonNumber", "rootOffenderId" ]
-      },
-      "AdjustmentReason" : {
-        "type" : "string",
-        "enum" : [ "P", "WRT" ]
       },
       "PrisonerAdvanceDto" : {
         "type" : "object",
@@ -46912,6 +46837,100 @@
         },
         "required" : [ "advanceAmount", "advanceCreateTransactionId", "caseloadId", "createDatetime", "createdBy", "id", "informationNumber", "prisonNumber", "repaymentAmount", "startDate", "status" ]
       },
+      "PrisonerAggregatedAccountsDto" : {
+        "type" : "object",
+        "properties" : {
+          "rootOffenderId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The root offender Id",
+            "example" : 12345
+          },
+          "prisonNumber" : {
+            "type" : "string",
+            "description" : "The prison Number",
+            "example" : "A1234BC"
+          },
+          "accounts" : {
+            "type" : "array",
+            "description" : "The aggregated prisoner accounts",
+            "items" : {
+              "$ref" : "#/components/schemas/AggregatedAccountDto"
+            }
+          },
+          "advances" : {
+            "type" : "array",
+            "description" : "Active advance details for the prisoner, if any",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonerAdvanceDto"
+            }
+          }
+        },
+        "required" : [ "accounts", "advances", "prisonNumber", "rootOffenderId" ]
+      },
+      "PrisonerAccountDto" : {
+        "type" : "object",
+        "properties" : {
+          "prisonId" : {
+            "type" : "string",
+            "description" : "The id of the prison",
+            "example" : "MDI"
+          },
+          "lastTransactionId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The id of the last transaction associated with the balance",
+            "example" : 123
+          },
+          "transactionDate" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time of the last transaction"
+          },
+          "accountCode" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The account code for the balance entry",
+            "example" : 2101
+          },
+          "balance" : {
+            "type" : "number",
+            "description" : "The account balance",
+            "example" : 12.5
+          },
+          "holdBalance" : {
+            "type" : [ "number", "null" ],
+            "description" : "The amount on hold",
+            "example" : 12.5
+          }
+        },
+        "required" : [ "accountCode", "balance", "lastTransactionId", "prisonId", "transactionDate" ]
+      },
+      "PrisonerBalanceDto" : {
+        "type" : "object",
+        "description" : "Finance details for a prisoner",
+        "properties" : {
+          "rootOffenderId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The root offender Id",
+            "example" : 12345
+          },
+          "prisonNumber" : {
+            "type" : "string",
+            "description" : "The prison Number",
+            "example" : "A1234BC"
+          },
+          "accounts" : {
+            "type" : "array",
+            "description" : "The accounts associated with the prisoner",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonerAccountDto"
+            }
+          }
+        },
+        "required" : [ "accounts", "prisonNumber", "rootOffenderId" ]
+      },
       "PagedModelLong" : {
         "type" : "object",
         "properties" : {
@@ -46925,7 +46944,8 @@
           "page" : {
             "$ref" : "#/components/schemas/PageMetadata"
           }
-        }
+        },
+        "required" : [ "content", "page" ]
       },
       "RootOffenderIdsWithLast" : {
         "type" : "object",
@@ -46954,26 +46974,26 @@
             "type" : [ "integer", "null" ],
             "format" : "int64"
           },
-          "txnEntryAmount" : {
-            "type" : "number"
+          "txnId" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "txnEntryDate" : {
             "type" : "string",
             "format" : "date-time"
           },
-          "txnEntrySeq" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "txnId" : {
-            "type" : "integer",
-            "format" : "int64"
+          "txnEntryDesc" : {
+            "type" : [ "string", "null" ]
           },
           "txnReferenceNumber" : {
             "type" : [ "string", "null" ]
           },
-          "txnEntryDesc" : {
-            "type" : [ "string", "null" ]
+          "txnEntryAmount" : {
+            "type" : "number"
+          },
+          "txnEntrySeq" : {
+            "type" : "integer",
+            "format" : "int32"
           }
         },
         "required" : [ "txnEntryAmount", "txnEntryDate", "txnEntrySeq", "txnId" ]

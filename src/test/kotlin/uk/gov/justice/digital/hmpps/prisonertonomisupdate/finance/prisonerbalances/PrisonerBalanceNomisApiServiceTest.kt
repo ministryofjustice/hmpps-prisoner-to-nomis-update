@@ -40,6 +40,7 @@ class PrisonerBalanceNomisApiServiceTest {
           balance = BigDecimal.valueOf(100.00),
         ),
       ),
+      advances = listOf(),
     )
 
     @Test
