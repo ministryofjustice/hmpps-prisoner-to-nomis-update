@@ -433,6 +433,7 @@ fun nomisPrisonerAccounts(accountCode: Long = 1001, balance: BigDecimal = BigDec
   rootOffenderId = OFFENDER_ID,
   prisonNumber = OFFENDER_NO,
   accounts = listOf(nomisAccount(accountCode = accountCode, balance = balance, holdBalance = holdBalance)),
+  advances = listOf(),
 )
 
 private fun nomisZeroAccount(accountCode: Long = 1001) = AggregatedAccountDto(

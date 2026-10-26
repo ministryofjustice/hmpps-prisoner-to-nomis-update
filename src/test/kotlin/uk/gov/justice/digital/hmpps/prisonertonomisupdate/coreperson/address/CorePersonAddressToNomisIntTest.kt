@@ -19,9 +19,11 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonC
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonNomisApiMockServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.contact.CorePersonContactMappingApiMockServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonAddress
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonAddressUsage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.prisonerAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.withRequestBodyJsonPath
+import java.time.LocalDateTime
 
 class CorePersonAddressToNomisIntTest(
   @Autowired private val nomisApi: CorePersonNomisApiMockServer,
@@ -120,7 +122,8 @@ class CorePersonAddressToNomisIntTest(
               .withRequestBodyJsonPath("noFixedAddress", false)
               .withRequestBodyJsonPath("comment", "Some comment")
               .withRequestBodyJsonPath("startDate", "2020-02-26")
-              .withRequestBodyJsonPath("endDate", "2023-07-15"),
+              .withRequestBodyJsonPath("endDate", "2023-07-15")
+              .withRequestBodyJsonPath("addressUsages.length()", 0),
           )
         }
 
@@ -131,7 +134,8 @@ class CorePersonAddressToNomisIntTest(
               .withRequestBodyJsonPath("cprId", cprAddressId)
               .withRequestBodyJsonPath("nomisId", nomisAddressId)
               .withRequestBodyJsonPath("nomisPrisonNumber", prisonNumber)
-              .withRequestBodyJsonPath("mappingType", "CPR_CREATED"),
+              .withRequestBodyJsonPath("mappingType", "CPR_CREATED")
+              .withRequestBodyJsonPath("addressUsageMappings.length()", 0),
           )
         }
 
@@ -145,6 +149,63 @@ class CorePersonAddressToNomisIntTest(
               assertThat(it).containsEntry("nomisAddressId", nomisAddressId.toString())
             },
             isNull(),
+          )
+        }
+      }
+
+      @Nested
+      @DisplayName("when the address has usages")
+      inner class WithAddressUsages {
+        private val cprAddressUsageId1 = "aaaaaaaa-2222-3333-4444-555555555555"
+        private val cprAddressUsageId2 = "bbbbbbbb-2222-3333-4444-555555555555"
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetAddressMapping(cprAddressId, mapping = null)
+          corePersonCprApi.stubGetPrisonerAddress(
+            prisonNumber,
+            cprAddressId,
+            prisonerAddress().copy(
+              addressUsage = listOf(
+                addressUsage(cprAddressUsageId1, PrisonAddressUsage.AddressUsageCode.HOME),
+                addressUsage(cprAddressUsageId2, PrisonAddressUsage.AddressUsageCode.HDC),
+              ),
+            ),
+          )
+          nomisApi.stubCreateOffenderAddress(prisonNumber, addressId = nomisAddressId)
+          mappingApi.stubCreateAddressMapping()
+
+          publishAddressCreatedDomainEvent(prisonNumber, cprAddressId)
+          waitForAnyProcessingToComplete("core-person-address-create-success")
+        }
+
+        @Test
+        fun `will create the address in NOMIS with the address usages`() {
+          nomisApi.verify(
+            postRequestedFor(urlPathEqualTo("/core-person/$prisonNumber/address"))
+              .withRequestBodyJsonPath("addressUsages.length()", 2)
+              .withRequestBodyJsonPath("addressUsages[0]", "HOME")
+              .withRequestBodyJsonPath("addressUsages[1]", "HDC"),
+          )
+        }
+
+        @Test
+        fun `will create address usage mappings along with the address mapping`() {
+          mappingApi.verify(
+            postRequestedFor(urlPathEqualTo("/mapping/core-person/address"))
+              .withRequestBodyJsonPath("cprId", cprAddressId)
+              .withRequestBodyJsonPath("nomisId", nomisAddressId)
+              .withRequestBodyJsonPath("addressUsageMappings.length()", 2)
+              .withRequestBodyJsonPath("addressUsageMappings[0].cprId", cprAddressUsageId1)
+              .withRequestBodyJsonPath("addressUsageMappings[0].nomisId", nomisAddressId)
+              .withRequestBodyJsonPath("addressUsageMappings[0].addressUsageCode", "HOME")
+              .withRequestBodyJsonPath("addressUsageMappings[0].nomisPrisonNumber", prisonNumber)
+              .withRequestBodyJsonPath("addressUsageMappings[0].mappingType", "CPR_CREATED")
+              .withRequestBodyJsonPath("addressUsageMappings[1].cprId", cprAddressUsageId2)
+              .withRequestBodyJsonPath("addressUsageMappings[1].nomisId", nomisAddressId)
+              .withRequestBodyJsonPath("addressUsageMappings[1].addressUsageCode", "HDC")
+              .withRequestBodyJsonPath("addressUsageMappings[1].nomisPrisonNumber", prisonNumber)
+              .withRequestBodyJsonPath("addressUsageMappings[1].mappingType", "CPR_CREATED"),
           )
         }
       }
@@ -180,10 +241,16 @@ class CorePersonAddressToNomisIntTest(
       @Nested
       @DisplayName("when mapping service fails once")
       inner class MappingFailure {
+        private val cprAddressUsageId = "aaaaaaaa-2222-3333-4444-555555555555"
+
         @BeforeEach
         fun setUp() {
           mappingApi.stubGetAddressMapping(cprAddressId, mapping = null)
-          corePersonCprApi.stubGetPrisonerAddress(prisonNumber, cprAddressId)
+          corePersonCprApi.stubGetPrisonerAddress(
+            prisonNumber,
+            cprAddressId,
+            prisonerAddress().copy(addressUsage = listOf(addressUsage(cprAddressUsageId, PrisonAddressUsage.AddressUsageCode.HOME))),
+          )
           nomisApi.stubCreateOffenderAddress(prisonNumber, addressId = nomisAddressId)
           mappingApi.stubCreateAddressMappingFollowedBySuccess()
 
@@ -213,6 +280,18 @@ class CorePersonAddressToNomisIntTest(
         }
 
         @Test
+        fun `will include the address usage mappings on both attempts`() {
+          mappingApi.verify(
+            2,
+            postRequestedFor(urlPathEqualTo("/mapping/core-person/address"))
+              .withRequestBodyJsonPath("addressUsageMappings[0].cprId", cprAddressUsageId)
+              .withRequestBodyJsonPath("addressUsageMappings[0].nomisId", nomisAddressId)
+              .withRequestBodyJsonPath("addressUsageMappings[0].addressUsageCode", "HOME")
+              .withRequestBodyJsonPath("addressUsageMappings[0].mappingType", "CPR_CREATED"),
+          )
+        }
+
+        @Test
         fun `will eventually send success telemetry`() {
           verify(telemetryClient).trackEvent(
             eq("core-person-address-create-success"),
@@ -226,6 +305,14 @@ class CorePersonAddressToNomisIntTest(
       }
     }
   }
+
+  private fun addressUsage(cprAddressUsageId: String, code: PrisonAddressUsage.AddressUsageCode) = PrisonAddressUsage(
+    addressUsageCode = code,
+    isActive = true,
+    createDateTime = LocalDateTime.parse("2025-02-03T10:20:30"),
+    createUserId = "ME",
+    cprAddressUsageId = cprAddressUsageId,
+  )
 
   private fun publishAddressCreatedDomainEvent(prisonNumber: String, cprAddressId: String, source: String = "core-person-record") {
     val eventType = "core-person-record.prison.address.created"

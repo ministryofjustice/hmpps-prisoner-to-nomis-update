@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.Priso
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonReligionReadResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ParentEntityNotFoundRetry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CorePersonAddressMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CorePersonAddressUsageMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CorePersonContactMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CorePersonContactMappingDto.NomisContactType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ReligionMappingDto
@@ -140,7 +141,6 @@ class CorePersonSynchronisationService(
       }
       transform {
         val cprAddress = corePersonCprApiService.getPrisonerAddress(prisonNumber, cprAddressId)
-        // TODO: need to handle address usage creation too
         val nomisAddressId = corePersonNomisApiService.createOffenderAddress(prisonNumber, cprAddress.toNomisCreateRequest()).addressId
         telemetryMap["nomisAddressId"] = nomisAddressId.toString()
 
@@ -149,6 +149,15 @@ class CorePersonSynchronisationService(
           nomisId = nomisAddressId,
           nomisPrisonNumber = prisonNumber,
           mappingType = CorePersonAddressMappingDto.MappingType.CPR_CREATED,
+          addressUsageMappings = cprAddress.addressUsage.map {
+            CorePersonAddressUsageMappingDto(
+              it.cprAddressUsageId!!,
+              nomisAddressId,
+              addressUsageCode = it.addressUsageCode.name,
+              nomisPrisonNumber = prisonNumber,
+              mappingType = CorePersonAddressUsageMappingDto.MappingType.CPR_CREATED,
+            )
+          },
         )
       }
       saveMapping { corePersonMappingApiService.createAddressMapping(it) }
@@ -373,6 +382,7 @@ private fun PrisonAddress.toNomisCreateRequest() = CreateOffenderAddressRequest(
   comment = comment,
   startDate = startDate,
   endDate = endDate,
+  addressUsages = this.addressUsage.map { it.addressUsageCode.name }.toSet(),
 )
 
 // NOMIS and CPR have slightly different country codes so need to translate
