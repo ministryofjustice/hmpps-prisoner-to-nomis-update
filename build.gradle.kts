@@ -11,8 +11,8 @@ import kotlin.io.path.pathString
 import kotlin.io.path.Path as KotlinPath
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.13"
-  kotlin("plugin.spring") version "2.4.20"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.14"
+  kotlin("plugin.spring") version "2.4.21"
   id("org.openapi.generator") version "7.26.0"
 }
 
@@ -30,7 +30,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.data:spring-data-commons")
   implementation("org.springframework.security:spring-security-access")
-  implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:3.1.1")
+  implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:3.2.0")
   implementation("org.springframework.boot:spring-boot-jackson2")
 
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:7.5.0-beta-2")
