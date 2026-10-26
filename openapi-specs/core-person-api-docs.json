@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-10-22.6011.4d29dfc"
+    "version" : "2026-10-23.6030.7bb2330"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -1792,6 +1792,11 @@
             "description" : "The nomis contact id",
             "example" : 1234
           },
+          "cprContactId" : {
+            "type" : [ "string", "null" ],
+            "description" : "The cpr contact id",
+            "example" : "4f2b1d8a-9e3c-4a1f-8b2d-112233445566"
+          },
           "value" : {
             "type" : [ "string", "null" ],
             "description" : "The contact value",
@@ -1851,6 +1856,11 @@
             "format" : "int64",
             "description" : "Is nomis address id",
             "example" : 5678
+          },
+          "cprAddressId" : {
+            "type" : [ "string", "null" ],
+            "description" : "The cpr address id",
+            "example" : "4f2b1d8a-9e3c-4a1f-8b2d-112233445566"
           },
           "fullAddress" : {
             "type" : [ "string", "null" ],
