@@ -7,7 +7,7 @@
       "name" : "Move a prisoner Team",
       "email" : "Moveaprisoner-gg@justice.gov.uk"
     },
-    "version" : "2026-10-22.382.a85170f"
+    "version" : "2026-10-23.388.3fefda6"
   },
   "servers" : [ {
     "url" : "/",
@@ -857,6 +857,15 @@
             "format" : "uuid"
           },
           "example" : "0196f1d3-9a1f-7c3a-9b2e-2c1f3a4b5c6d"
+        }, {
+          "name" : "force",
+          "in" : "query",
+          "description" : "Override when the property is already REMOVED, which would normally be an error",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
         } ],
         "requestBody" : {
           "content" : {
