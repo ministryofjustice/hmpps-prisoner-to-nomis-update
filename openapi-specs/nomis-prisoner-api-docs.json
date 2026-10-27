@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-26.2288.9a9db86"
+    "version" : "2026-10-26.2305.02843b3"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -23250,6 +23250,166 @@
         }
       }
     },
+    "/movements/{offenderNo}/person-locations/movement/{bookingId}/{movementSeq}" : {
+      "get" : {
+        "tags" : [ "person-location-movement-resource" ],
+        "summary" : "Get a single movement for an offender",
+        "description" : "Get a single person location movement for an offender by booking ID and movement sequence. Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getPersonLocationMovement",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender number (NOMS ID)",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender number (NOMS ID)",
+            "example" : "A1234BC"
+          },
+          "example" : "A1234BC"
+        }, {
+          "name" : "bookingId",
+          "in" : "path",
+          "description" : "Booking ID",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Booking ID",
+            "example" : 123
+          },
+          "example" : 123
+        }, {
+          "name" : "movementSeq",
+          "in" : "path",
+          "description" : "Movement Sequence",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Movement Sequence",
+            "example" : 1
+          },
+          "example" : 1
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Movement returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PersonLocationMovementDetail"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Offender, booking or movement not found, or the booking does not belong to the offender",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/movements/{offenderNo}/person-locations/booking/{bookingId}" : {
+      "get" : {
+        "tags" : [ "person-location-booking-resource" ],
+        "summary" : "Get a single booking for an offender",
+        "description" : "Get a single booking, without its movements, for an offender by booking ID. Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getPersonLocationBooking",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender number (NOMS ID)",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender number (NOMS ID)",
+            "example" : "A1234BC"
+          },
+          "example" : "A1234BC"
+        }, {
+          "name" : "bookingId",
+          "in" : "path",
+          "description" : "Booking ID",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Booking ID",
+            "example" : 123
+          },
+          "example" : 123
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Booking returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PersonLocationBooking"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Offender or booking not found, or the booking does not belong to the offender",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/movements/{offenderNo}/court" : {
       "get" : {
         "tags" : [ "offender-court-movements-resource" ],
@@ -24790,11 +24950,11 @@
         "parameters" : [ {
           "name" : "prisonNumber",
           "in" : "path",
-          "description" : "prisonNumber",
+          "description" : "Prison number aka noms id / offender id display",
           "required" : true,
           "schema" : {
             "type" : "string",
-            "description" : "prisonNumber",
+            "description" : "Prison number aka noms id / offender id display",
             "example" : "A1234BC"
           },
           "example" : "A1234BC"
@@ -25063,12 +25223,12 @@
         "parameters" : [ {
           "name" : "scheduledPaymentId",
           "in" : "path",
-          "description" : "Id",
+          "description" : "Scheduled Payment Id aka offender payment profile id",
           "required" : true,
           "schema" : {
             "type" : "integer",
             "format" : "int64",
-            "description" : "Id",
+            "description" : "Scheduled Payment Id aka offender payment profile id",
             "example" : 123456789
           },
           "example" : 123456789
@@ -25276,6 +25436,72 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/PrisonerBalanceDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint when role NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Prisoner does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/finance/prisoners/root-offender-id/{rootOffenderId}/scheduled-payments" : {
+      "get" : {
+        "tags" : [ "prisoner-scheduled-payments-resource" ],
+        "summary" : "Get a prisoner's scheduled payments by their root offender id",
+        "description" : "Retrieves a prisoner's scheduled payments by root offender id. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getPrisonerScheduledPaymentsById",
+        "parameters" : [ {
+          "name" : "rootOffenderId",
+          "in" : "path",
+          "description" : "The root offender id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The root offender id",
+            "example" : "A1234BC"
+          },
+          "example" : "A1234BC"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Scheduled Payment Information Returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/PrisonerScheduledPaymentDto"
+                  }
                 }
               }
             }
@@ -40079,6 +40305,12 @@
             "description" : "The transaction reference",
             "example" : "1423558449"
           },
+          "offenderDeductionId" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int64",
+            "description" : "The offender deduction id if this is an deduction transaction",
+            "example" : 12345678
+          },
           "createdAt" : {
             "type" : "string",
             "format" : "date-time"
@@ -45263,6 +45495,114 @@
         },
         "required" : [ "audit", "directionCode", "movementReason", "movementTime", "movementType", "sequence" ]
       },
+      "PersonLocationMovementDetail" : {
+        "type" : "object",
+        "description" : "A single person location movement",
+        "properties" : {
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Booking ID"
+          },
+          "sequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Movement sequence"
+          },
+          "movementType" : {
+            "type" : "string",
+            "description" : "Movement type",
+            "enum" : [ "ADM", "CRT", "TAP", "TRN", "REL" ]
+          },
+          "directionCode" : {
+            "type" : "string",
+            "description" : "The direction of the movement",
+            "enum" : [ "IN", "OUT" ]
+          },
+          "movementTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Movement time"
+          },
+          "movementReason" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "Movement reason code"
+          },
+          "from" : {
+            "description" : "From location",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/MovementLocation"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "to" : {
+            "description" : "To location",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/MovementLocation"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "scheduleId" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int64",
+            "description" : "Schedule ID"
+          },
+          "commentText" : {
+            "type" : [ "string", "null" ],
+            "description" : "Comment text"
+          },
+          "audit" : {
+            "$ref" : "#/components/schemas/NomisAudit",
+            "description" : "Audit data associated with the records"
+          }
+        },
+        "required" : [ "audit", "bookingId", "directionCode", "movementReason", "movementTime", "movementType", "sequence" ]
+      },
+      "PersonLocationBooking" : {
+        "type" : "object",
+        "description" : "A single booking's person location details, without its movements",
+        "properties" : {
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Booking ID"
+          },
+          "bookingNumber" : {
+            "type" : "string",
+            "description" : "Booking Number"
+          },
+          "activeBooking" : {
+            "type" : "boolean",
+            "description" : "Whether this is an active booking"
+          },
+          "latestBooking" : {
+            "type" : "boolean",
+            "description" : "Whether this is the latest booking"
+          },
+          "bookingStatus" : {
+            "type" : "string",
+            "description" : "The open/closed flag",
+            "enum" : [ "CLOSED", "OPEN" ]
+          },
+          "bookingBeginTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The booking begin date"
+          },
+          "bookingEndTime" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "The booking end date"
+          },
+          "audit" : {
+            "$ref" : "#/components/schemas/NomisAudit",
+            "description" : "Audit data associated with the records"
+          }
+        },
+        "required" : [ "activeBooking", "audit", "bookingBeginTime", "bookingId", "bookingNumber", "bookingStatus", "latestBooking" ]
+      },
       "BookingCourtMovementIn" : {
         "type" : "object",
         "properties" : {
@@ -46978,6 +47318,10 @@
             "type" : "integer",
             "format" : "int64"
           },
+          "txnEntrySeq" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
           "txnEntryDate" : {
             "type" : "string",
             "format" : "date-time"
@@ -46990,10 +47334,6 @@
           },
           "txnEntryAmount" : {
             "type" : "number"
-          },
-          "txnEntrySeq" : {
-            "type" : "integer",
-            "format" : "int32"
           }
         },
         "required" : [ "txnEntryAmount", "txnEntryDate", "txnEntrySeq", "txnId" ]
