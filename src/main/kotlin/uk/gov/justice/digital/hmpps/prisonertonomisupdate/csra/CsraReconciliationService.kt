@@ -153,27 +153,14 @@ class CsraReconciliationService(
 
     val differences = mutableListOf<Difference>()
 
-    if (dpsDetail.date != nomisDetail.date) {
-      differences.add(
-        Difference(
-          "date",
-          dpsDetail.date,
-          nomisDetail.date,
-          dpsDetail.id,
-          nomisDetail.id,
-        ),
-      )
-    }
+    // if (dpsDetail.date != nomisDetail.date) {
+    //   differences.add(Difference("date", dpsDetail.date, nomisDetail.date, dpsDetail.id, nomisDetail.id))
+    // }
+    // Ignore dates for now. The DPS current CSRA (for the case where the CSRA originated as the old Nomis 2 stage assessment)
+    // is selected based on the latest of what was originally the nomis assessment date when it should have been the evaluation date.
+
     if (dpsDetail.level != nomisDetail.level) {
-      differences.add(
-        Difference(
-          "level",
-          dpsDetail.level,
-          nomisDetail.level,
-          dpsDetail.id,
-          nomisDetail.id,
-        ),
-      )
+      differences.add(Difference("level", dpsDetail.level, nomisDetail.level, dpsDetail.id, nomisDetail.id))
     }
     return differences
   }

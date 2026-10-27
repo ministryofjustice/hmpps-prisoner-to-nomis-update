@@ -4,6 +4,7 @@ import com.microsoft.applicationinsights.TelemetryClient
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.check
@@ -156,6 +157,7 @@ class CsraReconciliationServiceTest {
     }
 
     @Test
+    @Disabled
     fun `will report a date mismatch`() = runTest {
       stubCsraReconciliation(
         nomisCsra(evaluationDate = LocalDate.parse("2024-06-01")),
@@ -169,6 +171,7 @@ class CsraReconciliationServiceTest {
     }
 
     @Test
+    @Disabled
     fun `will not report a missing evaluation date, defaulting to assessment date`() = runTest {
       stubCsraReconciliation(
         nomisCsra(evaluationDate = null, assessmentDate = LocalDate.parse("2024-01-01")),
