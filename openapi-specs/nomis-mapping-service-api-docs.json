@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-23.910.a04af57"
+    "version" : "2026-10-26.927.b73f8f7"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -3393,6 +3393,134 @@
           },
           "403" : {
             "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/person-location/movement" : {
+      "post" : {
+        "tags" : [ "person-location-movement-resource" ],
+        "summary" : "Creates a mapping for a single person location movement",
+        "description" : "Creates a mapping for a single person location movement. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "createMovementMapping",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PersonLocationMovementIdMappingDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Person location movement mapping created",
+            "content" : { }
+          },
+          "400" : {
+            "description" : "The request body is invalid",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "The mapping already exists.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/person-location/booking" : {
+      "post" : {
+        "tags" : [ "person-location-booking-resource" ],
+        "summary" : "Creates a mapping for a single person location booking",
+        "description" : "Creates a mapping for a single person location booking. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "createBookingMapping",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PersonLocationBookingIdMappingDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Person location booking mapping created",
+            "content" : { }
+          },
+          "400" : {
+            "description" : "The request body is invalid",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "The mapping already exists.",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -11771,6 +11899,132 @@
           },
           "403" : {
             "description" : "Forbidden to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/person-location/movement/nomis-booking-id/{nomisBookingId}/nomis-movement-seq/{nomisMovementSeq}" : {
+      "get" : {
+        "tags" : [ "person-location-movement-resource" ],
+        "summary" : "Gets a mapping for a single person location movement by NOMIS booking ID and movement sequence",
+        "description" : "Gets a mapping for a single person location movement by NOMIS booking ID and movement sequence. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "getMovementMappingByNomisId",
+        "parameters" : [ {
+          "name" : "nomisBookingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "name" : "nomisMovementSeq",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Person location movement mapping returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PersonLocationMovementIdMappingDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "The mapping does not exist.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/person-location/booking/nomis-booking-id/{nomisBookingId}" : {
+      "get" : {
+        "tags" : [ "person-location-booking-resource" ],
+        "summary" : "Gets a mapping for a single person location booking by NOMIS booking ID",
+        "description" : "Gets a mapping for a single person location booking by NOMIS booking ID. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "getBookingMappingByNomisId",
+        "parameters" : [ {
+          "name" : "nomisBookingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Person location booking mapping returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PersonLocationBookingIdMappingDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "The mapping does not exist.",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -25682,6 +25936,60 @@
         },
         "required" : [ "dpsId", "mappingType", "nomisId" ]
       },
+      "PersonLocationMovementIdMappingDto" : {
+        "type" : "object",
+        "description" : "Mapping for a single person location external movement",
+        "properties" : {
+          "nomisBookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS ID of the booking",
+            "example" : 12345
+          },
+          "nomisMovementSeq" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The NOMIS movement sequence number",
+            "example" : 3
+          },
+          "dpsExternalMovementId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS external movement ID"
+          },
+          "mappingType" : {
+            "type" : "string",
+            "description" : "The source of the mapping",
+            "enum" : [ "MIGRATED", "NOMIS_CREATED", "DPS_CREATED" ],
+            "example" : "NOMIS_CREATED"
+          }
+        },
+        "required" : [ "dpsExternalMovementId", "mappingType", "nomisBookingId", "nomisMovementSeq" ]
+      },
+      "PersonLocationBookingIdMappingDto" : {
+        "type" : "object",
+        "description" : "Mapping for a single person location booking (DPS custodial series)",
+        "properties" : {
+          "nomisBookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS ID of the booking",
+            "example" : 12345
+          },
+          "dpsCustodialSeriesId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS custodial series ID"
+          },
+          "mappingType" : {
+            "type" : "string",
+            "description" : "The source of the mapping",
+            "enum" : [ "MIGRATED", "NOMIS_CREATED", "DPS_CREATED" ],
+            "example" : "NOMIS_CREATED"
+          }
+        },
+        "required" : [ "dpsCustodialSeriesId", "mappingType", "nomisBookingId" ]
+      },
       "OfficialVisitorMappingDto" : {
         "type" : "object",
         "properties" : {
@@ -28574,7 +28882,8 @@
             "type" : "integer",
             "format" : "int64"
           }
-        }
+        },
+        "required" : [ "number", "size", "totalElements", "totalPages" ]
       },
       "PagedModelStaffMappingDto" : {
         "type" : "object",
@@ -28588,7 +28897,8 @@
           "page" : {
             "$ref" : "#/components/schemas/PageMetadata"
           }
-        }
+        },
+        "required" : [ "content", "page" ]
       },
       "PagedModelPrisonerBalanceMappingDto" : {
         "type" : "object",
@@ -28602,7 +28912,8 @@
           "page" : {
             "$ref" : "#/components/schemas/PageMetadata"
           }
-        }
+        },
+        "required" : [ "content", "page" ]
       },
       "PagedModelPrisonBalanceMappingDto" : {
         "type" : "object",
@@ -28616,7 +28927,8 @@
           "page" : {
             "$ref" : "#/components/schemas/PageMetadata"
           }
-        }
+        },
+        "required" : [ "content", "page" ]
       },
       "PageOfficialVisitMappingDto" : {
         "type" : "object",
@@ -29390,7 +29702,8 @@
           "page" : {
             "$ref" : "#/components/schemas/PageMetadata"
           }
-        }
+        },
+        "required" : [ "content", "page" ]
       }
     },
     "securitySchemes" : {
