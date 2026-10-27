@@ -158,7 +158,7 @@ generic-service:
       schedule: "5 7 * * *"
     - name: appointment-recon-month
       type: APPOINTMENT_RECON
-      schedule: "5 0 * * SUN-FRI"
+      schedule: "5 0 * * MON-FRI"
     - name: appointment-recon-extra
       type: APPOINTMENT_RECON_EXT
       schedule: "0 8 * * SAT"
