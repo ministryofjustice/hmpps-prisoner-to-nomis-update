@@ -23,17 +23,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonN
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonRetryQueueService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonSynchronisationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.EventSource
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalEthnicity
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalIdentifiers
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalReligion
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalSex
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalSexualOrientation
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalTitle
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.DpsPrisonRecord
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonReligion
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonReligion.ReligionCode
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonReligion.ReligionCode.AGNO
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonReligion.ReligionCode.BAHA
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ReligionMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PersonReference
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PersonReferenceList
@@ -110,12 +101,12 @@ internal class CorePersonSynchronisationReligionTest(@Autowired jsonMapper: Json
       val prisonNumber = "A1234BC"
       val cprReligions = listOf(
         prisonReligion(
-          religionCode = AGNO,
+          religionCode = ReligionCode.AGNO,
           endDate = LocalDate.of(2024, 4, 12),
           startDate = LocalDateTime.of(2021, 1, 25, 0, 0).toLocalDate(),
         ),
         prisonReligion(
-          religionCode = BAHA,
+          religionCode = ReligionCode.BAHA,
           startDate = LocalDateTime.of(2024, 4, 12, 0, 0).toLocalDate(),
         ),
       )
@@ -131,9 +122,7 @@ internal class CorePersonSynchronisationReligionTest(@Autowired jsonMapper: Json
           nomisPrisonNumber = prisonNumber,
         ),
       )
-      whenever(corePersonCprApiService.getCorePerson(prisonNumber)).thenReturn(
-        personRecord(prisonNumber, cprReligions),
-      )
+      whenever(corePersonCprApiService.getCorePersonReligionHistory(prisonNumber)).thenReturn(cprReligions)
       whenever(mapping.updatePrisonNumberOnReligionMappingsByCprIds(prisonNumber, cprReligions.map { it.cprReligionId!! })).thenReturn(
         mappings,
       )
@@ -167,8 +156,8 @@ internal class CorePersonSynchronisationReligionTest(@Autowired jsonMapper: Json
     @Test
     fun `should not call the nomis api or mapping service when there are no religions`() = runTest {
       val prisonNumber = "A1234BC"
-      whenever(corePersonCprApiService.getCorePerson(prisonNumber)).thenReturn(
-        personRecord(prisonNumber),
+      whenever(corePersonCprApiService.getCorePersonReligionHistory(prisonNumber)).thenReturn(
+        emptyList(),
       )
 
       whenever(mapping.updatePrisonNumberOnReligionMappingsByCprIds(any(), any())).thenReturn(
@@ -193,14 +182,11 @@ internal class CorePersonSynchronisationReligionTest(@Autowired jsonMapper: Json
     @Test
     fun `should throw if there is a missing mapping`() = runTest {
       val prisonNumber = "A1234BC"
-      whenever(corePersonCprApiService.getCorePerson(prisonNumber)).thenReturn(
-        personRecord(
-          prisonNumber,
-          listOf(
-            prisonReligion(
-              religionCode = BAHA,
-              startDate = LocalDateTime.of(2024, 4, 12, 0, 0).toLocalDate(),
-            ),
+      whenever(corePersonCprApiService.getCorePersonReligionHistory(prisonNumber)).thenReturn(
+        listOf(
+          prisonReligion(
+            religionCode = ReligionCode.BAHA,
+            startDate = LocalDateTime.of(2024, 4, 12, 0, 0).toLocalDate(),
           ),
         ),
       )
@@ -237,30 +223,5 @@ internal class CorePersonSynchronisationReligionTest(@Autowired jsonMapper: Json
     createDateTime = LocalDateTime.of(2021, 1, 25, 0, 0),
     createUserId = "createUserId",
     cprReligionId = cprReligionId,
-  )
-
-  private fun personRecord(prisonNumber: String, religions: List<PrisonReligion> = emptyList()) = DpsPrisonRecord(
-    title = CanonicalTitle(),
-    sex = CanonicalSex(),
-    sexualOrientation = CanonicalSexualOrientation(),
-    religion = CanonicalReligion(),
-    ethnicity = CanonicalEthnicity(),
-    aliases = emptyList(),
-    nationalities = emptyList(),
-    addresses = emptyList(),
-    identifiers = CanonicalIdentifiers(
-      crns = emptyList(),
-      prisonNumbers = listOf(prisonNumber),
-      defendantIds = emptyList(),
-      cids = emptyList(),
-      pncs = emptyList(),
-      cros = emptyList(),
-      nationalInsuranceNumbers = emptyList(),
-      driverLicenseNumbers = emptyList(),
-      arrestSummonsNumbers = emptyList(),
-      otherIdentifiers = emptyList(),
-    ),
-    religionHistory = religions,
-    contacts = emptyList(),
   )
 }

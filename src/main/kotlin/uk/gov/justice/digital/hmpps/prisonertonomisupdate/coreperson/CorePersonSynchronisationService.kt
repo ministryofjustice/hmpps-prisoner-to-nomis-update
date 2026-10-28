@@ -95,8 +95,7 @@ class CorePersonSynchronisationService(
     val telemetryMap = mutableMapOf(
       "prisonNumber" to toPrisonNumber,
     )
-    val toPerson = corePersonCprApiService.getCorePerson(toPrisonNumber)
-    val cprReligions = toPerson?.religionHistory.orEmpty()
+    val cprReligions = corePersonCprApiService.getCorePersonReligionHistory(toPrisonNumber)
     if (cprReligions.isEmpty()) {
       telemetryClient.trackEvent("${CORE_PERSON_RELIGION.entityName}-merge-ignored", telemetryMap)
       return

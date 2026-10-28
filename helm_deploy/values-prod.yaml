@@ -190,10 +190,10 @@ generic-service:
       schedule: "30 3 * * *"
     - name: core-person-recon
       type: CORE_PERSON_FULL_RECON
-      schedule: "30 6 * * MON"
+      schedule: "30 5 * * MON"
     - name: core-person-ac-recon
       type: COREPERSON_ACTIVE_RECON
-      schedule: "30 6 * * TUE,WED,THU,FRI"
+      schedule: "30 5 * * TUE,WED,THU,FRI"
     - name: court-case-recon
       type: COURT_CASE_PRISONER_RECON
       schedule: "0 19 * * SAT"

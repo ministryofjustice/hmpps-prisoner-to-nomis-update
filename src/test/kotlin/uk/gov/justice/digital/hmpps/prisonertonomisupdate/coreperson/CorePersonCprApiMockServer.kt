@@ -83,6 +83,16 @@ class CorePersonCprApiMockServer : WireMockServer(WIREMOCK_PORT) {
       ),
     )
   }
+  fun stubGetCorePersonReligionHistory(prisonNumber: String = "AA1234A", response: List<PrisonReligion> = listOf(corePersonReligionHistory()), status: HttpStatus = HttpStatus.OK, error: ErrorResponse = ErrorResponse(status = status.value())) {
+    stubFor(
+      get("/person/prison/$prisonNumber/religion-history").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(status.value())
+          .withBody(if (status == HttpStatus.OK) response else error),
+      ),
+    )
+  }
 
   fun stubGetReligion(
     prisonNumber: String,
@@ -241,19 +251,19 @@ fun corePersonDto(nationality: String? = null, religion: String? = null, address
   sex = CanonicalSex(),
   title = CanonicalTitle(),
   religionHistory = if (religion != null) {
-    listOf(
-      PrisonReligion(
-        religionCode = PrisonReligion.ReligionCode.valueOf(religion),
-        religionDescription = "$religion Description",
-        changeReasonKnown = false,
-        startDate = LocalDate.parse("2024-01-01"),
-        createDateTime = LocalDateTime.parse("2025-02-03T10:20:30"),
-        createUserId = "ME",
-        current = true,
-      ),
-    )
+    listOf(corePersonReligionHistory(religion))
   } else {
     emptyList()
   },
   contacts = emptyList(),
+)
+
+fun corePersonReligionHistory(religion: String = "JEHV") = PrisonReligion(
+  religionCode = PrisonReligion.ReligionCode.valueOf(religion),
+  religionDescription = "$religion Description",
+  changeReasonKnown = false,
+  startDate = LocalDate.parse("2024-01-01"),
+  createDateTime = LocalDateTime.parse("2025-02-03T10:20:30"),
+  createUserId = "ME",
+  current = true,
 )
