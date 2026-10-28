@@ -196,6 +196,7 @@ fun dpsProperty(): PropertyContainerDto = PropertyContainerDto(
   containerType = PropertyContainerDto.ContainerType.STANDARD,
   currentStatus = PropertyContainerDto.CurrentStatus.STORED,
   createDateTime = LocalDateTime.now(),
+  lastUpdatedDateTime = LocalDateTime.now(),
   createdByUserId = "ME",
   currentSealNumber = "seal-mark",
   currentLocation = UUID.fromString(DPS_LOCATION_ID),

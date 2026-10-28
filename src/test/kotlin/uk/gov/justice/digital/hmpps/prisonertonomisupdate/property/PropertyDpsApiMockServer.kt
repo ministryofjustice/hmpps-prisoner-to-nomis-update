@@ -97,6 +97,7 @@ fun dpsProperty(id: UUID = UUID.randomUUID(), locationId: UUID = UUID.randomUUID
   containerType = PropertyContainerDto.ContainerType.VALUABLES,
   currentStatus = PropertyContainerDto.CurrentStatus.COMBINED,
   createDateTime = LocalDateTime.now(),
+  lastUpdatedDateTime = LocalDateTime.now(),
   createdByUserId = "ME",
   currentSealNumber = "SEAL1234",
   currentLocation = if (removalOutcome == null) locationId else null,

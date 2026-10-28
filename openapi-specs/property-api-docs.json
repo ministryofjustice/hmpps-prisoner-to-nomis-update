@@ -7,7 +7,7 @@
       "name" : "Move a prisoner Team",
       "email" : "Moveaprisoner-gg@justice.gov.uk"
     },
-    "version" : "2026-10-23.388.3fefda6"
+    "version" : "2026-10-27.410.2504691"
   },
   "servers" : [ {
     "url" : "/",
@@ -2718,13 +2718,18 @@
             "format" : "date-time",
             "description" : "When the container was created"
           },
+          "lastUpdatedDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "When a person last changed the container, in this service or in NOMIS. Starts at createDateTime. Changes the service makes by itself, such as flagging property due for return when the prisoner is released, do not move it"
+          },
           "createdByUserId" : {
             "type" : "string",
             "description" : "Id of the user who created the container",
             "example" : "AUSER_GEN"
           }
         },
-        "required" : [ "containerType", "createDateTime", "createdByUserId", "currentStatus", "id", "prisonId", "prisonerNumber" ]
+        "required" : [ "containerType", "createDateTime", "createdByUserId", "currentStatus", "id", "lastUpdatedDateTime", "prisonId", "prisonerNumber" ]
       },
       "SetActiveAgencyRequest" : {
         "type" : "object",
@@ -3546,13 +3551,18 @@
             "format" : "date-time",
             "description" : "When the container was created"
           },
+          "lastUpdatedDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "When a person last changed the container, in this service or in NOMIS. Starts at createDateTime. Changes the service makes by itself, such as flagging property due for return when the prisoner is released, do not move it"
+          },
           "createdByUserId" : {
             "type" : "string",
             "description" : "Id of the user who created the container",
             "example" : "AUSER_GEN"
           }
         },
-        "required" : [ "containerType", "createDateTime", "createdByUserId", "currentStatus", "id", "inPrisonersCurrentPrison", "prisonId", "prisonerNumber" ]
+        "required" : [ "containerType", "createDateTime", "createdByUserId", "currentStatus", "id", "inPrisonersCurrentPrison", "lastUpdatedDateTime", "prisonId", "prisonerNumber" ]
       },
       "PrisonerPropertySummaryDto" : {
         "type" : "object",
