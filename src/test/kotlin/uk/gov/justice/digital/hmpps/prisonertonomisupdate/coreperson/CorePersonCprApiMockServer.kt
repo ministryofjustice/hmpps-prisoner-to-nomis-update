@@ -205,6 +205,7 @@ fun canonicalAddressUsage(code: CanonicalAddressUsage.Code = CanonicalAddressUsa
 )
 
 fun canonicalContact(value: String = "0114 555 5555", type: String = "HOME", extension: String? = null) = CanonicalContact(
+  cprContactId = "ef4c7479-218c-4f11-a02d-edd749820679",
   type = CanonicalContactType(code = type, description = "$type Description"),
   value = value,
   extension = extension,
