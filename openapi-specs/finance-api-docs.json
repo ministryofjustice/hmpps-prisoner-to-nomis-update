@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-26.1233.d0e7db5"
+    "version" : "2026-10-27.1244.d3d2a33"
   },
   "servers" : [ {
     "url" : "https://prisoner-finance-sync-api-dev.hmpps.service.justice.gov.uk/",
@@ -87,8 +87,18 @@
               }
             }
           },
-          "501" : {
-            "description" : "This endpoint is not yet implemented.",
+          "500" : {
+            "description" : "Internal server error.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502" : {
+            "description" : "A dependency error occurred.",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -171,6 +181,16 @@
           },
           "404" : {
             "description" : "Subscription not found",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal server error.",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -1058,6 +1078,16 @@
           "required" : true
         },
         "responses" : {
+          "201" : {
+            "description" : "Advance record migrated.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncCreateAdvanceRecordResponse"
+                }
+              }
+            }
+          },
           "400" : {
             "description" : "Bad request - invalid input data.",
             "content" : {
@@ -1088,8 +1118,18 @@
               }
             }
           },
-          "501" : {
-            "description" : "This endpoint is not yet implemented.",
+          "500" : {
+            "description" : "Internal Server Error - An unexpected error occurred.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502" : {
+            "description" : "A dependency error occurred.",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -2434,10 +2474,10 @@
             "description" : "The date time when the advance was created with the time set to midnight",
             "example" : "2024-06-18T00:00:00.000000"
           },
-          "migrationTimestamp" : {
+          "balanceCalculationTime" : {
             "type" : "string",
             "format" : "date-time",
-            "description" : "The date time the advance was migrated",
+            "description" : "The date time that the advance balance was calculated. I.e. the time of the last transaction relating to this advance.",
             "example" : "2024-06-18T12:05:38.000000"
           },
           "repaymentStartDate" : {
@@ -2479,7 +2519,7 @@
             "example" : 123456
           }
         },
-        "required" : [ "amountIssued", "amountOutstanding", "createdBy", "createdOn", "legacyInformationNumber", "legacyPaymentProfileId", "legacyTransactionId", "migrationTimestamp", "prisonID", "prisonNumber", "repaymentAmount", "repaymentStartDate", "status" ]
+        "required" : [ "amountIssued", "amountOutstanding", "balanceCalculationTime", "createdBy", "createdOn", "legacyInformationNumber", "legacyPaymentProfileId", "legacyTransactionId", "prisonID", "prisonNumber", "repaymentAmount", "repaymentStartDate", "status" ]
       },
       "SubAccountBalanceForReconciliation" : {
         "type" : "object",
@@ -2612,6 +2652,9 @@
             "type" : "string",
             "format" : "uuid"
           },
+          "transactionType" : {
+            "type" : [ "string", "null" ]
+          },
           "caseloadId" : {
             "type" : [ "string", "null" ]
           },
@@ -2622,9 +2665,6 @@
           "legacyTransactionId" : {
             "type" : [ "integer", "null" ],
             "format" : "int64"
-          },
-          "transactionType" : {
-            "type" : [ "string", "null" ]
           },
           "synchronizedTransactionId" : {
             "type" : "string",
