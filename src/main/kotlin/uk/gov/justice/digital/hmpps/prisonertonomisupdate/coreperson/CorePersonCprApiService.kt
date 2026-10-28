@@ -9,8 +9,10 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.api.SysconS
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.DpsPrisonRecord
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonContact
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonReligion
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonReligionReadResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyWithRetry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 
 @Service
@@ -29,6 +31,11 @@ class CorePersonCprApiService(
     .prepare(personApi.getByPrisonNumberDpsRequestConfig(prisonNumber))
     .retrieve()
     .awaitBodyOrNullForNotFound(backoffSpec)
+
+  suspend fun getCorePersonReligionHistory(prisonNumber: String): List<PrisonReligion> = personApi
+    .prepare(personApi.getReligionHistoryByPrisonNumberRequestConfig(prisonNumber))
+    .retrieve()
+    .awaitBodyWithRetry(backoffSpec)
 
   suspend fun getReligion(prisonNumber: String, cprReligionId: String): PrisonReligionReadResponse = syncApi
     .getPrisonReligion(prisonNumber, cprReligionId)

@@ -28,12 +28,26 @@ class CorePersonCprApiServiceTest {
   inner class GetCorePerson {
     @Test
     fun `will call the GET core person endpoint`() = runTest {
-      corePersonCprApi.stubGetCorePerson()
+      corePersonCprApi.stubGetCorePerson("A1234BC")
 
       apiService.getCorePerson("A1234BC")
 
       corePersonCprApi.verify(
         getRequestedFor(urlPathEqualTo("/person/prison/dps/A1234BC")),
+      )
+    }
+  }
+
+  @Nested
+  inner class GetCorePersonReligionHistory {
+    @Test
+    fun `will call the GET core person religion history endpoint`() = runTest {
+      corePersonCprApi.stubGetCorePersonReligionHistory("A1234BC")
+
+      apiService.getCorePersonReligionHistory("A1234BC")
+
+      corePersonCprApi.verify(
+        getRequestedFor(urlPathEqualTo("/person/prison/A1234BC/religion-history")),
       )
     }
   }
