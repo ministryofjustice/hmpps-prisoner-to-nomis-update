@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-10-23.6030.7bb2330"
+    "version" : "2026-10-27.6062.bf5aacd"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -614,7 +614,7 @@
             "content" : {
               "*/*" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/PrisonContactResponse"
+                  "$ref" : "#/components/schemas/CanonicalContact"
                 }
               }
             }
@@ -671,7 +671,7 @@
             "content" : {
               "*/*" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/PrisonContactResponse"
+                  "$ref" : "#/components/schemas/CanonicalContact"
                 }
               }
             }
@@ -1138,7 +1138,7 @@
                 "schema" : {
                   "type" : "array",
                   "items" : {
-                    "$ref" : "#/components/schemas/PrisonContactResponse"
+                    "$ref" : "#/components/schemas/CanonicalContact"
                   }
                 }
               }
@@ -1178,7 +1178,7 @@
             "content" : {
               "*/*" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/PrisonContactResponse"
+                  "$ref" : "#/components/schemas/CanonicalContact"
                 }
               }
             }
@@ -1305,7 +1305,7 @@
                 "schema" : {
                   "type" : "array",
                   "items" : {
-                    "$ref" : "#/components/schemas/PrisonContactResponse"
+                    "$ref" : "#/components/schemas/CanonicalContact"
                   }
                 }
               }
@@ -1379,6 +1379,64 @@
           }
         },
         "deprecated" : true,
+        "security" : [ {
+          "api-role" : [ ]
+        } ]
+      }
+    },
+    "/person/reference-data/religion-codes" : {
+      "get" : {
+        "tags" : [ "Canonical" ],
+        "description" : "Retrieve list of religion codes. Role required is **ROLE_CORE_PERSON_RECORD_API__RO**. ",
+        "operationId" : "getReligionCodes",
+        "parameters" : [ {
+          "name" : "active",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ReferenceDataWithActiveResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "api-role" : [ ]
+        } ]
+      }
+    },
+    "/person/reference-data/country-codes" : {
+      "get" : {
+        "tags" : [ "Canonical" ],
+        "description" : "Retrieve list of country codes. Role required is **ROLE_CORE_PERSON_RECORD_API__RO**. ",
+        "operationId" : "getCountryCodes",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ReferenceDataResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
         "security" : [ {
           "api-role" : [ ]
         } ]
@@ -1571,39 +1629,6 @@
                 "schema" : {
                   "type" : "string",
                   "format" : "binary"
-                }
-              }
-            }
-          }
-        },
-        "security" : [ {
-          "api-role" : [ ]
-        } ]
-      }
-    },
-    "/person/prison/religion-codes" : {
-      "get" : {
-        "tags" : [ "Prison" ],
-        "description" : "Retrieve list of prison religion codes. Role required is **ROLE_CORE_PERSON_RECORD_API__RO**. ",
-        "operationId" : "getReligionCodes",
-        "parameters" : [ {
-          "name" : "active",
-          "in" : "query",
-          "required" : false,
-          "schema" : {
-            "type" : "boolean"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/ReferenceDataResponse"
-                  }
                 }
               }
             }
@@ -2402,36 +2427,20 @@
         },
         "required" : [ "type", "userId", "value" ]
       },
-      "CanonicalContactType" : {
+      "CanonicalContact" : {
         "type" : "object",
         "properties" : {
-          "code" : {
-            "type" : [ "string", "null" ],
-            "description" : "Address contact type code",
-            "example" : "HOME"
-          },
-          "description" : {
-            "type" : [ "string", "null" ],
-            "description" : "Address contact type description",
-            "example" : "Home"
-          }
-        }
-      },
-      "PrisonContactResponse" : {
-        "type" : "object",
-        "description" : "A prisoner contact",
-        "properties" : {
-          "contactId" : {
+          "cprContactId" : {
             "type" : "string",
-            "description" : "The CPR contact id",
-            "example" : "f4165b62-d9eb-406c-bfb1-4f54f4bd2c6d"
+            "description" : "CPR contact Id",
+            "example" : "aa7299c5-0201-4cab-be25-e4eb9d1ac655"
           },
           "type" : {
             "$ref" : "#/components/schemas/CanonicalContactType",
             "description" : "Contact type"
           },
           "value" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Contact value",
             "example" : "+44 20 7946 0000"
           },
@@ -2461,7 +2470,22 @@
             "description" : "Username of staff member that last modified contact"
           }
         },
-        "required" : [ "contactId", "type", "value" ]
+        "required" : [ "cprContactId", "type" ]
+      },
+      "CanonicalContactType" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : [ "string", "null" ],
+            "description" : "Address contact type code",
+            "example" : "HOME"
+          },
+          "description" : {
+            "type" : [ "string", "null" ],
+            "description" : "Address contact type description",
+            "example" : "Home"
+          }
+        }
       },
       "PrisonReligionHistory" : {
         "type" : "object",
@@ -2598,15 +2622,11 @@
             "example" : "A1234BC"
           },
           "toPrisonAddressesAndContactsRequest" : {
-            "description" : "The merged addresses and contacts to overwrite on the person being merged to",
-            "oneOf" : [ {
-              "$ref" : "#/components/schemas/PrisonAddressesAndContactsRequest"
-            }, {
-              "type" : "null"
-            } ]
+            "$ref" : "#/components/schemas/PrisonAddressesAndContactsRequest",
+            "description" : "The merged addresses and contacts to overwrite on the person being merged to"
           }
         },
-        "required" : [ "fromPrisonNumber" ]
+        "required" : [ "fromPrisonNumber", "toPrisonAddressesAndContactsRequest" ]
       },
       "SysconAddressMapping" : {
         "type" : "object",
@@ -3351,46 +3371,6 @@
         },
         "required" : [ "isActive" ]
       },
-      "CanonicalContact" : {
-        "type" : "object",
-        "properties" : {
-          "type" : {
-            "$ref" : "#/components/schemas/CanonicalContactType",
-            "description" : "Contact type"
-          },
-          "value" : {
-            "type" : [ "string", "null" ],
-            "description" : "Contact value",
-            "example" : "+44 20 7946 0000"
-          },
-          "extension" : {
-            "type" : [ "string", "null" ],
-            "description" : "Contact extension",
-            "example" : "1234"
-          },
-          "createDateTime" : {
-            "type" : [ "string", "null" ],
-            "format" : "date-time",
-            "description" : "Date contact was created",
-            "example" : "2023-01-01T12:00:00"
-          },
-          "createUserId" : {
-            "type" : [ "string", "null" ],
-            "description" : "Username of staff member that added contact"
-          },
-          "modifyDateTime" : {
-            "type" : [ "string", "null" ],
-            "format" : "date-time",
-            "description" : "Date contact was last modified",
-            "example" : "2023-01-01T12:00:00"
-          },
-          "modifyUserId" : {
-            "type" : [ "string", "null" ],
-            "description" : "Username of staff member that last modified contact"
-          }
-        },
-        "required" : [ "type" ]
-      },
       "PrisonReligion" : {
         "type" : "object",
         "properties" : {
@@ -3803,7 +3783,7 @@
           }
         }
       },
-      "ReferenceDataResponse" : {
+      "ReferenceDataWithActiveResponse" : {
         "type" : "object",
         "properties" : {
           "code" : {
@@ -3817,6 +3797,18 @@
           }
         },
         "required" : [ "active", "code", "description" ]
+      },
+      "ReferenceDataResponse" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "code", "description" ]
       },
       "DpsPrisonRecord" : {
         "type" : "object",
