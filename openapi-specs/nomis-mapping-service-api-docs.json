@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-26.927.b73f8f7"
+    "version" : "2026-10-27.936.45d41af"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -3130,6 +3130,138 @@
           },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/scheduled-payments" : {
+      "get" : {
+        "tags" : [ "scheduled-payment-mapping-resource" ],
+        "summary" : "Get all paged scheduled payment mappings",
+        "description" : "Retrieve all mappings. Results are paged.",
+        "operationId" : "getScheduledPaymentMappings",
+        "parameters" : [ {
+          "name" : "pageRequest",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/components/schemas/Pageable"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Mapping page returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PagedModelScheduledPaymentMappingDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [ "scheduled-payment-mapping-resource" ],
+        "summary" : "Creates a scheduled payment mapping",
+        "description" : "Creates a scheduled payment mapping. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "createScheduledPaymentMapping",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ScheduledPaymentMappingDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Mappings created",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Indicates a duplicate mapping has been rejected. If Error code = 409 the body will return a DuplicateErrorResponse",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "scheduled-payment-mapping-resource" ],
+        "summary" : "Deletes all scheduled payment mappings",
+        "description" : "Deletes all scheduled payment mappings regardless of source.\n      This is expected to only ever been used in a non-production environment. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "deleteAllScheduledPaymentMappings",
+        "responses" : {
+          "204" : {
+            "description" : "All mappings deleted",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -11054,6 +11186,234 @@
         }
       }
     },
+    "/mapping/scheduled-payments/nomis-id/{nomisScheduledPaymentId}" : {
+      "get" : {
+        "tags" : [ "scheduled-payment-mapping-resource" ],
+        "summary" : "Get scheduled payment mapping by NOMIS scheduled payment ID",
+        "description" : "Retrieves the scheduled payment mapping by NOMIS scheduled payment ID. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "getScheduledPaymentMappingByNomisId",
+        "parameters" : [ {
+          "name" : "nomisScheduledPaymentId",
+          "in" : "path",
+          "description" : "NOMIS scheduled payment ID",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS scheduled payment ID",
+            "example" : 123456
+          },
+          "example" : 123456
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Scheduled payment mapping data",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ScheduledPaymentMappingDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access this endpoint is forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Id does not exist in mapping table",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/scheduled-payments/migration-id/{migrationId}" : {
+      "get" : {
+        "tags" : [ "scheduled-payment-mapping-resource" ],
+        "summary" : "Get paged scheduled payment mappings by migration id",
+        "description" : "Retrieve all scheduled payment mappings of type 'MIGRATED' for the given migration id (identifies a single migration run). Results are paged. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "getScheduledPaymentMappingByMigrationId",
+        "parameters" : [ {
+          "name" : "pageRequest",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/components/schemas/Pageable"
+          }
+        }, {
+          "name" : "migrationId",
+          "in" : "path",
+          "description" : "Migration Id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Migration Id",
+            "example" : "2020-03-24T12:00:00"
+          },
+          "example" : "2020-03-24T12:00:00"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Scheduled payment mapping page returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PagedModelScheduledPaymentMappingDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/scheduled-payments/dps-id/{dpsId}" : {
+      "get" : {
+        "tags" : [ "scheduled-payment-mapping-resource" ],
+        "summary" : "Get scheduled payment mapping by DPS id",
+        "description" : "Retrieves the scheduled payment mapping by DPS id. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "getScheduledPaymentMappingByDpsId",
+        "parameters" : [ {
+          "name" : "dpsId",
+          "in" : "path",
+          "description" : "DPS id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "DPS id",
+            "example" : "A1234BC"
+          },
+          "example" : "A1234BC"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Scheduled payment mapping data",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ScheduledPaymentMappingDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access this endpoint is forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Id does not exist in mapping table",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "scheduled-payment-mapping-resource" ],
+        "summary" : "Deletes a scheduled payment mapping",
+        "description" : "Deletes a scheduled payment mapping by DPS id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "deleteScheduledPaymentMappingByDpsId",
+        "parameters" : [ {
+          "name" : "dpsId",
+          "in" : "path",
+          "description" : "DPS id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "DPS id",
+            "example" : "A1234BC"
+          },
+          "example" : "A1234BC"
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Mapping Deleted",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mapping/punishments/{dpsPunishmentId}" : {
       "get" : {
         "tags" : [ "punishments-mapping-resource" ],
@@ -11975,6 +12335,55 @@
             }
           }
         }
+      },
+      "delete" : {
+        "tags" : [ "person-location-movement-resource" ],
+        "summary" : "Deletes a mapping for a single person location movement by NOMIS booking ID and movement sequence",
+        "description" : "Deletes a mapping for a single person location movement by NOMIS booking ID and movement sequence. Succeeds if the mapping does not exist. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "deleteMovementMappingByNomisId",
+        "parameters" : [ {
+          "name" : "nomisBookingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "name" : "nomisMovementSeq",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Person location movement mapping deleted",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/mapping/person-location/booking/nomis-booking-id/{nomisBookingId}" : {
@@ -12025,6 +12434,47 @@
           },
           "404" : {
             "description" : "The mapping does not exist.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "person-location-booking-resource" ],
+        "summary" : "Deletes a mapping for a single person location booking by NOMIS booking ID",
+        "description" : "Deletes a mapping for a single person location booking by NOMIS booking ID. Succeeds if the mapping does not exist. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "deleteBookingMappingByNomisId",
+        "parameters" : [ {
+          "name" : "nomisBookingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Person location booking mapping deleted",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -25816,6 +26266,40 @@
         },
         "required" : [ "adjustmentId", "mappingType", "nomisAdjustmentCategory", "nomisAdjustmentId" ]
       },
+      "ScheduledPaymentMappingDto" : {
+        "type" : "object",
+        "description" : "Scheduled payment mapping",
+        "properties" : {
+          "nomisScheduledPaymentId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS scheduled payment ID",
+            "example" : 123456
+          },
+          "dpsId" : {
+            "type" : "string",
+            "description" : "DPS representation of the scheduled payment"
+          },
+          "label" : {
+            "type" : [ "string", "null" ],
+            "description" : "Label (a timestamp for migrated ids)",
+            "maxLength" : 20,
+            "minLength" : 0
+          },
+          "mappingType" : {
+            "type" : "string",
+            "description" : "Mapping type",
+            "enum" : [ "MIGRATED", "NOMIS_CREATED", "DPS_CREATED" ]
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "description" : "Date-time the mapping was created",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          }
+        },
+        "required" : [ "dpsId", "mappingType", "nomisScheduledPaymentId" ]
+      },
       "AdjudicationPunishmentBatchMappingDto" : {
         "type" : "object",
         "description" : "Batch of Adjudication punishment (aka award) mappings",
@@ -28215,7 +28699,7 @@
           },
           "dpsId" : {
             "type" : "string",
-            "description" : "DPS representation of the transaction"
+            "description" : "DPS representation of the advance"
           },
           "label" : {
             "type" : [ "string", "null" ],
@@ -28892,6 +29376,21 @@
             "type" : "array",
             "items" : {
               "$ref" : "#/components/schemas/StaffMappingDto"
+            }
+          },
+          "page" : {
+            "$ref" : "#/components/schemas/PageMetadata"
+          }
+        },
+        "required" : [ "content", "page" ]
+      },
+      "PagedModelScheduledPaymentMappingDto" : {
+        "type" : "object",
+        "properties" : {
+          "content" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ScheduledPaymentMappingDto"
             }
           },
           "page" : {

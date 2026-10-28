@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-26.2305.02843b3"
+    "version" : "2026-10-27.2318.5ee689b"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -23298,7 +23298,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/PersonLocationMovementDetail"
+                  "$ref" : "#/components/schemas/PersonLocationMovement"
                 }
               }
             }
@@ -24878,6 +24878,119 @@
         }
       }
     },
+    "/finance/scheduled-payments/{scheduledPaymentId}" : {
+      "get" : {
+        "tags" : [ "scheduled-payments-resource" ],
+        "summary" : "Get a scheduled payment by id",
+        "description" : "Retrieves a prisoner scheduled payment identified by id. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getScheduledPayment",
+        "parameters" : [ {
+          "name" : "scheduledPaymentId",
+          "in" : "path",
+          "description" : "Scheduled Payment Id aka offender payment profile id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Scheduled Payment Id aka offender payment profile id",
+            "example" : 123456789
+          },
+          "example" : 123456789
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Scheduled Payment Information Returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonerScheduledPaymentDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Scheduled Payment does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/finance/scheduled-payments/active-count" : {
+      "get" : {
+        "tags" : [ "scheduled-payments-resource" ],
+        "summary" : "Get a count of all active prisoner scheduled payments",
+        "description" : "Retrieves a count of all prisoner scheduled payments that are ACTIVE. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getActiveScheduledPaymentsCount",
+        "responses" : {
+          "200" : {
+            "description" : "Scheduled Payment Information Returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ScheduledPaymentsCount"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Scheduled Payment does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/finance/prisoners/{rootOffenderId}/balance/summary" : {
       "get" : {
         "tags" : [ "prisoner-balance-resource" ],
@@ -24943,7 +25056,7 @@
     },
     "/finance/prisoners/{prisonNumber}/scheduled-payments" : {
       "get" : {
-        "tags" : [ "prisoner-scheduled-payments-resource" ],
+        "tags" : [ "scheduled-payments-resource" ],
         "summary" : "Get a prisoner's scheduled payments by their prison number",
         "description" : "Retrieves a prisoner's scheduled payments. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
         "operationId" : "getPrisonerScheduledPayments",
@@ -24958,6 +25071,18 @@
             "example" : "A1234BC"
           },
           "example" : "A1234BC"
+        }, {
+          "name" : "activeOnly",
+          "in" : "query",
+          "description" : "whether to return just active advances",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false,
+            "description" : "whether to return just active advances",
+            "example" : true
+          },
+          "example" : true
         } ],
         "responses" : {
           "200" : {
@@ -25139,7 +25264,7 @@
     },
     "/finance/prisoners/{prisonNumber}/advances" : {
       "get" : {
-        "tags" : [ "prisoner-advance-resource" ],
+        "tags" : [ "advances-resource" ],
         "summary" : "Get a prisoner's advances by their prison number",
         "description" : "Retrieves a prisoner's advances by prison number. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
         "operationId" : "getPrisonerAdvances",
@@ -25203,69 +25328,6 @@
           },
           "404" : {
             "description" : "Prisoner does not exist",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/finance/prisoners/scheduled-payments/{scheduledPaymentId}" : {
-      "get" : {
-        "tags" : [ "prisoner-scheduled-payments-resource" ],
-        "summary" : "Get a prisoner scheduled payment by id",
-        "description" : "Retrieves a prisoner scheduled payment identified by id. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-        "operationId" : "getScheduledPayment",
-        "parameters" : [ {
-          "name" : "scheduledPaymentId",
-          "in" : "path",
-          "description" : "Scheduled Payment Id aka offender payment profile id",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Scheduled Payment Id aka offender payment profile id",
-            "example" : 123456789
-          },
-          "example" : 123456789
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Scheduled Payment Information Returned",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/PrisonerScheduledPaymentDto"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden to access this endpoint. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Scheduled Payment does not exist",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -25475,7 +25537,7 @@
     },
     "/finance/prisoners/root-offender-id/{rootOffenderId}/scheduled-payments" : {
       "get" : {
-        "tags" : [ "prisoner-scheduled-payments-resource" ],
+        "tags" : [ "scheduled-payments-resource" ],
         "summary" : "Get a prisoner's scheduled payments by their root offender id",
         "description" : "Retrieves a prisoner's scheduled payments by root offender id. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
         "operationId" : "getPrisonerScheduledPaymentsById",
@@ -25491,6 +25553,18 @@
             "example" : "A1234BC"
           },
           "example" : "A1234BC"
+        }, {
+          "name" : "activeOnly",
+          "in" : "query",
+          "description" : "whether to return just active advances",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false,
+            "description" : "whether to return just active advances",
+            "example" : true
+          },
+          "example" : true
         } ],
         "responses" : {
           "200" : {
@@ -25541,7 +25615,7 @@
     },
     "/finance/prisoners/root-offender-id/{rootOffenderId}/advances" : {
       "get" : {
-        "tags" : [ "prisoner-advance-resource" ],
+        "tags" : [ "advances-resource" ],
         "summary" : "Get a prisoner's advances by their root offender id",
         "description" : "Retrieves a prisoner's advances by root offender id. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
         "operationId" : "getPrisonerAdvancesById",
@@ -26039,182 +26113,6 @@
         }
       }
     },
-    "/finance/prisoners/advances/{advanceId}" : {
-      "get" : {
-        "tags" : [ "prisoner-advance-resource" ],
-        "summary" : "Get a prisoner advance by id",
-        "description" : "Retrieves a prisoner advance identified by id. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-        "operationId" : "getAdvance",
-        "parameters" : [ {
-          "name" : "advanceId",
-          "in" : "path",
-          "description" : "Advance Id aka offender payment profile id",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Advance Id aka offender payment profile id",
-            "example" : 123456789
-          },
-          "example" : 123456789
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Advance Information Returned",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/PrisonerAdvanceDto"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden to access this endpoint. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Advance does not exist",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/finance/prisoners/advances/deduction-id/{deductionId}" : {
-      "get" : {
-        "tags" : [ "prisoner-advance-resource" ],
-        "summary" : "Get a prisoner advance by offender deduction id",
-        "description" : "Retrieves a prisoner advance identified by an associated offender deduction id. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-        "operationId" : "getAdvanceByDeductionId",
-        "parameters" : [ {
-          "name" : "deductionId",
-          "in" : "path",
-          "description" : "Offender deduction Id",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Offender deduction Id",
-            "example" : 123456789
-          },
-          "example" : 123456789
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Advance Information Returned",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/PrisonerAdvanceDto"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden to access this endpoint. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Advance does not exist",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/finance/prisoners/advances/active-count" : {
-      "get" : {
-        "tags" : [ "prisoner-advance-resource" ],
-        "summary" : "Get a count of all active prisoner advances",
-        "description" : "Retrieves a count of all prisoner advances that are ACTIVE. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-        "operationId" : "getActiveAdvancesCount",
-        "responses" : {
-          "200" : {
-            "description" : "Advance Information Returned",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/AdvancesCount"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden to access this endpoint. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Advance does not exist",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/finance/prison/{prisonId}/balance" : {
       "get" : {
         "tags" : [ "prison-balance-resource" ],
@@ -26319,6 +26217,182 @@
           },
           "404" : {
             "description" : "Prison does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/finance/advances/{advanceId}" : {
+      "get" : {
+        "tags" : [ "advances-resource" ],
+        "summary" : "Get an advance by id",
+        "description" : "Retrieves a prisoner advance identified by id. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getAdvance",
+        "parameters" : [ {
+          "name" : "advanceId",
+          "in" : "path",
+          "description" : "Advance Id aka offender payment profile id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Advance Id aka offender payment profile id",
+            "example" : 123456789
+          },
+          "example" : 123456789
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Advance Information Returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonerAdvanceDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Advance does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/finance/advances/deduction-id/{deductionId}" : {
+      "get" : {
+        "tags" : [ "advances-resource" ],
+        "summary" : "Get a prisoner advance by offender deduction id",
+        "description" : "Retrieves a prisoner advance identified by an associated offender deduction id. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getAdvanceByDeductionId",
+        "parameters" : [ {
+          "name" : "deductionId",
+          "in" : "path",
+          "description" : "Offender deduction Id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Offender deduction Id",
+            "example" : 123456789
+          },
+          "example" : 123456789
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Advance Information Returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonerAdvanceDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Advance does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/finance/advances/active-count" : {
+      "get" : {
+        "tags" : [ "advances-resource" ],
+        "summary" : "Get a count of all active prisoner advances",
+        "description" : "Retrieves a count of all prisoner advances that are ACTIVE. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getActiveAdvancesCount",
+        "responses" : {
+          "200" : {
+            "description" : "Advance Information Returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AdvancesCount"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Advance does not exist",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -45360,37 +45434,9 @@
         "type" : "object",
         "description" : "Booking person locations",
         "properties" : {
-          "bookingId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Booking ID"
-          },
-          "bookingNumber" : {
-            "type" : "string",
-            "description" : "Booking Number"
-          },
-          "activeBooking" : {
-            "type" : "boolean",
-            "description" : "Whether this is an active booking"
-          },
-          "latestBooking" : {
-            "type" : "boolean",
-            "description" : "Whether this is the latest booking"
-          },
-          "bookingStatus" : {
-            "type" : "string",
-            "description" : "The open/closed flag ",
-            "enum" : [ "CLOSED", "OPEN" ]
-          },
-          "bookingBeginTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The booking begin date "
-          },
-          "bookingEndTime" : {
-            "type" : [ "string", "null" ],
-            "format" : "date-time",
-            "description" : "The booking end date "
+          "booking" : {
+            "$ref" : "#/components/schemas/PersonLocationBooking",
+            "description" : "The booking"
           },
           "movements" : {
             "type" : "array",
@@ -45398,13 +45444,9 @@
             "items" : {
               "$ref" : "#/components/schemas/PersonLocationMovement"
             }
-          },
-          "audit" : {
-            "$ref" : "#/components/schemas/NomisAudit",
-            "description" : "Audit data associated with the records"
           }
         },
-        "required" : [ "activeBooking", "audit", "bookingBeginTime", "bookingId", "bookingNumber", "bookingStatus", "latestBooking", "movements" ]
+        "required" : [ "booking", "movements" ]
       },
       "MovementLocation" : {
         "type" : "object",
@@ -45436,66 +45478,50 @@
         },
         "required" : [ "bookings" ]
       },
-      "PersonLocationMovement" : {
+      "PersonLocationBooking" : {
         "type" : "object",
+        "description" : "A single booking's person location details, without its movements",
         "properties" : {
-          "sequence" : {
+          "bookingId" : {
             "type" : "integer",
-            "format" : "int32",
-            "description" : "Movement sequence"
+            "format" : "int64",
+            "description" : "Booking ID"
           },
-          "movementType" : {
+          "bookingNumber" : {
             "type" : "string",
-            "description" : "Movement type",
-            "enum" : [ "ADM", "CRT", "TAP", "TRN", "REL" ]
+            "description" : "Booking Number"
           },
-          "directionCode" : {
+          "activeBooking" : {
+            "type" : "boolean",
+            "description" : "Whether this is an active booking"
+          },
+          "latestBooking" : {
+            "type" : "boolean",
+            "description" : "Whether this is the latest booking"
+          },
+          "bookingStatus" : {
             "type" : "string",
-            "description" : "The direction of the movement",
-            "enum" : [ "IN", "OUT" ]
+            "description" : "The open/closed flag",
+            "enum" : [ "CLOSED", "OPEN" ]
           },
-          "movementTime" : {
+          "bookingBeginTime" : {
             "type" : "string",
             "format" : "date-time",
-            "description" : "Movement time"
+            "description" : "The booking begin date"
           },
-          "movementReason" : {
-            "$ref" : "#/components/schemas/CodeDescription",
-            "description" : "Movement reason code"
-          },
-          "from" : {
-            "description" : "From location",
-            "oneOf" : [ {
-              "$ref" : "#/components/schemas/MovementLocation"
-            }, {
-              "type" : "null"
-            } ]
-          },
-          "to" : {
-            "description" : "To location",
-            "oneOf" : [ {
-              "$ref" : "#/components/schemas/MovementLocation"
-            }, {
-              "type" : "null"
-            } ]
-          },
-          "scheduleId" : {
-            "type" : [ "integer", "null" ],
-            "format" : "int64",
-            "description" : "Schedule ID"
-          },
-          "commentText" : {
+          "bookingEndTime" : {
             "type" : [ "string", "null" ],
-            "description" : "Comment text"
+            "format" : "date-time",
+            "description" : "The booking end date"
           },
           "audit" : {
             "$ref" : "#/components/schemas/NomisAudit",
             "description" : "Audit data associated with the records"
           }
         },
-        "required" : [ "audit", "directionCode", "movementReason", "movementTime", "movementType", "sequence" ]
+        "required" : [ "activeBooking", "audit", "bookingBeginTime", "bookingId", "bookingNumber", "bookingStatus", "latestBooking" ]
       },
-      "PersonLocationMovementDetail" : {
+      "PersonLocationMovement" : {
         "type" : "object",
         "description" : "A single person location movement",
         "properties" : {
@@ -45559,49 +45585,6 @@
           }
         },
         "required" : [ "audit", "bookingId", "directionCode", "movementReason", "movementTime", "movementType", "sequence" ]
-      },
-      "PersonLocationBooking" : {
-        "type" : "object",
-        "description" : "A single booking's person location details, without its movements",
-        "properties" : {
-          "bookingId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Booking ID"
-          },
-          "bookingNumber" : {
-            "type" : "string",
-            "description" : "Booking Number"
-          },
-          "activeBooking" : {
-            "type" : "boolean",
-            "description" : "Whether this is an active booking"
-          },
-          "latestBooking" : {
-            "type" : "boolean",
-            "description" : "Whether this is the latest booking"
-          },
-          "bookingStatus" : {
-            "type" : "string",
-            "description" : "The open/closed flag",
-            "enum" : [ "CLOSED", "OPEN" ]
-          },
-          "bookingBeginTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The booking begin date"
-          },
-          "bookingEndTime" : {
-            "type" : [ "string", "null" ],
-            "format" : "date-time",
-            "description" : "The booking end date"
-          },
-          "audit" : {
-            "$ref" : "#/components/schemas/NomisAudit",
-            "description" : "Audit data associated with the records"
-          }
-        },
-        "required" : [ "activeBooking", "audit", "bookingBeginTime", "bookingId", "bookingNumber", "bookingStatus", "latestBooking" ]
       },
       "BookingCourtMovementIn" : {
         "type" : "object",
@@ -46930,6 +46913,78 @@
         },
         "required" : [ "bookingId", "currentIep", "iepDateTime", "iepLevel", "incentiveSequence", "offenderNo", "prisonId", "whenCreated" ]
       },
+      "PrisonerScheduledPaymentDto" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The scheduled payment id",
+            "example" : 123456
+          },
+          "prisonNumber" : {
+            "type" : "string",
+            "description" : "The prisonNumber",
+            "example" : "A1234BC"
+          },
+          "caseloadId" : {
+            "type" : "string",
+            "description" : "The caseload",
+            "example" : "MDI"
+          },
+          "transactionType" : {
+            "type" : "string",
+            "description" : "transaction type",
+            "example" : "TELE"
+          },
+          "paymentAmount" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The payment amount in pence, to be paid each time, to the prison, so £1.50 returned as 150",
+            "example" : 150
+          },
+          "startDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The start date of the scheduled payment",
+            "example" : "2024-06-01"
+          },
+          "endDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "The date the scheduled payment ends or null if it does not end",
+            "example" : "2024-06-01"
+          },
+          "reference" : {
+            "type" : [ "string", "null" ],
+            "description" : "The reference for the scheduled payment",
+            "example" : "REF12345"
+          },
+          "comment" : {
+            "type" : [ "string", "null" ],
+            "description" : "The comment for the scheduled payment",
+            "example" : "Sched payment for personal expenses"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "The user who created the scheduled payment",
+            "example" : "FRED_SMITH"
+          }
+        },
+        "required" : [ "caseloadId", "createdBy", "id", "paymentAmount", "prisonNumber", "startDate", "transactionType" ]
+      },
+      "ScheduledPaymentsCount" : {
+        "type" : "object",
+        "properties" : {
+          "activeCount" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The count of active scheduled payments",
+            "example" : 3
+          }
+        },
+        "required" : [ "activeCount" ]
+      },
       "AccountSummaryDto" : {
         "type" : "object",
         "properties" : {
@@ -46981,71 +47036,6 @@
           }
         },
         "required" : [ "accounts", "prisonNumber", "rootOffenderId" ]
-      },
-      "PrisonerScheduledPaymentDto" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The scheduled payment id",
-            "example" : 123456
-          },
-          "prisonNumber" : {
-            "type" : "string",
-            "description" : "The prisonNumber",
-            "example" : "A1234BC"
-          },
-          "caseloadId" : {
-            "type" : "string",
-            "description" : "The caseload",
-            "example" : "MDI"
-          },
-          "transactionType" : {
-            "type" : "string",
-            "description" : "transaction type",
-            "example" : "TELE"
-          },
-          "amount" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The amount in pence to be paid to the prison, so £1.50 returned as 150",
-            "example" : 150
-          },
-          "startDate" : {
-            "type" : "string",
-            "format" : "date",
-            "description" : "The start date of the scheduled payment",
-            "example" : "2024-06-01"
-          },
-          "endDate" : {
-            "type" : [ "string", "null" ],
-            "format" : "date",
-            "description" : "The date the scheduled payment ends or null if it does not end",
-            "example" : "2024-06-01"
-          },
-          "reference" : {
-            "type" : [ "string", "null" ],
-            "description" : "The reference for the scheduled payment",
-            "example" : "REF12345"
-          },
-          "comment" : {
-            "type" : [ "string", "null" ],
-            "description" : "The comment for the scheduled payment",
-            "example" : "Sched payment for personal expenses"
-          },
-          "createdBy" : {
-            "type" : "string",
-            "description" : "The user who created the scheduled payment",
-            "example" : "FRED_SMITH"
-          },
-          "status" : {
-            "type" : [ "string", "null" ],
-            "description" : "The status of the scheduled payment",
-            "example" : "ACTIVE"
-          }
-        },
-        "required" : [ "amount", "caseloadId", "createdBy", "id", "prisonNumber", "startDate", "transactionType" ]
       },
       "AdjustmentReason" : {
         "type" : "string",
@@ -47103,6 +47093,12 @@
             "format" : "date",
             "description" : "The date of the advance given to the prisoner",
             "example" : "2024-06-01"
+          },
+          "outstandingBalance" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The amount the prisoner still owes, in pence",
+            "example" : 125
           },
           "repaymentAmount" : {
             "type" : "integer",
@@ -47175,7 +47171,7 @@
             "example" : 123456789
           }
         },
-        "required" : [ "advanceAmount", "advanceCreateTransactionId", "caseloadId", "createDatetime", "createdBy", "id", "informationNumber", "prisonNumber", "repaymentAmount", "startDate", "status" ]
+        "required" : [ "advanceAmount", "advanceCreateTransactionId", "caseloadId", "createDatetime", "createdBy", "id", "informationNumber", "outstandingBalance", "prisonNumber", "repaymentAmount", "startDate", "status" ]
       },
       "PrisonerAggregatedAccountsDto" : {
         "type" : "object",
@@ -47338,18 +47334,6 @@
         },
         "required" : [ "txnEntryAmount", "txnEntryDate", "txnEntrySeq", "txnId" ]
       },
-      "AdvancesCount" : {
-        "type" : "object",
-        "properties" : {
-          "activeCount" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The count of active advances",
-            "example" : 3
-          }
-        },
-        "required" : [ "activeCount" ]
-      },
       "PrisonAccountBalanceDto" : {
         "type" : "object",
         "properties" : {
@@ -47389,6 +47373,18 @@
           }
         },
         "required" : [ "accountBalances", "prisonId" ]
+      },
+      "AdvancesCount" : {
+        "type" : "object",
+        "properties" : {
+          "activeCount" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The count of active advances",
+            "example" : 3
+          }
+        },
+        "required" : [ "activeCount" ]
       },
       "OffenderTestSelectionResponse" : {
         "type" : "object",
