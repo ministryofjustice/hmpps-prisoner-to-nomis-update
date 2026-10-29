@@ -78,6 +78,15 @@ class PropertyReconciliationServiceTest {
     }
 
     @Test
+    fun `will ignore DPS property created in error`() = runTest {
+      stubPropertyRetrieval(
+        dpsProperty = dpsProperty().copy(currentStatus = PropertyContainerDto.CurrentStatus.CREATED_IN_ERROR),
+      )
+      assertThat(service.checkProperty(NOMIS_ID)).isNull()
+      verifyNoInteractions(telemetryClient)
+    }
+
+    @Test
     fun `will report mismatches`() = runTest {
       stubPropertyRetrieval(
         nomisProperty().copy(prisonId = "OTHER", sealMark = "seal-mark-nomis"),

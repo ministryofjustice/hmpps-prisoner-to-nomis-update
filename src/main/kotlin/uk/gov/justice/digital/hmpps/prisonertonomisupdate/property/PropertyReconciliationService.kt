@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.Reconciliation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.generateIdRangesReconciliationReport
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.LocationsMappingService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.IdRange
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.property.model.PropertyContainerDto
 import java.time.LocalDate
 import java.util.UUID
 
@@ -84,9 +85,12 @@ class PropertyReconciliationService(
       val content = page.content!!
         .onEach { dpsId ->
           if (!dpsIdsInNomisMappings.contains(dpsId)) {
-            log.info("DPS only property container found for dpsId=$dpsId")
-            telemetryClient.trackEvent("$TELEMETRY_PREFIX-dps-only", mapOf("dpsId" to dpsId.toString()))
-            dpsOnlyCount++
+            val dpsData = dpsApiService.getProperty(dpsId)
+            if (dpsData.removalOutcome != PropertyContainerDto.RemovalOutcome.CREATED_IN_ERROR) {
+              log.info("DPS only property container found for dpsId=$dpsId")
+              telemetryClient.trackEvent("$TELEMETRY_PREFIX-dps-only", mapOf("dpsId" to dpsId.toString()))
+              dpsOnlyCount++
+            }
           }
         }
         .also { log.info("DPS page requested page: ${i - 1}, size: ${it.size}") }
@@ -169,23 +173,20 @@ class PropertyReconciliationService(
 
     // log.info("$id compared\n$dpsFields with\n$nomisFields with result\n$differenceList")
 
-    if (differenceList.isEmpty()) {
-      return null
+    return if (differenceList.isEmpty()) {
+      null
+    } else {
+      // log.info("Differences: $differenceList")
+      telemetryClient.trackEvent(
+        "$TELEMETRY_PREFIX-mismatch",
+        mapOf(
+          "nomisId" to nomisData.containerId.toString(),
+          "dpsId" to dpsData.id.toString(),
+          "differences" to differenceList.joinToString { "${it.field}: dps=${it.dps}, nomis=${it.nomis}" },
+        ),
+      )
+      MismatchProperty(nomisFields, dpsFields, differenceList)
     }
-    // log.info("Differences: $differenceList")
-    telemetryClient.trackEvent(
-      "$TELEMETRY_PREFIX-mismatch",
-      mapOf(
-        "nomisId" to nomisData.containerId.toString(),
-        "dpsId" to dpsData.id.toString(),
-        "differences" to differenceList.joinToString { "${it.field}: dps=${it.dps}, nomis=${it.nomis}" },
-      ),
-    )
-    return MismatchProperty(
-      nomis = nomisFields,
-      dps = dpsFields,
-      differences = differenceList,
-    )
   }.onFailure {
     log.error("Unable to match property containers for id=$id", it)
     telemetryClient.trackEvent(
