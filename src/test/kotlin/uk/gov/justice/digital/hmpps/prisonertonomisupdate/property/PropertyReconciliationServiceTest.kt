@@ -173,6 +173,25 @@ class PropertyReconciliationServiceTest {
         mapOf(
           "nomisId" to NOMIS_ID.toString(),
           "dpsId" to DPS_ID,
+          "removal-outcome" to "",
+        ),
+        null,
+      )
+    }
+
+    @Test
+    fun `will report mismatch when DPS record was soft-deleted`() = runTest {
+      stubPropertyRetrieval()
+      propertyDpsApi.stubGetProperty(DPS_ID, dpsProperty().copy(removalOutcome = PropertyContainerDto.RemovalOutcome.CREATED_IN_ERROR))
+
+      assertThat(service.checkProperty(NOMIS_ID)?.differences).hasSize(1)
+
+      verify(telemetryClient).trackEvent(
+        "property-reports-reconciliation-no-dps",
+        mapOf(
+          "nomisId" to NOMIS_ID.toString(),
+          "dpsId" to DPS_ID,
+          "removal-outcome" to "CREATED_IN_ERROR",
         ),
         null,
       )

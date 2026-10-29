@@ -142,13 +142,14 @@ class PropertyReconciliationService(
     dpsIdsInNomisMappings.add(dpsId)
 
     val dpsData = dpsApiService.getPropertyOrNull(dpsId)
-    if (dpsData == null) {
+    if (dpsData == null || dpsData.removalOutcome == PropertyContainerDto.RemovalOutcome.CREATED_IN_ERROR) {
       log.info("No DPS record found for nomisId=$id")
       telemetryClient.trackEvent(
         "$TELEMETRY_PREFIX-no-dps",
         mapOf(
           "nomisId" to id.toString(),
           "dpsId" to mapping.dpsPropertyContainerId,
+          "removal-outcome" to (dpsData?.removalOutcome?.name ?: ""),
         ),
       )
       return MismatchProperty(
