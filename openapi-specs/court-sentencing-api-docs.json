@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-27.2771.9e95022"
+    "version" : "2026-10-28.2777.c13287e"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -4671,7 +4671,7 @@
             "default" : [ "ACTIVE" ],
             "items" : {
               "type" : "string",
-              "enum" : [ "ACTIVE", "INACTIVE" ]
+              "enum" : [ "ACTIVE", "INACTIVE", "LEGACY" ]
             }
           }
         }, {
@@ -4858,7 +4858,7 @@
             "default" : [ "ACTIVE" ],
             "items" : {
               "type" : "string",
-              "enum" : [ "ACTIVE", "INACTIVE" ]
+              "enum" : [ "ACTIVE", "INACTIVE", "LEGACY" ]
             }
           }
         }, {
@@ -6420,7 +6420,7 @@
             "type" : "array",
             "items" : {
               "type" : "string",
-              "enum" : [ "ACTIVE", "INACTIVE" ]
+              "enum" : [ "ACTIVE", "INACTIVE", "LEGACY" ]
             }
           }
         } ],
@@ -7173,7 +7173,7 @@
             "type" : "array",
             "items" : {
               "type" : "string",
-              "enum" : [ "ACTIVE", "INACTIVE" ]
+              "enum" : [ "ACTIVE", "INACTIVE", "LEGACY" ]
             }
           }
         } ],
@@ -7400,7 +7400,7 @@
             "type" : "array",
             "items" : {
               "type" : "string",
-              "enum" : [ "ACTIVE", "INACTIVE" ]
+              "enum" : [ "ACTIVE", "INACTIVE", "LEGACY" ]
             }
           }
         } ],
@@ -7510,7 +7510,7 @@
             "type" : "array",
             "items" : {
               "type" : "string",
-              "enum" : [ "ACTIVE", "INACTIVE" ]
+              "enum" : [ "ACTIVE", "INACTIVE", "LEGACY" ]
             }
           }
         } ],
@@ -7617,7 +7617,7 @@
             "type" : "array",
             "items" : {
               "type" : "string",
-              "enum" : [ "ACTIVE", "INACTIVE" ]
+              "enum" : [ "ACTIVE", "INACTIVE", "LEGACY" ]
             }
           }
         } ],
@@ -7845,7 +7845,7 @@
           },
           "status" : {
             "type" : [ "string", "null" ],
-            "enum" : [ "ACTIVE", "INACTIVE" ]
+            "enum" : [ "ACTIVE", "INACTIVE", "LEGACY" ]
           },
           "isRecallable" : {
             "type" : [ "boolean", "null" ]
@@ -7946,7 +7946,7 @@
           },
           "status" : {
             "type" : "string",
-            "enum" : [ "ACTIVE", "INACTIVE" ]
+            "enum" : [ "ACTIVE", "INACTIVE", "LEGACY" ]
           },
           "isRecallable" : {
             "type" : "boolean"
@@ -8359,7 +8359,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "06:44:40.253666497"
+            "example" : "06:44:54.117290781"
           },
           "outcomeDispositionCode" : {
             "type" : [ "string", "null" ]
@@ -8554,7 +8554,7 @@
           },
           "status" : {
             "type" : "string",
-            "enum" : [ "ACTIVE", "INACTIVE" ]
+            "enum" : [ "ACTIVE", "INACTIVE", "LEGACY" ]
           }
         },
         "required" : [ "outcomeUuid", "resultCode", "resultName", "status" ]
@@ -8584,7 +8584,7 @@
           },
           "status" : {
             "type" : "string",
-            "enum" : [ "ACTIVE", "INACTIVE" ]
+            "enum" : [ "ACTIVE", "INACTIVE", "LEGACY" ]
           }
         },
         "required" : [ "displayOrder", "dispositionCode", "nomisCode", "outcomeName", "outcomeType", "outcomeUuid", "status" ]
@@ -8607,7 +8607,7 @@
           },
           "status" : {
             "type" : "string",
-            "enum" : [ "ACTIVE", "INACTIVE" ]
+            "enum" : [ "ACTIVE", "INACTIVE", "LEGACY" ]
           }
         },
         "required" : [ "outcome", "resultCode", "resultName", "resultUuid", "status" ]
@@ -8817,7 +8817,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "06:44:40.253666497"
+            "example" : "06:44:54.117290781"
           },
           "courtCode" : {
             "type" : "string"
@@ -9064,7 +9064,7 @@
           },
           "status" : {
             "type" : "string",
-            "enum" : [ "ACTIVE", "INACTIVE" ]
+            "enum" : [ "ACTIVE", "INACTIVE", "LEGACY" ]
           }
         },
         "required" : [ "displayOrder", "dispositionCode", "nomisCode", "outcomeName", "outcomeType", "status" ]
@@ -9110,7 +9110,7 @@
           },
           "status" : {
             "type" : "string",
-            "enum" : [ "ACTIVE", "INACTIVE" ]
+            "enum" : [ "ACTIVE", "INACTIVE", "LEGACY" ]
           }
         },
         "required" : [ "displayOrder", "dispositionCode", "isSubList", "nomisCode", "outcomeName", "outcomeType", "relatedChargeOutcomeUuid", "status", "warrantType" ]
@@ -9147,7 +9147,7 @@
           },
           "status" : {
             "type" : "string",
-            "enum" : [ "ACTIVE", "INACTIVE" ]
+            "enum" : [ "ACTIVE", "INACTIVE", "LEGACY" ]
           },
           "warrantType" : {
             "type" : "string"
@@ -11913,7 +11913,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "06:44:40.253666497"
+            "example" : "06:44:54.117290781"
           },
           "courtCode" : {
             "type" : "string"
@@ -12567,7 +12567,7 @@
           },
           "status" : {
             "type" : "string",
-            "enum" : [ "ACTIVE", "INACTIVE" ]
+            "enum" : [ "ACTIVE", "INACTIVE", "LEGACY" ]
           }
         },
         "required" : [ "classification", "description", "displayOrder", "nomisCjaCode", "nomisSentenceCalcType", "sentenceTypeUuid", "status" ]
@@ -12766,7 +12766,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:44:40.253666497"
+            "example" : "06:44:54.117290781"
           },
           "nomisOutcomeCode" : {
             "type" : [ "string", "null" ]
@@ -12845,7 +12845,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "06:44:40.253666497"
+            "example" : "06:44:54.117290781"
           },
           "courtId" : {
             "type" : "string"
@@ -12997,7 +12997,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:44:40.253666497"
+            "example" : "06:44:54.117290781"
           },
           "charges" : {
             "type" : "array",
@@ -13034,7 +13034,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "06:44:40.253666497"
+            "example" : "06:44:54.117290781"
           },
           "courtId" : {
             "type" : "string"
@@ -13676,7 +13676,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "06:44:40.253666497"
+            "example" : "06:44:54.117290781"
           },
           "courtCode" : {
             "type" : [ "string", "null" ]
@@ -13848,11 +13848,11 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
