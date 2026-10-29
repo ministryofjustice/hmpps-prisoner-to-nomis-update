@@ -122,6 +122,7 @@ class PropertyReconciliationResourceIntTest : IntegrationTestBase() {
     fun `will output a mismatch when there is a DPS record with no matching Nomis record`() = runTest {
       // 1 extra DPS record 21 with no matching Nomis record
       propertyDpsApi.stubGetAllIds(page = 3, size = 6, PageUUID(content = (19L..21L).map { UUID.fromString(generateDpsId(it)) }, propertySize = 3))
+      propertyDpsApi.stubGetProperty(generateDpsId(21))
 
       propertyReconciliationService.generatePropertyReconciliationReportBatch()
 
@@ -138,6 +139,29 @@ class PropertyReconciliationResourceIntTest : IntegrationTestBase() {
         },
         isNull(),
       )
+    }
+
+    @Test
+    fun `will not output a mismatch when an extra DPS record was created in error`() = runTest {
+      // 1 extra DPS record 21 with no matching Nomis record
+      propertyDpsApi.stubGetAllIds(page = 3, size = 6, PageUUID(content = (19L..21L).map { UUID.fromString(generateDpsId(it)) }, propertySize = 3))
+      propertyDpsApi.stubGetProperty(generateDpsId(21), dpsProperty().copy(removalOutcome = PropertyContainerDto.RemovalOutcome.CREATED_IN_ERROR))
+
+      propertyReconciliationService.generatePropertyReconciliationReportBatch()
+
+      await untilAsserted {
+        verify(telemetryClient).trackEvent(
+          eq("property-reports-reconciliation-report"),
+          check {
+            assertThat(it).containsEntry("nomis-property-count", "20")
+            assertThat(it).containsEntry("dps-only-count", "0")
+            assertThat(it).containsEntry("page-count", "2")
+            assertThat(it).containsEntry("mismatch-count", "0")
+            assertThat(it).containsEntry("success", "true")
+          },
+          isNull(),
+        )
+      }
     }
 
     private fun awaitReportFinished() {
