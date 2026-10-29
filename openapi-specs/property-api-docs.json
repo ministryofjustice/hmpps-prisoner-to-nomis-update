@@ -7,7 +7,7 @@
       "name" : "Move a prisoner Team",
       "email" : "Moveaprisoner-gg@justice.gov.uk"
     },
-    "version" : "2026-10-27.410.2504691"
+    "version" : "2026-10-28.412.bc45e00"
   },
   "servers" : [ {
     "url" : "/",
@@ -1732,7 +1732,7 @@
             "type" : "array",
             "items" : {
               "type" : "string",
-              "enum" : [ "STORED", "DUE_FOR_TRANSFER_OUT", "DUE_FOR_RETURN", "DISPOSAL_REQUIRED", "DISPOSED", "RETURNED", "TRANSFER", "COMBINED", "CREATED_IN_ERROR", "REMOVED" ]
+              "enum" : [ "STORED", "DUE_FOR_TRANSFER_OUT", "DUE_FOR_RETURN", "DISPOSAL_REQUIRED", "DISPOSED", "RETURNED", "TRANSFER", "COMBINED", "CREATED_IN_ERROR", "REVIEW_REQUIRED", "REMOVED" ]
             }
           },
           "example" : "STORED"
@@ -2004,7 +2004,7 @@
             "type" : "array",
             "items" : {
               "type" : "string",
-              "enum" : [ "STORED", "DUE_FOR_TRANSFER_OUT", "DUE_FOR_RETURN", "DISPOSAL_REQUIRED", "DISPOSED", "RETURNED", "TRANSFER", "COMBINED", "CREATED_IN_ERROR", "REMOVED" ]
+              "enum" : [ "STORED", "DUE_FOR_TRANSFER_OUT", "DUE_FOR_RETURN", "DISPOSAL_REQUIRED", "DISPOSED", "RETURNED", "TRANSFER", "COMBINED", "CREATED_IN_ERROR", "REVIEW_REQUIRED", "REMOVED" ]
             }
           },
           "example" : "STORED"
@@ -2680,7 +2680,7 @@
           "currentStatus" : {
             "type" : "string",
             "description" : "Current status, derived from the most recent event",
-            "enum" : [ "STORED", "DUE_FOR_TRANSFER_OUT", "DUE_FOR_RETURN", "DISPOSAL_REQUIRED", "DISPOSED", "RETURNED", "TRANSFER", "COMBINED", "CREATED_IN_ERROR", "REMOVED" ],
+            "enum" : [ "STORED", "DUE_FOR_TRANSFER_OUT", "DUE_FOR_RETURN", "DISPOSAL_REQUIRED", "DISPOSED", "RETURNED", "TRANSFER", "COMBINED", "CREATED_IN_ERROR", "REVIEW_REQUIRED", "REMOVED" ],
             "example" : "STORED"
           },
           "currentLocation" : {
@@ -3345,7 +3345,7 @@
           "eventType" : {
             "type" : "string",
             "description" : "What happened to the container",
-            "enum" : [ "CREATED_SEALED", "SEAL_CHANGED", "CONTAINER_TYPE_CHANGE", "MOVED", "PRISONER_RECEIVED", "PRISONER_TRANSFERRED_OUT", "PRISONER_RELEASED", "DIED_IN_CUSTODY", "TRANSFERRED", "RETURNED", "DISPOSAL_REQUIRED", "DISPOSED", "COMBINED", "CREATED_IN_ERROR", "REMOVED", "REACTIVATED" ],
+            "enum" : [ "CREATED_SEALED", "SEAL_CHANGED", "CONTAINER_TYPE_CHANGE", "MOVED", "PRISONER_RECEIVED", "PRISONER_TRANSFERRED_OUT", "PRISONER_RELEASED", "PRISONER_ADMITTED", "LOCATION_CONFIRMED", "DIED_IN_CUSTODY", "TRANSFERRED", "RETURNED", "DISPOSAL_REQUIRED", "DISPOSED", "COMBINED", "CREATED_IN_ERROR", "REMOVED", "REACTIVATED" ],
             "example" : "MOVED"
           },
           "eventDateTime" : {
@@ -3508,7 +3508,7 @@
           "currentStatus" : {
             "type" : "string",
             "description" : "Current status. Derived from the container's history and, for a container still in storage, from where its owner now is: property for someone released or being released imminently reads DUE_FOR_RETURN, property at a prison they have left reads DUE_FOR_TRANSFER_OUT, and a disposal date that has arisen takes precedence over both. Identical on the person and establishment views.",
-            "enum" : [ "STORED", "DUE_FOR_TRANSFER_OUT", "DUE_FOR_RETURN", "DISPOSAL_REQUIRED", "DISPOSED", "RETURNED", "TRANSFER", "COMBINED", "CREATED_IN_ERROR", "REMOVED" ],
+            "enum" : [ "STORED", "DUE_FOR_TRANSFER_OUT", "DUE_FOR_RETURN", "DISPOSAL_REQUIRED", "DISPOSED", "RETURNED", "TRANSFER", "COMBINED", "CREATED_IN_ERROR", "REVIEW_REQUIRED", "REMOVED" ],
             "example" : "STORED"
           },
           "currentLocation" : {
@@ -3680,13 +3680,13 @@
           "eventType" : {
             "type" : [ "string", "null" ],
             "description" : "What happened to the container, for container events; null for prisoner movements",
-            "enum" : [ "CREATED_SEALED", "SEAL_CHANGED", "CONTAINER_TYPE_CHANGE", "MOVED", "PRISONER_RECEIVED", "PRISONER_TRANSFERRED_OUT", "PRISONER_RELEASED", "DIED_IN_CUSTODY", "TRANSFERRED", "RETURNED", "DISPOSAL_REQUIRED", "DISPOSED", "COMBINED", "CREATED_IN_ERROR", "REMOVED", "REACTIVATED" ],
+            "enum" : [ "CREATED_SEALED", "SEAL_CHANGED", "CONTAINER_TYPE_CHANGE", "MOVED", "PRISONER_RECEIVED", "PRISONER_TRANSFERRED_OUT", "PRISONER_RELEASED", "PRISONER_ADMITTED", "LOCATION_CONFIRMED", "DIED_IN_CUSTODY", "TRANSFERRED", "RETURNED", "DISPOSAL_REQUIRED", "DISPOSED", "COMBINED", "CREATED_IN_ERROR", "REMOVED", "REACTIVATED" ],
             "example" : "TRANSFERRED"
           },
           "eventStatus" : {
             "type" : [ "string", "null" ],
             "description" : "The status this event put the container into (used for the item's status tag); null for prisoner movements",
-            "enum" : [ "STORED", "DUE_FOR_TRANSFER_OUT", "DUE_FOR_RETURN", "DISPOSAL_REQUIRED", "DISPOSED", "RETURNED", "TRANSFER", "COMBINED", "CREATED_IN_ERROR", "REMOVED" ],
+            "enum" : [ "STORED", "DUE_FOR_TRANSFER_OUT", "DUE_FOR_RETURN", "DISPOSAL_REQUIRED", "DISPOSED", "RETURNED", "TRANSFER", "COMBINED", "CREATED_IN_ERROR", "REVIEW_REQUIRED", "REMOVED" ],
             "example" : "TRANSFER"
           },
           "eventDateTime" : {
@@ -3783,7 +3783,7 @@
           "containerStatus" : {
             "type" : [ "string", "null" ],
             "description" : "The container's status as at this event, for the item's expandable details",
-            "enum" : [ "STORED", "DUE_FOR_TRANSFER_OUT", "DUE_FOR_RETURN", "DISPOSAL_REQUIRED", "DISPOSED", "RETURNED", "TRANSFER", "COMBINED", "CREATED_IN_ERROR", "REMOVED" ],
+            "enum" : [ "STORED", "DUE_FOR_TRANSFER_OUT", "DUE_FOR_RETURN", "DISPOSAL_REQUIRED", "DISPOSED", "RETURNED", "TRANSFER", "COMBINED", "CREATED_IN_ERROR", "REVIEW_REQUIRED", "REMOVED" ],
             "example" : "STORED"
           },
           "containerLocationDescription" : {
