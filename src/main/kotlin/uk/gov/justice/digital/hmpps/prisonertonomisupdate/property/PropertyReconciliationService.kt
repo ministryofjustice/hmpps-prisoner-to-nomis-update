@@ -85,8 +85,9 @@ class PropertyReconciliationService(
       val content = page.content!!
         .onEach { dpsId ->
           if (!dpsIdsInNomisMappings.contains(dpsId)) {
-            val dpsData = dpsApiService.getProperty(dpsId)
-            if (dpsData.removalOutcome != PropertyContainerDto.RemovalOutcome.CREATED_IN_ERROR) {
+            if (
+              dpsApiService.getProperty(dpsId).removalOutcome != PropertyContainerDto.RemovalOutcome.CREATED_IN_ERROR
+            ) {
               log.info("DPS only property container found for dpsId=$dpsId")
               telemetryClient.trackEvent("$TELEMETRY_PREFIX-dps-only", mapOf("dpsId" to dpsId.toString()))
               dpsOnlyCount++
