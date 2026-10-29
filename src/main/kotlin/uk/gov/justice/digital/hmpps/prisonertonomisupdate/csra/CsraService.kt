@@ -83,17 +83,20 @@ class CsraService(
         track("csra-update", telemetry) {
           val dpsData = csraDpsApiService.getCsraReview((dpsId))
           val mapping = csraMappingService.getMappingByDpsId(dpsId.toString())
-          val (_, nomisId, sequence) = mapping
-          telemetry += "bookingId" to nomisId.toString()
+          val (_, nomisBookingId, sequence) = mapping
+          telemetry += "bookingId" to nomisBookingId.toString()
           telemetry += "sequence" to sequence.toString()
 
           csraNomisApiService.updateCsra(nomisId, sequence, dpsData.toNomisUpdateRequest(nomisHighGeneralSpecific))
         }
       } else {
-        // Dont need to do anything. In the case of a readmission, Nomis would have the existing bookings existing CSRA.
+        // DPS cleared the current CSRA due to a readmission.
+        // In this case, Nomis would have the existing bookings existing CSRA.
         // However, this update only occurs for DPS enabled prisons, and for these, the Nomis display of current CSRA is disabled.
         // So if it is wrong in Nomis just for the period up till the prisoner gets their initial CSRA, that is ok.
-        telemetryClient.trackEvent("csra-update-readmission", telemetry, null)
+        // Dont need to do anything but reconciliation will have to be aware and ignore this prisoner.
+        telemetry += "readmission-cleared" to "true"
+        telemetryClient.trackEvent("csra-update-ignored", telemetry, null)
       }
     } else {
       telemetryClient.trackEvent("csra-update-ignored", telemetry, null)

@@ -363,6 +363,29 @@ class CsraToNomisIntTest : SqsIntegrationTestBase() {
         )
       }
     }
+
+    @Nested
+    @DisplayName("when DPS event has no CSRA id")
+    inner class WhenIdIsNull {
+      @BeforeEach
+      fun setup() {
+        publishCsraDomainEvent("cell.sharing.risk.assessment.amended", dpsId = null)
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the update`() {
+        verify(telemetryClient).trackEvent(
+          eq("csra-update-success"),
+          check {
+            assertThat(it).containsEntry("readmission-cleared", "true")
+            assertThat(it).containsEntry("offenderNo", CSRA_OFFENDER_NO)
+            assertThat(it).containsEntry("source", "DPS")
+          },
+          isNull(),
+        )
+      }
+    }
   }
 
   private fun publishCsraDomainEvent(

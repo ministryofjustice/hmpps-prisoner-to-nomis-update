@@ -78,27 +78,10 @@ class CsraReconciliationService(
     val nomisCsra = csraNomisApiService.getCurrentCsraForPrisonerOrNull(offenderNo)
     val dpsCsra = csraDpsApiService.getCsraCurrent(offenderNo)
 
+    if (dpsCsra?.reason == CsraRatingSetReason.NO_RATING_ON_READMISSION) {
+      return null
+    }
     val nomisField = nomisCsra?.let { csra ->
-
-      /**
-       * Function copied from the dps service
-       */
-      fun resolveNomisLevel(calculatedLevel: AssessmentLevel?, overrideLevel: AssessmentLevel?, reviewLevel: AssessmentLevel?): AssessmentLevel? {
-        if (reviewLevel != null && reviewLevel != AssessmentLevel.PEND) return reviewLevel
-
-        if (overrideLevel != null && calculatedLevel != null) {
-          // Where both are PEND neither ranks, and NOMIS falls through to the override's bare PEND.
-          levelPriorities.firstOrNull { it == overrideLevel || it == calculatedLevel }?.let { return it }
-        }
-
-        return when {
-          overrideLevel != null -> overrideLevel
-          calculatedLevel != AssessmentLevel.PEND -> calculatedLevel
-          else -> null
-        }
-      }
-      // TODO - maybe move this logic into a DPS endpoint for recon ^
-
       resolveNomisLevel(csra.calculatedLevel, csra.overrideLevel, csra.reviewLevel)
         ?.let {
           CsraDetailFields(
@@ -122,6 +105,15 @@ class CsraReconciliationService(
     val differenceList = compareObjects(dpsField, nomisField)
 
     if (differenceList.isNotEmpty()) {
+
+//      if (differenceList.first().property == "current-csra" && differenceList.first().nomis == 1) {
+//        val dpsDetails = csraDpsApiService.getCsraReview(dpsCsra?.reviewId!!)
+//        if (dpsDetails.reason == xx ) {
+//          // ???
+//        }
+//      }
+//
+
       log.info("difference found for offenderNo=$offenderNo: $differenceList")
       telemetryClient.trackEvent(
         "$TELEMETRY_CSRA_PREFIX-mismatch",
@@ -150,6 +142,25 @@ class CsraReconciliationService(
 
   /** Without the new NOMIS codes, every High result is stored in NOMIS as HI, so compare them all as HIGH. */
   private fun String?.asComparable(): String? = if (!nomisHighGeneralSpecific && this in listOf("HIGH_GENERAL", "HIGH_SPECIFIC")) "HIGH" else this
+
+  /**
+   * Function copied from the dps service
+   */
+  fun resolveNomisLevel(calculatedLevel: AssessmentLevel?, overrideLevel: AssessmentLevel?, reviewLevel: AssessmentLevel?): AssessmentLevel? {
+    if (reviewLevel != null && reviewLevel != AssessmentLevel.PEND) return reviewLevel
+
+    if (overrideLevel != null && calculatedLevel != null) {
+      // Where both are PEND neither ranks, and NOMIS falls through to the override's bare PEND.
+      levelPriorities.firstOrNull { it == overrideLevel || it == calculatedLevel }?.let { return it }
+    }
+
+    return when {
+      overrideLevel != null -> overrideLevel
+      calculatedLevel != AssessmentLevel.PEND -> calculatedLevel
+      else -> null
+    }
+  }
+  // TODO - maybe move this logic into a DPS endpoint for recon ^
 
   private fun compareObjects(dpsDetail: CsraDetailFields?, nomisDetail: CsraDetailFields?): List<Difference> {
     if (dpsDetail == null && nomisDetail == null) return emptyList()
