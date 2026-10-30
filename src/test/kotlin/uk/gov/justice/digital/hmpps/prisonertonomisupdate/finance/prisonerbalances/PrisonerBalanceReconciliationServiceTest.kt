@@ -76,7 +76,7 @@ class PrisonerBalanceReconciliationServiceTest {
   }
 
   @Nested
-  @TestPropertySource(properties = ["reports.prisoner.balance.reconciliation.holds=true"])
+  @TestPropertySource(properties = ["reports.prisoner.balance.reconciliation.fields='balances,holds'"])
   inner class CheckMatch {
     private fun stubBalanceReconciliation(nomisBalance: PrisonerAggregatedAccountsDto, dpsBalance: AccountReconciliationResponse) {
       financeNomisApi.stubGetPrisonerAccounts(OFFENDER_ID, nomisBalance)
@@ -400,7 +400,7 @@ class PrisonerBalanceReconciliationServiceTest {
   }
 
   @Nested
-  @TestPropertySource(properties = ["reports.prisoner.balance.reconciliation.balances=false", "reports.prisoner.balance.reconciliation.holds=true"])
+  @TestPropertySource(properties = ["reports.prisoner.balance.reconciliation.fields=holds"])
   inner class WithBalanceDisabled {
     private fun stubBalanceReconciliation(nomisBalance: PrisonerAggregatedAccountsDto, dpsBalance: AccountReconciliationResponse) {
       financeNomisApi.stubGetPrisonerAccounts(OFFENDER_ID, nomisBalance)
@@ -431,7 +431,7 @@ class PrisonerBalanceReconciliationServiceTest {
   }
 
   @Nested
-  @TestPropertySource(properties = ["reports.prisoner.balance.reconciliation.holds=false"])
+  @TestPropertySource(properties = ["reports.prisoner.balance.reconciliation.fields='balances'"])
   inner class WithHoldsDisabled {
     private fun stubBalanceReconciliation(nomisBalance: PrisonerAggregatedAccountsDto, dpsBalance: AccountReconciliationResponse) {
       financeNomisApi.stubGetPrisonerAccounts(OFFENDER_ID, nomisBalance)
