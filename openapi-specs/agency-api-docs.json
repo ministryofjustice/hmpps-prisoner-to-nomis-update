@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-20.625.e5fe4f5"
+    "version" : "2026-10-29.661.1948835"
   },
   "servers" : [ {
     "url" : "https://prison-register-dev.hmpps.service.justice.gov.uk",
@@ -7520,7 +7520,7 @@
       "get" : {
         "tags" : [ "legacy-sync-resource" ],
         "summary" : "Returns details of an agency of any type",
-        "description" : "Returns the details of any agency (court, hospital, probation office, approved premises, police custody suite, or generic agency) as a LegacyAgencyDto. Role required is ROLE_HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
+        "description" : "Returns the details of any agency (prison, court, hospital, probation office, approved premises, police custody suite, or generic agency) as a LegacyAgencyDto. Role required is ROLE_HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "getAgency",
         "parameters" : [ {
           "name" : "agencyId",
@@ -7584,7 +7584,7 @@
       "get" : {
         "tags" : [ "legacy-sync-resource" ],
         "summary" : "Returns details of an agency of any type for reconciliation",
-        "description" : "Returns the details of any agency (court, hospital, probation office, approved premises, police custody suite, or generic agency) as a LegacyAgencyDto. Role required is ROLE_HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
+        "description" : "Returns the details of any agency (prison, court, hospital, probation office, approved premises, police custody suite, or generic agency) as a LegacyAgencyDto. Role required is ROLE_HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "getAgencyDetails",
         "parameters" : [ {
           "name" : "agencyId",

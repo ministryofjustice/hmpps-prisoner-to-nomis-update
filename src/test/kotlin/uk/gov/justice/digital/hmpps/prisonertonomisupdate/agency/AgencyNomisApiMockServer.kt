@@ -291,6 +291,19 @@ class AgencyNomisApiMockServer(private val jsonMapper: JsonMapper) {
     )
   }
 
+  fun stubGetPrisonIds(
+    response: AgencyIdsResponse = agencyIdsResponse(),
+  ) {
+    nomisApi.stubFor(
+      get(urlPathEqualTo("/agency/ids/INST/all")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(jsonMapper.writeValueAsString(response)),
+      ),
+    )
+  }
+
   fun stubCreateAgency(
     response: AgencyResponse = agencyResponse(),
   ) {
