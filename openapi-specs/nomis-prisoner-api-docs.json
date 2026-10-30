@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-28.2322.a00471a"
+    "version" : "2026-10-29.2326.ff3cded"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -8952,6 +8952,16 @@
               }
             }
           },
+          "404" : {
+            "description" : "Agency not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
             "content" : {
@@ -8963,17 +8973,7 @@
             }
           },
           "403" : {
-            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Agency not found",
+            "description" : "Missing required role. Requires the ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW role",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -9032,6 +9032,16 @@
               }
             }
           },
+          "404" : {
+            "description" : "Agency not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
             "content" : {
@@ -9043,17 +9053,7 @@
             }
           },
           "403" : {
-            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Agency not found",
+            "description" : "Missing required role. Requires the ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW role",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -9085,6 +9085,16 @@
           "204" : {
             "description" : "Agency deleted or did not exist"
           },
+          "409" : {
+            "description" : "Agency can not be deleted as it is still referenced by other records, for example offender bookings, course activities or agency internal locations",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
             "content" : {
@@ -9096,17 +9106,7 @@
             }
           },
           "403" : {
-            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "409" : {
-            "description" : "Agency can not be deleted as it is still referenced by other records, for example offender bookings, course activities or agency internal locations",
+            "description" : "Missing required role. Requires the ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW role",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -9167,6 +9167,16 @@
               }
             }
           },
+          "404" : {
+            "description" : "Agency not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
             "content" : {
@@ -9178,17 +9188,7 @@
             }
           },
           "403" : {
-            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Agency not found",
+            "description" : "Missing required role. Requires the ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW role",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -9247,6 +9247,16 @@
               }
             }
           },
+          "404" : {
+            "description" : "Agency not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
             "content" : {
@@ -9258,17 +9268,7 @@
             }
           },
           "403" : {
-            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Agency not found",
+            "description" : "Missing required role. Requires the ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW role",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -9319,6 +9319,16 @@
               }
             }
           },
+          "404" : {
+            "description" : "Agency not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
             "content" : {
@@ -9330,17 +9340,7 @@
             }
           },
           "403" : {
-            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Agency not found",
+            "description" : "Missing required role. Requires the ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW role",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -9389,6 +9389,16 @@
               }
             }
           },
+          "404" : {
+            "description" : "Agency not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
             "content" : {
@@ -9400,17 +9410,7 @@
             }
           },
           "403" : {
-            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Agency not found",
+            "description" : "Missing required role. Requires the ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW role",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -9471,6 +9471,16 @@
               }
             }
           },
+          "404" : {
+            "description" : "Agency not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
             "content" : {
@@ -9482,17 +9492,7 @@
             }
           },
           "403" : {
-            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Agency not found",
+            "description" : "Missing required role. Requires the ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW role",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -9551,6 +9551,16 @@
               }
             }
           },
+          "404" : {
+            "description" : "Agency not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
             "content" : {
@@ -9562,17 +9572,7 @@
             }
           },
           "403" : {
-            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Agency not found",
+            "description" : "Missing required role. Requires the ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW role",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -15752,6 +15752,16 @@
               }
             }
           },
+          "409" : {
+            "description" : "Agency with this id already exists",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
             "content" : {
@@ -15763,17 +15773,7 @@
             }
           },
           "403" : {
-            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "409" : {
-            "description" : "Agency with this id already exists",
+            "description" : "Missing required role. Requires the ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW role",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -29123,6 +29123,58 @@
         }
       }
     },
+    "/agency/ids/{agencyType}/all" : {
+      "get" : {
+        "tags" : [ "agency-resource" ],
+        "summary" : "Gets a list of all agency ids of a specific type",
+        "description" : "Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getAllAgenciesByType",
+        "parameters" : [ {
+          "name" : "agencyType",
+          "in" : "path",
+          "description" : "Agency type code",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Agency type code",
+            "example" : "INST"
+          },
+          "example" : "INST"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Agency ids",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AgencyIdsResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/agency/ids/all" : {
       "get" : {
         "tags" : [ "agency-resource" ],
@@ -29168,7 +29220,7 @@
             }
           },
           "403" : {
-            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "description" : "Missing required role. Requires the ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW role",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -47310,6 +47362,10 @@
             "type" : [ "integer", "null" ],
             "format" : "int64"
           },
+          "txnId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
           "txnEntrySeq" : {
             "type" : "integer",
             "format" : "int32"
@@ -47326,10 +47382,6 @@
           },
           "txnEntryAmount" : {
             "type" : "number"
-          },
-          "txnId" : {
-            "type" : "integer",
-            "format" : "int64"
           }
         },
         "required" : [ "txnEntryAmount", "txnEntryDate", "txnEntrySeq", "txnId" ]
