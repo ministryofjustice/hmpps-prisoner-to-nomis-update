@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-28.2777.c13287e"
+    "version" : "2026-10-29.2790.7a4e61d"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -8255,9 +8255,15 @@
           },
           "hasUnconfirmedConsecutiveToFix" : {
             "type" : [ "boolean", "null" ]
+          },
+          "nomisRecall" : {
+            "type" : [ "boolean", "null" ]
+          },
+          "sentenceDeleted" : {
+            "type" : [ "boolean", "null" ]
           }
         },
-        "required" : [ "eventType", "isBreach", "prisonerId" ]
+        "required" : [ "eventType", "prisonerId" ]
       },
       "LegacyLinkCase" : {
         "type" : "object",
@@ -8359,7 +8365,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "06:44:54.117290781"
+            "example" : "06:44:44.292158515"
           },
           "outcomeDispositionCode" : {
             "type" : [ "string", "null" ]
@@ -8443,6 +8449,9 @@
           },
           "offenceCode" : {
             "type" : [ "string", "null" ]
+          },
+          "value" : {
+            "type" : [ "number", "null" ]
           }
         },
         "required" : [ "legacyData" ]
@@ -8694,6 +8703,9 @@
             "items" : {
               "$ref" : "#/components/schemas/AggravatingFactor"
             }
+          },
+          "value" : {
+            "type" : [ "number", "null" ]
           }
         },
         "required" : [ "offenceCode", "offenceStartDate", "prisonId" ]
@@ -8817,7 +8829,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "06:44:54.117290781"
+            "example" : "06:44:44.292158515"
           },
           "courtCode" : {
             "type" : "string"
@@ -10440,6 +10452,9 @@
           },
           "performedByUser" : {
             "type" : [ "string", "null" ]
+          },
+          "value" : {
+            "type" : [ "number", "null" ]
           }
         },
         "required" : [ "appearanceLifetimeUuid", "legacyData", "offenceCode" ]
@@ -11913,7 +11928,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "06:44:54.117290781"
+            "example" : "06:44:44.292158515"
           },
           "courtCode" : {
             "type" : "string"
@@ -12766,7 +12781,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:44:54.117290781"
+            "example" : "06:44:44.292158515"
           },
           "nomisOutcomeCode" : {
             "type" : [ "string", "null" ]
@@ -12845,7 +12860,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "06:44:54.117290781"
+            "example" : "06:44:44.292158515"
           },
           "courtId" : {
             "type" : "string"
@@ -12968,6 +12983,9 @@
             }, {
               "type" : "null"
             } ]
+          },
+          "value" : {
+            "type" : [ "number", "null" ]
           }
         },
         "required" : [ "courtCaseUuid", "lifetimeUuid", "offenceCode", "prisonerId" ]
@@ -12997,7 +13015,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:44:54.117290781"
+            "example" : "06:44:44.292158515"
           },
           "charges" : {
             "type" : "array",
@@ -13034,7 +13052,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "06:44:54.117290781"
+            "example" : "06:44:44.292158515"
           },
           "courtId" : {
             "type" : "string"
@@ -13676,7 +13694,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "06:44:54.117290781"
+            "example" : "06:44:44.292158515"
           },
           "courtCode" : {
             "type" : [ "string", "null" ]
