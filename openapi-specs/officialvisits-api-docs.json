@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-06.1300.7c693cc"
+    "version" : "2026-10-29.1355.4afa2e8"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -6228,7 +6228,8 @@
             "type" : "integer",
             "format" : "int64"
           }
-        }
+        },
+        "required" : [ "number", "size", "totalElements", "totalPages" ]
       },
       "PagedModelOfficialVisitSummarySearchResponse" : {
         "type" : "object",
@@ -6242,7 +6243,8 @@
           "page" : {
             "$ref" : "#/components/schemas/PageMetadata"
           }
-        }
+        },
+        "required" : [ "content", "page" ]
       },
       "PrisonerVisitedDetails" : {
         "type" : "object",
@@ -6540,7 +6542,8 @@
           "page" : {
             "$ref" : "#/components/schemas/PageMetadata"
           }
-        }
+        },
+        "required" : [ "content", "page" ]
       },
       "SentNotification" : {
         "type" : "object",
@@ -7220,7 +7223,8 @@
           "page" : {
             "$ref" : "#/components/schemas/PageMetadata"
           }
-        }
+        },
+        "required" : [ "content", "page" ]
       },
       "VisitForReviewIssue" : {
         "type" : "object",
@@ -7442,7 +7446,8 @@
           "page" : {
             "$ref" : "#/components/schemas/PageMetadata"
           }
-        }
+        },
+        "required" : [ "content", "page" ]
       },
       "SyncOfficialVisitId" : {
         "type" : "object",
