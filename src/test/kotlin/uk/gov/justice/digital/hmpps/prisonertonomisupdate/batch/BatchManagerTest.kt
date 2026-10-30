@@ -525,6 +525,16 @@ class BatchManagerTest {
   }
 
   @Test
+  fun `should call the prison registers reconciliation service`() = runTest {
+    val batchManager = batchManager(BatchType.PRISON_RECON)
+
+    batchManager.onApplicationEvent(event)
+
+    verify(agencyRegistersReconciliationService).generatePrisonReconciliationReportBatch()
+    verify(context).close()
+  }
+
+  @Test
   fun `should call the transfer scheduler all prisoner reconciliation service`() = runTest {
     val batchManager = batchManager(BatchType.TRANSFER_SCHEDULER_ALL_RECON)
 

@@ -58,6 +58,29 @@ class AgencyRegistersReconciliationService(
         log.error("Agency report failed", it)
       }
   }
+  suspend fun generatePrisonReconciliationReportBatch() {
+    telemetryClient.trackEvent(
+      "$TELEMETRY_PREFIX-requested",
+      mapOf(),
+    )
+
+    runCatching { generatePrisonReconciliationReport() }
+      .onSuccess {
+        log.info("Prison report completed with ${it.mismatches.size} mismatches")
+        telemetryClient.trackEvent(
+          "$TELEMETRY_PREFIX-report",
+          mapOf(
+            "agency-count" to it.itemsChecked.toString(),
+            "mismatch-count" to it.mismatches.size.toString(),
+            "success" to "true",
+          ) + it.mismatches.asMap(),
+        )
+      }
+      .onFailure {
+        telemetryClient.trackEvent("$TELEMETRY_PREFIX-report", mapOf("success" to "false"))
+        log.error("Prison report failed", it)
+      }
+  }
 
   suspend fun checkMatch(agencyId: String): MismatchAgency? {
     val nomisAgency = runCatching { nomisApiService.getAgency(agencyId) }.getOrNull()
@@ -90,6 +113,45 @@ class AgencyRegistersReconciliationService(
     val (nomisAgencyIds, dpsAgencyIds) = withContext(Dispatchers.Unconfined) {
       async { nomisApiService.getAgencyIds().agencyIds.map { it.agencyId } } to
         async { dpsApiService.getAgencyIds().agencyIds.map { it.agencyId } }
+    }.awaitBoth()
+
+    val allIds = (nomisAgencyIds + dpsAgencyIds).toSet()
+
+    return coroutineScope {
+      val itemsCount = AtomicInteger(0)
+      val pagesCount = AtomicInteger(0)
+
+      val mismatchesChannel = Channel<MismatchAgency>(capacity = UNLIMITED)
+      val channel = produce {
+        allIds.forEach { send(it) }
+        channel.close()
+      }
+
+      val jobs = (1L..10).map {
+        launch {
+          for (item in channel) {
+            checkMatch(item)?.also { mismatchesChannel.send(it) }
+            itemsCount.incrementAndGet()
+          }
+        }
+      }
+
+      launch {
+        jobs.joinAll()
+        mismatchesChannel.close()
+      }
+
+      ReconciliationResult(
+        mismatches = mismatchesChannel.toList().also { log.info("Mismatch result: $it") },
+        itemsChecked = itemsCount.get(),
+        pagesChecked = pagesCount.get(),
+      )
+    }
+  }
+  suspend fun generatePrisonReconciliationReport(): ReconciliationResult<MismatchAgency> {
+    val (nomisAgencyIds, dpsAgencyIds) = withContext(Dispatchers.Unconfined) {
+      async { nomisApiService.getPrisonIds().agencyIds.map { it.agencyId } } to
+        async { dpsApiService.getPrisonIds().agencyIds.map { it.agencyId } }
     }.awaitBoth()
 
     val allIds = (nomisAgencyIds + dpsAgencyIds).toSet()
