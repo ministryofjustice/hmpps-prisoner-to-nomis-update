@@ -24,4 +24,5 @@ class AgencyRegistersDpsApiService(
   suspend fun getAgency(agencyId: String): LegacyAgencyDto? = api.prepare(api.getAgencyRequestConfig(agencyId)).retrieve().awaitBodyOrNullForNotFound(retrySpec)
   suspend fun getAgencyForReconciliation(agencyId: String): LegacyAgencyDto? = api.prepare(api.getAgencyDetailsRequestConfig(agencyId)).retrieve().awaitBodyOrNullForNotFound(retrySpec)
   suspend fun getAgencyIds() = api.getAllAgencyIds().retryWhen(retrySpec).awaitSingle()
+  suspend fun getPrisonIds() = api.getAllPrisonIds().retryWhen(retrySpec).awaitSingle()
 }

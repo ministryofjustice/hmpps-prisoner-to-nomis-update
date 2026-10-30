@@ -158,4 +158,15 @@ class AgencyRegistersDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       ),
     )
   }
+
+  fun stubGetPrisonIds(response: AgencyIdsResponse = agencyIdsResponse()) {
+    stubFor(
+      get("/legacy/reconciliation/prison/ids/all").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(jsonMapper.writeValueAsString(response))
+          .withStatus(200),
+      ),
+    )
+  }
 }
