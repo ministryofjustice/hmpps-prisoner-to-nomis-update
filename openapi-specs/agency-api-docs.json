@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-29.661.1948835"
+    "version" : "2026-10-30.665.845fe6f"
   },
   "servers" : [ {
     "url" : "https://prison-register-dev.hmpps.service.justice.gov.uk",
@@ -7633,6 +7633,46 @@
           },
           "404" : {
             "description" : "Agency not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/legacy/reconciliation/prison/ids/all" : {
+      "get" : {
+        "tags" : [ "legacy-sync-resource" ],
+        "summary" : "Returns IDs of all prisons for reconciliation",
+        "description" : "Returns the IDs of all prisons. Role required is ROLE_HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
+        "operationId" : "getAllPrisonIds",
+        "responses" : {
+          "200" : {
+            "description" : "Prison IDs returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AgencyIdsResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Incorrect permissions to retrieve prison IDs",
             "content" : {
               "application/json" : {
                 "schema" : {
