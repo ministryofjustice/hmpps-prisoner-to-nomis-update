@@ -119,17 +119,23 @@ class PrisonerBalanceReconciliationService(
           )
         },
     )
-    val dpsFields = BalanceFields(
-      prisonNumber = nomisAccounts.prisonNumber,
-      accounts = dpsAccounts
-        .map {
-          AccountFields(
-            accountCode = it.key.toInt(),
-            balance = it.value.totalBalance,
-            holdBalance = it.value.holdBalance,
-          )
-        },
-    )
+    val dpsFields = dpsAccounts?.let {
+      BalanceFields(
+        prisonNumber = nomisAccounts.prisonNumber,
+        accounts = dpsAccounts.dynamicSubAccountBalances
+          .map {
+            AccountFields(
+              accountCode = it.key.toInt(),
+              balance = it.value.totalBalance,
+              holdBalance = it.value.holdBalance,
+            )
+          },
+//        advanceSummary = AdvanceSummary(
+//          advanceCount = dpsAccounts.advances.advanceCount,
+//          advanceBalance = dpsAccounts.advances.advanceBalance,
+//        ),
+      )
+    }
 
     val differenceList = compareObjects(dpsFields, nomisFields, "prisoner-balances")
 
@@ -288,7 +294,7 @@ class PrisonerBalanceReconciliationService(
 
 data class MismatchPrisonerBalance(
   val nomis: BalanceFields,
-  val dps: BalanceFields,
+  val dps: BalanceFields?,
   val differences: List<Difference> = emptyList(),
 )
 

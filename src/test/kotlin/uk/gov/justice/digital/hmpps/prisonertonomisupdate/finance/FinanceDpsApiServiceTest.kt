@@ -12,12 +12,14 @@ import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
-import org.springframework.http.HttpStatus.NOT_FOUND
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiExtension.Companion.dpsFinanceServer
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SubAccountBalanceForReconciliation
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.AccountReconciliationResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.AdvancesAccountReconciliation
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SubscriptionsAccountReconciliation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
+import java.math.BigDecimal
 
 @SpringAPIServiceTest
 @Import(
@@ -61,7 +63,17 @@ class FinanceDpsApiServiceTest {
   @Nested
   inner class ReconcilePrisonerAccounts {
     val prisonerNo = "A1234AA"
-    val sampleResponse = emptyMap<String, SubAccountBalanceForReconciliation>()
+    val sampleResponse = AccountReconciliationResponse(
+      advances = AdvancesAccountReconciliation(
+        advanceBalance = BigDecimal.ONE,
+        advanceCount = 1,
+      ),
+      subscriptions = SubscriptionsAccountReconciliation(
+        weeklyPaymentAmount = BigDecimal.ONE,
+        subscriptionCount = 1,
+      ),
+      dynamicSubAccountBalances = emptyMap(),
+    )
 
     @Test
     internal fun `will pass oath2 token to endpoint`() = runTest {
@@ -93,13 +105,6 @@ class FinanceDpsApiServiceTest {
       val data = apiService.getPrisonerAccounts(prisonerNo)
 
       assertThat(data).isEqualTo(sampleResponse)
-    }
-
-    @Test
-    fun `will return empty map when prisoner accounts not found`() = runTest {
-      dpsFinanceServer.stubGetPrisonerAccounts(prisonNumber = prisonerNo, status = NOT_FOUND)
-
-      assertThat(apiService.getPrisonerAccounts(prisonerNo)).isEmpty()
     }
 
     @Test
