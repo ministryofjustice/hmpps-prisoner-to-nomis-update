@@ -22,11 +22,14 @@ import org.mockito.kotlin.verifyNoInteractions
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiExtension.Companion.dpsFinanceServer
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SubAccountBalanceForReconciliation
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.AccountReconciliationResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.AdvancesAccountReconciliation
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SubscriptionsAccountReconciliation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerAggregatedAccountsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
+import java.math.BigDecimal
 
 class PrisonerBalanceReconciliationResourceIntTest(
   @Autowired private val reconciliationService: PrisonerBalanceReconciliationService,
@@ -34,6 +37,18 @@ class PrisonerBalanceReconciliationResourceIntTest(
 
   @Autowired
   private lateinit var financeNomisApi: PrisonerBalanceNomisApiMockServer
+
+  private val sampleResponse = AccountReconciliationResponse(
+    advances = AdvancesAccountReconciliation(
+      advanceBalance = BigDecimal.ONE,
+      advanceCount = 1,
+    ),
+    subscriptions = SubscriptionsAccountReconciliation(
+      weeklyPaymentAmount = BigDecimal.ONE,
+      subscriptionCount = 1,
+    ),
+    dynamicSubAccountBalances = emptyMap(),
+  )
 
   @DisplayName("Prisoner balances all reconciliation report")
   @Nested
@@ -126,7 +141,7 @@ class PrisonerBalanceReconciliationResourceIntTest(
         stubBalances(
           2,
           nomisPrisonerAccounts().copy(prisonNumber = "A0002NN"),
-          emptyMap(),
+          sampleResponse,
         )
         reconciliationService.generateReconciliationReportBatch(false)
 
@@ -173,7 +188,7 @@ class PrisonerBalanceReconciliationResourceIntTest(
         stubBalances(
           2,
           nomisPrisonerAccounts().copy(prisonNumber = "A0002NN"),
-          emptyMap(),
+          sampleResponse,
         )
 
         reconciliationService.generateReconciliationReportBatch(false)
@@ -257,7 +272,7 @@ class PrisonerBalanceReconciliationResourceIntTest(
         stubBalances(
           2,
           nomisPrisonerAccounts().copy(prisonNumber = "A0002NN"),
-          emptyMap(),
+          sampleResponse,
         )
         reconciliationService.generateReconciliationReportBatch(true)
 
@@ -458,7 +473,7 @@ class PrisonerBalanceReconciliationResourceIntTest(
     }
   }
 
-  private fun stubBalances(offenderId: Long, nomisResponse: PrisonerAggregatedAccountsDto, dpsResponse: Map<String, SubAccountBalanceForReconciliation>) {
+  private fun stubBalances(offenderId: Long, nomisResponse: PrisonerAggregatedAccountsDto, dpsResponse: AccountReconciliationResponse) {
     financeNomisApi.stubGetPrisonerAccounts(offenderId, nomisResponse)
     dpsFinanceServer.stubGetPrisonerAccounts(nomisResponse.prisonNumber, dpsResponse)
   }

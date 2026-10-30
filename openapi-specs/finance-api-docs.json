@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-27.1244.d3d2a33"
+    "version" : "2026-10-29.1248.34e64eb"
   },
   "servers" : [ {
     "url" : "https://prisoner-finance-sync-api-dev.hmpps.service.justice.gov.uk/",
@@ -1163,16 +1163,21 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "type" : "object",
-                  "additionalProperties" : {
-                    "$ref" : "#/components/schemas/SubAccountBalanceForReconciliation"
-                  }
+                  "$ref" : "#/components/schemas/AccountReconciliationResponse"
                 },
                 "examples" : {
-                  "SubAccountBalances" : {
-                    "summary" : "Example response",
-                    "description" : "SubAccountBalances",
+                  "AccountReconciliation" : {
+                    "summary" : "Example reconciliation response",
+                    "description" : "AccountReconciliation",
                     "value" : {
+                      "advances" : {
+                        "advanceBalance" : 15.0,
+                        "advanceCount" : 2
+                      },
+                      "subscriptions" : {
+                        "weeklyPaymentAmount" : 5.5,
+                        "subscriptionCount" : 1
+                      },
                       "2101" : {
                         "totalBalance" : 100.5,
                         "holdBalance" : 0,
@@ -2521,6 +2526,37 @@
         },
         "required" : [ "amountIssued", "amountOutstanding", "balanceCalculationTime", "createdBy", "createdOn", "legacyInformationNumber", "legacyPaymentProfileId", "legacyTransactionId", "prisonID", "prisonNumber", "repaymentAmount", "repaymentStartDate", "status" ]
       },
+      "AccountReconciliationResponse" : {
+        "type" : "object",
+        "properties" : {
+          "advances" : {
+            "$ref" : "#/components/schemas/AdvancesAccountReconciliation"
+          },
+          "subscriptions" : {
+            "$ref" : "#/components/schemas/SubscriptionsAccountReconciliation"
+          },
+          "dynamicSubAccountBalances" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/SubAccountBalanceForReconciliation"
+            }
+          }
+        },
+        "required" : [ "advances", "dynamicSubAccountBalances", "subscriptions" ]
+      },
+      "AdvancesAccountReconciliation" : {
+        "type" : "object",
+        "properties" : {
+          "advanceCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "advanceBalance" : {
+            "type" : "number"
+          }
+        },
+        "required" : [ "advanceBalance", "advanceCount" ]
+      },
       "SubAccountBalanceForReconciliation" : {
         "type" : "object",
         "properties" : {
@@ -2536,6 +2572,19 @@
           }
         },
         "required" : [ "balanceDateTime", "holdBalance", "totalBalance" ]
+      },
+      "SubscriptionsAccountReconciliation" : {
+        "type" : "object",
+        "properties" : {
+          "subscriptionCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "weeklyPaymentAmount" : {
+            "type" : "number"
+          }
+        },
+        "required" : [ "subscriptionCount", "weeklyPaymentAmount" ]
       },
       "SyncOffenderTransactionResponse" : {
         "type" : "object",
@@ -2648,12 +2697,9 @@
             "type" : "string",
             "format" : "date-time"
           },
-          "requestId" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "transactionType" : {
-            "type" : [ "string", "null" ]
+          "legacyTransactionId" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int64"
           },
           "caseloadId" : {
             "type" : [ "string", "null" ]
@@ -2662,9 +2708,12 @@
             "type" : [ "string", "null" ],
             "format" : "date-time"
           },
-          "legacyTransactionId" : {
-            "type" : [ "integer", "null" ],
-            "format" : "int64"
+          "requestId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "transactionType" : {
+            "type" : [ "string", "null" ]
           },
           "synchronizedTransactionId" : {
             "type" : "string",

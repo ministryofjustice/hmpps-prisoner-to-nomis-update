@@ -14,9 +14,9 @@ import org.springframework.test.context.junit.jupiter.SpringExtension
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiExtension.Companion.jsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiExtension.Companion.prisonerTransaction
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.AccountReconciliationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.GeneralLedgerEntry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.OffenderTransaction
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SubAccountBalanceForReconciliation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SyncOffenderTransactionResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ErrorResponse
 import java.math.BigDecimal
@@ -130,7 +130,7 @@ class FinanceDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   }
   fun stubGetPrisonerAccounts(
     prisonNumber: String,
-    response: Map<String, SubAccountBalanceForReconciliation> = emptyMap(),
+    response: AccountReconciliationResponse? = null,
     status: HttpStatus = HttpStatus.OK,
     error: ErrorResponse = ErrorResponse(status = status.value()),
   ) {
