@@ -33,6 +33,7 @@ class AgencyNomisApiService(
 
   suspend fun getAgency(agencyId: String): AgencyResponse? = api.prepare(api.getAgencyRequestConfig(agencyId)).retrieve().awaitBodyOrNullForNotFound(retrySpec)
   suspend fun getAgencyIds(): AgencyIdsResponse = api.getAllAgencies(excludeType = listOf("INST")).retryWhen(retrySpec).awaitSingle()
+  suspend fun getPrisonIds(): AgencyIdsResponse = api.getAllAgenciesByType(agencyType = "INST").retryWhen(retrySpec).awaitSingle()
   suspend fun createAgency(request: CreateAgencyRequest) = api.createAgency(request).awaitSingle()
   suspend fun updateAgency(agencyId: String, request: UpdateAgencyRequest) = api.updateAgency(agencyId, request).awaitSingle()
   suspend fun deleteAgency(agencyId: String) = api.deleteAgency(agencyId).awaitSingle()
