@@ -511,7 +511,19 @@ hmpps.sqs:
           "register.probationoffice.phone.deleted",
           "register.probationoffice.address.inserted",
           "register.probationoffice.address.amended",
-          "register.probationoffice.address.deleted"
+          "register.probationoffice.address.deleted",
+          "register.agency.inserted",
+          "register.agency.amended",
+          "register.agency.deleted",
+          "register.agency.email.inserted",
+          "register.agency.email.amended",
+          "register.agency.email.deleted",
+          "register.agency.phone.inserted",
+          "register.agency.phone.amended",
+          "register.agency.phone.deleted",
+          "register.agency.address.inserted",
+          "register.agency.address.amended",
+          "register.agency.address.deleted"
         ]}
       dlqMaxReceiveCount: 2
       visibilityTimeout: 120
