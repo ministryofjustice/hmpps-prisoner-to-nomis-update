@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-30.941.b13df61"
+    "version" : "2026-11-02"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -19280,62 +19280,6 @@
         }
       }
     },
-    "/mapping/core-person-religion/religion/cpr-ids" : {
-      "get" : {
-        "tags" : [ "religion-resource" ],
-        "summary" : "Get religion mappings by cpr ids",
-        "description" : "Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getReligionMappingsByCprIds",
-        "parameters" : [ {
-          "name" : "ids",
-          "in" : "query",
-          "description" : "Cpr religion ids",
-          "required" : true,
-          "schema" : {
-            "type" : "array",
-            "items" : {
-              "type" : "string"
-            }
-          },
-          "example" : "802dfae7-45f0-4c22-b369-bfe7da5e54e2"
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Mapping data",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/ReligionMappingDto"
-                  }
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Access this endpoint is forbidden",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/mapping/core-person-religion/religion/cpr-id/{cprId}" : {
       "get" : {
         "tags" : [ "religion-resource" ],
@@ -27285,11 +27229,11 @@
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           },
-          "id" : {
-            "type" : "string"
-          },
           "isNew" : {
             "type" : "boolean"
+          },
+          "id" : {
+            "type" : "string"
           }
         },
         "required" : [ "dpsCSIPReportId", "dpsCSIPReviewId", "id", "isNew", "mappingType", "new", "nomisCSIPReviewId" ]
@@ -27322,11 +27266,11 @@
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           },
-          "id" : {
-            "type" : "string"
-          },
           "isNew" : {
             "type" : "boolean"
+          },
+          "id" : {
+            "type" : "string"
           }
         },
         "required" : [ "dpsCSIPPlanId", "dpsCSIPReportId", "id", "isNew", "mappingType", "new", "nomisCSIPPlanId" ]
@@ -27359,11 +27303,11 @@
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           },
-          "id" : {
-            "type" : "string"
-          },
           "isNew" : {
             "type" : "boolean"
+          },
+          "id" : {
+            "type" : "string"
           }
         },
         "required" : [ "dpsCSIPInterviewId", "dpsCSIPReportId", "id", "isNew", "mappingType", "new", "nomisCSIPInterviewId" ]
@@ -27396,11 +27340,11 @@
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           },
-          "id" : {
-            "type" : "string"
-          },
           "isNew" : {
             "type" : "boolean"
+          },
+          "id" : {
+            "type" : "string"
           }
         },
         "required" : [ "dpsCSIPFactorId", "dpsCSIPReportId", "id", "isNew", "mappingType", "new", "nomisCSIPFactorId" ]
@@ -27501,11 +27445,11 @@
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           },
-          "id" : {
-            "type" : "string"
-          },
           "isNew" : {
             "type" : "boolean"
+          },
+          "id" : {
+            "type" : "string"
           }
         },
         "required" : [ "dpsCSIPAttendeeId", "dpsCSIPReportId", "id", "isNew", "mappingType", "new", "nomisCSIPAttendeeId" ]
@@ -27568,11 +27512,11 @@
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           },
-          "id" : {
-            "type" : "string"
-          },
           "isNew" : {
             "type" : "boolean"
+          },
+          "id" : {
+            "type" : "string"
           }
         },
         "required" : [ "dpsCSIPId", "id", "isNew", "mappingType", "new", "nomisCSIPId" ]
@@ -27625,11 +27569,11 @@
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           },
-          "id" : {
-            "type" : "string"
-          },
           "isNew" : {
             "type" : "boolean"
+          },
+          "id" : {
+            "type" : "string"
           }
         },
         "required" : [ "dpsSentenceId", "id", "isNew", "mappingType", "new", "nomisBookingId", "nomisSentenceSequence" ]
@@ -27667,11 +27611,11 @@
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           },
-          "id" : {
-            "type" : "string"
-          },
           "isNew" : {
             "type" : "boolean"
+          },
+          "id" : {
+            "type" : "string"
           }
         },
         "required" : [ "dpsTermId", "id", "isNew", "mappingType", "new", "nomisBookingId", "nomisSentenceSequence", "nomisTermSequence" ]
@@ -27701,11 +27645,11 @@
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           },
-          "id" : {
-            "type" : "string"
-          },
           "isNew" : {
             "type" : "boolean"
+          },
+          "id" : {
+            "type" : "string"
           }
         },
         "required" : [ "dpsCourtChargeId", "id", "isNew", "mappingType", "new", "nomisCourtChargeId" ]
@@ -27873,11 +27817,11 @@
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           },
-          "id" : {
-            "type" : "string"
-          },
           "isNew" : {
             "type" : "boolean"
+          },
+          "id" : {
+            "type" : "string"
           }
         },
         "required" : [ "dpsCourtAppearanceId", "id", "isNew", "mappingType", "new", "nomisCourtAppearanceId" ]
