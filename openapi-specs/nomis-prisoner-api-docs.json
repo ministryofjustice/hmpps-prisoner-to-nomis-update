@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-30.2332.6e09204"
+    "version" : "2026-10-30.2338.6238d58"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -20375,6 +20375,48 @@
         }
       }
     },
+    "/prisoners/{offenderNo}/bed-assignments" : {
+      "get" : {
+        "tags" : [ "bed-assignment-history-resource" ],
+        "summary" : "Gets all bed assignment history for a prisoner",
+        "description" : "Retrieves the bed assignment history across all of a prisoner's bookings, for migration and synchronisation. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getBedAssignmentsForPrisoner",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender No AKA prisoner number",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender No AKA prisoner number",
+            "example" : "A3745XD"
+          },
+          "example" : "A3745XD"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonerBedAssignmentHistoryResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Prisoner does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/prisoners/{offenderNo}/alerts/to-migrate" : {
       "get" : {
         "tags" : [ "alerts-resource" ],
@@ -21341,6 +21383,61 @@
           },
           "404" : {
             "description" : "Offender booking not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prisoners/booking-id/{bookingId}/bed-assignments/{sequence}" : {
+      "get" : {
+        "tags" : [ "bed-assignment-history-resource" ],
+        "summary" : "Get a bed assignment history record for a booking",
+        "description" : "Retrieves a single bed assignment, for synchronisation. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getBedAssignment",
+        "parameters" : [ {
+          "name" : "bookingId",
+          "in" : "path",
+          "description" : "Booking Id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Booking Id",
+            "example" : 2345678
+          },
+          "example" : 2345678
+        }, {
+          "name" : "sequence",
+          "in" : "path",
+          "description" : "Sequence within booking",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Sequence within booking",
+            "example" : 3
+          },
+          "example" : 3
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BedAssignmentHistoryResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Bed assignment or booking does not exist",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -27083,6 +27180,153 @@
           },
           "404" : {
             "description" : "Not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/court-event-charges/{eventId}/charges/{chargeId}" : {
+      "get" : {
+        "tags" : [ "court-sentencing-resource" ],
+        "summary" : "get the court event charge, without offenderNo validation",
+        "description" : "Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW. Retrieves the court event charge ",
+        "operationId" : "getCourtEventChargeForMigration",
+        "parameters" : [ {
+          "name" : "chargeId",
+          "in" : "path",
+          "description" : "Offender Charge id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Offender Charge id",
+            "example" : 12345
+          },
+          "example" : 12345
+        }, {
+          "name" : "eventId",
+          "in" : "path",
+          "description" : "Event id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Event id",
+            "example" : 12345
+          },
+          "example" : 12345
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "the court appearance details",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CourtEventChargeResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint when role NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Court Appearance not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/court-event-charges/ids" : {
+      "get" : {
+        "tags" : [ "court-sentencing-resource" ],
+        "summary" : "get court event charge IDs that have a property value",
+        "description" : "Retrieves a paged list of court event charge ids where the property value is not null. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
+        "operationId" : "getCourtEventChargeIdsWithPropertyValue",
+        "parameters" : [ {
+          "name" : "page",
+          "in" : "query",
+          "description" : "Zero-based page index (0..N)",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "default" : 0,
+            "minimum" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "description" : "The size of the page to be returned",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "default" : 20,
+            "minimum" : 1
+          }
+        }, {
+          "name" : "sort",
+          "in" : "query",
+          "description" : "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Pageable list of ids are returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PageCourtEventChargeIdResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint when role ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -43002,6 +43246,79 @@
         },
         "required" : [ "bookingId", "bookingSequence" ]
       },
+      "BedAssignmentHistoryResponse" : {
+        "type" : "object",
+        "description" : "A period a prisoner was assigned to a cell (living unit) in NOMIS",
+        "properties" : {
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The booking id",
+            "example" : 2345678
+          },
+          "sequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The sequence of the assignment within the booking",
+            "example" : 3
+          },
+          "livingUnitId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS internal location id of the living unit, returned even when the location no longer exists",
+            "example" : -3009
+          },
+          "livingUnitDescription" : {
+            "type" : [ "string", "null" ],
+            "description" : "The description of the living unit, null when the location no longer exists",
+            "example" : "BXI-A-1-016"
+          },
+          "prisonId" : {
+            "type" : [ "string", "null" ],
+            "description" : "The prison the living unit belongs to, null when the location no longer exists",
+            "example" : "BXI"
+          },
+          "assignmentDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "When the prisoner was assigned to the living unit"
+          },
+          "assignmentEndDateTime" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "When the assignment ended, null when it is the current assignment"
+          },
+          "assignmentReasonCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "The reason code (domain CHG_HOUS_RSN), returned even when not in reference data",
+            "example" : "ADM"
+          },
+          "assignmentReasonDescription" : {
+            "type" : [ "string", "null" ],
+            "description" : "The reason description, null when the code is not in reference data",
+            "example" : "Administrative"
+          },
+          "audit" : {
+            "$ref" : "#/components/schemas/NomisAudit",
+            "description" : "Audit data associated with the record"
+          }
+        },
+        "required" : [ "assignmentDateTime", "audit", "bookingId", "livingUnitId", "sequence" ]
+      },
+      "PrisonerBedAssignmentHistoryResponse" : {
+        "type" : "object",
+        "description" : "The bed assignment history held against a prisoner, across all bookings",
+        "properties" : {
+          "bedAssignments" : {
+            "type" : "array",
+            "description" : "Bed assignments ordered by booking id then sequence",
+            "items" : {
+              "$ref" : "#/components/schemas/BedAssignmentHistoryResponse"
+            }
+          }
+        },
+        "required" : [ "bedAssignments" ]
+      },
       "PrisonerAlertsResponse" : {
         "type" : "object",
         "description" : "The list of unique alerts held against a prisoner",
@@ -47380,14 +47697,6 @@
             "type" : [ "integer", "null" ],
             "format" : "int64"
           },
-          "txnId" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "txnEntrySeq" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
           "txnEntryDate" : {
             "type" : "string",
             "format" : "date-time"
@@ -47400,6 +47709,14 @@
           },
           "txnEntryAmount" : {
             "type" : "number"
+          },
+          "txnId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "txnEntrySeq" : {
+            "type" : "integer",
+            "format" : "int32"
           }
         },
         "required" : [ "txnEntryAmount", "txnEntryDate", "txnEntrySeq", "txnId" ]
@@ -47567,6 +47884,69 @@
           }
         },
         "required" : [ "csipId" ]
+      },
+      "CourtEventChargeIdResponse" : {
+        "type" : "object",
+        "description" : "court event charge id",
+        "properties" : {
+          "offenderChargeId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Offender Charge Id"
+          },
+          "eventId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Event Id"
+          }
+        },
+        "required" : [ "eventId", "offenderChargeId" ]
+      },
+      "PageCourtEventChargeIdResponse" : {
+        "type" : "object",
+        "properties" : {
+          "totalPages" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "content" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CourtEventChargeIdResponse"
+            }
+          },
+          "number" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
+          },
+          "numberOfElements" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
+          "empty" : {
+            "type" : "boolean"
+          }
+        }
       },
       "CourtCaseIdResponse" : {
         "type" : "object",
