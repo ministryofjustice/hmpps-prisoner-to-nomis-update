@@ -109,7 +109,7 @@ class PrisonerBalanceReconciliationServiceTest {
     @Test
     fun `will ignore DPS accounts with a zero balance to show no mismatch`() = runTest {
       val dpsAccounts = AccountReconciliationResponse(
-        dynamicSubAccountBalances = mapOf(
+        existingSubAccountBalances = mapOf(
           "1001" to SubAccountBalanceForReconciliation(
             totalBalance = BigDecimal.valueOf(1.5),
             holdBalance = BigDecimal.valueOf(0.3),
@@ -148,7 +148,7 @@ class PrisonerBalanceReconciliationServiceTest {
       stubBalanceReconciliation(
         nomisPrisonerAccounts(),
         AccountReconciliationResponse(
-          dynamicSubAccountBalances = mapOf(
+          existingSubAccountBalances = mapOf(
             "1001" to SubAccountBalanceForReconciliation(
               totalBalance = BigDecimal.TEN,
               holdBalance = BigDecimal.valueOf(0.3),
@@ -226,7 +226,7 @@ class PrisonerBalanceReconciliationServiceTest {
       stubBalanceReconciliation(
         nomisPrisonerAccounts().copy(accounts = listOf(nomisAccount(1001), nomisAccount(1002))),
         AccountReconciliationResponse(
-          dynamicSubAccountBalances = mapOf(
+          existingSubAccountBalances = mapOf(
             1002.toString() to SubAccountBalanceForReconciliation(
               totalBalance = BigDecimal.valueOf(1.5),
               holdBalance = BigDecimal.valueOf(0.3),
@@ -501,7 +501,7 @@ class PrisonerBalanceReconciliationServiceTest {
 }
 
 fun dpsAccount(accountCode: Int = 1001, totalBalance: BigDecimal = BigDecimal.valueOf(1.5), holdBalance: BigDecimal = BigDecimal.valueOf(0.3)) = AccountReconciliationResponse(
-  dynamicSubAccountBalances = mapOf(
+  existingSubAccountBalances = mapOf(
     accountCode.toString() to SubAccountBalanceForReconciliation(
       totalBalance = totalBalance,
       holdBalance = holdBalance,

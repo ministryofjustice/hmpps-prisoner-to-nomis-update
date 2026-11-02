@@ -47,7 +47,7 @@ class PrisonerBalanceReconciliationResourceIntTest(
       weeklyPaymentAmount = BigDecimal.ONE,
       subscriptionCount = 1,
     ),
-    dynamicSubAccountBalances = emptyMap(),
+    existingSubAccountBalances = emptyMap(),
   )
 
   @DisplayName("Prisoner balances all reconciliation report")
