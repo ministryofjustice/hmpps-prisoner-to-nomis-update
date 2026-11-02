@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-30.2338.6238d58"
+    "version" : "2026-11-02.2343.7d44793"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -24069,6 +24069,69 @@
         }
       }
     },
+    "/movements/booking/{bookingId}/person-locations" : {
+      "get" : {
+        "tags" : [ "offender-person-locations-resource" ],
+        "summary" : "Get booking and movements for a single booking",
+        "description" : "Get booking and movements for a single booking. This is used for reconciliation. Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getBookingPersonLocations",
+        "parameters" : [ {
+          "name" : "bookingId",
+          "in" : "path",
+          "description" : "Booking ID",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Booking ID",
+            "example" : 12345
+          },
+          "example" : 12345
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Person locations returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BookingPersonLocations"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Booking not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/movements/booking/{bookingId}/court" : {
       "get" : {
         "tags" : [ "offender-court-movements-resource" ],
@@ -25171,12 +25234,12 @@
         }, {
           "name" : "activeOnly",
           "in" : "query",
-          "description" : "whether to return just active advances",
+          "description" : "whether to return just active scheduled payments",
           "required" : false,
           "schema" : {
             "type" : "boolean",
             "default" : false,
-            "description" : "whether to return just active advances",
+            "description" : "whether to return just active scheduled payments",
             "example" : true
           },
           "example" : true
@@ -25653,12 +25716,12 @@
         }, {
           "name" : "activeOnly",
           "in" : "query",
-          "description" : "whether to return just active advances",
+          "description" : "whether to return just active scheduled payments",
           "required" : false,
           "schema" : {
             "type" : "boolean",
             "default" : false,
-            "description" : "whether to return just active advances",
+            "description" : "whether to return just active scheduled payments",
             "example" : true
           },
           "example" : true
@@ -47697,6 +47760,10 @@
             "type" : [ "integer", "null" ],
             "format" : "int64"
           },
+          "txnId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
           "txnEntryDate" : {
             "type" : "string",
             "format" : "date-time"
@@ -47709,10 +47776,6 @@
           },
           "txnEntryAmount" : {
             "type" : "number"
-          },
-          "txnId" : {
-            "type" : "integer",
-            "format" : "int64"
           },
           "txnEntrySeq" : {
             "type" : "integer",
