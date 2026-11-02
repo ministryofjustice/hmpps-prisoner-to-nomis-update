@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-29.2790.7a4e61d"
+    "version" : "2026-11-02.2799.795e95b"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -8263,7 +8263,7 @@
             "type" : [ "boolean", "null" ]
           }
         },
-        "required" : [ "eventType", "prisonerId" ]
+        "required" : [ "eventType", "isBreach", "prisonerId" ]
       },
       "LegacyLinkCase" : {
         "type" : "object",
@@ -8365,7 +8365,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "06:44:44.292158515"
+            "example" : "06:59:15.624005528"
           },
           "outcomeDispositionCode" : {
             "type" : [ "string", "null" ]
@@ -8829,7 +8829,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "06:44:44.292158515"
+            "example" : "06:59:15.624005528"
           },
           "courtCode" : {
             "type" : "string"
@@ -11928,7 +11928,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "06:44:44.292158515"
+            "example" : "06:59:15.624005528"
           },
           "courtCode" : {
             "type" : "string"
@@ -12781,7 +12781,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:44:44.292158515"
+            "example" : "06:59:15.624005528"
           },
           "nomisOutcomeCode" : {
             "type" : [ "string", "null" ]
@@ -12860,7 +12860,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "06:44:44.292158515"
+            "example" : "06:59:15.624005528"
           },
           "courtId" : {
             "type" : "string"
@@ -13015,7 +13015,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:44:44.292158515"
+            "example" : "06:59:15.624005528"
           },
           "charges" : {
             "type" : "array",
@@ -13052,7 +13052,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "06:44:44.292158515"
+            "example" : "06:59:15.624005528"
           },
           "courtId" : {
             "type" : "string"
@@ -13492,6 +13492,9 @@
           },
           "findingOfDomesticAbuse" : {
             "type" : [ "boolean", "null" ]
+          },
+          "value" : {
+            "type" : [ "number", "null" ]
           }
         },
         "required" : [ "chargeUuid", "createdAt", "offenceCode" ]
@@ -13574,9 +13577,15 @@
           },
           "hasUnconfirmedConsecutiveToFixSentences" : {
             "type" : "boolean"
+          },
+          "hasRecalls" : {
+            "type" : "boolean"
+          },
+          "canAddHearing" : {
+            "type" : "boolean"
           }
         },
-        "required" : [ "allAppearancesHaveRecall", "appearanceCount", "canAppeal", "canBreach", "caseReferences", "courtCaseStatus", "courtCaseUuid", "firstDayInCustody", "firstDayInCustodyWarrantType", "hasUnconfirmedConsecutiveToFixSentences", "latestCourtAppearance", "mergedFromCases", "prisonerId" ]
+        "required" : [ "allAppearancesHaveRecall", "appearanceCount", "canAddHearing", "canAppeal", "canBreach", "caseReferences", "courtCaseStatus", "courtCaseUuid", "firstDayInCustody", "firstDayInCustodyWarrantType", "hasRecalls", "hasUnconfirmedConsecutiveToFixSentences", "latestCourtAppearance", "mergedFromCases", "prisonerId" ]
       },
       "PagedLatestCourtAppearance" : {
         "type" : "object",
@@ -13694,7 +13703,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "06:44:44.292158515"
+            "example" : "06:59:15.624005528"
           },
           "courtCode" : {
             "type" : [ "string", "null" ]
@@ -13866,11 +13875,11 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
-          },
           "first" : {
             "type" : "boolean"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",

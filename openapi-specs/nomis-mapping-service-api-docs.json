@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-27.936.45d41af"
+    "version" : "2026-10-30.941.b13df61"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -7537,6 +7537,123 @@
                 }
               }
             }
+          },
+          "409" : {
+            "description" : "Indicates a duplicate mapping has been rejected. If Error code = 1409 the body will return a DuplicateErrorResponse",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/bed-assignments/{offenderNo}/all" : {
+      "post" : {
+        "tags" : [ "bed-assignment-mapping-resource" ],
+        "summary" : "Creates a set of new Bed assignment mappings for a prisoner",
+        "description" : "Creates a mapping between all the nomis bed assignment ids and dps bed assignment ids, replacing any earlier mappings for the same bookings. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "createBedAssignmentMappingsForPrisoner",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "NOMIS offender no of the prisoner being migrated. Not stored on the mapping",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "NOMIS offender no of the prisoner being migrated. Not stored on the mapping",
+            "example" : "A1234KT"
+          },
+          "example" : "A1234KT"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PrisonerBedAssignmentMappingsDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Mapping created",
+            "content" : { }
+          },
+          "409" : {
+            "description" : "Indicates a duplicate mapping has been rejected. If Error code = 1409 the body will return a DuplicateErrorResponse",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/bed-assignments/batch" : {
+      "post" : {
+        "tags" : [ "bed-assignment-mapping-resource" ],
+        "summary" : "Creates a batch of new Bed assignment mappings",
+        "description" : "Creates a mapping between a batch of nomis bed assignment ids and dps bed assignment ids. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "createBedAssignmentMappings",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "array",
+                "items" : {
+                  "$ref" : "#/components/schemas/BedAssignmentMappingDto"
+                }
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Mappings created",
+            "content" : { }
+          },
+          "409" : {
+            "description" : "Indicates a duplicate mapping has been rejected. If Error code = 1409 the body will return a DuplicateErrorResponse",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/bed-assignments" : {
+      "post" : {
+        "tags" : [ "bed-assignment-mapping-resource" ],
+        "summary" : "Creates a new Bed assignment mapping",
+        "description" : "Creates a mapping between Nomis booking & sequence, and DPS bed assignment id. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "createBedAssignmentMapping",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/BedAssignmentMappingDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Mapping created",
+            "content" : { }
           },
           "409" : {
             "description" : "Indicates a duplicate mapping has been rejected. If Error code = 1409 the body will return a DuplicateErrorResponse",
@@ -21604,6 +21721,240 @@
         }
       }
     },
+    "/mapping/bed-assignments/migration-id/{migrationId}/count-by-prisoner" : {
+      "get" : {
+        "tags" : [ "bed-assignment-mapping-resource" ],
+        "summary" : "Get count of mappings by migration id grouped by prisoner",
+        "operationId" : "getBedAssignmentMappingsByMigrationIdGroupByPrisoner",
+        "parameters" : [ {
+          "name" : "pageRequest",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/components/schemas/Pageable"
+          }
+        }, {
+          "name" : "migrationId",
+          "in" : "path",
+          "description" : "Migration Id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Migration Id",
+            "example" : "2020-03-24T12:00:00"
+          },
+          "example" : "2020-03-24T12:00:00"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Mapping page returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "integer",
+                  "format" : "int64"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/bed-assignments/migrated/latest" : {
+      "get" : {
+        "tags" : [ "bed-assignment-mapping-resource" ],
+        "summary" : "get the latest mapping for a migration",
+        "description" : "Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "getLatestMigratedBedAssignmentMapping",
+        "responses" : {
+          "200" : {
+            "description" : "Mapping Information Returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BedAssignmentMappingDto"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "No mappings found at all for any migration",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/bed-assignments/dps-bed-assignment-id/{dpsBedAssignmentId}" : {
+      "get" : {
+        "tags" : [ "bed-assignment-mapping-resource" ],
+        "summary" : "get mapping given DPS id",
+        "description" : "Retrieves mapping by DPS id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "getBedAssignmentMappingByDpsId",
+        "parameters" : [ {
+          "name" : "dpsBedAssignmentId",
+          "in" : "path",
+          "description" : "DPS bed assignment id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "DPS bed assignment id",
+            "example" : "edcd118c-41ba-42ea-b5c4-404b453ad58b"
+          },
+          "example" : "edcd118c-41ba-42ea-b5c4-404b453ad58b"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Mapping Information Returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BedAssignmentMappingDto"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Id does not exist in mapping table",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "bed-assignment-mapping-resource" ],
+        "summary" : "Deletes a mapping",
+        "description" : "Deletes mapping by DPS id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "deleteBedAssignmentMappingByDpsId",
+        "parameters" : [ {
+          "name" : "dpsBedAssignmentId",
+          "in" : "path",
+          "description" : "DPS bed assignment id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "DPS bed assignment id",
+            "example" : "edcd118c-41ba-42ea-b5c4-404b453ad58b"
+          },
+          "example" : "edcd118c-41ba-42ea-b5c4-404b453ad58b"
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Mapping Deleted",
+            "content" : { }
+          }
+        }
+      }
+    },
+    "/mapping/bed-assignments/booking-id/{bookingId}/sequence/{sequence}" : {
+      "get" : {
+        "tags" : [ "bed-assignment-mapping-resource" ],
+        "summary" : "get mapping",
+        "description" : "Retrieves a mapping by NOMIS id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "getBedAssignmentMappingByNomisId",
+        "parameters" : [ {
+          "name" : "bookingId",
+          "in" : "path",
+          "description" : "NOMIS booking id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS booking id",
+            "example" : 23456789
+          },
+          "example" : 23456789
+        }, {
+          "name" : "sequence",
+          "in" : "path",
+          "description" : "Sequence",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Sequence",
+            "example" : 3
+          },
+          "example" : 3
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Mapping Information Returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BedAssignmentMappingDto"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Id does not exist in mapping table",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "bed-assignment-mapping-resource" ],
+        "summary" : "Deletes mapping",
+        "description" : "Deletes a mapping by Nomis id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "deleteBedAssignmentMappingByNomisId",
+        "parameters" : [ {
+          "name" : "bookingId",
+          "in" : "path",
+          "description" : "NOMIS booking id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS booking id",
+            "example" : 23456789
+          },
+          "example" : 23456789
+        }, {
+          "name" : "sequence",
+          "in" : "path",
+          "description" : "Sequence",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Sequence",
+            "example" : 3
+          },
+          "example" : 3
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Mapping Deleted",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "integer",
+                  "format" : "int32"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mapping/appointments/nomis-event-id/{eventId}" : {
       "get" : {
         "tags" : [ "appointment-mapping-resource" ],
@@ -28615,6 +28966,94 @@
           }
         },
         "required" : [ "dpsId", "mappingType", "nomisId" ]
+      },
+      "BedAssignmentMappingIdDto" : {
+        "type" : "object",
+        "description" : "NOMIS to DPS mapping IDs",
+        "properties" : {
+          "dpsBedAssignmentId" : {
+            "type" : "string",
+            "description" : "DPS bed assignment id"
+          },
+          "nomisBookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS booking id"
+          },
+          "nomisSequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "NOMIS sequence within booking"
+          }
+        },
+        "required" : [ "dpsBedAssignmentId", "nomisBookingId", "nomisSequence" ]
+      },
+      "PrisonerBedAssignmentMappingsDto" : {
+        "type" : "object",
+        "description" : "Mappings for a prisoner created during migration",
+        "properties" : {
+          "label" : {
+            "type" : [ "string", "null" ],
+            "description" : "Label (a timestamp for migrated ids)"
+          },
+          "mappingType" : {
+            "type" : "string",
+            "description" : "Mapping type",
+            "enum" : [ "MIGRATED", "NOMIS_CREATED", "DPS_CREATED" ]
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "description" : "Date time the mapping was created",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          },
+          "mappings" : {
+            "type" : "array",
+            "description" : "Mapping IDs",
+            "items" : {
+              "$ref" : "#/components/schemas/BedAssignmentMappingIdDto"
+            }
+          }
+        },
+        "required" : [ "mappingType", "mappings" ]
+      },
+      "BedAssignmentMappingDto" : {
+        "type" : "object",
+        "description" : "Bed assignment mapping",
+        "properties" : {
+          "dpsBedAssignmentId" : {
+            "type" : "string",
+            "description" : "Bed assignment id in DPS"
+          },
+          "nomisBookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Nomis booking id"
+          },
+          "nomisSequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Nomis sequence within booking"
+          },
+          "label" : {
+            "type" : [ "string", "null" ],
+            "description" : "Label (a timestamp for migrated ids)",
+            "maxLength" : 20,
+            "minLength" : 0
+          },
+          "mappingType" : {
+            "type" : "string",
+            "description" : "Mapping type",
+            "enum" : [ "MIGRATED", "NOMIS_CREATED", "DPS_CREATED" ]
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "description" : "Date-time the mapping was created",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          }
+        },
+        "required" : [ "dpsBedAssignmentId", "mappingType", "nomisBookingId", "nomisSequence" ]
       },
       "AppointmentMappingDto" : {
         "type" : "object",
