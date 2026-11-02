@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.IncidentsDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.CourtSchedulerDpsApiExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.PersonLocationDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.TransferSchedulerDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsDpsApiExtension
@@ -72,6 +73,7 @@ class HealthCheckTest : IntegrationTestBase() {
       .jsonPath("components.courtSchedulerApi.status").isEqualTo("UP")
       .jsonPath("components.agencyApi.status").isEqualTo("UP")
       .jsonPath("components.transferSchedulerApi.status").isEqualTo("UP")
+      .jsonPath("components.personLocationApi.status").isEqualTo("UP")
   }
 
   @Test
@@ -138,6 +140,7 @@ class HealthCheckTest : IntegrationTestBase() {
     NonAssociationsApiExtension.nonAssociationsApiServer.stubHealthPing(status)
     OfficialVisitsDpsApiExtension.dpsOfficialVisitsServer.stubHealthPing(status)
     OrganisationsDpsApiExtension.dpsOrganisationsServer.stubHealthPing(status)
+    PersonLocationDpsApiExtension.dpsPersonLocationServer.stubHealthPing(status)
     PropertyDpsApiExtension.propertyDpsApi.stubHealthPing(status)
     SentencingAdjustmentsApiExtension.sentencingAdjustmentsApi.stubHealthPing(status)
     StaffDpsApiExtension.dpsStaffServer.stubHealthPing(status)
