@@ -32,11 +32,13 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.Reconciliation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationSuccessPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AggregatedAccountDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerAdvanceDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerAggregatedAccountsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 import java.math.BigDecimal
+import java.time.LocalDate
 import java.time.LocalDateTime
 import kotlin.collections.listOf
 import kotlin.collections.mapOf
@@ -76,7 +78,7 @@ class PrisonerBalanceReconciliationServiceTest {
   }
 
   @Nested
-  @TestPropertySource(properties = ["reports.prisoner.balance.reconciliation.holds=true"])
+  @TestPropertySource(properties = ["reports.prisoner.balance.reconciliation.fields='balances,holds,advances'"])
   inner class CheckMatch {
     private fun stubBalanceReconciliation(nomisBalance: PrisonerAggregatedAccountsDto, dpsBalance: AccountReconciliationResponse) {
       financeNomisApi.stubGetPrisonerAccounts(OFFENDER_ID, nomisBalance)
@@ -307,6 +309,22 @@ class PrisonerBalanceReconciliationServiceTest {
     }
 
     @Test
+    fun `will report an advances mismatch`() = runTest {
+      stubBalanceReconciliation(
+        nomisPrisonerAccounts(),
+        dpsAccount().copy(advances = AdvancesAccountReconciliation(advanceBalance = BigDecimal.TEN, advanceCount = 2)),
+      )
+      val actual = service.checkPrisonerBalance(OFFENDER_ID, isRetry = true)?.differences
+      val expected = listOf(
+        Difference(property = "prisoner-balances.advanceSummary.advanceBalance", dps = BigDecimal.TEN, nomis = BigDecimal("1.00")),
+        Difference(property = "prisoner-balances.advanceSummary.advanceCount", dps = 2, nomis = 1),
+      )
+      assertThat(actual).isEqualTo(
+        expected,
+      )
+    }
+
+    @Test
     fun `will return null and report telemetry when nomis account API returns not found`() = runTest {
       financeNomisApi.stubGetPrisonerAccountsWithError(OFFENDER_ID, NOT_FOUND)
 
@@ -400,8 +418,8 @@ class PrisonerBalanceReconciliationServiceTest {
   }
 
   @Nested
-  @TestPropertySource(properties = ["reports.prisoner.balance.reconciliation.balances=false", "reports.prisoner.balance.reconciliation.holds=true"])
-  inner class WithBalanceDisabled {
+  @TestPropertySource(properties = ["reports.prisoner.balance.reconciliation.fields=holds"])
+  inner class WithHoldsOnly {
     private fun stubBalanceReconciliation(nomisBalance: PrisonerAggregatedAccountsDto, dpsBalance: AccountReconciliationResponse) {
       financeNomisApi.stubGetPrisonerAccounts(OFFENDER_ID, nomisBalance)
       dpsApi.stubGetPrisonerAccounts(OFFENDER_NO, dpsBalance)
@@ -431,15 +449,15 @@ class PrisonerBalanceReconciliationServiceTest {
   }
 
   @Nested
-  @TestPropertySource(properties = ["reports.prisoner.balance.reconciliation.holds=false"])
-  inner class WithHoldsDisabled {
+  @TestPropertySource(properties = ["reports.prisoner.balance.reconciliation.fields='balances'"])
+  inner class WithBalancesOnly {
     private fun stubBalanceReconciliation(nomisBalance: PrisonerAggregatedAccountsDto, dpsBalance: AccountReconciliationResponse) {
       financeNomisApi.stubGetPrisonerAccounts(OFFENDER_ID, nomisBalance)
       dpsApi.stubGetPrisonerAccounts(OFFENDER_NO, dpsBalance)
     }
 
     @Test
-    fun `will not report a balance mismatch`() = runTest {
+    fun `will not report a hold mismatch`() = runTest {
       stubBalanceReconciliation(
         nomisPrisonerAccounts(),
         dpsAccount(holdBalance = BigDecimal("0.5")),
@@ -457,6 +475,40 @@ class PrisonerBalanceReconciliationServiceTest {
         listOf(
           Difference(property = "prisoner-balances.accounts[1001].balance", dps = BigDecimal("0.5"), nomis = BigDecimal("1.5")),
         ),
+      )
+    }
+  }
+
+  @Nested
+  @TestPropertySource(properties = ["reports.prisoner.balance.reconciliation.fields='advances'"])
+  inner class WithAdvancesOnly {
+    private fun stubBalanceReconciliation(nomisBalance: PrisonerAggregatedAccountsDto, dpsBalance: AccountReconciliationResponse) {
+      financeNomisApi.stubGetPrisonerAccounts(OFFENDER_ID, nomisBalance)
+      dpsApi.stubGetPrisonerAccounts(OFFENDER_NO, dpsBalance)
+    }
+
+    @Test
+    fun `will not report a balance or hold mismatch`() = runTest {
+      stubBalanceReconciliation(
+        nomisPrisonerAccounts(),
+        dpsAccount(totalBalance = BigDecimal("0.5"), holdBalance = BigDecimal("0.5")),
+      )
+      assertThat(service.checkPrisonerBalance(OFFENDER_ID, isRetry = true)?.differences).isNull()
+    }
+
+    @Test
+    fun `will report an advances mismatch if advances are enabled`() = runTest {
+      stubBalanceReconciliation(
+        nomisPrisonerAccounts(),
+        dpsAccount().copy(advances = AdvancesAccountReconciliation(advanceBalance = BigDecimal.TEN, advanceCount = 2)),
+      )
+      val actual = service.checkPrisonerBalance(OFFENDER_ID, isRetry = true)?.differences
+      val expected = listOf(
+        Difference(property = "prisoner-balances.advanceSummary.advanceBalance", dps = BigDecimal.TEN, nomis = BigDecimal("1.00")),
+        Difference(property = "prisoner-balances.advanceSummary.advanceCount", dps = 2, nomis = 1),
+      )
+      assertThat(actual).isEqualTo(
+        expected,
       )
     }
   }
@@ -522,7 +574,25 @@ fun nomisPrisonerAccounts(accountCode: Long = 1001, balance: BigDecimal = BigDec
   rootOffenderId = OFFENDER_ID,
   prisonNumber = OFFENDER_NO,
   accounts = listOf(nomisAccount(accountCode = accountCode, balance = balance, holdBalance = holdBalance)),
-  advances = listOf(),
+  advances = listOf(
+    PrisonerAdvanceDto(
+      id = 1234567L,
+      prisonNumber = OFFENDER_NO,
+      advanceAmount = 200,
+      adjustmentAmount = 100,
+      // Irrelevant but non-nullable fields:
+      caseloadId = "BMI",
+      outstandingBalance = 100,
+      repaymentAmount = 50,
+      startDate = LocalDate.now(),
+      informationNumber = "xyz",
+      createdBy = "test-user",
+      createDatetime = LocalDateTime.now(),
+      status = PrisonerAdvanceDto.Status.ACTIVE,
+      advanceCreateTransactionId = 1234567L,
+      lastTransactionTimestamp = LocalDateTime.now(),
+    ),
+  ),
 )
 
 private fun nomisZeroAccount(accountCode: Long = 1001) = AggregatedAccountDto(

@@ -18,6 +18,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.generateRanges
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import java.math.BigDecimal
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.collections.associate
+import kotlin.collections.isNotEmpty
 
 private const val RETRY_LIMIT = 200
 
@@ -29,8 +31,7 @@ class PrisonerBalanceReconciliationService(
   private val dpsApiService: FinanceDpsApiService,
   @Value($$"${reports.prisoner.balance.reconciliation.page-size:1000}") private val pageSize: Int = 1000,
   @Value($$"${reports.prisoner.balance.reconciliation.thread-count:10}") private val threadCount: Int = 10,
-  @Value($$"${reports.prisoner.balance.reconciliation.holds:false}") private val reconcileHolds: Boolean = false,
-  @Value($$"${reports.prisoner.balance.reconciliation.balances:true}") private val reconcileBalances: Boolean = true,
+  @Value($$"${reports.prisoner.balance.reconciliation.fields:balances}") private val reconcileFields: String? = null, // holds,balances,advances
 ) {
   private companion object {
     private const val TELEMETRY_PRISONER_PREFIX = "prisoner-balance-reports-reconciliation"
@@ -56,8 +57,7 @@ class PrisonerBalanceReconciliationService(
       "$TELEMETRY_PRISONER_PREFIX-requested",
       mapOf(
         "activeOnly" to activeOnly,
-        "balances" to reconcileBalances,
-        "holds" to reconcileHolds,
+        "fields" to (reconcileFields ?: "all"),
       ),
     )
 
@@ -108,6 +108,7 @@ class PrisonerBalanceReconciliationService(
   internal suspend fun checkPrisonerBalance(rootOffenderId: Long, isRetry: Boolean = false, suppressEvents: Boolean = false): MismatchPrisonerBalance? = runCatching {
     val nomisAccounts = financeNomisApiService.getPrisonerAccountsToReconcile(rootOffenderId)
     val dpsAccounts = dpsApiService.getPrisonerAccounts(nomisAccounts.prisonNumber)
+
     val nomisFields = BalanceFields(
       prisonNumber = nomisAccounts.prisonNumber,
       accounts = nomisAccounts.accounts
@@ -118,6 +119,12 @@ class PrisonerBalanceReconciliationService(
             holdBalance = it.holdBalance,
           )
         },
+      advanceSummary = AdvanceSummary(
+        advanceCount = nomisAccounts.advances.size,
+        advanceBalance = BigDecimal(
+          nomisAccounts.advances.sumOf { it.advanceAmount - (it.deductionAmount ?: 0) - (it.adjustmentAmount ?: 0) },
+        ).scaleByPowerOfTen(-2),
+      ),
     )
     val dpsFields = dpsAccounts?.let {
       BalanceFields(
@@ -130,10 +137,10 @@ class PrisonerBalanceReconciliationService(
               holdBalance = it.value.holdBalance,
             )
           },
-//        advanceSummary = AdvanceSummary(
-//          advanceCount = dpsAccounts.advances.advanceCount,
-//          advanceBalance = dpsAccounts.advances.advanceBalance,
-//        ),
+        advanceSummary = AdvanceSummary(
+          advanceCount = dpsAccounts.advances.advanceCount,
+          advanceBalance = dpsAccounts.advances.advanceBalance,
+        ),
       )
     }
 
@@ -193,6 +200,7 @@ class PrisonerBalanceReconciliationService(
         }
 
         differences.addAll(compareAccounts(dpsObj.accounts, nomisObj.accounts, "$parentProperty.accounts"))
+        differences.addAll(compareObjects(dpsObj.advanceSummary, nomisObj.advanceSummary, "$parentProperty.advanceSummary"))
       }
 
       is AccountFields -> {
@@ -200,7 +208,7 @@ class PrisonerBalanceReconciliationService(
         if (dpsObj.accountCode != nomisObj.accountCode) {
           differences.add(Difference("$parentProperty.accountCode", dpsObj.accountCode, nomisObj.accountCode))
         }
-        if (reconcileBalances) {
+        if (reconcileBalances()) {
           if (dpsObj.balance.compareTo(nomisObj.balance) != 0) {
             differences.add(
               Difference(
@@ -211,9 +219,36 @@ class PrisonerBalanceReconciliationService(
             )
           }
         }
-        if (reconcileHolds) {
+        if (reconcileHolds()) {
           if (dpsObj.holdBalance?.compareTo(nomisObj.holdBalance ?: BigDecimal.ZERO) != 0) {
             differences.add(Difference("$parentProperty.holdBalance: account code ${nomisObj.accountCode}", dpsObj.holdBalance, nomisObj.holdBalance))
+          }
+        }
+      }
+
+      is AdvanceSummary -> {
+        if (reconcileAdvances()) {
+          nomisObj as AdvanceSummary
+          if (dpsObj.advanceBalance.compareTo(nomisObj.advanceBalance) != 0) {
+            differences.add(Difference("$parentProperty.advanceBalance", dpsObj.advanceBalance, nomisObj.advanceBalance))
+          }
+          if (dpsObj.advanceCount != nomisObj.advanceCount) {
+            differences.add(Difference("$parentProperty.advanceCount", dpsObj.advanceCount, nomisObj.advanceCount))
+          }
+        }
+      }
+
+      else -> {
+        // For other types, use reflection to compare properties
+        val dpsProperties = dpsObj::class.members.filterIsInstance<kotlin.reflect.KProperty1<Any, *>>()
+        val nomisProperties = nomisObj::class.members.filterIsInstance<kotlin.reflect.KProperty1<Any, *>>()
+
+        for (property in dpsProperties) {
+          val dpsValue = property.get(dpsObj)
+          val nomisValue = nomisProperties.find { it.name == property.name }?.get(nomisObj)
+
+          if (dpsValue != nomisValue) {
+            differences.add(Difference("$parentProperty.${property.name}", dpsValue, nomisValue))
           }
         }
       }
@@ -238,7 +273,7 @@ class PrisonerBalanceReconciliationService(
         val dpsHoldBalance = dpsAccount?.holdBalance ?: BigDecimal.ZERO
         val nomisHoldBalance = nomisAccount?.holdBalance ?: BigDecimal.ZERO
 
-        if (reconcileBalances && dpsBalance.compareTo(nomisBalance) != 0) {
+        if (reconcileBalances() && dpsBalance.compareTo(nomisBalance) != 0) {
           differences.add(
             Difference(
               "$parentProperty[$accountCode].balance",
@@ -248,7 +283,7 @@ class PrisonerBalanceReconciliationService(
           )
         }
 
-        if (reconcileHolds && dpsHoldBalance.compareTo(nomisHoldBalance) != 0) {
+        if (reconcileHolds() && dpsHoldBalance.compareTo(nomisHoldBalance) != 0) {
           differences.add(
             Difference(
               "$parentProperty[$accountCode].holdBalance",
@@ -290,6 +325,10 @@ class PrisonerBalanceReconciliationService(
       ReconciliationErrorPageResult(it)
     },
   )
+
+  private fun reconcileBalances(): Boolean = reconcileFields.isNullOrBlank() || reconcileFields.contains("balances")
+  private fun reconcileHolds(): Boolean = reconcileFields.isNullOrBlank() || reconcileFields.contains("holds")
+  private fun reconcileAdvances(): Boolean = reconcileFields.isNullOrBlank() || reconcileFields.contains("advances")
 }
 
 data class MismatchPrisonerBalance(
@@ -301,12 +340,18 @@ data class MismatchPrisonerBalance(
 data class BalanceFields(
   val prisonNumber: String,
   val accounts: List<AccountFields> = emptyList(),
+  val advanceSummary: AdvanceSummary? = null,
 )
 
 data class AccountFields(
   val accountCode: Int,
   val balance: BigDecimal,
   val holdBalance: BigDecimal? = null,
+)
+
+data class AdvanceSummary(
+  val advanceCount: Int,
+  val advanceBalance: BigDecimal,
 )
 
 data class Difference(val property: String, val dps: Any?, val nomis: Any?, val id: String? = null)
