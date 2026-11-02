@@ -90,7 +90,7 @@ class AgencyRegistersReconciliationService(
       nomisAgency == null -> MismatchAgency(agencyId, "Missing in NOMIS")
       dpsAgency == null -> MismatchAgency(agencyId, "Missing in DPS")
       else -> compare(nomisAgency, dpsAgency)
-    }?.also {
+    }?.copy(nomisAgency = nomisAgency, dpsAgency = dpsAgency)?.also {
       telemetryClient.trackEvent(
         "$TELEMETRY_PREFIX-mismatch",
         mapOf(
@@ -193,6 +193,8 @@ data class MismatchAgency(
   val reason: String,
   val nomis: String? = null,
   val dps: String? = null,
+  val nomisAgency: AgencyResponse? = null,
+  val dpsAgency: LegacyAgencyDto? = null,
 )
 
 data class AgencyCoreDetails(
