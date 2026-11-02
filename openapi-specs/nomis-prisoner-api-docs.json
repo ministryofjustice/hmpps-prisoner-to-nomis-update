@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-29.2326.ff3cded"
+    "version" : "2026-10-30.2332.6e09204"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -24903,7 +24903,17 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/PrisonerScheduledPaymentDto"
+                  "$ref" : "#/components/schemas/ScheduledPaymentDto"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Scheduled Payment does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -24919,17 +24929,7 @@
             }
           },
           "403" : {
-            "description" : "Forbidden to access this endpoint. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Scheduled Payment does not exist",
+            "description" : "Missing required role. Requires the ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW role",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -24958,6 +24958,16 @@
               }
             }
           },
+          "404" : {
+            "description" : "Scheduled Payment does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
             "content" : {
@@ -24969,17 +24979,7 @@
             }
           },
           "403" : {
-            "description" : "Forbidden to access this endpoint. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Scheduled Payment does not exist",
+            "description" : "Missing required role. Requires the ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW role",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -25092,8 +25092,18 @@
                 "schema" : {
                   "type" : "array",
                   "items" : {
-                    "$ref" : "#/components/schemas/PrisonerScheduledPaymentDto"
+                    "$ref" : "#/components/schemas/ScheduledPaymentDto"
                   }
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Prisoner does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -25109,17 +25119,7 @@
             }
           },
           "403" : {
-            "description" : "Forbidden to access this endpoint when role NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Prisoner does not exist",
+            "description" : "Missing required role. Requires the ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW role",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -25574,8 +25574,18 @@
                 "schema" : {
                   "type" : "array",
                   "items" : {
-                    "$ref" : "#/components/schemas/PrisonerScheduledPaymentDto"
+                    "$ref" : "#/components/schemas/ScheduledPaymentDto"
                   }
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Prisoner does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -25591,17 +25601,7 @@
             }
           },
           "403" : {
-            "description" : "Forbidden to access this endpoint when role NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Prisoner does not exist",
+            "description" : "Missing required role. Requires the ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW role",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -46965,7 +46965,7 @@
         },
         "required" : [ "bookingId", "currentIep", "iepDateTime", "iepLevel", "incentiveSequence", "offenderNo", "prisonId", "whenCreated" ]
       },
-      "PrisonerScheduledPaymentDto" : {
+      "ScheduledPaymentDto" : {
         "type" : "object",
         "properties" : {
           "id" : {
@@ -46989,11 +46989,23 @@
             "description" : "transaction type",
             "example" : "TELE"
           },
-          "paymentAmount" : {
+          "subAccountCode" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The sub account code the payment will be taken from",
+            "example" : 2101
+          },
+          "amount" : {
             "type" : "integer",
             "format" : "int64",
             "description" : "The payment amount in pence, to be paid each time, to the prison, so £1.50 returned as 150",
             "example" : 150
+          },
+          "dayOfWeek" : {
+            "type" : "string",
+            "description" : "Day of the week the scheduled payment is paid",
+            "enum" : [ "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN" ],
+            "example" : "MON"
           },
           "startDate" : {
             "type" : "string",
@@ -47023,7 +47035,7 @@
             "example" : "FRED_SMITH"
           }
         },
-        "required" : [ "caseloadId", "createdBy", "id", "paymentAmount", "prisonNumber", "startDate", "transactionType" ]
+        "required" : [ "amount", "caseloadId", "createdBy", "dayOfWeek", "id", "prisonNumber", "startDate", "subAccountCode", "transactionType" ]
       },
       "ScheduledPaymentsCount" : {
         "type" : "object",
@@ -47221,9 +47233,15 @@
             "format" : "int64",
             "description" : "The transaction id for the advance creation",
             "example" : 123456789
+          },
+          "lastTransactionTimestamp" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date time of the last transaction for the advance",
+            "example" : "2025-07-14T12:13:14"
           }
         },
-        "required" : [ "advanceAmount", "advanceCreateTransactionId", "caseloadId", "createDatetime", "createdBy", "id", "informationNumber", "outstandingBalance", "prisonNumber", "repaymentAmount", "startDate", "status" ]
+        "required" : [ "advanceAmount", "advanceCreateTransactionId", "caseloadId", "createDatetime", "createdBy", "id", "informationNumber", "lastTransactionTimestamp", "outstandingBalance", "prisonNumber", "repaymentAmount", "startDate", "status" ]
       },
       "PrisonerAggregatedAccountsDto" : {
         "type" : "object",

@@ -4,6 +4,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.equalToJson
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.matching
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
@@ -113,6 +114,45 @@ class AgencyNomisApiServiceTest {
       mockServer.verify(
         getRequestedFor(urlEqualTo("/agency/ids/all?excludeType=INST")),
       )
+    }
+  }
+
+  @Nested
+  inner class GetPrisonIds {
+    @Test
+    internal fun `will pass oauth2 token to endpoint`() = runTest {
+      mockServer.stubGetPrisonIds()
+
+      apiService.getPrisonIds()
+
+      mockServer.verify(
+        getRequestedFor(anyUrl())
+          .withHeader("Authorization", matching(".+")),
+      )
+    }
+
+    @Test
+    fun `will call the get prison ids endpoint`() = runTest {
+      mockServer.stubGetPrisonIds()
+
+      apiService.getPrisonIds()
+
+      mockServer.verify(
+        getRequestedFor(urlPathEqualTo("/agency/ids/INST/all")),
+      )
+    }
+
+    @Test
+    fun `will return prison ids from the endpoint`() = runTest {
+      val expected = AgencyNomisApiMockServer.agencyIdsResponse().copy(
+        agencyIds = listOf(
+          AgencyNomisApiMockServer.agencyId().copy(agencyId = "MDI"),
+          AgencyNomisApiMockServer.agencyId().copy(agencyId = "LEI"),
+        ),
+      )
+      mockServer.stubGetPrisonIds(response = expected)
+
+      assertThat(apiService.getPrisonIds()).isEqualTo(expected)
     }
   }
 

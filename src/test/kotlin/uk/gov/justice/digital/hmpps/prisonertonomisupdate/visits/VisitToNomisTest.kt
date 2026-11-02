@@ -13,6 +13,8 @@ import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.mockito.Mockito
 import org.mockito.kotlin.any
 import org.mockito.kotlin.isNull
@@ -38,8 +40,9 @@ class VisitToNomisTest : SqsIntegrationTestBase() {
   @Nested
   inner class CreateVisit {
 
-    @Test
-    fun `will consume a prison visits create message`() {
+    @ParameterizedTest
+    @ValueSource(strings = ["SOCIAL", "SOCIAL_VIDEO", "FAMILY"])
+    fun `will consume a prison visits create message`(visitType: String) {
       visitsApi.stubVisitGet(
         "12",
         buildVisitApiDtoJsonResponse(
@@ -47,6 +50,7 @@ class VisitToNomisTest : SqsIntegrationTestBase() {
           prisonerId = "A32323Y",
           visitRoom = "Main visits room",
           visitRestriction = "OPEN",
+          visitType = visitType,
         ),
       )
       mappingServer.stubGetVsipWithError("12", 404)
@@ -326,6 +330,7 @@ fun buildVisitApiDtoJsonResponse(
   startTimestamp: String = "2019-12-02T09:00:00",
   endTimestamp: String = "2019-12-02T10:00:00",
   visitors: List<Long> = listOf(543524, 344444, 655656),
+  visitType: String = "SOCIAL",
 ): String {
   val outcomeString = outcome?.let { "\"outcomeStatus\": \"$it\"," } ?: ""
 
@@ -334,7 +339,7 @@ fun buildVisitApiDtoJsonResponse(
       "reference": "$visitId",
       "prisonId": "MDI",
       "prisonerId": "$prisonerId",
-      "visitType": "SOCIAL",
+      "visitType": "$visitType",
       "startTimestamp": "$startTimestamp",
       "endTimestamp": "$endTimestamp",
       "visitRestriction": "$visitRestriction",

@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-29.1248.34e64eb"
+    "version" : "2026-10-30.1253.dbb9165"
   },
   "servers" : [ {
     "url" : "https://prisoner-finance-sync-api-dev.hmpps.service.justice.gov.uk/",
@@ -2535,14 +2535,14 @@
           "subscriptions" : {
             "$ref" : "#/components/schemas/SubscriptionsAccountReconciliation"
           },
-          "dynamicSubAccountBalances" : {
+          "existingSubAccountBalances" : {
             "type" : "object",
             "additionalProperties" : {
               "$ref" : "#/components/schemas/SubAccountBalanceForReconciliation"
             }
           }
         },
-        "required" : [ "advances", "dynamicSubAccountBalances", "subscriptions" ]
+        "required" : [ "advances", "existingSubAccountBalances", "subscriptions" ]
       },
       "AdvancesAccountReconciliation" : {
         "type" : "object",

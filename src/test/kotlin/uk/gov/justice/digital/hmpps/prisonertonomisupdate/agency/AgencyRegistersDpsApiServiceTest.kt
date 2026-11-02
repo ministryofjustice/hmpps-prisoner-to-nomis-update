@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.matching
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
@@ -114,6 +115,45 @@ class AgencyRegistersDpsApiServiceTest {
       agencyRegistersApi.verify(
         getRequestedFor(urlPathEqualTo("/legacy/reconciliation/ids/all")),
       )
+    }
+  }
+
+  @Nested
+  inner class GetPrisonIds {
+    @Test
+    internal fun `will pass oauth2 token to endpoint`() = runTest {
+      agencyRegistersApi.stubGetPrisonIds()
+
+      apiService.getPrisonIds()
+
+      agencyRegistersApi.verify(
+        getRequestedFor(anyUrl())
+          .withHeader("Authorization", matching(".+")),
+      )
+    }
+
+    @Test
+    fun `will call the get prison ids endpoint`() = runTest {
+      agencyRegistersApi.stubGetPrisonIds()
+
+      apiService.getPrisonIds()
+
+      agencyRegistersApi.verify(
+        getRequestedFor(urlPathEqualTo("/legacy/reconciliation/prison/ids/all")),
+      )
+    }
+
+    @Test
+    fun `will return prison ids from the endpoint`() = runTest {
+      val expected = AgencyRegistersDpsApiExtension.agencyIdsResponse().copy(
+        agencyIds = listOf(
+          AgencyRegistersDpsApiExtension.agencyId().copy(agencyId = "MDI"),
+          AgencyRegistersDpsApiExtension.agencyId().copy(agencyId = "LEI"),
+        ),
+      )
+      agencyRegistersApi.stubGetPrisonIds(response = expected)
+
+      assertThat(apiService.getPrisonIds()).isEqualTo(expected)
     }
   }
 }

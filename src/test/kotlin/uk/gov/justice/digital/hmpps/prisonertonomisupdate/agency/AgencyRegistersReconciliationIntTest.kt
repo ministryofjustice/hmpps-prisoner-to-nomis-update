@@ -97,6 +97,72 @@ class AgencyRegistersReconciliationIntTest(
       await untilAsserted { verify(telemetryClient).trackEvent(eq("agency-reconciliation-report"), any(), isNull()) }
     }
   }
+
+  @DisplayName("Prison reconciliation report")
+  @Nested
+  inner class GeneratePrisonReconciliationReportBatch {
+    @BeforeEach
+    fun setUp() {
+      reset(telemetryClient)
+      nomisApi.stubGetPrisonIds(nomisAgencyIdsResponse("WWI", "BXI"))
+      dpsApi.stubGetPrisonIds(dpsAgencyIdsResponse("WWI", "BXI", "LEI"))
+
+      nomisApi.stubGetAgency("WWI", agencyResponse().copy(agencyId = "WWI", description = "Wandsworth Prison"))
+      nomisApi.stubGetAgency("BXI", agencyResponse().copy(agencyId = "BXI", description = "Brixton Prison"))
+      dpsApi.stubGetAgencyForReconciliation("WWI", legacyAgencyDto().copy(name = "Wandsworth Prison"))
+      dpsApi.stubGetAgencyForReconciliation("BXI", legacyAgencyDto().copy(name = "Brixton Prison"))
+      dpsApi.stubGetAgencyForReconciliation("LEI", legacyAgencyDto().copy(name = "Leeds Prison"))
+    }
+
+    @Test
+    fun `will output report requested telemetry`() = runTest {
+      reconciliationService.generatePrisonReconciliationReportBatch()
+
+      verify(telemetryClient).trackEvent(
+        eq("agency-reconciliation-requested"),
+        any(),
+        isNull(),
+      )
+
+      awaitReportFinished()
+    }
+
+    @Test
+    fun `will output report`() = runTest {
+      reconciliationService.generatePrisonReconciliationReportBatch()
+      awaitReportFinished()
+
+      verify(telemetryClient).trackEvent(
+        eq("agency-reconciliation-report"),
+        check {
+          assertThat(it).containsEntry("mismatch-count", "1")
+          assertThat(it).containsEntry("agency-count", "3")
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `will output a missing agency`() = runTest {
+      reconciliationService.generatePrisonReconciliationReportBatch()
+      awaitReportFinished()
+
+      verify(telemetryClient).trackEvent(
+        eq("agency-reconciliation-mismatch"),
+        eq(
+          mapOf(
+            "agencyId" to "LEI",
+            "reason" to "Missing in NOMIS",
+          ),
+        ),
+        isNull(),
+      )
+    }
+
+    private fun awaitReportFinished() {
+      await untilAsserted { verify(telemetryClient).trackEvent(eq("agency-reconciliation-report"), any(), isNull()) }
+    }
+  }
 }
 
 private fun dpsAgencyIdsResponse(vararg agencyIds: String): DpsAgencyIdsResponse = dpsAgencyIdsResponse().copy(agencyIds = agencyIds.map { dpsAgencyId().copy(agencyId = it) })

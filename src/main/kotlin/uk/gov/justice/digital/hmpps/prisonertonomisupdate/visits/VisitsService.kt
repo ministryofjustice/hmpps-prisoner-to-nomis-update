@@ -72,6 +72,7 @@ class VisitsService(
                 visitType = VisitType.valueOf(
                   when (visit.visitType) {
                     "SOCIAL" -> "SCON"
+                    "SOCIAL_VIDEO" -> "SCON"
                     "FAMILY" -> "SCON"
                     else -> throw ValidationException("Invalid visit type ${visit.visitType}")
                   },
@@ -95,6 +96,7 @@ class VisitsService(
                   mappingType = "ONLINE",
                 ).takeIf { doesMappingStillNotExist(visitBookedEvent.reference) }
               }
+
               else -> throw it
             }
           }.getOrNull()

@@ -49,6 +49,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PRISON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PRISONER_CONTACT_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PRISONER_RESTRICTION_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PRISONER_TRANSACTIONS_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PRISON_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PROPERTY_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PURGE_ACTIVITY_DLQ
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.SENTENCING_RECON
@@ -95,6 +96,7 @@ import java.time.LocalDate
 enum class BatchType {
   ADJUDICATION_RECON,
   AGENCY_RECON,
+  PRISON_RECON,
   ALERT_RECON,
   ALLOCATION_RECON,
   APPOINTMENT_RECON,
@@ -191,6 +193,7 @@ class BatchManager(
     when (batchType) {
       ADJUDICATION_RECON -> adjudicationsReconService.generateAdjudicationsReconciliationReport()
       AGENCY_RECON -> agencyRegistersReconciliationService.generateAgencyReconciliationReportBatch()
+      PRISON_RECON -> agencyRegistersReconciliationService.generatePrisonReconciliationReportBatch()
       ALERT_RECON -> alertsReconciliationService.generateAlertsReconciliationReport()
       ALLOCATION_RECON -> activitiesReconService.allocationReconciliationReport()
       APPOINTMENT_RECON -> appointmentsReconciliationService.generateReconciliationReportBatch()

@@ -150,6 +150,10 @@ generic-service:
       type: AGENCY_RECON
       schedule: "30 6 * * *"
       suspend: false
+    - name: prison-recon
+      type: PRISON_RECON
+      schedule: "35 6 * * *"
+      suspend: true
     - name: alert-recon
       type: ALERT_RECON
       schedule: "45 4 * * *"
