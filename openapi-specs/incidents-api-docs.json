@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-27.959.404f1ed"
+    "version" : "2026-10-30.977.b5c954a"
   },
   "servers" : [ {
     "url" : "/",
@@ -2479,6 +2479,54 @@
         }
       }
     },
+    "/subject-access-request/template" : {
+      "get" : {
+        "tags" : [ "Subject Access Request" ],
+        "operationId" : "getServiceTemplate",
+        "responses" : {
+          "200" : {
+            "description" : "Request successfully processed - return template file content",
+            "content" : {
+              "plain/text" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "The client does not have authorisation to make this request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Unexpected error occurred",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/queue-admin/get-dlq-messages/{dlqName}" : {
       "get" : {
         "tags" : [ "hmpps-queue-resource" ],
@@ -4365,17 +4413,17 @@
               "example" : "[\"property,ASC\"]"
             }
           },
-          "numberOfElements" : {
-            "type" : "integer",
-            "description" : "Number of elements in this page",
-            "format" : "int32",
-            "example" : 20
-          },
           "totalPages" : {
             "type" : "integer",
             "description" : "Total number of pages",
             "format" : "int32",
             "example" : 3
+          },
+          "numberOfElements" : {
+            "type" : "integer",
+            "description" : "Number of elements in this page",
+            "format" : "int32",
+            "example" : 20
           }
         },
         "description" : "Page of results",
