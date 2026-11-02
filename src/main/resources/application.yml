@@ -122,6 +122,11 @@ spring:
             client-id: ${organisations.client.id}
             client-secret: ${organisations.client.secret}
             authorization-grant-type: client_credentials
+          person-location-api:
+            provider: hmpps-auth
+            client-id: ${person.location.client.id}
+            client-secret: ${person.location.client.secret}
+            authorization-grant-type: client_credentials
           personal-relationships-api:
             provider: hmpps-auth
             client-id: ${personal.relationships.client.id}

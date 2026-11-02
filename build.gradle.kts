@@ -281,6 +281,11 @@ val models = listOf(
     testPackageName = "agency",
     url = "https://prison-register-dev.hmpps.service.justice.gov.uk/v3/api-docs",
   ),
+  ModelConfiguration(
+    name = "person-location",
+    packageName = "personlocation",
+    url = "https://person-location-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
+  ),
 )
 
 tasks {

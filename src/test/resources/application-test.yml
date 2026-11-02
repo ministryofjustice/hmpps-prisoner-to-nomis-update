@@ -35,6 +35,7 @@ api.base.url:
   property: http://localhost:8107
   csra: http://localhost:8108
   agencyregisters: http://localhost:8109
+  person-location: http://localhost:8111
 
 hmpps.sqs:
   defaultErrorVisibilityTimeout: 0

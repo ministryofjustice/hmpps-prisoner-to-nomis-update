@@ -1,0 +1,688 @@
+{
+  "openapi" : "3.1.0",
+  "info" : {
+    "title" : "HMPPS Person Location Api",
+    "contact" : {
+      "name" : "HMPPS Digital Studio",
+      "email" : "feedback@digital.justice.gov.uk"
+    },
+    "version" : "2026-11-02.134.48cd0d3"
+  },
+  "servers" : [ {
+    "url" : "https://person-location-api-dev.hmpps.service.justice.gov.uk",
+    "description" : "Development"
+  }, {
+    "url" : "https://person-location-api-preprod.hmpps.service.justice.gov.uk",
+    "description" : "Pre-Production"
+  }, {
+    "url" : "https://person-location-api.hmpps.service.justice.gov.uk",
+    "description" : "Production"
+  }, {
+    "url" : "http://localhost:8080",
+    "description" : "Local"
+  } ],
+  "security" : [ {
+    "PERSON_LOCATION_RO" : [ "read" ]
+  } ],
+  "tags" : [ ],
+  "paths" : {
+    "/sync/external-movements/{personIdentifier}" : {
+      "put" : {
+        "tags" : [ "Sync" ],
+        "operationId" : "syncExternalMovement",
+        "parameters" : [ {
+          "name" : "personIdentifier",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SyncExternalMovementRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ReferenceId"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sync/custodial-series/{personIdentifier}" : {
+      "put" : {
+        "tags" : [ "Sync" ],
+        "operationId" : "syncCustodialSeries",
+        "parameters" : [ {
+          "name" : "personIdentifier",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SyncCustodialSeriesRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ReferenceId"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/resync/external-movements/{personIdentifier}" : {
+      "put" : {
+        "tags" : [ "Sync" ],
+        "operationId" : "resync",
+        "parameters" : [ {
+          "name" : "personIdentifier",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ResyncExternalMovementsRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResyncResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sync/external-movements/{id}" : {
+      "get" : {
+        "tags" : [ "Sync" ],
+        "operationId" : "getExternalMovement",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncExternalMovement"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "Sync" ],
+        "operationId" : "deleteExternalMovement",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        }
+      }
+    },
+    "/sync/custodial-series/{id}" : {
+      "get" : {
+        "tags" : [ "Sync" ],
+        "operationId" : "getCustodialSeries",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncCustodialSeries"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "Sync" ],
+        "operationId" : "deleteCustodialSeries",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        }
+      }
+    },
+    "/reconciliation/external-movements/{personIdentifier}" : {
+      "get" : {
+        "tags" : [ "Sync" ],
+        "operationId" : "reconcile",
+        "parameters" : [ {
+          "name" : "personIdentifier",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ReconciliationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "CodedReason" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/MovementReason"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "code" : {
+              "type" : "string"
+            }
+          }
+        } ],
+        "description" : "Standard reference data code and description",
+        "required" : [ "code", "description" ]
+      },
+      "Court" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/Location"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "code" : {
+              "type" : "string"
+            }
+          }
+        } ],
+        "description" : "Court location",
+        "required" : [ "code", "description" ]
+      },
+      "HierarchicalReason" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/MovementReason"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "hierarchy" : {
+              "type" : "array",
+              "items" : {
+                "$ref" : "#/components/schemas/CodedReason"
+              }
+            }
+          }
+        } ],
+        "description" : "More complex hierarchies of reference data such as TAP",
+        "required" : [ "description", "hierarchy" ]
+      },
+      "Hospital" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/Location"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "code" : {
+              "type" : "string"
+            }
+          }
+        } ],
+        "description" : "Hospital location",
+        "required" : [ "code", "description" ]
+      },
+      "Location" : {
+        "type" : "object",
+        "description" : "Represents a movement origin or destination location",
+        "discriminator" : {
+          "propertyName" : "locationType",
+          "mapping" : {
+            "Prison" : "#/components/schemas/Prison",
+            "Court" : "#/components/schemas/Court",
+            "Hospital" : "#/components/schemas/Hospital",
+            "SimpleLocation" : "#/components/schemas/SimpleLocation"
+          }
+        },
+        "properties" : {
+          "description" : {
+            "type" : "string"
+          },
+          "locationType" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "description", "locationType" ]
+      },
+      "MovementReason" : {
+        "type" : "object",
+        "description" : "Represents a movement reason",
+        "discriminator" : {
+          "propertyName" : "reasonType",
+          "mapping" : {
+            "CodedReason" : "#/components/schemas/CodedReason",
+            "HierarchicalReason" : "#/components/schemas/HierarchicalReason"
+          }
+        },
+        "properties" : {
+          "description" : {
+            "type" : "string"
+          },
+          "reasonType" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "description", "reasonType" ]
+      },
+      "Prison" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/Location"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "code" : {
+              "type" : "string"
+            }
+          }
+        } ],
+        "description" : "Prison location",
+        "required" : [ "code", "description" ]
+      },
+      "SimpleLocation" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/Location"
+        } ],
+        "description" : "Generic location",
+        "required" : [ "description" ]
+      },
+      "SyncExternalJourney" : {
+        "type" : "object",
+        "properties" : {
+          "type" : {
+            "type" : "string",
+            "enum" : [ "ADMISSION", "COURT_APPEARANCE", "TEMPORARY_ABSENCE", "TRANSFER", "RELEASE" ]
+          },
+          "scheduleReference" : {
+            "type" : [ "string", "null" ]
+          }
+        },
+        "required" : [ "type" ]
+      },
+      "SyncExternalMovement" : {
+        "type" : "object",
+        "properties" : {
+          "dpsId" : {
+            "type" : [ "string", "null" ],
+            "format" : "uuid"
+          },
+          "dpsCustodySeriesId" : {
+            "type" : [ "string", "null" ],
+            "format" : "uuid"
+          },
+          "legacyBookingId" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int64"
+          },
+          "legacySequenceNumber" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int32"
+          },
+          "type" : {
+            "type" : "string",
+            "enum" : [ "ARRIVAL", "DEPARTURE" ]
+          },
+          "reason" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/MovementReason"
+            } ]
+          },
+          "occurredAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "from" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/Location"
+            } ]
+          },
+          "to" : {
+            "type" : "null",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/Location"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "notes" : {
+            "type" : [ "string", "null" ]
+          },
+          "journey" : {
+            "$ref" : "#/components/schemas/SyncExternalJourney"
+          }
+        },
+        "required" : [ "from", "journey", "occurredAt", "reason", "type" ]
+      },
+      "SyncExternalMovementRequest" : {
+        "type" : "object",
+        "properties" : {
+          "occurredAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "syncUser" : {
+            "$ref" : "#/components/schemas/SyncUser"
+          },
+          "movement" : {
+            "$ref" : "#/components/schemas/SyncExternalMovement"
+          }
+        },
+        "required" : [ "movement", "occurredAt", "syncUser" ]
+      },
+      "SyncUser" : {
+        "type" : "object",
+        "properties" : {
+          "username" : {
+            "type" : "string"
+          },
+          "activeCaseloadId" : {
+            "type" : [ "string", "null" ]
+          }
+        },
+        "required" : [ "username" ]
+      },
+      "ReferenceId" : {
+        "type" : "object",
+        "properties" : {
+          "dpsId" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        },
+        "required" : [ "dpsId" ]
+      },
+      "SyncCustodialSeries" : {
+        "type" : "object",
+        "properties" : {
+          "legacyBookingId" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int64"
+          },
+          "legacyBookingReference" : {
+            "type" : [ "string", "null" ]
+          },
+          "dpsId" : {
+            "type" : [ "string", "null" ],
+            "format" : "uuid"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "OPEN", "CLOSED" ]
+          },
+          "isActive" : {
+            "type" : "boolean"
+          },
+          "openedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "closedAt" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time"
+          },
+          "notes" : {
+            "type" : [ "string", "null" ]
+          }
+        },
+        "required" : [ "isActive", "openedAt", "status" ]
+      },
+      "SyncCustodialSeriesRequest" : {
+        "type" : "object",
+        "properties" : {
+          "occurredAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "syncUser" : {
+            "$ref" : "#/components/schemas/SyncUser"
+          },
+          "custodialSeries" : {
+            "$ref" : "#/components/schemas/SyncCustodialSeries"
+          }
+        },
+        "required" : [ "custodialSeries", "occurredAt", "syncUser" ]
+      },
+      "AtAndBy" : {
+        "type" : "object",
+        "properties" : {
+          "at" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "by" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "at", "by" ]
+      },
+      "ResyncCustodialSeries" : {
+        "type" : "object",
+        "properties" : {
+          "custodialSeries" : {
+            "$ref" : "#/components/schemas/SyncCustodialSeries"
+          },
+          "movements" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ResyncExternalMovement"
+            }
+          },
+          "created" : {
+            "$ref" : "#/components/schemas/AtAndBy"
+          },
+          "modified" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/AtAndBy"
+            }, {
+              "type" : "null"
+            } ]
+          }
+        },
+        "required" : [ "created", "custodialSeries", "movements" ]
+      },
+      "ResyncExternalMovement" : {
+        "type" : "object",
+        "properties" : {
+          "movement" : {
+            "$ref" : "#/components/schemas/SyncExternalMovement"
+          },
+          "created" : {
+            "$ref" : "#/components/schemas/AtAndBy"
+          },
+          "modified" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/AtAndBy"
+            }, {
+              "type" : "null"
+            } ]
+          }
+        },
+        "required" : [ "created", "movement" ]
+      },
+      "ResyncExternalMovementsRequest" : {
+        "type" : "object",
+        "properties" : {
+          "custodialSeries" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ResyncCustodialSeries"
+            }
+          }
+        },
+        "required" : [ "custodialSeries" ]
+      },
+      "CustodialSeriesMapping" : {
+        "type" : "object",
+        "properties" : {
+          "dpsId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "legacyBookingId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "movements" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ExternalMovementMapping"
+            }
+          }
+        },
+        "required" : [ "dpsId", "legacyBookingId", "movements" ]
+      },
+      "ExternalMovementMapping" : {
+        "type" : "object",
+        "properties" : {
+          "dpsId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "legacySequenceNumber" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "dpsId", "legacySequenceNumber" ]
+      },
+      "ResyncResponse" : {
+        "type" : "object",
+        "properties" : {
+          "custodialSeries" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CustodialSeriesMapping"
+            }
+          }
+        },
+        "required" : [ "custodialSeries" ]
+      },
+      "ReconciliationResponse" : {
+        "type" : "object",
+        "properties" : {
+          "series" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ReconciliationSeries"
+            }
+          }
+        },
+        "required" : [ "series" ]
+      },
+      "ReconciliationSeries" : {
+        "type" : "object",
+        "properties" : {
+          "series" : {
+            "$ref" : "#/components/schemas/SyncCustodialSeries"
+          },
+          "movements" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SyncExternalMovement"
+            }
+          }
+        },
+        "required" : [ "movements", "series" ]
+      }
+    },
+    "securitySchemes" : {
+      "PERSON_LOCATION_RO" : {
+        "type" : "http",
+        "description" : "A HMPPS Auth access token with the `ROLE_PERSON_LOCATION__RO` role.",
+        "name" : "Authorization",
+        "in" : "header",
+        "scheme" : "bearer",
+        "bearerFormat" : "JWT"
+      }
+    }
+  }
+}
