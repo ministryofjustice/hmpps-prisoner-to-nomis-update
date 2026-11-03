@@ -14,10 +14,16 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.Reconciliation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationSuccessPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.generateReconciliationReport
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.NomisMovementId
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.findMissing
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationIds.Type.BOOKING
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationIds.Type.MOVEMENT
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonLocationBookingMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderPersonLocationsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerId
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personlocation.model.ReconciliationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
-import kotlin.collections.listOf
+import java.util.UUID
 
 @Service
 class PersonLocationReconciliationService(
@@ -103,21 +109,135 @@ class PersonLocationReconciliationService(
     )
   }.getOrNull()
 
-  suspend fun checkPrisonersMatch(offenderNo: String): List<MismatchedPrisoner> = withContext(Dispatchers.Unconfined) {
+  suspend fun checkPrisonersMatch(offenderNo: String): List<MismatchedPrisonerLocations> = withContext(Dispatchers.Unconfined) {
     val nomisLocations = async { nomisApi.getOffenderPersonLocationsOrNull(offenderNo) }
     val dpsLocations = async { dpsApi.getReconciliation(offenderNo) }
     val mappings = nomisLocations.await()
       ?.let { async { mappingApi.getMappings(it.bookings.map { it.booking.bookingId }) } }
-      ?: listOf<PersonLocationBookingMappingDto>()
+      ?: throw IllegalStateException("Cannot perform reconciliation for a prisoner that doesn't exist in NOMIS - has the prisoner been merged or deleted recently?")
 
-    nomisLocations.await()
-    dpsLocations.await()
+    checkPrisonersMatch(offenderNo, nomisLocations.await()!!, dpsLocations.await(), mappings.await())
+  }
 
-    listOf()
+  private fun checkPrisonersMatch(
+    offenderNo: String,
+    nomisLocations: OffenderPersonLocationsResponse,
+    dpsLocations: ReconciliationResponse,
+    mappings: List<PersonLocationBookingMappingDto>,
+  ): List<MismatchedPrisonerLocations> {
+    val mismatchedEntities = findMismatchedEntities(offenderNo, nomisLocations, dpsLocations, mappings)
+    mismatchedEntities.forEach {
+      telemetryClient.trackEvent(
+        "$TELEMETRY_PERSON_LOCATION-mismatch",
+        mapOf(
+          "offenderNo" to offenderNo,
+          "type" to it.type,
+          "nomisCount" to it.nomisCount.toString(),
+          "dpsCount" to it.dpsCount.toString(),
+          "unexpected-nomis-ids" to it.unexpectedNomisIds,
+          "unexpected-dps-ids" to it.unexpectedDpsIds,
+        ),
+      )
+    }
+
+    return mismatchedEntities
+  }
+
+  private fun findMismatchedEntities(
+    offenderNo: String,
+    nomisLocations: OffenderPersonLocationsResponse,
+    dpsLocations: ReconciliationResponse,
+    mappings: List<PersonLocationBookingMappingDto>,
+  ): List<MismatchedPrisonerLocationIds> {
+    val mismatches = mutableListOf<MismatchedPrisonerLocationIds>()
+
+    // Check for bookings only in 1 system
+    val nomisBookingIds = nomisLocations.bookings.map { it.booking.bookingId }
+    val dpsSeriesIds = dpsLocations.series.map { it.series.dpsId!! }
+    if (nomisBookingIds.size != dpsSeriesIds.size) {
+      mismatches.add(
+        MismatchedPrisonerLocationIds(
+          offenderNo = offenderNo,
+          type = BOOKING,
+          nomisCount = nomisBookingIds.size,
+          dpsCount = dpsSeriesIds.size,
+          unexpectedNomisIds = mappings.unexpectedNomisBookings(nomisBookingIds, dpsSeriesIds).toString(),
+          unexpectedDpsIds = mappings.unexpectedDpsSeries(dpsSeriesIds, nomisBookingIds).toString(),
+        ),
+      )
+    }
+
+    // Check for movements only in 1 system
+    val nomisMovementIds = nomisLocations.bookings.flatMap { bk -> bk.movements.map { mv -> NomisMovementId(bk.booking.bookingId, mv.sequence) } }
+    val dpsMovementIds = dpsLocations.series.flatMap { ser -> ser.movements.map { mv -> mv.dpsId!! } }
+    if (nomisMovementIds.size != dpsMovementIds.size) {
+      mismatches.add(
+        MismatchedPrisonerLocationIds(
+          offenderNo = offenderNo,
+          type = MOVEMENT,
+          nomisCount = nomisMovementIds.size,
+          dpsCount = dpsMovementIds.size,
+          unexpectedNomisIds = mappings.unexpectedNomisMovements(nomisMovementIds, dpsMovementIds).toString(),
+          unexpectedDpsIds = mappings.unexpectedDpsMovements(dpsMovementIds, nomisMovementIds).toString(),
+        ),
+      )
+    }
+
+    return mismatches
+  }
+
+  fun List<PersonLocationBookingMappingDto>.unexpectedNomisBookings(
+    nomisBookingIds: List<Long>,
+    dpsSeriesIds: List<UUID>,
+  ) = findMissing(nomisBookingIds, dpsSeriesIds) { nomisId ->
+    this.find { it.bookingId == nomisId }?.dpsCustodialSeriesId
+  }
+
+  fun List<PersonLocationBookingMappingDto>.unexpectedDpsSeries(
+    dpsSeriesIds: List<UUID>,
+    nomisBookingIds: List<Long>,
+  ) = findMissing(dpsSeriesIds, nomisBookingIds) { dpsId ->
+    this.find { it.dpsCustodialSeriesId == dpsId }?.bookingId
+  }
+
+  fun List<PersonLocationBookingMappingDto>.unexpectedNomisMovements(
+    nomisMovementIds: List<NomisMovementId>,
+    dpsMovementIds: List<UUID>,
+  ) = findMissing(nomisMovementIds, dpsMovementIds) { nomisId ->
+    this.find { it.bookingId == nomisId.bookingId }
+      ?.movements?.find { it.nomisMovementSeq == nomisId.sequence }
+      ?.dpsExternalMovementId
+  }
+
+  fun List<PersonLocationBookingMappingDto>.unexpectedDpsMovements(
+    dpsMovementIds: List<UUID>,
+    nomisMovementIds: List<NomisMovementId>,
+  ) = findMissing(dpsMovementIds, nomisMovementIds) { dpsId ->
+    val bookingId = this.find { it.movements.any { it.dpsExternalMovementId == dpsId } }?.bookingId
+    val seq = this.flatMap { it.movements }.find { it.dpsExternalMovementId == dpsId }?.nomisMovementSeq
+    if (bookingId != null && seq != null) {
+      NomisMovementId(bookingId, seq)
+    } else {
+      null
+    }
   }
 }
 
-class MismatchedPrisoner(
+abstract class MismatchedPrisonerLocations(
   val offenderNo: String,
   val type: String,
 )
+
+class MismatchedPrisonerLocationIds(
+  offenderNo: String,
+  type: Type,
+  val nomisCount: Int,
+  val dpsCount: Int,
+  val unexpectedNomisIds: String,
+  val unexpectedDpsIds: String,
+) : MismatchedPrisonerLocations(offenderNo, type.name) {
+  enum class Type {
+    BOOKING,
+    MOVEMENT,
+  }
+}

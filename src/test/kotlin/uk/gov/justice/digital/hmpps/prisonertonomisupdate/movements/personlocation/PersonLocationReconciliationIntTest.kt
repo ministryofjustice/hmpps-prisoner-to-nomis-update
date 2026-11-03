@@ -18,6 +18,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.PersonLocationDpsApiExtension.Companion.dpsPersonLocationServer
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.PersonLocationDpsApiMockServer.Companion.reconciliationResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.PersonLocationNomisApiMockServer.Companion.offenderPersonLocationsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.generateOffenderNo
 
@@ -91,6 +93,142 @@ class PersonLocationReconciliationIntTest(
         },
         isNull(),
       )
+    }
+  }
+
+  @Nested
+  inner class AdditionalEntities {
+
+    @BeforeEach
+    fun setUp() {
+      reset(telemetryClient)
+      prisonerApi.stubGetAllPrisoners(
+        offenderId = 0,
+        pageSize = 100,
+        prisoners = listOf(generateOffenderNo(sequence = 1)),
+      )
+
+      stubEmptyResponses()
+    }
+
+    @Nested
+    inner class AdditionalEntitiesInNomis {
+
+      @BeforeEach
+      fun `stub additional entities in NOMIS and run report`() = runTest {
+        nomisApi.stubGetOffenderPersonLocations(
+          offenderNo = "A0001TZ",
+          response = offenderPersonLocationsResponse(),
+        )
+
+        reconciliationService.generatePersonLocationReconciliationReportBatch()
+        awaitReportFinished()
+      }
+
+      @Test
+      fun `should report extra NOMIS booking`() {
+        verify(telemetryClient).trackEvent(
+          eq("person-location-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "offenderNo" to "A0001TZ",
+              "type" to "BOOKING",
+              "nomisCount" to "1",
+              "dpsCount" to "0",
+              "unexpected-nomis-ids" to "[12345]",
+              "unexpected-dps-ids" to "[]",
+            ),
+          ),
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `should report extra NOMIS movements`() {
+        verify(telemetryClient).trackEvent(
+          eq("person-location-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "offenderNo" to "A0001TZ",
+              "type" to "MOVEMENT",
+              "nomisCount" to "2",
+              "dpsCount" to "0",
+              "unexpected-nomis-ids" to "[12345_1, 12345_2]",
+              "unexpected-dps-ids" to "[]",
+            ),
+          ),
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class AdditionalEntitiesInDps {
+      private val dpsResponse = reconciliationResponse()
+      private val seriesId = dpsResponse.series[0].series.dpsId
+      private val movementInId = dpsResponse.series[0].movements[0].dpsId
+      private val movementOutId = dpsResponse.series[0].movements[1].dpsId
+
+      @BeforeEach
+      fun `stub additional entities in DPS and run report`() = runTest {
+        dpsApi.stubReconciliation(
+          personIdentifier = "A0001TZ",
+          response = dpsResponse,
+        )
+
+        reconciliationService.generatePersonLocationReconciliationReportBatch()
+        awaitReportFinished()
+      }
+
+      @Test
+      fun `should report extra DPS series`() {
+        verify(telemetryClient).trackEvent(
+          eq("person-location-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "offenderNo" to "A0001TZ",
+              "type" to "BOOKING",
+              "nomisCount" to "0",
+              "dpsCount" to "1",
+              "unexpected-nomis-ids" to "[]",
+              "unexpected-dps-ids" to "[$seriesId]",
+            ),
+          ),
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `should report extra DPS movements`() {
+        verify(telemetryClient).trackEvent(
+          eq("person-location-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "offenderNo" to "A0001TZ",
+              "type" to "MOVEMENT",
+              "nomisCount" to "0",
+              "dpsCount" to "2",
+              "unexpected-nomis-ids" to "[]",
+              "unexpected-dps-ids" to "[$movementInId, $movementOutId]",
+            ),
+          ),
+          isNull(),
+        )
+      }
+    }
+
+    private fun stubEmptyResponses() {
+      nomisApi.stubGetOffenderPersonLocations(
+        offenderNo = "A0001TZ",
+        response = offenderPersonLocationsResponse(bookings = emptyList()),
+      )
+
+      dpsApi.stubReconciliation(
+        personIdentifier = "A0001TZ",
+        response = reconciliationResponse(series = emptyList()),
+      )
+
+      mappingApi.stubGetPersonLocationMappings(response = emptyList())
     }
   }
 

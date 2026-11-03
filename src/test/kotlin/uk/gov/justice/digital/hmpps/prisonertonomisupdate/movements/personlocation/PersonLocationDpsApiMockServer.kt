@@ -70,82 +70,84 @@ class PersonLocationDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     inline fun <reified T> getRequestBodies(pattern: RequestPatternBuilder): List<T> = dpsPersonLocationServer.getRequestBodies(pattern, jsonMapper)
 
     fun reconciliationResponse(
-      bookingId: Long = 12345L,
-      dpsCustodialSeriesId: UUID = UUID.randomUUID(),
-      movementIds: List<Pair<Int, UUID>> = listOf(1 to UUID.randomUUID(), 2 to UUID.randomUUID()),
-    ) = ReconciliationResponse(
-      series = listOf(
-        ReconciliationSeries(
-          series = SyncCustodialSeries(
-            status = SyncCustodialSeries.Status.OPEN,
-            isActive = true,
-            openedAt = LocalDateTime.now(),
-            legacyBookingId = bookingId,
-            legacyBookingReference = "B12435",
-            dpsId = dpsCustodialSeriesId,
-            closedAt = null,
-            notes = "custodial series notes",
-          ),
-          movements = listOf(
-            SyncExternalMovement(
-              type = SyncExternalMovement.Type.ARRIVAL,
-              reason = CodedReason(
-                description = "Transfer In from Other Establishment",
-                reasonType = "CodedReason",
-                code = "INT",
-              ),
-              occurredAt = LocalDateTime.now(),
-              from = Court(
-                description = "Sheffield Crown Court",
-                locationType = "Court",
-                code = "SHEFCC",
-              ),
-              journey = SyncExternalJourney(
-                type = SyncExternalJourney.Type.ADMISSION,
-                scheduleReference = null,
-              ),
-              dpsId = movementIds[0].second,
-              dpsCustodySeriesId = dpsCustodialSeriesId,
-              legacyBookingId = bookingId,
-              legacySequenceNumber = movementIds[0].first,
-              to = Prison(
-                description = "Brixton",
-                locationType = "Prison",
-                code = "BXI",
-              ),
-              notes = "movement ADM notes",
-            ),
-            SyncExternalMovement(
-              type = SyncExternalMovement.Type.DEPARTURE,
-              reason = CodedReason(
-                description = "Court Appearance",
-                reasonType = "CodedReason",
-                code = "CRT",
-              ),
-              occurredAt = LocalDateTime.now(),
-              from = Prison(
-                description = "Brixton",
-                locationType = "Prison",
-                code = "BXI",
-              ),
-              journey = SyncExternalJourney(
-                type = SyncExternalJourney.Type.COURT_APPEARANCE,
-                scheduleReference = "urn:court-appearance-scheduler:court-appearance:019ef99d-9326-73f8-8b96-27671a52287b",
-              ),
-              dpsId = movementIds[1].second,
-              dpsCustodySeriesId = dpsCustodialSeriesId,
-              legacyBookingId = bookingId,
-              legacySequenceNumber = movementIds[1].first,
-              to = Court(
-                description = "Leeds Crown Court",
-                locationType = "Court",
-                code = "LEEDCC",
-              ),
-              notes = "movement CRT notes",
-            ),
-          ),
-        ),
+      seriesId: UUID = UUID.randomUUID(),
+      bookingOpenedAt: LocalDateTime = LocalDateTime.parse("2024-01-01T10:00:00"),
+      movements: List<SyncExternalMovement> = listOf(
+        transferMovementIn(seriesId = seriesId, movementTime = bookingOpenedAt),
+        courtMovementOut(seriesId = seriesId, movementTime = bookingOpenedAt.plusDays(10)),
       ),
+      series: List<ReconciliationSeries> = listOf(
+        ReconciliationSeries(series = activeSeries(openedAt = bookingOpenedAt), movements = movements),
+      ),
+    ) = ReconciliationResponse(series = series)
+
+    fun activeSeries(id: UUID = UUID.randomUUID(), openedAt: LocalDateTime) = SyncCustodialSeries(
+      status = SyncCustodialSeries.Status.OPEN,
+      isActive = true,
+      openedAt = openedAt,
+      legacyBookingId = 12345,
+      legacyBookingReference = "B12435",
+      dpsId = id,
+      closedAt = null,
+      notes = "custodial series notes",
+    )
+
+    fun transferMovementIn(id: UUID = UUID.randomUUID(), seriesId: UUID, movementTime: LocalDateTime) = SyncExternalMovement(
+      type = SyncExternalMovement.Type.ARRIVAL,
+      reason = CodedReason(
+        description = "Transfer In from Other Establishment",
+        reasonType = "CodedReason",
+        code = "INT",
+      ),
+      occurredAt = movementTime,
+      from = Court(
+        description = "Sheffield Crown Court",
+        locationType = "Court",
+        code = "SHEFCC",
+      ),
+      journey = SyncExternalJourney(
+        type = SyncExternalJourney.Type.ADMISSION,
+        scheduleReference = null,
+      ),
+      dpsId = id,
+      dpsCustodySeriesId = seriesId,
+      legacyBookingId = 12345,
+      legacySequenceNumber = 1,
+      to = Prison(
+        description = "Brixton",
+        locationType = "Prison",
+        code = "BXI",
+      ),
+      notes = "movement ADM notes",
+    )
+
+    fun courtMovementOut(id: UUID = UUID.randomUUID(), seriesId: UUID, movementTime: LocalDateTime) = SyncExternalMovement(
+      type = SyncExternalMovement.Type.DEPARTURE,
+      reason = CodedReason(
+        description = "Court Appearance",
+        reasonType = "CodedReason",
+        code = "CRT",
+      ),
+      occurredAt = movementTime,
+      from = Prison(
+        description = "Brixton",
+        locationType = "Prison",
+        code = "BXI",
+      ),
+      journey = SyncExternalJourney(
+        type = SyncExternalJourney.Type.COURT_APPEARANCE,
+        scheduleReference = "urn:court-appearance-scheduler:court-appearance:019ef99d-9326-73f8-8b96-27671a52287b",
+      ),
+      dpsId = id,
+      dpsCustodySeriesId = seriesId,
+      legacyBookingId = 12345L,
+      legacySequenceNumber = 2,
+      to = Court(
+        description = "Leeds Crown Court",
+        locationType = "Court",
+        code = "LEEDCC",
+      ),
+      notes = "movement CRT notes",
     )
   }
 
