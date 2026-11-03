@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-11-02"
+    "version" : "2026-11-02.943.cc94212"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -27229,11 +27229,11 @@
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           },
-          "isNew" : {
-            "type" : "boolean"
-          },
           "id" : {
             "type" : "string"
+          },
+          "isNew" : {
+            "type" : "boolean"
           }
         },
         "required" : [ "dpsCSIPReportId", "dpsCSIPReviewId", "id", "isNew", "mappingType", "new", "nomisCSIPReviewId" ]
@@ -27266,11 +27266,11 @@
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           },
-          "isNew" : {
-            "type" : "boolean"
-          },
           "id" : {
             "type" : "string"
+          },
+          "isNew" : {
+            "type" : "boolean"
           }
         },
         "required" : [ "dpsCSIPPlanId", "dpsCSIPReportId", "id", "isNew", "mappingType", "new", "nomisCSIPPlanId" ]
@@ -27303,11 +27303,11 @@
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           },
-          "isNew" : {
-            "type" : "boolean"
-          },
           "id" : {
             "type" : "string"
+          },
+          "isNew" : {
+            "type" : "boolean"
           }
         },
         "required" : [ "dpsCSIPInterviewId", "dpsCSIPReportId", "id", "isNew", "mappingType", "new", "nomisCSIPInterviewId" ]
@@ -27340,11 +27340,11 @@
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           },
-          "isNew" : {
-            "type" : "boolean"
-          },
           "id" : {
             "type" : "string"
+          },
+          "isNew" : {
+            "type" : "boolean"
           }
         },
         "required" : [ "dpsCSIPFactorId", "dpsCSIPReportId", "id", "isNew", "mappingType", "new", "nomisCSIPFactorId" ]
@@ -27445,11 +27445,11 @@
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           },
-          "isNew" : {
-            "type" : "boolean"
-          },
           "id" : {
             "type" : "string"
+          },
+          "isNew" : {
+            "type" : "boolean"
           }
         },
         "required" : [ "dpsCSIPAttendeeId", "dpsCSIPReportId", "id", "isNew", "mappingType", "new", "nomisCSIPAttendeeId" ]
@@ -27512,11 +27512,11 @@
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           },
-          "isNew" : {
-            "type" : "boolean"
-          },
           "id" : {
             "type" : "string"
+          },
+          "isNew" : {
+            "type" : "boolean"
           }
         },
         "required" : [ "dpsCSIPId", "id", "isNew", "mappingType", "new", "nomisCSIPId" ]
@@ -27569,11 +27569,11 @@
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           },
-          "isNew" : {
-            "type" : "boolean"
-          },
           "id" : {
             "type" : "string"
+          },
+          "isNew" : {
+            "type" : "boolean"
           }
         },
         "required" : [ "dpsSentenceId", "id", "isNew", "mappingType", "new", "nomisBookingId", "nomisSentenceSequence" ]
@@ -27611,11 +27611,11 @@
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           },
-          "isNew" : {
-            "type" : "boolean"
-          },
           "id" : {
             "type" : "string"
+          },
+          "isNew" : {
+            "type" : "boolean"
           }
         },
         "required" : [ "dpsTermId", "id", "isNew", "mappingType", "new", "nomisBookingId", "nomisSentenceSequence", "nomisTermSequence" ]
@@ -27645,11 +27645,11 @@
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           },
-          "isNew" : {
-            "type" : "boolean"
-          },
           "id" : {
             "type" : "string"
+          },
+          "isNew" : {
+            "type" : "boolean"
           }
         },
         "required" : [ "dpsCourtChargeId", "id", "isNew", "mappingType", "new", "nomisCourtChargeId" ]
@@ -27817,11 +27817,11 @@
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           },
-          "isNew" : {
-            "type" : "boolean"
-          },
           "id" : {
             "type" : "string"
+          },
+          "isNew" : {
+            "type" : "boolean"
           }
         },
         "required" : [ "dpsCourtAppearanceId", "id", "isNew", "mappingType", "new", "nomisCourtAppearanceId" ]
