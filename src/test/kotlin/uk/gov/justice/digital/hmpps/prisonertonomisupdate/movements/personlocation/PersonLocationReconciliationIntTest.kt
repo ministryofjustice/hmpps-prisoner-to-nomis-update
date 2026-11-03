@@ -44,9 +44,7 @@ class PersonLocationReconciliationIntTest(
         prisoners = listOf(generateOffenderNo(sequence = 1)),
       )
 
-      nomisApi.stubGetOffenderPersonLocations(offenderNo = "A0001TZ")
-      dpsApi.stubReconciliation(personIdentifier = "A0001TZ")
-      mappingApi.stubGetPersonLocationMappings()
+      stubEmptyResponses()
     }
 
     @Test
@@ -216,20 +214,87 @@ class PersonLocationReconciliationIntTest(
         )
       }
     }
+  }
 
-    private fun stubEmptyResponses() {
+  @Nested
+  inner class MissingMappings {
+    private val dpsResponse = reconciliationResponse()
+    private val seriesId = dpsResponse.series[0].series.dpsId
+    private val movementInId = dpsResponse.series[0].movements[0].dpsId
+    private val movementOutId = dpsResponse.series[0].movements[1].dpsId
+
+    @BeforeEach
+    fun `stub entities in NOMIS and DPS but no mappings`() = runTest {
+      reset(telemetryClient)
+      prisonerApi.stubGetAllPrisoners(
+        offenderId = 0,
+        pageSize = 100,
+        prisoners = listOf(generateOffenderNo(sequence = 1)),
+      )
+
       nomisApi.stubGetOffenderPersonLocations(
         offenderNo = "A0001TZ",
-        response = offenderPersonLocationsResponse(bookings = emptyList()),
+        response = offenderPersonLocationsResponse(),
       )
-
       dpsApi.stubReconciliation(
         personIdentifier = "A0001TZ",
-        response = reconciliationResponse(series = emptyList()),
+        response = dpsResponse,
       )
-
       mappingApi.stubGetPersonLocationMappings(response = emptyList())
+
+      reconciliationService.generatePersonLocationReconciliationReportBatch()
+      awaitReportFinished()
     }
+
+    @Test
+    fun `should report missing booking mappings`() = runTest {
+      verify(telemetryClient).trackEvent(
+        eq("person-location-reconciliation-mismatch"),
+        eq(
+          mapOf(
+            "offenderNo" to "A0001TZ",
+            "type" to "MISSING_MAPPING_BOOKING",
+            "nomisCount" to "1",
+            "dpsCount" to "1",
+            "unexpected-nomis-ids" to "[12345]",
+            "unexpected-dps-ids" to "[$seriesId]",
+          ),
+        ),
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `should report missing  movement mappings`() = runTest {
+      verify(telemetryClient).trackEvent(
+        eq("person-location-reconciliation-mismatch"),
+        eq(
+          mapOf(
+            "offenderNo" to "A0001TZ",
+            "type" to "MISSING_MAPPING_MOVEMENT",
+            "nomisCount" to "2",
+            "dpsCount" to "2",
+            "unexpected-nomis-ids" to "[12345_1, 12345_2]",
+            "unexpected-dps-ids" to "[$movementInId, $movementOutId]",
+          ),
+        ),
+        isNull(),
+      )
+    }
+  }
+
+  private fun stubEmptyResponses() {
+    nomisApi.stubGetOffenderPersonLocations(
+      offenderNo = "A0001TZ",
+      response = offenderPersonLocationsResponse(bookings = emptyList()),
+    )
+
+    dpsApi.stubReconciliation(
+      personIdentifier = "A0001TZ",
+      response = reconciliationResponse(series = emptyList()),
+    )
+
+    mappingApi.stubGetPersonLocationMappings(response = emptyList())
   }
 
   private fun awaitReportFinished() {
