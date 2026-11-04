@@ -12,16 +12,34 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.check
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
+import org.mockito.kotlin.never
 import org.mockito.kotlin.reset
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationMovements.Type.COMMENT
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationMovements.Type.DIRECTION
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationMovements.Type.FROM_LOCATION
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationMovements.Type.MOVEMENT_REASON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationMovements.Type.MOVEMENT_TIME
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationMovements.Type.MOVEMENT_TYPE
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationMovements.Type.TO_LOCATION
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.PersonLocationDpsApiExtension.Companion.dpsPersonLocationServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.PersonLocationDpsApiMockServer.Companion.reconciliationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.PersonLocationNomisApiMockServer.Companion.offenderPersonLocationsResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonLocationBookingMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonLocationMovementMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.MovementLocation
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonLocationMovement.DirectionCode.IN
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonLocationMovement.DirectionCode.OUT
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonLocationMovement.MovementType.REL
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonLocationMovement.MovementType.TAP
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.generateOffenderNo
+import java.time.LocalDateTime
+import java.util.*
 
 class PersonLocationReconciliationIntTest(
   @Autowired private val reconciliationService: PersonLocationReconciliationService,
@@ -280,6 +298,208 @@ class PersonLocationReconciliationIntTest(
         ),
         isNull(),
       )
+    }
+  }
+
+  @Nested
+  inner class MovementProperties {
+    private val dpsResponse = reconciliationResponse()
+    private val seriesId = dpsResponse.series[0].series.dpsId!!
+    private val movementInId = dpsResponse.series[0].movements[0].dpsId!!
+    private val movementOutId = dpsResponse.series[0].movements[1].dpsId!!
+    private val validTransferIn = offenderPersonLocationsResponse().bookings[0].movements[0]
+    private val validCourtOut = offenderPersonLocationsResponse().bookings[0].movements[1]
+
+    fun verifyTelemetry(
+      nomisMovementId: String,
+      dpsMovementId: UUID,
+      type: MismatchedPrisonerLocationMovements.Type,
+    ) = verify(telemetryClient).trackEvent(
+      eq("person-location-reconciliation-mismatch"),
+      eq(
+        mapOf(
+          "offenderNo" to "A0001TZ",
+          "nomisMovementId" to nomisMovementId,
+          "dpsMovementId" to "$dpsMovementId",
+          "type" to type.name,
+        ),
+      ),
+      isNull(),
+    )
+
+    @BeforeEach
+    fun `stub matching entities in NOMIS and DPS`() = runTest {
+      reset(telemetryClient)
+      prisonerApi.stubGetAllPrisoners(
+        offenderId = 0,
+        pageSize = 100,
+        prisoners = listOf(generateOffenderNo(sequence = 1)),
+      )
+
+      nomisApi.stubGetOffenderPersonLocations(
+        offenderNo = "A0001TZ",
+        response = offenderPersonLocationsResponse(),
+      )
+      dpsApi.stubReconciliation(
+        personIdentifier = "A0001TZ",
+        response = dpsResponse,
+      )
+      mappingApi.stubGetPersonLocationMappings(
+        response = listOf(
+          PersonLocationBookingMappingDto(
+            bookingId = 12345L,
+            dpsCustodialSeriesId = seriesId,
+            movements = listOf(
+              PersonLocationMovementMappingDto(
+                nomisMovementSeq = 1,
+                dpsExternalMovementId = movementInId,
+              ),
+              PersonLocationMovementMappingDto(
+                nomisMovementSeq = 2,
+                dpsExternalMovementId = movementOutId,
+              ),
+            ),
+          ),
+        ),
+      )
+    }
+
+    @Test
+    fun `should report nothing if no differences`() = runTest {
+      reconciliationService.generatePersonLocationReconciliationReportBatch()
+      awaitReportFinished()
+
+      verify(telemetryClient, never()).trackEvent(
+        eq("person-location-reconciliation-mismatch"),
+        any(),
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `movement type different`() = runTest {
+      nomisApi.stubGetOffenderPersonLocations(
+        offenderNo = "A0001TZ",
+        response = offenderPersonLocationsResponse(
+          movements = listOf(
+            validTransferIn.copy(movementType = REL),
+            validCourtOut.copy(movementType = TAP),
+          ),
+        ),
+      )
+      reconciliationService.generatePersonLocationReconciliationReportBatch()
+      awaitReportFinished()
+
+      verifyTelemetry("12345_1", movementInId, MOVEMENT_TYPE)
+      verifyTelemetry("12345_2", movementOutId, MOVEMENT_TYPE)
+    }
+
+    @Test
+    fun `direction code different`() = runTest {
+      nomisApi.stubGetOffenderPersonLocations(
+        offenderNo = "A0001TZ",
+        response = offenderPersonLocationsResponse(
+          movements = listOf(
+            validTransferIn.copy(directionCode = OUT),
+            validCourtOut.copy(directionCode = IN),
+          ),
+        ),
+      )
+      reconciliationService.generatePersonLocationReconciliationReportBatch()
+      awaitReportFinished()
+
+      verifyTelemetry("12345_1", movementInId, DIRECTION)
+      verifyTelemetry("12345_2", movementOutId, DIRECTION)
+    }
+
+    @Test
+    fun `movement time different`() = runTest {
+      nomisApi.stubGetOffenderPersonLocations(
+        offenderNo = "A0001TZ",
+        response = offenderPersonLocationsResponse(
+          movements = listOf(
+            validTransferIn.copy(movementTime = LocalDateTime.now()),
+            validCourtOut.copy(movementTime = LocalDateTime.now()),
+          ),
+        ),
+      )
+      reconciliationService.generatePersonLocationReconciliationReportBatch()
+      awaitReportFinished()
+
+      verifyTelemetry("12345_1", movementInId, MOVEMENT_TIME)
+      verifyTelemetry("12345_2", movementOutId, MOVEMENT_TIME)
+    }
+
+    @Test
+    fun `movement reason different`() = runTest {
+      nomisApi.stubGetOffenderPersonLocations(
+        offenderNo = "A0001TZ",
+        response = offenderPersonLocationsResponse(
+          movements = listOf(
+            validTransferIn.copy(movementReason = CodeDescription("WRONG", "Wrong")),
+            validCourtOut.copy(movementReason = CodeDescription("WRONG", "Wrong")),
+          ),
+        ),
+      )
+      reconciliationService.generatePersonLocationReconciliationReportBatch()
+      awaitReportFinished()
+
+      verifyTelemetry("12345_1", movementInId, MOVEMENT_REASON)
+      verifyTelemetry("12345_2", movementOutId, MOVEMENT_REASON)
+    }
+
+    @Test
+    fun `from location different`() = runTest {
+      nomisApi.stubGetOffenderPersonLocations(
+        offenderNo = "A0001TZ",
+        response = offenderPersonLocationsResponse(
+          movements = listOf(
+            validTransferIn.copy(from = MovementLocation(type = MovementLocation.Type.COURT, code = "WRONG", description = "Wrong")),
+            validCourtOut.copy(from = MovementLocation(type = MovementLocation.Type.PRISON, code = "WRONG", description = "Wrong")),
+          ),
+        ),
+      )
+      reconciliationService.generatePersonLocationReconciliationReportBatch()
+      awaitReportFinished()
+
+      verifyTelemetry("12345_1", movementInId, FROM_LOCATION)
+      verifyTelemetry("12345_2", movementOutId, FROM_LOCATION)
+    }
+
+    @Test
+    fun `to location different`() = runTest {
+      nomisApi.stubGetOffenderPersonLocations(
+        offenderNo = "A0001TZ",
+        response = offenderPersonLocationsResponse(
+          movements = listOf(
+            validTransferIn.copy(to = MovementLocation(type = MovementLocation.Type.PRISON, code = "WRONG", description = "Wrong")),
+            validCourtOut.copy(to = MovementLocation(type = MovementLocation.Type.COURT, code = "WRONG", description = "Wrong")),
+          ),
+        ),
+      )
+      reconciliationService.generatePersonLocationReconciliationReportBatch()
+      awaitReportFinished()
+
+      verifyTelemetry("12345_1", movementInId, TO_LOCATION)
+      verifyTelemetry("12345_2", movementOutId, TO_LOCATION)
+    }
+
+    @Test
+    fun `comment different`() = runTest {
+      nomisApi.stubGetOffenderPersonLocations(
+        offenderNo = "A0001TZ",
+        response = offenderPersonLocationsResponse(
+          movements = listOf(
+            validTransferIn.copy(commentText = "WRONG"),
+            validCourtOut.copy(commentText = "WRONG"),
+          ),
+        ),
+      )
+      reconciliationService.generatePersonLocationReconciliationReportBatch()
+      awaitReportFinished()
+
+      verifyTelemetry("12345_1", movementInId, COMMENT)
+      verifyTelemetry("12345_2", movementOutId, COMMENT)
     }
   }
 
