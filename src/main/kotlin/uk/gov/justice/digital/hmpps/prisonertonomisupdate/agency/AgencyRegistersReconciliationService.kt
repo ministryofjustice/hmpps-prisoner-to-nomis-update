@@ -215,8 +215,8 @@ data class AgencyCoreDetails(
 )
 
 private fun AgencyResponse.asCoreDetails(): AgencyCoreDetails = AgencyCoreDetails(
-  name = description,
-  longDescription = longDescription,
+  name = description.uppercase(),
+  longDescription = longDescription?.uppercase(),
   active = active,
   deactivationDate = deactivationDate,
   cjitCode = cjitCode,
@@ -238,8 +238,8 @@ private fun AgencyResponse.asCoreDetails(): AgencyCoreDetails = AgencyCoreDetail
   localAuthorityCode = localAuthorities.firstOrNull()?.code,
 )
 private fun LegacyAgencyDto.asCoreDetails(): AgencyCoreDetails = AgencyCoreDetails(
-  name = name,
-  longDescription = description,
+  name = name.uppercase(),
+  longDescription = description?.uppercase(),
   active = active,
   deactivationDate = inactiveDate,
   cjitCode = cjitCode,
