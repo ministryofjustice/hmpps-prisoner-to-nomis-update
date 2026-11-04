@@ -31,6 +31,10 @@ dependencies {
   implementation("org.springframework.data:spring-data-commons")
   implementation("org.springframework.security:spring-security-access")
   implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:3.2.0")
+  // Temporarily pin swagger-ui for dompurify issues CVE-2026-11680(2-4)
+  constraints {
+    implementation("org.webjars:swagger-ui:5.34.1")
+  }
   implementation("org.springframework.boot:spring-boot-jackson2")
 
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:7.6.0-beta-2")
