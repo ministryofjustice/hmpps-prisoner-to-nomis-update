@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-11-02.2350.4f05a79"
+    "version" : "2026-11-03.2361.228d990"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -27401,6 +27401,84 @@
         }
       }
     },
+    "/court-event-charges/ids/all-from-id" : {
+      "get" : {
+        "tags" : [ "court-sentencing-resource" ],
+        "summary" : "get court event charge IDs that have a property value, using keyset pagination",
+        "description" : "Gets the specified number of court event charge ids (that have a property value) starting after the given offenderChargeId/eventId.\n      Clients can iterate through all ids by calling this endpoint using the offenderChargeId/eventId from the last call (omit for first call).\n      Iteration ends when the returned courtEventChargeIds list has size less than the requested page size.\n      This is far more performant than the equivalent offset-paged /court-event-charges/ids endpoint for large tables since it avoids\n      a COUNT query and the cost of skipping rows via OFFSET grows with each page.\n      Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
+        "operationId" : "getCourtEventChargeIdsWithPropertyValueFromId",
+        "parameters" : [ {
+          "name" : "offenderChargeId",
+          "in" : "query",
+          "description" : "If supplied get court event charges starting after this offender charge id",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "default" : 0,
+            "description" : "If supplied get court event charges starting after this offender charge id",
+            "example" : 1555999
+          },
+          "example" : 1555999
+        }, {
+          "name" : "eventId",
+          "in" : "query",
+          "description" : "If supplied get court event charges starting after this event id (only used in conjunction with offenderChargeId)",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "default" : 0,
+            "description" : "If supplied get court event charges starting after this event id (only used in conjunction with offenderChargeId)",
+            "example" : 1555999
+          },
+          "example" : 1555999
+        }, {
+          "name" : "pageSize",
+          "in" : "query",
+          "description" : "Number of court event charges to get",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 20,
+            "description" : "Number of court event charges to get"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "list of court event charge ids are returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CourtEventChargeIdsWithLast"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint when role ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/court-cases/{id}" : {
       "get" : {
         "tags" : [ "court-sentencing-resource" ],
@@ -47481,10 +47559,6 @@
         },
         "required" : [ "accounts", "prisonNumber", "rootOffenderId" ]
       },
-      "AdjustmentReason" : {
-        "type" : "string",
-        "enum" : [ "P", "WRT" ]
-      },
       "AggregatedAccountDto" : {
         "type" : "object",
         "properties" : {
@@ -47576,14 +47650,6 @@
             "format" : "int64",
             "description" : "How much has been paid off so far, in pence",
             "example" : 1130
-          },
-          "adjustmentReason" : {
-            "description" : "The reason code for the adjustment",
-            "oneOf" : [ {
-              "$ref" : "#/components/schemas/AdjustmentReason"
-            }, {
-              "type" : "null"
-            } ]
           },
           "adjustmentAmount" : {
             "type" : [ "integer", "null" ],
@@ -47753,17 +47819,6 @@
       "PrisonerHoldProjection" : {
         "type" : "object",
         "properties" : {
-          "clientUniqueRef" : {
-            "type" : [ "string", "null" ]
-          },
-          "holdNumber" : {
-            "type" : [ "integer", "null" ],
-            "format" : "int64"
-          },
-          "txnEntrySeq" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
           "txnId" : {
             "type" : "integer",
             "format" : "int64"
@@ -47780,6 +47835,17 @@
           },
           "txnEntryAmount" : {
             "type" : "number"
+          },
+          "txnEntrySeq" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "clientUniqueRef" : {
+            "type" : [ "string", "null" ]
+          },
+          "holdNumber" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int64"
           }
         },
         "required" : [ "txnEntryAmount", "txnEntryDate", "txnEntrySeq", "txnId" ]
@@ -48010,6 +48076,30 @@
             "type" : "boolean"
           }
         }
+      },
+      "CourtEventChargeIdsWithLast" : {
+        "type" : "object",
+        "description" : "court event charge ids retrieved using keyset pagination, with the last ids seen",
+        "properties" : {
+          "courtEventChargeIds" : {
+            "type" : "array",
+            "description" : "The court event charge ids found, in ascending offenderChargeId/eventId order",
+            "items" : {
+              "$ref" : "#/components/schemas/CourtEventChargeIdResponse"
+            }
+          },
+          "lastOffenderChargeId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The last offenderChargeId seen - pass this back in on the next call"
+          },
+          "lastEventId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The last eventId seen - pass this back in on the next call"
+          }
+        },
+        "required" : [ "courtEventChargeIds", "lastEventId", "lastOffenderChargeId" ]
       },
       "CourtCaseIdResponse" : {
         "type" : "object",
