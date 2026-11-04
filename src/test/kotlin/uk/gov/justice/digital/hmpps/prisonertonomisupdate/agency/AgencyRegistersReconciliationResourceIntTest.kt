@@ -80,8 +80,8 @@ class AgencyRegistersReconciliationResourceIntTest(
 
         assertThat(result.agencyId).isEqualTo(agencyId)
         assertThat(result.reason).isEqualTo("different-core-agency-details")
-        assertThat(result.nomis).contains("Sheffield Crown Ct")
-        assertThat(result.dps).contains("Sheffield Big Court")
+        assertThat(result.nomis).contains("SHEFFIELD CROWN CT")
+        assertThat(result.dps).contains("SHEFFIELD BIG COURT")
         assertThat(result.nomisAgency).isEqualTo(agencyResponse())
         assertThat(result.dpsAgency).isEqualTo(dpsAgency)
       }
