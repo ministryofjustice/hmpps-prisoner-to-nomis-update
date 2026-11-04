@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.CourtSchedulerReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.MismatchedPrisonerCourtMovements
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocations
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.PersonLocationReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.MismatchPrisonerTaps
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.MismatchPrisonerTapsSummary
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapActivePrisonersReconciliationService
@@ -22,6 +24,7 @@ class ExternalMovementsReconciliationResource(
   private val activePrisonerReconService: TapActivePrisonersReconciliationService,
   private val courtSchedulerReconService: CourtSchedulerReconciliationService,
   private val transferSchedulerReconService: TransferScheduleReconciliationService,
+  private val personLocationsReconService: PersonLocationReconciliationService,
 ) {
 
   @GetMapping("/external-movements/all-taps/{offenderNo}/reconciliation")
@@ -41,4 +44,9 @@ class ExternalMovementsReconciliationResource(
   suspend fun transferMovementsReconciliation(
     @PathVariable offenderNo: String,
   ): List<MismatchedPrisonerTransfer> = transferSchedulerReconService.checkPrisonersMatch(offenderNo, suppressTelemetry = true)
+
+  @GetMapping("/external-movements/person-locations/{offenderNo}/reconciliation")
+  suspend fun personLocationsReconciliation(
+    @PathVariable offenderNo: String,
+  ): List<MismatchedPrisonerLocations> = personLocationsReconService.checkPrisonersMatch(offenderNo, suppressTelemetry = true)
 }
