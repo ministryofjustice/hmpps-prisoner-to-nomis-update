@@ -86,7 +86,7 @@ class PersonLocationDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       isActive = true,
       openedAt = openedAt,
       legacyBookingId = 12345,
-      legacyBookingReference = "B12435",
+      legacyBookingReference = "B12345",
       dpsId = id,
       closedAt = null,
       notes = "custodial series notes",
