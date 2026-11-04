@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-30.665.845fe6f"
+    "version" : "2026-11-03.675.098ea2b"
   },
   "servers" : [ {
     "url" : "https://prison-register-dev.hmpps.service.justice.gov.uk",
@@ -5722,6 +5722,80 @@
         }
       }
     },
+    "/legacy/sync/prison/id/{agencyId}" : {
+      "post" : {
+        "tags" : [ "legacy-sync-resource" ],
+        "summary" : "Creates or updates a prison",
+        "description" : "Used for synchronising data from NOMIS. This creates a prison, or updates it if it already exists, and publishes the corresponding prison-type domain event with source NOMIS. Role required is ROLE_HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
+        "operationId" : "createOrUpdatePrison",
+        "parameters" : [ {
+          "name" : "agencyId",
+          "in" : "path",
+          "description" : "NOMIS Agency Id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "NOMIS Agency Id",
+            "example" : "WWI",
+            "maxLength" : 6,
+            "minLength" : 2
+          },
+          "example" : "WWI"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/LegacyAgencyDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Prison created or updated",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LegacyAgencyResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Information request to create or update prison",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LegacyAgencyResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Incorrect permissions to add or update agency",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/legacy/sync/agency/id/{agencyId}" : {
       "post" : {
         "tags" : [ "legacy-sync-resource" ],
@@ -7774,6 +7848,61 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/courts/summary" : {
+      "get" : {
+        "tags" : [ "court-resource" ],
+        "summary" : "Get summary of all courts",
+        "description" : "Court IDs, names, active status and court types ordered by court ID ascending",
+        "operationId" : "getCourtSummaries",
+        "parameters" : [ {
+          "name" : "active",
+          "in" : "query",
+          "description" : "Active",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          },
+          "example" : true
+        }, {
+          "name" : "textSearch",
+          "in" : "query",
+          "description" : "Text search",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "Sheffield"
+        }, {
+          "name" : "courtTypeCodes",
+          "in" : "query",
+          "description" : "Court type codes to filter by",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "CACD", "CB", "CC", "CO", "DCM", "GCM", "IMM", "MC", "OTHER", "YC" ]
+            }
+          },
+          "example" : "CACD, CB"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Successful Operation",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/CourtSummaryDto"
+                  }
                 }
               }
             }
@@ -10580,6 +10709,35 @@
           }
         },
         "required" : [ "agencyId", "legacyType", "name" ]
+      },
+      "CourtSummaryDto" : {
+        "type" : "object",
+        "description" : "Court summary information",
+        "properties" : {
+          "courtId" : {
+            "type" : "string",
+            "description" : "Court ID",
+            "example" : "NWCLYC"
+          },
+          "courtName" : {
+            "type" : "string",
+            "description" : "Name",
+            "example" : "N Staffs Youth Court - Newcastle"
+          },
+          "active" : {
+            "type" : "boolean",
+            "description" : "Whether still active"
+          },
+          "courtType" : {
+            "description" : "courtType",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          }
+        },
+        "required" : [ "active", "courtId", "courtName" ]
       },
       "AgencySummaryDto" : {
         "type" : "object",
