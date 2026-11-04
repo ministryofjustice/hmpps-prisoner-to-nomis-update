@@ -140,14 +140,14 @@ class PersonLocationReconciliationService(
     )
   }.getOrNull()
 
-  suspend fun checkPrisonersMatch(offenderNo: String): List<MismatchedPrisonerLocations> = withContext(Dispatchers.Unconfined) {
+  suspend fun checkPrisonersMatch(offenderNo: String, suppressTelemetry: Boolean = false): List<MismatchedPrisonerLocations> = withContext(Dispatchers.Unconfined) {
     val nomisLocations = async { nomisApi.getOffenderPersonLocationsOrNull(offenderNo) }
     val dpsLocations = async { dpsApi.getReconciliation(offenderNo) }
     val mappings = nomisLocations.await()
       ?.let { async { mappingApi.getMappings(it.bookings.map { it.booking.bookingId }) } }
       ?: throw IllegalStateException("Cannot perform reconciliation for a prisoner that doesn't exist in NOMIS - has the prisoner been merged or deleted recently?")
 
-    checkPrisonersMatch(offenderNo, nomisLocations.await()!!, dpsLocations.await(), mappings.await())
+    checkPrisonersMatch(offenderNo, nomisLocations.await()!!, dpsLocations.await(), mappings.await(), suppressTelemetry)
   }
 
   private fun checkPrisonersMatch(
@@ -155,53 +155,61 @@ class PersonLocationReconciliationService(
     nomisLocations: OffenderPersonLocationsResponse,
     dpsLocations: ReconciliationResponse,
     mappings: List<PersonLocationBookingMappingDto>,
+    suppressTelemetry: Boolean,
   ): List<MismatchedPrisonerLocations> {
     val mismatchedEntities = findMismatchedEntities(offenderNo, nomisLocations, dpsLocations, mappings)
     val missingMappings = findMissingMappings(offenderNo, nomisLocations, dpsLocations, mappings)
-    (mismatchedEntities + missingMappings).forEach {
-      telemetryClient.trackEvent(
-        "$TELEMETRY_PERSON_LOCATION-mismatch",
-        mapOf(
-          "offenderNo" to offenderNo,
-          "type" to it.type,
-          "nomisCount" to it.nomisCount.toString(),
-          "dpsCount" to it.dpsCount.toString(),
-          "unexpected-nomis-ids" to it.unexpectedNomisIds,
-          "unexpected-dps-ids" to it.unexpectedDpsIds,
-        ),
-      )
+    if (!suppressTelemetry) {
+      (mismatchedEntities + missingMappings).forEach {
+        telemetryClient.trackEvent(
+          "$TELEMETRY_PERSON_LOCATION-mismatch",
+          mapOf(
+            "offenderNo" to offenderNo,
+            "type" to it.type,
+            "nomisCount" to it.nomisCount.toString(),
+            "dpsCount" to it.dpsCount.toString(),
+            "unexpected-nomis-ids" to it.unexpectedNomisIds,
+            "unexpected-dps-ids" to it.unexpectedDpsIds,
+          ),
+        )
+      }
     }
 
     val mismatchedMovements = findMismatchedMovements(offenderNo, nomisLocations, dpsLocations, mappings)
-    mismatchedMovements.forEach {
-      telemetryClient.trackEvent(
-        "$TELEMETRY_PERSON_LOCATION-mismatch",
-        mapOf(
-          "offenderNo" to offenderNo,
-          "type" to it.type,
-          "nomisMovementId" to "${it.nomisMovementId}",
-          "dpsMovementId" to "${it.dpsMovementId}",
-        ),
-      )
+    if (!suppressTelemetry) {
+      mismatchedMovements.forEach {
+        telemetryClient.trackEvent(
+          "$TELEMETRY_PERSON_LOCATION-mismatch",
+          mapOf(
+            "offenderNo" to offenderNo,
+            "type" to it.type,
+            "nomisMovementId" to "${it.nomisMovementId}",
+            "dpsMovementId" to "${it.dpsMovementId}",
+          ),
+        )
+      }
     }
 
-    val misMatchedBookings = findMismatchedBookings(offenderNo, nomisLocations, dpsLocations, mappings)
-    misMatchedBookings.forEach {
-      telemetryClient.trackEvent(
-        "$TELEMETRY_PERSON_LOCATION-mismatch",
-        mapOf(
-          "offenderNo" to offenderNo,
-          "type" to it.type,
-          "nomisBookingId" to "${it.nomisBookingId}",
-          "dpsSeriesId" to "${it.dpsSeriesId}",
-        ),
-      )
+    val mismatchedBookings = findMismatchedBookings(offenderNo, nomisLocations, dpsLocations, mappings)
+    if (!suppressTelemetry) {
+      mismatchedBookings.forEach {
+        telemetryClient.trackEvent(
+          "$TELEMETRY_PERSON_LOCATION-mismatch",
+          mapOf(
+            "offenderNo" to offenderNo,
+            "type" to it.type,
+            "nomisBookingId" to "${it.nomisBookingId}",
+            "dpsSeriesId" to "${it.dpsSeriesId}",
+          ),
+        )
+      }
     }
 
     return buildList {
       addAll(mismatchedEntities)
       addAll(missingMappings)
       addAll(mismatchedMovements)
+      addAll(mismatchedBookings)
     }
   }
 
@@ -381,7 +389,7 @@ class PersonLocationReconciliationService(
 
       // movement reason
       if (nomisMovement.movementReason.code != (dpsMovement.reason as CodedReason).code) {
-        mismatches.add(mismatch(MOVEMENT_REASON, nomisMovement.movementReason.code, dpsMovement.reason.reasonType))
+        mismatches.add(mismatch(MOVEMENT_REASON, nomisMovement.movementReason.code, dpsMovement.reason.code))
       }
 
       // movement time
@@ -467,6 +475,8 @@ class MismatchedPrisonerLocationIds(
   val unexpectedNomisIds: String,
   val unexpectedDpsIds: String,
 ) : MismatchedPrisonerLocations(offenderNo, type.name) {
+  override fun toString() = "MismatchedPrisonerLocationIds(offenderNo=$offenderNo, type=$type, nomisCount=$nomisCount, dpsCount=$dpsCount, unexpectedNomisIds=$unexpectedNomisIds, unexpectedDpsIds=$unexpectedDpsIds)"
+
   enum class Type {
     BOOKING,
     MOVEMENT,
@@ -483,6 +493,8 @@ class MismatchedPrisonerLocationMovements(
   val nomisValue: String?,
   val dpsValue: String?,
 ) : MismatchedPrisonerLocations(offenderNo, type.name) {
+  override fun toString() = "MismatchedPrisonerLocationMovements(offenderNo=$offenderNo, type=$type, nomisMovementId=$nomisMovementId, dpsMovementId=$dpsMovementId, nomisValue=$nomisValue, dpsValue=$dpsValue)"
+
   enum class Type {
     COMMENT,
     DIRECTION,
@@ -502,6 +514,8 @@ class MismatchedPrisonerLocationBookings(
   val nomisValue: String?,
   val dpsValue: String?,
 ) : MismatchedPrisonerLocations(offenderNo, type.name) {
+  override fun toString() = "MismatchedPrisonerLocationBookings(offenderNo=$offenderNo, type=$type, nomisBookingId=$nomisBookingId, dpsSeriesId=$dpsSeriesId, nomisValue=$nomisValue, dpsValue=$dpsValue)"
+
   enum class Type {
     ACTIVE_FLAG,
     BOOKING_BEGIN_TIME,

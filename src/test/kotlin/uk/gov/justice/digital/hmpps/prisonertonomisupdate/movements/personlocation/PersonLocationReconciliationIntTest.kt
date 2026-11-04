@@ -18,11 +18,16 @@ import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.NomisMovementId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationBookings.Type.ACTIVE_FLAG
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationBookings.Type.BOOKING_BEGIN_TIME
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationBookings.Type.BOOKING_END_TIME
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationBookings.Type.BOOKING_NUMBER
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationBookings.Type.BOOKING_STATUS
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationIds.Type.BOOKING
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationIds.Type.MISSING_MAPPING_BOOKING
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationIds.Type.MISSING_MAPPING_MOVEMENT
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationIds.Type.MOVEMENT
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationMovements.Type.COMMENT
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationMovements.Type.DIRECTION
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationMovements.Type.FROM_LOCATION
@@ -164,6 +169,12 @@ class PersonLocationReconciliationIntTest(
           ),
           isNull(),
         )
+
+        verifyReconciliationEndpointIds(
+          type = BOOKING,
+          nomisCount = 1,
+          unexpectedNomisIds = "[12345]",
+        )
       }
 
       @Test
@@ -181,6 +192,12 @@ class PersonLocationReconciliationIntTest(
             ),
           ),
           isNull(),
+        )
+
+        verifyReconciliationEndpointIds(
+          type = MOVEMENT,
+          nomisCount = 2,
+          unexpectedNomisIds = "[12345_1, 12345_2]",
         )
       }
     }
@@ -219,6 +236,12 @@ class PersonLocationReconciliationIntTest(
           ),
           isNull(),
         )
+
+        verifyReconciliationEndpointIds(
+          type = BOOKING,
+          dpsCount = 1,
+          unexpectedDpsIds = "[$seriesId]",
+        )
       }
 
       @Test
@@ -236,6 +259,12 @@ class PersonLocationReconciliationIntTest(
             ),
           ),
           isNull(),
+        )
+
+        verifyReconciliationEndpointIds(
+          type = MOVEMENT,
+          dpsCount = 2,
+          unexpectedDpsIds = "[$movementInId, $movementOutId]",
         )
       }
     }
@@ -287,6 +316,14 @@ class PersonLocationReconciliationIntTest(
         ),
         isNull(),
       )
+
+      verifyReconciliationEndpointIds(
+        type = MISSING_MAPPING_BOOKING,
+        nomisCount = 1,
+        dpsCount = 1,
+        unexpectedNomisIds = "[12345]",
+        unexpectedDpsIds = "[$seriesId]",
+      )
     }
 
     @Test
@@ -304,6 +341,14 @@ class PersonLocationReconciliationIntTest(
           ),
         ),
         isNull(),
+      )
+
+      verifyReconciliationEndpointIds(
+        type = MISSING_MAPPING_MOVEMENT,
+        nomisCount = 2,
+        dpsCount = 2,
+        unexpectedNomisIds = "[12345_1, 12345_2]",
+        unexpectedDpsIds = "[$movementInId, $movementOutId]",
       )
     }
   }
@@ -399,6 +444,21 @@ class PersonLocationReconciliationIntTest(
 
       verifyTelemetry("12345_1", movementInId, MOVEMENT_TYPE)
       verifyTelemetry("12345_2", movementOutId, MOVEMENT_TYPE)
+
+      verifyReconciliationEndpointMovement(
+        type = MOVEMENT_TYPE,
+        nomisMoveSeq = 1,
+        dpsId = movementInId,
+        nomisValue = "REL",
+        dpsValue = "ADMISSION",
+      )
+      verifyReconciliationEndpointMovement(
+        type = MOVEMENT_TYPE,
+        nomisMoveSeq = 2,
+        dpsId = movementOutId,
+        nomisValue = "TAP",
+        dpsValue = "COURT_APPEARANCE",
+      )
     }
 
     @Test
@@ -417,16 +477,32 @@ class PersonLocationReconciliationIntTest(
 
       verifyTelemetry("12345_1", movementInId, DIRECTION)
       verifyTelemetry("12345_2", movementOutId, DIRECTION)
+
+      verifyReconciliationEndpointMovement(
+        type = DIRECTION,
+        nomisMoveSeq = 1,
+        dpsId = movementInId,
+        nomisValue = "OUT",
+        dpsValue = "ARRIVAL",
+      )
+      verifyReconciliationEndpointMovement(
+        type = DIRECTION,
+        nomisMoveSeq = 2,
+        dpsId = movementOutId,
+        nomisValue = "IN",
+        dpsValue = "DEPARTURE",
+      )
     }
 
     @Test
     fun `movement time different`() = runTest {
+      val now = LocalDateTime.now()
       nomisApi.stubGetOffenderPersonLocations(
         offenderNo = "A0001TZ",
         response = offenderPersonLocationsResponse(
           movements = listOf(
-            validTransferIn.copy(movementTime = LocalDateTime.now()),
-            validCourtOut.copy(movementTime = LocalDateTime.now()),
+            validTransferIn.copy(movementTime = now),
+            validCourtOut.copy(movementTime = now),
           ),
         ),
       )
@@ -435,6 +511,21 @@ class PersonLocationReconciliationIntTest(
 
       verifyTelemetry("12345_1", movementInId, MOVEMENT_TIME)
       verifyTelemetry("12345_2", movementOutId, MOVEMENT_TIME)
+
+      verifyReconciliationEndpointMovement(
+        type = MOVEMENT_TIME,
+        nomisMoveSeq = 1,
+        dpsId = movementInId,
+        nomisValue = "$now",
+        dpsValue = "2024-01-01T10:00",
+      )
+      verifyReconciliationEndpointMovement(
+        type = MOVEMENT_TIME,
+        nomisMoveSeq = 2,
+        dpsId = movementOutId,
+        nomisValue = "$now",
+        dpsValue = "2024-01-11T10:00",
+      )
     }
 
     @Test
@@ -453,6 +544,21 @@ class PersonLocationReconciliationIntTest(
 
       verifyTelemetry("12345_1", movementInId, MOVEMENT_REASON)
       verifyTelemetry("12345_2", movementOutId, MOVEMENT_REASON)
+
+      verifyReconciliationEndpointMovement(
+        type = MOVEMENT_REASON,
+        nomisMoveSeq = 1,
+        dpsId = movementInId,
+        nomisValue = "WRONG",
+        dpsValue = "INT",
+      )
+      verifyReconciliationEndpointMovement(
+        type = MOVEMENT_REASON,
+        nomisMoveSeq = 2,
+        dpsId = movementOutId,
+        nomisValue = "WRONG",
+        dpsValue = "CRT",
+      )
     }
 
     @Test
@@ -471,6 +577,21 @@ class PersonLocationReconciliationIntTest(
 
       verifyTelemetry("12345_1", movementInId, FROM_LOCATION)
       verifyTelemetry("12345_2", movementOutId, FROM_LOCATION)
+
+      verifyReconciliationEndpointMovement(
+        type = FROM_LOCATION,
+        nomisMoveSeq = 1,
+        dpsId = movementInId,
+        nomisValue = "Wrong",
+        dpsValue = "Sheffield Crown Court",
+      )
+      verifyReconciliationEndpointMovement(
+        type = FROM_LOCATION,
+        nomisMoveSeq = 2,
+        dpsId = movementOutId,
+        nomisValue = "Wrong",
+        dpsValue = "Brixton",
+      )
     }
 
     @Test
@@ -489,6 +610,21 @@ class PersonLocationReconciliationIntTest(
 
       verifyTelemetry("12345_1", movementInId, TO_LOCATION)
       verifyTelemetry("12345_2", movementOutId, TO_LOCATION)
+
+      verifyReconciliationEndpointMovement(
+        type = TO_LOCATION,
+        nomisMoveSeq = 1,
+        dpsId = movementInId,
+        nomisValue = "Wrong",
+        dpsValue = "Brixton",
+      )
+      verifyReconciliationEndpointMovement(
+        type = TO_LOCATION,
+        nomisMoveSeq = 2,
+        dpsId = movementOutId,
+        nomisValue = "Wrong",
+        dpsValue = "Leeds Crown Court",
+      )
     }
 
     @Test
@@ -507,6 +643,42 @@ class PersonLocationReconciliationIntTest(
 
       verifyTelemetry("12345_1", movementInId, COMMENT)
       verifyTelemetry("12345_2", movementOutId, COMMENT)
+
+      verifyReconciliationEndpointMovement(
+        type = COMMENT,
+        nomisMoveSeq = 1,
+        dpsId = movementInId,
+        nomisValue = "WRONG",
+        dpsValue = "movement ADM notes",
+      )
+      verifyReconciliationEndpointMovement(
+        type = COMMENT,
+        nomisMoveSeq = 2,
+        dpsId = movementOutId,
+        nomisValue = "WRONG",
+        dpsValue = "movement CRT notes",
+      )
+    }
+
+    private fun verifyReconciliationEndpointMovement(
+      offenderNo: String = "A0001TZ",
+      type: MismatchedPrisonerLocationMovements.Type,
+      nomisBookingId: Long = 12345,
+      nomisMoveSeq: Int,
+      dpsId: UUID,
+      nomisValue: String,
+      dpsValue: String,
+    ) {
+      verifyReconciliationEndpoint(
+        MismatchedPrisonerLocationMovements(
+          offenderNo = offenderNo,
+          type = type,
+          nomisMovementId = NomisMovementId(nomisBookingId, nomisMoveSeq),
+          dpsMovementId = dpsId,
+          nomisValue = nomisValue,
+          dpsValue = dpsValue,
+        ),
+      )
     }
   }
 
@@ -602,6 +774,12 @@ class PersonLocationReconciliationIntTest(
       awaitReportFinished()
 
       verifyTelemetry(BOOKING_STATUS)
+
+      verifyReconciliationEndpointBooking(
+        type = BOOKING_STATUS,
+        nomisValue = "CLOSED",
+        dpsValue = "OPEN",
+      )
     }
 
     @Test
@@ -621,6 +799,12 @@ class PersonLocationReconciliationIntTest(
       awaitReportFinished()
 
       verifyTelemetry(ACTIVE_FLAG)
+
+      verifyReconciliationEndpointBooking(
+        type = ACTIVE_FLAG,
+        nomisValue = "false",
+        dpsValue = "true",
+      )
     }
 
     @Test
@@ -640,16 +824,23 @@ class PersonLocationReconciliationIntTest(
       awaitReportFinished()
 
       verifyTelemetry(BOOKING_NUMBER)
+
+      verifyReconciliationEndpointBooking(
+        type = BOOKING_NUMBER,
+        nomisValue = "WRONG",
+        dpsValue = "B12345",
+      )
     }
 
     @Test
     fun `booking begin time different`() = runTest {
+      val now = LocalDateTime.now()
       nomisApi.stubGetOffenderPersonLocations(
         offenderNo = "A0001TZ",
         response = offenderPersonLocationsResponse(
           bookings = listOf(
             BookingPersonLocations(
-              booking = validBooking.copy(bookingBeginTime = LocalDateTime.now()),
+              booking = validBooking.copy(bookingBeginTime = now),
               movements = listOf(validTransferIn, validCourtOut),
             ),
           ),
@@ -659,16 +850,23 @@ class PersonLocationReconciliationIntTest(
       awaitReportFinished()
 
       verifyTelemetry(BOOKING_BEGIN_TIME)
+
+      verifyReconciliationEndpointBooking(
+        type = BOOKING_BEGIN_TIME,
+        nomisValue = "$now",
+        dpsValue = "2024-01-01T10:00",
+      )
     }
 
     @Test
     fun `booking end time different`() = runTest {
+      val now = LocalDateTime.now()
       nomisApi.stubGetOffenderPersonLocations(
         offenderNo = "A0001TZ",
         response = offenderPersonLocationsResponse(
           bookings = listOf(
             BookingPersonLocations(
-              booking = validBooking.copy(bookingEndTime = LocalDateTime.now()),
+              booking = validBooking.copy(bookingEndTime = now),
               movements = listOf(validTransferIn, validCourtOut),
             ),
           ),
@@ -678,6 +876,73 @@ class PersonLocationReconciliationIntTest(
       awaitReportFinished()
 
       verifyTelemetry(BOOKING_END_TIME)
+
+      verifyReconciliationEndpointBooking(
+        type = BOOKING_END_TIME,
+        nomisValue = "$now",
+        dpsValue = "null",
+      )
+    }
+
+    private fun verifyReconciliationEndpointBooking(
+      offenderNo: String = "A0001TZ",
+      type: MismatchedPrisonerLocationBookings.Type,
+      nomisBookingId: Long = 12345,
+      dpsSeriesId: UUID = seriesId,
+      nomisValue: String,
+      dpsValue: String,
+    ) {
+      verifyReconciliationEndpoint(
+        MismatchedPrisonerLocationBookings(
+          offenderNo = offenderNo,
+          type = type,
+          nomisBookingId = nomisBookingId,
+          dpsSeriesId = dpsSeriesId,
+          nomisValue = nomisValue,
+          dpsValue = dpsValue,
+        ),
+      )
+    }
+  }
+
+  @Nested
+  inner class ReconciliationEndpoint {
+
+    @Nested
+    inner class Validation {
+      @Test
+      fun `should return error for unknown offender`() {
+        webTestClient.get().uri("/external-movements/person-locations/UNKNOWN/reconciliation")
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
+          .exchange()
+          .expectStatus().is5xxServerError
+      }
+    }
+
+    @Nested
+    inner class Security {
+      @Test
+      fun `access forbidden when no role`() {
+        webTestClient.get().uri("/external-movements/person-locations/A0001TZ/reconciliation")
+          .headers(setAuthorisation(roles = listOf()))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access forbidden with wrong role`() {
+        webTestClient.get().uri("/external-movements/person-locations/A0001TZ/reconciliation")
+          .headers(setAuthorisation(roles = listOf("ROLE_BANANAS")))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access unauthorised with no auth token`() {
+        webTestClient.get().uri("/external-movements/person-locations/A0001TZ/reconciliation")
+          .exchange()
+          .expectStatus().isUnauthorized
+      }
     }
   }
 
@@ -693,6 +958,54 @@ class PersonLocationReconciliationIntTest(
     )
 
     mappingApi.stubGetPersonLocationMappings(response = emptyList())
+  }
+
+  private fun verifyReconciliationEndpointIds(
+    offenderNo: String = "A0001TZ",
+    type: MismatchedPrisonerLocationIds.Type,
+    nomisCount: Int = 0,
+    dpsCount: Int = 0,
+    unexpectedNomisIds: String = "[]",
+    unexpectedDpsIds: String = "[]",
+  ) {
+    verifyReconciliationEndpoint(
+      MismatchedPrisonerLocationIds(
+        offenderNo = offenderNo,
+        type = type,
+        nomisCount = nomisCount,
+        dpsCount = dpsCount,
+        unexpectedNomisIds = unexpectedNomisIds,
+        unexpectedDpsIds = unexpectedDpsIds,
+      ),
+    )
+  }
+
+  private fun verifyReconciliationEndpoint(
+    mismatch: MismatchedPrisonerLocations,
+  ) {
+    reset(telemetryClient)
+
+    webTestClient.get()
+      .uri("/external-movements/person-locations/${mismatch.offenderNo}/reconciliation")
+      .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
+      .exchange()
+      .expectStatus().isOk()
+      .expectBodyList(mismatch.javaClass)
+      .returnResult().responseBody!!
+      .apply {
+        assertThat(this)
+          .withFailMessage(
+            """
+            Expected mismatch does not match any actual response:
+            $mismatch
+            $this
+            """.trimIndent(),
+          )
+          .usingRecursiveFieldByFieldElementComparator()
+          .contains(mismatch)
+      }
+
+    verify(telemetryClient, never()).trackEvent(any(), any(), any())
   }
 
   private fun awaitReportFinished() {
