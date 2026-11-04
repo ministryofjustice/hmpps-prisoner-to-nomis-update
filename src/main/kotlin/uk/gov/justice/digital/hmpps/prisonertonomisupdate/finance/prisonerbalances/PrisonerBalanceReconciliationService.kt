@@ -129,7 +129,7 @@ class PrisonerBalanceReconciliationService(
     val dpsFields = dpsAccounts?.let {
       BalanceFields(
         prisonNumber = nomisAccounts.prisonNumber,
-        accounts = dpsAccounts.existingSubAccountBalances
+        accounts = dpsAccounts.subAccountBalances
           .map {
             AccountFields(
               accountCode = it.key.toInt(),
