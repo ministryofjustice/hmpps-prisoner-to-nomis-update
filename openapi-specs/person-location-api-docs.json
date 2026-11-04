@@ -6,7 +6,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-11-02.134.48cd0d3"
+    "version" : "2026-11-03.144.62e809d"
   },
   "servers" : [ {
     "url" : "https://person-location-api-dev.hmpps.service.justice.gov.uk",
@@ -22,9 +22,15 @@
     "description" : "Local"
   } ],
   "security" : [ {
-    "PERSON_LOCATION_RO" : [ "read" ]
+    "ROLE_PERSON_LOCATION__LOCATION__RO" : [ "read" ]
   } ],
-  "tags" : [ ],
+  "tags" : [ {
+    "name" : "Integrations",
+    "description" : "DPS integration endpoints"
+  }, {
+    "name" : "Sync",
+    "description" : "Legacy sync endpoints - not to be use by any other client"
+  } ],
   "paths" : {
     "/sync/external-movements/{personIdentifier}" : {
       "put" : {
@@ -243,6 +249,33 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ReconciliationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/integrations/people/{personIdentifier}/periods-of-custody" : {
+      "get" : {
+        "tags" : [ "Integrations" ],
+        "summary" : "Retrieve periods of custody ordered in reverse chronological order (most recent first).",
+        "operationId" : "periodsOfCustodyFor",
+        "parameters" : [ {
+          "name" : "personIdentifier",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PeriodsOfCustody"
                 }
               }
             }
@@ -672,12 +705,57 @@
           }
         },
         "required" : [ "movements", "series" ]
+      },
+      "CodedDescription" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "code", "description" ]
+      },
+      "PeriodOfCustody" : {
+        "type" : "object",
+        "description" : "Period of custody",
+        "properties" : {
+          "commencedAt" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Date of admission for the period of custody."
+          },
+          "concludedAt" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "Optional date of release for the period of custody. When not provided, the period of custody is deemed active."
+          },
+          "status" : {
+            "$ref" : "#/components/schemas/CodedDescription",
+            "description" : "The status of the period of custody. Code and human readable description."
+          }
+        },
+        "required" : [ "commencedAt", "status" ]
+      },
+      "PeriodsOfCustody" : {
+        "type" : "object",
+        "properties" : {
+          "periodsOfCustody" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PeriodOfCustody"
+            }
+          }
+        },
+        "required" : [ "periodsOfCustody" ]
       }
     },
     "securitySchemes" : {
-      "PERSON_LOCATION_RO" : {
+      "ROLE_PERSON_LOCATION__PERIOD_OF_CUSTODY__RO" : {
         "type" : "http",
-        "description" : "A HMPPS Auth access token with the `ROLE_PERSON_LOCATION__RO` role.",
+        "description" : "A HMPPS Auth access token with the `ROLE_PERSON_LOCATION__PERIOD_OF_CUSTODY__RO` role.",
         "name" : "Authorization",
         "in" : "header",
         "scheme" : "bearer",
