@@ -67,6 +67,28 @@ class AgencyRegistersReconciliationServiceTest {
     }
 
     @Nested
+    inner class WhenAgenciesMatchButDifferentCase {
+      @BeforeEach
+      fun setUp() {
+        stubAgency(
+          agencyResponse().copy(
+            description = "SHEFFIELD CROWN COURT",
+            longDescription = "THE SHEFFIELD CROWN COURT",
+          ),
+          legacyAgencyDto().copy(
+            name = "Sheffield Crown Court",
+            description = "The Sheffield Crown Court",
+          ),
+        )
+      }
+
+      @Test
+      fun `will return null`() = runTest {
+        assertThat(service.checkMatch(agencyId)).isNull()
+      }
+    }
+
+    @Nested
     inner class WhenDescriptionDoesNotMatch {
       @BeforeEach
       fun setUp() {
