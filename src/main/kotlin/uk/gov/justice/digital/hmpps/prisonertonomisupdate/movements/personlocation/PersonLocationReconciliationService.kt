@@ -21,13 +21,35 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocati
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationIds.Type.MISSING_MAPPING_BOOKING
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationIds.Type.MISSING_MAPPING_MOVEMENT
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationIds.Type.MOVEMENT
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationMovements.Type.COMMENT
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationMovements.Type.DIRECTION
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationMovements.Type.FROM_LOCATION
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationMovements.Type.MOVEMENT_REASON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationMovements.Type.MOVEMENT_TIME
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationMovements.Type.MOVEMENT_TYPE
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationMovements.Type.TO_LOCATION
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonLocationBookingMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderPersonLocationsResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonLocationMovement
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonLocationMovement.DirectionCode.IN
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonLocationMovement.DirectionCode.OUT
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonLocationMovement.MovementType.ADM
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonLocationMovement.MovementType.CRT
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonLocationMovement.MovementType.REL
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonLocationMovement.MovementType.TAP
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonLocationMovement.MovementType.TRN
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerId
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personlocation.model.CodedReason
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personlocation.model.ReconciliationResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personlocation.model.SyncExternalJourney.Type.ADMISSION
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personlocation.model.SyncExternalJourney.Type.COURT_APPEARANCE
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personlocation.model.SyncExternalJourney.Type.RELEASE
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personlocation.model.SyncExternalJourney.Type.TEMPORARY_ABSENCE
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personlocation.model.SyncExternalJourney.Type.TRANSFER
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personlocation.model.SyncExternalMovement.Type.ARRIVAL
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personlocation.model.SyncExternalMovement.Type.DEPARTURE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
-import java.util.UUID
-import kotlin.collections.find
+import java.util.*
 
 @Service
 class PersonLocationReconciliationService(
@@ -145,7 +167,24 @@ class PersonLocationReconciliationService(
       )
     }
 
-    return mismatchedEntities + missingMappings
+    val mismatchedMovements = findMismatchedMovements(offenderNo, nomisLocations, dpsLocations, mappings)
+    mismatchedMovements.forEach {
+      telemetryClient.trackEvent(
+        "$TELEMETRY_PERSON_LOCATION-mismatch",
+        mapOf(
+          "offenderNo" to offenderNo,
+          "type" to it.type,
+          "nomisMovementId" to "${it.nomisMovementId}",
+          "dpsMovementId" to "${it.dpsMovementId}",
+        ),
+      )
+    }
+
+    return buildList {
+      addAll(mismatchedEntities)
+      addAll(missingMappings)
+      addAll(mismatchedMovements)
+    }
   }
 
   private fun findMismatchedEntities(
@@ -173,8 +212,8 @@ class PersonLocationReconciliationService(
     }
 
     // Check for movements only in 1 system
-    val nomisMovementIds = nomisLocations.bookings.flatMap { bk -> bk.movements.map { mv -> NomisMovementId(bk.booking.bookingId, mv.sequence) } }
-    val dpsMovementIds = dpsLocations.series.flatMap { ser -> ser.movements.map { mv -> mv.dpsId!! } }
+    val nomisMovementIds = nomisLocations.movementIds()
+    val dpsMovementIds = dpsLocations.movementIds()
     if (nomisMovementIds.size != dpsMovementIds.size) {
       mismatches.add(
         MismatchedPrisonerLocationIds(
@@ -255,8 +294,8 @@ class PersonLocationReconciliationService(
     }
 
     // check for missing movement mappings
-    val nomisMovementIds = nomisLocations.bookings.flatMap { bk -> bk.movements.map { mv -> NomisMovementId(bk.booking.bookingId, mv.sequence) } }
-    val dpsMovementIds = dpsLocations.series.flatMap { ser -> ser.movements.map { mv -> mv.dpsId!! } }
+    val nomisMovementIds = nomisLocations.movementIds()
+    val dpsMovementIds = dpsLocations.movementIds()
     val matchedMovementIds = mappings.matchingMovements(nomisMovementIds, dpsMovementIds)
     if (matchedMovementIds.size != nomisMovementIds.size || matchedMovementIds.size != dpsMovementIds.size) {
       val missingNomisIds = nomisMovementIds - matchedMovementIds.map { it.first }.toSet()
@@ -291,6 +330,65 @@ class PersonLocationReconciliationService(
       ?.movements?.find { it.nomisMovementSeq == nomisId.sequence }
       ?.dpsExternalMovementId
   }
+
+  private fun findMismatchedMovements(
+    offenderNo: String,
+    nomisLocations: OffenderPersonLocationsResponse,
+    dpsLocations: ReconciliationResponse,
+    mappings: List<PersonLocationBookingMappingDto>,
+  ): List<MismatchedPrisonerLocationMovements> {
+    val mismatches = mutableListOf<MismatchedPrisonerLocationMovements>()
+    val nomisMovementIds = nomisLocations.movementIds()
+    val dpsMovementIds = dpsLocations.movementIds()
+
+    mappings.matchingMovements(nomisMovementIds, dpsMovementIds).forEach { (nomisId, dpsId) ->
+      fun mismatch(type: MismatchedPrisonerLocationMovements.Type, nomisValue: String?, dpsValue: String?) = MismatchedPrisonerLocationMovements(offenderNo, type, nomisId, dpsId, nomisValue, dpsValue)
+      val nomisMovement = nomisLocations.findMovement(nomisId)
+      val dpsMovement = dpsLocations.findMovement(dpsId)
+
+      // comments
+      if (nomisMovement.commentText != dpsMovement.notes) {
+        mismatches.add(mismatch(COMMENT, nomisMovement.commentText, dpsMovement.notes))
+      }
+
+      // direction
+      if (nomisMovement.directionCode.toDpsMovementType() != dpsMovement.type) {
+        mismatches.add(mismatch(DIRECTION, nomisMovement.directionCode.value, dpsMovement.type.value))
+      }
+
+      // from location
+      if (nomisMovement.from?.description != dpsMovement.from.description) {
+        mismatches.add(mismatch(FROM_LOCATION, nomisMovement.from?.description, dpsMovement.from.description))
+      }
+
+      // movement reason
+      if (nomisMovement.movementReason.code != (dpsMovement.reason as CodedReason).code) {
+        mismatches.add(mismatch(MOVEMENT_REASON, nomisMovement.movementReason.code, dpsMovement.reason.reasonType))
+      }
+
+      // movement time
+      if (nomisMovement.movementTime != dpsMovement.occurredAt) {
+        mismatches.add(mismatch(MOVEMENT_TIME, "${nomisMovement.movementTime}", "${dpsMovement.occurredAt}"))
+      }
+
+      // movement type
+      if (nomisMovement.movementType.toDpsJourneyType() != dpsMovement.journey.type) {
+        mismatches.add(mismatch(MOVEMENT_TYPE, nomisMovement.movementType.value, dpsMovement.journey.type.value))
+      }
+
+      // to location
+      if (nomisMovement.to?.description != dpsMovement.to?.description) {
+        mismatches.add(mismatch(TO_LOCATION, nomisMovement.to?.description, dpsMovement.to?.description))
+      }
+    }
+
+    return mismatches
+  }
+
+  private fun OffenderPersonLocationsResponse.movementIds() = bookings.flatMap { bk -> bk.movements.map { mv -> NomisMovementId(bk.booking.bookingId, mv.sequence) } }
+  private fun OffenderPersonLocationsResponse.findMovement(nomisId: NomisMovementId) = bookings.flatMap { it.movements }.first { it.bookingId == nomisId.bookingId && it.sequence == nomisId.sequence }
+  private fun ReconciliationResponse.movementIds() = series.flatMap { ser -> ser.movements.map { mv -> mv.dpsId!! } }
+  private fun ReconciliationResponse.findMovement(dpsId: UUID) = series.flatMap { it.movements }.first { it.dpsId == dpsId }
 }
 
 abstract class MismatchedPrisonerLocations(
@@ -312,4 +410,36 @@ class MismatchedPrisonerLocationIds(
     MISSING_MAPPING_BOOKING,
     MISSING_MAPPING_MOVEMENT,
   }
+}
+
+class MismatchedPrisonerLocationMovements(
+  offenderNo: String,
+  type: Type,
+  val nomisMovementId: NomisMovementId,
+  val dpsMovementId: UUID,
+  val nomisValue: String?,
+  val dpsValue: String?,
+) : MismatchedPrisonerLocations(offenderNo, type.name) {
+  enum class Type {
+    COMMENT,
+    DIRECTION,
+    FROM_LOCATION,
+    MOVEMENT_REASON,
+    MOVEMENT_TIME,
+    MOVEMENT_TYPE,
+    TO_LOCATION,
+  }
+}
+
+private fun PersonLocationMovement.MovementType.toDpsJourneyType() = when (this) {
+  ADM -> ADMISSION
+  CRT -> COURT_APPEARANCE
+  REL -> RELEASE
+  TAP -> TEMPORARY_ABSENCE
+  TRN -> TRANSFER
+}
+
+private fun PersonLocationMovement.DirectionCode.toDpsMovementType() = when (this) {
+  IN -> ARRIVAL
+  OUT -> DEPARTURE
 }

@@ -91,6 +91,7 @@ class PersonLocationNomisApiMockServer(private val jsonMapper: JsonMapper) {
       ),
       from = MovementLocation(type = MovementLocation.Type.COURT, description = "Sheffield Crown Court", code = "SHEFCC"),
       to = MovementLocation(type = MovementLocation.Type.PRISON, description = "Brixton", code = "BXI"),
+      commentText = "movement ADM notes",
     )
 
     fun courtMovementOut(
