@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-11-02.1256.5606a65"
+    "version" : "2026-11-04.1265.25334e4"
   },
   "servers" : [ {
     "url" : "https://prisoner-finance-sync-api-dev.hmpps.service.justice.gov.uk/",
@@ -1164,37 +1164,6 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/AccountReconciliationResponse"
-                },
-                "examples" : {
-                  "AccountReconciliation" : {
-                    "summary" : "Example reconciliation response",
-                    "description" : "AccountReconciliation",
-                    "value" : {
-                      "advances" : {
-                        "advanceBalance" : 15.0,
-                        "advanceCount" : 2
-                      },
-                      "subscriptions" : {
-                        "weeklyPaymentAmount" : 5.5,
-                        "subscriptionCount" : 1
-                      },
-                      "2101" : {
-                        "totalBalance" : 100.5,
-                        "holdBalance" : 0,
-                        "balanceDateTime" : "2026-07-17T12:55:12.813Z"
-                      },
-                      "2102" : {
-                        "totalBalance" : 50.0,
-                        "holdBalance" : 10.0,
-                        "balanceDateTime" : "2026-07-17T12:55:12.813Z"
-                      },
-                      "2103" : {
-                        "totalBalance" : 0,
-                        "holdBalance" : 0,
-                        "balanceDateTime" : "2026-07-17T12:55:12.813Z"
-                      }
-                    }
-                  }
                 }
               }
             }
@@ -2535,14 +2504,14 @@
           "subscriptions" : {
             "$ref" : "#/components/schemas/SubscriptionsAccountReconciliation"
           },
-          "existingSubAccountBalances" : {
+          "subAccountBalances" : {
             "type" : "object",
             "additionalProperties" : {
               "$ref" : "#/components/schemas/SubAccountBalanceForReconciliation"
             }
           }
         },
-        "required" : [ "advances", "existingSubAccountBalances", "subscriptions" ]
+        "required" : [ "advances", "subAccountBalances", "subscriptions" ]
       },
       "AdvancesAccountReconciliation" : {
         "type" : "object",
@@ -2701,8 +2670,9 @@
             "type" : "string",
             "format" : "uuid"
           },
-          "transactionType" : {
-            "type" : [ "string", "null" ]
+          "legacyTransactionId" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int64"
           },
           "caseloadId" : {
             "type" : [ "string", "null" ]
@@ -2711,9 +2681,8 @@
             "type" : [ "string", "null" ],
             "format" : "date-time"
           },
-          "legacyTransactionId" : {
-            "type" : [ "integer", "null" ],
-            "format" : "int64"
+          "transactionType" : {
+            "type" : [ "string", "null" ]
           },
           "synchronizedTransactionId" : {
             "type" : "string",

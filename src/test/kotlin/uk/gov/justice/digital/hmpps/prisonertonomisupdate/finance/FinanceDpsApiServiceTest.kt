@@ -72,7 +72,7 @@ class FinanceDpsApiServiceTest {
         weeklyPaymentAmount = BigDecimal.ONE,
         subscriptionCount = 1,
       ),
-      existingSubAccountBalances = emptyMap(),
+      subAccountBalances = emptyMap(),
     )
 
     @Test
