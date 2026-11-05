@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegisters
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension.Companion.legacyAgencyEmailDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension.Companion.legacyAgencyPhoneDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.LegacyAgencyDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.LegacyAgencyType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AgencyResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
@@ -471,6 +472,22 @@ class AgencyRegistersReconciliationServiceTest {
         stubAgency(
           agencyResponse().copy(longDescription = "HMP Brixton", addresses = listOf(agencyAddress().copy(flat = null, premise = "HMP Brixton", street = "The Law Courts", locality = "50 West Bar", postcode = "S3 8PH"))),
           legacyAgencyDto().copy(description = "HMP Brixton", addresses = listOf(legacyAgencyAddressDto().copy(addressLine1 = "The Law Courts", addressLine2 = "50 West Bar", postcode = "S3 8PH"))),
+        )
+      }
+
+      @Test
+      fun `will match`() = runTest {
+        assertThat(service.checkMatch(agencyId)).isNull()
+      }
+    }
+
+    @Nested
+    inner class WhenClosedPrisonHasNoAddressInDPS {
+      @BeforeEach
+      fun setUp() {
+        stubAgency(
+          agencyResponse().copy(type = CodeDescription(code = "INST", description = "Prison"), active = false, addresses = listOf(agencyAddress())),
+          legacyAgencyDto().copy(agencyType = LegacyAgencyType.PRISON, active = false, addresses = emptyList()),
         )
       }
 
