@@ -15,6 +15,7 @@ import kotlinx.coroutines.withContext
 import org.slf4j.Logger
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.LegacyAgencyDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.LegacyAgencyType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.logger
@@ -254,10 +255,10 @@ private fun LegacyAgencyDto.asCoreDetails(): AgencyCoreDetails = AgencyCoreDetai
   localAuthorityCode = localAuthorityCode,
 )
 
-private fun LegacyAgencyDto.addressesSorted(): List<String> = addresses.map { listOfNotNull(it.addressLine1, it.addressLine2, it.town, it.county, it.country, it.postcode?.cleanPostcode()).joinToString(", ") }.sorted()
+private fun LegacyAgencyDto.addressesSorted(): List<String> = this.takeUnless { it.isClosedPrison() }?.addresses?.map { listOfNotNull(it.addressLine1, it.addressLine2, it.town, it.county, it.country, it.postcode?.cleanPostcode()).joinToString(", ") }?.sorted() ?: emptyList()
 private fun LegacyAgencyDto.phonesSorted(): List<String> = this.phoneNumbers.map { it.number }.distinct().sorted()
 private fun LegacyAgencyDto.emailAddressesSorted(): List<String> = this.emailAddresses.map { it.address }.sorted()
-private fun AgencyResponse.addressesSorted(): List<String> = addresses.map {
+private fun AgencyResponse.addressesSorted(): List<String> = this.takeUnless { it.isClosedPrison() }?.addresses?.map {
   if (longDescription != null && longDescription == it.premise) {
     // In NOMIS Prisons tend to have the Prison name in the premises field.
     // DPS does not. For now mark these have matched though if we stick with this we need to change sync
@@ -266,11 +267,12 @@ private fun AgencyResponse.addressesSorted(): List<String> = addresses.map {
   } else {
     listOfNotNull(it.flat, it.premise, it.street, it.locality, it.city?.description, it.county?.description, it.country?.description, it.postcode?.cleanPostcode()).joinToString(", ")
   }
-}.sorted()
+}?.sorted() ?: emptyList()
 
 private fun AgencyResponse.phonesSorted(): List<String> = (this.addresses.flatMap { it.phoneNumbers }.map { it.number } + this.phones.map { it.number }).distinct().sorted()
 private fun AgencyResponse.emailAddressesSorted(): List<String> = this.emailAddresses.map { it.emailAddress }.sorted()
-
+private fun AgencyResponse.isClosedPrison() = this.type.code == "INST" && !this.active
+private fun LegacyAgencyDto.isClosedPrison() = this.agencyType == LegacyAgencyType.PRISON && !this.active
 private fun List<MismatchAgency>.asMap(): Pair<String, String> = this
   .sortedBy { it.agencyId }.take(10).let { mismatch -> "agencyIds" to mismatch.joinToString { it.agencyId } }
 
