@@ -19,9 +19,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiServi
 class CourtSchedulerReconciliationServiceActivePrisoners(
   private val telemetryClient: TelemetryClient,
   private val nomisPrisonerApiService: NomisApiService,
-  private val reonciliationService: CourtSchedulerReconciliationService,
-  @param:Value($$"${reports.temporary-absences.active-prisoners.reconciliation.page-size}") private val pageSize: Int = 100,
-  @param:Value($$"${reports.temporary-absences.active-prisoners.reconciliation.thread-count}") private val threadCount: Int = 15,
+  private val reconciliationService: CourtSchedulerReconciliationService,
+  @param:Value($$"${reports.court-scheduler.active-prisoners.reconciliation.page-size}") private val pageSize: Int = 100,
+  @param:Value($$"${reports.court-scheduler.active-prisoners.reconciliation.thread-count}") private val threadCount: Int = 15,
 ) {
   internal companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -37,7 +37,7 @@ class CourtSchedulerReconciliationServiceActivePrisoners(
 
     runCatching { generateCourtSchedulerReconciliationReport() }
       .onSuccess {
-        log.info("Court scheduler reconciliation report completed with ${it.mismatches.size} mismatches")
+        log.info("Court scheduler active prisoners reconciliation report completed with ${it.mismatches.size} mismatches")
         telemetryClient.trackEvent(
           "$TELEMETRY_COURT_SCHEDULER-report",
           mapOf(
@@ -51,7 +51,7 @@ class CourtSchedulerReconciliationServiceActivePrisoners(
       }
       .onFailure {
         telemetryClient.trackEvent("$TELEMETRY_COURT_SCHEDULER-report", mapOf("success" to "false"))
-        log.error("Temporary absences all prisoners reconciliation report failed", it)
+        log.error("Court scheduler active prisoners reconciliation report failed", it)
       }
   }
 
@@ -90,7 +90,7 @@ class CourtSchedulerReconciliationServiceActivePrisoners(
     .also { log.info("Page requested from booking: $lastBookingId, with $pageSize offenders") }
 
   suspend fun checkPrisonersMatch(prisonerIds: PrisonerIds): PrisonerIds? = runCatching {
-    reonciliationService.checkPrisonersMatch(prisonerIds.offenderNo).takeIf { it.isNotEmpty() }
+    reconciliationService.checkPrisonersMatch(prisonerIds.offenderNo).takeIf { it.isNotEmpty() }
       ?.let { prisonerIds }
   }.onFailure {
     log.error("Unable to match court schedule for prisoner ${prisonerIds.offenderNo}", it)

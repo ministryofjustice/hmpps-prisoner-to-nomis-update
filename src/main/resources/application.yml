@@ -283,6 +283,15 @@ reports:
       reconciliation:
         page-size: 100
         thread-count: 15
+  court-scheduler:
+    all-prisoners:
+      reconciliation:
+        page-size: 100
+        thread-count: 15
+    active-prisoners:
+      reconciliation:
+        page-size: 100
+        thread-count: 15
   person-location:
     all-prisoners:
       reconciliation:
