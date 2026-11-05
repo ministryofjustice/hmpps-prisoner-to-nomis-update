@@ -54,7 +54,7 @@ class PrisonerReconciliationReport(
   suspend fun run() {
     telemetryClient.trackEvent("${names.telemetryPrefix}-requested", mapOf("TYPE" to selection.name))
 
-    runCatching { generateReport() }
+    runCatching { reconcile() }
       .onSuccess {
         log.info("${names.description} ${selection.label} reconciliation report completed with ${it.mismatches.size} mismatches")
         telemetryClient.trackEvent(
@@ -69,12 +69,12 @@ class PrisonerReconciliationReport(
         )
       }
       .onFailure {
-        telemetryClient.trackEvent("${names.telemetryPrefix}-report", mapOf("success" to "false"))
+        telemetryClient.trackEvent("${names.telemetryPrefix}-report", mapOf("TYPE" to selection.name, "success" to "false"))
         log.error("${names.description} ${selection.label} reconciliation report failed", it)
       }
   }
 
-  private suspend fun generateReport(): ReconciliationResult<String> = generateReconciliationReport(
+  private suspend fun reconcile(): ReconciliationResult<String> = generateReconciliationReport(
     threadCount = threadCount,
     pageSize = pageSize,
     checkMatch = ::checkPrisoner,
