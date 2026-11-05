@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-11-03.2821.68b43ee"
+    "version" : "2026-11-05.2834.d9c53a4"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -5361,6 +5361,64 @@
         }
       }
     },
+    "/person/{prisonerId}/next-court-appearance" : {
+      "get" : {
+        "tags" : [ "person-controller" ],
+        "summary" : "retrieve the first next court appearance",
+        "description" : "This endpoint will retrieve the first next court appearance for the future",
+        "operationId" : "firstNextCourtAppearance",
+        "parameters" : [ {
+          "name" : "prisonerId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns next court appearance for person",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PersonNextCourtAppearance"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PersonNextCourtAppearance"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PersonNextCourtAppearance"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "No next court appearance",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PersonNextCourtAppearance"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/person/{prisonerId}/has-sentence-to-chain-to" : {
       "get" : {
         "tags" : [ "person-controller" ],
@@ -8263,7 +8321,7 @@
             "type" : [ "boolean", "null" ]
           }
         },
-        "required" : [ "eventType", "prisonerId" ]
+        "required" : [ "eventType", "isBreach", "prisonerId" ]
       },
       "LegacyLinkCase" : {
         "type" : "object",
@@ -8365,7 +8423,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "06:44:45.44496331"
+            "example" : "04:46:03.273581893"
           },
           "outcomeDispositionCode" : {
             "type" : [ "string", "null" ]
@@ -8829,7 +8887,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "06:44:45.44496331"
+            "example" : "04:46:03.273581893"
           },
           "courtCode" : {
             "type" : "string"
@@ -11928,7 +11986,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "06:44:45.44496331"
+            "example" : "04:46:03.273581893"
           },
           "courtCode" : {
             "type" : "string"
@@ -12101,6 +12159,32 @@
           }
         },
         "required" : [ "sentenceEnvelopes" ]
+      },
+      "PersonNextCourtAppearance" : {
+        "type" : "object",
+        "properties" : {
+          "caseReference" : {
+            "type" : [ "string", "null" ]
+          },
+          "courtCode" : {
+            "type" : "string"
+          },
+          "appearanceType" : {
+            "$ref" : "#/components/schemas/AppearanceType"
+          },
+          "courtAppearanceSubType" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CourtAppearanceSubtype"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "dateTime" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        },
+        "required" : [ "appearanceType", "courtCode", "dateTime" ]
       },
       "HasSentenceToChainToResponse" : {
         "type" : "object",
@@ -12785,7 +12869,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:44:45.44496331"
+            "example" : "04:46:03.273581893"
           },
           "nomisOutcomeCode" : {
             "type" : [ "string", "null" ]
@@ -12864,7 +12948,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "06:44:45.44496331"
+            "example" : "04:46:03.273581893"
           },
           "courtId" : {
             "type" : "string"
@@ -13019,7 +13103,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:44:45.44496331"
+            "example" : "04:46:03.273581893"
           },
           "charges" : {
             "type" : "array",
@@ -13056,7 +13140,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "06:44:45.44496331"
+            "example" : "04:46:03.273581893"
           },
           "courtId" : {
             "type" : "string"
@@ -13707,7 +13791,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "06:44:45.44496331"
+            "example" : "04:46:03.273581893"
           },
           "courtCode" : {
             "type" : [ "string", "null" ]
@@ -13863,13 +13947,13 @@
           "last" : {
             "type" : "boolean"
           },
-          "totalPages" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
           "totalElements" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "totalPages" : {
+            "type" : "integer",
+            "format" : "int32"
           },
           "size" : {
             "type" : "integer",
