@@ -266,14 +266,9 @@ reports:
     reconciliation:
       page-size: 100
   temporary-absences:
-    all-prisoners:
-      reconciliation:
-        page-size: 100
-        thread-count: 15
-    active-prisoners:
-      reconciliation:
-        page-size: 100
-        thread-count: 15
+    reconciliation:
+      page-size: 100
+      thread-count: 15
   transfer-scheduler:
     reconciliation:
       page-size: 100

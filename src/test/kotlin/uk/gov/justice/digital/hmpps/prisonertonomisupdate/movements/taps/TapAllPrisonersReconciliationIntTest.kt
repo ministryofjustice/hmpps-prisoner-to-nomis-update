@@ -98,7 +98,7 @@ class TapAllPrisonersReconciliationIntTest(
 
     @Test
     fun `will output report requested telemetry`() = runTest {
-      reconciliationService.generateTapAllPrisonersReconciliationReportBatch()
+      reconciliationService.generateReport()
 
       verify(telemetryClient).trackEvent(
         eq("temporary-absences-all-reconciliation-requested"),
@@ -111,7 +111,7 @@ class TapAllPrisonersReconciliationIntTest(
 
     @Test
     fun `will output report`() = runTest {
-      reconciliationService.generateTapAllPrisonersReconciliationReportBatch()
+      reconciliationService.generateReport()
       awaitReportFinished()
 
       verify(telemetryClient).trackEvent(
@@ -127,7 +127,7 @@ class TapAllPrisonersReconciliationIntTest(
 
     @Test
     fun `will output a mismatch for a single difference`() = runTest {
-      reconciliationService.generateTapAllPrisonersReconciliationReportBatch()
+      reconciliationService.generateReport()
       awaitReportFinished()
 
       verify(telemetryClient).trackEvent(
@@ -144,7 +144,7 @@ class TapAllPrisonersReconciliationIntTest(
 
     @Test
     fun `will output multiple mismatches for multiple differences`() = runTest {
-      reconciliationService.generateTapAllPrisonersReconciliationReportBatch()
+      reconciliationService.generateReport()
       awaitReportFinished()
 
       verify(telemetryClient).trackEvent(
@@ -273,7 +273,7 @@ class TapAllPrisonersReconciliationIntTest(
         )
 
         // Run the reconciliation report
-        reconciliationService.generateTapAllPrisonersReconciliationReportBatch()
+        reconciliationService.generateReport()
         awaitReportFinished()
       }
 
@@ -381,7 +381,7 @@ class TapAllPrisonersReconciliationIntTest(
           ),
         )
 
-        reconciliationService.generateTapAllPrisonersReconciliationReportBatch()
+        reconciliationService.generateReport()
         awaitReportFinished()
       }
 
@@ -512,7 +512,7 @@ class TapAllPrisonersReconciliationIntTest(
           ),
         )
 
-        reconciliationService.generateTapAllPrisonersReconciliationReportBatch()
+        reconciliationService.generateReport()
         awaitReportFinished()
       }
 
@@ -623,7 +623,7 @@ class TapAllPrisonersReconciliationIntTest(
           ),
         )
 
-        reconciliationService.generateTapAllPrisonersReconciliationReportBatch()
+        reconciliationService.generateReport()
         awaitReportFinished()
       }
 
@@ -700,7 +700,7 @@ class TapAllPrisonersReconciliationIntTest(
 
         )
 
-        reconciliationService.generateTapAllPrisonersReconciliationReportBatch()
+        reconciliationService.generateReport()
         awaitReportFinished()
       }
 
@@ -777,7 +777,7 @@ class TapAllPrisonersReconciliationIntTest(
           ),
         )
 
-        reconciliationService.generateTapAllPrisonersReconciliationReportBatch()
+        reconciliationService.generateReport()
         awaitReportFinished()
       }
 
@@ -836,7 +836,7 @@ class TapAllPrisonersReconciliationIntTest(
 
         )
 
-        reconciliationService.generateTapAllPrisonersReconciliationReportBatch()
+        reconciliationService.generateReport()
         awaitReportFinished()
       }
 
@@ -900,7 +900,7 @@ class TapAllPrisonersReconciliationIntTest(
           ),
         )
 
-        reconciliationService.generateTapAllPrisonersReconciliationReportBatch()
+        reconciliationService.generateReport()
         awaitReportFinished()
       }
 
@@ -967,7 +967,7 @@ class TapAllPrisonersReconciliationIntTest(
           ),
         )
 
-        reconciliationService.generateTapAllPrisonersReconciliationReportBatch()
+        reconciliationService.generateReport()
         awaitReportFinished()
       }
 
@@ -1011,7 +1011,7 @@ class TapAllPrisonersReconciliationIntTest(
           ),
         )
 
-        reconciliationService.generateTapAllPrisonersReconciliationReportBatch()
+        reconciliationService.generateReport()
         awaitReportFinished()
       }
 

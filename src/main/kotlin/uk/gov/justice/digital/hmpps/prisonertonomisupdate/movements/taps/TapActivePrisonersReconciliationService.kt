@@ -4,16 +4,12 @@ import com.microsoft.applicationinsights.TelemetryClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationErrorPageResult
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationPageResult
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationResult
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationSuccessPageResult
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.generateReconciliationReport
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.PrisonerReconciliationReport
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.PrisonerSelection
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationNames
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.NomisMovementId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.findMatches
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.findMissing
@@ -26,7 +22,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Bo
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingTapScheduleOut
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingTaps
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTapsResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import java.time.LocalDate
 import java.util.*
@@ -38,86 +33,12 @@ class TapActivePrisonersReconciliationService(
   private val dpsApiService: TapDpsApiService,
   private val nomisPrisonerApiService: NomisApiService,
   private val mappingService: TapMappingApiService,
-  @param:Value($$"${reports.temporary-absences.active-prisoners.reconciliation.page-size}") private val pageSize: Int = 100,
-  @param:Value($$"${reports.temporary-absences.active-prisoners.reconciliation.thread-count}") private val threadCount: Int = 15,
+  @param:Value($$"${reports.temporary-absences.reconciliation.page-size}") private val pageSize: Int = 100,
+  @param:Value($$"${reports.temporary-absences.reconciliation.thread-count}") private val threadCount: Int = 15,
 ) {
-  internal companion object {
-    val log: Logger = LoggerFactory.getLogger(this::class.java)
-    const val TELEMETRY_ACTIVE_TAPS = "temporary-absences-active-reconciliation"
-  }
+  private val names = ReconciliationNames("temporary-absences-active-reconciliation", "Temporary absences")
 
-  suspend fun generateTapActivePrisonersReconciliationReportBatch() {
-    telemetryClient.trackEvent(
-      "$TELEMETRY_ACTIVE_TAPS-requested",
-      mapOf(),
-    )
-
-    runCatching { generateTapActivePrisonersReconciliationReport() }
-      .onSuccess {
-        log.info("Temporary absences active prisoners reconciliation report completed with ${it.mismatches.size} mismatches")
-        telemetryClient.trackEvent(
-          "$TELEMETRY_ACTIVE_TAPS-report",
-          mapOf(
-            "prisoners-count" to it.itemsChecked.toString(),
-            "pages-count" to it.pagesChecked.toString(),
-            "mismatch-count" to it.mismatches.size.toString(),
-            "success" to "true",
-          ) + it.mismatches.asMap(),
-        )
-      }
-      .onFailure {
-        telemetryClient.trackEvent("$TELEMETRY_ACTIVE_TAPS-report", mapOf("success" to "false"))
-        log.error("Temporary absences all prisoners reconciliation report failed", it)
-      }
-  }
-
-  private fun List<PrisonerIds>.asMap(): Pair<String, String> = this
-    .sortedBy { it.offenderNo }.take(10).let { mismatch -> "offenderNos" to mismatch.joinToString { it.offenderNo } }
-
-  suspend fun generateTapActivePrisonersReconciliationReport(): ReconciliationResult<PrisonerIds> = generateReconciliationReport(
-    threadCount = threadCount,
-    pageSize = pageSize,
-    checkMatch = ::checkPrisonerTapsMatch,
-    nextPage = ::getNextBookingsForPage,
-  )
-
-  private suspend fun getNextBookingsForPage(lastBookingId: Long): ReconciliationPageResult<PrisonerIds> = runCatching {
-    nomisPrisonerApiService.getAllLatestBookings(
-      lastBookingId = lastBookingId,
-      activeOnly = true,
-      pageSize = pageSize,
-    )
-  }.onFailure {
-    telemetryClient.trackEvent(
-      "$TELEMETRY_ACTIVE_TAPS-mismatch-page-error",
-      mapOf(
-        "booking" to lastBookingId.toString(),
-      ),
-    )
-    log.error("Unable to match entire page of bookings from booking: $lastBookingId", it)
-  }
-    .map {
-      ReconciliationSuccessPageResult(
-        ids = it.prisonerIds,
-        last = it.lastBookingId,
-      )
-    }
-    .getOrElse { ReconciliationErrorPageResult(it) }
-    .also { log.info("Page requested from booking: $lastBookingId, with $pageSize offenders") }
-
-  suspend fun checkPrisonerTapsMatch(prisonerIds: PrisonerIds): PrisonerIds? = runCatching {
-    checkPrisonerTapsMatch(prisonerIds.offenderNo).takeIf { it.isNotEmpty() }
-      ?.let { prisonerIds }
-  }.onFailure {
-    log.error("Unable to match temporary absences for prisoner ${prisonerIds.offenderNo}", it)
-    telemetryClient.trackEvent(
-      "$TELEMETRY_ACTIVE_TAPS-mismatch-error",
-      mapOf(
-        "offenderNo" to prisonerIds.offenderNo,
-        "reason" to (it.message ?: "unknown"),
-      ),
-    )
-  }.getOrNull()
+  suspend fun generateReport() = PrisonerReconciliationReport(telemetryClient, nomisPrisonerApiService, names, PrisonerSelection.ACTIVE_PRISONERS, pageSize, threadCount) { checkPrisonerTapsMatch(it) }.run()
 
   suspend fun checkPrisonerTapsMatch(offenderNo: String, suppressTelemetry: Boolean = false): List<MismatchPrisonerTaps> = withContext(Dispatchers.Unconfined) {
     val nomisTaps = async { nomisApiService.getAllOffenderTapsOrNull(offenderNo) }
@@ -148,7 +69,7 @@ class TapActivePrisonersReconciliationService(
     if (!suppressTelemetry) {
       mismatchedCounts.forEach {
         telemetryClient.trackEvent(
-          "$TELEMETRY_ACTIVE_TAPS-mismatch",
+          "${names.telemetryPrefix}-mismatch",
           mapOf(
             "offenderNo" to offenderNo,
             "type" to it.type,
@@ -165,7 +86,7 @@ class TapActivePrisonersReconciliationService(
     if (!suppressTelemetry) {
       mismatchedSchedulesOut.forEach {
         telemetryClient.trackEvent(
-          "$TELEMETRY_ACTIVE_TAPS-mismatch",
+          "${names.telemetryPrefix}-mismatch",
           mapOf(
             "offenderNo" to offenderNo,
             "nomisEventId" to "${it.nomisEventId}",
@@ -180,7 +101,7 @@ class TapActivePrisonersReconciliationService(
     if (!suppressTelemetry) {
       mismatchedMovements.forEach {
         telemetryClient.trackEvent(
-          "$TELEMETRY_ACTIVE_TAPS-mismatch",
+          "${names.telemetryPrefix}-mismatch",
           mapOf(
             "offenderNo" to offenderNo,
             "nomisMovementId" to "${it.nomisMovementId}",
