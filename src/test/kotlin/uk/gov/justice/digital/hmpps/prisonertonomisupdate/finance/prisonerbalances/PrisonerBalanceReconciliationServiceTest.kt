@@ -342,41 +342,59 @@ class PrisonerBalanceReconciliationServiceTest {
     }
 
     @Test
-    fun `will report differences and telemetry when dps API returns not found`() = runTest {
+    fun `will report differences and telemetry when dps API returns not found and Nomis non-zeros`() = runTest {
       financeNomisApi.stubGetPrisonerAccounts(OFFENDER_ID, nomisPrisonerAccounts())
       dpsApi.stubGetPrisonerAccounts(OFFENDER_NO, status = NOT_FOUND)
 
       service.checkPrisonerBalance(OFFENDER_ID, isRetry = true)?.differences?.first()!!.apply {
-        assertThat(property).isEqualTo("prisoner-balances")
-        assertThat(dps).isNull()
-        assertThat((nomis as BalanceFields).prisonNumber).isEqualTo("A5678BZ")
+        assertThat(property).isEqualTo("prisoner-balances.accounts[1001].balance")
+        assertThat(dps).isEqualTo(BigDecimal.ZERO)
+        assertThat(nomis).isEqualTo(BigDecimal("1.5"))
       }
       verify(telemetryClient).trackEvent(
         eq("prisoner-balance-reports-reconciliation-mismatch"),
         check {
           assertThat(it).containsEntry("prisoner", OFFENDER_NO)
-          assertThat(it).containsKey("prisoner-balances")
+          assertThat(it).containsKey("prisoner-balances.accounts[1001].balance")
         },
         isNull(),
       )
     }
 
     @Test
-    fun `will return mismatch if no nomis accounts and dps API returns not found`() = runTest {
+    fun `will return null treating as zeros when dps API returns 404 and Nomis is all zeros`() = runTest {
+      financeNomisApi.stubGetPrisonerAccounts(
+        OFFENDER_ID,
+        PrisonerAggregatedAccountsDto(
+          rootOffenderId = OFFENDER_ID,
+          prisonNumber = OFFENDER_NO,
+          accounts = listOf(nomisZeroAccount()),
+          advances = emptyList(),
+        ),
+      )
+      dpsApi.stubGetPrisonerAccounts(OFFENDER_NO, status = NOT_FOUND)
+
+      assertThat(service.checkPrisonerBalance(OFFENDER_ID, isRetry = true)).isNull()
+
+      verifyNoInteractions(telemetryClient)
+    }
+
+    @Test
+    fun `will return mismatch if advances but no nomis accounts and dps API returns not found`() = runTest {
       financeNomisApi.stubGetPrisonerAccounts(OFFENDER_ID, nomisPrisonerAccounts().copy(accounts = listOf()))
       dpsApi.stubGetPrisonerAccounts(OFFENDER_NO, status = NOT_FOUND)
 
       service.checkPrisonerBalance(OFFENDER_ID, isRetry = true)?.differences?.first()!!.apply {
-        assertThat(property).isEqualTo("prisoner-balances")
-        assertThat(dps).isNull()
-        assertThat((nomis as BalanceFields).prisonNumber).isEqualTo("A5678BZ")
+        assertThat(property).isEqualTo("prisoner-balances.advanceSummary.advanceBalance")
+        assertThat(dps).isEqualTo(BigDecimal.ZERO)
+        assertThat(nomis).isEqualTo(BigDecimal("1.00"))
       }
 
       verify(telemetryClient).trackEvent(
         eq("prisoner-balance-reports-reconciliation-mismatch"),
         check {
           assertThat(it).containsEntry("prisoner", OFFENDER_NO)
-          assertThat(it).containsKey("prisoner-balances")
+          assertThat(it).containsKey("prisoner-balances.advanceSummary.advanceBalance")
         },
         isNull(),
       )

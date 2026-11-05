@@ -105,7 +105,11 @@ class PrisonerBalanceReconciliationService(
       }
   }
 
-  internal suspend fun checkPrisonerBalance(rootOffenderId: Long, isRetry: Boolean = false, suppressEvents: Boolean = false): MismatchPrisonerBalance? = runCatching {
+  internal suspend fun checkPrisonerBalance(
+    rootOffenderId: Long,
+    isRetry: Boolean = false,
+    suppressEvents: Boolean = false,
+  ): MismatchPrisonerBalance? = runCatching {
     val nomisAccounts = financeNomisApiService.getPrisonerAccountsToReconcile(rootOffenderId)
     val dpsAccounts = dpsApiService.getPrisonerAccounts(nomisAccounts.prisonNumber)
 
@@ -143,6 +147,11 @@ class PrisonerBalanceReconciliationService(
         ),
       )
     }
+      ?: BalanceFields(
+        prisonNumber = nomisAccounts.prisonNumber,
+        accounts = emptyList(),
+        advanceSummary = AdvanceSummary(advanceCount = 0, advanceBalance = BigDecimal.ZERO),
+      )
 
     val differenceList = compareObjects(dpsFields, nomisFields, "prisoner-balances")
 
