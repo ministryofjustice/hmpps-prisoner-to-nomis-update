@@ -538,6 +538,22 @@ class AgencyRegistersReconciliationServiceTest {
     }
 
     @Nested
+    inner class WhenClosedPrisonHasNoPhoneNumberInDPS {
+      @BeforeEach
+      fun setUp() {
+        stubAgency(
+          agencyResponse().copy(type = CodeDescription(code = "INST", description = "Prison"), active = false, phones = listOf(agencyPhoneNumber().copy(number = "0114 555 1234"))),
+          legacyAgencyDto().copy(agencyType = LegacyAgencyType.PRISON, active = false, phoneNumbers = emptyList()),
+        )
+      }
+
+      @Test
+      fun `will match`() = runTest {
+        assertThat(service.checkMatch(agencyId)).isNull()
+      }
+    }
+
+    @Nested
     inner class WhenPhoneNumberMatchWhenOnAddressAndGlobal {
       @BeforeEach
       fun setUp() {

@@ -256,7 +256,7 @@ private fun LegacyAgencyDto.asCoreDetails(): AgencyCoreDetails = AgencyCoreDetai
 )
 
 private fun LegacyAgencyDto.addressesSorted(): List<String> = this.takeUnless { it.isClosedPrison() }?.addresses?.map { listOfNotNull(it.addressLine1, it.addressLine2, it.town, it.county, it.country, it.postcode?.cleanPostcode()).joinToString(", ") }?.sorted() ?: emptyList()
-private fun LegacyAgencyDto.phonesSorted(): List<String> = this.phoneNumbers.map { it.number }.distinct().sorted()
+private fun LegacyAgencyDto.phonesSorted(): List<String> = this.takeUnless { it.isClosedPrison() }?.phoneNumbers?.map { it.number }?.distinct()?.sorted() ?: emptyList()
 private fun LegacyAgencyDto.emailAddressesSorted(): List<String> = this.emailAddresses.map { it.address }.sorted()
 private fun AgencyResponse.addressesSorted(): List<String> = this.takeUnless { it.isClosedPrison() }?.addresses?.map {
   if (longDescription != null && longDescription == it.premise) {
@@ -269,7 +269,7 @@ private fun AgencyResponse.addressesSorted(): List<String> = this.takeUnless { i
   }
 }?.sorted() ?: emptyList()
 
-private fun AgencyResponse.phonesSorted(): List<String> = (this.addresses.flatMap { it.phoneNumbers }.map { it.number } + this.phones.map { it.number }).distinct().sorted()
+private fun AgencyResponse.phonesSorted(): List<String> = this.takeUnless { it.isClosedPrison() }?.let { (it.addresses.flatMap { it.phoneNumbers }.map { it.number } + it.phones.map { it.number }).distinct().sorted() } ?: emptyList()
 private fun AgencyResponse.emailAddressesSorted(): List<String> = this.emailAddresses.map { it.emailAddress }.sorted()
 private fun AgencyResponse.isClosedPrison() = this.type.code == "INST" && !this.active
 private fun LegacyAgencyDto.isClosedPrison() = this.agencyType == LegacyAgencyType.PRISON && !this.active
