@@ -44,6 +44,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.OFFICI
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.OFFICIAL_VISIT_ALL_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.ORGANISATIONS_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PERSON_CONTACT_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PERSON_LOCATION_ACTIVE_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PERSON_LOCATION_ALL_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PRISONER_BALANCE_ACTIVE_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PRISONER_BALANCE_ALL_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PRISONER_CONTACT_RECON
@@ -73,6 +75,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.IncidentsRec
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.LocationsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.CourtSchedulerReconciliationServiceActivePrisoners
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.CourtSchedulerReconciliationServiceAllPrisoners
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.PersonLocationReconciliationServiceActivePrisoners
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.PersonLocationReconciliationServiceAllPrisoners
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapActivePrisonersReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapAllPrisonersReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.TransferSchedulerReconciliationServiceActivePrisoners
@@ -125,6 +129,8 @@ enum class BatchType {
   VISIT_SLOTS_RECON,
   ORGANISATIONS_RECON,
   PERSON_CONTACT_RECON,
+  PERSON_LOCATION_ACTIVE_RECON,
+  PERSON_LOCATION_ALL_RECON,
   PRISONER_BALANCE_ACTIVE_RECON,
   PRISONER_BALANCE_ALL_RECON,
   PRISONER_CONTACT_RECON,
@@ -170,6 +176,8 @@ class BatchManager(
   private val officialVisitsAllMissingFromNOMISReconciliationService: OfficialVisitsAllMissingFromNOMISReconciliationService,
   private val officialVisitsActiveScheduledReconciliationService: OfficialVisitsActiveScheduledReconciliationService,
   private val organisationReconciliationService: OrganisationsReconciliationService,
+  private val personLocationReconciliationServiceActivePrisoners: PersonLocationReconciliationServiceActivePrisoners,
+  private val personLocationReconciliationServiceAllPrisoners: PersonLocationReconciliationServiceAllPrisoners,
   private val prisonerBalanceReconciliationService: PrisonerBalanceReconciliationService,
   private val prisonerRestrictionsReconciliationService: PrisonerRestrictionsReconciliationService,
   private val prisonerTransactionsReconciliationService: PrisonerTransactionReconciliationService,
@@ -221,6 +229,8 @@ class BatchManager(
       OFFICIAL_VISIT_ACTIVE_SCH_RECON -> officialVisitsActiveScheduledReconciliationService.generateActiveScheduledVisitsReconciliationReportBatch()
       ORGANISATIONS_RECON -> organisationReconciliationService.generateOrganisationsReconciliationReport()
       PERSON_CONTACT_RECON -> contactPersonReconciliationService.generatePersonContactReconciliationReportBatch()
+      PERSON_LOCATION_ACTIVE_RECON -> personLocationReconciliationServiceActivePrisoners.generatePersonLocationReconciliationReportBatch()
+      PERSON_LOCATION_ALL_RECON -> personLocationReconciliationServiceAllPrisoners.generatePersonLocationReconciliationReportBatch()
       PRISONER_BALANCE_ACTIVE_RECON -> prisonerBalanceReconciliationService.generateReconciliationReportBatch(activeOnly = true)
       PRISONER_BALANCE_ALL_RECON -> prisonerBalanceReconciliationService.generateReconciliationReportBatch(activeOnly = false)
       PRISONER_CONTACT_RECON -> contactPersonReconciliationService.generatePrisonerContactReconciliationReportBatch()

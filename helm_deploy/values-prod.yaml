@@ -260,6 +260,14 @@ generic-service:
     - name: person-contact-recon
       type: PERSON_CONTACT_RECON
       schedule: "50 1 * * 6"
+    - name: person-location-act-recon
+      type: PERSON_LOCATION_ACTIVE_RECON
+      schedule: "30 3 * * *"
+      suspend: true
+    - name: person-location-all-recon
+      type: PERSON_LOCATION_ALL_RECON
+      schedule: "30 3 * * *"
+      suspend: true
     - name: prisoner-balance-active-recon
       type: PRISONER_BALANCE_ACTIVE_RECON
       schedule: "30 3 * * TUE,WED,THU,FRI"

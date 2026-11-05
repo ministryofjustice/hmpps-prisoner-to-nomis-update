@@ -123,6 +123,14 @@ generic-service:
       type: CSRA_FULL_RECON
       schedule: "00 4 * * *"
       suspend: true
+    - name: person-location-act-recon
+      type: PERSON_LOCATION_ACTIVE_RECON
+      schedule: "30 3 * * *"
+      suspend: true
+    - name: person-location-all-recon
+      type: PERSON_LOCATION_ALL_RECON
+      schedule: "30 3 * * *"
+      suspend: true
     - name: prisoner-balance-active-recon
       type: PRISONER_BALANCE_ACTIVE_RECON
       schedule: "30 3 * * *"
