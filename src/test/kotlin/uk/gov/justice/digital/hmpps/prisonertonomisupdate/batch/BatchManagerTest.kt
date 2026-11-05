@@ -54,6 +54,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.IncidentsRec
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.LocationsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.CourtSchedulerReconciliationServiceActivePrisoners
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.CourtSchedulerReconciliationServiceAllPrisoners
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.PersonLocationReconciliationServiceActivePrisoners
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.PersonLocationReconciliationServiceAllPrisoners
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapActivePrisonersReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapAllPrisonersReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.TransferSchedulerReconciliationServiceActivePrisoners
@@ -99,6 +101,8 @@ class BatchManagerTest {
   private val officialVisitsAllMissingFromNOMISReconciliationService = mock<OfficialVisitsAllMissingFromNOMISReconciliationService>()
   private val officialVisitsActiveScheduledReconciliationService = mock<OfficialVisitsActiveScheduledReconciliationService>()
   private val organisationsReconciliationService = mock<OrganisationsReconciliationService>()
+  private val personLocationReconciliationServiceActive = mock<PersonLocationReconciliationServiceActivePrisoners>()
+  private val personLocationReconciliationServiceAll = mock<PersonLocationReconciliationServiceAllPrisoners>()
   private val prisonerTransactionsReconciliationService = mock<PrisonerTransactionReconciliationService>()
   private val prisonerBalanceReconciliationService = mock<PrisonerBalanceReconciliationService>()
   private val prisonerRestrictionsReconciliationService = mock<PrisonerRestrictionsReconciliationService>()
@@ -554,6 +558,26 @@ class BatchManagerTest {
     verify(context).close()
   }
 
+  @Test
+  fun `should call the person location all prisoner reconciliation service`() = runTest {
+    val batchManager = batchManager(BatchType.PERSON_LOCATION_ALL_RECON)
+
+    batchManager.onApplicationEvent(event)
+
+    verify(personLocationReconciliationServiceAll).generatePersonLocationReconciliationReportBatch()
+    verify(context).close()
+  }
+
+  @Test
+  fun `should call the person location active prisoner reconciliation service`() = runTest {
+    val batchManager = batchManager(BatchType.PERSON_LOCATION_ACTIVE_RECON)
+
+    batchManager.onApplicationEvent(event)
+
+    verify(personLocationReconciliationServiceActive).generatePersonLocationReconciliationReportBatch()
+    verify(context).close()
+  }
+
   private fun batchManager(batchType: BatchType) = BatchManager(
     batchType = batchType,
     activitiesDlqName = activityDlqName,
@@ -580,6 +604,8 @@ class BatchManagerTest {
     officialVisitsAllMissingFromNOMISReconciliationService = officialVisitsAllMissingFromNOMISReconciliationService,
     officialVisitsActiveScheduledReconciliationService = officialVisitsActiveScheduledReconciliationService,
     organisationReconciliationService = organisationsReconciliationService,
+    personLocationReconciliationServiceActivePrisoners = personLocationReconciliationServiceActive,
+    personLocationReconciliationServiceAllPrisoners = personLocationReconciliationServiceAll,
     prisonerTransactionsReconciliationService = prisonerTransactionsReconciliationService,
     prisonerBalanceReconciliationService = prisonerBalanceReconciliationService,
     prisonerRestrictionsReconciliationService = prisonerRestrictionsReconciliationService,

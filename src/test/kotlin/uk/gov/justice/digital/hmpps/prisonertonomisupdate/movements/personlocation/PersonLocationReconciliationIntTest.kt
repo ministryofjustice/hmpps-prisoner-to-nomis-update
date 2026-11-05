@@ -40,6 +40,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocati
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.PersonLocationNomisApiMockServer.Companion.offenderPersonLocationsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonLocationBookingMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonLocationMovementMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingPersonLocations
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.MovementLocation
@@ -48,13 +49,15 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Pe
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonLocationMovement.DirectionCode.OUT
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonLocationMovement.MovementType.REL
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonLocationMovement.MovementType.TAP
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.generateOffenderNo
 import java.time.LocalDateTime
 import java.util.*
 
 class PersonLocationReconciliationIntTest(
-  @Autowired private val reconciliationService: PersonLocationReconciliationService,
+  @Autowired private val activePrisonerReconciliationService: PersonLocationReconciliationServiceActivePrisoners,
+  @Autowired private val allPrisonerReconciliationService: PersonLocationReconciliationServiceAllPrisoners,
   @Autowired private val nomisApi: PersonLocationNomisApiMockServer,
   @Autowired private val mappingApi: PersonLocationMappingApiMockServer,
 ) : IntegrationTestBase() {
@@ -62,9 +65,9 @@ class PersonLocationReconciliationIntTest(
   private val dpsApi = dpsPersonLocationServer
   private val prisonerApi = NomisApiExtension.nomisApi
 
-  @DisplayName("Generate reconciliation report")
+  @DisplayName("Generate reconciliation report - all prisoners")
   @Nested
-  inner class GenerateReconciliationReportBatch {
+  inner class GenerateReconciliationReportBatchAllPrisoners {
     @BeforeEach
     fun setUp() {
       reset(telemetryClient)
@@ -79,11 +82,11 @@ class PersonLocationReconciliationIntTest(
 
     @Test
     fun `will output report requested telemetry`() = runTest {
-      reconciliationService.generatePersonLocationReconciliationReportBatch()
+      allPrisonerReconciliationService.generatePersonLocationReconciliationReportBatch()
 
       verify(telemetryClient).trackEvent(
         eq("person-location-reconciliation-requested"),
-        any(),
+        check { assertThat(it).containsEntry("TYPE", "ALL") },
         isNull(),
       )
 
@@ -92,12 +95,13 @@ class PersonLocationReconciliationIntTest(
 
     @Test
     fun `will output report`() = runTest {
-      reconciliationService.generatePersonLocationReconciliationReportBatch()
+      allPrisonerReconciliationService.generatePersonLocationReconciliationReportBatch()
       awaitReportFinished()
 
       verify(telemetryClient).trackEvent(
         eq("person-location-reconciliation-report"),
         check {
+          assertThat(it).containsEntry("TYPE", "ALL")
           assertThat(it).containsEntry("prisoners-count", "1")
           assertThat(it).containsEntry("mismatch-count", "0")
           assertThat(it).containsEntry("pages-count", "1")
@@ -110,7 +114,72 @@ class PersonLocationReconciliationIntTest(
     fun `will report failure to reconcile prisoner`() = runTest {
       nomisApi.stubGetOffenderPersonLocations(offenderNo = "A0001TZ", status = INTERNAL_SERVER_ERROR)
 
-      reconciliationService.generatePersonLocationReconciliationReportBatch()
+      allPrisonerReconciliationService.generatePersonLocationReconciliationReportBatch()
+      awaitReportFinished()
+
+      verify(telemetryClient).trackEvent(
+        eq("person-location-reconciliation-mismatch-error"),
+        check {
+          assertThat(it).containsEntry("offenderNo", "A0001TZ")
+          assertThat(it).containsEntry("reason", "500 Internal Server Error from GET http://localhost:8082/movements/A0001TZ/person-locations")
+        },
+        isNull(),
+      )
+    }
+  }
+
+  @DisplayName("Generate reconciliation report - active prisoners")
+  @Nested
+  inner class GenerateReconciliationReportBatchActivePrisoners {
+    @BeforeEach
+    fun setUp() {
+      reset(telemetryClient)
+      prisonerApi.stubGetAllLatestBookings(
+        bookingId = 0,
+        response = BookingIdsWithLast(
+          lastBookingId = 12345,
+          prisonerIds = listOf(PrisonerIds(12345L, generateOffenderNo(sequence = 1))),
+        ),
+      )
+
+      stubEmptyResponses()
+    }
+
+    @Test
+    fun `will output report requested telemetry`() = runTest {
+      activePrisonerReconciliationService.generatePersonLocationReconciliationReportBatch()
+
+      verify(telemetryClient).trackEvent(
+        eq("person-location-reconciliation-requested"),
+        check { assertThat(it).containsEntry("TYPE", "ACTIVE") },
+        isNull(),
+      )
+
+      awaitReportFinished()
+    }
+
+    @Test
+    fun `will output report`() = runTest {
+      activePrisonerReconciliationService.generatePersonLocationReconciliationReportBatch()
+      awaitReportFinished()
+
+      verify(telemetryClient).trackEvent(
+        eq("person-location-reconciliation-report"),
+        check {
+          assertThat(it).containsEntry("TYPE", "ACTIVE")
+          assertThat(it).containsEntry("prisoners-count", "1")
+          assertThat(it).containsEntry("mismatch-count", "0")
+          assertThat(it).containsEntry("pages-count", "1")
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `will report failure to reconcile prisoner`() = runTest {
+      nomisApi.stubGetOffenderPersonLocations(offenderNo = "A0001TZ", status = INTERNAL_SERVER_ERROR)
+
+      activePrisonerReconciliationService.generatePersonLocationReconciliationReportBatch()
       awaitReportFinished()
 
       verify(telemetryClient).trackEvent(
@@ -149,7 +218,7 @@ class PersonLocationReconciliationIntTest(
           response = offenderPersonLocationsResponse(),
         )
 
-        reconciliationService.generatePersonLocationReconciliationReportBatch()
+        allPrisonerReconciliationService.generatePersonLocationReconciliationReportBatch()
         awaitReportFinished()
       }
 
@@ -216,7 +285,7 @@ class PersonLocationReconciliationIntTest(
           response = dpsResponse,
         )
 
-        reconciliationService.generatePersonLocationReconciliationReportBatch()
+        allPrisonerReconciliationService.generatePersonLocationReconciliationReportBatch()
         awaitReportFinished()
       }
 
@@ -296,7 +365,7 @@ class PersonLocationReconciliationIntTest(
       )
       mappingApi.stubGetPersonLocationMappings(response = emptyList())
 
-      reconciliationService.generatePersonLocationReconciliationReportBatch()
+      allPrisonerReconciliationService.generatePersonLocationReconciliationReportBatch()
       awaitReportFinished()
     }
 
@@ -418,7 +487,7 @@ class PersonLocationReconciliationIntTest(
 
     @Test
     fun `should report nothing if no differences`() = runTest {
-      reconciliationService.generatePersonLocationReconciliationReportBatch()
+      allPrisonerReconciliationService.generatePersonLocationReconciliationReportBatch()
       awaitReportFinished()
 
       verify(telemetryClient, never()).trackEvent(
@@ -439,7 +508,7 @@ class PersonLocationReconciliationIntTest(
           ),
         ),
       )
-      reconciliationService.generatePersonLocationReconciliationReportBatch()
+      allPrisonerReconciliationService.generatePersonLocationReconciliationReportBatch()
       awaitReportFinished()
 
       verifyTelemetry("12345_1", movementInId, MOVEMENT_TYPE)
@@ -472,7 +541,7 @@ class PersonLocationReconciliationIntTest(
           ),
         ),
       )
-      reconciliationService.generatePersonLocationReconciliationReportBatch()
+      allPrisonerReconciliationService.generatePersonLocationReconciliationReportBatch()
       awaitReportFinished()
 
       verifyTelemetry("12345_1", movementInId, DIRECTION)
@@ -506,7 +575,7 @@ class PersonLocationReconciliationIntTest(
           ),
         ),
       )
-      reconciliationService.generatePersonLocationReconciliationReportBatch()
+      allPrisonerReconciliationService.generatePersonLocationReconciliationReportBatch()
       awaitReportFinished()
 
       verifyTelemetry("12345_1", movementInId, MOVEMENT_TIME)
@@ -539,7 +608,7 @@ class PersonLocationReconciliationIntTest(
           ),
         ),
       )
-      reconciliationService.generatePersonLocationReconciliationReportBatch()
+      allPrisonerReconciliationService.generatePersonLocationReconciliationReportBatch()
       awaitReportFinished()
 
       verifyTelemetry("12345_1", movementInId, MOVEMENT_REASON)
@@ -572,7 +641,7 @@ class PersonLocationReconciliationIntTest(
           ),
         ),
       )
-      reconciliationService.generatePersonLocationReconciliationReportBatch()
+      allPrisonerReconciliationService.generatePersonLocationReconciliationReportBatch()
       awaitReportFinished()
 
       verifyTelemetry("12345_1", movementInId, FROM_LOCATION)
@@ -605,7 +674,7 @@ class PersonLocationReconciliationIntTest(
           ),
         ),
       )
-      reconciliationService.generatePersonLocationReconciliationReportBatch()
+      allPrisonerReconciliationService.generatePersonLocationReconciliationReportBatch()
       awaitReportFinished()
 
       verifyTelemetry("12345_1", movementInId, TO_LOCATION)
@@ -638,7 +707,7 @@ class PersonLocationReconciliationIntTest(
           ),
         ),
       )
-      reconciliationService.generatePersonLocationReconciliationReportBatch()
+      allPrisonerReconciliationService.generatePersonLocationReconciliationReportBatch()
       awaitReportFinished()
 
       verifyTelemetry("12345_1", movementInId, COMMENT)
@@ -747,7 +816,7 @@ class PersonLocationReconciliationIntTest(
 
     @Test
     fun `should report nothing if no differences`() = runTest {
-      reconciliationService.generatePersonLocationReconciliationReportBatch()
+      allPrisonerReconciliationService.generatePersonLocationReconciliationReportBatch()
       awaitReportFinished()
 
       verify(telemetryClient, never()).trackEvent(
@@ -770,7 +839,7 @@ class PersonLocationReconciliationIntTest(
           ),
         ),
       )
-      reconciliationService.generatePersonLocationReconciliationReportBatch()
+      allPrisonerReconciliationService.generatePersonLocationReconciliationReportBatch()
       awaitReportFinished()
 
       verifyTelemetry(BOOKING_STATUS)
@@ -795,7 +864,7 @@ class PersonLocationReconciliationIntTest(
           ),
         ),
       )
-      reconciliationService.generatePersonLocationReconciliationReportBatch()
+      allPrisonerReconciliationService.generatePersonLocationReconciliationReportBatch()
       awaitReportFinished()
 
       verifyTelemetry(ACTIVE_FLAG)
@@ -820,7 +889,7 @@ class PersonLocationReconciliationIntTest(
           ),
         ),
       )
-      reconciliationService.generatePersonLocationReconciliationReportBatch()
+      allPrisonerReconciliationService.generatePersonLocationReconciliationReportBatch()
       awaitReportFinished()
 
       verifyTelemetry(BOOKING_NUMBER)
@@ -846,7 +915,7 @@ class PersonLocationReconciliationIntTest(
           ),
         ),
       )
-      reconciliationService.generatePersonLocationReconciliationReportBatch()
+      allPrisonerReconciliationService.generatePersonLocationReconciliationReportBatch()
       awaitReportFinished()
 
       verifyTelemetry(BOOKING_BEGIN_TIME)
@@ -872,7 +941,7 @@ class PersonLocationReconciliationIntTest(
           ),
         ),
       )
-      reconciliationService.generatePersonLocationReconciliationReportBatch()
+      allPrisonerReconciliationService.generatePersonLocationReconciliationReportBatch()
       awaitReportFinished()
 
       verifyTelemetry(BOOKING_END_TIME)
