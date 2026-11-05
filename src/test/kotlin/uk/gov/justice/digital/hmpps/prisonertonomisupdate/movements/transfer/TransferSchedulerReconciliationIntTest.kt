@@ -17,6 +17,8 @@ import org.mockito.kotlin.reset
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.PrisonerSelection.ACTIVE_PRISONERS
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.PrisonerSelection.ALL_PRISONERS
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.TransferSchedulerDpsApiExtension.Companion.transferSchedulerDpsApiServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.TransferSchedulerDpsApiMockServer.Companion.reconciliation
@@ -47,8 +49,7 @@ import java.time.LocalDateTime
 import java.util.*
 
 class TransferSchedulerReconciliationIntTest(
-  @Autowired private val allPrisonersReconciliationService: TransferSchedulerReconciliationServiceAllPrisoners,
-  @Autowired private val activePrisonersReconciliationService: TransferSchedulerReconciliationServiceActivePrisoners,
+  @Autowired private val reconciliationService: TransferScheduleReconciliationService,
   @Autowired private val nomisApi: TransferSchedulerNomisApiMockServer,
   @Autowired private val mappingApi: TransferSchedulerMappingApiMockServer,
 ) : IntegrationTestBase() {
@@ -73,12 +74,12 @@ class TransferSchedulerReconciliationIntTest(
 
     @Test
     fun `will output report requested telemetry`() = runTest {
-      allPrisonersReconciliationService.generateTransferSchedulerReconciliationReportBatch()
+      reconciliationService.generateReport(ALL_PRISONERS)
 
       verify(telemetryClient).trackEvent(
         eq("transfer-scheduler-reconciliation-requested"),
         check {
-          assertThat(it["TYPE"]).isEqualTo("ALL")
+          assertThat(it["TYPE"]).isEqualTo("ALL_PRISONERS")
         },
         isNull(),
       )
@@ -88,7 +89,7 @@ class TransferSchedulerReconciliationIntTest(
 
     @Test
     fun `will output report`() = runTest {
-      allPrisonersReconciliationService.generateTransferSchedulerReconciliationReportBatch()
+      reconciliationService.generateReport(ALL_PRISONERS)
       awaitReportFinished()
 
       verify(telemetryClient).trackEvent(
@@ -106,7 +107,7 @@ class TransferSchedulerReconciliationIntTest(
     fun `will report failure to reconcile prisoner`() = runTest {
       nomisApi.stubGetOffenderTransferMovements(status = INTERNAL_SERVER_ERROR)
 
-      allPrisonersReconciliationService.generateTransferSchedulerReconciliationReportBatch()
+      reconciliationService.generateReport(ALL_PRISONERS)
       awaitReportFinished()
 
       verify(telemetryClient).trackEvent(
@@ -139,12 +140,12 @@ class TransferSchedulerReconciliationIntTest(
 
     @Test
     fun `will output report requested telemetry`() = runTest {
-      activePrisonersReconciliationService.generateTransferSchedulerReconciliationReportBatch()
+      reconciliationService.generateReport(ACTIVE_PRISONERS)
 
       verify(telemetryClient).trackEvent(
         eq("transfer-scheduler-reconciliation-requested"),
         check {
-          assertThat(it["TYPE"]).isEqualTo("ACTIVE")
+          assertThat(it["TYPE"]).isEqualTo("ACTIVE_PRISONERS")
         },
         isNull(),
       )
@@ -154,7 +155,7 @@ class TransferSchedulerReconciliationIntTest(
 
     @Test
     fun `will output report`() = runTest {
-      activePrisonersReconciliationService.generateTransferSchedulerReconciliationReportBatch()
+      reconciliationService.generateReport(ACTIVE_PRISONERS)
       awaitReportFinished()
 
       verify(telemetryClient).trackEvent(
@@ -172,7 +173,7 @@ class TransferSchedulerReconciliationIntTest(
     fun `will report failure to reconcile prisoner`() = runTest {
       nomisApi.stubGetOffenderTransferMovements(status = INTERNAL_SERVER_ERROR)
 
-      activePrisonersReconciliationService.generateTransferSchedulerReconciliationReportBatch()
+      reconciliationService.generateReport(ACTIVE_PRISONERS)
       awaitReportFinished()
 
       verify(telemetryClient).trackEvent(
@@ -224,7 +225,7 @@ class TransferSchedulerReconciliationIntTest(
 
       @Test
       fun `should report extra NOMIS transfer schedule`() = runTest {
-        allPrisonersReconciliationService.generateTransferSchedulerReconciliationReportBatch()
+        reconciliationService.generateReport(ALL_PRISONERS)
         awaitReportFinished()
 
         verify(telemetryClient).trackEvent(
@@ -245,7 +246,7 @@ class TransferSchedulerReconciliationIntTest(
 
       @Test
       fun `should report extra NOMIS scheduled movement`() = runTest {
-        allPrisonersReconciliationService.generateTransferSchedulerReconciliationReportBatch()
+        reconciliationService.generateReport(ALL_PRISONERS)
         awaitReportFinished()
 
         verify(telemetryClient).trackEvent(
@@ -266,7 +267,7 @@ class TransferSchedulerReconciliationIntTest(
 
       @Test
       fun `should report extra NOMIS unscheduled movement`() = runTest {
-        allPrisonersReconciliationService.generateTransferSchedulerReconciliationReportBatch()
+        reconciliationService.generateReport(ALL_PRISONERS)
         awaitReportFinished()
 
         verify(telemetryClient).trackEvent(
@@ -331,7 +332,7 @@ class TransferSchedulerReconciliationIntTest(
 
       @Test
       fun `should NOT report extra NOMIS transfer schedule`() = runTest {
-        allPrisonersReconciliationService.generateTransferSchedulerReconciliationReportBatch()
+        reconciliationService.generateReport(ALL_PRISONERS)
         awaitReportFinished()
 
         verify(telemetryClient, never()).trackEvent(
@@ -352,7 +353,7 @@ class TransferSchedulerReconciliationIntTest(
 
       @Test
       fun `should report extra NOMIS movement as unscheduled`() = runTest {
-        allPrisonersReconciliationService.generateTransferSchedulerReconciliationReportBatch()
+        reconciliationService.generateReport(ALL_PRISONERS)
         awaitReportFinished()
 
         verify(telemetryClient).trackEvent(
@@ -408,7 +409,7 @@ class TransferSchedulerReconciliationIntTest(
           ),
         )
 
-        allPrisonersReconciliationService.generateTransferSchedulerReconciliationReportBatch()
+        reconciliationService.generateReport(ALL_PRISONERS)
         awaitReportFinished()
       }
 
@@ -523,7 +524,7 @@ class TransferSchedulerReconciliationIntTest(
         ),
       )
 
-      allPrisonersReconciliationService.generateTransferSchedulerReconciliationReportBatch()
+      reconciliationService.generateReport(ALL_PRISONERS)
       awaitReportFinished()
     }
 
@@ -622,7 +623,7 @@ class TransferSchedulerReconciliationIntTest(
         stubNomis()
         stubDps()
         stubMappings()
-        allPrisonersReconciliationService.generateTransferSchedulerReconciliationReportBatch()
+        reconciliationService.generateReport(ALL_PRISONERS)
           .also { awaitReportFinished() }
 
         verify(telemetryClient, never()).trackEvent(
@@ -637,7 +638,7 @@ class TransferSchedulerReconciliationIntTest(
         stubNomis(schedule = stubNomisSchedule(eventStatus = "CANC"))
         stubDps()
         stubMappings()
-        allPrisonersReconciliationService.generateTransferSchedulerReconciliationReportBatch()
+        reconciliationService.generateReport(ALL_PRISONERS)
           .also { awaitReportFinished() }
 
         verify(telemetryClient, never()).trackEvent(
@@ -652,7 +653,7 @@ class TransferSchedulerReconciliationIntTest(
         stubNomis(schedule = stubNomisSchedule(startTime = yesterday))
         stubDps()
         stubMappings()
-        allPrisonersReconciliationService.generateTransferSchedulerReconciliationReportBatch()
+        reconciliationService.generateReport(ALL_PRISONERS)
           .also { awaitReportFinished() }
 
         verifyTelemetry("SCHEDULE_START_TIME")
@@ -663,7 +664,7 @@ class TransferSchedulerReconciliationIntTest(
         stubNomis(schedule = stubNomisSchedule(eventSubType = "29"))
         stubDps()
         stubMappings()
-        allPrisonersReconciliationService.generateTransferSchedulerReconciliationReportBatch()
+        reconciliationService.generateReport(ALL_PRISONERS)
           .also { awaitReportFinished() }
 
         verifyTelemetry("SCHEDULE_EVENT_SUBTYPE")
@@ -677,7 +678,7 @@ class TransferSchedulerReconciliationIntTest(
         )
         stubDps()
         stubMappings()
-        allPrisonersReconciliationService.generateTransferSchedulerReconciliationReportBatch()
+        reconciliationService.generateReport(ALL_PRISONERS)
           .also { awaitReportFinished() }
 
         verify(telemetryClient, never()).trackEvent(
@@ -695,7 +696,7 @@ class TransferSchedulerReconciliationIntTest(
         )
         stubDps()
         stubMappings()
-        allPrisonersReconciliationService.generateTransferSchedulerReconciliationReportBatch()
+        reconciliationService.generateReport(ALL_PRISONERS)
           .also { awaitReportFinished() }
 
         verifyTelemetry("SCHEDULE_FROM_PRISON")
@@ -709,7 +710,7 @@ class TransferSchedulerReconciliationIntTest(
         )
         stubDps()
         stubMappings()
-        allPrisonersReconciliationService.generateTransferSchedulerReconciliationReportBatch()
+        reconciliationService.generateReport(ALL_PRISONERS)
           .also { awaitReportFinished() }
 
         verifyTelemetry("SCHEDULE_FROM_PRISON")
@@ -720,7 +721,7 @@ class TransferSchedulerReconciliationIntTest(
         stubNomis(schedule = stubNomisSchedule(toPrison = "MDI"))
         stubDps()
         stubMappings()
-        allPrisonersReconciliationService.generateTransferSchedulerReconciliationReportBatch()
+        reconciliationService.generateReport(ALL_PRISONERS)
           .also { awaitReportFinished() }
 
         verifyTelemetry("SCHEDULE_TO_PRISON")
@@ -731,7 +732,7 @@ class TransferSchedulerReconciliationIntTest(
         stubNomis(schedule = stubNomisSchedule(comment = "different"))
         stubDps()
         stubMappings()
-        allPrisonersReconciliationService.generateTransferSchedulerReconciliationReportBatch()
+        reconciliationService.generateReport(ALL_PRISONERS)
           .also { awaitReportFinished() }
 
         verifyTelemetry("SCHEDULE_COMMENT")
@@ -742,7 +743,7 @@ class TransferSchedulerReconciliationIntTest(
         stubNomis(schedule = stubNomisSchedule(escortCode = "GEO"))
         stubDps()
         stubMappings()
-        allPrisonersReconciliationService.generateTransferSchedulerReconciliationReportBatch()
+        reconciliationService.generateReport(ALL_PRISONERS)
           .also { awaitReportFinished() }
 
         verifyTelemetry("SCHEDULE_ESCORT")
@@ -782,7 +783,7 @@ class TransferSchedulerReconciliationIntTest(
         stubNomis(schedule = stubNomisSchedule(startTime = null), scheduledMovement = null, unscheduledMovement = null)
         stubDps(schedule = stubDpsSchedule(start = null), scheduledMovement = null, unscheduledMovement = null)
         stubMappings()
-        allPrisonersReconciliationService.generateTransferSchedulerReconciliationReportBatch()
+        reconciliationService.generateReport(ALL_PRISONERS)
           .also { awaitReportFinished() }
 
         verify(telemetryClient, never()).trackEvent(
@@ -797,7 +798,7 @@ class TransferSchedulerReconciliationIntTest(
         stubNomis(schedule = stubNomisSchedule(startTime = null, comment = "different"), scheduledMovement = null, unscheduledMovement = null)
         stubDps(schedule = stubDpsSchedule(start = null), scheduledMovement = null, unscheduledMovement = null)
         stubMappings()
-        allPrisonersReconciliationService.generateTransferSchedulerReconciliationReportBatch()
+        reconciliationService.generateReport(ALL_PRISONERS)
           .also { awaitReportFinished() }
 
         verify(telemetryClient, never()).trackEvent(
@@ -829,7 +830,7 @@ class TransferSchedulerReconciliationIntTest(
         stubNomis(waitlist = null)
         stubDps()
         stubMappings()
-        allPrisonersReconciliationService.generateTransferSchedulerReconciliationReportBatch()
+        reconciliationService.generateReport(ALL_PRISONERS)
           .also { awaitReportFinished() }
 
         verifyTelemetry("WAITLIST")
@@ -840,7 +841,7 @@ class TransferSchedulerReconciliationIntTest(
         stubNomis(waitlist = stubNomisWaitlist(requestDate = now.toLocalDate()))
         stubDps()
         stubMappings()
-        allPrisonersReconciliationService.generateTransferSchedulerReconciliationReportBatch()
+        reconciliationService.generateReport(ALL_PRISONERS)
           .also { awaitReportFinished() }
 
         verifyTelemetry("WAITLIST_REQUESTED_DATE")
@@ -851,7 +852,7 @@ class TransferSchedulerReconciliationIntTest(
         stubNomis(waitlist = stubNomisWaitlist(priority = "1"))
         stubDps()
         stubMappings()
-        allPrisonersReconciliationService.generateTransferSchedulerReconciliationReportBatch()
+        reconciliationService.generateReport(ALL_PRISONERS)
           .also { awaitReportFinished() }
 
         verifyTelemetry("WAITLIST_TRANSFER_PRIORITY")
@@ -862,7 +863,7 @@ class TransferSchedulerReconciliationIntTest(
         stubNomis(waitlist = stubNomisWaitlist(comment = "different"))
         stubDps()
         stubMappings()
-        allPrisonersReconciliationService.generateTransferSchedulerReconciliationReportBatch()
+        reconciliationService.generateReport(ALL_PRISONERS)
           .also { awaitReportFinished() }
 
         verifyTelemetry("WAITLIST_COMMENT")

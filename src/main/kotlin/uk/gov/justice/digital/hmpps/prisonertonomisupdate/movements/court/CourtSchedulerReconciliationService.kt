@@ -4,10 +4,14 @@ import com.microsoft.applicationinsights.TelemetryClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtscheduler.model.ReconciliationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingMappingService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.PrisonerReconciliationReport
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.PrisonerSelection
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationNames
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.NomisMovementId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.MismatchPrisonerCourtMovementDetails.Type.MOVEMENT_TIME
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.MismatchPrisonerCourtMovementDetails.Type.REASON
@@ -20,6 +24,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.findMissing
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtSchedulerPrisonerMappingIdsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingCourtMovements
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderCourtMovementsResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import java.time.LocalDateTime
 import java.util.*
 
@@ -32,10 +37,13 @@ class CourtSchedulerReconciliationService(
   private val dpsApiService: CourtSchedulerDpsApiService,
   private val mappingService: CourtSchedulerMappingApiService,
   private val courtSentencingMappingService: CourtSentencingMappingService,
+  private val nomisPrisonerApi: NomisApiService,
+  @param:Value($$"${reports.court-scheduler.reconciliation.page-size}") private val pageSize: Int = 100,
+  @param:Value($$"${reports.court-scheduler.reconciliation.thread-count}") private val threadCount: Int = 15,
 ) {
-  companion object {
-    const val TELEMETRY_COURT_SCHEDULER = "court-scheduler-reconciliation"
-  }
+  private val names = ReconciliationNames("court-scheduler-reconciliation", "Court scheduler")
+
+  suspend fun generateReport(selection: PrisonerSelection) = PrisonerReconciliationReport(telemetryClient, nomisPrisonerApi, names, selection, pageSize, threadCount) { checkPrisonersMatch(it) }.run()
 
   suspend fun checkPrisonersMatch(offenderNo: String, suppressTelemetry: Boolean = false): List<MismatchedPrisonerCourtMovements> = withContext(Dispatchers.Unconfined) {
     val nomisMovements = async { nomisApiService.getOffenderCourtMovementsOrNull(offenderNo) }
@@ -62,7 +70,7 @@ class CourtSchedulerReconciliationService(
     if (!suppressTelemetry) {
       mismatchedEntities.forEach {
         telemetryClient.trackEvent(
-          "$TELEMETRY_COURT_SCHEDULER-mismatch",
+          "${names.telemetryPrefix}-mismatch",
           mapOf(
             "offenderNo" to offenderNo,
             "type" to it.type,
@@ -79,7 +87,7 @@ class CourtSchedulerReconciliationService(
     if (!suppressTelemetry) {
       mismatchedScheduleDetails.forEach {
         telemetryClient.trackEvent(
-          "$TELEMETRY_COURT_SCHEDULER-mismatch",
+          "${names.telemetryPrefix}-mismatch",
           mapOf(
             "offenderNo" to offenderNo,
             "type" to it.type,
@@ -98,7 +106,7 @@ class CourtSchedulerReconciliationService(
     if (!suppressTelemetry) {
       mismatchedMovementDetails.forEach {
         telemetryClient.trackEvent(
-          "$TELEMETRY_COURT_SCHEDULER-mismatch",
+          "${names.telemetryPrefix}-mismatch",
           mapOf(
             "offenderNo" to offenderNo,
             "type" to it.type,

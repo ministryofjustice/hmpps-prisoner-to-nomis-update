@@ -54,13 +54,11 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.PrisonerSelect
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives.IncentivesReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.IncidentsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.LocationsReconciliationService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.CourtSchedulerReconciliationServiceActivePrisoners
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.CourtSchedulerReconciliationServiceAllPrisoners
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.CourtSchedulerReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.PersonLocationReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapActivePrisonersReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapAllPrisonersReconciliationService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.TransferSchedulerReconciliationServiceActivePrisoners
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.TransferSchedulerReconciliationServiceAllPrisoners
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.TransferScheduleReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nonassociations.NonAssociationsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsActiveScheduledReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsAllMissingFromNOMISReconciliationService
@@ -88,8 +86,7 @@ class BatchManagerTest {
   private val contactPersonProfileDetailsReconService = mock<ContactPersonProfileDetailsReconciliationService>()
   private val contactPersonReconService = mock<ContactPersonReconciliationService>()
   private val corePersonReconciliationService = mock<CorePersonReconciliationService>()
-  private val courtSchedulerReconciliationServiceActive = mock<CourtSchedulerReconciliationServiceActivePrisoners>()
-  private val courtSchedulerReconciliationServiceAll = mock<CourtSchedulerReconciliationServiceAllPrisoners>()
+  private val courtSchedulerReconciliationService = mock<CourtSchedulerReconciliationService>()
   private val courtSentencingReconciliationService = mock<CourtSentencingReconciliationService>()
   private val csipReconciliationService = mock<CSIPReconciliationService>()
   private val csraReconciliationService = mock<CsraReconciliationService>()
@@ -112,8 +109,7 @@ class BatchManagerTest {
   private val staffReconciliationService = mock<StaffReconciliationService>()
   private val tapActivePrisonersReconciliationService = mock<TapActivePrisonersReconciliationService>()
   private val tapAllPrisonersReconciliationService = mock<TapAllPrisonersReconciliationService>()
-  private val transferSchedulerReconciliationServiceActive = mock<TransferSchedulerReconciliationServiceActivePrisoners>()
-  private val transferSchedulerReconciliationServiceAll = mock<TransferSchedulerReconciliationServiceAllPrisoners>()
+  private val transferSchedulerReconciliationService = mock<TransferScheduleReconciliationService>()
   private val visitBalanceReconciliationService = mock<VisitBalanceReconciliationService>()
   private val visitSlotsReconciliationService = mock<VisitSlotsReconciliationService>()
   private val activityDlqName = "activity-dlq-name"
@@ -504,7 +500,7 @@ class BatchManagerTest {
 
     batchManager.onApplicationEvent(event)
 
-    verify(courtSchedulerReconciliationServiceAll).generateCourtSchedulerReconciliationReportBatch()
+    verify(courtSchedulerReconciliationService).generateReport(ALL_PRISONERS)
     verify(context).close()
   }
 
@@ -514,7 +510,7 @@ class BatchManagerTest {
 
     batchManager.onApplicationEvent(event)
 
-    verify(courtSchedulerReconciliationServiceActive).generateCourtSchedulerReconciliationReportBatch()
+    verify(courtSchedulerReconciliationService).generateReport(ACTIVE_PRISONERS)
     verify(context).close()
   }
 
@@ -544,7 +540,7 @@ class BatchManagerTest {
 
     batchManager.onApplicationEvent(event)
 
-    verify(transferSchedulerReconciliationServiceAll).generateTransferSchedulerReconciliationReportBatch()
+    verify(transferSchedulerReconciliationService).generateReport(ALL_PRISONERS)
     verify(context).close()
   }
 
@@ -554,7 +550,7 @@ class BatchManagerTest {
 
     batchManager.onApplicationEvent(event)
 
-    verify(transferSchedulerReconciliationServiceActive).generateTransferSchedulerReconciliationReportBatch()
+    verify(transferSchedulerReconciliationService).generateReport(ACTIVE_PRISONERS)
     verify(context).close()
   }
 
@@ -590,8 +586,7 @@ class BatchManagerTest {
     contactPersonProfileDetailsReconService = contactPersonProfileDetailsReconService,
     contactPersonReconciliationService = contactPersonReconService,
     corePersonReconciliationService = corePersonReconciliationService,
-    courtSchedulerReconciliationServiceAll = courtSchedulerReconciliationServiceAll,
-    courtSchedulerReconciliationServiceActive = courtSchedulerReconciliationServiceActive,
+    courtSchedulerReconciliationService = courtSchedulerReconciliationService,
     courtSentencingReconciliationService = courtSentencingReconciliationService,
     csipReconciliationService = csipReconciliationService,
     csraReconciliationService = csraReconciliationService,
@@ -614,8 +609,7 @@ class BatchManagerTest {
     sentencingReconciliationService = sentencingReconciliationService,
     tapActivePrisonersReconciliationService = tapActivePrisonersReconciliationService,
     tapAllPrisonersReconciliationService = tapAllPrisonersReconciliationService,
-    transferSchedulerReconciliationServiceAll = transferSchedulerReconciliationServiceAll,
-    transferSchedulerReconciliationServiceActive = transferSchedulerReconciliationServiceActive,
+    transferSchedulerReconciliationService = transferSchedulerReconciliationService,
     visitBalancesReconciliationService = visitBalanceReconciliationService,
     visitSlotsReconciliationService = visitSlotsReconciliationService,
   )
