@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-11-02.943.cc94212"
+    "version" : "2026-11-05.958.c22ccad"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -5951,40 +5951,6 @@
         }
       }
     },
-    "/mapping/core-person/profile" : {
-      "post" : {
-        "tags" : [ "core-person-mapping-resource" ],
-        "summary" : "Creates a core person profile mapping",
-        "description" : "Creates a core person profile mapping typically when syncing a newly created profile item to DPS.\n      Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "createProfileMapping",
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/ProfileMappingIdDto"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "201" : {
-            "description" : "Mappings created",
-            "content" : { }
-          },
-          "409" : {
-            "description" : "Indicates a duplicate mapping has been rejected. If Error code = 1409 the body will return a DuplicateErrorResponse",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/DuplicateMappingErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/mapping/core-person/merge" : {
       "post" : {
         "tags" : [ "core-person-mapping-resource" ],
@@ -6135,7 +6101,7 @@
     },
     "/mapping/core-person/contact" : {
       "post" : {
-        "tags" : [ "core-person-mapping-resource" ],
+        "tags" : [ "core-person-contact-mapping-resource" ],
         "summary" : "Creates core person contact mappings for synchronisation",
         "description" : "Creates core person contact mappings for synchronisation between NOMIS ids and CPR ids. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
         "operationId" : "createCorePersonContactMapping",
@@ -6249,7 +6215,7 @@
     },
     "/mapping/core-person/address-usage" : {
       "post" : {
-        "tags" : [ "core-person-mapping-resource" ],
+        "tags" : [ "core-person-address-mapping-resource" ],
         "summary" : "Creates core person address usage mappings for synchronisation",
         "description" : "Creates core person address usage mappings for synchronisation between NOMIS ids and CPR ids. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
         "operationId" : "createCorePersonAddressUsageMapping",
@@ -6303,7 +6269,7 @@
     },
     "/mapping/core-person/address" : {
       "post" : {
-        "tags" : [ "core-person-mapping-resource" ],
+        "tags" : [ "core-person-address-mapping-resource" ],
         "summary" : "Creates core person address mappings for synchronisation",
         "description" : "Creates core person address mappings for synchronisation between NOMIS ids and CPR ids. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
         "operationId" : "createCorePersonAddressMapping",
@@ -17976,82 +17942,6 @@
         }
       }
     },
-    "/mapping/core-person/profile/cpr-id/{cprId}" : {
-      "get" : {
-        "tags" : [ "core-person-mapping-resource" ],
-        "summary" : "Get a core person profile mapping by cpr Id",
-        "description" : "Retrieves the core person profile mapping.\n      Note this Id may refer to one of several tables in the CPR service, e.g. Disability, sexual orientation etc.\n      Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getProfileMappingByDpsId",
-        "parameters" : [ {
-          "name" : "cprId",
-          "in" : "path",
-          "description" : "CPR UUID",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "description" : "CPR UUID",
-            "example" : "12345678-1234-5678-abcd-1234567890ab"
-          },
-          "example" : "12345678-1234-5678-abcd-1234567890ab"
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ProfileMappingDto"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/mapping/core-person/profile/booking/{bookingId}/type/{profileType}" : {
-      "get" : {
-        "tags" : [ "core-person-mapping-resource" ],
-        "summary" : "Get a core person profile mapping by booking Id and Nomis profile type",
-        "description" : "Retrieves the core person profile mapping.\n      Note this can retrieve a CPR Id which may refer to one of several tables in the CPR service, e.g. Disability, sexual orientation etc.\n      Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getProfileMappingByNomisIds",
-        "parameters" : [ {
-          "name" : "bookingId",
-          "in" : "path",
-          "description" : "Booking id",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Booking id",
-            "example" : 12345678
-          },
-          "example" : 12345678
-        }, {
-          "name" : "profileType",
-          "in" : "path",
-          "description" : "Nomis profile type",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "description" : "Nomis profile type",
-            "example" : "SEXO"
-          },
-          "example" : "SEXO"
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ProfileMappingDto"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/mapping/core-person/person/nomis-prison-number/{nomisPrisonNumber}" : {
       "get" : {
         "tags" : [ "core-person-mapping-resource" ],
@@ -18431,7 +18321,7 @@
     },
     "/mapping/core-person/contact/nomis-contact-id/{nomisContactId}/type/{nomisContactType}" : {
       "get" : {
-        "tags" : [ "core-person-mapping-resource" ],
+        "tags" : [ "core-person-contact-mapping-resource" ],
         "summary" : "Get a core person contact mapping by nomis contact Id and contact type",
         "description" : "Retrieves the core person contact mapping by NOMIS Contact Id and contact type. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
         "operationId" : "getCorePersonContactMappingByNomisId",
@@ -18504,7 +18394,7 @@
         }
       },
       "delete" : {
-        "tags" : [ "core-person-mapping-resource" ],
+        "tags" : [ "core-person-contact-mapping-resource" ],
         "summary" : "Delete core person contact mapping by nomis contact Id and contact type",
         "description" : "Delete the core person contact mapping by NOMIS Contact Id and contact type. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
         "operationId" : "deleteCorePersonContactMappingByNomisId",
@@ -18563,7 +18453,7 @@
     },
     "/mapping/core-person/contact/cpr-contact-id/{cprContactId}" : {
       "get" : {
-        "tags" : [ "core-person-mapping-resource" ],
+        "tags" : [ "core-person-contact-mapping-resource" ],
         "summary" : "Get a core person contact mapping by cpr contact Id",
         "description" : "Retrieves the core person contact mapping by CPR Contact Id. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
         "operationId" : "getCorePersonContactMappingByCprId",
@@ -18795,7 +18685,7 @@
     },
     "/mapping/core-person/address/nomis-address-id/{nomisAddressId}" : {
       "get" : {
-        "tags" : [ "core-person-mapping-resource" ],
+        "tags" : [ "core-person-address-mapping-resource" ],
         "summary" : "Get a core person address mapping by nomis address Id",
         "description" : "Retrieves the core person address mapping by NOMIS Address Id. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
         "operationId" : "getCorePersonAddressMappingByNomisId",
@@ -18856,7 +18746,7 @@
         }
       },
       "delete" : {
-        "tags" : [ "core-person-mapping-resource" ],
+        "tags" : [ "core-person-address-mapping-resource" ],
         "summary" : "Delete core person address mapping by nomis address Id",
         "description" : "Delete the core person address mapping by NOMIS Address Id. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
         "operationId" : "deleteCorePersonAddressMappingByNomisId",
@@ -18903,7 +18793,7 @@
     },
     "/mapping/core-person/address/cpr-address-id/{cprAddressId}" : {
       "get" : {
-        "tags" : [ "core-person-mapping-resource" ],
+        "tags" : [ "core-person-address-mapping-resource" ],
         "summary" : "Get person address mapping by cpr core person address Id",
         "description" : "Retrieves the person address mapping by CPR Core Person Address Id. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
         "operationId" : "getAddressMappingByCprId",
@@ -18965,7 +18855,7 @@
     },
     "/mapping/core-person/address-usage/nomis-address-id/{nomisAddressId}/usage-code/{addressUsageCode}" : {
       "get" : {
-        "tags" : [ "core-person-mapping-resource" ],
+        "tags" : [ "core-person-address-mapping-resource" ],
         "summary" : "Get a core person address usage mapping by nomis address Id and usage code",
         "description" : "Retrieves the core person address usage mapping by NOMIS Address Id and address usage code. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
         "operationId" : "getCorePersonAddressUsageMappingByNomisId",
@@ -19037,7 +18927,7 @@
         }
       },
       "delete" : {
-        "tags" : [ "core-person-mapping-resource" ],
+        "tags" : [ "core-person-address-mapping-resource" ],
         "summary" : "Delete a core person address usage mapping by nomis address Id and usage code",
         "description" : "Deletes the core person address usage mapping by NOMIS Address Id and address usage code. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
         "operationId" : "deleteCorePersonAddressUsageMappingByNomisId",
@@ -19095,7 +18985,7 @@
     },
     "/mapping/core-person/address-usage/cpr-address-usage-id/{cprAddressUsageId}" : {
       "get" : {
-        "tags" : [ "core-person-mapping-resource" ],
+        "tags" : [ "core-person-address-mapping-resource" ],
         "summary" : "Get a core person address usage mapping by cpr address usage Id",
         "description" : "Retrieves the core person address usage mapping by CPR Address Usage Id. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
         "operationId" : "getCorePersonAddressUsageMappingByCprId",
@@ -28071,34 +27961,6 @@
         },
         "required" : [ "addressUsages", "addresses", "contacts", "mappingType", "personMapping" ]
       },
-      "ProfileMappingIdDto" : {
-        "type" : "object",
-        "properties" : {
-          "cprId" : {
-            "type" : "string",
-            "description" : "CPR profile id"
-          },
-          "nomisBookingId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "NOMIS booking id"
-          },
-          "nomisProfileType" : {
-            "type" : "string",
-            "description" : "NOMIS profile type"
-          },
-          "nomisPrisonNumber" : {
-            "type" : "string",
-            "description" : "NOMIS Prison number aka Offender number"
-          },
-          "mappingType" : {
-            "type" : "string",
-            "description" : "Mapping type - currently defaulted to be NOMIS_CREATED",
-            "enum" : [ "MIGRATED", "CPR_CREATED", "NOMIS_CREATED" ]
-          }
-        },
-        "required" : [ "cprId", "mappingType", "nomisBookingId", "nomisPrisonNumber", "nomisProfileType" ]
-      },
       "CorePersonMergeMappingsDto" : {
         "type" : "object",
         "description" : "Mappings for a Core Person and its associated child entities after it has been merged to.",
@@ -30261,44 +30123,6 @@
             "type" : "boolean"
           }
         }
-      },
-      "ProfileMappingDto" : {
-        "type" : "object",
-        "properties" : {
-          "cprId" : {
-            "type" : "string",
-            "description" : "CPR profile id"
-          },
-          "nomisBookingId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "NOMIS booking id"
-          },
-          "nomisProfileType" : {
-            "type" : "string",
-            "description" : "NOMIS profile type"
-          },
-          "nomisPrisonNumber" : {
-            "type" : "string",
-            "description" : "NOMIS Prison number aka Offender number"
-          },
-          "label" : {
-            "type" : [ "string", "null" ],
-            "description" : "Label (a timestamp for migrated ids)"
-          },
-          "mappingType" : {
-            "type" : "string",
-            "description" : "Mapping type",
-            "enum" : [ "MIGRATED", "CPR_CREATED", "NOMIS_CREATED" ]
-          },
-          "whenCreated" : {
-            "type" : "string",
-            "description" : "Date time the mapping was created",
-            "example" : "2021-07-05T10:35:17",
-            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
-          }
-        },
-        "required" : [ "cprId", "mappingType", "nomisBookingId", "nomisPrisonNumber", "nomisProfileType" ]
       },
       "CorePersonMappingDto" : {
         "type" : "object",

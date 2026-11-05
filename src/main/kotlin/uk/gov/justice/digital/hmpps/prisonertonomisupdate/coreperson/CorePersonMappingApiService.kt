@@ -7,7 +7,8 @@ import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodilessEntityOrThrowOnConflict
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyWithRetry
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.api.CorePersonMappingResourceApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.api.CorePersonAddressMappingResourceApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.api.CorePersonContactMappingResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.api.ReligionResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CorePersonAddressMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CorePersonContactMappingDto
@@ -19,7 +20,8 @@ class CorePersonMappingApiService(
   @Qualifier("mappingWebClient") webClient: WebClient,
   retryApiService: RetryApiService,
 ) {
-  private val corePersonApi = CorePersonMappingResourceApi(webClient)
+  private val contactApi = CorePersonContactMappingResourceApi(webClient)
+  private val addressApi = CorePersonAddressMappingResourceApi(webClient)
   private val religionApi = ReligionResourceApi(webClient)
 
   private val corePersonBackoffSpec = retryApiService.getBackoffSpec().withRetryContext(
@@ -29,26 +31,26 @@ class CorePersonMappingApiService(
     Context.of("api", "CorePersonMappingApiService-religion"),
   )
 
-  suspend fun getByCprContactIdOrNull(cprContactId: String): CorePersonContactMappingDto? = corePersonApi
-    .prepare(corePersonApi.getCorePersonContactMappingByCprIdRequestConfig(cprContactId))
+  suspend fun getByCprContactIdOrNull(cprContactId: String): CorePersonContactMappingDto? = contactApi
+    .prepare(contactApi.getCorePersonContactMappingByCprIdRequestConfig(cprContactId))
     .retrieve()
     .awaitBodyOrNullForNotFound(corePersonBackoffSpec)
 
-  suspend fun getByCprContactId(cprContactId: String): CorePersonContactMappingDto = corePersonApi
+  suspend fun getByCprContactId(cprContactId: String): CorePersonContactMappingDto = contactApi
     .getCorePersonContactMappingByCprId(cprContactId)
     .awaitBodyWithRetry(corePersonBackoffSpec)
 
-  suspend fun createContactMapping(mapping: CorePersonContactMappingDto) = corePersonApi
-    .prepare(corePersonApi.createCorePersonContactMappingRequestConfig(mapping))
+  suspend fun createContactMapping(mapping: CorePersonContactMappingDto) = contactApi
+    .prepare(contactApi.createCorePersonContactMappingRequestConfig(mapping))
     .retrieve()
     .awaitBodilessEntityOrThrowOnConflict()
 
-  suspend fun getByCprAddressIdOrNull(cprAddressId: String): CorePersonAddressMappingDto? = corePersonApi
+  suspend fun getByCprAddressIdOrNull(cprAddressId: String): CorePersonAddressMappingDto? = addressApi
     .getAddressMappingByCprId(cprAddressId)
     .awaitBodyOrNullForNotFound()
 
-  suspend fun createAddressMapping(mapping: CorePersonAddressMappingDto) = corePersonApi
-    .prepare(corePersonApi.createCorePersonAddressMappingRequestConfig(mapping))
+  suspend fun createAddressMapping(mapping: CorePersonAddressMappingDto) = addressApi
+    .prepare(addressApi.createCorePersonAddressMappingRequestConfig(mapping))
     .retrieve()
     .awaitBodilessEntityOrThrowOnConflict()
 
