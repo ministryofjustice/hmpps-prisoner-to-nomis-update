@@ -4,10 +4,12 @@ import com.microsoft.applicationinsights.TelemetryClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.PrisonerReconciliationReport
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.PrisonerSelection
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationNames
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.NomisMovementId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.findMatches
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.findMissing
@@ -46,6 +48,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personlocation.model.S
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personlocation.model.SyncExternalJourney.Type.TRANSFER
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personlocation.model.SyncExternalMovement.Type.ARRIVAL
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personlocation.model.SyncExternalMovement.Type.DEPARTURE
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import java.util.*
 
 @Service
@@ -54,11 +57,13 @@ class PersonLocationReconciliationService(
   private val nomisApi: PersonLocationNomisApiService,
   private val dpsApi: PersonLocationDpsApiService,
   private val mappingApi: PersonLocationMappingApiService,
+  private val nomisPrisonerApi: NomisApiService,
+  @param:Value($$"${reports.person-location.reconciliation.page-size}") private val pageSize: Int = 100,
+  @param:Value($$"${reports.person-location.reconciliation.thread-count}") private val threadCount: Int = 15,
 ) {
-  internal companion object {
-    val log: Logger = LoggerFactory.getLogger(this::class.java)
-    const val TELEMETRY_PERSON_LOCATION = "person-location-reconciliation"
-  }
+  private val names = ReconciliationNames("person-location-reconciliation", "Person location")
+
+  suspend fun generateReport(selection: PrisonerSelection) = PrisonerReconciliationReport(telemetryClient, nomisPrisonerApi, names, selection, pageSize, threadCount) { checkPrisonersMatch(it) }.run()
 
   suspend fun checkPrisonersMatch(offenderNo: String, suppressTelemetry: Boolean = false): List<MismatchedPrisonerLocations> = withContext(Dispatchers.Unconfined) {
     val nomisLocations = async { nomisApi.getOffenderPersonLocationsOrNull(offenderNo) }
@@ -82,7 +87,7 @@ class PersonLocationReconciliationService(
     if (!suppressTelemetry) {
       (mismatchedEntities + missingMappings).forEach {
         telemetryClient.trackEvent(
-          "$TELEMETRY_PERSON_LOCATION-mismatch",
+          "${names.telemetryPrefix}-mismatch",
           mapOf(
             "offenderNo" to offenderNo,
             "type" to it.type,
@@ -99,7 +104,7 @@ class PersonLocationReconciliationService(
     if (!suppressTelemetry) {
       mismatchedMovements.forEach {
         telemetryClient.trackEvent(
-          "$TELEMETRY_PERSON_LOCATION-mismatch",
+          "${names.telemetryPrefix}-mismatch",
           mapOf(
             "offenderNo" to offenderNo,
             "type" to it.type,
@@ -114,7 +119,7 @@ class PersonLocationReconciliationService(
     if (!suppressTelemetry) {
       mismatchedBookings.forEach {
         telemetryClient.trackEvent(
-          "$TELEMETRY_PERSON_LOCATION-mismatch",
+          "${names.telemetryPrefix}-mismatch",
           mapOf(
             "offenderNo" to offenderNo,
             "type" to it.type,

@@ -49,13 +49,14 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.CSIPReconciliatio
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csra.CsraReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.prisonerbalances.PrisonerBalanceReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.transactions.PrisonerTransactionReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.PrisonerSelection.ACTIVE_PRISONERS
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.PrisonerSelection.ALL_PRISONERS
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives.IncentivesReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.IncidentsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.LocationsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.CourtSchedulerReconciliationServiceActivePrisoners
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.CourtSchedulerReconciliationServiceAllPrisoners
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.PersonLocationReconciliationServiceActivePrisoners
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.PersonLocationReconciliationServiceAllPrisoners
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.PersonLocationReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapActivePrisonersReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapAllPrisonersReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.TransferSchedulerReconciliationServiceActivePrisoners
@@ -101,8 +102,7 @@ class BatchManagerTest {
   private val officialVisitsAllMissingFromNOMISReconciliationService = mock<OfficialVisitsAllMissingFromNOMISReconciliationService>()
   private val officialVisitsActiveScheduledReconciliationService = mock<OfficialVisitsActiveScheduledReconciliationService>()
   private val organisationsReconciliationService = mock<OrganisationsReconciliationService>()
-  private val personLocationReconciliationServiceActive = mock<PersonLocationReconciliationServiceActivePrisoners>()
-  private val personLocationReconciliationServiceAll = mock<PersonLocationReconciliationServiceAllPrisoners>()
+  private val personLocationReconciliationService = mock<PersonLocationReconciliationService>()
   private val prisonerTransactionsReconciliationService = mock<PrisonerTransactionReconciliationService>()
   private val prisonerBalanceReconciliationService = mock<PrisonerBalanceReconciliationService>()
   private val prisonerRestrictionsReconciliationService = mock<PrisonerRestrictionsReconciliationService>()
@@ -564,7 +564,7 @@ class BatchManagerTest {
 
     batchManager.onApplicationEvent(event)
 
-    verify(personLocationReconciliationServiceAll).generatePersonLocationReconciliationReportBatch()
+    verify(personLocationReconciliationService).generateReport(ALL_PRISONERS)
     verify(context).close()
   }
 
@@ -574,7 +574,7 @@ class BatchManagerTest {
 
     batchManager.onApplicationEvent(event)
 
-    verify(personLocationReconciliationServiceActive).generatePersonLocationReconciliationReportBatch()
+    verify(personLocationReconciliationService).generateReport(ACTIVE_PRISONERS)
     verify(context).close()
   }
 
@@ -604,8 +604,7 @@ class BatchManagerTest {
     officialVisitsAllMissingFromNOMISReconciliationService = officialVisitsAllMissingFromNOMISReconciliationService,
     officialVisitsActiveScheduledReconciliationService = officialVisitsActiveScheduledReconciliationService,
     organisationReconciliationService = organisationsReconciliationService,
-    personLocationReconciliationServiceActivePrisoners = personLocationReconciliationServiceActive,
-    personLocationReconciliationServiceAllPrisoners = personLocationReconciliationServiceAll,
+    personLocationReconciliationService = personLocationReconciliationService,
     prisonerTransactionsReconciliationService = prisonerTransactionsReconciliationService,
     prisonerBalanceReconciliationService = prisonerBalanceReconciliationService,
     prisonerRestrictionsReconciliationService = prisonerRestrictionsReconciliationService,

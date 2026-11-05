@@ -293,14 +293,9 @@ reports:
         page-size: 100
         thread-count: 15
   person-location:
-    all-prisoners:
-      reconciliation:
-        page-size: 100
-        thread-count: 15
-    active-prisoners:
-      reconciliation:
-        page-size: 100
-        thread-count: 15
+    reconciliation:
+      page-size: 100
+      thread-count: 15
 hmpps.sqs:
   defaultErrorVisibilityTimeout: 1, 10, 60, 600
   queueAdminRole: ROLE_SYSCON__QUEUE_ADMIN
