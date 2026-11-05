@@ -105,7 +105,11 @@ class PrisonerBalanceReconciliationService(
       }
   }
 
-  internal suspend fun checkPrisonerBalance(rootOffenderId: Long, isRetry: Boolean = false, suppressEvents: Boolean = false): MismatchPrisonerBalance? = runCatching {
+  internal suspend fun checkPrisonerBalance(
+    rootOffenderId: Long,
+    isRetry: Boolean = false,
+    suppressEvents: Boolean = false,
+  ): MismatchPrisonerBalance? = runCatching {
     val nomisAccounts = financeNomisApiService.getPrisonerAccountsToReconcile(rootOffenderId)
     val dpsAccounts = dpsApiService.getPrisonerAccounts(nomisAccounts.prisonNumber)
 
@@ -143,6 +147,11 @@ class PrisonerBalanceReconciliationService(
         ),
       )
     }
+      ?: BalanceFields(
+        prisonNumber = nomisAccounts.prisonNumber,
+        accounts = emptyList(),
+        advanceSummary = AdvanceSummary(advanceCount = 0, advanceBalance = BigDecimal.ZERO),
+      )
 
     val differenceList = compareObjects(dpsFields, nomisFields, "prisoner-balances")
 
@@ -185,6 +194,14 @@ class PrisonerBalanceReconciliationService(
     }
   }.getOrNull()
 
+  /*
+  Difference(property=prisoner-balances, dps=null, nomis=BalanceFields(
+     prisonNumber=A2168EL,
+     accounts=[AccountFields(accountCode=2101, balance=0, holdBalance=null),
+               AccountFields(accountCode=2102, balance=0, holdBalance=null),
+               AccountFields(accountCode=2103, balance=0, holdBalance=null)],
+   advanceSummary=AdvanceSummary(advanceCount=0, advanceBalance=0.00)), id=null)
+   */
   private fun compareObjects(dpsObj: Any?, nomisObj: Any?, parentProperty: String): List<Difference> {
     if (dpsObj == null && nomisObj == null) return emptyList()
     if (dpsObj == null || nomisObj == null || dpsObj::class != nomisObj::class) return listOf(Difference(parentProperty, dpsObj, nomisObj))
