@@ -255,6 +255,7 @@ reports:
     active-prisoners-visits:
       reconciliation:
         page-size: 30
+        thread-count: 30
     all-visits:
       reconciliation:
         page-size: 30
