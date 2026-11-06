@@ -450,7 +450,7 @@ class BatchManagerTest {
 
     batchManager.onApplicationEvent(event)
 
-    verify(officialVisitsActiveScheduledReconciliationService).generateActiveScheduledVisitsReconciliationReportBatch()
+    verify(officialVisitsActiveScheduledReconciliationService).generateReport()
     verify(context).close()
   }
 
