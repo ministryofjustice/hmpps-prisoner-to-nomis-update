@@ -480,7 +480,7 @@ class BatchManagerTest {
 
     batchManager.onApplicationEvent(event)
 
-    verify(tapActivePrisonersReconciliationService).generateTapActivePrisonersReconciliationReportBatch()
+    verify(tapActivePrisonersReconciliationService).generateReport()
     verify(context).close()
   }
 
@@ -490,7 +490,7 @@ class BatchManagerTest {
 
     batchManager.onApplicationEvent(event)
 
-    verify(tapAllPrisonersReconciliationService).generateTapAllPrisonersReconciliationReportBatch()
+    verify(tapAllPrisonersReconciliationService).generateReport()
     verify(context).close()
   }
 

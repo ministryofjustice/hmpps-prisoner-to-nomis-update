@@ -81,7 +81,7 @@ class TapActivePrisonersReconciliationIntTest(
 
     @Test
     fun `will output report requested telemetry`() = runTest {
-      reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
+      reconciliationService.generateReport()
 
       verify(telemetryClient).trackEvent(
         eq("temporary-absences-active-reconciliation-requested"),
@@ -94,7 +94,7 @@ class TapActivePrisonersReconciliationIntTest(
 
     @Test
     fun `will output report`() = runTest {
-      reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
+      reconciliationService.generateReport()
       awaitReportFinished()
 
       verify(telemetryClient).trackEvent(
@@ -176,7 +176,7 @@ class TapActivePrisonersReconciliationIntTest(
         )
 
         // Run the reconciliation report
-        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
+        reconciliationService.generateReport()
         awaitReportFinished()
       }
 
@@ -332,7 +332,7 @@ class TapActivePrisonersReconciliationIntTest(
         )
 
         // Run the reconciliation report
-        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
+        reconciliationService.generateReport()
         awaitReportFinished()
       }
 
@@ -494,7 +494,7 @@ class TapActivePrisonersReconciliationIntTest(
         stubDpsTaps()
         stubMappingTaps()
 
-        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
+        reconciliationService.generateReport()
         awaitReportFinished()
 
         verify(telemetryClient, never()).trackEvent(
@@ -510,7 +510,7 @@ class TapActivePrisonersReconciliationIntTest(
         stubDpsTaps(reasonCode = "RC")
         stubMappingTaps()
 
-        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
+        reconciliationService.generateReport()
         awaitReportFinished()
 
         verify(telemetryClient).trackEvent(
@@ -533,7 +533,7 @@ class TapActivePrisonersReconciliationIntTest(
         stubDpsTaps(startTime = LocalDateTime.now())
         stubMappingTaps()
 
-        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
+        reconciliationService.generateReport()
         awaitReportFinished()
 
         verify(telemetryClient).trackEvent(
@@ -556,7 +556,7 @@ class TapActivePrisonersReconciliationIntTest(
         stubDpsTaps(endTime = LocalDateTime.now().plusDays(3))
         stubMappingTaps()
 
-        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
+        reconciliationService.generateReport()
         awaitReportFinished()
 
         verify(telemetryClient).trackEvent(
@@ -579,7 +579,7 @@ class TapActivePrisonersReconciliationIntTest(
         stubDpsTaps(postCode = "X1 1XX")
         stubMappingTaps()
 
-        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
+        reconciliationService.generateReport()
         awaitReportFinished()
 
         verify(telemetryClient).trackEvent(
@@ -603,7 +603,7 @@ class TapActivePrisonersReconciliationIntTest(
         stubDpsTaps(startTime = startTime, postCode = "X1 1XX")
         stubMappingTaps()
 
-        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
+        reconciliationService.generateReport()
         awaitReportFinished()
 
         verify(telemetryClient, never()).trackEvent(
@@ -619,7 +619,7 @@ class TapActivePrisonersReconciliationIntTest(
         stubDpsTaps(movementOut = true)
         stubMappingTaps()
 
-        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
+        reconciliationService.generateReport()
         awaitReportFinished()
 
         verify(telemetryClient).trackEvent(
@@ -647,7 +647,7 @@ class TapActivePrisonersReconciliationIntTest(
         )
         stubMappingTaps()
 
-        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
+        reconciliationService.generateReport()
         awaitReportFinished()
 
         verify(telemetryClient, times(4)).trackEvent(
@@ -791,7 +791,7 @@ class TapActivePrisonersReconciliationIntTest(
         stubDpsTaps()
         stubMappingTaps()
 
-        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
+        reconciliationService.generateReport()
         awaitReportFinished()
 
         verify(telemetryClient, never()).trackEvent(
@@ -807,7 +807,7 @@ class TapActivePrisonersReconciliationIntTest(
         stubDpsTaps(startTime = LocalDateTime.now())
         stubMappingTaps()
 
-        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
+        reconciliationService.generateReport()
         awaitReportFinished()
 
         verify(telemetryClient).trackEvent(
@@ -831,7 +831,7 @@ class TapActivePrisonersReconciliationIntTest(
         stubDpsTaps()
         stubMappingTaps()
 
-        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
+        reconciliationService.generateReport()
         awaitReportFinished()
 
         verify(telemetryClient, never()).trackEvent(
@@ -854,7 +854,7 @@ class TapActivePrisonersReconciliationIntTest(
         stubDpsTaps(movementIn = true, endTime = LocalDateTime.now().plusDays(3))
         stubMappingTaps(movementIn = true)
 
-        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
+        reconciliationService.generateReport()
         awaitReportFinished()
 
         verify(telemetryClient).trackEvent(
@@ -878,7 +878,7 @@ class TapActivePrisonersReconciliationIntTest(
         stubDpsTaps(movementIn = true)
         stubMappingTaps(movementIn = true)
 
-        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
+        reconciliationService.generateReport()
         awaitReportFinished()
 
         verify(telemetryClient, never()).trackEvent(
@@ -901,7 +901,7 @@ class TapActivePrisonersReconciliationIntTest(
         stubDpsTaps(reasonCode = "R2")
         stubMappingTaps()
 
-        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
+        reconciliationService.generateReport()
         awaitReportFinished()
 
         verify(telemetryClient).trackEvent(
@@ -924,7 +924,7 @@ class TapActivePrisonersReconciliationIntTest(
         stubDpsTaps(accompaniedByCode = "POL")
         stubMappingTaps()
 
-        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
+        reconciliationService.generateReport()
         awaitReportFinished()
 
         verify(telemetryClient).trackEvent(
@@ -947,7 +947,7 @@ class TapActivePrisonersReconciliationIntTest(
         stubDpsTaps(comments = "different comment")
         stubMappingTaps()
 
-        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
+        reconciliationService.generateReport()
         awaitReportFinished()
 
         verify(telemetryClient).trackEvent(
@@ -977,7 +977,7 @@ class TapActivePrisonersReconciliationIntTest(
         )
         stubMappingTaps(movementIn = true)
 
-        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
+        reconciliationService.generateReport()
         awaitReportFinished()
 
         // We should get 4 mismatches from the outbound movement
@@ -1142,7 +1142,7 @@ class TapActivePrisonersReconciliationIntTest(
         stubDpsTaps()
         stubMappingTaps()
 
-        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
+        reconciliationService.generateReport()
         awaitReportFinished()
 
         verify(telemetryClient, never()).trackEvent(
@@ -1164,7 +1164,7 @@ class TapActivePrisonersReconciliationIntTest(
         )
         stubMappingTaps()
 
-        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
+        reconciliationService.generateReport()
         awaitReportFinished()
 
         // We should get 4 mismatches from the outbound movement
@@ -1296,7 +1296,7 @@ class TapActivePrisonersReconciliationIntTest(
       // There are no mappings for the prisoner - this happened in a real incident where the mappings were not moved after a merge
       mappingApi.stubGetTapMappingIds(prisonerNumber = "A0001TZ", response = emptyPrisonerMappingIdsDto())
 
-      reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
+      reconciliationService.generateReport()
       awaitReportFinished()
 
       verify(telemetryClient).trackEvent(
@@ -1408,7 +1408,7 @@ class TapActivePrisonersReconciliationIntTest(
     fun `will report error if NOMIS prisoner not found`() = runTest {
       nomisMovementsApi.stubGetOffenderTaps(status = HttpStatus.NOT_FOUND)
 
-      reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
+      reconciliationService.generateReport()
       awaitReportFinished()
 
       verify(telemetryClient).trackEvent(
