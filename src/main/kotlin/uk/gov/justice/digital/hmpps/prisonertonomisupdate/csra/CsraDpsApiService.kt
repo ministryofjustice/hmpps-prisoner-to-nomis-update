@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csra.api.CSRAReviewApi
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csra.model.CsraCurrentRating
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csra.model.CsraDetailedRating
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csra.model.CsraReviewDetail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csra.model.CsraReviewHistory
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
@@ -33,7 +33,7 @@ class CsraDpsApiService(
     .getCsraHistory(prisonerNumber = prisonerNumber, size = size)
     .awaitBodyWithRetry(retrySpec)
 
-  suspend fun getCsraCurrent(prisonerNumber: String): CsraCurrentRating? = api
+  suspend fun getCsraCurrent(prisonerNumber: String): CsraDetailedRating? = api
     .getCurrentRating(prisonerNumber = prisonerNumber)
     .awaitBodyOrNullForNotFound(retrySpec)
 }
