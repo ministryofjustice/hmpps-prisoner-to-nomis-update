@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtscheduler.model.C
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtscheduler.model.CourtEventMovement
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtscheduler.model.ReconciliationCourtEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingMappingApiMockServer
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.PrisonerSelection.ALL_PRISONERS
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.NomisMovementId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.CourtSchedulerDpsApiExtension.Companion.courtSchedulerDpsApiServer
@@ -45,7 +46,7 @@ import java.time.LocalDateTime
 import java.util.*
 
 class CourtSchedulerReconciliationIntTest(
-  @Autowired private val reconciliationService: CourtSchedulerReconciliationServiceAllPrisoners,
+  @Autowired private val reconciliationService: CourtSchedulerReconciliationService,
   @Autowired private val courtScheduleNomisApi: CourtSchedulerNomisApiMockServer,
   @Autowired private val mappingApi: CourtSchedulerMappingApiMockServer,
   @Autowired private val courtSentencingMappingApi: CourtSentencingMappingApiMockServer,
@@ -73,7 +74,7 @@ class CourtSchedulerReconciliationIntTest(
 
     @Test
     fun `will output report requested telemetry`() = runTest {
-      reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+      reconciliationService.generateReport(ALL_PRISONERS)
 
       verify(telemetryClient).trackEvent(
         eq("court-scheduler-reconciliation-requested"),
@@ -86,7 +87,7 @@ class CourtSchedulerReconciliationIntTest(
 
     @Test
     fun `will output report`() = runTest {
-      reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+      reconciliationService.generateReport(ALL_PRISONERS)
       awaitReportFinished()
 
       verify(telemetryClient).trackEvent(
@@ -103,7 +104,7 @@ class CourtSchedulerReconciliationIntTest(
     fun `will report failure to reconcile prisoner`() = runTest {
       courtScheduleNomisApi.stubGetOffenderCourtMovements(status = INTERNAL_SERVER_ERROR)
 
-      reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+      reconciliationService.generateReport(ALL_PRISONERS)
       awaitReportFinished()
 
       verify(telemetryClient).trackEvent(
@@ -154,7 +155,7 @@ class CourtSchedulerReconciliationIntTest(
 
       @Test
       fun `should report extra NOMIS court event`() = runTest {
-        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+        reconciliationService.generateReport(ALL_PRISONERS)
         awaitReportFinished()
 
         verify(telemetryClient).trackEvent(
@@ -201,7 +202,7 @@ class CourtSchedulerReconciliationIntTest(
           ),
         )
 
-        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+        reconciliationService.generateReport(ALL_PRISONERS)
         awaitReportFinished()
 
         verify(telemetryClient).trackEvent(
@@ -222,7 +223,7 @@ class CourtSchedulerReconciliationIntTest(
 
       @Test
       fun `should report extra NOMIS court movements OUT`() = runTest {
-        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+        reconciliationService.generateReport(ALL_PRISONERS)
         awaitReportFinished()
 
         verify(telemetryClient).trackEvent(
@@ -243,7 +244,7 @@ class CourtSchedulerReconciliationIntTest(
 
       @Test
       fun `should report extra unscheduled NOMIS court movements OUT`() = runTest {
-        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+        reconciliationService.generateReport(ALL_PRISONERS)
         awaitReportFinished()
 
         verify(telemetryClient).trackEvent(
@@ -264,7 +265,7 @@ class CourtSchedulerReconciliationIntTest(
 
       @Test
       fun `should report extra NOMIS court movements IN`() = runTest {
-        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+        reconciliationService.generateReport(ALL_PRISONERS)
         awaitReportFinished()
 
         verify(telemetryClient).trackEvent(
@@ -285,7 +286,7 @@ class CourtSchedulerReconciliationIntTest(
 
       @Test
       fun `should report extra unscheduled NOMIS court movements IN`() = runTest {
-        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+        reconciliationService.generateReport(ALL_PRISONERS)
         awaitReportFinished()
 
         verify(telemetryClient).trackEvent(
@@ -334,7 +335,7 @@ class CourtSchedulerReconciliationIntTest(
           ),
         )
 
-        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+        reconciliationService.generateReport(ALL_PRISONERS)
         awaitReportFinished()
       }
 
@@ -500,7 +501,7 @@ class CourtSchedulerReconciliationIntTest(
           ),
         )
 
-        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+        reconciliationService.generateReport(ALL_PRISONERS)
         awaitReportFinished()
       }
 
@@ -648,7 +649,7 @@ class CourtSchedulerReconciliationIntTest(
 
       @Test
       fun `should report extra NOMIS court event with correct details`() = runTest {
-        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+        reconciliationService.generateReport(ALL_PRISONERS)
         awaitReportFinished()
 
         verify(telemetryClient).trackEvent(
@@ -737,7 +738,7 @@ class CourtSchedulerReconciliationIntTest(
 
       @Test
       fun `should report extra DPS court event with correct details`() = runTest {
-        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+        reconciliationService.generateReport(ALL_PRISONERS)
         awaitReportFinished()
 
         verify(telemetryClient).trackEvent(
@@ -825,7 +826,7 @@ class CourtSchedulerReconciliationIntTest(
 
     @Test
     fun `should report missing court event mappings`() = runTest {
-      reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+      reconciliationService.generateReport(ALL_PRISONERS)
       awaitReportFinished()
 
       verify(telemetryClient).trackEvent(
@@ -878,7 +879,7 @@ class CourtSchedulerReconciliationIntTest(
       // But the court sentencing mapping does not exist
       courtSentencingMappingApi.stubGetAllCourtAppearanceByNomisIds(mappings = listOf())
 
-      reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+      reconciliationService.generateReport(ALL_PRISONERS)
       awaitReportFinished()
 
       verify(telemetryClient).trackEvent(
@@ -899,7 +900,7 @@ class CourtSchedulerReconciliationIntTest(
 
     @Test
     fun `should report missing scheduled court movement out mappings`() = runTest {
-      reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+      reconciliationService.generateReport(ALL_PRISONERS)
       awaitReportFinished()
 
       verify(telemetryClient).trackEvent(
@@ -920,7 +921,7 @@ class CourtSchedulerReconciliationIntTest(
 
     @Test
     fun `should report missing scheduled court movement in mappings`() = runTest {
-      reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+      reconciliationService.generateReport(ALL_PRISONERS)
       awaitReportFinished()
 
       verify(telemetryClient).trackEvent(
@@ -941,7 +942,7 @@ class CourtSchedulerReconciliationIntTest(
 
     @Test
     fun `should report missing unscheduled court movementout mappings`() = runTest {
-      reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+      reconciliationService.generateReport(ALL_PRISONERS)
       awaitReportFinished()
 
       verify(telemetryClient).trackEvent(
@@ -962,7 +963,7 @@ class CourtSchedulerReconciliationIntTest(
 
     @Test
     fun `should report missing unscheduled court movement in mappings`() = runTest {
-      reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+      reconciliationService.generateReport(ALL_PRISONERS)
       awaitReportFinished()
 
       verify(telemetryClient).trackEvent(
@@ -1010,7 +1011,7 @@ class CourtSchedulerReconciliationIntTest(
         stubNomisCourtEvent(court = "YORKMC")
         stubMappings()
 
-        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+        reconciliationService.generateReport(ALL_PRISONERS)
         awaitReportFinished()
 
         verify(telemetryClient).trackEvent(
@@ -1033,7 +1034,7 @@ class CourtSchedulerReconciliationIntTest(
         stubNomisCourtEvent(startTime = today)
         stubMappings()
 
-        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+        reconciliationService.generateReport(ALL_PRISONERS)
         awaitReportFinished()
 
         verify(telemetryClient).trackEvent(
@@ -1056,7 +1057,7 @@ class CourtSchedulerReconciliationIntTest(
         stubNomisCourtEvent(eventType = "CA")
         stubMappings()
 
-        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+        reconciliationService.generateReport(ALL_PRISONERS)
         awaitReportFinished()
 
         verify(telemetryClient).trackEvent(
@@ -1094,7 +1095,7 @@ class CourtSchedulerReconciliationIntTest(
         stubNomisCourtEvent(movementOut = bookingCourtMovementOut(seq = 456))
         stubMappings(NomisMovementId(12345, 456), dpsScheduledMovementOutId)
 
-        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+        reconciliationService.generateReport(ALL_PRISONERS)
         awaitReportFinished()
 
         verify(telemetryClient).trackEvent(
@@ -1117,7 +1118,7 @@ class CourtSchedulerReconciliationIntTest(
         stubNomisCourtEvent(movementOut = bookingCourtMovementOut(seq = 456))
         stubMappings(NomisMovementId(12345, 456), dpsScheduledMovementOutId)
 
-        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+        reconciliationService.generateReport(ALL_PRISONERS)
         awaitReportFinished()
 
         verify(telemetryClient).trackEvent(
@@ -1140,7 +1141,7 @@ class CourtSchedulerReconciliationIntTest(
         stubNomisCourtEvent(movementOut = bookingCourtMovementOut(seq = 456).copy(movementTime = today.withSecond(0)))
         stubMappings(NomisMovementId(12345, 456), dpsScheduledMovementOutId)
 
-        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+        reconciliationService.generateReport(ALL_PRISONERS)
         awaitReportFinished()
 
         verify(telemetryClient, never()).trackEvent(
@@ -1156,7 +1157,7 @@ class CourtSchedulerReconciliationIntTest(
         stubNomisCourtEvent(movementOut = bookingCourtMovementOut(seq = 456))
         stubMappings(NomisMovementId(12345, 456), dpsScheduledMovementOutId)
 
-        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+        reconciliationService.generateReport(ALL_PRISONERS)
         awaitReportFinished()
 
         verify(telemetryClient).trackEvent(
@@ -1179,7 +1180,7 @@ class CourtSchedulerReconciliationIntTest(
         stubNomisCourtEvent(movementOut = bookingCourtMovementOut(seq = 456))
         stubMappings(NomisMovementId(12345, 456), dpsScheduledMovementOutId)
 
-        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+        reconciliationService.generateReport(ALL_PRISONERS)
         awaitReportFinished()
 
         verify(telemetryClient).trackEvent(
@@ -1202,7 +1203,7 @@ class CourtSchedulerReconciliationIntTest(
         stubNomisCourtEvent(movementOut = bookingCourtMovementOut(seq = 456, court = null))
         stubMappings(NomisMovementId(12345, 456), dpsScheduledMovementOutId)
 
-        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+        reconciliationService.generateReport(ALL_PRISONERS)
         awaitReportFinished()
 
         verify(telemetryClient, never()).trackEvent(
@@ -1235,7 +1236,7 @@ class CourtSchedulerReconciliationIntTest(
         stubNomisCourtEvent(movementIn = bookingCourtMovementIn(seq = 789))
         stubMappings(nomisMovementInId = NomisMovementId(12345, 789), dpsMovementInId = dpsScheduledMovementInId)
 
-        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+        reconciliationService.generateReport(ALL_PRISONERS)
         awaitReportFinished()
 
         verify(telemetryClient).trackEvent(
@@ -1273,7 +1274,7 @@ class CourtSchedulerReconciliationIntTest(
         stubNomisUnscheduledCourtMovementOut(bookingCourtMovementOut(seq = 654))
         stubMappings(nomisMovementOutId = NomisMovementId(12345, 654), dpsMovementOutId = dpsUnscheduledMovementOutId)
 
-        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+        reconciliationService.generateReport(ALL_PRISONERS)
         awaitReportFinished()
 
         verify(telemetryClient).trackEvent(
@@ -1311,7 +1312,7 @@ class CourtSchedulerReconciliationIntTest(
         stubNomisUnscheduledCourtMovementIn(bookingCourtMovementIn(seq = 987))
         stubMappings(nomisMovementInId = NomisMovementId(12345, 987), dpsMovementInId = dpsUnscheduledMovementInId)
 
-        reconciliationService.generateCourtSchedulerReconciliationReportBatch()
+        reconciliationService.generateReport(ALL_PRISONERS)
         awaitReportFinished()
 
         verify(telemetryClient).trackEvent(

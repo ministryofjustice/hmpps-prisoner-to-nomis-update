@@ -6,8 +6,12 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.PrisonerReconciliationReport
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.PrisonerSelection
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationNames
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.NomisMovementId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.findMatches
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.findMissing
@@ -29,6 +33,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.Mis
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.MismatchedPrisonerTransferIds.Type.UNSCHEDULED_MOVEMENT
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TransferSchedulerPrisonerMappingIdsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTransferMovementsResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.transferscheduler.model.ReconciliationResponse
 import java.util.*
 
@@ -38,10 +43,16 @@ class TransferScheduleReconciliationService(
   private val nomisApi: TransferSchedulerNomisApiService,
   private val dpsApi: TransferSchedulerDpsApiService,
   private val mappingApi: TransferSchedulerMappingApiService,
+  private val nomisPrisonerApi: NomisApiService,
+  @param:Value($$"${reports.transfer-scheduler.reconciliation.page-size}") private val pageSize: Int = 100,
+  @param:Value($$"${reports.transfer-scheduler.reconciliation.thread-count}") private val threadCount: Int = 15,
 ) {
+  private val names = ReconciliationNames("transfer-scheduler-reconciliation", "Transfer scheduler")
+
+  suspend fun generateReport(selection: PrisonerSelection) = PrisonerReconciliationReport(telemetryClient, nomisPrisonerApi, names, selection, pageSize, threadCount) { checkPrisonersMatch(it) }.run()
+
   internal companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
-    const val TELEMETRY_TRANSFER_SCHEDULER = "transfer-scheduler-reconciliation"
   }
 
   suspend fun checkPrisonersMatch(offenderNo: String, suppressTelemetry: Boolean = false): List<MismatchedPrisonerTransfer> = withContext(Dispatchers.Unconfined) {
@@ -68,7 +79,7 @@ class TransferScheduleReconciliationService(
     (mismatchedEntities + missingMappings).forEach {
       if (!suppressTelemetry) {
         telemetryClient.trackEvent(
-          "$TELEMETRY_TRANSFER_SCHEDULER-mismatch",
+          "${names.telemetryPrefix}-mismatch",
           mapOf(
             "offenderNo" to offenderNo,
             "type" to it.type,
@@ -85,7 +96,7 @@ class TransferScheduleReconciliationService(
     scheduleDifferences.forEach {
       if (!suppressTelemetry) {
         telemetryClient.trackEvent(
-          "$TELEMETRY_TRANSFER_SCHEDULER-mismatch",
+          "${names.telemetryPrefix}-mismatch",
           mapOf(
             "offenderNo" to offenderNo,
             "type" to it.type,

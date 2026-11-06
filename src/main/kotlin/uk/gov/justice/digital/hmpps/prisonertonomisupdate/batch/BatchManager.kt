@@ -75,13 +75,11 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.PrisonerSelect
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives.IncentivesReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.IncidentsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.LocationsReconciliationService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.CourtSchedulerReconciliationServiceActivePrisoners
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.CourtSchedulerReconciliationServiceAllPrisoners
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.court.CourtSchedulerReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.PersonLocationReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapActivePrisonersReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapAllPrisonersReconciliationService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.TransferSchedulerReconciliationServiceActivePrisoners
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.TransferSchedulerReconciliationServiceAllPrisoners
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.transfer.TransferScheduleReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nonassociations.NonAssociationsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsActiveScheduledReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsAllMissingFromNOMISReconciliationService
@@ -164,8 +162,7 @@ class BatchManager(
   private val contactPersonProfileDetailsReconService: ContactPersonProfileDetailsReconciliationService,
   private val contactPersonReconciliationService: ContactPersonReconciliationService,
   private val corePersonReconciliationService: CorePersonReconciliationService,
-  private val courtSchedulerReconciliationServiceAll: CourtSchedulerReconciliationServiceAllPrisoners,
-  private val courtSchedulerReconciliationServiceActive: CourtSchedulerReconciliationServiceActivePrisoners,
+  private val courtSchedulerReconciliationService: CourtSchedulerReconciliationService,
   private val courtSentencingReconciliationService: CourtSentencingReconciliationService,
   private val csipReconciliationService: CSIPReconciliationService,
   private val hmppsQueueService: HmppsQueueService,
@@ -187,8 +184,7 @@ class BatchManager(
   private val sentencingReconciliationService: SentencingReconciliationService,
   private val tapActivePrisonersReconciliationService: TapActivePrisonersReconciliationService,
   private val tapAllPrisonersReconciliationService: TapAllPrisonersReconciliationService,
-  private val transferSchedulerReconciliationServiceAll: TransferSchedulerReconciliationServiceAllPrisoners,
-  private val transferSchedulerReconciliationServiceActive: TransferSchedulerReconciliationServiceActivePrisoners,
+  private val transferSchedulerReconciliationService: TransferScheduleReconciliationService,
   private val visitBalancesReconciliationService: VisitBalanceReconciliationService,
   private val visitSlotsReconciliationService: VisitSlotsReconciliationService,
 ) {
@@ -216,8 +212,8 @@ class BatchManager(
       CORE_PERSON_FULL_RECON -> corePersonReconciliationService.generateReconciliationReport(activeOnly = false)
       COURT_CASE_PRISONER_RECON -> courtSentencingReconciliationService.generateCourtCasePrisonerReconciliationReportBatch()
       COURT_CASE_ACTIVE_PRISONER_RECON -> courtSentencingReconciliationService.generateCourtCaseActivePrisonerReconciliationReportBatch()
-      COURT_SCHEDULER_ACTIVE_RECON -> courtSchedulerReconciliationServiceActive.generateCourtSchedulerReconciliationReportBatch()
-      COURT_SCHEDULER_ALL_RECON -> courtSchedulerReconciliationServiceAll.generateCourtSchedulerReconciliationReportBatch()
+      COURT_SCHEDULER_ACTIVE_RECON -> courtSchedulerReconciliationService.generateReport(ACTIVE_PRISONERS)
+      COURT_SCHEDULER_ALL_RECON -> courtSchedulerReconciliationService.generateReport(ALL_PRISONERS)
       CSIP_RECON -> csipReconciliationService.generateCSIPReconciliationReport()
       DELETE_UNKNOWN_ACTIVITY_MAPPINGS -> schedulesService.deleteUnknownMappings()
       INCENTIVES_RECON -> incentivesReconciliationService.generateIncentiveReconciliationReport()
@@ -243,8 +239,8 @@ class BatchManager(
       SUSPENDED_ALLOCATION_RECON -> activitiesReconService.suspendedAllocationReconciliationReport()
       TAP_ACTIVE_PRISONERS_RECON -> tapActivePrisonersReconciliationService.generateTapActivePrisonersReconciliationReportBatch()
       TAP_ALL_PRISONERS_RECON -> tapAllPrisonersReconciliationService.generateTapAllPrisonersReconciliationReportBatch()
-      TRANSFER_SCHEDULER_ACTIVE_RECON -> transferSchedulerReconciliationServiceActive.generateTransferSchedulerReconciliationReportBatch()
-      TRANSFER_SCHEDULER_ALL_RECON -> transferSchedulerReconciliationServiceAll.generateTransferSchedulerReconciliationReportBatch()
+      TRANSFER_SCHEDULER_ACTIVE_RECON -> transferSchedulerReconciliationService.generateReport(ACTIVE_PRISONERS)
+      TRANSFER_SCHEDULER_ALL_RECON -> transferSchedulerReconciliationService.generateReport(ALL_PRISONERS)
       VISIT_BALANCE_RECON -> visitBalancesReconciliationService.generateReconciliationReport()
       VISIT_SLOTS_RECON -> visitSlotsReconciliationService.generateVisitSlotsReconciliationReportBatch()
     }
