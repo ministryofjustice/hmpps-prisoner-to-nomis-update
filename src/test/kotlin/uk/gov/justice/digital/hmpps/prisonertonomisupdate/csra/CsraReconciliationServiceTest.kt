@@ -17,7 +17,7 @@ import org.springframework.context.annotation.Import
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import software.amazon.awssdk.http.HttpStatusCode
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csra.model.CsraCurrentRating
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csra.model.CsraDetailedRating
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationErrorPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationSuccessPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
@@ -70,7 +70,7 @@ class CsraReconciliationServiceTest {
 
   @Nested
   inner class CheckMatch {
-    private fun stubCsraReconciliation(nomisCsra: CsraGetDto?, dpsCsra: CsraCurrentRating?) {
+    private fun stubCsraReconciliation(nomisCsra: CsraGetDto?, dpsCsra: CsraDetailedRating?) {
       nomisCsra?.let { csraNomisApi.stubGetCurrentCsraForPrisoner(CSRA_OFFENDER_NO, it) }
         ?: csraNomisApi.stubGetCurrentCsraForPrisonerError(CSRA_OFFENDER_NO, HttpStatusCode.NOT_FOUND)
       dpsCsra?.let { dpsApi.stubGetCurrentCsra(CSRA_OFFENDER_NO, it) }
@@ -90,7 +90,7 @@ class CsraReconciliationServiceTest {
     fun `will not report a mismatch when there is no rating`() = runTest {
       stubCsraReconciliation(
         null,
-        dpsCsra(CSRA_DPS_ID, status = CsraCurrentRating.Status.NO_RATING),
+        dpsCsra(CSRA_DPS_ID, status = CsraDetailedRating.Status.NO_RATING),
       )
       assertThat(service.checkCsra(CSRA_OFFENDER_NO)).isNull()
     }
@@ -125,7 +125,7 @@ class CsraReconciliationServiceTest {
     fun `will report a level mismatch`() = runTest {
       stubCsraReconciliation(
         nomisCsra(),
-        dpsCsra(CSRA_DPS_ID, rating = CsraCurrentRating.Rating.HIGH),
+        dpsCsra(CSRA_DPS_ID, rating = CsraDetailedRating.Rating.HIGH),
       )
       assertThat(service.checkCsra(CSRA_OFFENDER_NO)?.differences).isEqualTo(
         listOf(
@@ -138,7 +138,7 @@ class CsraReconciliationServiceTest {
     fun `a HI level trumps a STD level`() = runTest {
       stubCsraReconciliation(
         nomisCsra(calculatedLevel = AssessmentLevel.HI, overrideLevel = AssessmentLevel.STANDARD),
-        dpsCsra(CSRA_DPS_ID, rating = CsraCurrentRating.Rating.STANDARD),
+        dpsCsra(CSRA_DPS_ID, rating = CsraDetailedRating.Rating.STANDARD),
       )
       assertThat(service.checkCsra(CSRA_OFFENDER_NO)?.differences).isEqualTo(
         listOf(
@@ -151,7 +151,7 @@ class CsraReconciliationServiceTest {
     fun `a Nomis PEND level is ignored`() = runTest {
       stubCsraReconciliation(
         nomisCsra(calculatedLevel = AssessmentLevel.PEND, overrideLevel = null, reviewLevel = null),
-        dpsCsra(CSRA_DPS_ID, status = CsraCurrentRating.Status.NO_RATING),
+        dpsCsra(CSRA_DPS_ID, status = CsraDetailedRating.Status.NO_RATING),
       )
       assertThat(service.checkCsra(CSRA_OFFENDER_NO)?.differences).isNull()
     }
@@ -245,11 +245,11 @@ fun nomisCsra(
 
 fun dpsCsra(
   uuid: String,
-  rating: CsraCurrentRating.Rating = CsraCurrentRating.Rating.STANDARD,
-  status: CsraCurrentRating.Status = CsraCurrentRating.Status.COMPLETE,
-) = CsraCurrentRating(
+  rating: CsraDetailedRating.Rating = CsraDetailedRating.Rating.STANDARD,
+  status: CsraDetailedRating.Status = CsraDetailedRating.Status.COMPLETE,
+) = CsraDetailedRating(
   reviewId = UUID.fromString(uuid),
-  type = CsraCurrentRating.Type.CSRA_REVIEW,
+  type = CsraDetailedRating.Type.CSRA_REVIEW,
   rating = rating,
   prisonerNumber = CSRA_OFFENDER_NO,
   status = status,
