@@ -21,7 +21,7 @@ import org.mockito.kotlin.verifyNoInteractions
 import org.springframework.beans.factory.annotation.Autowired
 import software.amazon.awssdk.http.HttpStatusCode
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csra.CsraDpsApiExtension.Companion.csraApi
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csra.model.CsraCurrentRating
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csra.model.CsraDetailedRating
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CsraGetDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
@@ -282,7 +282,7 @@ class CsraReconciliationResourceIntTest(
     }
   }
 
-  private fun stubCsras(offenderNo: String, nomisResponse: CsraGetDto?, dpsResponse: CsraCurrentRating?) {
+  private fun stubCsras(offenderNo: String, nomisResponse: CsraGetDto?, dpsResponse: CsraDetailedRating?) {
     nomisResponse?.let { csraNomisApi.stubGetCurrentCsraForPrisoner(offenderNo, it) }
       ?: csraNomisApi.stubGetCurrentCsraForPrisonerError(offenderNo, HttpStatusCode.NOT_FOUND)
     dpsResponse?.let { csraApi.stubGetCurrentCsra(offenderNo, it) }

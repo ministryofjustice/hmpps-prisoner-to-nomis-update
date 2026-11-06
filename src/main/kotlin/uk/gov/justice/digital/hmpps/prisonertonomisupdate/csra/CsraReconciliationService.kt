@@ -6,7 +6,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csra.model.CsraCurrentRating
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csra.model.CsraDetailedRating
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationErrorPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationResult
@@ -108,7 +108,7 @@ class CsraReconciliationService(
     }
 
     val dpsField = dpsCsra
-      ?.takeIf { it.status != CsraCurrentRating.Status.NO_RATING }
+      ?.takeIf { it.status != CsraDetailedRating.Status.NO_RATING }
       ?.let {
         CsraDetailFields(
           id = it.reviewId.toString(),
@@ -206,13 +206,13 @@ fun AssessmentLevel.toGenericLevel() = when (this) {
   AssessmentLevel.PEND -> null
 }
 
-private fun CsraCurrentRating.toGenericLevel(): String? = when (rating) {
-  CsraCurrentRating.Rating.HIGH,
-  CsraCurrentRating.Rating.HIGH_GENERAL,
-  CsraCurrentRating.Rating.HIGH_SPECIFIC,
+private fun CsraDetailedRating.toGenericLevel(): String? = when (rating) {
+  CsraDetailedRating.Rating.HIGH,
+  CsraDetailedRating.Rating.HIGH_GENERAL,
+  CsraDetailedRating.Rating.HIGH_SPECIFIC,
   -> "HIGH"
 
-  CsraCurrentRating.Rating.STANDARD -> "STANDARD"
+  CsraDetailedRating.Rating.STANDARD -> "STANDARD"
   null -> null
 }
 

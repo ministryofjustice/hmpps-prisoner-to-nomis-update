@@ -14,7 +14,7 @@ import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csra.CsraDpsApiExtension.Companion.jsonMapper
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csra.model.CsraCurrentRating
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csra.model.CsraDetailedRating
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csra.model.CsraReviewDetail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csra.model.CsraReviewHistory
 import java.time.LocalDate
@@ -73,7 +73,7 @@ class CsraDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetCurrentCsra(prisonerNumber: String, response: CsraCurrentRating) {
+  fun stubGetCurrentCsra(prisonerNumber: String, response: CsraDetailedRating) {
     stubFor(
       get(urlPathEqualTo("/csra-review/prisoner/$prisonerNumber/current-rating"))
         .willReturn(okJson(jsonMapper.writeValueAsString(response))),
