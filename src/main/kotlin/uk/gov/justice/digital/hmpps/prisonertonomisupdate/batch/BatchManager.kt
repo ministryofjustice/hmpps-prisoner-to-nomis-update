@@ -222,7 +222,7 @@ class BatchManager(
       NON_ASSOCIATIONS_RECON -> nonAssociationsReconciliationService.generateReconciliationReport()
       OFFICIAL_VISIT_ALL_RECON -> officialVisitsAllReconciliationService.generateAllVisitsReconciliationReportBatch()
       OFFICIAL_VISIT_ALL_MISSING_RECON -> officialVisitsAllMissingFromNOMISReconciliationService.generateAllVisitsReconciliationReportBatch()
-      OFFICIAL_VISIT_ACTIVE_SCH_RECON -> officialVisitsActiveScheduledReconciliationService.generateActiveScheduledVisitsReconciliationReportBatch()
+      OFFICIAL_VISIT_ACTIVE_SCH_RECON -> officialVisitsActiveScheduledReconciliationService.generateReport()
       ORGANISATIONS_RECON -> organisationReconciliationService.generateOrganisationsReconciliationReport()
       PERSON_CONTACT_RECON -> contactPersonReconciliationService.generatePersonContactReconciliationReportBatch()
       PERSON_LOCATION_ACTIVE_RECON -> personLocationReconciliationService.generateReport(ACTIVE_PRISONERS)
