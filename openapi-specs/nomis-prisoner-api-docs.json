@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-11-04.2363.8b90b15"
+    "version" : "2026-11-05.2367.dc4ab5d"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -2848,6 +2848,168 @@
           },
           "403" : {
             "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prison/{agencyId}/addresses" : {
+      "put" : {
+        "tags" : [ "agency-resource" ],
+        "summary" : "Refreshes the list of prison addresses",
+        "description" : "Replaces the existing list of addresses for a prison with the list supplied. Where there is a single existing address and a single requested address they are matched directly and updated in place so the id is preserved. Where there is more than one address, there is no id in the request to correlate addresses with, so existing and requested addresses are instead matched by exact postcode; where more than one address shares the same postcode they are matched in the order the existing addresses were created. A null or blank postcode never matches anything, even another null postcode, to avoid silently reassigning the identity of an unrelated address. Any requested address that cannot be matched to an existing one results in a new address being created, defaulting its address type to BUS; any existing address that is not matched by a requested one is removed. City, county and country are looked up by description, matched case insensitively; if a description does not match any reference data the value is left unset on the address and the lookup failure is recorded in the response telemetry. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "updatePrisonAddresses",
+        "parameters" : [ {
+          "name" : "agencyId",
+          "in" : "path",
+          "description" : "Prison id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prison id",
+            "example" : "WWI"
+          },
+          "example" : "WWI"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateAgencyAddressesRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Prison addresses updated",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AgencyAddressesResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "The request contains bad data, for example the default BUS address type reference data is missing",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Prison not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [ "agency-resource" ],
+        "summary" : "Create an prison address",
+        "description" : "Creates a new address for a prison. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "createPrisonAddress",
+        "parameters" : [ {
+          "name" : "agencyId",
+          "in" : "path",
+          "description" : "Prison id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prison id",
+            "example" : "WWI"
+          },
+          "example" : "WWI"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateAgencyAddressRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Prison address created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CreateAgencyAddressResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "The request contains bad data, for example the default BUS address type reference data is missing",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Agency not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW role",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -32602,6 +32764,210 @@
         },
         "required" : [ "date", "isActive", "updateUsername" ]
       },
+      "AgencyAddress" : {
+        "type" : "object",
+        "description" : "The data held in NOMIS about an address",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Unique NOMIS Id of number"
+          },
+          "type" : {
+            "description" : "Address type",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "flat" : {
+            "type" : [ "string", "null" ],
+            "description" : "Flat name or number",
+            "example" : "Apartment 3"
+          },
+          "premise" : {
+            "type" : [ "string", "null" ],
+            "description" : "Premise",
+            "example" : "22"
+          },
+          "street" : {
+            "type" : [ "string", "null" ],
+            "description" : "Street",
+            "example" : "West Street"
+          },
+          "locality" : {
+            "type" : [ "string", "null" ],
+            "description" : "Locality",
+            "example" : "Keighley"
+          },
+          "postcode" : {
+            "type" : [ "string", "null" ],
+            "description" : "Post code",
+            "example" : "MK15 2ST"
+          },
+          "city" : {
+            "description" : "City",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "county" : {
+            "description" : "County",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "country" : {
+            "description" : "Country",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "phoneNumbers" : {
+            "type" : "array",
+            "description" : "List of phone numbers for the address",
+            "items" : {
+              "$ref" : "#/components/schemas/AgencyPhoneNumber"
+            }
+          },
+          "validatedPAF" : {
+            "type" : "boolean",
+            "description" : "true if address validated by Post Office Address file??"
+          },
+          "noFixedAddress" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "true if address not fixed. for example homeless"
+          },
+          "primaryAddress" : {
+            "type" : "boolean",
+            "description" : "true if this is the agency's primary address"
+          },
+          "mailAddress" : {
+            "type" : "boolean",
+            "description" : "true if this is used for mail"
+          },
+          "comment" : {
+            "type" : [ "string", "null" ],
+            "description" : "Free format comment about the address"
+          },
+          "startDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Date address was valid from"
+          },
+          "endDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Date address was valid to"
+          }
+        },
+        "required" : [ "id", "mailAddress", "phoneNumbers", "primaryAddress", "validatedPAF" ]
+      },
+      "AgencyAddressesResponse" : {
+        "type" : "object",
+        "description" : "A response to refreshing the list of addresses for an agency",
+        "properties" : {
+          "addresses" : {
+            "type" : "array",
+            "description" : "The list of addresses now held for the agency",
+            "items" : {
+              "$ref" : "#/components/schemas/AgencyAddress"
+            }
+          }
+        },
+        "required" : [ "addresses" ]
+      },
+      "AgencyPhoneNumber" : {
+        "type" : "object",
+        "description" : "The data held in NOMIS about a phone number",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Unique NOMIS Id of number"
+          },
+          "number" : {
+            "type" : "string",
+            "description" : "The number"
+          },
+          "extension" : {
+            "type" : [ "string", "null" ],
+            "description" : "Extension"
+          },
+          "type" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "Phone type"
+          }
+        },
+        "required" : [ "id", "number", "type" ]
+      },
+      "UpdateAgencyAddress" : {
+        "type" : "object",
+        "description" : "An address to be held against an agency",
+        "properties" : {
+          "flat" : {
+            "type" : [ "string", "null" ],
+            "description" : "Flat name or number",
+            "example" : "Apartment 3"
+          },
+          "premise" : {
+            "type" : [ "string", "null" ],
+            "description" : "Premise",
+            "example" : "22"
+          },
+          "street" : {
+            "type" : [ "string", "null" ],
+            "description" : "Street",
+            "example" : "West Street"
+          },
+          "locality" : {
+            "type" : [ "string", "null" ],
+            "description" : "Locality",
+            "example" : "Keighley"
+          },
+          "postcode" : {
+            "type" : [ "string", "null" ],
+            "description" : "Post code",
+            "example" : "MK15 2ST"
+          },
+          "city" : {
+            "type" : [ "string", "null" ],
+            "description" : "City description, matched case insensitively. If not found the city will not be set",
+            "example" : "Sheffield"
+          },
+          "county" : {
+            "type" : [ "string", "null" ],
+            "description" : "County description, matched case insensitively. If not found the county will not be set",
+            "example" : "South Yorkshire"
+          },
+          "country" : {
+            "type" : [ "string", "null" ],
+            "description" : "Country description, matched case insensitively. If not found the country will not be set",
+            "example" : "England"
+          }
+        }
+      },
+      "UpdateAgencyAddressesRequest" : {
+        "type" : "object",
+        "description" : "A request to refresh and replace the list of addresses for an agency",
+        "properties" : {
+          "addresses" : {
+            "type" : "array",
+            "description" : "The complete list of addresses to hold against the agency, replacing any existing list. If there is a single existing address and a single requested address they are matched directly; otherwise existing and requested addresses are matched by exact postcode, with a null or blank postcode never matching",
+            "items" : {
+              "$ref" : "#/components/schemas/UpdateAgencyAddress"
+            }
+          }
+        },
+        "required" : [ "addresses" ]
+      },
       "UpdatePersonRequest" : {
         "type" : "object",
         "description" : "Request to update an person (aka DPS contact) in NOMIS",
@@ -35000,112 +35366,6 @@
         },
         "required" : [ "description" ]
       },
-      "AgencyAddress" : {
-        "type" : "object",
-        "description" : "The data held in NOMIS about an address",
-        "properties" : {
-          "id" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Unique NOMIS Id of number"
-          },
-          "type" : {
-            "description" : "Address type",
-            "oneOf" : [ {
-              "$ref" : "#/components/schemas/CodeDescription"
-            }, {
-              "type" : "null"
-            } ]
-          },
-          "flat" : {
-            "type" : [ "string", "null" ],
-            "description" : "Flat name or number",
-            "example" : "Apartment 3"
-          },
-          "premise" : {
-            "type" : [ "string", "null" ],
-            "description" : "Premise",
-            "example" : "22"
-          },
-          "street" : {
-            "type" : [ "string", "null" ],
-            "description" : "Street",
-            "example" : "West Street"
-          },
-          "locality" : {
-            "type" : [ "string", "null" ],
-            "description" : "Locality",
-            "example" : "Keighley"
-          },
-          "postcode" : {
-            "type" : [ "string", "null" ],
-            "description" : "Post code",
-            "example" : "MK15 2ST"
-          },
-          "city" : {
-            "description" : "City",
-            "oneOf" : [ {
-              "$ref" : "#/components/schemas/CodeDescription"
-            }, {
-              "type" : "null"
-            } ]
-          },
-          "county" : {
-            "description" : "County",
-            "oneOf" : [ {
-              "$ref" : "#/components/schemas/CodeDescription"
-            }, {
-              "type" : "null"
-            } ]
-          },
-          "country" : {
-            "description" : "Country",
-            "oneOf" : [ {
-              "$ref" : "#/components/schemas/CodeDescription"
-            }, {
-              "type" : "null"
-            } ]
-          },
-          "phoneNumbers" : {
-            "type" : "array",
-            "description" : "List of phone numbers for the address",
-            "items" : {
-              "$ref" : "#/components/schemas/AgencyPhoneNumber"
-            }
-          },
-          "validatedPAF" : {
-            "type" : "boolean",
-            "description" : "true if address validated by Post Office Address file??"
-          },
-          "noFixedAddress" : {
-            "type" : [ "boolean", "null" ],
-            "description" : "true if address not fixed. for example homeless"
-          },
-          "primaryAddress" : {
-            "type" : "boolean",
-            "description" : "true if this is the agency's primary address"
-          },
-          "mailAddress" : {
-            "type" : "boolean",
-            "description" : "true if this is used for mail"
-          },
-          "comment" : {
-            "type" : [ "string", "null" ],
-            "description" : "Free format comment about the address"
-          },
-          "startDate" : {
-            "type" : [ "string", "null" ],
-            "format" : "date",
-            "description" : "Date address was valid from"
-          },
-          "endDate" : {
-            "type" : [ "string", "null" ],
-            "format" : "date",
-            "description" : "Date address was valid to"
-          }
-        },
-        "required" : [ "id", "mailAddress", "phoneNumbers", "primaryAddress", "validatedPAF" ]
-      },
       "AgencyEmailAddress" : {
         "type" : "object",
         "description" : "The data held in NOMIS about an email address",
@@ -35122,30 +35382,6 @@
           }
         },
         "required" : [ "emailAddress", "id" ]
-      },
-      "AgencyPhoneNumber" : {
-        "type" : "object",
-        "description" : "The data held in NOMIS about a phone number",
-        "properties" : {
-          "id" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Unique NOMIS Id of number"
-          },
-          "number" : {
-            "type" : "string",
-            "description" : "The number"
-          },
-          "extension" : {
-            "type" : [ "string", "null" ],
-            "description" : "Extension"
-          },
-          "type" : {
-            "$ref" : "#/components/schemas/CodeDescription",
-            "description" : "Phone type"
-          }
-        },
-        "required" : [ "id", "number", "type" ]
       },
       "AgencyResponse" : {
         "type" : "object",
@@ -35459,80 +35695,6 @@
           }
         },
         "required" : [ "emailAddresses" ]
-      },
-      "AgencyAddressesResponse" : {
-        "type" : "object",
-        "description" : "A response to refreshing the list of addresses for an agency",
-        "properties" : {
-          "addresses" : {
-            "type" : "array",
-            "description" : "The list of addresses now held for the agency",
-            "items" : {
-              "$ref" : "#/components/schemas/AgencyAddress"
-            }
-          }
-        },
-        "required" : [ "addresses" ]
-      },
-      "UpdateAgencyAddress" : {
-        "type" : "object",
-        "description" : "An address to be held against an agency",
-        "properties" : {
-          "flat" : {
-            "type" : [ "string", "null" ],
-            "description" : "Flat name or number",
-            "example" : "Apartment 3"
-          },
-          "premise" : {
-            "type" : [ "string", "null" ],
-            "description" : "Premise",
-            "example" : "22"
-          },
-          "street" : {
-            "type" : [ "string", "null" ],
-            "description" : "Street",
-            "example" : "West Street"
-          },
-          "locality" : {
-            "type" : [ "string", "null" ],
-            "description" : "Locality",
-            "example" : "Keighley"
-          },
-          "postcode" : {
-            "type" : [ "string", "null" ],
-            "description" : "Post code",
-            "example" : "MK15 2ST"
-          },
-          "city" : {
-            "type" : [ "string", "null" ],
-            "description" : "City description, matched case insensitively. If not found the city will not be set",
-            "example" : "Sheffield"
-          },
-          "county" : {
-            "type" : [ "string", "null" ],
-            "description" : "County description, matched case insensitively. If not found the county will not be set",
-            "example" : "South Yorkshire"
-          },
-          "country" : {
-            "type" : [ "string", "null" ],
-            "description" : "Country description, matched case insensitively. If not found the country will not be set",
-            "example" : "England"
-          }
-        }
-      },
-      "UpdateAgencyAddressesRequest" : {
-        "type" : "object",
-        "description" : "A request to refresh and replace the list of addresses for an agency",
-        "properties" : {
-          "addresses" : {
-            "type" : "array",
-            "description" : "The complete list of addresses to hold against the agency, replacing any existing list. If there is a single existing address and a single requested address they are matched directly; otherwise existing and requested addresses are matched by exact postcode, with a null or blank postcode never matching",
-            "items" : {
-              "$ref" : "#/components/schemas/UpdateAgencyAddress"
-            }
-          }
-        },
-        "required" : [ "addresses" ]
       },
       "Repair" : {
         "type" : "object",
@@ -38468,6 +38630,64 @@
         },
         "required" : [ "number" ]
       },
+      "CreateAgencyAddressResponse" : {
+        "type" : "object",
+        "description" : "A response to creating an agency address",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Unique NOMIS Id of address"
+          }
+        },
+        "required" : [ "id" ]
+      },
+      "CreateAgencyAddressRequest" : {
+        "type" : "object",
+        "description" : "A request to create an agency address",
+        "properties" : {
+          "flat" : {
+            "type" : [ "string", "null" ],
+            "description" : "Flat name or number",
+            "example" : "Apartment 3"
+          },
+          "premise" : {
+            "type" : [ "string", "null" ],
+            "description" : "Premise",
+            "example" : "22"
+          },
+          "street" : {
+            "type" : [ "string", "null" ],
+            "description" : "Street",
+            "example" : "West Street"
+          },
+          "locality" : {
+            "type" : [ "string", "null" ],
+            "description" : "Locality",
+            "example" : "Keighley"
+          },
+          "postcode" : {
+            "type" : [ "string", "null" ],
+            "description" : "Post code",
+            "example" : "MK15 2ST"
+          },
+          "city" : {
+            "type" : [ "string", "null" ],
+            "description" : "City description, matched case insensitively. If not found the city will not be set",
+            "example" : "Sheffield"
+          },
+          "county" : {
+            "type" : [ "string", "null" ],
+            "description" : "County description, matched case insensitively. If not found the county will not be set",
+            "example" : "South Yorkshire"
+          },
+          "country" : {
+            "type" : [ "string", "null" ],
+            "description" : "Country description, matched case insensitively. If not found the country will not be set",
+            "example" : "England"
+          }
+        }
+      },
       "CreatePersonResponse" : {
         "type" : "object",
         "properties" : {
@@ -40053,64 +40273,6 @@
           }
         },
         "required" : [ "emailAddress" ]
-      },
-      "CreateAgencyAddressResponse" : {
-        "type" : "object",
-        "description" : "A response to creating an agency address",
-        "properties" : {
-          "id" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Unique NOMIS Id of address"
-          }
-        },
-        "required" : [ "id" ]
-      },
-      "CreateAgencyAddressRequest" : {
-        "type" : "object",
-        "description" : "A request to create an agency address",
-        "properties" : {
-          "flat" : {
-            "type" : [ "string", "null" ],
-            "description" : "Flat name or number",
-            "example" : "Apartment 3"
-          },
-          "premise" : {
-            "type" : [ "string", "null" ],
-            "description" : "Premise",
-            "example" : "22"
-          },
-          "street" : {
-            "type" : [ "string", "null" ],
-            "description" : "Street",
-            "example" : "West Street"
-          },
-          "locality" : {
-            "type" : [ "string", "null" ],
-            "description" : "Locality",
-            "example" : "Keighley"
-          },
-          "postcode" : {
-            "type" : [ "string", "null" ],
-            "description" : "Post code",
-            "example" : "MK15 2ST"
-          },
-          "city" : {
-            "type" : [ "string", "null" ],
-            "description" : "City description, matched case insensitively. If not found the city will not be set",
-            "example" : "Sheffield"
-          },
-          "county" : {
-            "type" : [ "string", "null" ],
-            "description" : "County description, matched case insensitively. If not found the county will not be set",
-            "example" : "South Yorkshire"
-          },
-          "country" : {
-            "type" : [ "string", "null" ],
-            "description" : "Country description, matched case insensitively. If not found the country will not be set",
-            "example" : "England"
-          }
-        }
       },
       "CreateHearingResponse" : {
         "type" : "object",
@@ -42254,6 +42416,11 @@
             }, {
               "type" : "null"
             } ]
+          },
+          "overrideReasonCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "The override reason code (reference code in domain 'OVERRIDE_RSN')",
+            "example" : "SECURITY"
           },
           "score" : {
             "type" : [ "number", "null" ],
