@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-09-22.334.a1e8e6b"
+    "version" : "2026-11-05.434.e17b390"
   },
   "servers" : [ {
     "url" : "/",
@@ -8028,7 +8028,7 @@
       "get" : {
         "tags" : [ "Contacts" ],
         "summary" : "Search contacts",
-        "description" : "Search contacts by name, date of birth, contact ID or list of contactIds",
+        "description" : "Search contacts by name, date of birth, contact ID or list of contactIds. Partial name searches without a date of birth are limited to the configured number of matching contacts (2,000 by default), before sorting and pagination.",
         "operationId" : "searchContacts",
         "parameters" : [ {
           "name" : "lastName",
@@ -15307,7 +15307,8 @@
             "type" : "integer",
             "format" : "int64"
           }
-        }
+        },
+        "required" : [ "number", "size", "totalElements", "totalPages" ]
       },
       "PagedModelSyncContactId" : {
         "type" : "object",
@@ -15321,7 +15322,8 @@
           "page" : {
             "$ref" : "#/components/schemas/PageMetadata"
           }
-        }
+        },
+        "required" : [ "content", "page" ]
       },
       "SyncContactId" : {
         "type" : "object",
@@ -15391,7 +15393,8 @@
           "page" : {
             "$ref" : "#/components/schemas/PageMetadata"
           }
-        }
+        },
+        "required" : [ "content", "page" ]
       },
       "PrisonerContactSummary" : {
         "type" : "object",
@@ -15664,7 +15667,8 @@
           "page" : {
             "$ref" : "#/components/schemas/PageMetadata"
           }
-        }
+        },
+        "required" : [ "content", "page" ]
       },
       "PrisonerRestrictionDetails" : {
         "type" : "object",
@@ -15927,7 +15931,8 @@
           "page" : {
             "$ref" : "#/components/schemas/PageMetadata"
           }
-        }
+        },
+        "required" : [ "content", "page" ]
       },
       "ContactAuditEntry" : {
         "type" : "object",
@@ -16240,7 +16245,8 @@
           "page" : {
             "$ref" : "#/components/schemas/PageMetadata"
           }
-        }
+        },
+        "required" : [ "content", "page" ]
       }
     },
     "securitySchemes" : {
