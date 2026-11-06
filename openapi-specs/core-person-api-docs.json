@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-10-27.6062.bf5aacd"
+    "version" : "2026-11-05.6142.aaeb6d9"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -1048,6 +1048,44 @@
         "security" : [ {
           "api-role" : [ ]
         } ]
+      }
+    },
+    "/person/search/exact-match" : {
+      "post" : {
+        "tags" : [ "Search" ],
+        "operationId" : "search",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ExactMatchSearchRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "This endpoint returns person identifiers which exactly match all the search terms",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ExactMatchSearchResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Nothing exactly matches all the search terms",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ExactMatchSearchResponse"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/person/probation/{crn}/address" : {
@@ -2936,6 +2974,66 @@
           }
         },
         "required" : [ "cprIdentifierId", "nomisIdentifierId" ]
+      },
+      "ExactMatchSearchRequest" : {
+        "type" : "object",
+        "properties" : {
+          "firstName" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "lastName" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "dateOfBirth" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "pnc" : {
+            "type" : "string",
+            "minLength" : 1
+          }
+        },
+        "required" : [ "dateOfBirth", "firstName", "lastName", "pnc" ]
+      },
+      "ExactMatchSearchResponse" : {
+        "type" : "object",
+        "properties" : {
+          "crns" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "description" : "List of CRNs",
+              "example" : "B123435"
+            }
+          },
+          "prisonNumbers" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "description" : "List of prison numbers",
+              "example" : "A1234BC"
+            }
+          },
+          "defendantIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "description" : "List of defendant IDs",
+              "example" : "46caa4e5-ae06-4226-9cb6-682cb26cf025"
+            }
+          },
+          "cids" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "description" : "List of C_IDs",
+              "example" : "\"1234567\""
+            }
+          }
+        },
+        "required" : [ "cids", "crns", "defendantIds", "prisonNumbers" ]
       },
       "ProbationCreateAddress" : {
         "type" : "object",
