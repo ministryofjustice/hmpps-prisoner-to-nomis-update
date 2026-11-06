@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-05-07.252.f042755"
+    "version" : "2026-11-04.401.77f6612"
   },
   "servers" : [ {
     "url" : "/",
@@ -4615,7 +4615,8 @@
             "type" : "integer",
             "format" : "int64"
           }
-        }
+        },
+        "required" : [ "number", "size", "totalElements", "totalPages" ]
       },
       "PagedModelSyncOrganisationId" : {
         "type" : "object",
@@ -4629,7 +4630,8 @@
           "page" : {
             "$ref" : "#/components/schemas/PageMetadata"
           }
-        }
+        },
+        "required" : [ "content", "page" ]
       },
       "SyncOrganisationId" : {
         "type" : "object",
@@ -4833,7 +4835,8 @@
           "page" : {
             "$ref" : "#/components/schemas/PageMetadata"
           }
-        }
+        },
+        "required" : [ "content", "page" ]
       }
     },
     "securitySchemes" : {
