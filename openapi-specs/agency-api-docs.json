@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-11-03.675.098ea2b"
+    "version" : "2026-11-06.687.145b091"
   },
   "servers" : [ {
     "url" : "https://prison-register-dev.hmpps.service.justice.gov.uk",
@@ -7590,6 +7590,40 @@
         }
       }
     },
+    "/prison-maintenance/id/{prisonId}/details" : {
+      "get" : {
+        "tags" : [ "prison-maintenance-resource" ],
+        "summary" : "Get details of specified prison",
+        "description" : "Information on a specific prison",
+        "operationId" : "getPrisonDetailsById",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "description" : "Prison ID",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prison ID",
+            "example" : "MDI",
+            "maxLength" : 6,
+            "minLength" : 3
+          },
+          "example" : "MDI"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Successful Operation",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FullPrisonDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/legacy/{agencyId}" : {
       "get" : {
         "tags" : [ "legacy-sync-resource" ],
@@ -10666,6 +10700,156 @@
           }
         },
         "required" : [ "prisonId", "prisonName" ]
+      },
+      "DepartmentDto" : {
+        "type" : "object",
+        "description" : "Prison Information",
+        "properties" : {
+          "type" : {
+            "type" : "string",
+            "enum" : [ "PRISON", "SOCIAL_VISIT", "VIDEOLINK_CONFERENCING_CENTRE", "OFFENDER_MANAGEMENT_UNIT", "OFFICIAL_VISIT" ]
+          },
+          "emailAddress" : {
+            "type" : [ "string", "null" ]
+          },
+          "phoneNumber" : {
+            "type" : [ "string", "null" ]
+          },
+          "webAddress" : {
+            "type" : [ "string", "null" ]
+          }
+        },
+        "required" : [ "type" ]
+      },
+      "FullPrisonDto" : {
+        "type" : "object",
+        "description" : "Prison Information",
+        "properties" : {
+          "prisonId" : {
+            "type" : "string",
+            "description" : "Prison ID",
+            "example" : "MDI"
+          },
+          "prisonName" : {
+            "type" : "string",
+            "description" : "Name of the prison",
+            "example" : "Moorland HMP"
+          },
+          "prisonNameInWelsh" : {
+            "type" : [ "string", "null" ],
+            "description" : "Name of the prison in Welsh",
+            "example" : "Carchar Brynbuga"
+          },
+          "active" : {
+            "type" : "boolean",
+            "description" : "Whether the prison is still active"
+          },
+          "male" : {
+            "type" : "boolean",
+            "description" : "Whether the prison has male prisoners"
+          },
+          "female" : {
+            "type" : "boolean",
+            "description" : "Whether the prison has female prisoners"
+          },
+          "contracted" : {
+            "type" : "boolean",
+            "description" : "Whether the prison is contracted"
+          },
+          "lthse" : {
+            "type" : "boolean",
+            "description" : "Whether the prison is part of long term high security estate"
+          },
+          "types" : {
+            "type" : "array",
+            "description" : "List of types for this prison",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonTypeDto"
+            }
+          },
+          "categories" : {
+            "type" : "array",
+            "description" : "List of the categories for this prison",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "A", "B", "C", "D", "OPEN", "CLOSED" ]
+            },
+            "uniqueItems" : true
+          },
+          "addresses" : {
+            "type" : "array",
+            "description" : "List of address for this prison",
+            "items" : {
+              "$ref" : "#/components/schemas/AddressDto"
+            }
+          },
+          "operators" : {
+            "type" : "array",
+            "description" : "List of operators for this prison",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonOperatorDto"
+            }
+          },
+          "departments" : {
+            "type" : "array",
+            "description" : "List of departments for this prison",
+            "items" : {
+              "$ref" : "#/components/schemas/DepartmentDto"
+            }
+          },
+          "inactiveDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Date made inactive",
+            "example" : "2023-12-31"
+          },
+          "cjitCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "CJIT Code",
+            "example" : "123456789"
+          },
+          "area" : {
+            "description" : "Area",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "region" : {
+            "description" : "Region",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "geographicalArea" : {
+            "description" : "Geographical Area",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "localAuthority" : {
+            "description" : "Local Authority",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "payrollRegion" : {
+            "description" : "Prisoner Payroll Region",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          }
+        },
+        "required" : [ "active", "addresses", "categories", "contracted", "departments", "female", "lthse", "male", "operators", "prisonId", "prisonName", "types" ]
       },
       "AgencyId" : {
         "type" : "object",
