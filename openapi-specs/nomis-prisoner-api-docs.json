@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-11-05.2367.dc4ab5d"
+    "version" : "2026-11-06.2369.378fee5"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -25628,6 +25628,16 @@
               }
             }
           },
+          "404" : {
+            "description" : "Prisoner does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
             "content" : {
@@ -25639,17 +25649,7 @@
             }
           },
           "403" : {
-            "description" : "Forbidden to access this endpoint when role NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Prisoner does not exist",
+            "description" : "Missing required role. Requires the ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW role",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -25980,6 +25980,16 @@
               }
             }
           },
+          "404" : {
+            "description" : "Prisoner does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
             "content" : {
@@ -25991,17 +26001,7 @@
             }
           },
           "403" : {
-            "description" : "Forbidden to access this endpoint when role NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Prisoner does not exist",
+            "description" : "Missing required role. Requires the ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW role",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -26580,6 +26580,16 @@
               }
             }
           },
+          "404" : {
+            "description" : "Advance does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
             "content" : {
@@ -26591,17 +26601,7 @@
             }
           },
           "403" : {
-            "description" : "Forbidden to access this endpoint. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Advance does not exist",
+            "description" : "Missing required role. Requires the ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW role",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -26643,6 +26643,16 @@
               }
             }
           },
+          "404" : {
+            "description" : "Advance does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
             "content" : {
@@ -26654,17 +26664,7 @@
             }
           },
           "403" : {
-            "description" : "Forbidden to access this endpoint. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Advance does not exist",
+            "description" : "Missing required role. Requires the ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW role",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -26693,6 +26693,16 @@
               }
             }
           },
+          "404" : {
+            "description" : "Advance does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
             "content" : {
@@ -26704,17 +26714,7 @@
             }
           },
           "403" : {
-            "description" : "Forbidden to access this endpoint. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Advance does not exist",
+            "description" : "Missing required role. Requires the ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW role",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -47993,13 +47993,13 @@
             "type" : [ "integer", "null" ],
             "format" : "int64"
           },
-          "txnEntrySeq" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
           "txnId" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "txnEntrySeq" : {
+            "type" : "integer",
+            "format" : "int32"
           },
           "txnEntryDate" : {
             "type" : "string",
