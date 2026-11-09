@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-11-05.958.c22ccad"
+    "version" : "2026-11-06.966.c042eba"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -5917,7 +5917,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/CorePersonMappingsDto"
+                "$ref" : "#/components/schemas/CorePersonAddressContactMappingsDto"
               }
             }
           },
@@ -6429,7 +6429,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/CorePersonMappingsDto"
+                "$ref" : "#/components/schemas/CorePersonAddressContactMappingsDto"
               }
             }
           },
@@ -7896,6 +7896,50 @@
         "responses" : {
           "204" : {
             "description" : "Mappings deleted",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/advances/replace" : {
+      "post" : {
+        "tags" : [ "advance-mapping-resource" ],
+        "summary" : "Replaces an advance mapping.",
+        "description" : "Creates a new advance mapping and removes the previously supplied one (if one exists).\n      Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "replaceAdvanceMapping",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AdvanceMappingDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Mapping replaced",
             "content" : { }
           },
           "401" : {
@@ -18004,68 +18048,6 @@
         }
       }
     },
-    "/mapping/core-person/person/cpr-id/{cprId}" : {
-      "get" : {
-        "tags" : [ "core-person-mapping-resource" ],
-        "summary" : "Get core person mapping by cpr core person Id",
-        "description" : "Retrieves the person mapping by CPR Core Person Id. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getPersonMappingByCprId",
-        "parameters" : [ {
-          "name" : "cprId",
-          "in" : "path",
-          "description" : "CPR core person id",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "description" : "CPR core person id",
-            "example" : 12345
-          },
-          "example" : 12345
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Person mapping data",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/CorePersonMappingDto"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Access this endpoint is forbidden",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Id does not exist in mapping table",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/mapping/core-person/migration-id/{migrationId}" : {
       "get" : {
         "tags" : [ "core-person-mapping-resource" ],
@@ -18972,68 +18954,6 @@
           },
           "403" : {
             "description" : "Access forbidden for this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/mapping/core-person/address-usage/cpr-address-usage-id/{cprAddressUsageId}" : {
-      "get" : {
-        "tags" : [ "core-person-address-mapping-resource" ],
-        "summary" : "Get a core person address usage mapping by cpr address usage Id",
-        "description" : "Retrieves the core person address usage mapping by CPR Address Usage Id. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getCorePersonAddressUsageMappingByCprId",
-        "parameters" : [ {
-          "name" : "cprAddressUsageId",
-          "in" : "path",
-          "description" : "CPR address usage id",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "description" : "CPR address usage id",
-            "example" : 12345
-          },
-          "example" : 12345
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Core Person address usage mapping data",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/CorePersonAddressUsageMappingDto"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Access this endpoint is forbidden",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Id does not exist in mapping table",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -22569,8 +22489,8 @@
       },
       "delete" : {
         "tags" : [ "advance-mapping-resource" ],
-        "summary" : "Deletes a Advance mapping",
-        "description" : "Deletes a Advance mapping by DPS id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "summary" : "Deletes an Advance mapping",
+        "description" : "Deletes an Advance mapping by DPS id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
         "operationId" : "deleteAdvanceMappingByDpsId",
         "parameters" : [ {
           "name" : "dpsId",
@@ -27781,6 +27701,53 @@
         },
         "required" : [ "dpsId", "mappingType", "nomisId" ]
       },
+      "CorePersonAddressContactMappingsDto" : {
+        "type" : "object",
+        "description" : "Mappings for a Core Person and its associated child entities",
+        "properties" : {
+          "label" : {
+            "type" : [ "string", "null" ],
+            "description" : "Label (a timestamp for migrated ids)"
+          },
+          "mappingType" : {
+            "type" : "string",
+            "description" : "Mapping type",
+            "enum" : [ "MIGRATED", "CPR_CREATED", "NOMIS_CREATED" ]
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "description" : "Date time the mapping was created",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          },
+          "personMapping" : {
+            "$ref" : "#/components/schemas/CorePersonMappingIdDto",
+            "description" : "Core Person mapping"
+          },
+          "addresses" : {
+            "type" : "array",
+            "description" : "Core Person address mappings",
+            "items" : {
+              "$ref" : "#/components/schemas/CorePersonAddressMappingDto"
+            }
+          },
+          "contacts" : {
+            "type" : "array",
+            "description" : "Core Person contact mappings",
+            "items" : {
+              "$ref" : "#/components/schemas/CorePersonContactMappingDto"
+            }
+          },
+          "addressUsages" : {
+            "type" : "array",
+            "description" : "Core Person address usage mappings",
+            "items" : {
+              "$ref" : "#/components/schemas/CorePersonAddressUsageMappingDto"
+            }
+          }
+        },
+        "required" : [ "addressUsages", "addresses", "contacts", "mappingType", "personMapping" ]
+      },
       "CorePersonAddressMappingDto" : {
         "type" : "object",
         "properties" : {
@@ -27913,53 +27880,6 @@
           }
         },
         "required" : [ "cprId", "nomisPrisonNumber" ]
-      },
-      "CorePersonMappingsDto" : {
-        "type" : "object",
-        "description" : "Mappings for a Core Person and its associated child entities",
-        "properties" : {
-          "label" : {
-            "type" : [ "string", "null" ],
-            "description" : "Label (a timestamp for migrated ids)"
-          },
-          "mappingType" : {
-            "type" : "string",
-            "description" : "Mapping type",
-            "enum" : [ "MIGRATED", "CPR_CREATED", "NOMIS_CREATED" ]
-          },
-          "whenCreated" : {
-            "type" : "string",
-            "description" : "Date time the mapping was created",
-            "example" : "2021-07-05T10:35:17",
-            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
-          },
-          "personMapping" : {
-            "$ref" : "#/components/schemas/CorePersonMappingIdDto",
-            "description" : "Core Person mapping"
-          },
-          "addresses" : {
-            "type" : "array",
-            "description" : "Core Person address mappings",
-            "items" : {
-              "$ref" : "#/components/schemas/CorePersonAddressMappingDto"
-            }
-          },
-          "contacts" : {
-            "type" : "array",
-            "description" : "Core Person contact mappings",
-            "items" : {
-              "$ref" : "#/components/schemas/CorePersonContactMappingDto"
-            }
-          },
-          "addressUsages" : {
-            "type" : "array",
-            "description" : "Core Person address usage mappings",
-            "items" : {
-              "$ref" : "#/components/schemas/CorePersonAddressUsageMappingDto"
-            }
-          }
-        },
-        "required" : [ "addressUsages", "addresses", "contacts", "mappingType", "personMapping" ]
       },
       "CorePersonMergeMappingsDto" : {
         "type" : "object",
