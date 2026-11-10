@@ -22,7 +22,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegisters
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension.Companion.legacyAgencyEmailDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension.Companion.legacyAgencyPhoneDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.LegacyAgencyDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.LegacyAgencyType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AgencyResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
@@ -51,7 +50,7 @@ class AgencyRegistersReconciliationServiceTest {
   private lateinit var service: AgencyRegistersReconciliationService
 
   @Nested
-  inner class CheckMatch {
+  inner class CheckNonPrisonMatch {
     val agencyId = "SHEFCC"
 
     @Nested
@@ -63,7 +62,7 @@ class AgencyRegistersReconciliationServiceTest {
 
       @Test
       fun `will return null`() = runTest {
-        assertThat(service.checkMatch(agencyId)).isNull()
+        assertThat(service.checkNonPrisonMatch(agencyId)).isNull()
       }
     }
 
@@ -85,7 +84,7 @@ class AgencyRegistersReconciliationServiceTest {
 
       @Test
       fun `will return null`() = runTest {
-        assertThat(service.checkMatch(agencyId)).isNull()
+        assertThat(service.checkNonPrisonMatch(agencyId)).isNull()
       }
     }
 
@@ -101,7 +100,7 @@ class AgencyRegistersReconciliationServiceTest {
 
       @Test
       fun `will report and return mismatch`() = runTest {
-        assertThat(service.checkMatch(agencyId)).isNotNull()
+        assertThat(service.checkNonPrisonMatch(agencyId)).isNotNull()
         verify(telemetryClient).trackEvent(
           eq("agency-reconciliation-mismatch"),
           check {
@@ -125,7 +124,7 @@ class AgencyRegistersReconciliationServiceTest {
 
       @Test
       fun `will report and return mismatch`() = runTest {
-        assertThat(service.checkMatch(agencyId)).isNotNull()
+        assertThat(service.checkNonPrisonMatch(agencyId)).isNotNull()
         verify(telemetryClient).trackEvent(
           eq("agency-reconciliation-mismatch"),
           check {
@@ -149,7 +148,7 @@ class AgencyRegistersReconciliationServiceTest {
 
       @Test
       fun `will report and return mismatch`() = runTest {
-        assertThat(service.checkMatch(agencyId)).isNotNull()
+        assertThat(service.checkNonPrisonMatch(agencyId)).isNotNull()
         verify(telemetryClient).trackEvent(
           eq("agency-reconciliation-mismatch"),
           check {
@@ -173,7 +172,7 @@ class AgencyRegistersReconciliationServiceTest {
 
       @Test
       fun `will report and return mismatch`() = runTest {
-        assertThat(service.checkMatch(agencyId)).isNotNull()
+        assertThat(service.checkNonPrisonMatch(agencyId)).isNotNull()
         verify(telemetryClient).trackEvent(
           eq("agency-reconciliation-mismatch"),
           check {
@@ -197,7 +196,7 @@ class AgencyRegistersReconciliationServiceTest {
 
       @Test
       fun `will report and return mismatch`() = runTest {
-        assertThat(service.checkMatch(agencyId)).isNotNull()
+        assertThat(service.checkNonPrisonMatch(agencyId)).isNotNull()
         verify(telemetryClient).trackEvent(
           eq("agency-reconciliation-mismatch"),
           check {
@@ -221,7 +220,7 @@ class AgencyRegistersReconciliationServiceTest {
 
       @Test
       fun `will report and return mismatch`() = runTest {
-        assertThat(service.checkMatch(agencyId)).isNotNull()
+        assertThat(service.checkNonPrisonMatch(agencyId)).isNotNull()
         verify(telemetryClient).trackEvent(
           eq("agency-reconciliation-mismatch"),
           check {
@@ -245,7 +244,7 @@ class AgencyRegistersReconciliationServiceTest {
 
       @Test
       fun `will report and return mismatch`() = runTest {
-        assertThat(service.checkMatch(agencyId)).isNotNull()
+        assertThat(service.checkNonPrisonMatch(agencyId)).isNotNull()
         verify(telemetryClient).trackEvent(
           eq("agency-reconciliation-mismatch"),
           check {
@@ -269,7 +268,7 @@ class AgencyRegistersReconciliationServiceTest {
 
       @Test
       fun `will report and return mismatch`() = runTest {
-        assertThat(service.checkMatch(agencyId)).isNotNull()
+        assertThat(service.checkNonPrisonMatch(agencyId)).isNotNull()
         verify(telemetryClient).trackEvent(
           eq("agency-reconciliation-mismatch"),
           check {
@@ -293,7 +292,7 @@ class AgencyRegistersReconciliationServiceTest {
 
       @Test
       fun `will report and return mismatch`() = runTest {
-        assertThat(service.checkMatch(agencyId)).isNotNull()
+        assertThat(service.checkNonPrisonMatch(agencyId)).isNotNull()
         verify(telemetryClient).trackEvent(
           eq("agency-reconciliation-mismatch"),
           check {
@@ -317,7 +316,7 @@ class AgencyRegistersReconciliationServiceTest {
 
       @Test
       fun `will report and return mismatch`() = runTest {
-        assertThat(service.checkMatch(agencyId)).isNotNull()
+        assertThat(service.checkNonPrisonMatch(agencyId)).isNotNull()
         verify(telemetryClient).trackEvent(
           eq("agency-reconciliation-mismatch"),
           check {
@@ -341,7 +340,7 @@ class AgencyRegistersReconciliationServiceTest {
 
       @Test
       fun `will report and return mismatch`() = runTest {
-        assertThat(service.checkMatch(agencyId)).isNotNull()
+        assertThat(service.checkNonPrisonMatch(agencyId)).isNotNull()
         verify(telemetryClient).trackEvent(
           eq("agency-reconciliation-mismatch"),
           check {
@@ -365,7 +364,7 @@ class AgencyRegistersReconciliationServiceTest {
 
       @Test
       fun `will report and return mismatch`() = runTest {
-        assertThat(service.checkMatch(agencyId)).isNotNull()
+        assertThat(service.checkNonPrisonMatch(agencyId)).isNotNull()
         verify(telemetryClient).trackEvent(
           eq("agency-reconciliation-mismatch"),
           check {
@@ -389,7 +388,7 @@ class AgencyRegistersReconciliationServiceTest {
 
       @Test
       fun `will report and return mismatch`() = runTest {
-        assertThat(service.checkMatch(agencyId)).isNotNull()
+        assertThat(service.checkNonPrisonMatch(agencyId)).isNotNull()
         verify(telemetryClient).trackEvent(
           eq("agency-reconciliation-mismatch"),
           check {
@@ -413,7 +412,7 @@ class AgencyRegistersReconciliationServiceTest {
 
       @Test
       fun `will report and return mismatch`() = runTest {
-        assertThat(service.checkMatch(agencyId)).isNotNull()
+        assertThat(service.checkNonPrisonMatch(agencyId)).isNotNull()
         verify(telemetryClient).trackEvent(
           eq("agency-reconciliation-mismatch"),
           check {
@@ -437,7 +436,7 @@ class AgencyRegistersReconciliationServiceTest {
 
       @Test
       fun `will report and return mismatch`() = runTest {
-        assertThat(service.checkMatch(agencyId)).isNotNull()
+        assertThat(service.checkNonPrisonMatch(agencyId)).isNotNull()
         verify(telemetryClient).trackEvent(
           eq("agency-reconciliation-mismatch"),
           check {
@@ -461,39 +460,7 @@ class AgencyRegistersReconciliationServiceTest {
 
       @Test
       fun `will match`() = runTest {
-        assertThat(service.checkMatch(agencyId)).isNull()
-      }
-    }
-
-    @Nested
-    inner class WhenPrisonAddressPremiseContainsPrisonName {
-      @BeforeEach
-      fun setUp() {
-        stubAgency(
-          agencyResponse().copy(longDescription = "HMP Brixton", addresses = listOf(agencyAddress().copy(flat = null, premise = "HMP Brixton", street = "The Law Courts", locality = "50 West Bar", postcode = "S3 8PH"))),
-          legacyAgencyDto().copy(description = "HMP Brixton", addresses = listOf(legacyAgencyAddressDto().copy(addressLine1 = "The Law Courts", addressLine2 = "50 West Bar", postcode = "S3 8PH"))),
-        )
-      }
-
-      @Test
-      fun `will match`() = runTest {
-        assertThat(service.checkMatch(agencyId)).isNull()
-      }
-    }
-
-    @Nested
-    inner class WhenClosedPrisonHasNoAddressInDPS {
-      @BeforeEach
-      fun setUp() {
-        stubAgency(
-          agencyResponse().copy(type = CodeDescription(code = "INST", description = "Prison"), active = false, addresses = listOf(agencyAddress())),
-          legacyAgencyDto().copy(agencyType = LegacyAgencyType.PRISON, active = false, addresses = emptyList()),
-        )
-      }
-
-      @Test
-      fun `will match`() = runTest {
-        assertThat(service.checkMatch(agencyId)).isNull()
+        assertThat(service.checkNonPrisonMatch(agencyId)).isNull()
       }
     }
 
@@ -509,7 +476,7 @@ class AgencyRegistersReconciliationServiceTest {
 
       @Test
       fun `will match`() = runTest {
-        assertThat(service.checkMatch(agencyId)).isNull()
+        assertThat(service.checkNonPrisonMatch(agencyId)).isNull()
       }
     }
 
@@ -525,7 +492,7 @@ class AgencyRegistersReconciliationServiceTest {
 
       @Test
       fun `will report and return mismatch`() = runTest {
-        assertThat(service.checkMatch(agencyId)).isNotNull()
+        assertThat(service.checkNonPrisonMatch(agencyId)).isNotNull()
         verify(telemetryClient).trackEvent(
           eq("agency-reconciliation-mismatch"),
           check {
@@ -534,22 +501,6 @@ class AgencyRegistersReconciliationServiceTest {
           },
           isNull(),
         )
-      }
-    }
-
-    @Nested
-    inner class WhenClosedPrisonHasNoPhoneNumberInDPS {
-      @BeforeEach
-      fun setUp() {
-        stubAgency(
-          agencyResponse().copy(type = CodeDescription(code = "INST", description = "Prison"), active = false, phones = listOf(agencyPhoneNumber().copy(number = "0114 555 1234"))),
-          legacyAgencyDto().copy(agencyType = LegacyAgencyType.PRISON, active = false, phoneNumbers = emptyList()),
-        )
-      }
-
-      @Test
-      fun `will match`() = runTest {
-        assertThat(service.checkMatch(agencyId)).isNull()
       }
     }
 
@@ -565,7 +516,7 @@ class AgencyRegistersReconciliationServiceTest {
 
       @Test
       fun `will not report mismatch`() = runTest {
-        assertThat(service.checkMatch(agencyId)).isNull()
+        assertThat(service.checkNonPrisonMatch(agencyId)).isNull()
       }
     }
 
@@ -581,7 +532,7 @@ class AgencyRegistersReconciliationServiceTest {
 
       @Test
       fun `will report and return mismatch`() = runTest {
-        assertThat(service.checkMatch(agencyId)).isNotNull()
+        assertThat(service.checkNonPrisonMatch(agencyId)).isNotNull()
         verify(telemetryClient).trackEvent(
           eq("agency-reconciliation-mismatch"),
           check {
@@ -595,6 +546,173 @@ class AgencyRegistersReconciliationServiceTest {
 
     fun stubAgency(nomisAgency: AgencyResponse, dpsAgency: LegacyAgencyDto) {
       nomisApi.stubGetAgency(agencyId, response = nomisAgency)
+      dpsApi.stubGetAgencyForReconciliation(agencyId, response = dpsAgency)
+    }
+  }
+
+  @Nested
+  inner class CheckPrisonMatch {
+    val agencyId = "WWI"
+
+    @Nested
+    inner class WhenAgenciesMatch {
+      @BeforeEach
+      fun setUp() {
+        stubAgency(agencyResponse(), legacyAgencyDto())
+      }
+
+      @Test
+      fun `will return null`() = runTest {
+        assertThat(service.checkPrisonMatch(agencyId)).isNull()
+      }
+    }
+
+    @Nested
+    inner class WhenCjitCodeDoesNotMatch {
+      @BeforeEach
+      fun setUp() {
+        stubAgency(
+          agencyResponse().copy(cjitCode = "A00XX00"),
+          legacyAgencyDto().copy(cjitCode = "B00YY00"),
+        )
+      }
+
+      @Test
+      fun `will report and return mismatch`() = runTest {
+        assertThat(service.checkPrisonMatch(agencyId)).isNotNull()
+        verify(telemetryClient).trackEvent(
+          eq("agency-reconciliation-mismatch"),
+          check {
+            assertThat(it["agencyId"]).isEqualTo(agencyId)
+            assertThat(it["reason"]).isEqualTo("different-core-prison-details")
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenLocalAuthorityDoesNotMatch {
+      @BeforeEach
+      fun setUp() {
+        stubAgency(
+          agencyResponse().copy(localAuthorities = listOf(CodeDescription(code = "00CG", description = "Sheffield City Council"))),
+          legacyAgencyDto().copy(localAuthorityCode = "00AA"),
+        )
+      }
+
+      @Test
+      fun `will report and return mismatch`() = runTest {
+        assertThat(service.checkPrisonMatch(agencyId)).isNotNull()
+        verify(telemetryClient).trackEvent(
+          eq("agency-reconciliation-mismatch"),
+          check {
+            assertThat(it["agencyId"]).isEqualTo(agencyId)
+            assertThat(it["reason"]).isEqualTo("different-core-prison-details")
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenAreaCodeDoesNotMatch {
+      @BeforeEach
+      fun setUp() {
+        stubAgency(
+          agencyResponse().copy(area = CodeDescription(code = "NW", description = "North West")),
+          legacyAgencyDto().copy(areaCode = "SE"),
+        )
+      }
+
+      @Test
+      fun `will report and return mismatch`() = runTest {
+        assertThat(service.checkPrisonMatch(agencyId)).isNotNull()
+        verify(telemetryClient).trackEvent(
+          eq("agency-reconciliation-mismatch"),
+          check {
+            assertThat(it["agencyId"]).isEqualTo(agencyId)
+            assertThat(it["reason"]).isEqualTo("different-core-prison-details")
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenRegionCodeDoesNotMatch {
+      @BeforeEach
+      fun setUp() {
+        stubAgency(
+          agencyResponse().copy(nomsRegion = CodeDescription(code = "NWEST", description = "North West")),
+          legacyAgencyDto().copy(regionCode = "SEAST"),
+        )
+      }
+
+      @Test
+      fun `will report and return mismatch`() = runTest {
+        assertThat(service.checkPrisonMatch(agencyId)).isNotNull()
+        verify(telemetryClient).trackEvent(
+          eq("agency-reconciliation-mismatch"),
+          check {
+            assertThat(it["agencyId"]).isEqualTo(agencyId)
+            assertThat(it["reason"]).isEqualTo("different-core-prison-details")
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenGeographicalAreaCodeDoesNotMatch {
+      @BeforeEach
+      fun setUp() {
+        stubAgency(
+          agencyResponse().copy(region = CodeDescription(code = "NYORKS", description = "North Yorkshire")),
+          legacyAgencyDto().copy(geographicalAreaCode = "SYORKS"),
+        )
+      }
+
+      @Test
+      fun `will report and return mismatch`() = runTest {
+        assertThat(service.checkPrisonMatch(agencyId)).isNotNull()
+        verify(telemetryClient).trackEvent(
+          eq("agency-reconciliation-mismatch"),
+          check {
+            assertThat(it["agencyId"]).isEqualTo(agencyId)
+            assertThat(it["reason"]).isEqualTo("different-core-prison-details")
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenPayrollRegionCodeDoesNotMatch {
+      @BeforeEach
+      fun setUp() {
+        stubAgency(
+          agencyResponse().copy(payrollRegion = CodeDescription(code = "NE", description = "North East")),
+          legacyAgencyDto().copy(payrollRegionCode = "SW"),
+        )
+      }
+
+      @Test
+      fun `will report and return mismatch`() = runTest {
+        assertThat(service.checkPrisonMatch(agencyId)).isNotNull()
+        verify(telemetryClient).trackEvent(
+          eq("agency-reconciliation-mismatch"),
+          check {
+            assertThat(it["agencyId"]).isEqualTo(agencyId)
+            assertThat(it["reason"]).isEqualTo("different-core-prison-details")
+          },
+          isNull(),
+        )
+      }
+    }
+
+    fun stubAgency(nomisAgency: AgencyResponse, dpsAgency: LegacyAgencyDto) {
+      nomisApi.stubGetAgency(agencyId, response = nomisAgency.copy(agencyId = agencyId))
       dpsApi.stubGetAgencyForReconciliation(agencyId, response = dpsAgency)
     }
   }

@@ -166,7 +166,7 @@ generic-service:
     - name: prison-recon
       type: PRISON_RECON
       schedule: "35 6 * * *"
-      suspend: true
+      suspend: false
     - name: alert-recon
       type: ALERT_RECON
       schedule: "45 4 * * *"

@@ -15,5 +15,10 @@ class AgencyRegistersReconciliationResource(
   @PreAuthorize("hasRole('PRISONER_TO_NOMIS__UPDATE__RW')")
   @GetMapping("/agencies/{agencyId}/reconciliation")
   @Operation(description = "Returns a mismatch with the full NOMIS and DPS agency payloads, where available, or an empty response when the agencies match.")
-  suspend fun getAgencyReconciliation(@PathVariable agencyId: String): MismatchAgency? = reconciliationService.checkMatch(agencyId)
+  suspend fun getAgencyReconciliation(@PathVariable agencyId: String): MismatchAgency? = reconciliationService.checkNonPrisonMatch(agencyId)
+
+  @PreAuthorize("hasRole('PRISONER_TO_NOMIS__UPDATE__RW')")
+  @GetMapping("/prisons/{agencyId}/reconciliation")
+  @Operation(description = "Returns a mismatch with the partial NOMIS and DPS prison payloads, where available, or an empty response when the prisons match.")
+  suspend fun getPrisonReconciliation(@PathVariable agencyId: String): MismatchAgency? = reconciliationService.checkPrisonMatch(agencyId)
 }

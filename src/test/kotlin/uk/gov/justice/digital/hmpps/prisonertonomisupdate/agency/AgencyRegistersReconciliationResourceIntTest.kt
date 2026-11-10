@@ -143,4 +143,130 @@ class AgencyRegistersReconciliationResourceIntTest(
       .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
       .exchange()
   }
+
+  @DisplayName("GET /prisons/{agencyId}/reconciliation")
+  @Nested
+  inner class GetPrisonReconciliation {
+    private val agencyId = "SHEFCC"
+    private val url = "/prisons/$agencyId/reconciliation"
+
+    @BeforeEach
+    fun setUp() {
+      nomisApi.stubGetAgency(agencyId, agencyResponse())
+      dpsApi.stubGetAgencyForReconciliation(agencyId, legacyAgencyDto())
+    }
+
+    @Nested
+    inner class Security {
+      @Test
+      fun `access unauthorised with no auth token`() {
+        webTestClient.get().uri(url)
+          .exchange()
+          .expectStatus().isUnauthorized
+      }
+
+      @Test
+      fun `access forbidden when no role`() {
+        webTestClient.get().uri(url)
+          .headers(setAuthorisation(roles = listOf()))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access forbidden with wrong role`() {
+        webTestClient.get().uri(url)
+          .headers(setAuthorisation(roles = listOf("ROLE_BANANAS")))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+    }
+
+    @Nested
+    inner class WhenPrisonsMatch {
+      @Test
+      fun `will return an empty response`() {
+        getReconciliation()
+          .expectStatus().isOk
+          .expectBody().isEmpty
+      }
+    }
+
+    @Nested
+    inner class WhenPrisonsDoNotMatch {
+      private val dpsAgency = legacyAgencyDto().copy(localAuthorityCode = "CJIT123")
+
+      @BeforeEach
+      fun setUp() {
+        dpsApi.stubGetAgencyForReconciliation(agencyId, dpsAgency)
+      }
+
+      @Test
+      fun `will return the full agency payloads and mismatch details`() {
+        val result = getReconciliation().expectBodyResponse<MismatchAgency>()
+
+        assertThat(result.agencyId).isEqualTo(agencyId)
+        assertThat(result.reason).isEqualTo("different-core-prison-details")
+        assertThat(result.dps).contains("CJIT123")
+        assertThat(result.nomisAgency).isEqualTo(agencyResponse())
+        assertThat(result.dpsAgency).isEqualTo(dpsAgency)
+      }
+    }
+
+    @Nested
+    inner class WhenMissingInNomis {
+      @BeforeEach
+      fun setUp() {
+        nomisApi.stubGetAgency(agencyId, HttpStatus.NOT_FOUND)
+      }
+
+      @Test
+      fun `will return the DPS agency payload`() {
+        val result = getReconciliation().expectBodyResponse<MismatchAgency>()
+
+        assertThat(result.agencyId).isEqualTo(agencyId)
+        assertThat(result.reason).isEqualTo("Missing in NOMIS")
+        assertThat(result.nomisAgency).isNull()
+        assertThat(result.dpsAgency).isEqualTo(legacyAgencyDto())
+      }
+    }
+
+    @Nested
+    inner class WhenMissingInDps {
+      @BeforeEach
+      fun setUp() {
+        dpsApi.stubGetAgencyForReconciliation(agencyId, HttpStatus.NOT_FOUND)
+      }
+
+      @Test
+      fun `will return the NOMIS agency payload`() {
+        val result = getReconciliation().expectBodyResponse<MismatchAgency>()
+
+        assertThat(result.agencyId).isEqualTo(agencyId)
+        assertThat(result.reason).isEqualTo("Missing in DPS")
+        assertThat(result.nomisAgency).isEqualTo(agencyResponse())
+        assertThat(result.dpsAgency).isNull()
+      }
+    }
+
+    @Nested
+    inner class WhenNomisFails {
+      @BeforeEach
+      fun setUp() {
+        nomisApi.stubGetAgency(agencyId, HttpStatus.INTERNAL_SERVER_ERROR)
+      }
+    }
+
+    @Nested
+    inner class WhenDpsFails {
+      @BeforeEach
+      fun setUp() {
+        dpsApi.stubGetAgencyForReconciliation(agencyId, HttpStatus.INTERNAL_SERVER_ERROR)
+      }
+    }
+
+    private fun getReconciliation() = webTestClient.get().uri(url)
+      .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
+      .exchange()
+  }
 }

@@ -15,7 +15,6 @@ import kotlinx.coroutines.withContext
 import org.slf4j.Logger
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.LegacyAgencyDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.LegacyAgencyType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.logger
@@ -25,6 +24,7 @@ import java.time.LocalDate
 import java.util.concurrent.atomic.AtomicInteger
 
 @OptIn(ExperimentalCoroutinesApi::class)
+@Suppress("SuppressedCancellationException")
 @Service
 class AgencyRegistersReconciliationService(
   private val telemetryClient: TelemetryClient,
@@ -83,14 +83,22 @@ class AgencyRegistersReconciliationService(
       }
   }
 
-  suspend fun checkMatch(agencyId: String): MismatchAgency? {
+  suspend fun checkPrisonMatch(agencyId: String): MismatchAgency? = checkMatch(agencyId) { nomis, dps ->
+    comparePrisonAgency(nomis, dps)
+  }
+
+  suspend fun checkNonPrisonMatch(agencyId: String): MismatchAgency? = checkMatch(agencyId) { nomis, dps ->
+    compareNonPrisonAgency(nomis, dps)
+  }
+
+  suspend fun checkMatch(agencyId: String, compareAgency: (AgencyResponse, LegacyAgencyDto) -> MismatchAgency?): MismatchAgency? {
     val nomisAgency = runCatching { nomisApiService.getAgency(agencyId) }.getOrNull()
     val dpsAgency = runCatching { dpsApiService.getAgencyForReconciliation(agencyId) }.getOrNull()
 
     return when {
       nomisAgency == null -> MismatchAgency(agencyId, "Missing in NOMIS")
       dpsAgency == null -> MismatchAgency(agencyId, "Missing in DPS")
-      else -> compare(nomisAgency, dpsAgency)
+      else -> compareAgency(nomisAgency, dpsAgency)
     }?.copy(nomisAgency = nomisAgency, dpsAgency = dpsAgency)?.also {
       telemetryClient.trackEvent(
         "$TELEMETRY_PREFIX-mismatch",
@@ -102,11 +110,15 @@ class AgencyRegistersReconciliationService(
     }
   }
 
-  fun compare(nomisAgency: AgencyResponse, dpsAgency: LegacyAgencyDto): MismatchAgency? = when {
+  fun compareNonPrisonAgency(nomisAgency: AgencyResponse, dpsAgency: LegacyAgencyDto): MismatchAgency? = when {
     nomisAgency.asCoreDetails() != dpsAgency.asCoreDetails() -> MismatchAgency(nomisAgency.agencyId, "different-core-agency-details", nomis = nomisAgency.asCoreDetails().toString(), dps = dpsAgency.asCoreDetails().toString())
     nomisAgency.addressesSorted() != dpsAgency.addressesSorted() -> MismatchAgency(nomisAgency.agencyId, "different-address-agency-details", nomis = nomisAgency.addressesSorted().toString(), dps = dpsAgency.addressesSorted().toString())
     nomisAgency.phonesSorted() != dpsAgency.phonesSorted() -> MismatchAgency(nomisAgency.agencyId, "different-phone-agency-details", nomis = nomisAgency.phonesSorted().toString(), dps = dpsAgency.phonesSorted().toString())
     nomisAgency.emailAddressesSorted() != dpsAgency.emailAddressesSorted() -> MismatchAgency(nomisAgency.agencyId, "different-email-agency-details", nomis = nomisAgency.emailAddressesSorted().toString(), dps = dpsAgency.emailAddressesSorted().toString())
+    else -> null
+  }
+  fun comparePrisonAgency(nomisAgency: AgencyResponse, dpsAgency: LegacyAgencyDto): MismatchAgency? = when {
+    nomisAgency.asPrisonCoreDetails() != dpsAgency.asPrisonCoreDetails() -> MismatchAgency(nomisAgency.agencyId, "different-core-prison-details", nomis = nomisAgency.asPrisonCoreDetails().toString(), dps = dpsAgency.asPrisonCoreDetails().toString())
     else -> null
   }
 
@@ -131,7 +143,7 @@ class AgencyRegistersReconciliationService(
       val jobs = (1L..10).map {
         launch {
           for (item in channel) {
-            checkMatch(item)?.also { mismatchesChannel.send(it) }
+            checkNonPrisonMatch(item)?.also { mismatchesChannel.send(it) }
             itemsCount.incrementAndGet()
           }
         }
@@ -170,7 +182,7 @@ class AgencyRegistersReconciliationService(
       val jobs = (1L..10).map {
         launch {
           for (item in channel) {
-            checkMatch(item)?.also { mismatchesChannel.send(it) }
+            checkPrisonMatch(item)?.also { mismatchesChannel.send(it) }
             itemsCount.incrementAndGet()
           }
         }
@@ -215,6 +227,19 @@ data class AgencyCoreDetails(
   val localAuthorityCode: String?,
 )
 
+data class PrisonCoreDetails(
+  val longDescription: String?,
+  val active: Boolean,
+  val deactivationDate: LocalDate?,
+  val cjitCode: String?,
+  val areaCode: String?,
+  val subareaCode: String?,
+  val regionCode: String?,
+  val geographicalAreaCode: String?,
+  val payrollRegionCode: String?,
+  val localAuthorityCode: String?,
+)
+
 private fun AgencyResponse.asCoreDetails(): AgencyCoreDetails = AgencyCoreDetails(
   name = description.uppercase(),
   longDescription = longDescription?.uppercase(),
@@ -254,25 +279,40 @@ private fun LegacyAgencyDto.asCoreDetails(): AgencyCoreDetails = AgencyCoreDetai
   contact = contact,
   localAuthorityCode = localAuthorityCode,
 )
+private fun AgencyResponse.asPrisonCoreDetails(): PrisonCoreDetails = PrisonCoreDetails(
+  longDescription = longDescription?.uppercase(),
+  active = active,
+  deactivationDate = deactivationDate,
+  cjitCode = cjitCode,
+  areaCode = area?.code,
+  subareaCode = subArea?.code,
+  regionCode = nomsRegion?.code,
+  geographicalAreaCode = region?.code,
+  payrollRegionCode = payrollRegion?.code,
+  localAuthorityCode = localAuthorities.firstOrNull()?.code,
+)
+private fun LegacyAgencyDto.asPrisonCoreDetails(): PrisonCoreDetails = PrisonCoreDetails(
+  longDescription = description?.uppercase(),
+  active = active,
+  deactivationDate = inactiveDate,
+  cjitCode = cjitCode,
+  areaCode = areaCode,
+  subareaCode = subareaCode,
+  regionCode = regionCode,
+  geographicalAreaCode = geographicalAreaCode,
+  payrollRegionCode = payrollRegionCode,
+  localAuthorityCode = localAuthorityCode,
+)
 
-private fun LegacyAgencyDto.addressesSorted(): List<String> = this.takeUnless { it.isClosedPrison() }?.addresses?.map { listOfNotNull(it.addressLine1, it.addressLine2, it.town, it.county, it.country, it.postcode?.cleanPostcode()).joinToString(", ") }?.sorted() ?: emptyList()
-private fun LegacyAgencyDto.phonesSorted(): List<String> = this.takeUnless { it.isClosedPrison() }?.phoneNumbers?.map { it.number }?.distinct()?.sorted() ?: emptyList()
+private fun LegacyAgencyDto.addressesSorted(): List<String> = this.addresses.map { listOfNotNull(it.addressLine1, it.addressLine2, it.town, it.county, it.country, it.postcode?.cleanPostcode()).joinToString(", ") }.sorted()
+private fun LegacyAgencyDto.phonesSorted(): List<String> = this.phoneNumbers.map { it.number }.distinct().sorted()
 private fun LegacyAgencyDto.emailAddressesSorted(): List<String> = this.emailAddresses.map { it.address }.sorted()
-private fun AgencyResponse.addressesSorted(): List<String> = this.takeUnless { it.isClosedPrison() }?.addresses?.map {
-  if (longDescription != null && longDescription == it.premise) {
-    // In NOMIS Prisons tend to have the Prison name in the premises field.
-    // DPS does not. For now mark these have matched though if we stick with this we need to change sync
-    // to deal with the same rule so requires a discussion with DPS
-    listOfNotNull(it.flat, it.street, it.locality, it.city?.description, it.county?.description, it.country?.description, it.postcode?.cleanPostcode()).joinToString(", ")
-  } else {
-    listOfNotNull(it.flat, it.premise, it.street, it.locality, it.city?.description, it.county?.description, it.country?.description, it.postcode?.cleanPostcode()).joinToString(", ")
-  }
-}?.sorted() ?: emptyList()
+private fun AgencyResponse.addressesSorted(): List<String> = this.addresses.map {
+  listOfNotNull(it.flat, it.premise, it.street, it.locality, it.city?.description, it.county?.description, it.country?.description, it.postcode?.cleanPostcode()).joinToString(", ")
+}.sorted()
 
-private fun AgencyResponse.phonesSorted(): List<String> = this.takeUnless { it.isClosedPrison() }?.let { (it.addresses.flatMap { it.phoneNumbers }.map { it.number } + it.phones.map { it.number }).distinct().sorted() } ?: emptyList()
+private fun AgencyResponse.phonesSorted(): List<String> = (this.addresses.flatMap { it.phoneNumbers }.map { it.number } + this.phones.map { it.number }).distinct().sorted()
 private fun AgencyResponse.emailAddressesSorted(): List<String> = this.emailAddresses.map { it.emailAddress }.sorted()
-private fun AgencyResponse.isClosedPrison() = this.type.code == "INST" && !this.active
-private fun LegacyAgencyDto.isClosedPrison() = this.agencyType == LegacyAgencyType.PRISON && !this.active
 private fun List<MismatchAgency>.asMap(): Pair<String, String> = this
   .sortedBy { it.agencyId }.take(10).let { mismatch -> "agencyIds" to mismatch.joinToString { it.agencyId } }
 
