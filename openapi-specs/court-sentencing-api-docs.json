@@ -8423,7 +8423,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "09:20:30.062617834"
+            "example" : "09:20:30.625169787"
           },
           "outcomeDispositionCode" : {
             "type" : [ "string", "null" ]
@@ -8887,7 +8887,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "09:20:30.062617834"
+            "example" : "09:20:30.625169787"
           },
           "courtCode" : {
             "type" : "string"
@@ -11995,7 +11995,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "09:20:30.062617834"
+            "example" : "09:20:30.625169787"
           },
           "courtCode" : {
             "type" : "string"
@@ -12889,7 +12889,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "09:20:30.062617834"
+            "example" : "09:20:30.625169787"
           },
           "nomisOutcomeCode" : {
             "type" : [ "string", "null" ]
@@ -12968,7 +12968,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "09:20:30.062617834"
+            "example" : "09:20:30.625169787"
           },
           "courtId" : {
             "type" : "string"
@@ -13123,7 +13123,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "09:20:30.062617834"
+            "example" : "09:20:30.625169787"
           },
           "charges" : {
             "type" : "array",
@@ -13160,7 +13160,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "09:20:30.062617834"
+            "example" : "09:20:30.625169787"
           },
           "courtId" : {
             "type" : "string"
@@ -13814,7 +13814,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "09:20:30.062617834"
+            "example" : "09:20:30.625169787"
           },
           "courtCode" : {
             "type" : [ "string", "null" ]
