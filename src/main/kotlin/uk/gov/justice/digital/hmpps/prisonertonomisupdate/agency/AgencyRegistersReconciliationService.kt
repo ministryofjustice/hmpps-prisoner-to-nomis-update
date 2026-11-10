@@ -163,7 +163,7 @@ class AgencyRegistersReconciliationService(
   }
   suspend fun generatePrisonReconciliationReport(): ReconciliationResult<MismatchAgency> {
     val (nomisAgencyIds, dpsAgencyIds) = withContext(Dispatchers.Unconfined) {
-      async { nomisApiService.getPrisonIds().agencyIds.map { it.agencyId } } to
+      async { nomisApiService.getPrisonIds().agencyIds.filterNot { it.agencyId in ["OUT", "TRN", "*ALL*", "UNKNWN"] }.map { it.agencyId } } to
         async { dpsApiService.getPrisonIds().agencyIds.map { it.agencyId } }
     }.awaitBoth()
 
