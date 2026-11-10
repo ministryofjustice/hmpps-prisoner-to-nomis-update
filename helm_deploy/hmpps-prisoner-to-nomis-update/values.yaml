@@ -46,6 +46,7 @@ generic-service:
     REPORTS_CONTACT-PERSON_PROFILE-DETAILS_RECONCILIATION_PARALLEL-JOBS: 6
     REPORTS_CORE-PERSON_RECONCILIATION_FIELDS: religions,religion,addresses,contacts
     REPORTS_PRISONER_BALANCE_RECONCILIATION_FIELDS: balances,holds,advances
+    REPORTS_PERSON-LOCATION_RECONCILIATION_RECONCILE_BOOKINGS: false
 
   # Pre-existing kubernetes secrets to load as environment variables in the deployment.
   # namespace_secrets:

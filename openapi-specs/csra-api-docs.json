@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-11-05.668.f06fb64"
+    "version" : "2026-11-09.679.22d3e4a"
   },
   "servers" : [ {
     "url" : "/",
@@ -2223,6 +2223,12 @@
             "enum" : [ "HIGH", "HIGH_GENERAL", "HIGH_SPECIFIC", "STANDARD" ],
             "example" : "STANDARD"
           },
+          "reason" : {
+            "type" : [ "string", "null" ],
+            "description" : "The reason the current rating was set, if any",
+            "enum" : [ "RATING_SAVED", "NO_RATING_ON_READMISSION" ],
+            "example" : "RATING_SAVED"
+          },
           "provisional" : {
             "type" : "boolean",
             "description" : "Whether the rating is provisional (a final rating has not yet been confirmed)",
@@ -2678,6 +2684,10 @@
             "format" : "date-time",
             "description" : "When this stage was last partially saved, if ever"
           },
+          "provisionalReviewed" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "FINAL stage only: whether the provisional assessment has been reviewed. null = Not yet started, false = Incomplete, true = Complete"
+          },
           "dpsChecked" : {
             "type" : [ "boolean", "null" ]
           },
@@ -2815,6 +2825,10 @@
             "description" : "The prison the assessment is being made at",
             "example" : "LEI",
             "minLength" : 1
+          },
+          "provisionalReviewed" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "FINAL stage only: whether the provisional assessment has been reviewed. null = Not yet started, false = Incomplete, true = Complete"
           },
           "dpsChecked" : {
             "type" : [ "boolean", "null" ],
