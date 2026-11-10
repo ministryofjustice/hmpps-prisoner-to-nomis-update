@@ -168,6 +168,7 @@ class CourtSentencingService(
 
             val courtCaseMapping = retrieveParentCaseMapping(courtCaseId)
             telemetryMap["nomisCourtCaseId"] = courtCaseMapping.nomisCourtCaseId.toString()
+            telemetryMap["dpsActive"] = dpsCourtCase.active.toString()
 
             nomisApiService.updateCourtCase(
               offenderNo = offenderNo,
