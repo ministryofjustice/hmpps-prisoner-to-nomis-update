@@ -34,7 +34,7 @@ class OfficialVisitsActiveScheduledReconciliationIntTest(
 
   @DisplayName("Official visits active scheduled reconciliation report")
   @Nested
-  inner class GenerateActiveScheduledVisitsReconciliationReportBatch {
+  inner class GenerateReport {
     @BeforeEach
     fun setUp() {
       reset(telemetryClient)
@@ -60,7 +60,7 @@ class OfficialVisitsActiveScheduledReconciliationIntTest(
 
     @Test
     fun `will output report requested telemetry`() = runTest {
-      reconciliationService.generateActiveScheduledVisitsReconciliationReportBatch()
+      reconciliationService.generateReport()
 
       verify(telemetryClient).trackEvent(
         eq("official-visits-active-reconciliation-requested"),
@@ -73,7 +73,7 @@ class OfficialVisitsActiveScheduledReconciliationIntTest(
 
     @Test
     fun `will output report`() = runTest {
-      reconciliationService.generateActiveScheduledVisitsReconciliationReportBatch()
+      reconciliationService.generateReport()
       awaitReportFinished()
 
       verify(telemetryClient).trackEvent(
@@ -82,6 +82,8 @@ class OfficialVisitsActiveScheduledReconciliationIntTest(
           assertThat(it).containsEntry("mismatch-count", "2")
           assertThat(it).containsEntry("pages-count", "1")
           assertThat(it).containsEntry("prisoners-count", "3")
+          assertThat(it).containsEntry("TYPE", "ACTIVE_PRISONERS")
+          assertThat(it).containsEntry("offenderNos", "A0002TZ, A0003TZ")
         },
         isNull(),
       )
@@ -89,7 +91,7 @@ class OfficialVisitsActiveScheduledReconciliationIntTest(
 
     @Test
     fun `will output a mismatch for number of visits`() = runTest {
-      reconciliationService.generateActiveScheduledVisitsReconciliationReportBatch()
+      reconciliationService.generateReport()
       awaitReportFinished()
 
       verify(telemetryClient).trackEvent(
@@ -119,7 +121,7 @@ class OfficialVisitsActiveScheduledReconciliationIntTest(
 
     @Test
     fun `will output a mismatch for different visit details`() = runTest {
-      reconciliationService.generateActiveScheduledVisitsReconciliationReportBatch()
+      reconciliationService.generateReport()
       awaitReportFinished()
 
       verify(telemetryClient).trackEvent(
