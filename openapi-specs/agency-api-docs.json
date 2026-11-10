@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-11-06.687.145b091"
+    "version" : "2026-11-09.692.efa1f27"
   },
   "servers" : [ {
     "url" : "https://prison-register-dev.hmpps.service.justice.gov.uk",
@@ -1094,6 +1094,95 @@
             }
           }
         }
+      }
+    },
+    "/prison-maintenance/id/{prisonId}/area" : {
+      "put" : {
+        "tags" : [ "prison-maintenance-resource" ],
+        "summary" : "Updates specified prison area details",
+        "description" : "Updates prison area information, role required is MAINTAIN_REF_DATA or MAINTAIN_PRISON_DATA",
+        "operationId" : "updatePrisonArea",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "description" : "Prison Id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prison Id",
+            "example" : "MDI",
+            "maxLength" : 6,
+            "minLength" : 3
+          },
+          "example" : "MDI"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdatePrisonAreaDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Prison Area Information Updated",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonDto"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Information request to update prison area",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Incorrect permissions to make prison update",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Prison ID not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "MAINTAIN_REF_DATA" : [ "write" ]
+        }, {
+          "MAINTAIN_PRISON_DATA" : [ "write" ]
+        } ]
       }
     },
     "/prison-maintenance/id/{prisonId}/address/{addressId}" : {
@@ -8854,6 +8943,37 @@
             "example" : "Cymru",
             "maxLength" : 16,
             "minLength" : 0
+          }
+        }
+      },
+      "UpdatePrisonAreaDto" : {
+        "type" : "object",
+        "description" : "Area prison data to update",
+        "properties" : {
+          "cjitCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "CJIT Code",
+            "example" : "123456789"
+          },
+          "areaCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "Area"
+          },
+          "regionCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "Region"
+          },
+          "geographicalAreaCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "Geographical Area"
+          },
+          "localAuthorityCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "Local Authority"
+          },
+          "payrollRegionCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "Prisoner Payroll Region"
           }
         }
       },
