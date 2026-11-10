@@ -490,6 +490,90 @@ internal class CourtSentencingReconciliationServiceTest {
     }
 
     @Test
+    fun `will report a court event charge difference (null propertyvalue)`() = runTest {
+      stubCase(
+        nomisCase = nomisCaseResponse().copy(
+          courtEvents = listOf(
+            nomisAppearanceResponse().copy(
+              courtEventCharges = listOf(
+                nomisChargeResponse().copy(propertyValue = BigDecimal.valueOf(10.59)),
+              ),
+            ),
+          ),
+        ),
+        dpsCase = dpsCourtCaseResponse().copy(
+          appearances = listOf(
+            dpsAppearanceResponse().copy(
+              charges = listOf(
+                dpsChargeResponse().copy(
+                  value = null,
+                ),
+              ),
+            ),
+          ),
+        ),
+      )
+      assertThat(
+        service.checkCase(
+          nomisCaseId = NOMIS_COURT_CASE_ID,
+          dpsCaseId = DPS_COURT_CASE_ID,
+          offenderNo = OFFENDER_NO,
+        )?.differences,
+      ).isEqualTo(
+        listOf(
+          Difference(
+            property = "case.appearances[0].charges[0].chargeValue",
+            dps = null,
+            nomis = "10.59",
+            id = DPS_COURT_CHARGE_ID,
+          ),
+        ),
+      )
+    }
+
+    @Test
+    fun `will report a court event charge difference`() = runTest {
+      stubCase(
+        nomisCase = nomisCaseResponse().copy(
+          courtEvents = listOf(
+            nomisAppearanceResponse().copy(
+              courtEventCharges = listOf(
+                nomisChargeResponse().copy(propertyValue = BigDecimal.valueOf(10.59)),
+              ),
+            ),
+          ),
+        ),
+        dpsCase = dpsCourtCaseResponse().copy(
+          appearances = listOf(
+            dpsAppearanceResponse().copy(
+              charges = listOf(
+                dpsChargeResponse().copy(
+                  value = BigDecimal.valueOf(5.6),
+                ),
+              ),
+            ),
+          ),
+        ),
+      )
+      assertThat(
+        service.checkCase(
+          nomisCaseId = NOMIS_COURT_CASE_ID,
+          dpsCaseId = DPS_COURT_CASE_ID,
+          offenderNo = OFFENDER_NO,
+        )?.differences,
+      ).isEqualTo(
+        listOf(
+          Difference(
+            property = "case.appearances[0].charges[0].chargeValue",
+            dps = "5.6",
+            nomis = "10.59",
+            id = DPS_COURT_CHARGE_ID,
+          ),
+        ),
+      )
+    }
+
+    @Test
     fun `will ignore bad offence date data`() = runTest {
       stubCase(
         nomisCase = nomisCaseResponse().copy(
@@ -1365,6 +1449,7 @@ fun nomisChargeResponse(
   offenceDate = offenceStartDate,
   offenceEndDate = offenceStartDate.plusDays(1),
   mostSeriousFlag = false,
+  propertyValue = BigDecimal.valueOf(10.59),
   resultCode1 = OffenceResultCodeResponse(
     code = OUTCOME_1,
     description = "Outcome text",
@@ -1456,6 +1541,7 @@ fun dpsChargeResponse(
   offenceCode = offenceCode,
   offenceStartDate = offenceStartDate,
   sentenceResponse = sentenceResponse,
+  chargeValue = BigDecimal.valueOf(10.59),
 )
 
 fun dpsChargeResponseWithoutSentence() = dpsChargeResponse(sentenceResponse = null)

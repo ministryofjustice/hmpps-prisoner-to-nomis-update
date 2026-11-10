@@ -119,6 +119,7 @@ class CourtSentencingApiExtension :
       offenceCode: String = "TR11017",
       offenceStartDate: LocalDate = LocalDate.parse("2021-01-01"),
       sentenceResponse: ReconciliationSentence? = reconciliationSentence(),
+      chargeValue: BigDecimal = BigDecimal.valueOf(10.59),
     ) = ReconciliationCharge(
       chargeUuid = UUID.fromString(chargeUuid),
       offenceCode = offenceCode,
@@ -126,6 +127,7 @@ class CourtSentencingApiExtension :
       offenceEndDate = offenceStartDate.plusDays(1),
       nomisOutcomeCode = "4001",
       sentence = sentenceResponse,
+      value = chargeValue,
     )
 
     fun reconciliationChargeWithoutSentence() = reconciliationCharge(sentenceResponse = null)

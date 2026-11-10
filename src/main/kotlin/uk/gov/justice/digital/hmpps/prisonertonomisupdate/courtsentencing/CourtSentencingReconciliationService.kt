@@ -20,7 +20,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiServi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
 import java.math.BigDecimal
 import java.time.LocalDate
-import kotlin.collections.addAll
 
 @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
 @Service
@@ -380,6 +379,7 @@ class CourtSentencingReconciliationService(
               offenceDate = appearanceChargeResponse.offenceStartDate,
               offenceEndDate = appearanceChargeResponse.offenceEndDate,
               outcome = appearanceChargeResponse.nomisOutcomeCode,
+              chargeValue = appearanceChargeResponse.value,
               id = appearanceChargeResponse.chargeUuid.toString(),
               mappedId = if (extraInfo == true) {
                 mappingService.getMappingGivenCourtChargeIdOrNull(appearanceChargeResponse.chargeUuid.toString())?.nomisCourtChargeId
@@ -427,6 +427,7 @@ class CourtSentencingReconciliationService(
               offenceDate = chargeResponse.offenceDate,
               offenceEndDate = chargeResponse.offenceEndDate,
               outcome = chargeResponse.resultCode1?.code,
+              chargeValue = chargeResponse.propertyValue,
               id = chargeResponse.offenderCharge.id.toString(),
               mappedId = if (extraInfo == true) {
                 mappingService.getMappingGivenNomisCourtChargeIdOrNull(chargeResponse.offenderCharge.id)?.dpsCourtChargeId
@@ -658,6 +659,9 @@ class CourtSentencingReconciliationService(
         }
         if (dpsObj.outcome != nomisObj.outcome) {
           differences.add(Difference("$parentProperty.outcome", dpsObj.outcome, nomisObj.outcome, dpsObj.id))
+        }
+        if (!isSameValue(dpsObj.chargeValue, nomisObj.chargeValue)) {
+          differences.add(Difference("$parentProperty.chargeValue", dpsObj.chargeValue?.toString(), nomisObj.chargeValue?.toString(), dpsObj.id))
         }
       }
 
@@ -962,6 +966,8 @@ data class AppearanceFields(
   }
 }
 
+private fun isSameValue(a: BigDecimal?, b: BigDecimal?) = if (a == null || b == null) a == b else a.compareTo(b) == 0
+
 data class ChargeFields(
   val offenceCode: String,
   val offenceDate: LocalDate?,
@@ -969,6 +975,7 @@ data class ChargeFields(
   val outcome: String?,
   val id: String,
   val mappedId: String? = null,
+  val chargeValue: BigDecimal? = null,
 ) {
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
@@ -976,7 +983,8 @@ data class ChargeFields(
     return offenceCode == other.offenceCode &&
       offenceDate == other.offenceDate &&
       offenceEndDate == other.offenceEndDate &&
-      outcome == other.outcome
+      outcome == other.outcome &&
+      isSameValue(chargeValue, other.chargeValue)
   }
 
   fun toSortString(): String = "ChargeFields(outcome=$outcome, offenceDate=$offenceDate, offenceCode='$offenceCode', offenceEndDate=$offenceEndDate,)"
