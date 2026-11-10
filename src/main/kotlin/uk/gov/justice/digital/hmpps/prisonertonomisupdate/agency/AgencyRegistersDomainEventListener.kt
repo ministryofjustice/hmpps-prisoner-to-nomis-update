@@ -44,6 +44,7 @@ class AgencyRegistersDomainEventListener(
       "register.court.address.inserted" -> service.courtAddressInserted(message.fromJson())
       "register.court.address.amended" -> service.courtAddressAmended(message.fromJson())
       "register.court.address.deleted" -> service.courtAddressDeleted(message.fromJson())
+      "register.prison.area.amended" -> service.prisonAreaAmended(message.fromJson())
       "register.hospital.inserted" -> service.hospitalInserted(message.fromJson())
       "register.hospital.amended" -> service.hospitalAmended(message.fromJson())
       "register.hospital.deleted" -> service.hospitalDeleted(message.fromJson())
@@ -360,3 +361,13 @@ data class AgencyAddressAdditionalInformation(
   val addressId: Long,
   override val source: String,
 ) : SourcedAdditionalData
+
+data class PrisonAdditionalInformation(
+  val prisonId: String,
+  override val source: String,
+) : SourcedAdditionalData
+
+data class PrisonEvent(
+  val eventType: String,
+  override val additionalInformation: PrisonAdditionalInformation,
+) : SourcedEvent

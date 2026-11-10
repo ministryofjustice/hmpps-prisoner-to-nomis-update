@@ -34,6 +34,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Up
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyPhoneNumber
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyPhoneNumbersRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdatePrisonAreaRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 
 @Component
@@ -145,6 +146,11 @@ class AgencyNomisApiMockServer(private val jsonMapper: JsonMapper) {
 
     fun createAgencyEmailResponse() = CreateAgencyEmailAddressResponse(
       id = 123456,
+    )
+
+    fun updatePrisonAreaRequest() = UpdatePrisonAreaRequest(
+      localAuthorityCodes = listOf("LA1"),
+      areaCode = "NORTH",
     )
 
     fun updateAgencyEmailAddressesRequest() = UpdateAgencyEmailAddressesRequest(
@@ -323,6 +329,20 @@ class AgencyNomisApiMockServer(private val jsonMapper: JsonMapper) {
   ) {
     nomisApi.stubFor(
       put(urlPathEqualTo("/agency/$agencyId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(jsonMapper.writeValueAsString(response)),
+      ),
+    )
+  }
+
+  fun stubUpdatePrisonArea(
+    agencyId: String = "MDI",
+    response: AgencyResponse = agencyResponse(),
+  ) {
+    nomisApi.stubFor(
+      put(urlPathEqualTo("/prison/$agencyId")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value())

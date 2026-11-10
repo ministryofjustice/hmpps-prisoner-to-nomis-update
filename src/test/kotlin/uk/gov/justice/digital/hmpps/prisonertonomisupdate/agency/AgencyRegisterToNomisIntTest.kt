@@ -44,6 +44,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Up
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyPhoneNumber
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyPhoneNumbersRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdatePrisonAreaRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.jsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.getRequestBody
@@ -198,6 +199,74 @@ class AgencyRegisterToNomisIntTest(
             check {
               assertThat(it["courtId"]).isEqualTo(courtId)
               assertThat(it["nomisAgencyId"]).isEqualTo(courtId)
+            },
+            isNull(),
+          )
+        }
+      }
+    }
+  }
+
+  @Nested
+  @DisplayName("register.prison.area.amended")
+  inner class PrisonAreaAmended {
+    val prisonId = "MDI"
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of the event")
+    inner class WhenNomisUpdated {
+
+      @BeforeEach
+      fun setUp() {
+        publishPrisonAreaUpdatedEvent(prisonId = prisonId, source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the event is ignored`() {
+        verify(telemetryClient).trackEvent(
+          eq("prison-area-updated-ignored"),
+          check {
+            assertThat(it["prisonId"]).isEqualTo(prisonId)
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of the event")
+    inner class WhenDpsUpdated {
+
+      @Nested
+      inner class HappyPath {
+
+        @BeforeEach
+        fun setUp() {
+          dpsApi.stubGetAgency(agencyId = prisonId, response = legacyAgencyDto())
+          nomisApi.stubUpdatePrisonArea(agencyId = prisonId, response = agencyResponse().copy(agencyId = prisonId))
+          publishPrisonAreaUpdatedEvent(prisonId = prisonId)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will update NOMIS`() {
+          val request: UpdatePrisonAreaRequest = NomisApiExtension.nomisApi.getRequestBody(putRequestedFor(urlEqualTo("/prison/$prisonId")), jsonMapper)
+          assertThat(request.localAuthorityCodes).containsExactly("00CG")
+          assertThat(request.areaCode).isEqualTo("52")
+          assertThat(request.regionCode).isEqualTo("NEAST")
+          assertThat(request.nomsRegionCode).isEqualTo("YOHUM")
+          assertThat(request.cjitCode).isEqualTo("C00SH00")
+          assertThat(request.payrollRegionCode).isEqualTo("YP")
+        }
+
+        @Test
+        fun `will send telemetry event showing success`() {
+          verify(telemetryClient).trackEvent(
+            eq("prison-area-updated-success"),
+            check {
+              assertThat(it["prisonId"]).isEqualTo(prisonId)
+              assertThat(it["nomisAgencyId"]).isEqualTo(prisonId)
             },
             isNull(),
           )
@@ -6221,6 +6290,24 @@ class AgencyRegisterToNomisIntTest(
           additionalInformation = ProbationOfficeEmailAdditionalInformation(
             probationOfficeId = probationOfficeId,
             emailId = emailId,
+            source = source,
+          ),
+        ),
+      )
+    }
+  }
+
+  private fun publishPrisonAreaUpdatedEvent(
+    prisonId: String,
+    source: String = "DPS",
+  ) {
+    with("register.prison.area.amended") {
+      publishDomainEvent(
+        eventType = this,
+        payload = PrisonEvent(
+          eventType = this,
+          additionalInformation = PrisonAdditionalInformation(
+            prisonId = prisonId,
             source = source,
           ),
         ),
