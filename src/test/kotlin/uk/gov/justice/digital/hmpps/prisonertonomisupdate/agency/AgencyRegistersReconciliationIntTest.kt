@@ -104,7 +104,7 @@ class AgencyRegistersReconciliationIntTest(
     @BeforeEach
     fun setUp() {
       reset(telemetryClient)
-      nomisApi.stubGetPrisonIds(nomisAgencyIdsResponse("WWI", "BXI"))
+      nomisApi.stubGetPrisonIds(nomisAgencyIdsResponse("WWI", "BXI", "OUT", "TRN", "*ALL*", "UNKNWN"))
       dpsApi.stubGetPrisonIds(dpsAgencyIdsResponse("WWI", "BXI", "LEI"))
 
       nomisApi.stubGetAgency("WWI", agencyResponse().copy(agencyId = "WWI", description = "Wandsworth Prison"))
