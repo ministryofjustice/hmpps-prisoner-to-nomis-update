@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Of
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
+import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.Objects
@@ -182,7 +183,7 @@ class CorePersonReconciliationService(
           !Objects.equals(n.startDate, cpr.startDate) -> "$i-startDate:nomis=${n.startDate}, cpr=${cpr.startDate}"
           !Objects.equals(n.endDate, cpr.endDate) -> "$i-endDate:nomis=${n.endDate}, cpr=${cpr.endDate}"
           n.current != cpr.current -> "$i-current:nomis=${n.current}, cpr=${cpr.current}"
-          n.createDatetime.notEqualsIgnoringNanos(cpr.createDatetime) -> "$i-createDatetime:nomis=${n.createDatetime}, cpr=${cpr.createDatetime}"
+          n.createDatetime.notEqualsWithinOneDay(cpr.createDatetime) -> "$i-createDatetime:nomis=${n.createDatetime}, cpr=${cpr.createDatetime}"
           else -> null
         }
       }
@@ -243,7 +244,11 @@ class CorePersonReconciliationService(
   suspend fun checkCorePersonMatch(offenderNo: String, suppressEvents: Boolean = false): MismatchCorePerson? = checkCorePersonMatch(PrisonerIds(0, offenderNo), suppressEvents)
 }
 
-private fun LocalDateTime?.notEqualsIgnoringNanos(createDatetime: LocalDateTime?): Boolean = !Objects.equals(this?.withNano(0), createDatetime?.withNano(0))
+private fun LocalDateTime?.notEqualsWithinOneDay(other: LocalDateTime?): Boolean = when {
+  this == null || other == null -> this != other
+  Duration.between(this, other).abs() > Duration.ofDays(1) -> true
+  else -> false
+}
 
 // NOMIS and CPR return addresses in arbitrary order, so sort both sides into the same deterministic order
 private val addressComparator = compareBy<PrisonerAddress, LocalDateTime?>(nullsFirst()) { it.createdDateTime }
