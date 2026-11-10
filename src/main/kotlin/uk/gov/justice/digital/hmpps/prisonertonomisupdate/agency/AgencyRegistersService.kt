@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Up
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyPhoneNumber
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyPhoneNumbersRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAgencyRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdatePrisonAreaRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.TelemetryEnabled
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.track
 
@@ -54,6 +55,22 @@ class AgencyRegistersService(
       track("court-updated", telemetry) {
         val dpsAgency = requireNotNull(dpsService.getAgency(courtId)) { "Court $courtId not found in DPS" }
         val response = nomisApiService.updateAgency(courtId, dpsAgency.toUpdateAgencyRequest(typeCode = "CRT"))
+        telemetry["nomisAgencyId"] = response.agencyId
+      }
+    }
+  }
+
+  suspend fun prisonAreaAmended(event: PrisonEvent) {
+    val prisonId = event.additionalInformation.prisonId
+    val telemetry = mutableMapOf(
+      "prisonId" to prisonId,
+    )
+    if (!event.didOriginateInDPS()) {
+      telemetryClient.trackEvent("prison-area-updated-ignored", telemetry)
+    } else {
+      track("prison-area-updated", telemetry) {
+        val dpsAgency = requireNotNull(dpsService.getAgency(prisonId)) { "Prison $prisonId not found in DPS" }
+        val response = nomisApiService.updatePrisonArea(prisonId, dpsAgency.toUpdatePrisonAreaRequest())
         telemetry["nomisAgencyId"] = response.agencyId
       }
     }
@@ -1143,6 +1160,17 @@ private fun LegacyAgencyDto.toUpdateAgencyRequest(typeCode: String): UpdateAgenc
   cjitCode = cjitCode,
   payrollRegionCode = payrollRegionCode,
   typeCode = typeCode,
+)
+
+private fun LegacyAgencyDto.toUpdatePrisonAreaRequest(): UpdatePrisonAreaRequest = UpdatePrisonAreaRequest(
+  localAuthorityCodes = listOfNotNull(localAuthorityCode),
+  areaCode = areaCode,
+  // NOMIS swaps the naming around: Legacy's regionCode is NOMIS's nomsRegionCode, and Legacy's
+  // geographicalAreaCode is NOMIS's regionCode
+  regionCode = geographicalAreaCode,
+  nomsRegionCode = regionCode,
+  cjitCode = cjitCode,
+  payrollRegionCode = payrollRegionCode,
 )
 
 private fun LegacyAgencyDto.AccessibleAccess?.toDisabilityAccessCode(): String? = when (this) {

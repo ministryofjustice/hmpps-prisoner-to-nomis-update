@@ -28,6 +28,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiM
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.updateAgencyEmailAddressesRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.updateAgencyPhoneNumbersRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.updateAgencyPhoneNumbersResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyNomisApiMockServer.Companion.updatePrisonAreaRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
@@ -284,6 +285,34 @@ class AgencyNomisApiServiceTest {
           .withRequestBody(equalToJson("""{"phoneNumbers":[]}""")),
       )
       assertThat(response.phoneNumbers).isEmpty()
+    }
+  }
+
+  @Nested
+  inner class UpdatePrisonArea {
+    val request = updatePrisonAreaRequest()
+
+    @Test
+    fun `will pass oauth2 token to endpoint`() = runTest {
+      mockServer.stubUpdatePrisonArea(agencyId = "MDI")
+
+      apiService.updatePrisonArea("MDI", request)
+
+      mockServer.verify(
+        putRequestedFor(anyUrl())
+          .withHeader("Authorization", matching(".+")),
+      )
+    }
+
+    @Test
+    fun `will call the update prison area endpoint with request`() = runTest {
+      mockServer.stubUpdatePrisonArea(agencyId = "MDI")
+
+      apiService.updatePrisonArea("MDI", request)
+
+      mockServer.verify(
+        putRequestedFor(urlPathEqualTo("/prison/MDI")),
+      )
     }
   }
 

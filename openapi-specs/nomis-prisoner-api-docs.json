@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-11-06.2369.378fee5"
+    "version" : "2026-11-10.2375.445800f"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -2848,6 +2848,88 @@
           },
           "403" : {
             "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prison/{agencyId}" : {
+      "put" : {
+        "tags" : [ "agency-resource" ],
+        "summary" : "Updates the area details of a prison",
+        "description" : "Replaces the area details, these are the only details synchronised with NOMIS. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "updatePrisonArea",
+        "parameters" : [ {
+          "name" : "agencyId",
+          "in" : "path",
+          "description" : "Prison id (aka agencyId)",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prison id (aka agencyId)",
+            "example" : "WWI"
+          },
+          "example" : "WWI"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdatePrisonAreaRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Prison updated",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AgencyResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "The request contains bad data, for example a reference data code that does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Agency not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW role",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -28430,6 +28512,69 @@
         }
       }
     },
+    "/core-person/{offenderId}/alias" : {
+      "get" : {
+        "tags" : [ "core-person-resource" ],
+        "summary" : "Get an alias by offender id",
+        "description" : "Retrieves an alias. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getAlias",
+        "parameters" : [ {
+          "name" : "offenderId",
+          "in" : "path",
+          "description" : "The offender id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The offender id",
+            "example" : 1234567
+          },
+          "example" : 1234567
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Alias returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CoreOffender"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Alias does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/core-person/{offenderId}/address/{addressId}" : {
       "get" : {
         "tags" : [ "core-person-resource" ],
@@ -28667,69 +28812,6 @@
           },
           "404" : {
             "description" : "Offender, address or phone does not exist",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/core-person/alias/{offenderId}" : {
-      "get" : {
-        "tags" : [ "core-person-resource" ],
-        "summary" : "Get an alias by offender id",
-        "description" : "Retrieves an alias. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-        "operationId" : "getAlias",
-        "parameters" : [ {
-          "name" : "offenderId",
-          "in" : "path",
-          "description" : "The offender id",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The offender id",
-            "example" : 1234567
-          },
-          "example" : 1234567
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Alias returned",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/CoreOffender"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Alias does not exist",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -32870,19 +32952,22 @@
         },
         "required" : [ "id", "mailAddress", "phoneNumbers", "primaryAddress", "validatedPAF" ]
       },
-      "AgencyAddressesResponse" : {
+      "AgencyEmailAddress" : {
         "type" : "object",
-        "description" : "A response to refreshing the list of addresses for an agency",
+        "description" : "The data held in NOMIS about an email address",
         "properties" : {
-          "addresses" : {
-            "type" : "array",
-            "description" : "The list of addresses now held for the agency",
-            "items" : {
-              "$ref" : "#/components/schemas/AgencyAddress"
-            }
+          "id" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Unique NOMIS Id of email address"
+          },
+          "emailAddress" : {
+            "type" : "string",
+            "description" : "The email address",
+            "example" : "john.smith@internet.co.uk"
           }
         },
-        "required" : [ "addresses" ]
+        "required" : [ "emailAddress", "id" ]
       },
       "AgencyPhoneNumber" : {
         "type" : "object",
@@ -32907,6 +32992,201 @@
           }
         },
         "required" : [ "id", "number", "type" ]
+      },
+      "AgencyResponse" : {
+        "type" : "object",
+        "description" : "A response to get an agency that is not a prison",
+        "properties" : {
+          "agencyId" : {
+            "type" : "string",
+            "description" : "The agency id",
+            "example" : "LCSY02"
+          },
+          "description" : {
+            "type" : "string",
+            "description" : "Name of agency",
+            "example" : "Blackburn YOT"
+          },
+          "longDescription" : {
+            "type" : [ "string", "null" ],
+            "description" : "Description of agency",
+            "example" : "Blackburn YOT"
+          },
+          "district" : {
+            "description" : "Geographic district",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "type" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "Agency type"
+          },
+          "active" : {
+            "type" : "boolean",
+            "description" : "Indicates if still used",
+            "example" : true
+          },
+          "deactivationDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Date no longer active",
+            "example" : "2020-01-01"
+          },
+          "updateAllowed" : {
+            "type" : "boolean",
+            "description" : "Indicates if data is allowed to be updated",
+            "example" : true
+          },
+          "contactName" : {
+            "type" : [ "string", "null" ],
+            "description" : "Name of contact at agency",
+            "example" : "John Smith"
+          },
+          "courtType" : {
+            "description" : "Court type",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "disabilityAccessCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "Disability access code",
+            "example" : "Y"
+          },
+          "area" : {
+            "description" : "Area",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "subArea" : {
+            "description" : "Sub-Area",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "region" : {
+            "description" : "Region",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "nomsRegion" : {
+            "description" : "NOMS Region",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "payrollRegion" : {
+            "description" : "Payroll Region",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "cjitCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "CJIT code",
+            "example" : "D62L087"
+          },
+          "localAuthorities" : {
+            "type" : "array",
+            "description" : "Local Authorities",
+            "items" : {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }
+          },
+          "addresses" : {
+            "type" : "array",
+            "description" : "Addresses",
+            "items" : {
+              "$ref" : "#/components/schemas/AgencyAddress"
+            }
+          },
+          "phones" : {
+            "type" : "array",
+            "description" : "Phone numbers",
+            "items" : {
+              "$ref" : "#/components/schemas/AgencyPhoneNumber"
+            }
+          },
+          "emailAddresses" : {
+            "type" : "array",
+            "description" : "Email addresses",
+            "items" : {
+              "$ref" : "#/components/schemas/AgencyEmailAddress"
+            }
+          }
+        },
+        "required" : [ "active", "addresses", "agencyId", "description", "emailAddresses", "localAuthorities", "phones", "type", "updateAllowed" ]
+      },
+      "UpdatePrisonAreaRequest" : {
+        "type" : "object",
+        "description" : "A request to update the area details of a prison",
+        "properties" : {
+          "areaCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "Area code",
+            "example" : "LOND"
+          },
+          "regionCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "Geographic region code",
+            "example" : "LOND"
+          },
+          "nomsRegionCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "NOMS region code",
+            "example" : "LOND"
+          },
+          "cjitCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "CJIT code",
+            "example" : "D62L087"
+          },
+          "payrollRegionCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "Payroll region code",
+            "example" : "LOND"
+          },
+          "localAuthorityCodes" : {
+            "type" : "array",
+            "description" : "Local authority codes, with a maximum of one allowed",
+            "example" : [ "BRENT" ],
+            "items" : {
+              "type" : "string"
+            }
+          }
+        },
+        "required" : [ "localAuthorityCodes" ]
+      },
+      "AgencyAddressesResponse" : {
+        "type" : "object",
+        "description" : "A response to refreshing the list of addresses for an agency",
+        "properties" : {
+          "addresses" : {
+            "type" : "array",
+            "description" : "The list of addresses now held for the agency",
+            "items" : {
+              "$ref" : "#/components/schemas/AgencyAddress"
+            }
+          }
+        },
+        "required" : [ "addresses" ]
       },
       "UpdateAgencyAddress" : {
         "type" : "object",
@@ -35365,164 +35645,6 @@
           }
         },
         "required" : [ "description" ]
-      },
-      "AgencyEmailAddress" : {
-        "type" : "object",
-        "description" : "The data held in NOMIS about an email address",
-        "properties" : {
-          "id" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Unique NOMIS Id of email address"
-          },
-          "emailAddress" : {
-            "type" : "string",
-            "description" : "The email address",
-            "example" : "john.smith@internet.co.uk"
-          }
-        },
-        "required" : [ "emailAddress", "id" ]
-      },
-      "AgencyResponse" : {
-        "type" : "object",
-        "description" : "A response to get an agency that is not a prison",
-        "properties" : {
-          "agencyId" : {
-            "type" : "string",
-            "description" : "The agency id",
-            "example" : "LCSY02"
-          },
-          "description" : {
-            "type" : "string",
-            "description" : "Name of agency",
-            "example" : "Blackburn YOT"
-          },
-          "longDescription" : {
-            "type" : [ "string", "null" ],
-            "description" : "Description of agency",
-            "example" : "Blackburn YOT"
-          },
-          "district" : {
-            "description" : "Geographic district",
-            "oneOf" : [ {
-              "$ref" : "#/components/schemas/CodeDescription"
-            }, {
-              "type" : "null"
-            } ]
-          },
-          "type" : {
-            "$ref" : "#/components/schemas/CodeDescription",
-            "description" : "Agency type"
-          },
-          "active" : {
-            "type" : "boolean",
-            "description" : "Indicates if still used",
-            "example" : true
-          },
-          "deactivationDate" : {
-            "type" : [ "string", "null" ],
-            "format" : "date",
-            "description" : "Date no longer active",
-            "example" : "2020-01-01"
-          },
-          "updateAllowed" : {
-            "type" : "boolean",
-            "description" : "Indicates if data is allowed to be updated",
-            "example" : true
-          },
-          "contactName" : {
-            "type" : [ "string", "null" ],
-            "description" : "Name of contact at agency",
-            "example" : "John Smith"
-          },
-          "courtType" : {
-            "description" : "Court type",
-            "oneOf" : [ {
-              "$ref" : "#/components/schemas/CodeDescription"
-            }, {
-              "type" : "null"
-            } ]
-          },
-          "disabilityAccessCode" : {
-            "type" : [ "string", "null" ],
-            "description" : "Disability access code",
-            "example" : "Y"
-          },
-          "area" : {
-            "description" : "Area",
-            "oneOf" : [ {
-              "$ref" : "#/components/schemas/CodeDescription"
-            }, {
-              "type" : "null"
-            } ]
-          },
-          "subArea" : {
-            "description" : "Sub-Area",
-            "oneOf" : [ {
-              "$ref" : "#/components/schemas/CodeDescription"
-            }, {
-              "type" : "null"
-            } ]
-          },
-          "region" : {
-            "description" : "Region",
-            "oneOf" : [ {
-              "$ref" : "#/components/schemas/CodeDescription"
-            }, {
-              "type" : "null"
-            } ]
-          },
-          "nomsRegion" : {
-            "description" : "NOMS Region",
-            "oneOf" : [ {
-              "$ref" : "#/components/schemas/CodeDescription"
-            }, {
-              "type" : "null"
-            } ]
-          },
-          "payrollRegion" : {
-            "description" : "Payroll Region",
-            "oneOf" : [ {
-              "$ref" : "#/components/schemas/CodeDescription"
-            }, {
-              "type" : "null"
-            } ]
-          },
-          "cjitCode" : {
-            "type" : [ "string", "null" ],
-            "description" : "CJIT code",
-            "example" : "D62L087"
-          },
-          "localAuthorities" : {
-            "type" : "array",
-            "description" : "Local Authorities",
-            "items" : {
-              "$ref" : "#/components/schemas/CodeDescription"
-            }
-          },
-          "addresses" : {
-            "type" : "array",
-            "description" : "Addresses",
-            "items" : {
-              "$ref" : "#/components/schemas/AgencyAddress"
-            }
-          },
-          "phones" : {
-            "type" : "array",
-            "description" : "Phone numbers",
-            "items" : {
-              "$ref" : "#/components/schemas/AgencyPhoneNumber"
-            }
-          },
-          "emailAddresses" : {
-            "type" : "array",
-            "description" : "Email addresses",
-            "items" : {
-              "$ref" : "#/components/schemas/AgencyEmailAddress"
-            }
-          }
-        },
-        "required" : [ "active", "addresses", "agencyId", "description", "emailAddresses", "localAuthorities", "phones", "type", "updateAllowed" ]
       },
       "UpdateAgencyRequest" : {
         "type" : "object",
@@ -47993,17 +48115,9 @@
             "type" : [ "integer", "null" ],
             "format" : "int64"
           },
-          "txnId" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
           "txnEntrySeq" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "txnEntryDate" : {
-            "type" : "string",
-            "format" : "date-time"
           },
           "txnEntryDesc" : {
             "type" : [ "string", "null" ]
@@ -48013,6 +48127,14 @@
           },
           "txnEntryAmount" : {
             "type" : "number"
+          },
+          "txnId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "txnEntryDate" : {
+            "type" : "string",
+            "format" : "date-time"
           }
         },
         "required" : [ "txnEntryAmount", "txnEntryDate", "txnEntrySeq", "txnId" ]
@@ -48685,6 +48807,14 @@
             "type" : "string",
             "description" : "Surname name of this offender record"
           },
+          "suffix" : {
+            "description" : "Suffix of this offender record, e.g. Junior",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodeDescription"
+            }, {
+              "type" : "null"
+            } ]
+          },
           "dateOfBirth" : {
             "type" : [ "string", "null" ],
             "format" : "date",
@@ -48735,6 +48865,24 @@
             "type" : "boolean",
             "description" : "The offender record associated with the current booking"
           },
+          "createdDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Date time when the record was created the record in NOMIS"
+          },
+          "createdByUsername" : {
+            "type" : "string",
+            "description" : "Username of person who created the record in NOMIS"
+          },
+          "lastUpdatedDateTime" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "Date time when the record was last updated the record in NOMIS"
+          },
+          "lastUpdatedByUsername" : {
+            "type" : [ "string", "null" ],
+            "description" : "Username of person who last updated the record in NOMIS"
+          },
           "identifiers" : {
             "type" : "array",
             "description" : "List of identifiers for the offender",
@@ -48743,7 +48891,7 @@
             }
           }
         },
-        "required" : [ "firstName", "identifiers", "lastName", "offenderId", "workingName" ]
+        "required" : [ "createdByUsername", "createdDateTime", "firstName", "identifiers", "lastName", "lastUpdatedByUsername", "lastUpdatedDateTime", "offenderId", "workingName" ]
       },
       "CorePerson" : {
         "type" : "object",
@@ -48836,9 +48984,27 @@
           "verified" : {
             "type" : "boolean",
             "description" : "Verified"
+          },
+          "createdDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Date time when the record was created the record in NOMIS"
+          },
+          "createdByUsername" : {
+            "type" : "string",
+            "description" : "Username of person who created the record in NOMIS"
+          },
+          "lastUpdatedDateTime" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "Date time when the record was last updated the record in NOMIS"
+          },
+          "lastUpdatedByUsername" : {
+            "type" : [ "string", "null" ],
+            "description" : "Username of person who last updated the record in NOMIS"
           }
         },
-        "required" : [ "identifier", "offenderId", "sequence", "type", "verified" ]
+        "required" : [ "createdByUsername", "createdDateTime", "identifier", "lastUpdatedByUsername", "lastUpdatedDateTime", "offenderId", "sequence", "type", "verified" ]
       },
       "OffenderAddress" : {
         "type" : "object",
