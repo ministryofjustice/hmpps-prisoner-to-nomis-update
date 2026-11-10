@@ -23,6 +23,7 @@ import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csra.CsraDpsApiExtension.Companion.csraApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csra.CsraDpsApiExtension.Companion.jsonMapper
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csra.model.CsraReviewDetail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CsraMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CsraCreateResponse
@@ -115,6 +116,32 @@ class CsraToNomisIntTest : SqsIntegrationTestBase() {
               assertThat(it).containsEntry("mappingType", "DPS_CREATED")
             },
             isNull(),
+          )
+        }
+      }
+
+      @Nested
+      @DisplayName("when the result is High Specific and NOMIS does not hold the new High codes (default)")
+      inner class HighSpecificWithSwitchOff {
+        @BeforeEach
+        fun setup() {
+          csraNomisApiMockServer.stubCreateCsra(CSRA_OFFENDER_NO, CsraCreateResponse(bookingId = CSRA_BOOKING_ID, sequence = CSRA_SEQUENCE))
+          csraApi.stubGetCsraReview(
+            UUID.fromString(CSRA_DPS_ID),
+            dpsCsra(UUID.fromString(CSRA_DPS_ID), finalResult = CsraReviewDetail.FinalResult.HIGH_SPECIFIC),
+          )
+          csraMappingApiMockServer.stubPostMapping()
+          publishCsraDomainEvent("cell.sharing.risk.assessment.created")
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will create the CSRA in NOMIS as HI`() {
+          csraNomisApiMockServer.verify(
+            1,
+            postRequestedFor(urlPathEqualTo("/prisoners/$CSRA_OFFENDER_NO/csra"))
+              .withRequestBodyJsonPath("$.calculatedLevel", "HI")
+              .withRequestBodyJsonPath("$.reviewLevel", "HI"),
           )
         }
       }

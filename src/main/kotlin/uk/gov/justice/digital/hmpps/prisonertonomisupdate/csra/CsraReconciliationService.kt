@@ -24,6 +24,8 @@ class CsraReconciliationService(
   private val csraDpsApiService: CsraDpsApiService,
   @Value($$"${reports.csra.reconciliation.page-size:1000}") private val pageSize: Int = 1000,
   @Value($$"${reports.csra.reconciliation.thread-count:10}") private val threadCount: Int = 10,
+  /** See [CsraService]: when off, NOMIS only holds HI, so High General and High Specific are compared as High. */
+  @Value($$"${feature.csra.nomis-high-general-specific:false}") private val nomisHighGeneralSpecific: Boolean = false,
 ) {
   private companion object {
     private const val TELEMETRY_CSRA_PREFIX = "csra-reports-reconciliation"
@@ -70,7 +72,7 @@ class CsraReconciliationService(
     idsInRange = { range -> this.getOffenderNosInRange(range.fromId, range.toId, activeOnly) },
   )
 
-  private val levelPriorities = listOf(AssessmentLevel.HI, AssessmentLevel.STANDARD, AssessmentLevel.MED, AssessmentLevel.LOW)
+  private val levelPriorities = listOf(AssessmentLevel.HI_SPFC, AssessmentLevel.HI_GEN, AssessmentLevel.HI, AssessmentLevel.STANDARD, AssessmentLevel.MED, AssessmentLevel.LOW)
 
   internal suspend fun checkCsra(offenderNo: String): MismatchCsra? = runCatching {
     val nomisCsra = csraNomisApiService.getCurrentCsraForPrisonerOrNull(offenderNo)
@@ -102,7 +104,7 @@ class CsraReconciliationService(
           CsraDetailFields(
             id = "${csra.bookingId}-${csra.sequence}",
             date = csra.evaluationDate ?: csra.assessmentDate,
-            level = it.toGenericLevel(),
+            level = it.toGenericLevel().asComparable(),
           )
         }
     }
@@ -113,7 +115,7 @@ class CsraReconciliationService(
         CsraDetailFields(
           id = it.reviewId.toString(),
           date = it.finalDate,
-          level = it.toGenericLevel(),
+          level = it.toGenericLevel().asComparable(),
         )
       }
 
@@ -145,6 +147,9 @@ class CsraReconciliationService(
       ),
     )
   }.getOrNull()
+
+  /** Without the new NOMIS codes, every High result is stored in NOMIS as HI, so compare them all as HIGH. */
+  private fun String?.asComparable(): String? = if (!nomisHighGeneralSpecific && this in listOf("HIGH_GENERAL", "HIGH_SPECIFIC")) "HIGH" else this
 
   private fun compareObjects(dpsDetail: CsraDetailFields?, nomisDetail: CsraDetailFields?): List<Difference> {
     if (dpsDetail == null && nomisDetail == null) return emptyList()
@@ -197,6 +202,8 @@ class CsraReconciliationService(
 
 fun AssessmentLevel.toGenericLevel() = when (this) {
   AssessmentLevel.HI -> "HIGH"
+  AssessmentLevel.HI_GEN -> "HIGH_GENERAL"
+  AssessmentLevel.HI_SPFC -> "HIGH_SPECIFIC"
 
   AssessmentLevel.STANDARD,
   AssessmentLevel.LOW,
@@ -207,10 +214,9 @@ fun AssessmentLevel.toGenericLevel() = when (this) {
 }
 
 private fun CsraDetailedRating.toGenericLevel(): String? = when (rating) {
-  CsraDetailedRating.Rating.HIGH,
-  CsraDetailedRating.Rating.HIGH_GENERAL,
-  CsraDetailedRating.Rating.HIGH_SPECIFIC,
-  -> "HIGH"
+  CsraDetailedRating.Rating.HIGH -> "HIGH"
+  CsraDetailedRating.Rating.HIGH_GENERAL -> "HIGH_GENERAL"
+  CsraDetailedRating.Rating.HIGH_SPECIFIC -> "HIGH_SPECIFIC"
 
   CsraDetailedRating.Rating.STANDARD -> "STANDARD"
   null -> null

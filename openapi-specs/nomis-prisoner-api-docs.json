@@ -32596,7 +32596,7 @@
       },
       "AssessmentLevel" : {
         "type" : "string",
-        "enum" : [ "STANDARD", "PEND", "LOW", "MED", "HI" ]
+        "enum" : [ "STANDARD", "PEND", "LOW", "MED", "HI", "HI_GEN", "HI_SPFC" ]
       },
       "AssessmentStatusType" : {
         "type" : "string",
