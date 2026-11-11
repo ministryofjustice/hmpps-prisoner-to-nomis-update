@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-11-05.6142.aaeb6d9"
+    "version" : "2026-11-10.6192.f4e918b"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -1053,6 +1053,7 @@
     "/person/search/exact-match" : {
       "post" : {
         "tags" : [ "Search" ],
+        "description" : "Exact match search. All search terms must match exactly. Role required is **ROLE_CORE_PERSON_RECORD_API__RO** .",
         "operationId" : "search",
         "requestBody" : {
           "content" : {
@@ -1085,7 +1086,10 @@
               }
             }
           }
-        }
+        },
+        "security" : [ {
+          "api-role" : [ ]
+        } ]
       }
     },
     "/person/probation/{crn}/address" : {
@@ -2843,7 +2847,7 @@
             "example" : "M"
           },
           "isPrimary" : {
-            "type" : [ "boolean", "null" ],
+            "type" : "boolean",
             "description" : "Indicates if this is a primary alias",
             "example" : true
           },
@@ -2861,13 +2865,47 @@
             "description" : "Ethnicity of this offender record",
             "enum" : [ "A1", "A2", "A3", "A4", "A9", "B1", "B2", "B9", "ETH03", "M1", "M2", "M3", "M9", "MERGE", "NS", "O1", "O2", "O9", "UN", "W1", "W2", "W3", "W4", "W5", "W8", "W9", "Z1" ]
           },
-          "createDate" : {
+          "identifiers" : {
+            "type" : "array",
+            "description" : "List of identifiers associated with this alias",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonIdentifier"
+            }
+          },
+          "suffix" : {
             "type" : [ "string", "null" ],
-            "format" : "date",
-            "description" : "Date this offender record was created"
+            "description" : "Suffix",
+            "enum" : [ "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "Junior", "Senior" ]
+          },
+          "nameType" : {
+            "type" : [ "string", "null" ],
+            "description" : "Name type",
+            "enum" : [ "CN", "ALIAS", "MAID", "NICK" ]
+          },
+          "createDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The alias create date and time",
+            "example" : "2000-01-01T12:00:00"
+          },
+          "createUserId" : {
+            "type" : "string",
+            "description" : "The alias create user id",
+            "example" : "12345"
+          },
+          "modifyDateTime" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "The alias modify date and time",
+            "example" : "2000-01-01T12:00:00"
+          },
+          "modifyUserId" : {
+            "type" : [ "string", "null" ],
+            "description" : "The alias modify user id",
+            "example" : "12345"
           }
         },
-        "required" : [ "nomisOffenderId" ]
+        "required" : [ "createDateTime", "createUserId", "identifiers", "isPrimary", "nomisOffenderId" ]
       },
       "PrisonAliasesAndIdentifiersRequest" : {
         "type" : "object",
@@ -2878,16 +2916,9 @@
               "$ref" : "#/components/schemas/PrisonAlias"
             },
             "minItems" : 1
-          },
-          "identifiers" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/PrisonIdentifier"
-            },
-            "minItems" : 1
           }
         },
-        "required" : [ "aliases", "identifiers" ]
+        "required" : [ "aliases" ]
       },
       "PrisonIdentifier" : {
         "type" : "object",
@@ -2925,9 +2956,31 @@
           "verified" : {
             "type" : "boolean",
             "description" : "Verified"
+          },
+          "createDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The identifier create date and time",
+            "example" : "2000-01-01T12:00:00"
+          },
+          "createUserId" : {
+            "type" : "string",
+            "description" : "The identifier create user id",
+            "example" : "12345"
+          },
+          "modifyDateTime" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "The identifier modify date and time",
+            "example" : "2000-01-01T12:00:00"
+          },
+          "modifyUserId" : {
+            "type" : [ "string", "null" ],
+            "description" : "The identifier modify user id",
+            "example" : "12345"
           }
         },
-        "required" : [ "nomisIdentifierId", "type", "value", "verified" ]
+        "required" : [ "createDateTime", "createUserId", "nomisIdentifierId", "type", "value", "verified" ]
       },
       "SysconAliasMapping" : {
         "type" : "object",
