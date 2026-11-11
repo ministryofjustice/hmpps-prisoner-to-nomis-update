@@ -661,7 +661,7 @@ class CourtSentencingReconciliationService(
           differences.add(Difference("$parentProperty.outcome", dpsObj.outcome, nomisObj.outcome, dpsObj.id))
         }
         if (!isSameValue(dpsObj.chargeValue, nomisObj.chargeValue)) {
-          differences.add(Difference("$parentProperty.chargeValue", dpsObj.chargeValue?.toString(), nomisObj.chargeValue?.toString(), dpsObj.id))
+          differences.add(Difference("$parentProperty.chargeValue", dpsObj.chargeValue?.toDifferenceString(), nomisObj.chargeValue?.toDifferenceString(), dpsObj.id))
         }
       }
 
@@ -775,7 +775,8 @@ class CourtSentencingReconciliationService(
     compareBy<ChargeFields> { it.offenceCode }
       .thenBy { it.offenceDate }
       .thenBy { it.outcome }
-      .thenBy { it.offenceEndDate },
+      .thenBy { it.offenceEndDate }
+      .thenBy { it.chargeValue },
   )
 
   fun <T> compareLists(dpsList: List<T>, nomisList: List<T>, parentProperty: String): List<Difference> {
@@ -966,6 +967,8 @@ data class AppearanceFields(
   }
 }
 
+private fun BigDecimal.toDifferenceString(): String = stripTrailingZeros().toPlainString()
+
 private fun isSameValue(a: BigDecimal?, b: BigDecimal?) = if (a == null || b == null) a == b else a.compareTo(b) == 0
 
 data class ChargeFields(
@@ -987,7 +990,7 @@ data class ChargeFields(
       isSameValue(chargeValue, other.chargeValue)
   }
 
-  fun toSortString(): String = "ChargeFields(outcome=$outcome, offenceDate=$offenceDate, offenceCode='$offenceCode', offenceEndDate=$offenceEndDate,)"
+  fun toSortString(): String = "ChargeFields(outcome=$outcome, offenceDate=$offenceDate, offenceCode='$offenceCode', offenceEndDate=$offenceEndDate, chargeValue=${chargeValue?.toDifferenceString()},)"
 }
 
 data class SentenceFields(
