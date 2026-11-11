@@ -4,6 +4,7 @@ import com.microsoft.applicationinsights.TelemetryClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.PrisonerReconciliationReport
@@ -57,11 +58,12 @@ class PersonLocationReconciliationService(
   private val dpsApi: PersonLocationDpsApiService,
   private val mappingApi: PersonLocationMappingApiService,
   private val nomisPrisonerApi: NomisApiService,
-  private val config: PersonLocationReconciliationConfig,
+  @param:Value($$"${reports.person-location.reconciliation.page-size}") private val pageSize: Int = 100,
+  @param:Value($$"${reports.person-location.reconciliation.thread-count}") private val threadCount: Int = 15,
 ) {
   private val names = ReconciliationNames("person-location-reconciliation", "Person location")
 
-  suspend fun generateReport(selection: PrisonerSelection) = PrisonerReconciliationReport(telemetryClient, nomisPrisonerApi, names, selection, config.pageSize, config.threadCount) { checkPrisonersMatch(it) }.run()
+  suspend fun generateReport(selection: PrisonerSelection) = PrisonerReconciliationReport(telemetryClient, nomisPrisonerApi, names, selection, pageSize, threadCount) { checkPrisonersMatch(it) }.run()
 
   suspend fun checkPrisonersMatch(offenderNo: String, suppressTelemetry: Boolean = false): List<MismatchedPrisonerLocations> = withContext(Dispatchers.Unconfined) {
     val nomisLocations = async { nomisApi.getOffenderPersonLocationsOrNull(offenderNo) }
@@ -113,11 +115,7 @@ class PersonLocationReconciliationService(
       }
     }
 
-    val mismatchedBookings = if (config.reconcileBookings) {
-      findMismatchedBookings(offenderNo, nomisLocations, dpsLocations, mappings)
-    } else {
-      emptyList()
-    }
+    val mismatchedBookings = findMismatchedBookings(offenderNo, nomisLocations, dpsLocations, mappings)
     if (!suppressTelemetry) {
       mismatchedBookings.forEach {
         telemetryClient.trackEvent(
@@ -149,21 +147,19 @@ class PersonLocationReconciliationService(
     val mismatches = mutableListOf<MismatchedPrisonerLocationIds>()
 
     // Check for bookings only in 1 system
-    if (config.reconcileBookings) {
-      val nomisBookingIds = nomisLocations.bookings.map { it.booking.bookingId }
-      val dpsSeriesIds = dpsLocations.series.map { it.series.dpsId!! }
-      if (nomisBookingIds.size != dpsSeriesIds.size) {
-        mismatches.add(
-          MismatchedPrisonerLocationIds(
-            offenderNo = offenderNo,
-            type = BOOKING,
-            nomisCount = nomisBookingIds.size,
-            dpsCount = dpsSeriesIds.size,
-            unexpectedNomisIds = mappings.unexpectedNomisBookings(nomisBookingIds, dpsSeriesIds).toString(),
-            unexpectedDpsIds = mappings.unexpectedDpsSeries(dpsSeriesIds, nomisBookingIds).toString(),
-          ),
-        )
-      }
+    val nomisBookingIds = nomisLocations.bookings.map { it.booking.bookingId }
+    val dpsSeriesIds = dpsLocations.series.map { it.series.dpsId!! }
+    if (nomisBookingIds.size != dpsSeriesIds.size) {
+      mismatches.add(
+        MismatchedPrisonerLocationIds(
+          offenderNo = offenderNo,
+          type = BOOKING,
+          nomisCount = nomisBookingIds.size,
+          dpsCount = dpsSeriesIds.size,
+          unexpectedNomisIds = mappings.unexpectedNomisBookings(nomisBookingIds, dpsSeriesIds).toString(),
+          unexpectedDpsIds = mappings.unexpectedDpsSeries(dpsSeriesIds, nomisBookingIds).toString(),
+        ),
+      )
     }
 
     // Check for movements only in 1 system
@@ -230,24 +226,22 @@ class PersonLocationReconciliationService(
     val mismatches = mutableListOf<MismatchedPrisonerLocationIds>()
 
     // check for missing booking mappings
-    if (config.reconcileBookings) {
-      val nomisBookingIds = nomisLocations.bookings.map { it.booking.bookingId }
-      val dpsSeriesIds = dpsLocations.series.map { it.series.dpsId!! }
-      val matchedBookingIds = mappings.matchingBookings(nomisBookingIds, dpsSeriesIds)
-      if (matchedBookingIds.size != nomisBookingIds.size || matchedBookingIds.size != dpsSeriesIds.size) {
-        val missingNomisIds = nomisBookingIds - matchedBookingIds.map { it.first }.toSet()
-        val missingDpsIds = dpsSeriesIds - matchedBookingIds.map { it.second }.toSet()
-        mismatches.add(
-          MismatchedPrisonerLocationIds(
-            offenderNo = offenderNo,
-            type = MISSING_MAPPING_BOOKING,
-            nomisCount = nomisBookingIds.size,
-            dpsCount = dpsSeriesIds.size,
-            unexpectedNomisIds = "$missingNomisIds",
-            unexpectedDpsIds = "$missingDpsIds",
-          ),
-        )
-      }
+    val nomisBookingIds = nomisLocations.bookings.map { it.booking.bookingId }
+    val dpsSeriesIds = dpsLocations.series.map { it.series.dpsId!! }
+    val matchedBookingIds = mappings.matchingBookings(nomisBookingIds, dpsSeriesIds)
+    if (matchedBookingIds.size != nomisBookingIds.size || matchedBookingIds.size != dpsSeriesIds.size) {
+      val missingNomisIds = nomisBookingIds - matchedBookingIds.map { it.first }.toSet()
+      val missingDpsIds = dpsSeriesIds - matchedBookingIds.map { it.second }.toSet()
+      mismatches.add(
+        MismatchedPrisonerLocationIds(
+          offenderNo = offenderNo,
+          type = MISSING_MAPPING_BOOKING,
+          nomisCount = nomisBookingIds.size,
+          dpsCount = dpsSeriesIds.size,
+          unexpectedNomisIds = "$missingNomisIds",
+          unexpectedDpsIds = "$missingDpsIds",
+        ),
+      )
     }
 
     // check for missing movement mappings
