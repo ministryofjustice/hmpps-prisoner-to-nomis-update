@@ -9,18 +9,17 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
-import org.mockito.kotlin.argThat
 import org.mockito.kotlin.check
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.never
 import org.mockito.kotlin.reset
 import org.mockito.kotlin.verify
-import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.PrisonerSelection.ACTIVE_PRISONERS
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.PrisonerSelection.ALL_PRISONERS
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.NomisMovementId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationBookings.Type.ACTIVE_FLAG
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationBookings.Type.BOOKING_BEGIN_TIME
@@ -62,7 +61,7 @@ class PersonLocationReconciliationIntTest(
   @Autowired private val reconciliationService: PersonLocationReconciliationService,
   @Autowired private val nomisApi: PersonLocationNomisApiMockServer,
   @Autowired private val mappingApi: PersonLocationMappingApiMockServer,
-) : PersonLocationIntegrationTestBase() {
+) : IntegrationTestBase() {
 
   private val dpsApi = dpsPersonLocationServer
   private val prisonerApi = NomisApiExtension.nomisApi
@@ -286,13 +285,13 @@ class PersonLocationReconciliationIntTest(
           personIdentifier = "A0001TZ",
           response = dpsResponse,
         )
+
+        reconciliationService.generateReport(ALL_PRISONERS)
+        awaitReportFinished()
       }
 
       @Test
-      fun `should report extra DPS series`() = runTest {
-        reconciliationService.generateReport(ALL_PRISONERS)
-        awaitReportFinished()
-
+      fun `should report extra DPS series`() {
         verify(telemetryClient).trackEvent(
           eq("person-location-reconciliation-mismatch"),
           eq(
@@ -316,24 +315,7 @@ class PersonLocationReconciliationIntTest(
       }
 
       @Test
-      fun `should NOT report extra DPS series if booking reconciliation off`() = runTest {
-        whenever(reconciliationConfig.reconcileBookings).thenReturn(false)
-
-        reconciliationService.generateReport(ALL_PRISONERS)
-        awaitReportFinished()
-
-        verify(telemetryClient, never()).trackEvent(
-          eq("person-location-reconciliation-mismatch"),
-          argThat { this["type"] == "BOOKING" || this["type"] == "MISSING_MAPPING_BOOKING" },
-          isNull(),
-        )
-      }
-
-      @Test
-      fun `should report extra DPS movements`() = runTest {
-        reconciliationService.generateReport(ALL_PRISONERS)
-        awaitReportFinished()
-
+      fun `should report extra DPS movements`() {
         verify(telemetryClient).trackEvent(
           eq("person-location-reconciliation-mismatch"),
           eq(
@@ -867,37 +849,6 @@ class PersonLocationReconciliationIntTest(
         type = BOOKING_STATUS,
         nomisValue = "CLOSED",
         dpsValue = "OPEN",
-      )
-    }
-
-    @Test
-    fun `should NOT report mismatch if booking reconciliation off`() = runTest {
-      whenever(reconciliationConfig.reconcileBookings).thenReturn(false)
-      nomisApi.stubGetOffenderPersonLocations(
-        offenderNo = "A0001TZ",
-        response = offenderPersonLocationsResponse(
-          bookings = listOf(
-            BookingPersonLocations(
-              booking = validBooking.copy(bookingStatus = CLOSED),
-              movements = listOf(validTransferIn, validCourtOut),
-            ),
-          ),
-        ),
-      )
-      reconciliationService.generateReport(ALL_PRISONERS)
-      awaitReportFinished()
-
-      verify(telemetryClient, never()).trackEvent(
-        eq("person-location-reconciliation-mismatch"),
-        eq(
-          mapOf(
-            "offenderNo" to "A0001TZ",
-            "nomisBookingId" to "12345",
-            "dpsSeriesId" to "$seriesId",
-            "type" to "BOOKING_STATUS",
-          ),
-        ),
-        isNull(),
       )
     }
 
