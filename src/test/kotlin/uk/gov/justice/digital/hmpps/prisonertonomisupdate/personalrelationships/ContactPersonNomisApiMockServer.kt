@@ -696,6 +696,17 @@ class ContactPersonNomisApiMockServer(private val jsonMapper: JsonMapper) {
     )
   }
 
+  fun stubGetPrisonerContactsError(prisonerNumber: String, status: HttpStatus = HttpStatus.INTERNAL_SERVER_ERROR) {
+    nomisApi.stubFor(
+      get(urlPathEqualTo("/prisoners/$prisonerNumber/contacts")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(status.value())
+          .withBody("""{"status":${status.value()}}"""),
+      ),
+    )
+  }
+
   fun stubGetPersonIds(lastPersonId: Long = 0, response: PersonIdsWithLast = PersonIdsWithLast(lastPersonId = 0, personIds = emptyList())) {
     nomisApi.stubFor(
       get(urlPathEqualTo("/persons/ids/all-from-id")).withQueryParam("personId", equalTo("$lastPersonId")).willReturn(

@@ -10,7 +10,10 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.PrisonerReconciliationReport
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.PrisonerSelection.ACTIVE_PRISONERS
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationErrorPageResult
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationNames
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationSuccessPageResult
@@ -19,7 +22,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ContactRestriction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerContact
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ReconcilePrisonerRelationship
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ReconcileRelationship
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ReconcileRelationshipRestriction
@@ -38,6 +40,7 @@ class ContactPersonReconciliationService(
   private val nomisPrisonerApiService: NomisApiService,
   private val dpsApiService: ContactPersonDpsApiService,
   @Value("\${reports.contact-person.prisoner-contact.reconciliation.page-size:10}") private val prisonerContactPageSize: Int = 10,
+  @Value("\${reports.contact-person.prisoner-contact.reconciliation.thread-count:10}") private val prisonerContactThreadCount: Int = 10,
   @Value("\${reports.contact-person.person-contact.reconciliation.page-size:10}") private val personContactPageSize: Int = 10,
 ) {
   internal companion object {
@@ -45,38 +48,19 @@ class ContactPersonReconciliationService(
     const val TELEMETRY_PRISONER_PREFIX = "contact-person-prisoner-contact-reconciliation"
     const val TELEMETRY_PERSON_PREFIX = "contact-person-reconciliation"
   }
-  suspend fun generatePrisonerContactReconciliationReportBatch() {
-    telemetryClient.trackEvent(
-      "$TELEMETRY_PRISONER_PREFIX-requested",
-      mapOf(),
-    )
+  private val prisonerContactNames = ReconciliationNames(TELEMETRY_PRISONER_PREFIX, "Prisoner contacts")
 
-    runCatching { generatePrisonerContactReconciliationReport() }
-      .onSuccess {
-        log.info("Prisoner contacts reconciliation report completed with ${it.mismatches.size} mismatches")
-        telemetryClient.trackEvent(
-          "$TELEMETRY_PRISONER_PREFIX-report",
-          mapOf(
-            "prisoners-count" to it.itemsChecked.toString(),
-            "pages-count" to it.pagesChecked.toString(),
-            "mismatch-count" to it.mismatches.size.toString(),
-            "success" to "true",
-          ) + it.mismatches.asPrisonerMap(),
-        )
-      }
-      .onFailure {
-        telemetryClient.trackEvent("$TELEMETRY_PRISONER_PREFIX-report", mapOf("success" to "false"))
-        log.error("Prisoner contacts reconciliation report failed", it)
-      }
-  }
+  suspend fun generatePrisonerContactReconciliationReportBatch() = PrisonerReconciliationReport(
+    telemetryClient,
+    nomisPrisonerApiService,
+    prisonerContactNames,
+    ACTIVE_PRISONERS,
+    prisonerContactPageSize,
+    prisonerContactThreadCount,
+    mismatchSummary = { prisoners -> prisoners.associate { it.offenderNo to it.mismatches.first().asReportValue() } },
+  ) { listOfNotNull(checkPrisonerContactsMatch(it)) }.run()
 
-  private fun List<MismatchPrisonerContacts>.asPrisonerMap(): Map<String, String> = this.associate { it.offenderNo to "dpsCount=${it.dpsContactCount},nomisCount=${it.nomisContactCount}" }
-
-  suspend fun generatePrisonerContactReconciliationReport(): ReconciliationResult<MismatchPrisonerContacts> = generateReconciliationReport(
-    threadCount = prisonerContactPageSize,
-    checkMatch = ::checkPrisonerContactsMatch,
-    nextPage = ::getNextBookingsForPage,
-  )
+  private fun MismatchPrisonerContacts.asReportValue() = "dpsCount=$dpsContactCount,nomisCount=$nomisContactCount"
 
   suspend fun generatePersonContactReconciliationReportBatch() {
     telemetryClient.trackEvent(
@@ -138,26 +122,6 @@ class ContactPersonReconciliationService(
     )
   }
 
-  private suspend fun getNextBookingsForPage(lastBookingId: Long): ReconciliationPageResult<PrisonerIds> = runCatching {
-    nomisPrisonerApiService.getAllLatestBookings(lastBookingId = lastBookingId, activeOnly = true, pageSize = prisonerContactPageSize)
-  }.onFailure {
-    telemetryClient.trackEvent(
-      "$TELEMETRY_PRISONER_PREFIX-mismatch-page-error",
-      mapOf(
-        "booking" to lastBookingId.toString(),
-      ),
-    )
-    log.error("Unable to match entire page of bookings from booking: $lastBookingId", it)
-  }
-    .map {
-      ReconciliationSuccessPageResult(
-        ids = it.prisonerIds,
-        last = it.lastBookingId,
-      )
-    }
-    .getOrElse { ReconciliationErrorPageResult(it) }
-    .also { log.info("Page requested from booking: $lastBookingId, with $prisonerContactPageSize bookings") }
-
   private suspend fun getNextPersonsForPage(lastPersonId: Long): ReconciliationPageResult<Long> = runCatching { nomisApiService.getPersonIds(lastPersonId = lastPersonId, pageSize = personContactPageSize) }
     .onFailure {
       telemetryClient.trackEvent(
@@ -172,37 +136,28 @@ class ContactPersonReconciliationService(
     .getOrElse { ReconciliationErrorPageResult(it) }
     .also { log.info("Page requested from person: $lastPersonId, with $personContactPageSize person") }
 
-  suspend fun checkPrisonerContactsMatch(prisonerId: PrisonerIds): MismatchPrisonerContacts? = runCatching {
+  suspend fun checkPrisonerContactsMatch(offenderNo: String): MismatchPrisonerContacts? {
     val (nomisContacts, dpsContacts) = withContext(Dispatchers.Unconfined) {
-      async { nomisApiService.getContactsForPrisoner(prisonerId.offenderNo).contacts } to
-        async { dpsApiService.getPrisonerContacts(prisonerId.offenderNo).relationships }
+      async { nomisApiService.getContactsForPrisoner(offenderNo).contacts } to
+        async { dpsApiService.getPrisonerContacts(offenderNo).relationships }
     }.awaitBoth()
 
     val dpsContactSummaries = dpsContacts.map { it.asSummary() }
     val nomisContactSummaries = nomisContacts.map { it.asSummary() }
 
-    checkContactsMatch(
-      prisonerId = prisonerId,
+    return checkContactsMatch(
+      offenderNo = offenderNo,
       dpsContactSummaries = dpsContactSummaries,
       nomisContactSummaries = nomisContactSummaries,
     ) ?: run {
       // don't bother checking restrictions unless we have matching contacts
       checkContactRestrictionsMatch(
-        prisonerId = prisonerId,
+        offenderNo = offenderNo,
         nomisContacts = nomisContacts,
         dpsContacts = dpsContacts,
       )
     }
-  }.onFailure {
-    log.error("Unable to match contacts for prisoner with ${prisonerId.offenderNo} booking: ${prisonerId.bookingId}", it)
-    telemetryClient.trackEvent(
-      "$TELEMETRY_PRISONER_PREFIX-mismatch-error",
-      mapOf(
-        "offenderNo" to prisonerId.offenderNo,
-        "bookingId" to prisonerId.bookingId.toString(),
-      ),
-    )
-  }.getOrNull()
+  }
 
   suspend fun checkPersonContactMatch(personId: Long): MismatchPersonContacts? = runCatching {
     val (nomisPerson, dpsContact) = withContext(Dispatchers.Unconfined) {
@@ -265,11 +220,11 @@ class ContactPersonReconciliationService(
     return null
   }
 
-  suspend fun checkContactsMatch(prisonerId: PrisonerIds, nomisContactSummaries: List<ContactSummary>, dpsContactSummaries: List<ContactSummary>): MismatchPrisonerContacts? {
+  suspend fun checkContactsMatch(offenderNo: String, nomisContactSummaries: List<ContactSummary>, dpsContactSummaries: List<ContactSummary>): MismatchPrisonerContacts? {
     val (contactIdsMissingFromNomis, contactIdsMissingFromDps) = findMissingContacts(nomisContactSummaries, dpsContactSummaries)
 
     val telemetry = mutableMapOf(
-      "offenderNo" to prisonerId.offenderNo,
+      "offenderNo" to offenderNo,
       "dpsContactCount" to (dpsContactSummaries.size.toString()),
       "nomisContactCount" to (nomisContactSummaries.size.toString()),
       "contactIdsMissingFromNomis" to (contactIdsMissingFromNomis.toString()),
@@ -277,7 +232,7 @@ class ContactPersonReconciliationService(
     )
 
     if (nomisContactSummaries.size != dpsContactSummaries.size) {
-      return MismatchPrisonerContacts(prisonerId.offenderNo, nomisContactCount = nomisContactSummaries.size, dpsContactCount = dpsContactSummaries.size).also { mismatch ->
+      return MismatchPrisonerContacts(offenderNo, nomisContactCount = nomisContactSummaries.size, dpsContactCount = dpsContactSummaries.size).also { mismatch ->
         telemetryClient.trackEvent(
           "$TELEMETRY_PRISONER_PREFIX-mismatch",
           telemetry + ("reason" to "different-number-of-contacts"),
@@ -286,7 +241,7 @@ class ContactPersonReconciliationService(
     }
 
     if (contactIdsMissingFromNomis.isNotEmpty() || contactIdsMissingFromDps.isNotEmpty()) {
-      return MismatchPrisonerContacts(prisonerId.offenderNo, nomisContactCount = nomisContactSummaries.size, dpsContactCount = dpsContactSummaries.size).also { mismatch ->
+      return MismatchPrisonerContacts(offenderNo, nomisContactCount = nomisContactSummaries.size, dpsContactCount = dpsContactSummaries.size).also { mismatch ->
         telemetryClient.trackEvent(
           "$TELEMETRY_PRISONER_PREFIX-mismatch",
           telemetry + mapOf("reason" to "different-contacts", "contactIdsMissingFromNomis" to contactIdsMissingFromNomis.toString(), "contactIdsMissingFromDps" to contactIdsMissingFromDps.toString()),
@@ -298,15 +253,15 @@ class ContactPersonReconciliationService(
         "$TELEMETRY_PRISONER_PREFIX-mismatch",
         telemetry + mapOf("reason" to "different-contacts-details", "contactId" to dpsSummary.contactId.toString()),
       )
-      MismatchPrisonerContacts(prisonerId.offenderNo, nomisContactCount = nomisContactSummaries.size, dpsContactCount = dpsContactSummaries.size)
+      MismatchPrisonerContacts(offenderNo, nomisContactCount = nomisContactSummaries.size, dpsContactCount = dpsContactSummaries.size)
     }.firstOrNull()
   }
-  suspend fun checkContactRestrictionsMatch(prisonerId: PrisonerIds, nomisContacts: List<PrisonerContact>, dpsContacts: List<ReconcilePrisonerRelationship>): MismatchPrisonerContacts? = dpsContacts.map { dpsContact ->
+  suspend fun checkContactRestrictionsMatch(offenderNo: String, nomisContacts: List<PrisonerContact>, dpsContacts: List<ReconcilePrisonerRelationship>): MismatchPrisonerContacts? = dpsContacts.map { dpsContact ->
     val dpsPrisonerContactRestrictions = dpsContact.restrictions
     // since we only do this if contacts match, we must be able to find the associated relationship in NOMIS
     val nomisPrisonerContactRestrictions = nomisContacts.find { it.person.personId == dpsContact.contactId && it.relationshipType.code == dpsContact.relationshipToPrisoner }?.restrictions ?: emptyList()
     val telemetry = mutableMapOf(
-      "offenderNo" to prisonerId.offenderNo,
+      "offenderNo" to offenderNo,
       "contactId" to dpsContact.contactId.toString(),
       "relationshipType" to dpsContact.relationshipToPrisoner,
       "dpsPrisonerContactRestrictionCount" to (dpsPrisonerContactRestrictions.size.toString()),
@@ -319,7 +274,7 @@ class ContactPersonReconciliationService(
     val (prisonerRestrictionsTypesMissingFromNomis, prisonerRestrictionsTypesMissingFromDps) = findMissingPrisonerContactRestrictions(nomisPrisonerContactRestrictionsSummaries, dpsPrisonerContactRestrictionsSummaries)
 
     if (nomisPrisonerContactRestrictions.size != dpsPrisonerContactRestrictions.size) {
-      return MismatchPrisonerContacts(prisonerId.offenderNo, nomisContactCount = nomisContacts.size, dpsContactCount = dpsContacts.size).also { mismatch ->
+      return MismatchPrisonerContacts(offenderNo, nomisContactCount = nomisContacts.size, dpsContactCount = dpsContacts.size).also { mismatch ->
         log.info("Prisoner contact restriction sizes do not match  $mismatch")
         telemetryClient.trackEvent(
           "$TELEMETRY_PRISONER_PREFIX-mismatch",
@@ -333,7 +288,7 @@ class ContactPersonReconciliationService(
     }
 
     if (prisonerRestrictionsTypesMissingFromNomis.isNotEmpty() || prisonerRestrictionsTypesMissingFromDps.isNotEmpty()) {
-      return MismatchPrisonerContacts(prisonerId.offenderNo, nomisContactCount = nomisContacts.size, dpsContactCount = dpsContacts.size).also { mismatch ->
+      return MismatchPrisonerContacts(offenderNo, nomisContactCount = nomisContacts.size, dpsContactCount = dpsContacts.size).also { mismatch ->
         log.info("Prisoner contact restrictions types do not match  $mismatch")
         telemetryClient.trackEvent(
           "$TELEMETRY_PRISONER_PREFIX-mismatch",
@@ -354,7 +309,7 @@ class ContactPersonReconciliationService(
           "restrictionType" to dpsSummary.restrictionType,
         ),
       )
-      MismatchPrisonerContacts(prisonerId.offenderNo, nomisContactCount = nomisContacts.size, dpsContactCount = dpsContacts.size)
+      MismatchPrisonerContacts(offenderNo, nomisContactCount = nomisContacts.size, dpsContactCount = dpsContacts.size)
     }.firstOrNull()
   }.firstOrNull()
 

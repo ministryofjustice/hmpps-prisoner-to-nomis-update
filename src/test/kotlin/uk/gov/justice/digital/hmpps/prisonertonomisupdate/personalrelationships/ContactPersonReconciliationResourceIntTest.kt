@@ -68,7 +68,7 @@ class ContactPersonReconciliationResourceIntTest(
 
       verify(telemetryClient).trackEvent(
         eq("contact-person-prisoner-contact-reconciliation-requested"),
-        any(),
+        eq(mapOf("TYPE" to "ACTIVE_PRISONERS")),
         isNull(),
       )
 
@@ -83,6 +83,37 @@ class ContactPersonReconciliationResourceIntTest(
       verify(telemetryClient).trackEvent(
         eq("contact-person-prisoner-contact-reconciliation-report"),
         check {
+          assertThat(it).containsEntry("TYPE", "ACTIVE_PRISONERS")
+          assertThat(it).containsEntry("mismatch-count", "3")
+          assertThat(it).containsEntry("A0001TZ", "dpsCount=1,nomisCount=2")
+          assertThat(it).containsEntry("A0002TZ", "dpsCount=2,nomisCount=2")
+          assertThat(it).containsEntry("A0004TZ", "dpsCount=1,nomisCount=1")
+          assertThat(it).doesNotContainKey("offenderNos")
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `will output an error and carry on when a prisoner cannot be checked`() = runTest {
+      nomisApi.stubGetPrisonerContactsError("A0003TZ")
+
+      reconciliationService.generatePrisonerContactReconciliationReportBatch()
+      awaitReportFinished()
+
+      verify(telemetryClient).trackEvent(
+        eq("contact-person-prisoner-contact-reconciliation-mismatch-error"),
+        check {
+          assertThat(it).containsEntry("offenderNo", "A0003TZ")
+          assertThat(it).containsKey("reason")
+          assertThat(it).doesNotContainKey("bookingId")
+        },
+        isNull(),
+      )
+      verify(telemetryClient).trackEvent(
+        eq("contact-person-prisoner-contact-reconciliation-report"),
+        check {
+          assertThat(it).containsEntry("prisoners-count", "4")
           assertThat(it).containsEntry("mismatch-count", "3")
         },
         isNull(),

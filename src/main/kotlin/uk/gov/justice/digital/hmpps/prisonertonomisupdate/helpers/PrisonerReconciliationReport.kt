@@ -33,19 +33,29 @@ enum class PrisonerSelection(val label: String, val cursorName: String) {
 class ReconciliationNames(val telemetryPrefix: String, val description: String)
 
 /**
+ * The mismatches found for a single prisoner; only created when there is at least one.
+ */
+class PrisonerMismatches<M>(val offenderNo: String, val mismatches: List<M>)
+
+/**
  * Reconciles every prisoner in a [PrisonerSelection], emitting the standard `-requested`, `-report`,
  * `-mismatch-page-error` and `-mismatch-error` telemetry events.
  *
+ * @param mismatchSummary summary of the prisoners that mismatched, added as properties to the `-report` event; defaults to
+ * the first 10 offender numbers as `offenderNos`
  * @param check reconciles a single prisoner by offender number, returning the mismatches found (empty if none)
  */
-class PrisonerReconciliationReport(
+class PrisonerReconciliationReport<M : Any>(
   private val telemetryClient: TelemetryClient,
   private val nomisApi: NomisApiService,
   private val names: ReconciliationNames,
   private val selection: PrisonerSelection,
   private val pageSize: Int,
   private val threadCount: Int,
-  private val check: suspend (offenderNo: String) -> List<*>,
+  private val mismatchSummary: (List<PrisonerMismatches<M>>) -> Map<String, String> = { prisoners ->
+    mapOf("offenderNos" to prisoners.map { it.offenderNo }.sorted().take(10).joinToString())
+  },
+  private val check: suspend (offenderNo: String) -> List<M>,
 ) {
   private companion object {
     val log: Logger = LoggerFactory.getLogger(PrisonerReconciliationReport::class.java)
@@ -65,7 +75,7 @@ class PrisonerReconciliationReport(
             "pages-count" to it.pagesChecked.toString(),
             "mismatch-count" to it.mismatches.size.toString(),
             "success" to "true",
-          ) + ("offenderNos" to it.mismatches.sorted().take(10).joinToString()),
+          ) + mismatchSummary(it.mismatches),
         )
       }
       .onFailure {
@@ -74,7 +84,7 @@ class PrisonerReconciliationReport(
       }
   }
 
-  private suspend fun reconcile(): ReconciliationResult<String> = generateReconciliationReport(
+  private suspend fun reconcile(): ReconciliationResult<PrisonerMismatches<M>> = generateReconciliationReport(
     threadCount = threadCount,
     pageSize = pageSize,
     checkMatch = ::checkPrisoner,
@@ -89,8 +99,8 @@ class PrisonerReconciliationReport(
     .getOrElse { ReconciliationErrorPageResult(it) }
     .also { log.info("Page requested from ${selection.cursorName}: $last, with $pageSize prisoners") }
 
-  private suspend fun checkPrisoner(offenderNo: String): String? = runCatching {
-    offenderNo.takeIf { check(offenderNo).isNotEmpty() }
+  private suspend fun checkPrisoner(offenderNo: String): PrisonerMismatches<M>? = runCatching {
+    check(offenderNo).takeIf { it.isNotEmpty() }?.let { PrisonerMismatches(offenderNo, it) }
   }.onFailure {
     log.error("Unable to match ${names.description} for prisoner $offenderNo", it)
     telemetryClient.trackEvent(
