@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AdminCaseloadResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CaseloadResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.IdRange
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.MemberCaseloadResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.NomisAudit
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PageMetadata
@@ -38,30 +39,47 @@ class StaffNomisApiMockServer(private val jsonMapper: JsonMapper) {
     )
   }
 
-  fun stubGetStaffIds(
-    pageNumber: Int = 0,
-    pageSize: Int = 1,
-    totalElements: Long = content.size.toLong(),
-    content: List<StaffIdResponse>,
+  fun stubGetAllStaffIdRanges(
+    pageSize: Long = 3,
+    totalElements: Long = 3,
+    active: Boolean = false,
   ) {
+    val content: List<IdRange> = if (totalElements <= 0) {
+      emptyList()
+    } else {
+      (0..(totalElements / pageSize))
+        .zipWithNext()
+        .map { IdRange(it.first * pageSize, it.second * pageSize) }
+    }
     nomisApi.stubFor(
-      get(urlPathEqualTo("/staff/pagedIds"))
-        .withQueryParam("page", equalTo(pageNumber.toString()))
+      get(urlPathEqualTo("/staff/id-ranges"))
+        .withQueryParam("active", equalTo(active.toString()))
         .withQueryParam("size", equalTo(pageSize.toString()))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(HttpStatus.OK.value())
-            .withBody(
-              jsonMapper.writeValueAsString(
-                pagedModelStaffIdResponse(
-                  content,
-                  pageSize = pageSize,
-                  pageNumber = pageNumber,
-                  totalElements = totalElements,
-                ),
-              ),
-            ),
+            .withBody(jsonMapper.writeValueAsString(content)),
+        ),
+    )
+  }
+
+  fun stubGetAllStaffIdsInRange(
+    fromStaffId: Long = 1,
+    toStaffId: Long = 3,
+    content: List<Long> = (fromStaffId..toStaffId).toList(),
+    active: Boolean = false,
+  ) {
+    nomisApi.stubFor(
+      get(urlPathEqualTo("/staff/ids"))
+        .withQueryParam("active", equalTo(active.toString()))
+        .withQueryParam("fromId", equalTo(fromStaffId.toString()))
+        .withQueryParam("toId", equalTo(toStaffId.toString()))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.OK.value())
+            .withBody(jsonMapper.writeValueAsString(content)),
         ),
     )
   }

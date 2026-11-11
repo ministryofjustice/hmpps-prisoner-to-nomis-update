@@ -31,7 +31,8 @@ class StaffReconciliationIntTest(
     @BeforeEach
     fun setUp() {
       reset(telemetryClient)
-      nomisApi.stubGetStaffIds(content = listOf(StaffIdResponse(1), StaffIdResponse(2), StaffIdResponse(3)))
+      nomisApi.stubGetAllStaffIdRanges(pageSize = 3, totalElements = 3)
+      nomisApi.stubGetAllStaffIdsInRange(fromStaffId = 0, toStaffId = 3, content = listOf(1L, 2L, 3L))
       nomisApi.stubGetStaffIdsFromId(content = listOf(StaffIdResponse(1), StaffIdResponse(2), StaffIdResponse(3)))
 
       // staffId 1 - matches

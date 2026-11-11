@@ -5,9 +5,7 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.StaffResourceApi
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PagedModelStaffIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.StaffDetails
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.StaffIdsPage
 
 @Service
 class StaffNomisApiService(@Qualifier("nomisApiWebClient") private val webClient: WebClient) {
@@ -16,9 +14,11 @@ class StaffNomisApiService(@Qualifier("nomisApiWebClient") private val webClient
   suspend fun getStaffDetails(staffId: Long): StaffDetails = api.getStaffById(staffId, true)
     .awaitSingle()
 
-  suspend fun getStaffIds(pageNumber: Long = 0, pageSize: Long = 1): PagedModelStaffIdResponse = api.getStaffIds(page = pageNumber.toInt(), size = pageSize.toInt())
+  suspend fun getAllStaffIdsInRange(fromStaffId: Long, toStaffId: Long, activeOnly: Boolean = false) = api
+    .getAllStaffInRange(activeOnly, fromStaffId, toStaffId)
     .awaitSingle()
 
-  suspend fun getStaffIdsFromId(lastStaffId: Long = 0, pageSize: Long): StaffIdsPage = api.getStaffIdsFromId(staffId = lastStaffId, size = pageSize.toInt())
+  suspend fun getAllStaffIdRanges(pageSize: Long, activeOnly: Boolean = false) = api
+    .getAllStaffIdRanges(activeOnly, pageSize.toInt())
     .awaitSingle()
 }

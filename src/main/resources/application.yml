@@ -266,6 +266,7 @@ reports:
   staff:
     reconciliation:
       page-size: 100
+      thread-count: 15
   temporary-absences:
     reconciliation:
       page-size: 100
