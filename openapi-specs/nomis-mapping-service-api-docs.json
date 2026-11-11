@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-11-09.987.449250a"
+    "version" : "2026-11-10.989.53ede7c"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -6102,6 +6102,50 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/core-person/alias-identifier/replace" : {
+      "post" : {
+        "tags" : [ "core-person-alias-identifier-repair-resource" ],
+        "summary" : "Replaces aliases and identifiers mappings.",
+        "description" : "Creates lists of aliases and identifiers mappings and removes the previous supplied set.\n      This does not add or remove any data from any associated parent CorePersonMappingDto entry. \n      Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "replaceCorePersonAliasIdentifierMappings",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CorePersonAliasIdentifierMappingsDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Mappings replaced",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
                 }
               }
             }
