@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-11-09.679.22d3e4a"
+    "version" : "2026-11-10.684.d54442b"
   },
   "servers" : [ {
     "url" : "/",
@@ -2355,9 +2355,25 @@
             "format" : "time-local",
             "description" : "The time the final rating was completed, if recorded",
             "example" : "11:20:00"
+          },
+          "ratingDescription" : {
+            "type" : "string",
+            "description" : "The rating in full, to show as given, for example on the prisoner profile Overview card. Includes the provisional or interim stage. \"No rating\" when there is no rating.",
+            "example" : "High risk – general (interim)"
+          },
+          "ratingShortDescription" : {
+            "type" : "string",
+            "description" : "The rating in short, to show as given, for example in the prisoner profile header. Never includes the stage. \"No rating\" when there is no rating.",
+            "example" : "High – general"
+          },
+          "reviewDueDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "The review due date to show beside the rating, or null where none should be shown (Standard, No rating and provisional ratings). Unlike nextReviewDate, show it whenever it is present.",
+            "example" : "2027-05-06"
           }
         },
-        "required" : [ "inheritedAfterTransfer", "prisonerNumber", "provisional", "riskTo", "status", "vulnerabilities" ]
+        "required" : [ "inheritedAfterTransfer", "prisonerNumber", "provisional", "ratingDescription", "ratingShortDescription", "riskTo", "status", "vulnerabilities" ]
       },
       "CsraInProgressReview" : {
         "type" : "object",
