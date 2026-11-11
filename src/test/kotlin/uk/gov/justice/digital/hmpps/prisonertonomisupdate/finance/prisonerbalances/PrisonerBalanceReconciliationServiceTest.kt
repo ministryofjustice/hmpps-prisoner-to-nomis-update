@@ -129,7 +129,7 @@ class PrisonerBalanceReconciliationServiceTest {
           ),
         ),
         advances = AdvancesAccountReconciliation(
-          advanceBalance = BigDecimal.ONE,
+          advanceBalance = BigDecimal("0.75"),
           advanceCount = 1,
         ),
         subscriptions = SubscriptionsAccountReconciliation(
@@ -168,7 +168,7 @@ class PrisonerBalanceReconciliationServiceTest {
             ),
           ),
           advances = AdvancesAccountReconciliation(
-            advanceBalance = BigDecimal.ONE,
+            advanceBalance = BigDecimal("0.75"),
             advanceCount = 1,
           ),
           subscriptions = SubscriptionsAccountReconciliation(
@@ -241,7 +241,7 @@ class PrisonerBalanceReconciliationServiceTest {
             ),
           ),
           advances = AdvancesAccountReconciliation(
-            advanceBalance = BigDecimal.ONE,
+            advanceBalance = BigDecimal("0.75"),
             advanceCount = 1,
           ),
           subscriptions = SubscriptionsAccountReconciliation(
@@ -316,7 +316,7 @@ class PrisonerBalanceReconciliationServiceTest {
       )
       val actual = service.checkPrisonerBalance(OFFENDER_ID, isRetry = true)?.differences
       val expected = listOf(
-        Difference(property = "prisoner-balances.advanceSummary.advanceBalance", dps = BigDecimal.TEN, nomis = BigDecimal("1.00")),
+        Difference(property = "prisoner-balances.advanceSummary.advanceBalance", dps = BigDecimal.TEN, nomis = BigDecimal("0.75")),
         Difference(property = "prisoner-balances.advanceSummary.advanceCount", dps = 2, nomis = 1),
       )
       assertThat(actual).isEqualTo(
@@ -355,7 +355,8 @@ class PrisonerBalanceReconciliationServiceTest {
         eq("prisoner-balance-reports-reconciliation-mismatch"),
         check {
           assertThat(it).containsEntry("prisoner", OFFENDER_NO)
-          assertThat(it).containsKey("prisoner-balances.accounts[1001].balance")
+          assertThat(it).containsEntry("prisoner-balances.accounts[1001].balance", "nomis:1.5; dps:0")
+          assertThat(it).containsEntry("prisoner-balances.accounts[1001].holdBalance", "nomis:0.3; dps:null")
         },
         isNull(),
       )
@@ -387,14 +388,15 @@ class PrisonerBalanceReconciliationServiceTest {
       service.checkPrisonerBalance(OFFENDER_ID, isRetry = true)?.differences?.first()!!.apply {
         assertThat(property).isEqualTo("prisoner-balances.advanceSummary.advanceBalance")
         assertThat(dps).isEqualTo(BigDecimal.ZERO)
-        assertThat(nomis).isEqualTo(BigDecimal("1.00"))
+        assertThat(nomis).isEqualTo(BigDecimal("0.75"))
       }
 
       verify(telemetryClient).trackEvent(
         eq("prisoner-balance-reports-reconciliation-mismatch"),
         check {
           assertThat(it).containsEntry("prisoner", OFFENDER_NO)
-          assertThat(it).containsKey("prisoner-balances.advanceSummary.advanceBalance")
+          assertThat(it).containsEntry("prisoner-balances.advanceSummary.advanceBalance", "nomis:0.75; dps:0")
+          assertThat(it).containsEntry("prisoner-balances.advanceSummary.advanceCount", "nomis:1; dps:0")
         },
         isNull(),
       )
@@ -522,7 +524,7 @@ class PrisonerBalanceReconciliationServiceTest {
       )
       val actual = service.checkPrisonerBalance(OFFENDER_ID, isRetry = true)?.differences
       val expected = listOf(
-        Difference(property = "prisoner-balances.advanceSummary.advanceBalance", dps = BigDecimal.TEN, nomis = BigDecimal("1.00")),
+        Difference(property = "prisoner-balances.advanceSummary.advanceBalance", dps = BigDecimal.TEN, nomis = BigDecimal("0.75")),
         Difference(property = "prisoner-balances.advanceSummary.advanceCount", dps = 2, nomis = 1),
       )
       assertThat(actual).isEqualTo(
@@ -579,7 +581,7 @@ fun dpsAccount(accountCode: Int = 1001, totalBalance: BigDecimal = BigDecimal.va
     ),
   ),
   advances = AdvancesAccountReconciliation(
-    advanceBalance = BigDecimal.ONE,
+    advanceBalance = BigDecimal("0.75"),
     advanceCount = 1,
   ),
   subscriptions = SubscriptionsAccountReconciliation(
@@ -600,8 +602,8 @@ fun nomisPrisonerAccounts(accountCode: Long = 1001, balance: BigDecimal = BigDec
       adjustmentAmount = 100,
       // Irrelevant but non-nullable fields:
       caseloadId = "BMI",
-      outstandingBalance = 100,
-      repaymentAmount = 50,
+      outstandingBalance = 75,
+      repaymentAmount = 25,
       startDate = LocalDate.now(),
       informationNumber = "xyz",
       createdBy = "test-user",

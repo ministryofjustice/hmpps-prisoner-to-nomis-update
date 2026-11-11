@@ -67,7 +67,8 @@ class PrisonerBalanceReconciliationService(
           "$TELEMETRY_PRISONER_PREFIX-report",
           mapOf(
             "activeOnly" to activeOnly,
-            "balance-count" to it.itemsChecked,
+            "fields" to (reconcileFields ?: "all"),
+            "prisoners-count" to it.itemsChecked,
             "page-count" to it.pagesChecked,
             "mismatch-count" to it.mismatches.size,
             "success" to "true",
@@ -126,7 +127,7 @@ class PrisonerBalanceReconciliationService(
       advanceSummary = AdvanceSummary(
         advanceCount = nomisAccounts.advances.size,
         advanceBalance = BigDecimal(
-          nomisAccounts.advances.sumOf { it.advanceAmount - (it.deductionAmount ?: 0) - (it.adjustmentAmount ?: 0) },
+          nomisAccounts.advances.sumOf { it.outstandingBalance },
         ).scaleByPowerOfTen(-2),
       ),
     )
@@ -153,7 +154,7 @@ class PrisonerBalanceReconciliationService(
         advanceSummary = AdvanceSummary(advanceCount = 0, advanceBalance = BigDecimal.ZERO),
       )
 
-    val differenceList = compareObjects(dpsFields, nomisFields, "prisoner-balances")
+    val differenceList = compareBalanceFields(nomisFields, dpsFields, "prisoner-balances")
 
     // log.info("$rootOffenderId compared\n$dpsFields with\n$nomisFields with result\n$differenceList")
 
@@ -164,7 +165,7 @@ class PrisonerBalanceReconciliationService(
           "$TELEMETRY_PRISONER_PREFIX-mismatch",
           mapOf(
             "prisoner" to nomisAccounts.prisonNumber,
-          ) + differenceList.associate { it.property to it },
+          ) + differenceList.associate { it.property to "nomis:${it.nomis}; dps:${it.dps}" },
           suppressEvent = suppressEvents,
         )
         return MismatchPrisonerBalance(
@@ -194,82 +195,41 @@ class PrisonerBalanceReconciliationService(
     }
   }.getOrNull()
 
-  private fun compareObjects(dpsObj: Any?, nomisObj: Any?, parentProperty: String): List<Difference> {
-    if (dpsObj == null && nomisObj == null) return emptyList()
-    if (dpsObj == null || nomisObj == null || dpsObj::class != nomisObj::class) return listOf(Difference(parentProperty, dpsObj, nomisObj))
-
+  private fun compareBalanceFields(nomis: BalanceFields, dps: BalanceFields, parentProperty: String): List<Difference> {
     val differences = mutableListOf<Difference>()
 
-    when (dpsObj) {
-      is BalanceFields -> {
-        nomisObj as BalanceFields
-
-        if (dpsObj.prisonNumber != nomisObj.prisonNumber) {
-          differences.add(Difference("$parentProperty.prisonNumber", dpsObj.prisonNumber, nomisObj.prisonNumber))
-        }
-
-        differences.addAll(compareAccounts(dpsObj.accounts, nomisObj.accounts, "$parentProperty.accounts"))
-        differences.addAll(compareObjects(dpsObj.advanceSummary, nomisObj.advanceSummary, "$parentProperty.advanceSummary"))
-      }
-
-      is AccountFields -> {
-        nomisObj as AccountFields
-        if (dpsObj.accountCode != nomisObj.accountCode) {
-          differences.add(Difference("$parentProperty.accountCode", dpsObj.accountCode, nomisObj.accountCode))
-        }
-        if (reconcileBalances()) {
-          if (dpsObj.balance.compareTo(nomisObj.balance) != 0) {
-            differences.add(
-              Difference(
-                "$parentProperty.balance: account code ${nomisObj.accountCode}",
-                dpsObj.balance,
-                nomisObj.balance,
-              ),
-            )
-          }
-        }
-        if (reconcileHolds()) {
-          if (dpsObj.holdBalance?.compareTo(nomisObj.holdBalance ?: BigDecimal.ZERO) != 0) {
-            differences.add(Difference("$parentProperty.holdBalance: account code ${nomisObj.accountCode}", dpsObj.holdBalance, nomisObj.holdBalance))
-          }
-        }
-      }
-
-      is AdvanceSummary -> {
-        if (reconcileAdvances()) {
-          nomisObj as AdvanceSummary
-          if (dpsObj.advanceBalance.compareTo(nomisObj.advanceBalance) != 0) {
-            differences.add(Difference("$parentProperty.advanceBalance", dpsObj.advanceBalance, nomisObj.advanceBalance))
-          }
-          if (dpsObj.advanceCount != nomisObj.advanceCount) {
-            differences.add(Difference("$parentProperty.advanceCount", dpsObj.advanceCount, nomisObj.advanceCount))
-          }
-        }
-      }
-
-      else -> {
-        // For other types, use reflection to compare properties
-        val dpsProperties = dpsObj::class.members.filterIsInstance<kotlin.reflect.KProperty1<Any, *>>()
-        val nomisProperties = nomisObj::class.members.filterIsInstance<kotlin.reflect.KProperty1<Any, *>>()
-
-        for (property in dpsProperties) {
-          val dpsValue = property.get(dpsObj)
-          val nomisValue = nomisProperties.find { it.name == property.name }?.get(nomisObj)
-
-          if (dpsValue != nomisValue) {
-            differences.add(Difference("$parentProperty.${property.name}", dpsValue, nomisValue))
-          }
-        }
-      }
+    if (nomis.prisonNumber != dps.prisonNumber) {
+      differences.add(Difference("$parentProperty.prisonNumber", nomis.prisonNumber, dps.prisonNumber))
     }
+
+    differences.addAll(compareAccounts(nomis.accounts, dps.accounts, "$parentProperty.accounts"))
+    differences.addAll(compareAdvanceSummary(nomis.advanceSummary, dps.advanceSummary, "$parentProperty.advanceSummary"))
+
     return differences
   }
 
-  private fun compareAccounts(dpsAccounts: List<AccountFields>, nomisAccounts: List<AccountFields>, parentProperty: String): List<Difference> {
+  private fun compareAdvanceSummary(nomis: AdvanceSummary?, dps: AdvanceSummary?, parentProperty: String): List<Difference> {
+    if (!reconcileAdvances()) return emptyList()
+    if (nomis == null && dps == null) return emptyList()
+    if (nomis == null || dps == null) return listOf(Difference(parentProperty, nomis, dps))
+
     val differences = mutableListOf<Difference>()
 
-    val dpsAccountsByCode = dpsAccounts.associateBy { it.accountCode }
+    if (nomis.advanceBalance.compareTo(dps.advanceBalance) != 0) {
+      differences.add(Difference("$parentProperty.advanceBalance", nomis.advanceBalance, dps.advanceBalance))
+    }
+    if (nomis.advanceCount != dps.advanceCount) {
+      differences.add(Difference("$parentProperty.advanceCount", nomis.advanceCount, dps.advanceCount))
+    }
+
+    return differences
+  }
+
+  private fun compareAccounts(nomisAccounts: List<AccountFields>, dpsAccounts: List<AccountFields>, parentProperty: String): List<Difference> {
+    val differences = mutableListOf<Difference>()
+
     val nomisAccountsByCode = nomisAccounts.associateBy { it.accountCode }
+    val dpsAccountsByCode = dpsAccounts.associateBy { it.accountCode }
 
     (dpsAccountsByCode.keys + nomisAccountsByCode.keys)
       .sorted()
@@ -277,17 +237,17 @@ class PrisonerBalanceReconciliationService(
         val dpsAccount = dpsAccountsByCode[accountCode]
         val nomisAccount = nomisAccountsByCode[accountCode]
 
-        val dpsBalance = dpsAccount?.balance ?: BigDecimal.ZERO
         val nomisBalance = nomisAccount?.balance ?: BigDecimal.ZERO
-        val dpsHoldBalance = dpsAccount?.holdBalance ?: BigDecimal.ZERO
+        val dpsBalance = dpsAccount?.balance ?: BigDecimal.ZERO
         val nomisHoldBalance = nomisAccount?.holdBalance ?: BigDecimal.ZERO
+        val dpsHoldBalance = dpsAccount?.holdBalance ?: BigDecimal.ZERO
 
         if (reconcileBalances() && dpsBalance.compareTo(nomisBalance) != 0) {
           differences.add(
             Difference(
               "$parentProperty[$accountCode].balance",
-              dpsBalance,
               nomisBalance,
+              dpsBalance,
             ),
           )
         }
@@ -296,8 +256,8 @@ class PrisonerBalanceReconciliationService(
           differences.add(
             Difference(
               "$parentProperty[$accountCode].holdBalance",
-              dpsAccount?.holdBalance,
               nomisAccount?.holdBalance,
+              dpsAccount?.holdBalance,
             ),
           )
         }
@@ -363,4 +323,4 @@ data class AdvanceSummary(
   val advanceBalance: BigDecimal,
 )
 
-data class Difference(val property: String, val dps: Any?, val nomis: Any?, val id: String? = null)
+data class Difference(val property: String, val nomis: Any?, val dps: Any?, val id: String? = null)
