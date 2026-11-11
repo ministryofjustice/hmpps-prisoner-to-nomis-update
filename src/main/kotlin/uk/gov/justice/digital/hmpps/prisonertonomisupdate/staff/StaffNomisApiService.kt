@@ -14,11 +14,11 @@ class StaffNomisApiService(@Qualifier("nomisApiWebClient") private val webClient
   suspend fun getStaffDetails(staffId: Long): StaffDetails = api.getStaffById(staffId, true)
     .awaitSingle()
 
-  suspend fun getAllStaffIdsInRange(fromStaffId: Long, toStaffId: Long, activeOnly: Boolean = false) = api
-    .getAllStaffInRange(activeOnly, fromStaffId, toStaffId)
+  suspend fun getAllStaffIdsInRange(fromStaffId: Long, toStaffId: Long) = api
+    .getAllStaffInRange(false, fromStaffId, toStaffId)
     .awaitSingle()
 
-  suspend fun getAllStaffIdRanges(pageSize: Long, activeOnly: Boolean = false) = api
-    .getAllStaffIdRanges(activeOnly, pageSize.toInt())
+  suspend fun getAllStaffIdRanges(pageSize: Long) = api
+    .getAllStaffIdRanges(false, pageSize.toInt())
     .awaitSingle()
 }
