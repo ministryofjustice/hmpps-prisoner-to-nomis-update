@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-10-29.1355.4afa2e8"
+    "version" : "2026-11-10.1370.24c540e"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -3601,6 +3601,139 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/integrations/schedules/official-visits/ids" : {
+      "get" : {
+        "tags" : [ "Integrations - schedules" ],
+        "summary" : "Return a paged list of official visit IDs matching the supplied criteria",
+        "description" : "The date range is mandatory and inclusive. All other filters are optional and combined with AND. Only the matching official visit IDs are returned.\n\nRequires one of the following roles:\n* ROLE_PRISONER_SCHEDULES__RO",
+        "operationId" : "findOfficialVisitIds",
+        "parameters" : [ {
+          "name" : "fromDate",
+          "in" : "query",
+          "description" : "The earliest visit date in ISO format (YYYY-MM-DD)",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "example" : "2026-11-01"
+        }, {
+          "name" : "toDate",
+          "in" : "query",
+          "description" : "The latest visit date in ISO format (YYYY-MM-DD)",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "example" : "2026-11-30"
+        }, {
+          "name" : "prisonerNumber",
+          "in" : "query",
+          "description" : "The prisoner number",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "A1234AA"
+        }, {
+          "name" : "prisonCode",
+          "in" : "query",
+          "description" : "The prison code",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "MDI"
+        }, {
+          "name" : "visitStatus",
+          "in" : "query",
+          "description" : "The visit status",
+          "required" : false,
+          "schema" : {
+            "$ref" : "#/components/schemas/VisitStatusType"
+          },
+          "example" : "SCHEDULED"
+        }, {
+          "name" : "visitType",
+          "in" : "query",
+          "description" : "The visit type",
+          "required" : false,
+          "schema" : {
+            "$ref" : "#/components/schemas/VisitType"
+          },
+          "example" : "IN_PERSON"
+        }, {
+          "name" : "locationId",
+          "in" : "query",
+          "description" : "The DPS location ID",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "example" : "9485cf4a-750b-4d74-b594-59bacbcda247"
+        }, {
+          "name" : "page",
+          "in" : "query",
+          "description" : "Zero-based page index (0..N)",
+          "schema" : {
+            "type" : "integer",
+            "default" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "description" : "The size of the page to be returned",
+          "schema" : {
+            "type" : "integer",
+            "default" : 20
+          }
+        }, {
+          "name" : "sort",
+          "in" : "query",
+          "description" : "Sort criteria in the format property,(asc|desc). Sortable properties: officialVisitId, visitDate, startTime. Defaults to officialVisitId,asc. officialVisitId is always the final sort key, so results page consistently.",
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "A paginated list of matching official visit IDs",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PagedModelLong"
                 }
               }
             }
@@ -8040,6 +8173,22 @@
           }
         },
         "required" : [ "hasChanged" ]
+      },
+      "PagedModelLong" : {
+        "type" : "object",
+        "properties" : {
+          "content" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          },
+          "page" : {
+            "$ref" : "#/components/schemas/PageMetadata"
+          }
+        },
+        "required" : [ "content", "page" ]
       },
       "AvailableSlot" : {
         "type" : "object",
