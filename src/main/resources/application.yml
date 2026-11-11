@@ -250,7 +250,7 @@ reports:
       page-size: 40
   core-person:
     reconciliation:
-      page-size: 100
+      page-size: 30
   official-visits:
     active-prisoners-visits:
       reconciliation:
