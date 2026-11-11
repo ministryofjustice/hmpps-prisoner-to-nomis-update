@@ -124,7 +124,8 @@ class PrisonerBalanceReconciliationResourceIntTest(
           eq("prisoner-balance-reports-reconciliation-report"),
           check {
             assertThat(it).containsEntry("activeOnly", "false")
-            assertThat(it).containsEntry("balance-count", "20")
+            assertThat(it).containsEntry("fields", "balances")
+            assertThat(it).containsEntry("prisoners-count", "20")
             assertThat(it).containsEntry("page-count", "2")
             assertThat(it).containsEntry("mismatch-count", "0")
             assertThat(it).containsEntry("success", "true")
@@ -148,7 +149,8 @@ class PrisonerBalanceReconciliationResourceIntTest(
           eq("prisoner-balance-reports-reconciliation-report"),
           check {
             assertThat(it).containsEntry("activeOnly", "false")
-            assertThat(it).containsEntry("balance-count", "20")
+            assertThat(it).containsEntry("fields", "balances")
+            assertThat(it).containsEntry("prisoners-count", "20")
             assertThat(it).containsEntry("page-count", "2")
             assertThat(it).containsEntry("mismatch-count", "1")
             assertThat(it).containsEntry("success", "true")
@@ -204,6 +206,7 @@ class PrisonerBalanceReconciliationResourceIntTest(
           eq("prisoner-balance-reports-reconciliation-mismatch"),
           check {
             assertThat(it).containsEntry("prisoner", "A0002NN")
+            assertThat(it).containsEntry("prisoner-balances.accounts[1001].balance", "nomis:1.5; dps:0")
           },
           isNull(),
         )
@@ -240,7 +243,10 @@ class PrisonerBalanceReconciliationResourceIntTest(
 
         verify(telemetryClient).trackEvent(
           eq("prisoner-balance-reports-reconciliation-requested"),
-          check { assertThat(it).containsEntry("activeOnly", "true") },
+          check {
+            assertThat(it).containsEntry("activeOnly", "true")
+            assertThat(it).containsEntry("fields", "balances")
+          },
           isNull(),
         )
 
@@ -255,7 +261,8 @@ class PrisonerBalanceReconciliationResourceIntTest(
           eq("prisoner-balance-reports-reconciliation-report"),
           check {
             assertThat(it).containsEntry("activeOnly", "true")
-            assertThat(it).containsEntry("balance-count", "20")
+            assertThat(it).containsEntry("fields", "balances")
+            assertThat(it).containsEntry("prisoners-count", "20")
             assertThat(it).containsEntry("page-count", "2")
             assertThat(it).containsEntry("mismatch-count", "0")
             assertThat(it).containsEntry("success", "true")
@@ -279,7 +286,8 @@ class PrisonerBalanceReconciliationResourceIntTest(
           eq("prisoner-balance-reports-reconciliation-report"),
           check {
             assertThat(it).containsEntry("activeOnly", "true")
-            assertThat(it).containsEntry("balance-count", "20")
+            assertThat(it).containsEntry("fields", "balances")
+            assertThat(it).containsEntry("prisoners-count", "20")
             assertThat(it).containsEntry("page-count", "2")
             assertThat(it).containsEntry("mismatch-count", "1")
             assertThat(it).containsEntry("success", "true")
