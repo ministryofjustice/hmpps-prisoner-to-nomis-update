@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.csra
 
 import com.microsoft.applicationinsights.TelemetryClient
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import tools.jackson.databind.json.JsonMapper
 import tools.jackson.module.kotlin.readValue
@@ -26,6 +27,11 @@ class CsraService(
   private val csraRetryQueueService: CsraRetryQueueService,
   override val telemetryClient: TelemetryClient,
   private val jsonMapper: JsonMapper,
+  /**
+   * Whether NOMIS in this environment holds the High General (HI_GEN) and High Specific (HI_SPFC) reference codes.
+   * When off, both results are sent to NOMIS as HI. Turn on once the codes exist in that environment's NOMIS.
+   */
+  @Value($$"${feature.csra.nomis-high-general-specific:false}") private val nomisHighGeneralSpecific: Boolean = false,
 ) : CreateMappingRetryable,
   TelemetryEnabled {
   suspend fun created(event: CsraDomainEvent) {
@@ -47,7 +53,7 @@ class CsraService(
         }
         transform {
           csraDpsApiService.getCsraReview(dpsId).run {
-            val request = toNomisCreateRequest()
+            val request = toNomisCreateRequest(nomisHighGeneralSpecific)
 
             eventTelemetry += "type" to request.type.toString()
 
@@ -80,7 +86,7 @@ class CsraService(
         telemetry += "bookingId" to nomisId.toString()
         telemetry += "sequence" to sequence.toString()
 
-        csraNomisApiService.updateCsra(nomisId, sequence, dpsData.toNomisUpdateRequest())
+        csraNomisApiService.updateCsra(nomisId, sequence, dpsData.toNomisUpdateRequest(nomisHighGeneralSpecific))
       }
     } else {
       telemetryClient.trackEvent("csra-update-ignored", telemetry, null)
@@ -118,11 +124,11 @@ fun CsraDomainEvent.asTelemetry() = mutableMapOf(
   "source" to additionalInformation.source.toString(),
 )
 
-private fun CsraReviewDetail.toNomisCreateRequest() = CsraCreateDto(
+internal fun CsraReviewDetail.toNomisCreateRequest(nomisHighGeneralSpecific: Boolean) = CsraCreateDto(
   assessmentDate = assessmentDate,
   type = type.toNomisAssessmentType(),
-  calculatedLevel = finalResult?.toGenericLevel() ?: interimResult?.toGenericLevel() ?: AssessmentLevel.STANDARD,
-  reviewLevel = finalResult?.toGenericLevel(),
+  calculatedLevel = finalResult?.toNomisLevel(nomisHighGeneralSpecific) ?: interimResult?.toNomisLevel(nomisHighGeneralSpecific) ?: AssessmentLevel.STANDARD,
+  reviewLevel = finalResult?.toNomisLevel(nomisHighGeneralSpecific),
   evaluationDate = finalResultDate,
   evaluationResultCode = finalResult?.let { EvaluationResultCode.APP },
   // DPS does not hold a numeric CSRA score for a review, only a rating/level, so this is not populated
@@ -134,8 +140,8 @@ private fun CsraReviewDetail.toNomisCreateRequest() = CsraCreateDto(
   createdBy = createdBy,
 )
 
-private fun CsraReviewDetail.toNomisUpdateRequest() = CsraUpdateDto(
-  reviewLevel = finalResult?.toGenericLevel(),
+internal fun CsraReviewDetail.toNomisUpdateRequest(nomisHighGeneralSpecific: Boolean) = CsraUpdateDto(
+  reviewLevel = finalResult?.toNomisLevel(nomisHighGeneralSpecific),
   evaluationDate = finalResultDate,
   evaluationResultCode = EvaluationResultCode.APP,
   status = if (finalResult != null) AssessmentStatusType.A else AssessmentStatusType.P,
@@ -155,16 +161,16 @@ private fun CsraReviewDetail.Type.toNomisAssessmentType(): AssessmentType = when
   CsraReviewDetail.Type.CSRA_REVIEW -> AssessmentType.CSRREV
 }
 
-private fun CsraReviewDetail.FinalResult.toGenericLevel(): AssessmentLevel = when (this) {
+private fun CsraReviewDetail.FinalResult.toNomisLevel(nomisHighGeneralSpecific: Boolean): AssessmentLevel = when (this) {
   CsraReviewDetail.FinalResult.HIGH -> AssessmentLevel.HI
-  CsraReviewDetail.FinalResult.HIGH_GENERAL -> AssessmentLevel.HI
-  CsraReviewDetail.FinalResult.HIGH_SPECIFIC -> AssessmentLevel.HI
+  CsraReviewDetail.FinalResult.HIGH_GENERAL -> if (nomisHighGeneralSpecific) AssessmentLevel.HI_GEN else AssessmentLevel.HI
+  CsraReviewDetail.FinalResult.HIGH_SPECIFIC -> if (nomisHighGeneralSpecific) AssessmentLevel.HI_SPFC else AssessmentLevel.HI
   CsraReviewDetail.FinalResult.STANDARD -> AssessmentLevel.STANDARD
 }
 
-private fun CsraReviewDetail.InterimResult.toGenericLevel(): AssessmentLevel = when (this) {
+private fun CsraReviewDetail.InterimResult.toNomisLevel(nomisHighGeneralSpecific: Boolean): AssessmentLevel = when (this) {
   CsraReviewDetail.InterimResult.HIGH -> AssessmentLevel.HI
-  CsraReviewDetail.InterimResult.HIGH_GENERAL -> AssessmentLevel.HI
-  CsraReviewDetail.InterimResult.HIGH_SPECIFIC -> AssessmentLevel.HI
+  CsraReviewDetail.InterimResult.HIGH_GENERAL -> if (nomisHighGeneralSpecific) AssessmentLevel.HI_GEN else AssessmentLevel.HI
+  CsraReviewDetail.InterimResult.HIGH_SPECIFIC -> if (nomisHighGeneralSpecific) AssessmentLevel.HI_SPFC else AssessmentLevel.HI
   CsraReviewDetail.InterimResult.STANDARD -> AssessmentLevel.STANDARD
 }

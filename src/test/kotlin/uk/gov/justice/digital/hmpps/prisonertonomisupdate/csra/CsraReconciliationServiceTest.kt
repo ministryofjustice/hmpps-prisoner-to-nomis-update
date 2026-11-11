@@ -14,6 +14,7 @@ import org.mockito.kotlin.reset
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
+import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import software.amazon.awssdk.http.HttpStatusCode
@@ -148,6 +149,17 @@ class CsraReconciliationServiceTest {
     }
 
     @Test
+    fun `High General and High Specific match NOMIS HI when NOMIS does not hold the new codes`() = runTest {
+      listOf(CsraDetailedRating.Rating.HIGH_GENERAL, CsraDetailedRating.Rating.HIGH_SPECIFIC).forEach { rating ->
+        stubCsraReconciliation(
+          nomisCsra(calculatedLevel = AssessmentLevel.HI, reviewLevel = AssessmentLevel.HI),
+          dpsCsra(CSRA_DPS_ID, rating = rating),
+        )
+        assertThat(service.checkCsra(CSRA_OFFENDER_NO)).isNull()
+      }
+    }
+
+    @Test
     fun `a Nomis PEND level is ignored`() = runTest {
       stubCsraReconciliation(
         nomisCsra(calculatedLevel = AssessmentLevel.PEND, overrideLevel = null, reviewLevel = null),
@@ -178,6 +190,74 @@ class CsraReconciliationServiceTest {
         dpsCsra(CSRA_DPS_ID),
       )
       assertThat(service.checkCsra(CSRA_OFFENDER_NO)?.differences).isNull()
+    }
+  }
+
+  @Nested
+  @TestPropertySource(properties = ["feature.csra.nomis-high-general-specific=true"])
+  inner class CheckMatchWhenNomisHoldsHighGeneralAndSpecific {
+    private fun stubCsraReconciliation(nomisCsra: CsraGetDto, dpsCsra: CsraDetailedRating) {
+      csraNomisApi.stubGetCurrentCsraForPrisoner(CSRA_OFFENDER_NO, nomisCsra)
+      dpsApi.stubGetCurrentCsra(CSRA_OFFENDER_NO, dpsCsra)
+    }
+
+    @Test
+    fun `will match High General with HI_GEN and High Specific with HI_SPFC`() = runTest {
+      stubCsraReconciliation(
+        nomisCsra(calculatedLevel = AssessmentLevel.HI_GEN, reviewLevel = AssessmentLevel.HI_GEN),
+        dpsCsra(CSRA_DPS_ID, rating = CsraDetailedRating.Rating.HIGH_GENERAL),
+      )
+      assertThat(service.checkCsra(CSRA_OFFENDER_NO)).isNull()
+
+      stubCsraReconciliation(
+        nomisCsra(calculatedLevel = AssessmentLevel.HI_SPFC, reviewLevel = AssessmentLevel.HI_SPFC),
+        dpsCsra(CSRA_DPS_ID, rating = CsraDetailedRating.Rating.HIGH_SPECIFIC),
+      )
+      assertThat(service.checkCsra(CSRA_OFFENDER_NO)).isNull()
+    }
+
+    @Test
+    fun `will still match legacy High with HI`() = runTest {
+      stubCsraReconciliation(
+        nomisCsra(calculatedLevel = AssessmentLevel.HI, reviewLevel = AssessmentLevel.HI),
+        dpsCsra(CSRA_DPS_ID, rating = CsraDetailedRating.Rating.HIGH),
+      )
+      assertThat(service.checkCsra(CSRA_OFFENDER_NO)).isNull()
+    }
+
+    @Test
+    fun `will report High Specific in DPS against HI in NOMIS`() = runTest {
+      stubCsraReconciliation(
+        nomisCsra(calculatedLevel = AssessmentLevel.HI, reviewLevel = AssessmentLevel.HI),
+        dpsCsra(CSRA_DPS_ID, rating = CsraDetailedRating.Rating.HIGH_SPECIFIC),
+      )
+      assertThat(service.checkCsra(CSRA_OFFENDER_NO)?.differences).isEqualTo(
+        listOf(
+          Difference(property = "level", dps = "HIGH_SPECIFIC", nomis = "HIGH", dpsId = CSRA_DPS_ID, nomisId = "1-1"),
+        ),
+      )
+    }
+
+    @Test
+    fun `will report High General in DPS against HI_SPFC in NOMIS`() = runTest {
+      stubCsraReconciliation(
+        nomisCsra(calculatedLevel = AssessmentLevel.HI_SPFC, reviewLevel = AssessmentLevel.HI_SPFC),
+        dpsCsra(CSRA_DPS_ID, rating = CsraDetailedRating.Rating.HIGH_GENERAL),
+      )
+      assertThat(service.checkCsra(CSRA_OFFENDER_NO)?.differences).isEqualTo(
+        listOf(
+          Difference(property = "level", dps = "HIGH_GENERAL", nomis = "HIGH_SPECIFIC", dpsId = CSRA_DPS_ID, nomisId = "1-1"),
+        ),
+      )
+    }
+
+    @Test
+    fun `an override of HI_GEN trumps a calculated HI`() = runTest {
+      stubCsraReconciliation(
+        nomisCsra(calculatedLevel = AssessmentLevel.HI, overrideLevel = AssessmentLevel.HI_GEN),
+        dpsCsra(CSRA_DPS_ID, rating = CsraDetailedRating.Rating.HIGH_GENERAL),
+      )
+      assertThat(service.checkCsra(CSRA_OFFENDER_NO)).isNull()
     }
   }
 
