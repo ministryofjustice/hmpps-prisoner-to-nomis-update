@@ -358,6 +358,39 @@ internal class CourtSentencingReconciliationServiceTest {
     }
 
     @Test
+    fun `will reorder charges correctly for comparison when charge value is the only difference`() = runTest {
+      stubCase(
+        nomisCase = nomisCaseResponse(sentences = emptyList()).copy(
+          courtEvents = listOf(
+            nomisAppearanceResponse().copy(
+              courtEventCharges = listOf(
+                nomisChargeResponse().copy(propertyValue = BigDecimal("20.00")),
+                nomisChargeResponse().copy(propertyValue = BigDecimal("10.00")),
+              ),
+            ),
+          ),
+        ),
+        dpsCase = dpsCourtCaseResponse().copy(
+          appearances = listOf(
+            dpsAppearanceResponse().copy(
+              charges = listOf(
+                dpsChargeResponse(sentenceResponse = null).copy(value = BigDecimal("10.00")),
+                dpsChargeResponse(sentenceResponse = null).copy(value = BigDecimal("20.00")),
+              ),
+            ),
+          ),
+        ),
+      )
+      assertThat(
+        service.checkCase(
+          nomisCaseId = NOMIS_COURT_CASE_ID,
+          dpsCaseId = DPS_COURT_CASE_ID,
+          offenderNo = OFFENDER_NO,
+        ),
+      ).isNull()
+    }
+
+    @Test
     fun `will report an appearance outcome difference`() = runTest {
       stubCase(
         nomisCase = nomisCaseResponse().copy(
@@ -529,6 +562,81 @@ internal class CourtSentencingReconciliationServiceTest {
           ),
         ),
       )
+    }
+
+    @Test
+    fun `will strip trailing zeros from reported charge values`() = runTest {
+      stubCase(
+        nomisCase = nomisCaseResponse().copy(
+          courtEvents = listOf(
+            nomisAppearanceResponse().copy(
+              courtEventCharges = listOf(
+                nomisChargeResponse().copy(propertyValue = BigDecimal("10.60")),
+              ),
+            ),
+          ),
+        ),
+        dpsCase = dpsCourtCaseResponse().copy(
+          appearances = listOf(
+            dpsAppearanceResponse().copy(
+              charges = listOf(
+                dpsChargeResponse().copy(
+                  value = BigDecimal("100.500"),
+                ),
+              ),
+            ),
+          ),
+        ),
+      )
+      assertThat(
+        service.checkCase(
+          nomisCaseId = NOMIS_COURT_CASE_ID,
+          dpsCaseId = DPS_COURT_CASE_ID,
+          offenderNo = OFFENDER_NO,
+        )?.differences,
+      ).isEqualTo(
+        listOf(
+          Difference(
+            property = "case.appearances[0].charges[0].chargeValue",
+            dps = "100.5",
+            nomis = "10.6",
+            id = DPS_COURT_CHARGE_ID,
+          ),
+        ),
+      )
+    }
+
+    @Test
+    fun `will not report a charge value difference when only trailing zeros differ`() = runTest {
+      stubCase(
+        nomisCase = nomisCaseResponse().copy(
+          courtEvents = listOf(
+            nomisAppearanceResponse().copy(
+              courtEventCharges = listOf(
+                nomisChargeResponse().copy(propertyValue = BigDecimal("10.5")),
+              ),
+            ),
+          ),
+        ),
+        dpsCase = dpsCourtCaseResponse().copy(
+          appearances = listOf(
+            dpsAppearanceResponse().copy(
+              charges = listOf(
+                dpsChargeResponse().copy(
+                  value = BigDecimal("10.50"),
+                ),
+              ),
+            ),
+          ),
+        ),
+      )
+      assertThat(
+        service.checkCase(
+          nomisCaseId = NOMIS_COURT_CASE_ID,
+          dpsCaseId = DPS_COURT_CASE_ID,
+          offenderNo = OFFENDER_NO,
+        )?.differences,
+      ).isNullOrEmpty()
     }
 
     @Test
