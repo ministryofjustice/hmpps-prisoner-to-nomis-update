@@ -470,7 +470,19 @@ class ContactPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value())
-          .withBody(ContactPersonDpsApiExtension.jsonMapper.writeValueAsString(PagedModelSyncContactId(page = PageMetadata(totalElements = totalElements), content = contactIds.map { SyncContactId(it) }))),
+          .withBody(
+            ContactPersonDpsApiExtension.jsonMapper.writeValueAsString(
+              PagedModelSyncContactId(
+                page = PageMetadata(
+                  totalElements = totalElements,
+                  propertySize = contactIds.size.toLong(),
+                  number = contactIds.size.toLong(),
+                  totalPages = 1,
+                ),
+                content = contactIds.map { SyncContactId(it) },
+              ),
+            ),
+          ),
       ),
     )
   }
@@ -481,7 +493,19 @@ class ContactPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value())
-          .withBody(ContactPersonDpsApiExtension.jsonMapper.writeValueAsString(PagedModelPrisonerRestrictionId(page = PageMetadata(totalElements = totalElements), content = prisonerRestrictionsIds.map { PrisonerRestrictionId(it) }))),
+          .withBody(
+            ContactPersonDpsApiExtension.jsonMapper.writeValueAsString(
+              PagedModelPrisonerRestrictionId(
+                page = PageMetadata(
+                  totalElements = totalElements,
+                  propertySize = prisonerRestrictionsIds.size.toLong(),
+                  number = prisonerRestrictionsIds.size.toLong(),
+                  totalPages = 1,
+                ),
+                content = prisonerRestrictionsIds.map { PrisonerRestrictionId(it) },
+              ),
+            ),
+          ),
       ),
     )
   }
