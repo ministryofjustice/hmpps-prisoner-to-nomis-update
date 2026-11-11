@@ -251,6 +251,8 @@ fun dpsCsra(
   reviewId = UUID.fromString(uuid),
   type = CsraDetailedRating.Type.CSRA_REVIEW,
   rating = rating,
+  ratingDescription = rating.name,
+  ratingShortDescription = rating.name,
   prisonerNumber = CSRA_OFFENDER_NO,
   status = status,
   provisional = false,
