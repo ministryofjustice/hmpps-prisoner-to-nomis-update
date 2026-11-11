@@ -20,7 +20,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.St
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.StaffDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.StaffEmail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.StaffIdResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.StaffIdsPage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -95,20 +94,6 @@ class StaffNomisApiMockServer(private val jsonMapper: JsonMapper) {
           .withStatus(HttpStatus.OK.value())
           .withBody(jsonMapper.writeValueAsString(response)),
       ),
-    )
-  }
-  fun stubGetStaffIdsFromId(
-    content: List<StaffIdResponse>,
-    staffId: Long = 0,
-  ) {
-    nomisApi.stubFor(
-      get(urlPathEqualTo("/staff/ids/all-from-id"))
-        .withQueryParam("staffId", equalTo(staffId.toString())).willReturn(
-          aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withStatus(HttpStatus.OK.value())
-            .withBody(jsonMapper.writeValueAsString(StaffIdsPage(content))),
-        ),
     )
   }
 
