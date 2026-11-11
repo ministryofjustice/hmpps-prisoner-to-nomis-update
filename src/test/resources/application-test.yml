@@ -587,6 +587,9 @@ reports:
       reconciliation:
         page-size: 2
         thread-count: 10
+  staff:
+    reconciliation:
+      page-size: 3
 api.locations.timeout: 1s
 
 springdoc:

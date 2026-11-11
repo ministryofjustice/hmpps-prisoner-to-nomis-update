@@ -16,7 +16,6 @@ import org.mockito.kotlin.reset
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.StaffIdResponse
 
 class StaffReconciliationIntTest(
   @Autowired private val reconciliationService: StaffReconciliationService,
@@ -31,8 +30,8 @@ class StaffReconciliationIntTest(
     @BeforeEach
     fun setUp() {
       reset(telemetryClient)
-      nomisApi.stubGetStaffIds(content = listOf(StaffIdResponse(1), StaffIdResponse(2), StaffIdResponse(3)))
-      nomisApi.stubGetStaffIdsFromId(content = listOf(StaffIdResponse(1), StaffIdResponse(2), StaffIdResponse(3)))
+      nomisApi.stubGetAllStaffIdRanges(pageSize = 3, totalElements = 3)
+      nomisApi.stubGetAllStaffIdsInRange(fromStaffId = 0, toStaffId = 3, content = listOf(1L, 2L, 3L))
 
       // staffId 1 - matches
       nomisApi.stubGetStaffById(staffId = 1)

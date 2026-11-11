@@ -13,7 +13,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationErrorPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationSuccessPageResult
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.generateReconciliationReport
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.generateRangesReconciliationReport
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.StaffDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.staff.model.PrisonUserReconciliationResponse
@@ -25,6 +25,7 @@ class StaffReconciliationService(
   private val nomisApiService: StaffNomisApiService,
   private val dpsApiService: StaffDpsApiService,
   @param:Value($$"${reports.staff.reconciliation.page-size}") private val pageSize: Int = 30,
+  @param:Value($$"${reports.staff.reconciliation.thread-count:10}") private val threadCount: Int = 10,
 ) {
   internal companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -38,10 +39,11 @@ class StaffReconciliationService(
     )
 
     runCatching {
-      generateReconciliationReport(
-        threadCount = pageSize,
+      generateRangesReconciliationReport(
+        threadCount = threadCount,
         checkMatch = ::checkStaffMatch,
-        nextPage = ::getNextNomisStaffIdsForPage,
+        idRanges = { nomisApiService.getAllStaffIdRanges(pageSize.toLong()) },
+        idsInRange = { range -> this.getAllStaffIdsInRange(range.fromId, range.toId) },
       )
     }
       .onSuccess {
@@ -49,9 +51,9 @@ class StaffReconciliationService(
         telemetryClient.trackEvent(
           "$TELEMETRY_STAFF_PREFIX-report",
           mapOf(
-            "staff-count" to it.itemsChecked.toString(),
-            "pages-count" to it.pagesChecked.toString(),
-            "mismatch-count" to it.mismatches.size.toString(),
+            "staff-count" to it.itemsChecked,
+            "pages-count" to it.pagesChecked,
+            "mismatch-count" to it.mismatches.size,
             "success" to "true",
           ) + it.mismatches.asMap(),
         )
@@ -62,31 +64,6 @@ class StaffReconciliationService(
       }
   }
 
-  private fun List<MismatchStaff>.asMap(): Pair<String, String> = this
-    .sortedBy { it.nomisStaffId }.take(10)
-    .let { mismatch -> "nomisStaffIds" to mismatch.map { it.nomisStaffId }.joinToString() }
-
-  private suspend fun getNextNomisStaffIdsForPage(lastNomisStaffId: Long): ReconciliationPageResult<Long> = runCatching {
-    nomisApiService.getStaffIdsFromId(lastStaffId = lastNomisStaffId, pageSize = pageSize.toLong())
-  }
-    .onFailure {
-      telemetryClient.trackEvent(
-        "$TELEMETRY_STAFF_PREFIX-mismatch-page-error",
-        mapOf(
-          "nomisStaffId" to lastNomisStaffId.toString(),
-        ),
-      )
-      log.error("Unable to match entire page of staff from nomisStaffId: $lastNomisStaffId", it)
-    }
-    .map { page ->
-      ReconciliationSuccessPageResult(
-        ids = page.ids.map { it.staffId },
-        last = page.ids.last().staffId,
-      )
-    }
-    .getOrElse { ReconciliationErrorPageResult(it) }
-    .also { log.info("Page requested from staff: $lastNomisStaffId, with $pageSize staff") }
-
   suspend fun checkStaffMatch(nomisStaffId: Long): MismatchStaff? = runCatching {
     val (nomisStaff, dpsResult: DpsStaffResult) = nomisStaffToPossibleDpsStaff(nomisStaffId)
 
@@ -95,7 +72,7 @@ class StaffReconciliationService(
         telemetryClient.trackEvent(
           "$TELEMETRY_STAFF_PREFIX-mismatch",
           mapOf(
-            "nomisStaffId" to nomisStaffId.toString(),
+            "nomisStaffId" to nomisStaffId,
             "reason" to "dps-record-missing",
           ),
         )
@@ -123,6 +100,33 @@ class StaffReconciliationService(
       ),
     )
   }.getOrNull()
+
+  internal suspend fun getAllStaffIdsInRange(
+    fromStaffId: Long,
+    toStaffId: Long,
+  ): ReconciliationPageResult<Long> = runCatching {
+    nomisApiService.getAllStaffIdsInRange(
+      fromStaffId = fromStaffId,
+      toStaffId = toStaffId,
+    )
+  }.fold(
+    onSuccess = { ids ->
+      ReconciliationSuccessPageResult(ids = ids, last = 0)
+        .also { log.info("Page requested from fromStaffId: $fromStaffId, toStaffId: $toStaffId, with ${it.ids.size} staff") }
+    },
+    onFailure = {
+      telemetryClient.trackEvent(
+        "$TELEMETRY_STAFF_PREFIX-mismatch-page-error",
+        mapOf(
+          "fromStaffId" to fromStaffId,
+          "toStaffId" to toStaffId,
+          "error" to (it.message ?: it.javaClass.name),
+        ),
+      )
+      log.error("Unable to match entire page of staff from fromStaffId: $fromStaffId, toStaffId: $toStaffId", it)
+      ReconciliationErrorPageResult(it)
+    },
+  )
 
   private suspend fun nomisStaffToPossibleDpsStaff(nomisStaffId: Long): Pair<StaffDetails, DpsStaffResult> = withContext(Dispatchers.Unconfined) {
     async { nomisApiService.getStaffDetails(nomisStaffId) } to
@@ -165,6 +169,9 @@ class StaffReconciliationService(
       }
   }
 }
+private fun List<MismatchStaff>.asMap(): Pair<String, String> = this
+  .sortedBy { it.nomisStaffId }.take(10)
+  .let { mismatch -> "nomisStaffIds" to mismatch.map { it.nomisStaffId }.joinToString() }
 
 data class MismatchStaff(
   val nomisStaffId: Long,
