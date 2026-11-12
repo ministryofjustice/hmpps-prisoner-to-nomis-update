@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-11-10.6192.f4e918b"
+    "version" : "2026-11-11.6227.6d9d5ad"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -2813,6 +2813,11 @@
             "description" : "The nomis offender id for this alias",
             "example" : 10000
           },
+          "cprAliasId" : {
+            "type" : [ "string", "null" ],
+            "description" : "The cpr alias id",
+            "example" : "4f2b1d8a-9f3c-4a1f-8b2d-112233445566"
+          },
           "titleCode" : {
             "type" : [ "string", "null" ],
             "description" : "The alias title code",
@@ -2826,7 +2831,7 @@
           },
           "middleNames" : {
             "type" : [ "string", "null" ],
-            "description" : "The alias middles name",
+            "description" : "The alias middle names",
             "example" : "James"
           },
           "lastName" : {
@@ -2927,6 +2932,11 @@
             "$ref" : "#/components/schemas/NomisIdentifierId",
             "description" : "The nomis identifier id"
           },
+          "cprIdentifierId" : {
+            "type" : [ "string", "null" ],
+            "description" : "The cpr identifier id",
+            "example" : "4f2c1d8a-9e3c-4a1f-8b2d-112233445566"
+          },
           "type" : {
             "type" : "string",
             "description" : "The identifier type",
@@ -2942,11 +2952,6 @@
             "type" : [ "string", "null" ],
             "description" : "The identifier comment",
             "example" : "Some comment"
-          },
-          "issuedAuthority" : {
-            "type" : [ "string", "null" ],
-            "description" : "The issued authority",
-            "example" : "Police"
           },
           "issuedDate" : {
             "type" : [ "string", "null" ],
