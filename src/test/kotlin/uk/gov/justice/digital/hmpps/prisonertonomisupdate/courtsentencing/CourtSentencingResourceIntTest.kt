@@ -1726,7 +1726,10 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will call nomis api to create the charge`() {
         waitForAnyProcessingToComplete(2)
-        nomisApi.verify(putRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/$NOMIS_COURT_CASE_ID/court-appearances/$NOMIS_COURT_APPEARANCE_ID/charges/$NOMIS_COURT_CHARGE_ID")))
+        nomisApi.verify(
+          putRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/$NOMIS_COURT_CASE_ID/court-appearances/$NOMIS_COURT_APPEARANCE_ID/charges/$NOMIS_COURT_CHARGE_ID"))
+            .withRequestBody(matchingJsonPath("propertyValue", equalTo(COURT_CHARGE_1_VALUE.toString()))),
+        )
       }
     }
   }
