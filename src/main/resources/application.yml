@@ -7,7 +7,7 @@ spring:
     name: hmpps-prisoner-to-nomis-update
   http:
     codecs:
-      max-in-memory-size: 15MB
+      max-in-memory-size: 20MB
 
   security:
     oauth2:
