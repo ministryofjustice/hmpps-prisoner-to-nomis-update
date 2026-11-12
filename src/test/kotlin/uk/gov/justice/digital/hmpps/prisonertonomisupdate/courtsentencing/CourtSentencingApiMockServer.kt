@@ -42,6 +42,7 @@ const val COURT_CHARGE_2_OFFENCE_CODE = "PS90032"
 const val COURT_CHARGE_3_OFFENCE_CODE = "PS90033"
 const val COURT_CHARGE_4_OFFENCE_CODE = "PS90034"
 const val COURT_CHARGE_1_RESULT_CODE = "4531"
+val COURT_CHARGE_1_VALUE: BigDecimal = BigDecimal("12.5")
 const val COURT_CHARGE_2_RESULT_CODE = "4531"
 const val COURT_CHARGE_3_RESULT_CODE = "1002"
 const val COURT_CHARGE_1_OFFENCE_DATE = "2024-01-11"
@@ -336,6 +337,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
       offenceEndDate = LocalDate.parse(COURT_CHARGE_1_OFFENCE_END_DATE),
       prisonerId = offenderNo,
       nomisOutcomeCode = COURT_CHARGE_1_RESULT_CODE,
+      value = COURT_CHARGE_1_VALUE,
     )
     stubFor(
       get(WireMock.urlPathMatching("/legacy/charge/$courtChargeId")).willReturn(
@@ -358,6 +360,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
       offenceEndDate = LocalDate.parse(COURT_CHARGE_1_OFFENCE_END_DATE),
       prisonerId = offenderNo,
       nomisOutcomeCode = COURT_CHARGE_1_RESULT_CODE,
+      value = COURT_CHARGE_1_VALUE,
     )
     stubFor(
       get(WireMock.urlPathMatching("/legacy/court-appearance/$courtAppearanceId/charge/$courtChargeId")).willReturn(
