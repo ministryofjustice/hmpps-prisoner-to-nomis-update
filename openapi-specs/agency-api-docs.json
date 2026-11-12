@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-11-09.692.efa1f27"
+    "version" : "2026-11-11.700.4099211"
   },
   "servers" : [ {
     "url" : "https://prison-register-dev.hmpps.service.justice.gov.uk",
@@ -2667,6 +2667,60 @@
           },
           "404" : {
             "description" : "Agency Id or Address Id not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/legacy/sync/prison/id/{agencyId}/phone-number" : {
+      "put" : {
+        "tags" : [ "legacy-sync-resource" ],
+        "summary" : "Updates prison phone number by creating or updating a department record",
+        "description" : "Used for synchronising data from NOMIS. Role required is ROLE_HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
+        "operationId" : "updatePrisonPhoneNumber",
+        "parameters" : [ {
+          "name" : "agencyId",
+          "in" : "path",
+          "description" : "NOMIS Agency Id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "NOMIS Agency Id",
+            "example" : "WWI",
+            "maxLength" : 6,
+            "minLength" : 2
+          },
+          "example" : "WWI"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/LegacyPrisonPhoneDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Prison phone number updated",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DepartmentDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -9331,6 +9385,53 @@
         },
         "required" : [ "active", "addresses", "agencyId", "agencyName", "agencyType", "emailAddresses", "phoneNumbers" ]
       },
+      "LegacyAgencyPhoneDto" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int64",
+            "description" : "Database Id",
+            "example" : 123
+          },
+          "number" : {
+            "type" : "string",
+            "description" : "Phone number",
+            "example" : "0114 555 9898"
+          }
+        },
+        "required" : [ "number" ]
+      },
+      "LegacyPrisonPhoneDto" : {
+        "type" : "object",
+        "description" : "Prison phone number",
+        "properties" : {
+          "phoneNumber" : {
+            "$ref" : "#/components/schemas/LegacyAgencyPhoneDto"
+          }
+        },
+        "required" : [ "phoneNumber" ]
+      },
+      "DepartmentDto" : {
+        "type" : "object",
+        "description" : "Prison Information",
+        "properties" : {
+          "type" : {
+            "type" : "string",
+            "enum" : [ "PRISON", "SOCIAL_VISIT", "VIDEOLINK_CONFERENCING_CENTRE", "OFFENDER_MANAGEMENT_UNIT", "OFFICIAL_VISIT" ]
+          },
+          "emailAddress" : {
+            "type" : [ "string", "null" ]
+          },
+          "phoneNumber" : {
+            "type" : [ "string", "null" ]
+          },
+          "webAddress" : {
+            "type" : [ "string", "null" ]
+          }
+        },
+        "required" : [ "type" ]
+      },
       "UpdateHospitalDto" : {
         "type" : "object",
         "description" : "Hospital Update Record",
@@ -10455,23 +10556,6 @@
         },
         "required" : [ "address" ]
       },
-      "LegacyAgencyPhoneDto" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : [ "integer", "null" ],
-            "format" : "int64",
-            "description" : "Database Id",
-            "example" : 123
-          },
-          "number" : {
-            "type" : "string",
-            "description" : "Phone number",
-            "example" : "0114 555 9898"
-          }
-        },
-        "required" : [ "number" ]
-      },
       "LegacyAgencyType" : {
         "type" : "string",
         "enum" : [ "PRISON", "COURT", "HOSPITAL", "SECURE_HOSPITAL", "PROBATION_OFFICE", "POLICE_CUSTODY_SUITE", "APPROVED_PREMISES", "AIRPORT", "PROBATION_CRC", "FOREIGN_NATIONAL_PRISON", "VOLUNTARY_HOSTEL", "IMMIGRATION_DETENTION_CENTRE", "OUTSIDE", "PECS", "PSYCHIATRIC_CARE", "CHILDREN_SECURE_HOME", "SECURE_TRAINING_CENTRE", "YOT" ]
@@ -10820,26 +10904,6 @@
           }
         },
         "required" : [ "prisonId", "prisonName" ]
-      },
-      "DepartmentDto" : {
-        "type" : "object",
-        "description" : "Prison Information",
-        "properties" : {
-          "type" : {
-            "type" : "string",
-            "enum" : [ "PRISON", "SOCIAL_VISIT", "VIDEOLINK_CONFERENCING_CENTRE", "OFFENDER_MANAGEMENT_UNIT", "OFFICIAL_VISIT" ]
-          },
-          "emailAddress" : {
-            "type" : [ "string", "null" ]
-          },
-          "phoneNumber" : {
-            "type" : [ "string", "null" ]
-          },
-          "webAddress" : {
-            "type" : [ "string", "null" ]
-          }
-        },
-        "required" : [ "type" ]
       },
       "FullPrisonDto" : {
         "type" : "object",
