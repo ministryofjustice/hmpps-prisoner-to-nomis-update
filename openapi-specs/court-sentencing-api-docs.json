@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-11-10.2872.de50744"
+    "version" : "2026-11-11.2905.0aeaa02"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -285,7 +285,7 @@
       "get" : {
         "tags" : [ "recall-controller" ],
         "summary" : "Retrieve a recall",
-        "description" : "This endpoint will retrieve the details of a recall",
+        "description" : "This endpoint will retrieve the details of a recall. Pass groupNomisRecalls=true to group NOMIS recalls",
         "operationId" : "getRecall",
         "parameters" : [ {
           "name" : "recallUuid",
@@ -294,6 +294,14 @@
           "schema" : {
             "type" : "string",
             "format" : "uuid"
+          }
+        }, {
+          "name" : "groupNomisRecalls",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
           }
         } ],
         "responses" : {
@@ -2830,6 +2838,66 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/IsRecallPossibleResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/person/statuses" : {
+      "post" : {
+        "tags" : [ "person-controller" ],
+        "summary" : "Retrieve person status indicators for a list of people",
+        "description" : "PeopleStatus contains a map of statuses linked to a person",
+        "operationId" : "getPeopleStatus",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PeopleStatusRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Returns person status indicators for a list of people",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PeopleStatus"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Malformed request such as empty personIds",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PeopleStatus"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PeopleStatus"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PeopleStatus"
                 }
               }
             }
@@ -8321,7 +8389,7 @@
             "type" : [ "boolean", "null" ]
           }
         },
-        "required" : [ "eventType", "isBreach", "prisonerId" ]
+        "required" : [ "eventType", "prisonerId" ]
       },
       "LegacyLinkCase" : {
         "type" : "object",
@@ -8423,7 +8491,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "06:44:50.087264291"
+            "example" : "06:44:48.355431192"
           },
           "outcomeDispositionCode" : {
             "type" : [ "string", "null" ]
@@ -8887,7 +8955,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "06:44:50.087264291"
+            "example" : "06:44:48.355431192"
           },
           "courtCode" : {
             "type" : "string"
@@ -9381,6 +9449,47 @@
           }
         },
         "required" : [ "isRecallPossible", "sentenceIds" ]
+      },
+      "PeopleStatusRequest" : {
+        "type" : "object",
+        "description" : "Status indicators for a list of people",
+        "properties" : {
+          "personIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            },
+            "minItems" : 1,
+            "uniqueItems" : true
+          }
+        },
+        "required" : [ "personIds" ]
+      },
+      "PeopleStatus" : {
+        "type" : "object",
+        "description" : "Status indicators for a map of people and their status",
+        "properties" : {
+          "peopleStatus" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/PersonStatus"
+            }
+          }
+        },
+        "required" : [ "peopleStatus" ]
+      },
+      "PersonStatus" : {
+        "type" : "object",
+        "description" : "Status indicators for a person",
+        "properties" : {
+          "isOnRemand" : {
+            "type" : "boolean"
+          },
+          "isCurrentlyOnRecall" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "isCurrentlyOnRecall", "isOnRemand" ]
       },
       "FixSingleSentenceMultipleChargesPeople" : {
         "type" : "object",
@@ -11632,19 +11741,6 @@
         },
         "required" : [ "offenceCode", "sentenceServeType", "sentenceUuid" ]
       },
-      "PersonStatus" : {
-        "type" : "object",
-        "description" : "Status indicators for a person",
-        "properties" : {
-          "isOnRemand" : {
-            "type" : "boolean"
-          },
-          "isCurrentlyOnRecall" : {
-            "type" : "boolean"
-          }
-        },
-        "required" : [ "isCurrentlyOnRecall", "isOnRemand" ]
-      },
       "AppearanceToChainTo" : {
         "type" : "object",
         "properties" : {
@@ -11705,9 +11801,15 @@
           },
           "value" : {
             "type" : [ "number", "null" ]
+          },
+          "periodLengths" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PeriodLength"
+            }
           }
         },
-        "required" : [ "chargeUuid", "offenceCode", "sentenceUuid" ]
+        "required" : [ "chargeUuid", "offenceCode", "periodLengths", "sentenceUuid" ]
       },
       "SentencesToChainToResponse" : {
         "type" : "object",
@@ -11995,7 +12097,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "06:44:50.087264291"
+            "example" : "06:44:48.355431192"
           },
           "courtCode" : {
             "type" : "string"
@@ -12889,7 +12991,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:44:50.087264291"
+            "example" : "06:44:48.355431192"
           },
           "nomisOutcomeCode" : {
             "type" : [ "string", "null" ]
@@ -12968,7 +13070,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "06:44:50.087264291"
+            "example" : "06:44:48.355431192"
           },
           "courtId" : {
             "type" : "string"
@@ -13123,7 +13225,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:44:50.087264291"
+            "example" : "06:44:48.355431192"
           },
           "charges" : {
             "type" : "array",
@@ -13160,7 +13262,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "06:44:50.087264291"
+            "example" : "06:44:48.355431192"
           },
           "courtId" : {
             "type" : "string"
@@ -13814,7 +13916,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "06:44:50.087264291"
+            "example" : "06:44:48.355431192"
           },
           "courtCode" : {
             "type" : [ "string", "null" ]
