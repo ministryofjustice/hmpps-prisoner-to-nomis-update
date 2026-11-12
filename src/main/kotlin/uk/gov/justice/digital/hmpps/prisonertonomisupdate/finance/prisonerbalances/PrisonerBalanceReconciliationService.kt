@@ -252,13 +252,7 @@ class PrisonerBalanceReconciliationService(
         val dpsHoldBalance = dpsAccount?.holdBalance ?: BigDecimal.ZERO
 
         if (reconcileBalances() && dpsBalance.compareTo(nomisBalance) != 0) {
-          differences.add(
-            Difference(
-              "$parentProperty[$accountCode].balance",
-              nomisBalance,
-              dpsBalance,
-            ),
-          )
+          differences.addIfMismatch("$parentProperty[$accountCode].balance", nomisBalance, dpsBalance)
         }
 
         if (reconcileHolds() && dpsHoldBalance.compareTo(nomisHoldBalance) != 0) {
