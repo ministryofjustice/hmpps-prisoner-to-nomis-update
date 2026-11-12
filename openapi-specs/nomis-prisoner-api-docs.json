@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-11-10.2375.445800f"
+    "version" : "2026-11-11.2384.469b5d5"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -29752,6 +29752,68 @@
         }
       }
     },
+    "/agency/{agencyId}/phone-number" : {
+      "get" : {
+        "tags" : [ "agency-resource" ],
+        "summary" : "Gets the phone number of an agency",
+        "description" : "Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getAgencyPhoneNumber",
+        "parameters" : [ {
+          "name" : "agencyId",
+          "in" : "path",
+          "description" : "Agency id (aka agencyId)",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Agency id (aka agencyId)",
+            "example" : "WWI"
+          },
+          "example" : "WWI"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Phone number details",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AgencyPhoneResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Agency not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/agency/ids/{agencyType}/all" : {
       "get" : {
         "tags" : [ "agency-resource" ],
@@ -32281,6 +32343,9 @@
           "isBreach" : {
             "type" : "boolean",
             "description" : "Indicates if the charge is related to a breach supervision (or imprisonable offence)"
+          },
+          "propertyValue" : {
+            "type" : [ "number", "null" ]
           }
         },
         "required" : [ "isBreach", "offenceCode" ]
@@ -37044,6 +37109,9 @@
           },
           "resultCode1" : {
             "type" : [ "string", "null" ]
+          },
+          "propertyValue" : {
+            "type" : [ "number", "null" ]
           }
         },
         "required" : [ "id" ]
@@ -37068,6 +37136,9 @@
           },
           "resultCode1" : {
             "type" : [ "string", "null" ]
+          },
+          "propertyValue" : {
+            "type" : [ "number", "null" ]
           }
         },
         "required" : [ "id", "offenceCode" ]
@@ -48115,9 +48186,17 @@
             "type" : [ "integer", "null" ],
             "format" : "int64"
           },
+          "txnId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
           "txnEntrySeq" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "txnEntryDate" : {
+            "type" : "string",
+            "format" : "date-time"
           },
           "txnEntryDesc" : {
             "type" : [ "string", "null" ]
@@ -48127,14 +48206,6 @@
           },
           "txnEntryAmount" : {
             "type" : "number"
-          },
-          "txnId" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "txnEntryDate" : {
-            "type" : "string",
-            "format" : "date-time"
           }
         },
         "required" : [ "txnEntryAmount", "txnEntryDate", "txnEntrySeq", "txnId" ]
@@ -49756,6 +49827,20 @@
           },
           "empty" : {
             "type" : "boolean"
+          }
+        }
+      },
+      "AgencyPhoneResponse" : {
+        "type" : "object",
+        "description" : "A response to get prison phone main number",
+        "properties" : {
+          "phone" : {
+            "description" : "Phone number",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/AgencyPhoneNumber"
+            }, {
+              "type" : "null"
+            } ]
           }
         }
       },
