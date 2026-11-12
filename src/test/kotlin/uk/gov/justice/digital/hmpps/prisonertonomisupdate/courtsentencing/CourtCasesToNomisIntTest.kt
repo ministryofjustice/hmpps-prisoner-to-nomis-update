@@ -1743,6 +1743,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             assertThat(it["nomisChargeId"]).isEqualTo(NOMIS_COURT_CHARGE_ID.toString())
             assertThat(it["nomisOutcomeCode"]).isEqualTo("4531")
             assertThat(it["nomisOffenceCode"]).isEqualTo(COURT_CHARGE_1_OFFENCE_CODE)
+            assertThat(it["propertyValue"]).isEqualTo(COURT_CHARGE_1_VALUE.toString())
           },
           isNull(),
         )
@@ -1751,7 +1752,10 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will call nomis api to create the Charge`() {
         waitForAnyProcessingToComplete()
-        courtSentencingNomisApi.verify(postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/${NOMIS_COURT_CASE_ID_FOR_CREATION}/charges")))
+        courtSentencingNomisApi.verify(
+          postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/${NOMIS_COURT_CASE_ID_FOR_CREATION}/charges"))
+            .withRequestBody(matchingJsonPath("propertyValue", equalTo(COURT_CHARGE_1_VALUE.toString()))),
+        )
       }
 
       @Test
@@ -1879,6 +1883,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             assertThat(it["nomisChargeId"]).isEqualTo(NOMIS_COURT_CHARGE_ID.toString())
             assertThat(it["nomisOutcomeCode"]).isEqualTo("4531")
             assertThat(it["nomisOffenceCode"]).isEqualTo(COURT_CHARGE_1_OFFENCE_CODE)
+            assertThat(it["propertyValue"]).isEqualTo(COURT_CHARGE_1_VALUE.toString())
           },
           isNull(),
         )
@@ -2028,6 +2033,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             assertThat(it["nomisChargeId"]).isEqualTo(NOMIS_COURT_CHARGE_ID.toString())
             assertThat(it["nomisOutcomeCode"]).isEqualTo("4531")
             assertThat(it["nomisOffenceCode"]).isEqualTo(COURT_CHARGE_1_OFFENCE_CODE)
+            assertThat(it["propertyValue"]).isEqualTo(COURT_CHARGE_1_VALUE.toString())
           },
           isNull(),
         )
@@ -2036,7 +2042,10 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will call nomis api to create the Charge`() {
         waitForAnyProcessingToComplete()
-        courtSentencingNomisApi.verify(postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/${NOMIS_COURT_CASE_ID_FOR_CREATION}/charges")))
+        courtSentencingNomisApi.verify(
+          postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/${NOMIS_COURT_CASE_ID_FOR_CREATION}/charges"))
+            .withRequestBody(matchingJsonPath("propertyValue", equalTo(COURT_CHARGE_1_VALUE.toString()))),
+        )
       }
 
       @Test
@@ -2222,6 +2231,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             assertThat(it["nomisChargeId"]).isEqualTo(NOMIS_COURT_CHARGE_ID.toString())
             assertThat(it["nomisOutcomeCode"]).isEqualTo(COURT_CHARGE_1_RESULT_CODE)
             assertThat(it["nomisOffenceCode"]).isEqualTo(COURT_CHARGE_1_OFFENCE_CODE)
+            assertThat(it["propertyValue"]).isEqualTo(COURT_CHARGE_1_VALUE.toString())
             assertThat(it["isOnFutureAppearance"]).isEqualTo("false")
           },
           isNull(),
@@ -2233,6 +2243,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         waitForAnyProcessingToComplete()
         courtSentencingNomisApi.verify(
           putRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/$NOMIS_COURT_CASE_ID_FOR_CREATION/court-appearances/$NOMIS_COURT_APPEARANCE_ID/charges/$NOMIS_COURT_CHARGE_ID"))
+            .withRequestBody(matchingJsonPath("propertyValue", equalTo(COURT_CHARGE_1_VALUE.toString())))
             .withRequestBody(
               matchingJsonPath(
                 "offenceCode",
@@ -2321,6 +2332,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             assertThat(it["nomisChargeId"]).isEqualTo(NOMIS_COURT_CHARGE_ID.toString())
             assertThat(it["nomisOutcomeCode"]).isEqualTo(COURT_CHARGE_1_RESULT_CODE)
             assertThat(it["nomisOffenceCode"]).isEqualTo(COURT_CHARGE_1_OFFENCE_CODE)
+            assertThat(it["propertyValue"]).isEqualTo(COURT_CHARGE_1_VALUE.toString())
             assertThat(it["isOnFutureAppearance"]).isEqualTo("true")
           },
           isNull(),
@@ -2332,6 +2344,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         waitForAnyProcessingToComplete()
         courtSentencingNomisApi.verify(
           putRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/$NOMIS_COURT_CASE_ID_FOR_CREATION/court-appearances/$NOMIS_COURT_APPEARANCE_ID/charges/$NOMIS_COURT_CHARGE_ID"))
+            .withRequestBody(matchingJsonPath("propertyValue", equalTo(COURT_CHARGE_1_VALUE.toString())))
             .withRequestBody(
               matchingJsonPath(
                 "offenceCode",
