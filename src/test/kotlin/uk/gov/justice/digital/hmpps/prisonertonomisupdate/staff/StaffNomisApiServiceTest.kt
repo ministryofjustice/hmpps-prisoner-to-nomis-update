@@ -71,7 +71,6 @@ class StaffNomisApiServiceTest {
 
       apiService.getAllStaffIdRanges(
         pageSize = 5,
-        activeOnly = false,
       )
 
       nomisApi.verify(
@@ -117,7 +116,6 @@ class StaffNomisApiServiceTest {
       apiService.getAllStaffIdsInRange(
         fromStaffId = 5,
         toStaffId = 100,
-        activeOnly = false,
       )
 
       mockServer.verify(

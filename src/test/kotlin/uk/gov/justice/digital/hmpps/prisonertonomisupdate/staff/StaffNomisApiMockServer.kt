@@ -13,46 +13,23 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Ca
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.IdRange
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.MemberCaseloadResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.NomisAudit
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PageMetadata
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PagedModelStaffIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RoleResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.StaffAccount
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.StaffDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.StaffEmail
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.StaffIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import java.time.LocalDate
 import java.time.LocalDateTime
 
 @Component
 class StaffNomisApiMockServer(private val jsonMapper: JsonMapper) {
-  companion object {
-    fun pagedModelStaffIdResponse(content: List<StaffIdResponse>, totalElements: Long = content.size.toLong(), pageSize: Int = 20, pageNumber: Int = 1): PagedModelStaffIdResponse = PagedModelStaffIdResponse(
-      content = content,
-      page = PageMetadata(
-        propertySize = pageSize.toLong(),
-        number = pageNumber.toLong(),
-        totalElements = totalElements,
-        totalPages = Math.ceilDiv(totalElements, pageSize),
-      ),
-    )
-  }
+  fun stubGetAllStaffIdRanges(pageSize: Long = 10, totalElements: Long = 20) {
+    val content: List<IdRange> = (0L until totalElements step pageSize)
+      .map { IdRange(it, minOf(it + pageSize, totalElements)) }
 
-  fun stubGetAllStaffIdRanges(
-    pageSize: Long = 3,
-    totalElements: Long = 3,
-    active: Boolean = false,
-  ) {
-    val content: List<IdRange> = if (totalElements <= 0) {
-      emptyList()
-    } else {
-      (0..(totalElements / pageSize))
-        .zipWithNext()
-        .map { IdRange(it.first * pageSize, it.second * pageSize) }
-    }
     nomisApi.stubFor(
       get(urlPathEqualTo("/staff/id-ranges"))
-        .withQueryParam("active", equalTo(active.toString()))
+        .withQueryParam("active", equalTo("false"))
         .withQueryParam("size", equalTo(pageSize.toString()))
         .willReturn(
           aResponse()
