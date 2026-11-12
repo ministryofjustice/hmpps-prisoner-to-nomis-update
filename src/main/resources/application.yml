@@ -251,6 +251,11 @@ reports:
   core-person:
     reconciliation:
       page-size: 30
+  contact-person:
+    prisoner-contact:
+      reconciliation:
+        page-size: 10
+        thread-count: 10
   official-visits:
     active-prisoners-visits:
       reconciliation:

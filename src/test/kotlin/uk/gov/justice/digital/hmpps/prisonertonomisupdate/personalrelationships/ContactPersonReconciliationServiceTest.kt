@@ -22,7 +22,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ContactForPerson
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ContactPerson
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerContact
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactAddressDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactAddressPhoneDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactEmailDetails
@@ -75,19 +74,16 @@ internal class ContactPersonReconciliationServiceTest {
 
   @Nested
   inner class CheckPrisonerContactsMatch {
-    val prisonerId: PrisonerIds = PrisonerIds(
-      bookingId = 1,
-      offenderNo = "A1234KT",
-    )
+    val offenderNo = "A1234KT"
     private fun stubContact(dpsContact: ReconcilePrisonerRelationship, nomisContact: PrisonerContact) {
       nomisApi.stubGetPrisonerContacts(
-        prisonerId.offenderNo,
+        offenderNo,
         prisonerWithContacts().copy(
           contacts = listOf(nomisContact),
         ),
       )
       dpsApi.stubGetPrisonerContacts(
-        prisonerId.offenderNo,
+        offenderNo,
         prisonerContactDetails().copy(
           relationships = listOf(dpsContact),
         ),
@@ -98,14 +94,14 @@ internal class ContactPersonReconciliationServiceTest {
     inner class WhenPrisonerHasNoContacts {
       @BeforeEach
       fun beforeEach() {
-        nomisApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerWithContacts().copy(contacts = emptyList()))
-        dpsApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerContactDetails().copy(relationships = emptyList()))
+        nomisApi.stubGetPrisonerContacts(offenderNo, prisonerWithContacts().copy(contacts = emptyList()))
+        dpsApi.stubGetPrisonerContacts(offenderNo, prisonerContactDetails().copy(relationships = emptyList()))
       }
 
       @Test
       fun `will not report a mismatch`() = runTest {
         assertThat(
-          service.checkPrisonerContactsMatch(prisonerId),
+          service.checkPrisonerContactsMatch(offenderNo),
         ).isNull()
       }
     }
@@ -114,14 +110,14 @@ internal class ContactPersonReconciliationServiceTest {
     inner class WhenPrisonerHasSameContacts {
       @BeforeEach
       fun beforeEach() {
-        nomisApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerWithContacts().copy(contacts = listOf(prisonerContact(1), prisonerContact(2))))
-        dpsApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerContactDetails().copy(relationships = listOf(prisonerContactRelationshipDetails(contactId = 1, prisonerContactId = 11), prisonerContactRelationshipDetails(contactId = 2, prisonerContactId = 22))))
+        nomisApi.stubGetPrisonerContacts(offenderNo, prisonerWithContacts().copy(contacts = listOf(prisonerContact(1), prisonerContact(2))))
+        dpsApi.stubGetPrisonerContacts(offenderNo, prisonerContactDetails().copy(relationships = listOf(prisonerContactRelationshipDetails(contactId = 1, prisonerContactId = 11), prisonerContactRelationshipDetails(contactId = 2, prisonerContactId = 22))))
       }
 
       @Test
       fun `will not report a mismatch`() = runTest {
         assertThat(
-          service.checkPrisonerContactsMatch(prisonerId),
+          service.checkPrisonerContactsMatch(offenderNo),
         ).isNull()
       }
     }
@@ -149,7 +145,7 @@ internal class ContactPersonReconciliationServiceTest {
       @Test
       fun `will not report a mismatch`() = runTest {
         assertThat(
-          service.checkPrisonerContactsMatch(prisonerId),
+          service.checkPrisonerContactsMatch(offenderNo),
         ).isNull()
       }
     }
@@ -177,7 +173,7 @@ internal class ContactPersonReconciliationServiceTest {
       @Test
       fun `will not report a mismatch`() = runTest {
         assertThat(
-          service.checkPrisonerContactsMatch(prisonerId),
+          service.checkPrisonerContactsMatch(offenderNo),
         ).isNull()
       }
     }
@@ -187,7 +183,7 @@ internal class ContactPersonReconciliationServiceTest {
       @BeforeEach
       fun beforeEach() {
         nomisApi.stubGetPrisonerContacts(
-          prisonerId.offenderNo,
+          offenderNo,
           prisonerWithContacts().copy(
             contacts = listOf(
               prisonerContact(personId = 1, contactId = 1).copy(approvedVisitor = true),
@@ -196,7 +192,7 @@ internal class ContactPersonReconciliationServiceTest {
           ),
         )
         dpsApi.stubGetPrisonerContacts(
-          prisonerId.offenderNo,
+          offenderNo,
           prisonerContactDetails().copy(
             relationships = listOf(
               prisonerContactRelationshipDetails(
@@ -219,7 +215,7 @@ internal class ContactPersonReconciliationServiceTest {
       @Test
       fun `will not report a mismatch`() = runTest {
         assertThat(
-          service.checkPrisonerContactsMatch(prisonerId),
+          service.checkPrisonerContactsMatch(offenderNo),
         ).isNull()
       }
     }
@@ -228,9 +224,9 @@ internal class ContactPersonReconciliationServiceTest {
     inner class WhenContactIsMissingInDPS {
       @BeforeEach
       fun beforeEach() {
-        nomisApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerWithContacts().copy(contacts = listOf(prisonerContact(1))))
+        nomisApi.stubGetPrisonerContacts(offenderNo, prisonerWithContacts().copy(contacts = listOf(prisonerContact(1))))
         dpsApi.stubGetPrisonerContacts(
-          prisonerId.offenderNo,
+          offenderNo,
           prisonerContactDetails().copy(
             relationships = emptyList(),
           ),
@@ -239,17 +235,17 @@ internal class ContactPersonReconciliationServiceTest {
 
       @Test
       fun `will report a mismatch`() = runTest {
-        assertThat(service.checkPrisonerContactsMatch(prisonerId)).isNotNull.extracting { it!!.offenderNo }.isEqualTo(prisonerId.offenderNo)
+        assertThat(service.checkPrisonerContactsMatch(offenderNo)).isNotNull.extracting { it!!.offenderNo }.isEqualTo(offenderNo)
       }
 
       @Test
       fun `telemetry will show contact is missing`() = runTest {
-        service.checkPrisonerContactsMatch(prisonerId)
+        service.checkPrisonerContactsMatch(offenderNo)
         verify(telemetryClient).trackEvent(
           eq("contact-person-prisoner-contact-reconciliation-mismatch"),
           eq(
             mapOf(
-              "offenderNo" to prisonerId.offenderNo,
+              "offenderNo" to offenderNo,
               "dpsContactCount" to "0",
               "nomisContactCount" to "1",
               "contactIdsMissingFromNomis" to "[]",
@@ -266,9 +262,9 @@ internal class ContactPersonReconciliationServiceTest {
     inner class WhenContactIsMissingInNOMIS {
       @BeforeEach
       fun beforeEach() {
-        nomisApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerWithContacts().copy(contacts = listOf()))
+        nomisApi.stubGetPrisonerContacts(offenderNo, prisonerWithContacts().copy(contacts = listOf()))
         dpsApi.stubGetPrisonerContacts(
-          prisonerId.offenderNo,
+          offenderNo,
           prisonerContactDetails().copy(
             relationships = listOf(prisonerContactRelationshipDetails(contactId = 1)),
           ),
@@ -277,17 +273,17 @@ internal class ContactPersonReconciliationServiceTest {
 
       @Test
       fun `will report a mismatch`() = runTest {
-        assertThat(service.checkPrisonerContactsMatch(prisonerId)).isNotNull.extracting { it!!.offenderNo }.isEqualTo(prisonerId.offenderNo)
+        assertThat(service.checkPrisonerContactsMatch(offenderNo)).isNotNull.extracting { it!!.offenderNo }.isEqualTo(offenderNo)
       }
 
       @Test
       fun `telemetry will show contact is missing`() = runTest {
-        service.checkPrisonerContactsMatch(prisonerId)
+        service.checkPrisonerContactsMatch(offenderNo)
         verify(telemetryClient).trackEvent(
           eq("contact-person-prisoner-contact-reconciliation-mismatch"),
           eq(
             mapOf(
-              "offenderNo" to prisonerId.offenderNo,
+              "offenderNo" to offenderNo,
               "dpsContactCount" to "1",
               "nomisContactCount" to "0",
               "contactIdsMissingFromNomis" to "[1]",
@@ -304,9 +300,9 @@ internal class ContactPersonReconciliationServiceTest {
     inner class WhenBothHaveASingleContactButDifferentContactPersonId {
       @BeforeEach
       fun beforeEach() {
-        nomisApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerWithContacts().copy(contacts = listOf(prisonerContact(88))))
+        nomisApi.stubGetPrisonerContacts(offenderNo, prisonerWithContacts().copy(contacts = listOf(prisonerContact(88))))
         dpsApi.stubGetPrisonerContacts(
-          prisonerId.offenderNo,
+          offenderNo,
           prisonerContactDetails().copy(
             relationships = listOf(prisonerContactRelationshipDetails(contactId = 99)),
           ),
@@ -315,17 +311,17 @@ internal class ContactPersonReconciliationServiceTest {
 
       @Test
       fun `will report a mismatch`() = runTest {
-        assertThat(service.checkPrisonerContactsMatch(prisonerId)).isNotNull.extracting { it!!.offenderNo }.isEqualTo(prisonerId.offenderNo)
+        assertThat(service.checkPrisonerContactsMatch(offenderNo)).isNotNull.extracting { it!!.offenderNo }.isEqualTo(offenderNo)
       }
 
       @Test
       fun `telemetry will show contact is missing`() = runTest {
-        service.checkPrisonerContactsMatch(prisonerId)
+        service.checkPrisonerContactsMatch(offenderNo)
         verify(telemetryClient).trackEvent(
           eq("contact-person-prisoner-contact-reconciliation-mismatch"),
           eq(
             mapOf(
-              "offenderNo" to prisonerId.offenderNo,
+              "offenderNo" to offenderNo,
               "dpsContactCount" to "1",
               "nomisContactCount" to "1",
               "contactIdsMissingFromNomis" to "[99]",
@@ -360,17 +356,17 @@ internal class ContactPersonReconciliationServiceTest {
 
       @Test
       fun `will report a mismatch`() = runTest {
-        assertThat(service.checkPrisonerContactsMatch(prisonerId)).isNotNull.extracting { it!!.offenderNo }.isEqualTo(prisonerId.offenderNo)
+        assertThat(service.checkPrisonerContactsMatch(offenderNo)).isNotNull.extracting { it!!.offenderNo }.isEqualTo(offenderNo)
       }
 
       @Test
       fun `telemetry will show contact is different`() = runTest {
-        service.checkPrisonerContactsMatch(prisonerId)
+        service.checkPrisonerContactsMatch(offenderNo)
         verify(telemetryClient).trackEvent(
           eq("contact-person-prisoner-contact-reconciliation-mismatch"),
           eq(
             mapOf(
-              "offenderNo" to prisonerId.offenderNo,
+              "offenderNo" to offenderNo,
               "dpsContactCount" to "1",
               "nomisContactCount" to "1",
               "contactIdsMissingFromNomis" to "[]",
@@ -400,7 +396,7 @@ internal class ContactPersonReconciliationServiceTest {
 
       @Test
       fun `telemetry will show contact is different`() = runTest {
-        service.checkPrisonerContactsMatch(prisonerId)
+        service.checkPrisonerContactsMatch(offenderNo)
         verify(telemetryClient).trackEvent(
           eq("contact-person-prisoner-contact-reconciliation-mismatch"),
           check {
@@ -427,7 +423,7 @@ internal class ContactPersonReconciliationServiceTest {
 
       @Test
       fun `telemetry will show contact is different`() = runTest {
-        service.checkPrisonerContactsMatch(prisonerId)
+        service.checkPrisonerContactsMatch(offenderNo)
         verify(telemetryClient).trackEvent(
           eq("contact-person-prisoner-contact-reconciliation-mismatch"),
           check {
@@ -454,7 +450,7 @@ internal class ContactPersonReconciliationServiceTest {
 
       @Test
       fun `telemetry will show contact is different`() = runTest {
-        service.checkPrisonerContactsMatch(prisonerId)
+        service.checkPrisonerContactsMatch(offenderNo)
         verify(telemetryClient).trackEvent(
           eq("contact-person-prisoner-contact-reconciliation-mismatch"),
           check {
@@ -481,7 +477,7 @@ internal class ContactPersonReconciliationServiceTest {
 
       @Test
       fun `telemetry will show contact is different`() = runTest {
-        service.checkPrisonerContactsMatch(prisonerId)
+        service.checkPrisonerContactsMatch(offenderNo)
         verify(telemetryClient).trackEvent(
           eq("contact-person-prisoner-contact-reconciliation-mismatch"),
           check {
@@ -508,7 +504,7 @@ internal class ContactPersonReconciliationServiceTest {
 
       @Test
       fun `telemetry will show contact is different`() = runTest {
-        service.checkPrisonerContactsMatch(prisonerId)
+        service.checkPrisonerContactsMatch(offenderNo)
         verify(telemetryClient).trackEvent(
           eq("contact-person-prisoner-contact-reconciliation-mismatch"),
           check {
@@ -535,7 +531,7 @@ internal class ContactPersonReconciliationServiceTest {
 
       @Test
       fun `telemetry will show contact is different`() = runTest {
-        service.checkPrisonerContactsMatch(prisonerId)
+        service.checkPrisonerContactsMatch(offenderNo)
         verify(telemetryClient).trackEvent(
           eq("contact-person-prisoner-contact-reconciliation-mismatch"),
           check {
@@ -552,9 +548,9 @@ internal class ContactPersonReconciliationServiceTest {
       inner class WhenPrisonerHasNoRestrictions {
         @BeforeEach
         fun beforeEach() {
-          nomisApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerWithContacts().copy(contacts = listOf(prisonerContact(1).copy(restrictions = emptyList()))))
+          nomisApi.stubGetPrisonerContacts(offenderNo, prisonerWithContacts().copy(contacts = listOf(prisonerContact(1).copy(restrictions = emptyList()))))
           dpsApi.stubGetPrisonerContacts(
-            prisonerId.offenderNo,
+            offenderNo,
             prisonerContactDetails().copy(
               relationships = listOf(prisonerContactRelationshipDetails(contactId = 1, prisonerContactId = 11).copy(restrictions = emptyList())),
             ),
@@ -564,7 +560,7 @@ internal class ContactPersonReconciliationServiceTest {
         @Test
         fun `will not report a mismatch`() = runTest {
           assertThat(
-            service.checkPrisonerContactsMatch(prisonerId),
+            service.checkPrisonerContactsMatch(offenderNo),
           ).isNull()
         }
       }
@@ -573,9 +569,9 @@ internal class ContactPersonReconciliationServiceTest {
       inner class WhenPrisonerHasSameRestrictions {
         @BeforeEach
         fun beforeEach() {
-          nomisApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerWithContacts().copy(contacts = listOf(prisonerContact(1).copy(restrictions = listOf(contactRestriction())))))
+          nomisApi.stubGetPrisonerContacts(offenderNo, prisonerWithContacts().copy(contacts = listOf(prisonerContact(1).copy(restrictions = listOf(contactRestriction())))))
           dpsApi.stubGetPrisonerContacts(
-            prisonerId.offenderNo,
+            offenderNo,
             prisonerContactDetails().copy(
               relationships = listOf(prisonerContactRelationshipDetails(contactId = 1, prisonerContactId = 11).copy(restrictions = listOf(prisonerContactRestrictionDetails()))),
             ),
@@ -585,7 +581,7 @@ internal class ContactPersonReconciliationServiceTest {
         @Test
         fun `will not report a mismatch`() = runTest {
           assertThat(
-            service.checkPrisonerContactsMatch(prisonerId),
+            service.checkPrisonerContactsMatch(offenderNo),
           ).isNull()
         }
       }
@@ -594,9 +590,9 @@ internal class ContactPersonReconciliationServiceTest {
       inner class WhenRestrictionIsMissingInDPS {
         @BeforeEach
         fun beforeEach() {
-          nomisApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerWithContacts().copy(contacts = listOf(prisonerContact(1).copy(restrictions = listOf(contactRestriction())))))
+          nomisApi.stubGetPrisonerContacts(offenderNo, prisonerWithContacts().copy(contacts = listOf(prisonerContact(1).copy(restrictions = listOf(contactRestriction())))))
           dpsApi.stubGetPrisonerContacts(
-            prisonerId.offenderNo,
+            offenderNo,
             prisonerContactDetails().copy(
               relationships = listOf(prisonerContactRelationshipDetails(contactId = 1, prisonerContactId = 11).copy(restrictions = emptyList())),
             ),
@@ -605,17 +601,17 @@ internal class ContactPersonReconciliationServiceTest {
 
         @Test
         fun `will report a mismatch`() = runTest {
-          assertThat(service.checkPrisonerContactsMatch(prisonerId)).isNotNull.extracting { it!!.offenderNo }.isEqualTo(prisonerId.offenderNo)
+          assertThat(service.checkPrisonerContactsMatch(offenderNo)).isNotNull.extracting { it!!.offenderNo }.isEqualTo(offenderNo)
         }
 
         @Test
         fun `telemetry will show restriction is missing`() = runTest {
-          service.checkPrisonerContactsMatch(prisonerId)
+          service.checkPrisonerContactsMatch(offenderNo)
           verify(telemetryClient).trackEvent(
             eq("contact-person-prisoner-contact-reconciliation-mismatch"),
             eq(
               mapOf(
-                "offenderNo" to prisonerId.offenderNo,
+                "offenderNo" to offenderNo,
                 "contactId" to "1",
                 "relationshipType" to "BRO",
                 "dpsPrisonerContactRestrictionCount" to "0",
@@ -634,9 +630,9 @@ internal class ContactPersonReconciliationServiceTest {
       inner class WhenRestrictionIsMissingInNOMIS {
         @BeforeEach
         fun beforeEach() {
-          nomisApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerWithContacts().copy(contacts = listOf(prisonerContact(1).copy(restrictions = listOf()))))
+          nomisApi.stubGetPrisonerContacts(offenderNo, prisonerWithContacts().copy(contacts = listOf(prisonerContact(1).copy(restrictions = listOf()))))
           dpsApi.stubGetPrisonerContacts(
-            prisonerId.offenderNo,
+            offenderNo,
             prisonerContactDetails().copy(
               relationships = listOf(prisonerContactRelationshipDetails(contactId = 1, prisonerContactId = 11).copy(restrictions = listOf(prisonerContactRestrictionDetails()))),
             ),
@@ -645,17 +641,17 @@ internal class ContactPersonReconciliationServiceTest {
 
         @Test
         fun `will report a mismatch`() = runTest {
-          assertThat(service.checkPrisonerContactsMatch(prisonerId)).isNotNull.extracting { it!!.offenderNo }.isEqualTo(prisonerId.offenderNo)
+          assertThat(service.checkPrisonerContactsMatch(offenderNo)).isNotNull.extracting { it!!.offenderNo }.isEqualTo(offenderNo)
         }
 
         @Test
         fun `telemetry will show restriction is missing`() = runTest {
-          service.checkPrisonerContactsMatch(prisonerId)
+          service.checkPrisonerContactsMatch(offenderNo)
           verify(telemetryClient).trackEvent(
             eq("contact-person-prisoner-contact-reconciliation-mismatch"),
             eq(
               mapOf(
-                "offenderNo" to prisonerId.offenderNo,
+                "offenderNo" to offenderNo,
                 "contactId" to "1",
                 "relationshipType" to "BRO",
                 "dpsPrisonerContactRestrictionCount" to "1",
@@ -674,9 +670,9 @@ internal class ContactPersonReconciliationServiceTest {
       inner class WhenBothHaveASingleRestrictionButDifferentRestrictionType {
         @BeforeEach
         fun beforeEach() {
-          nomisApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerWithContacts().copy(contacts = listOf(prisonerContact(1).copy(restrictions = listOf(contactRestriction().copy(type = CodeDescription("CCTV", "CCTV")))))))
+          nomisApi.stubGetPrisonerContacts(offenderNo, prisonerWithContacts().copy(contacts = listOf(prisonerContact(1).copy(restrictions = listOf(contactRestriction().copy(type = CodeDescription("CCTV", "CCTV")))))))
           dpsApi.stubGetPrisonerContacts(
-            prisonerId.offenderNo,
+            offenderNo,
             prisonerContactDetails().copy(
               relationships = listOf(prisonerContactRelationshipDetails(contactId = 1, prisonerContactId = 11).copy(restrictions = listOf(prisonerContactRestrictionDetails().copy(restrictionType = "BAN")))),
             ),
@@ -685,17 +681,17 @@ internal class ContactPersonReconciliationServiceTest {
 
         @Test
         fun `will report a mismatch`() = runTest {
-          assertThat(service.checkPrisonerContactsMatch(prisonerId)).isNotNull.extracting { it!!.offenderNo }.isEqualTo(prisonerId.offenderNo)
+          assertThat(service.checkPrisonerContactsMatch(offenderNo)).isNotNull.extracting { it!!.offenderNo }.isEqualTo(offenderNo)
         }
 
         @Test
         fun `telemetry will show restriction is missing`() = runTest {
-          service.checkPrisonerContactsMatch(prisonerId)
+          service.checkPrisonerContactsMatch(offenderNo)
           verify(telemetryClient).trackEvent(
             eq("contact-person-prisoner-contact-reconciliation-mismatch"),
             eq(
               mapOf(
-                "offenderNo" to prisonerId.offenderNo,
+                "offenderNo" to offenderNo,
                 "contactId" to "1",
                 "relationshipType" to "BRO",
                 "dpsPrisonerContactRestrictionCount" to "1",
@@ -714,9 +710,9 @@ internal class ContactPersonReconciliationServiceTest {
       inner class WhenHasSameRestrictionButDifferentDates {
         @BeforeEach
         fun beforeEach() {
-          nomisApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerWithContacts().copy(contacts = listOf(prisonerContact(1).copy(restrictions = listOf(contactRestriction().copy(expiryDate = LocalDate.parse("2023-01-01")))))))
+          nomisApi.stubGetPrisonerContacts(offenderNo, prisonerWithContacts().copy(contacts = listOf(prisonerContact(1).copy(restrictions = listOf(contactRestriction().copy(expiryDate = LocalDate.parse("2023-01-01")))))))
           dpsApi.stubGetPrisonerContacts(
-            prisonerId.offenderNo,
+            offenderNo,
             prisonerContactDetails().copy(
               relationships = listOf(prisonerContactRelationshipDetails(contactId = 1, prisonerContactId = 11).copy(restrictions = listOf(prisonerContactRestrictionDetails().copy(expiryDate = LocalDate.parse("2022-01-01"))))),
             ),
@@ -725,17 +721,17 @@ internal class ContactPersonReconciliationServiceTest {
 
         @Test
         fun `will report a mismatch`() = runTest {
-          assertThat(service.checkPrisonerContactsMatch(prisonerId)).isNotNull.extracting { it!!.offenderNo }.isEqualTo(prisonerId.offenderNo)
+          assertThat(service.checkPrisonerContactsMatch(offenderNo)).isNotNull.extracting { it!!.offenderNo }.isEqualTo(offenderNo)
         }
 
         @Test
         fun `telemetry will show restriction is missing`() = runTest {
-          service.checkPrisonerContactsMatch(prisonerId)
+          service.checkPrisonerContactsMatch(offenderNo)
           verify(telemetryClient).trackEvent(
             eq("contact-person-prisoner-contact-reconciliation-mismatch"),
             eq(
               mapOf(
-                "offenderNo" to prisonerId.offenderNo,
+                "offenderNo" to offenderNo,
                 "contactId" to "1",
                 "relationshipType" to "BRO",
                 "dpsPrisonerContactRestrictionCount" to "1",

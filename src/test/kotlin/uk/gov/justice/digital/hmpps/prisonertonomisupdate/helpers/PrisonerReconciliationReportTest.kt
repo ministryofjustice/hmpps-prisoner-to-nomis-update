@@ -119,6 +119,36 @@ class PrisonerReconciliationReportTest {
   }
 
   @Nested
+  inner class CustomReportProperties {
+    @Test
+    fun `mismatch summary is built from the mismatches of each prisoner instead of the offender numbers`() = runTest {
+      stubAllPrisoners("A0001TZ", "A0002TZ", "A0003TZ")
+      mismatchesFor = { if (it == "A0002TZ") listOf("one", "two") else emptyList() }
+
+      PrisonerReconciliationReport(
+        telemetryClient,
+        nomisApi,
+        names,
+        ALL_PRISONERS,
+        pageSize = 10,
+        threadCount = 2,
+        mismatchSummary = { prisoners -> prisoners.associate { it.offenderNo to "count=${it.mismatches.size}" } },
+        check = { mismatchesFor(it) },
+      ).run()
+
+      verify(telemetryClient).trackEvent(
+        eq("test-reconciliation-report"),
+        check {
+          assertThat(it).containsEntry("mismatch-count", "1")
+          assertThat(it).containsEntry("A0002TZ", "count=2")
+          assertThat(it).doesNotContainKey("offenderNos")
+        },
+        isNull(),
+      )
+    }
+  }
+
+  @Nested
   inner class CheckError {
     @Test
     fun `a prisoner that cannot be checked is reported and the rest are still checked`() = runTest {
