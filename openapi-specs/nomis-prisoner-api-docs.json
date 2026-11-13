@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-11-11.2384.469b5d5"
+    "version" : "2026-11-12.2392.c4a4fde"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -28362,6 +28362,72 @@
         }
       }
     },
+    "/core-person/{offenderId}/identifiers" : {
+      "get" : {
+        "tags" : [ "core-person-resource" ],
+        "summary" : "Get all identifiers for an offender id",
+        "description" : "Retrieves all identifiers for the offender id, ordered by sequence number. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getIdentifiers",
+        "parameters" : [ {
+          "name" : "offenderId",
+          "in" : "path",
+          "description" : "The offender id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The offender id",
+            "example" : 1234567
+          },
+          "example" : 1234567
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Identifiers returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/Identifier"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Offender does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/core-person/{offenderId}/identifier/{sequenceNumber}" : {
       "get" : {
         "tags" : [ "core-person-resource" ],
@@ -48076,9 +48142,31 @@
             "items" : {
               "$ref" : "#/components/schemas/PrisonerAdvanceDto"
             }
+          },
+          "scheduledPayments" : {
+            "$ref" : "#/components/schemas/ScheduledPaymentSummary",
+            "description" : "Active scheduled payments for the prisoner, if any"
           }
         },
-        "required" : [ "accounts", "advances", "prisonNumber", "rootOffenderId" ]
+        "required" : [ "accounts", "advances", "prisonNumber", "rootOffenderId", "scheduledPayments" ]
+      },
+      "ScheduledPaymentSummary" : {
+        "type" : "object",
+        "properties" : {
+          "count" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The count of the number of active scheduled payments for the prisoner",
+            "example" : 4
+          },
+          "totalWeeklyPayment" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The weekly total paid by the prisoner for active scheduled payments in pence",
+            "example" : 1250
+          }
+        },
+        "required" : [ "count", "totalWeeklyPayment" ]
       },
       "PrisonerAccountDto" : {
         "type" : "object",
@@ -48179,20 +48267,13 @@
       "PrisonerHoldProjection" : {
         "type" : "object",
         "properties" : {
-          "clientUniqueRef" : {
-            "type" : [ "string", "null" ]
-          },
-          "holdNumber" : {
-            "type" : [ "integer", "null" ],
-            "format" : "int64"
+          "txnEntrySeq" : {
+            "type" : "integer",
+            "format" : "int32"
           },
           "txnId" : {
             "type" : "integer",
             "format" : "int64"
-          },
-          "txnEntrySeq" : {
-            "type" : "integer",
-            "format" : "int32"
           },
           "txnEntryDate" : {
             "type" : "string",
@@ -48206,6 +48287,13 @@
           },
           "txnEntryAmount" : {
             "type" : "number"
+          },
+          "clientUniqueRef" : {
+            "type" : [ "string", "null" ]
+          },
+          "holdNumber" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int64"
           }
         },
         "required" : [ "txnEntryAmount", "txnEntryDate", "txnEntrySeq", "txnId" ]
