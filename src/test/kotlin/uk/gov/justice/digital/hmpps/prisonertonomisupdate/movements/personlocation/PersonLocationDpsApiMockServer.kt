@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocati
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personlocation.model.CodedReason
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personlocation.model.Court
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personlocation.model.Prison
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personlocation.model.ReconciliationPrisonerStatus
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personlocation.model.ReconciliationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personlocation.model.ReconciliationSeries
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personlocation.model.SyncCustodialSeries
@@ -79,7 +80,16 @@ class PersonLocationDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       series: List<ReconciliationSeries> = listOf(
         ReconciliationSeries(series = activeSeries(openedAt = bookingOpenedAt), movements = movements),
       ),
-    ) = ReconciliationResponse(series = series)
+    ) = ReconciliationResponse(
+      series = series,
+      status = ReconciliationPrisonerStatus(
+        inCustody = true,
+        temporarilyAbsent = false,
+        expectedLegacyInOut = "IN",
+        expectedLegacyActive = "ACTIVE",
+        prisonCode = "BXI",
+      ),
+    )
 
     fun activeSeries(id: UUID = UUID.randomUUID(), openedAt: LocalDateTime) = SyncCustodialSeries(
       status = SyncCustodialSeries.Status.OPEN,
