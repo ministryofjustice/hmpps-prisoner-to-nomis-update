@@ -13,7 +13,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.Reconciliation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.NomisMovementId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.findMatches
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.findMissing
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationBookings.Type.ACTIVE_FLAG
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationBookings.Type.BOOKING_ACTIVE_FLAG
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationBookings.Type.BOOKING_BEGIN_TIME
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationBookings.Type.BOOKING_END_TIME
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationBookings.Type.BOOKING_NUMBER
@@ -22,17 +22,18 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocati
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationIds.Type.MISSING_MAPPING_BOOKING
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationIds.Type.MISSING_MAPPING_MOVEMENT
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationIds.Type.MOVEMENT
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationMovements.Type.COMMENT
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationMovements.Type.DIRECTION
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationMovements.Type.FROM_LOCATION
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationMovements.Type.MOVEMENT_COMMENT
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationMovements.Type.MOVEMENT_DIRECTION
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationMovements.Type.MOVEMENT_FROM_LOCATION
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationMovements.Type.MOVEMENT_REASON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationMovements.Type.MOVEMENT_TIME
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationMovements.Type.MOVEMENT_TO_LOCATION
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationMovements.Type.MOVEMENT_TYPE
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationMovements.Type.TO_LOCATION
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationStatus.Type.ACTIVE
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationStatus.Type.IN_OUT
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationStatus.Type.PRISON_CODE
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationStatus.Type.STATUS_ACTIVE
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationStatus.Type.STATUS_IN_OUT
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationStatus.Type.STATUS_PRISON_CODE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonLocationBookingMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.MovementLocation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderPersonLocationsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonLocationMovement
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonLocationMovement.DirectionCode.IN
@@ -142,8 +143,6 @@ class PersonLocationReconciliationService(
             "offenderNo" to offenderNo,
             "type" to it.type,
             "nomisBookingId" to "${it.nomisBookingId}",
-            "nomisValue" to "${it.nomisValue}",
-            "dpsValue" to "${it.dpsValue}",
           ),
         )
       }
@@ -319,17 +318,17 @@ class PersonLocationReconciliationService(
 
       // comments
       if (nomisMovement.commentText != dpsMovement.notes) {
-        mismatches.add(mismatch(COMMENT, nomisMovement.commentText, dpsMovement.notes))
+        mismatches.add(mismatch(MOVEMENT_COMMENT, nomisMovement.commentText, dpsMovement.notes))
       }
 
       // direction
       if (nomisMovement.directionCode.toDpsMovementType() != dpsMovement.type) {
-        mismatches.add(mismatch(DIRECTION, nomisMovement.directionCode.value, dpsMovement.type.value))
+        mismatches.add(mismatch(MOVEMENT_DIRECTION, nomisMovement.directionCode.value, dpsMovement.type.value))
       }
 
       // from location
-      if (nomisMovement.from?.description != dpsMovement.from.description) {
-        mismatches.add(mismatch(FROM_LOCATION, nomisMovement.from?.description, dpsMovement.from.description))
+      if (nomisMovement.from?.expectedDpsDescription() != dpsMovement.from.description) {
+        mismatches.add(mismatch(MOVEMENT_FROM_LOCATION, nomisMovement.from?.description, dpsMovement.from.description))
       }
 
       // movement reason
@@ -348,8 +347,8 @@ class PersonLocationReconciliationService(
       }
 
       // to location
-      if (nomisMovement.to?.description != dpsMovement.to?.description) {
-        mismatches.add(mismatch(TO_LOCATION, nomisMovement.to?.description, dpsMovement.to?.description))
+      if (nomisMovement.to?.expectedDpsDescription() != dpsMovement.to?.description) {
+        mismatches.add(mismatch(MOVEMENT_TO_LOCATION, nomisMovement.to?.description, dpsMovement.to?.description))
       }
     }
 
@@ -379,7 +378,7 @@ class PersonLocationReconciliationService(
 
       // active flag
       if (nomisMovement.activeBooking != dpsMovement.isActive) {
-        mismatches.add(mismatch(ACTIVE_FLAG, "${nomisMovement.activeBooking}", "${dpsMovement.isActive}"))
+        mismatches.add(mismatch(BOOKING_ACTIVE_FLAG, "${nomisMovement.activeBooking}", "${dpsMovement.isActive}"))
       }
 
       // booking begin time
@@ -414,22 +413,25 @@ class PersonLocationReconciliationService(
     val checks = nomisBooking?.let {
       val nomisActive = if (it.activeBooking) "ACTIVE" else "INACTIVE"
       listOf(
-        StatusCheck(ACTIVE, nomisActive, nomisActive, dpsStatus.expectedLegacyActive),
-        StatusCheck(IN_OUT, it.inOutStatus, it.inOutStatus, dpsStatus.expectedLegacyInOut),
+        StatusCheck(STATUS_ACTIVE, nomisActive, nomisActive, dpsStatus.expectedLegacyActive),
+        StatusCheck(STATUS_IN_OUT, it.inOutStatus, it.inOutStatus, dpsStatus.expectedLegacyInOut),
         // NOMIS uses OUT and TRN in place of a prison when the prisoner is not in a prison
-        StatusCheck(PRISON_CODE, it.prison, it.prison.takeUnless { prison -> prison in listOf("OUT", "TRN") }, dpsStatus.prisonCode),
+        StatusCheck(STATUS_PRISON_CODE, it.prison, it.prison.takeUnless { prison -> prison in listOf("OUT", "TRN") }, dpsStatus.prisonCode),
       )
     } ?: listOf(
       // a prisoner with no NOMIS bookings, e.g. after a merge not yet processed by DPS
-      StatusCheck(ACTIVE, null, "OUT", dpsStatus.expectedLegacyActive),
-      StatusCheck(IN_OUT, null, "OUT", dpsStatus.expectedLegacyInOut),
-      StatusCheck(PRISON_CODE, null, null, dpsStatus.prisonCode),
+      StatusCheck(STATUS_ACTIVE, null, "OUT", dpsStatus.expectedLegacyActive),
+      StatusCheck(STATUS_IN_OUT, null, "OUT", dpsStatus.expectedLegacyInOut),
+      StatusCheck(STATUS_PRISON_CODE, null, null, dpsStatus.prisonCode),
     )
 
     return checks
       .filter { it.expectedDpsValue != it.dpsValue }
       .map { MismatchedPrisonerLocationStatus(offenderNo, it.type, nomisBooking?.bookingId, it.nomisValue, it.dpsValue) }
   }
+
+  // The sync sends DPS "UNKNOWN" rather than the NOMIS descriptions of the unknown location codes
+  private fun MovementLocation.expectedDpsDescription() = if (code in listOf("UNKNWN", "UNKNCT")) "UNKNOWN" else description
 
   private fun OffenderPersonLocationsResponse.movementIds() = bookings.flatMap { bk -> bk.movements.map { mv -> NomisMovementId(bk.booking.bookingId, mv.sequence) } }
   private fun OffenderPersonLocationsResponse.findMovement(nomisId: NomisMovementId) = bookings.flatMap { it.movements }.first { it.bookingId == nomisId.bookingId && it.sequence == nomisId.sequence }
@@ -471,13 +473,13 @@ class MismatchedPrisonerLocationMovements(
   override fun toString() = "MismatchedPrisonerLocationMovements(offenderNo=$offenderNo, type=$type, nomisMovementId=$nomisMovementId, dpsMovementId=$dpsMovementId, nomisValue=$nomisValue, dpsValue=$dpsValue)"
 
   enum class Type {
-    COMMENT,
-    DIRECTION,
-    FROM_LOCATION,
+    MOVEMENT_COMMENT,
+    MOVEMENT_DIRECTION,
+    MOVEMENT_FROM_LOCATION,
     MOVEMENT_REASON,
     MOVEMENT_TIME,
     MOVEMENT_TYPE,
-    TO_LOCATION,
+    MOVEMENT_TO_LOCATION,
   }
 }
 
@@ -492,7 +494,7 @@ class MismatchedPrisonerLocationBookings(
   override fun toString() = "MismatchedPrisonerLocationBookings(offenderNo=$offenderNo, type=$type, nomisBookingId=$nomisBookingId, dpsSeriesId=$dpsSeriesId, nomisValue=$nomisValue, dpsValue=$dpsValue)"
 
   enum class Type {
-    ACTIVE_FLAG,
+    BOOKING_ACTIVE_FLAG,
     BOOKING_BEGIN_TIME,
     BOOKING_END_TIME,
     BOOKING_NUMBER,
@@ -523,8 +525,8 @@ class MismatchedPrisonerLocationStatus(
   override fun toString() = "MismatchedPrisonerLocationStatus(offenderNo=$offenderNo, type=$type, nomisBookingId=$nomisBookingId, nomisValue=$nomisValue, dpsValue=$dpsValue)"
 
   enum class Type {
-    ACTIVE,
-    IN_OUT,
-    PRISON_CODE,
+    STATUS_ACTIVE,
+    STATUS_IN_OUT,
+    STATUS_PRISON_CODE,
   }
 }
