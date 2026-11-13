@@ -339,6 +339,7 @@ fun dpsCsra(
   inheritedAfterTransfer = false,
   riskTo = emptyList(),
   vulnerabilities = emptyList(),
+  stages = emptyList(),
   finalDate = LocalDate.parse("2024-01-01"),
 //  reviewId = TODO(),
 //  prisonId = TODO(),
