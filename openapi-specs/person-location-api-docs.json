@@ -6,7 +6,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-11-03.144.62e809d"
+    "version" : "2026-11-12.173.e93bee4"
   },
   "servers" : [ {
     "url" : "https://person-location-api-dev.hmpps.service.justice.gov.uk",
@@ -270,12 +270,154 @@
           }
         } ],
         "responses" : {
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "200" : {
-            "description" : "OK",
+            "description" : "All periods of custody for the provided identifier returned in reverse chronological order. If current, concludedAt will be null.",
             "content" : {
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/PeriodsOfCustody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/integrations/people/{personIdentifier}/periods-of-custody/latest" : {
+      "get" : {
+        "tags" : [ "Integrations" ],
+        "summary" : "Retrieve the most recent period of custody if one exists. The status and concluded date can be used to determine if it is current.",
+        "operationId" : "latestPeriodFor",
+        "parameters" : [ {
+          "name" : "personIdentifier",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "No period of custody exists for the provided identifier",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200" : {
+            "description" : "The most recent period of custody for the provided identifier. If current, concludedAt will be null.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PeriodOfCustody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/integrations/people/{personIdentifier}/periods-of-custody/at" : {
+      "get" : {
+        "tags" : [ "Integrations" ],
+        "summary" : "Retrieve the period of custody for a given date and time. The status and concluded date can be used to determine if it is current.",
+        "operationId" : "periodAt",
+        "parameters" : [ {
+          "name" : "personIdentifier",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "anchorDateTime",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        } ],
+        "responses" : {
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "No period of custody exists for the provided identifier at the given date and time",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200" : {
+            "description" : "The period of custody for the provided identifier covering the date and time provided. If current, concludedAt will be null.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PeriodOfCustody"
                 }
               }
             }
@@ -679,9 +821,33 @@
         },
         "required" : [ "custodialSeries" ]
       },
+      "ReconciliationPrisonerStatus" : {
+        "type" : "object",
+        "properties" : {
+          "inCustody" : {
+            "type" : "boolean"
+          },
+          "prisonCode" : {
+            "type" : [ "string", "null" ]
+          },
+          "temporarilyAbsent" : {
+            "type" : "boolean"
+          },
+          "expectedLegacyInOut" : {
+            "type" : "string"
+          },
+          "expectedLegacyActive" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "expectedLegacyActive", "expectedLegacyInOut", "inCustody", "temporarilyAbsent" ]
+      },
       "ReconciliationResponse" : {
         "type" : "object",
         "properties" : {
+          "status" : {
+            "$ref" : "#/components/schemas/ReconciliationPrisonerStatus"
+          },
           "series" : {
             "type" : "array",
             "items" : {
@@ -689,7 +855,7 @@
             }
           }
         },
-        "required" : [ "series" ]
+        "required" : [ "series", "status" ]
       },
       "ReconciliationSeries" : {
         "type" : "object",
@@ -705,6 +871,28 @@
           }
         },
         "required" : [ "movements", "series" ]
+      },
+      "ErrorResponse" : {
+        "type" : "object",
+        "properties" : {
+          "status" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "errorCode" : {
+            "type" : [ "string", "null" ]
+          },
+          "userMessage" : {
+            "type" : [ "string", "null" ]
+          },
+          "developerMessage" : {
+            "type" : [ "string", "null" ]
+          },
+          "moreInfo" : {
+            "type" : [ "string", "null" ]
+          }
+        },
+        "required" : [ "status" ]
       },
       "CodedDescription" : {
         "type" : "object",
@@ -735,6 +923,14 @@
           "status" : {
             "$ref" : "#/components/schemas/CodedDescription",
             "description" : "The status of the period of custody. Code and human readable description."
+          },
+          "previousPeriod" : {
+            "description" : "Information about the previous period of custody, where one exists.",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PreviousPeriod"
+            }, {
+              "type" : "null"
+            } ]
           }
         },
         "required" : [ "commencedAt", "status" ]
@@ -750,6 +946,17 @@
           }
         },
         "required" : [ "periodsOfCustody" ]
+      },
+      "PreviousPeriod" : {
+        "type" : "object",
+        "properties" : {
+          "concludedAt" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Date the previous period of custody concluded."
+          }
+        },
+        "required" : [ "concludedAt" ]
       }
     },
     "securitySchemes" : {
