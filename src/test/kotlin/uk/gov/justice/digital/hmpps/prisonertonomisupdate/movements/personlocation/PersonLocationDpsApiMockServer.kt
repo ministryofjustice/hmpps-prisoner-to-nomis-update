@@ -70,6 +70,15 @@ class PersonLocationDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     inline fun <reified T> getRequestBody(pattern: RequestPatternBuilder): T = dpsPersonLocationServer.getRequestBody(pattern, jsonMapper)
     inline fun <reified T> getRequestBodies(pattern: RequestPatternBuilder): List<T> = dpsPersonLocationServer.getRequestBodies(pattern, jsonMapper)
 
+    val noBookingsStatus = ReconciliationPrisonerStatus(
+      inCustody = false,
+      temporarilyAbsent = false,
+      transferring = false,
+      expectedLegacyInOut = "OUT",
+      expectedLegacyActive = "OUT",
+      prisonCode = null,
+    )
+
     fun reconciliationResponse(
       seriesId: UUID = UUID.randomUUID(),
       bookingOpenedAt: LocalDateTime = LocalDateTime.parse("2024-01-01T10:00:00"),

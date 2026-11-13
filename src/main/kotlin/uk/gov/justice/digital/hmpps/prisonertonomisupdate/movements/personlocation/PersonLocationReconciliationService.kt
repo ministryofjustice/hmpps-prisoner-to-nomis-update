@@ -406,28 +406,29 @@ class PersonLocationReconciliationService(
     nomisLocations: OffenderPersonLocationsResponse,
     dpsLocations: ReconciliationResponse,
   ): List<MismatchedPrisonerLocationStatus> {
-    val mismatches = mutableListOf<MismatchedPrisonerLocationStatus>()
-    val nomisBooking = nomisLocations.bookings.map { it.booking }.let { bookings -> bookings.firstOrNull { it.activeBooking } ?: bookings.first { it.latestBooking } }
+    val nomisBooking = nomisLocations.bookings.map { it.booking }.let { bookings -> bookings.firstOrNull { it.activeBooking } ?: bookings.firstOrNull { it.latestBooking } }
     val dpsStatus = dpsLocations.status
 
-    fun mismatch(type: MismatchedPrisonerLocationStatus.Type, nomisValue: String?, dpsValue: String?) = MismatchedPrisonerLocationStatus(offenderNo, type, nomisBooking.bookingId, nomisValue, dpsValue)
+    class StatusCheck(val type: MismatchedPrisonerLocationStatus.Type, val nomisValue: String?, val expectedDpsValue: String?, val dpsValue: String?)
 
-    val nomisActive = if (nomisBooking.activeBooking) "ACTIVE" else "INACTIVE"
-    if (nomisActive != dpsStatus.expectedLegacyActive) {
-      mismatches.add(mismatch(ACTIVE, nomisActive, dpsStatus.expectedLegacyActive))
-    }
+    val checks = nomisBooking?.let {
+      val nomisActive = if (it.activeBooking) "ACTIVE" else "INACTIVE"
+      listOf(
+        StatusCheck(ACTIVE, nomisActive, nomisActive, dpsStatus.expectedLegacyActive),
+        StatusCheck(IN_OUT, it.inOutStatus, it.inOutStatus, dpsStatus.expectedLegacyInOut),
+        // NOMIS uses OUT and TRN in place of a prison when the prisoner is not in a prison
+        StatusCheck(PRISON_CODE, it.prison, it.prison.takeUnless { prison -> prison in listOf("OUT", "TRN") }, dpsStatus.prisonCode),
+      )
+    } ?: listOf(
+      // a prisoner with no NOMIS bookings, e.g. after a merge not yet processed by DPS
+      StatusCheck(ACTIVE, null, "OUT", dpsStatus.expectedLegacyActive),
+      StatusCheck(IN_OUT, null, "OUT", dpsStatus.expectedLegacyInOut),
+      StatusCheck(PRISON_CODE, null, null, dpsStatus.prisonCode),
+    )
 
-    if (nomisBooking.inOutStatus != dpsStatus.expectedLegacyInOut) {
-      mismatches.add(mismatch(IN_OUT, nomisBooking.inOutStatus, dpsStatus.expectedLegacyInOut))
-    }
-
-    // NOMIS uses OUT and TRN in place of a prison when the prisoner is not in a prison
-    val expectedPrisonCode = nomisBooking.prison.takeUnless { it in listOf("OUT", "TRN") }
-    if (expectedPrisonCode != dpsStatus.prisonCode) {
-      mismatches.add(mismatch(PRISON_CODE, nomisBooking.prison, dpsStatus.prisonCode))
-    }
-
-    return mismatches
+    return checks
+      .filter { it.expectedDpsValue != it.dpsValue }
+      .map { MismatchedPrisonerLocationStatus(offenderNo, it.type, nomisBooking?.bookingId, it.nomisValue, it.dpsValue) }
   }
 
   private fun OffenderPersonLocationsResponse.movementIds() = bookings.flatMap { bk -> bk.movements.map { mv -> NomisMovementId(bk.booking.bookingId, mv.sequence) } }
@@ -515,7 +516,7 @@ private fun PersonLocationMovement.DirectionCode.toDpsMovementType() = when (thi
 class MismatchedPrisonerLocationStatus(
   offenderNo: String,
   type: Type,
-  val nomisBookingId: Long,
+  val nomisBookingId: Long?,
   val nomisValue: String?,
   val dpsValue: String?,
 ) : MismatchedPrisonerLocations(offenderNo, type.name) {

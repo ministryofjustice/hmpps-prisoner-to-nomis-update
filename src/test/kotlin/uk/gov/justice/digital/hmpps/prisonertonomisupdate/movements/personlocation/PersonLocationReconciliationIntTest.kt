@@ -43,7 +43,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocati
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationStatus.Type.IN_OUT
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationStatus.Type.PRISON_CODE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.PersonLocationDpsApiExtension.Companion.dpsPersonLocationServer
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.PersonLocationDpsApiMockServer.Companion.activeSeries
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.PersonLocationDpsApiMockServer.Companion.noBookingsStatus
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.PersonLocationDpsApiMockServer.Companion.reconciliationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.PersonLocationNomisApiMockServer.Companion.activeBooking
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.PersonLocationNomisApiMockServer.Companion.offenderPersonLocationsResponse
@@ -227,6 +227,10 @@ class PersonLocationReconciliationIntTest(
           offenderNo = "A0001TZ",
           response = offenderPersonLocationsResponse(),
         )
+        dpsApi.stubReconciliation(
+          personIdentifier = "A0001TZ",
+          response = reconciliationResponse(series = emptyList()),
+        )
 
         reconciliationService.generateReport(ALL_PRISONERS)
         awaitReportFinished()
@@ -283,27 +287,13 @@ class PersonLocationReconciliationIntTest(
 
     @Nested
     inner class AdditionalEntitiesInDps {
-      private val mappedSeriesId = UUID.randomUUID()
-      private val extraDps = reconciliationResponse()
-      private val dpsResponse = reconciliationResponse(
-        series = listOf(
-          ReconciliationSeries(series = activeSeries(id = mappedSeriesId, openedAt = LocalDateTime.parse("2024-01-01T10:00:00")), movements = emptyList()),
-          extraDps.series[0],
-        ),
-      )
-      private val seriesId = extraDps.series[0].series.dpsId
-      private val movementInId = extraDps.series[0].movements[0].dpsId
-      private val movementOutId = extraDps.series[0].movements[1].dpsId
+      private val dpsResponse = reconciliationResponse(status = noBookingsStatus)
+      private val seriesId = dpsResponse.series[0].series.dpsId
+      private val movementInId = dpsResponse.series[0].movements[0].dpsId
+      private val movementOutId = dpsResponse.series[0].movements[1].dpsId
 
       @BeforeEach
       fun `stub additional entities in DPS and run report`() = runTest {
-        nomisApi.stubGetOffenderPersonLocations(
-          offenderNo = "A0001TZ",
-          response = offenderPersonLocationsResponse(bookings = listOf(activeBooking())),
-        )
-        mappingApi.stubGetPersonLocationMappings(
-          response = listOf(PersonLocationBookingMappingDto(bookingId = 12345L, dpsCustodialSeriesId = mappedSeriesId, movements = emptyList())),
-        )
         dpsApi.stubReconciliation(
           personIdentifier = "A0001TZ",
           response = dpsResponse,
@@ -321,8 +311,8 @@ class PersonLocationReconciliationIntTest(
             mapOf(
               "offenderNo" to "A0001TZ",
               "type" to "BOOKING",
-              "nomisCount" to "1",
-              "dpsCount" to "2",
+              "nomisCount" to "0",
+              "dpsCount" to "1",
               "unexpected-nomis-ids" to "[]",
               "unexpected-dps-ids" to "[$seriesId]",
             ),
@@ -332,8 +322,7 @@ class PersonLocationReconciliationIntTest(
 
         verifyReconciliationEndpointIds(
           type = BOOKING,
-          nomisCount = 1,
-          dpsCount = 2,
+          dpsCount = 1,
           unexpectedDpsIds = "[$seriesId]",
         )
       }
@@ -1010,15 +999,15 @@ class PersonLocationReconciliationIntTest(
     private val validBookingLocations = offenderPersonLocationsResponse().bookings[0]
     private val validBooking = validBookingLocations.booking
 
-    fun verifyTelemetry(type: MismatchedPrisonerLocationStatus.Type, nomisValue: String, dpsValue: String, nomisBookingId: Long = 12345) = verify(telemetryClient).trackEvent(
+    fun verifyTelemetry(type: MismatchedPrisonerLocationStatus.Type, nomisValue: String?, dpsValue: String?, nomisBookingId: Long? = 12345) = verify(telemetryClient).trackEvent(
       eq("person-location-reconciliation-mismatch"),
       eq(
         mapOf(
           "offenderNo" to "A0001TZ",
           "type" to type.name,
           "nomisBookingId" to "$nomisBookingId",
-          "nomisValue" to nomisValue,
-          "dpsValue" to dpsValue,
+          "nomisValue" to "$nomisValue",
+          "dpsValue" to "$dpsValue",
         ),
       ),
       isNull(),
@@ -1030,14 +1019,14 @@ class PersonLocationReconciliationIntTest(
       isNull(),
     )
 
-    fun stubAndRunReport(nomisBookings: List<BookingPersonLocations> = listOf(validBookingLocations), dpsStatus: ReconciliationPrisonerStatus = validDpsStatus) = runTest {
+    fun stubAndRunReport(nomisBookings: List<BookingPersonLocations> = listOf(validBookingLocations), dpsStatus: ReconciliationPrisonerStatus = validDpsStatus, dpsSeries: List<ReconciliationSeries> = dpsResponse.series) = runTest {
       nomisApi.stubGetOffenderPersonLocations(
         offenderNo = "A0001TZ",
         response = offenderPersonLocationsResponse(bookings = nomisBookings),
       )
       dpsApi.stubReconciliation(
         personIdentifier = "A0001TZ",
-        response = dpsResponse.copy(status = dpsStatus),
+        response = dpsResponse.copy(series = dpsSeries, status = dpsStatus),
       )
       reconciliationService.generateReport(ALL_PRISONERS)
       awaitReportFinished()
@@ -1117,6 +1106,23 @@ class PersonLocationReconciliationIntTest(
     }
 
     @Test
+    fun `should expect OUT status when NOMIS has no bookings`() {
+      stubAndRunReport(nomisBookings = emptyList(), dpsStatus = noBookingsStatus, dpsSeries = emptyList())
+
+      verifyNoStatusTelemetry()
+    }
+
+    @Test
+    fun `should report DPS status when NOMIS has no bookings`() {
+      stubAndRunReport(nomisBookings = emptyList(), dpsSeries = emptyList())
+
+      verifyTelemetry(ACTIVE, nomisValue = null, dpsValue = "ACTIVE", nomisBookingId = null)
+      verifyTelemetry(IN_OUT, nomisValue = null, dpsValue = "IN", nomisBookingId = null)
+      verifyTelemetry(PRISON_CODE, nomisValue = null, dpsValue = "BXI", nomisBookingId = null)
+      verifyReconciliationEndpointStatus(ACTIVE, nomisValue = null, dpsValue = "ACTIVE", nomisBookingId = null)
+    }
+
+    @Test
     fun `should use the active booking rather than an older inactive booking`() {
       val oldBooking = validBooking.copy(bookingId = 1, activeBooking = false, latestBooking = false, prison = "OUT", inOutStatus = "OUT")
       stubAndRunReport(
@@ -1148,14 +1154,15 @@ class PersonLocationReconciliationIntTest(
 
     private fun verifyReconciliationEndpointStatus(
       type: MismatchedPrisonerLocationStatus.Type,
-      nomisValue: String,
-      dpsValue: String,
+      nomisValue: String?,
+      dpsValue: String?,
+      nomisBookingId: Long? = 12345,
     ) {
       verifyReconciliationEndpoint(
         MismatchedPrisonerLocationStatus(
           offenderNo = "A0001TZ",
           type = type,
-          nomisBookingId = 12345,
+          nomisBookingId = nomisBookingId,
           nomisValue = nomisValue,
           dpsValue = dpsValue,
         ),
@@ -1212,7 +1219,7 @@ class PersonLocationReconciliationIntTest(
 
     dpsApi.stubReconciliation(
       personIdentifier = "A0001TZ",
-      response = reconciliationResponse(series = emptyList()),
+      response = reconciliationResponse(series = emptyList(), status = noBookingsStatus),
     )
 
     mappingApi.stubGetPersonLocationMappings(response = emptyList())
