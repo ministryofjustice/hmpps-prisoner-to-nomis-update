@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-11-12.2385.c15b61e"
+    "version" : "2026-11-13.2395.5f5e5c1"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -28362,6 +28362,72 @@
         }
       }
     },
+    "/core-person/{offenderId}/identifiers" : {
+      "get" : {
+        "tags" : [ "core-person-resource" ],
+        "summary" : "Get all identifiers for an offender id",
+        "description" : "Retrieves all identifiers for the offender id, ordered by sequence number. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getIdentifiers",
+        "parameters" : [ {
+          "name" : "offenderId",
+          "in" : "path",
+          "description" : "The offender id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The offender id",
+            "example" : 1234567
+          },
+          "example" : 1234567
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Identifiers returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/Identifier"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Offender does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/core-person/{offenderId}/identifier/{sequenceNumber}" : {
       "get" : {
         "tags" : [ "core-person-resource" ],
@@ -46384,12 +46450,20 @@
             "format" : "date-time",
             "description" : "The booking end date"
           },
+          "prison" : {
+            "type" : "string",
+            "description" : "The prison the booking is currently at, or OUT or TRN when released or in transit"
+          },
+          "inOutStatus" : {
+            "type" : "string",
+            "description" : "The booking in/out status: IN, OUT or TRN"
+          },
           "audit" : {
             "$ref" : "#/components/schemas/NomisAudit",
             "description" : "Audit data associated with the records"
           }
         },
-        "required" : [ "activeBooking", "audit", "bookingBeginTime", "bookingId", "bookingNumber", "bookingStatus", "latestBooking" ]
+        "required" : [ "activeBooking", "audit", "bookingBeginTime", "bookingId", "bookingNumber", "bookingStatus", "inOutStatus", "latestBooking", "prison" ]
       },
       "PersonLocationMovement" : {
         "type" : "object",
@@ -48212,10 +48286,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "txnId" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
           "txnEntryDate" : {
             "type" : "string",
             "format" : "date-time"
@@ -48228,6 +48298,10 @@
           },
           "txnEntryAmount" : {
             "type" : "number"
+          },
+          "txnId" : {
+            "type" : "integer",
+            "format" : "int64"
           }
         },
         "required" : [ "txnEntryAmount", "txnEntryDate", "txnEntrySeq", "txnId" ]
