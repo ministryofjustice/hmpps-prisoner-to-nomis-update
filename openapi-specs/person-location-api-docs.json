@@ -6,7 +6,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-11-12.173.e93bee4"
+    "version" : "2026-11-13.178.24d0c91"
   },
   "servers" : [ {
     "url" : "https://person-location-api-dev.hmpps.service.justice.gov.uk",
@@ -833,6 +833,9 @@
           "temporarilyAbsent" : {
             "type" : "boolean"
           },
+          "transferring" : {
+            "type" : "boolean"
+          },
           "expectedLegacyInOut" : {
             "type" : "string"
           },
@@ -840,7 +843,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "expectedLegacyActive", "expectedLegacyInOut", "inCustody", "temporarilyAbsent" ]
+        "required" : [ "expectedLegacyActive", "expectedLegacyInOut", "inCustody", "temporarilyAbsent", "transferring" ]
       },
       "ReconciliationResponse" : {
         "type" : "object",

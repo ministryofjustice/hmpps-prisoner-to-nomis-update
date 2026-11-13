@@ -80,15 +80,17 @@ class PersonLocationDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       series: List<ReconciliationSeries> = listOf(
         ReconciliationSeries(series = activeSeries(openedAt = bookingOpenedAt), movements = movements),
       ),
-    ) = ReconciliationResponse(
-      series = series,
-      status = ReconciliationPrisonerStatus(
+      status: ReconciliationPrisonerStatus = ReconciliationPrisonerStatus(
         inCustody = true,
         temporarilyAbsent = false,
+        transferring = false,
         expectedLegacyInOut = "IN",
         expectedLegacyActive = "ACTIVE",
         prisonCode = "BXI",
       ),
+    ) = ReconciliationResponse(
+      series = series,
+      status = status,
     )
 
     fun activeSeries(id: UUID = UUID.randomUUID(), openedAt: LocalDateTime) = SyncCustodialSeries(

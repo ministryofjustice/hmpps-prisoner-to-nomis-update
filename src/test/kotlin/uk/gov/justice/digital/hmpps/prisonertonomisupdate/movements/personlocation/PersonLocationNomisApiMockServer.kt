@@ -59,6 +59,8 @@ class PersonLocationNomisApiMockServer(private val jsonMapper: JsonMapper) {
     fun activeBooking(
       bookingId: Long = 12345L,
       bookingBeginTime: LocalDateTime = LocalDateTime.parse("2024-01-01T10:00:00"),
+      prison: String = "BXI",
+      inOutStatus: String = "IN",
       movements: List<PersonLocationMovement> = listOf(),
     ) = BookingPersonLocations(
       booking = PersonLocationBooking(
@@ -68,6 +70,8 @@ class PersonLocationNomisApiMockServer(private val jsonMapper: JsonMapper) {
         latestBooking = true,
         bookingStatus = PersonLocationBooking.BookingStatus.OPEN,
         bookingBeginTime = bookingBeginTime,
+        prison = prison,
+        inOutStatus = inOutStatus,
         audit = NomisAudit(createDatetime = bookingBeginTime, createUsername = "PRISONER_MANAGER_API"),
       ),
       movements = movements,

@@ -29,6 +29,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocati
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationMovements.Type.MOVEMENT_TIME
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationMovements.Type.MOVEMENT_TYPE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationMovements.Type.TO_LOCATION
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationStatus.Type.ACTIVE
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationStatus.Type.IN_OUT
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationStatus.Type.PRISON_CODE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonLocationBookingMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderPersonLocationsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonLocationMovement
@@ -130,11 +133,28 @@ class PersonLocationReconciliationService(
       }
     }
 
+    val mismatchedStatus = findMismatchedStatus(offenderNo, nomisLocations, dpsLocations)
+    if (!suppressTelemetry) {
+      mismatchedStatus.forEach {
+        telemetryClient.trackEvent(
+          "${names.telemetryPrefix}-mismatch",
+          mapOf(
+            "offenderNo" to offenderNo,
+            "type" to it.type,
+            "nomisBookingId" to "${it.nomisBookingId}",
+            "nomisValue" to "${it.nomisValue}",
+            "dpsValue" to "${it.dpsValue}",
+          ),
+        )
+      }
+    }
+
     return buildList {
       addAll(mismatchedEntities)
       addAll(missingMappings)
       addAll(mismatchedMovements)
       addAll(mismatchedBookings)
+      addAll(mismatchedStatus)
     }
   }
 
@@ -381,6 +401,35 @@ class PersonLocationReconciliationService(
     return mismatches
   }
 
+  private fun findMismatchedStatus(
+    offenderNo: String,
+    nomisLocations: OffenderPersonLocationsResponse,
+    dpsLocations: ReconciliationResponse,
+  ): List<MismatchedPrisonerLocationStatus> {
+    val mismatches = mutableListOf<MismatchedPrisonerLocationStatus>()
+    val nomisBooking = nomisLocations.bookings.map { it.booking }.let { bookings -> bookings.firstOrNull { it.activeBooking } ?: bookings.first { it.latestBooking } }
+    val dpsStatus = dpsLocations.status
+
+    fun mismatch(type: MismatchedPrisonerLocationStatus.Type, nomisValue: String?, dpsValue: String?) = MismatchedPrisonerLocationStatus(offenderNo, type, nomisBooking.bookingId, nomisValue, dpsValue)
+
+    val nomisActive = if (nomisBooking.activeBooking) "ACTIVE" else "INACTIVE"
+    if (nomisActive != dpsStatus.expectedLegacyActive) {
+      mismatches.add(mismatch(ACTIVE, nomisActive, dpsStatus.expectedLegacyActive))
+    }
+
+    if (nomisBooking.inOutStatus != dpsStatus.expectedLegacyInOut) {
+      mismatches.add(mismatch(IN_OUT, nomisBooking.inOutStatus, dpsStatus.expectedLegacyInOut))
+    }
+
+    // NOMIS uses OUT and TRN in place of a prison when the prisoner is not in a prison
+    val expectedPrisonCode = nomisBooking.prison.takeUnless { it in listOf("OUT", "TRN") }
+    if (expectedPrisonCode != dpsStatus.prisonCode) {
+      mismatches.add(mismatch(PRISON_CODE, nomisBooking.prison, dpsStatus.prisonCode))
+    }
+
+    return mismatches
+  }
+
   private fun OffenderPersonLocationsResponse.movementIds() = bookings.flatMap { bk -> bk.movements.map { mv -> NomisMovementId(bk.booking.bookingId, mv.sequence) } }
   private fun OffenderPersonLocationsResponse.findMovement(nomisId: NomisMovementId) = bookings.flatMap { it.movements }.first { it.bookingId == nomisId.bookingId && it.sequence == nomisId.sequence }
   private fun ReconciliationResponse.movementIds() = series.flatMap { ser -> ser.movements.map { mv -> mv.dpsId!! } }
@@ -461,4 +510,20 @@ private fun PersonLocationMovement.MovementType.toDpsJourneyType() = when (this)
 private fun PersonLocationMovement.DirectionCode.toDpsMovementType() = when (this) {
   IN -> ARRIVAL
   OUT -> DEPARTURE
+}
+
+class MismatchedPrisonerLocationStatus(
+  offenderNo: String,
+  type: Type,
+  val nomisBookingId: Long,
+  val nomisValue: String?,
+  val dpsValue: String?,
+) : MismatchedPrisonerLocations(offenderNo, type.name) {
+  override fun toString() = "MismatchedPrisonerLocationStatus(offenderNo=$offenderNo, type=$type, nomisBookingId=$nomisBookingId, nomisValue=$nomisValue, dpsValue=$dpsValue)"
+
+  enum class Type {
+    ACTIVE,
+    IN_OUT,
+    PRISON_CODE,
+  }
 }
