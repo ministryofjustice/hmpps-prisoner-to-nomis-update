@@ -7,7 +7,7 @@
       "name" : "Move a prisoner Team",
       "email" : "Moveaprisoner-gg@justice.gov.uk"
     },
-    "version" : "2026-10-28.412.bc45e00"
+    "version" : "2026-11-12.461.c350e21"
   },
   "servers" : [ {
     "url" : "/",
@@ -64,6 +64,16 @@
           "200" : {
             "description" : "Containers moved"
           },
+          "404" : {
+            "description" : "Some of the supplied DPS ids do not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "401" : {
             "description" : "Unauthorized - a valid token was not presented",
             "content" : {
@@ -76,16 +86,6 @@
           },
           "403" : {
             "description" : "Forbidden - the ROLE_PRISONER_PROPERTY__SYNC role is required",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Some of the supplied DPS ids do not exist",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -522,6 +522,16 @@
               }
             }
           },
+          "404" : {
+            "description" : "The supplied DPS id does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "401" : {
             "description" : "Unauthorized - a valid token was not presented",
             "content" : {
@@ -534,16 +544,6 @@
           },
           "403" : {
             "description" : "Forbidden - the ROLE_PRISONER_PROPERTY__SYNC role is required",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "The supplied DPS id does not exist",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -595,6 +595,16 @@
               }
             }
           },
+          "404" : {
+            "description" : "The supplied DPS id does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "401" : {
             "description" : "Unauthorized - a valid token was not presented",
             "content" : {
@@ -607,16 +617,6 @@
           },
           "403" : {
             "description" : "Forbidden - the ROLE_PRISONER_PROPERTY__SYNC role is required",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "The supplied DPS id does not exist",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -1370,6 +1370,16 @@
               }
             }
           },
+          "404" : {
+            "description" : "Property container not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "401" : {
             "description" : "Unauthorized - a valid token was not presented",
             "content" : {
@@ -1389,9 +1399,64 @@
                 }
               }
             }
+          }
+        },
+        "security" : [ {
+          "bearer-jwt" : [ ]
+        } ]
+      },
+      "delete" : {
+        "tags" : [ "Sync with NOMIS" ],
+        "summary" : "Delete a property container by its DPS id",
+        "description" : "Permanently deletes the container and its event history. Only to be used to correct sync errors. Requires role ROLE_PRISONER_PROPERTY__SYNC.",
+        "operationId" : "deleteContainer",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "Property container id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "example" : "0196f1d3-9a1f-7c3a-9b2e-2c1f3a4b5c6d"
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Property container deleted"
           },
           "404" : {
             "description" : "Property container not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Property container has non-sync events or is referenced by another container's event",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - a valid token was not presented",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden - the ROLE_PRISONER_PROPERTY__SYNC role is required",
             "content" : {
               "application/json" : {
                 "schema" : {
