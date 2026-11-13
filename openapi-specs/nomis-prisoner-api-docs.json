@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-11-11.2384.469b5d5"
+    "version" : "2026-11-12.2385.c15b61e"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -48076,9 +48076,31 @@
             "items" : {
               "$ref" : "#/components/schemas/PrisonerAdvanceDto"
             }
+          },
+          "scheduledPayments" : {
+            "$ref" : "#/components/schemas/ScheduledPaymentSummary",
+            "description" : "Active scheduled payments for the prisoner, if any"
           }
         },
-        "required" : [ "accounts", "advances", "prisonNumber", "rootOffenderId" ]
+        "required" : [ "accounts", "advances", "prisonNumber", "rootOffenderId", "scheduledPayments" ]
+      },
+      "ScheduledPaymentSummary" : {
+        "type" : "object",
+        "properties" : {
+          "count" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The count of the number of active scheduled payments for the prisoner",
+            "example" : 4
+          },
+          "totalWeeklyPayment" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The weekly total paid by the prisoner for active scheduled payments in pence",
+            "example" : 1250
+          }
+        },
+        "required" : [ "count", "totalWeeklyPayment" ]
       },
       "PrisonerAccountDto" : {
         "type" : "object",
@@ -48186,13 +48208,13 @@
             "type" : [ "integer", "null" ],
             "format" : "int64"
           },
-          "txnId" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
           "txnEntrySeq" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "txnId" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "txnEntryDate" : {
             "type" : "string",

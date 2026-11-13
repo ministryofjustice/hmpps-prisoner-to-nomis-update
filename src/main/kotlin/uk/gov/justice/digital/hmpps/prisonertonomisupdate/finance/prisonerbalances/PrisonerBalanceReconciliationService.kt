@@ -31,7 +31,7 @@ class PrisonerBalanceReconciliationService(
   private val dpsApiService: FinanceDpsApiService,
   @Value($$"${reports.prisoner.balance.reconciliation.page-size:1000}") private val pageSize: Int = 1000,
   @Value($$"${reports.prisoner.balance.reconciliation.thread-count:10}") private val threadCount: Int = 10,
-  @Value($$"${reports.prisoner.balance.reconciliation.fields:balances}") private val reconcileFields: String? = null, // holds,balances,advances
+  @Value($$"${reports.prisoner.balance.reconciliation.fields:balances}") private val reconcileFields: String? = null, // holds,balances,advances,scheduled-payments
 ) {
   private companion object {
     private const val TELEMETRY_PRISONER_PREFIX = "prisoner-balance-reports-reconciliation"
@@ -130,6 +130,7 @@ class PrisonerBalanceReconciliationService(
           nomisAccounts.advances.sumOf { it.outstandingBalance },
         ).scaleByPowerOfTen(-2),
       ),
+      scheduledPayments = ScheduledPaymentSummary(count = nomisAccounts.scheduledPayments.count.toInt(), weeklyPayment = BigDecimal(nomisAccounts.scheduledPayments.totalWeeklyPayment).scaleByPowerOfTen(-2)),
     )
     val dpsFields = dpsAccounts?.let {
       BalanceFields(
@@ -146,12 +147,14 @@ class PrisonerBalanceReconciliationService(
           advanceCount = dpsAccounts.advances.advanceCount,
           advanceBalance = dpsAccounts.advances.advanceBalance,
         ),
+        scheduledPayments = ScheduledPaymentSummary(count = dpsAccounts.subscriptions.subscriptionCount, weeklyPayment = dpsAccounts.subscriptions.weeklyPaymentAmount),
       )
     }
       ?: BalanceFields(
         prisonNumber = nomisAccounts.prisonNumber,
         accounts = emptyList(),
         advanceSummary = AdvanceSummary(advanceCount = 0, advanceBalance = BigDecimal.ZERO),
+        scheduledPayments = ScheduledPaymentSummary(count = 0, weeklyPayment = BigDecimal.ZERO),
       )
 
     val differenceList = compareBalanceFields(nomisFields, dpsFields, "prisoner-balances")
@@ -204,6 +207,7 @@ class PrisonerBalanceReconciliationService(
 
     differences.addAll(compareAccounts(nomis.accounts, dps.accounts, "$parentProperty.accounts"))
     differences.addAll(compareAdvanceSummary(nomis.advanceSummary, dps.advanceSummary, "$parentProperty.advanceSummary"))
+    differences.addAll(compareScheduledPayments(nomis.scheduledPayments, dps.scheduledPayments, "$parentProperty.scheduledPayments"))
 
     return differences
   }
@@ -215,13 +219,18 @@ class PrisonerBalanceReconciliationService(
 
     val differences = mutableListOf<Difference>()
 
-    if (nomis.advanceBalance.compareTo(dps.advanceBalance) != 0) {
-      differences.add(Difference("$parentProperty.advanceBalance", nomis.advanceBalance, dps.advanceBalance))
-    }
-    if (nomis.advanceCount != dps.advanceCount) {
-      differences.add(Difference("$parentProperty.advanceCount", nomis.advanceCount, dps.advanceCount))
-    }
+    differences.addIfMismatch("$parentProperty.advanceBalance", nomis.advanceBalance, dps.advanceBalance)
+    differences.addIfMismatch("$parentProperty.advanceCount", nomis.advanceCount, dps.advanceCount)
+    return differences
+  }
 
+  private fun compareScheduledPayments(nomis: ScheduledPaymentSummary, dps: ScheduledPaymentSummary, parentProperty: String): List<Difference> {
+    if (!reconcileScheduledPayments()) return emptyList()
+
+    val differences = mutableListOf<Difference>()
+
+    differences.addIfMismatch("$parentProperty.weeklyPayment", nomis.weeklyPayment, dps.weeklyPayment)
+    differences.addIfMismatch("$parentProperty.count", nomis.count, dps.count)
     return differences
   }
 
@@ -243,13 +252,7 @@ class PrisonerBalanceReconciliationService(
         val dpsHoldBalance = dpsAccount?.holdBalance ?: BigDecimal.ZERO
 
         if (reconcileBalances() && dpsBalance.compareTo(nomisBalance) != 0) {
-          differences.add(
-            Difference(
-              "$parentProperty[$accountCode].balance",
-              nomisBalance,
-              dpsBalance,
-            ),
-          )
+          differences.addIfMismatch("$parentProperty[$accountCode].balance", nomisBalance, dpsBalance)
         }
 
         if (reconcileHolds() && dpsHoldBalance.compareTo(nomisHoldBalance) != 0) {
@@ -298,6 +301,7 @@ class PrisonerBalanceReconciliationService(
   private fun reconcileBalances(): Boolean = reconcileFields.isNullOrBlank() || reconcileFields.contains("balances")
   private fun reconcileHolds(): Boolean = reconcileFields.isNullOrBlank() || reconcileFields.contains("holds")
   private fun reconcileAdvances(): Boolean = reconcileFields.isNullOrBlank() || reconcileFields.contains("advances")
+  private fun reconcileScheduledPayments(): Boolean = reconcileFields.isNullOrBlank() || reconcileFields.contains("scheduled-payments")
 }
 
 data class MismatchPrisonerBalance(
@@ -310,6 +314,7 @@ data class BalanceFields(
   val prisonNumber: String,
   val accounts: List<AccountFields> = emptyList(),
   val advanceSummary: AdvanceSummary? = null,
+  val scheduledPayments: ScheduledPaymentSummary = ScheduledPaymentSummary(count = 0, weeklyPayment = BigDecimal.ZERO),
 )
 
 data class AccountFields(
@@ -323,4 +328,21 @@ data class AdvanceSummary(
   val advanceBalance: BigDecimal,
 )
 
+data class ScheduledPaymentSummary(
+  val count: Int,
+  val weeklyPayment: BigDecimal,
+)
+
 data class Difference(val property: String, val nomis: Any?, val dps: Any?, val id: String? = null)
+
+private fun MutableList<Difference>.addIfMismatch(propertyName: String, nomisValue: BigDecimal, dpsValue: BigDecimal) {
+  if (nomisValue.compareTo(dpsValue) != 0) {
+    add(Difference(propertyName, nomisValue, dpsValue))
+  }
+}
+
+private fun MutableList<Difference>.addIfMismatch(propertyName: String, nomisValue: Int, dpsValue: Int) {
+  if (nomisValue != dpsValue) {
+    add(Difference(propertyName, nomisValue, dpsValue))
+  }
+}

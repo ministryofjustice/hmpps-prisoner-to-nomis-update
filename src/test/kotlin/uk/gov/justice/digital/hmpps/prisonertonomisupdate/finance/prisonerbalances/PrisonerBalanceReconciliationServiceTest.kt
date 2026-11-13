@@ -34,6 +34,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AggregatedAccountDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerAdvanceDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerAggregatedAccountsDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ScheduledPaymentSummary
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
@@ -78,7 +79,7 @@ class PrisonerBalanceReconciliationServiceTest {
   }
 
   @Nested
-  @TestPropertySource(properties = ["reports.prisoner.balance.reconciliation.fields='balances,holds,advances'"])
+  @TestPropertySource(properties = ["reports.prisoner.balance.reconciliation.fields='balances,holds,advances,scheduled-payments'"])
   inner class CheckMatch {
     private fun stubBalanceReconciliation(nomisBalance: PrisonerAggregatedAccountsDto, dpsBalance: AccountReconciliationResponse) {
       financeNomisApi.stubGetPrisonerAccounts(OFFENDER_ID, nomisBalance)
@@ -133,8 +134,8 @@ class PrisonerBalanceReconciliationServiceTest {
           advanceCount = 1,
         ),
         subscriptions = SubscriptionsAccountReconciliation(
-          weeklyPaymentAmount = BigDecimal.ONE,
-          subscriptionCount = 1,
+          weeklyPaymentAmount = BigDecimal("3.40"),
+          subscriptionCount = 2,
         ),
       )
       stubBalanceReconciliation(
@@ -172,8 +173,8 @@ class PrisonerBalanceReconciliationServiceTest {
             advanceCount = 1,
           ),
           subscriptions = SubscriptionsAccountReconciliation(
-            weeklyPaymentAmount = BigDecimal.ONE,
-            subscriptionCount = 1,
+            weeklyPaymentAmount = BigDecimal("3.40"),
+            subscriptionCount = 2,
           ),
         ),
       )
@@ -245,8 +246,8 @@ class PrisonerBalanceReconciliationServiceTest {
             advanceCount = 1,
           ),
           subscriptions = SubscriptionsAccountReconciliation(
-            weeklyPaymentAmount = BigDecimal.ONE,
-            subscriptionCount = 1,
+            weeklyPaymentAmount = BigDecimal("3.40"),
+            subscriptionCount = 2,
           ),
         ),
       )
@@ -325,6 +326,22 @@ class PrisonerBalanceReconciliationServiceTest {
     }
 
     @Test
+    fun `will report a scheduled payment mismatch`() = runTest {
+      stubBalanceReconciliation(
+        nomisPrisonerAccounts(),
+        dpsAccount().copy(subscriptions = SubscriptionsAccountReconciliation(weeklyPaymentAmount = BigDecimal.TEN, subscriptionCount = 1)),
+      )
+      val actual = service.checkPrisonerBalance(OFFENDER_ID, isRetry = true)?.differences
+      val expected = listOf(
+        Difference(property = "prisoner-balances.scheduledPayments.weeklyPayment", nomis = BigDecimal("3.40"), dps = BigDecimal.TEN),
+        Difference(property = "prisoner-balances.scheduledPayments.count", nomis = 2, dps = 1),
+      )
+      assertThat(actual).isEqualTo(
+        expected,
+      )
+    }
+
+    @Test
     fun `will return null and report telemetry when nomis account API returns not found`() = runTest {
       financeNomisApi.stubGetPrisonerAccountsWithError(OFFENDER_ID, NOT_FOUND)
 
@@ -371,6 +388,7 @@ class PrisonerBalanceReconciliationServiceTest {
           prisonNumber = OFFENDER_NO,
           accounts = listOf(nomisZeroAccount()),
           advances = emptyList(),
+          scheduledPayments = ScheduledPaymentSummary(count = 0, totalWeeklyPayment = 0),
         ),
       )
       dpsApi.stubGetPrisonerAccounts(OFFENDER_NO, status = NOT_FOUND)
@@ -381,15 +399,18 @@ class PrisonerBalanceReconciliationServiceTest {
     }
 
     @Test
-    fun `will return mismatch if advances but no nomis accounts and dps API returns not found`() = runTest {
+    fun `will return mismatch if advances & scheduled payments but no nomis accounts and dps API returns not found`() = runTest {
       financeNomisApi.stubGetPrisonerAccounts(OFFENDER_ID, nomisPrisonerAccounts().copy(accounts = listOf()))
       dpsApi.stubGetPrisonerAccounts(OFFENDER_NO, status = NOT_FOUND)
 
-      service.checkPrisonerBalance(OFFENDER_ID, isRetry = true)?.differences?.first()!!.apply {
-        assertThat(property).isEqualTo("prisoner-balances.advanceSummary.advanceBalance")
-        assertThat(dps).isEqualTo(BigDecimal.ZERO)
-        assertThat(nomis).isEqualTo(BigDecimal("0.75"))
-      }
+      assertThat(service.checkPrisonerBalance(OFFENDER_ID, isRetry = true)?.differences).isEqualTo(
+        listOf(
+          Difference(property = "prisoner-balances.advanceSummary.advanceBalance", dps = BigDecimal.ZERO, nomis = BigDecimal("0.75")),
+          Difference(property = "prisoner-balances.advanceSummary.advanceCount", dps = 0, nomis = 1),
+          Difference(property = "prisoner-balances.scheduledPayments.weeklyPayment", dps = BigDecimal.ZERO, nomis = BigDecimal("3.40")),
+          Difference(property = "prisoner-balances.scheduledPayments.count", dps = 0, nomis = 2),
+        ),
+      )
 
       verify(telemetryClient).trackEvent(
         eq("prisoner-balance-reports-reconciliation-mismatch"),
@@ -397,6 +418,8 @@ class PrisonerBalanceReconciliationServiceTest {
           assertThat(it).containsEntry("prisoner", OFFENDER_NO)
           assertThat(it).containsEntry("prisoner-balances.advanceSummary.advanceBalance", "nomis:0.75; dps:0")
           assertThat(it).containsEntry("prisoner-balances.advanceSummary.advanceCount", "nomis:1; dps:0")
+          assertThat(it).containsEntry("prisoner-balances.scheduledPayments.weeklyPayment", "nomis:3.40; dps:0")
+          assertThat(it).containsEntry("prisoner-balances.scheduledPayments.count", "nomis:2; dps:0")
         },
         isNull(),
       )
@@ -534,6 +557,60 @@ class PrisonerBalanceReconciliationServiceTest {
   }
 
   @Nested
+  @TestPropertySource(properties = ["reports.prisoner.balance.reconciliation.fields='scheduled-payments'"])
+  inner class WithScheduledPaymentsOnly {
+    private fun stubBalanceReconciliation(nomisBalance: PrisonerAggregatedAccountsDto, dpsBalance: AccountReconciliationResponse) {
+      financeNomisApi.stubGetPrisonerAccounts(OFFENDER_ID, nomisBalance)
+      dpsApi.stubGetPrisonerAccounts(OFFENDER_NO, dpsBalance)
+    }
+
+    @Test
+    fun `will not report a balance or hold mismatch`() = runTest {
+      stubBalanceReconciliation(
+        nomisPrisonerAccounts(),
+        dpsAccount(totalBalance = BigDecimal("0.5"), holdBalance = BigDecimal("0.5")),
+      )
+      assertThat(service.checkPrisonerBalance(OFFENDER_ID, isRetry = true)?.differences).isNull()
+    }
+
+    @Test
+    fun `will report both weeklyPaymentAmount and count scheduled payment mismatch if scheduled payments are enabled`() = runTest {
+      stubBalanceReconciliation(
+        nomisPrisonerAccounts(),
+        dpsAccount().copy(subscriptions = SubscriptionsAccountReconciliation(weeklyPaymentAmount = BigDecimal.TEN, subscriptionCount = 1)),
+      )
+      val actual = service.checkPrisonerBalance(OFFENDER_ID, isRetry = true)?.differences
+      val expected = listOf(
+        Difference(property = "prisoner-balances.scheduledPayments.weeklyPayment", nomis = BigDecimal("3.40"), dps = BigDecimal.TEN),
+        Difference(property = "prisoner-balances.scheduledPayments.count", nomis = 2, dps = 1),
+      )
+      assertThat(actual).isEqualTo(expected)
+    }
+
+    @Test
+    fun `will report weeklyPaymentAmount only mismatch if scheduled payments are enabled`() = runTest {
+      stubBalanceReconciliation(
+        nomisPrisonerAccounts(),
+        dpsAccount().copy(subscriptions = SubscriptionsAccountReconciliation(weeklyPaymentAmount = BigDecimal.TEN, subscriptionCount = 2)),
+      )
+      val actual = service.checkPrisonerBalance(OFFENDER_ID, isRetry = true)?.differences
+      val expected = listOf(Difference(property = "prisoner-balances.scheduledPayments.weeklyPayment", nomis = BigDecimal("3.40"), dps = BigDecimal.TEN))
+      assertThat(actual).isEqualTo(expected)
+    }
+
+    @Test
+    fun `will report an count only mismatch if scheduled payments are enabled`() = runTest {
+      stubBalanceReconciliation(
+        nomisPrisonerAccounts(),
+        dpsAccount().copy(subscriptions = SubscriptionsAccountReconciliation(weeklyPaymentAmount = BigDecimal("3.40"), subscriptionCount = 1)),
+      )
+      val actual = service.checkPrisonerBalance(OFFENDER_ID, isRetry = true)?.differences
+      val expected = listOf(Difference(property = "prisoner-balances.scheduledPayments.count", nomis = 2, dps = 1))
+      assertThat(actual).isEqualTo(expected)
+    }
+  }
+
+  @Nested
   inner class GetPrisonerIdsForPage {
     @Test
     fun `will return id list`() = runTest {
@@ -585,8 +662,8 @@ fun dpsAccount(accountCode: Int = 1001, totalBalance: BigDecimal = BigDecimal.va
     advanceCount = 1,
   ),
   subscriptions = SubscriptionsAccountReconciliation(
-    weeklyPaymentAmount = BigDecimal.ONE,
-    subscriptionCount = 1,
+    weeklyPaymentAmount = BigDecimal("3.40"),
+    subscriptionCount = 2,
   ),
 )
 
@@ -612,6 +689,10 @@ fun nomisPrisonerAccounts(accountCode: Long = 1001, balance: BigDecimal = BigDec
       advanceCreateTransactionId = 1234567L,
       lastTransactionTimestamp = LocalDateTime.now(),
     ),
+  ),
+  scheduledPayments = ScheduledPaymentSummary(
+    count = 2,
+    totalWeeklyPayment = 340,
   ),
 )
 
