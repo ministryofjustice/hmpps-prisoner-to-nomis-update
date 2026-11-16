@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-11-11.6227.6d9d5ad"
+    "version" : "2026-11-16.6268.d12a06d"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -202,6 +202,155 @@
         "security" : [ {
           "api-role" : [ ]
         } ]
+      }
+    },
+    "/syscon-sync/person/{prisonNumber}/alias/{cprAliasId}" : {
+      "get" : {
+        "tags" : [ "Syscon Sync" ],
+        "description" : "Get a prisoner alias record by Prison Number and alias uuid. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
+        "operationId" : "getPrisonerAlias",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "cprAliasId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonAlias"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "api-role" : [ ]
+        } ]
+      },
+      "put" : {
+        "tags" : [ "Syscon Sync" ],
+        "description" : "Update prisoner alias record by Prison Number and alias uuid. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
+        "operationId" : "updatePrisonerAlias",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "cprAliasId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PrisonAlias"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "No Content",
+            "content" : { }
+          }
+        },
+        "security" : [ {
+          "api-role" : [ ]
+        } ]
+      },
+      "delete" : {
+        "tags" : [ "Syscon Sync" ],
+        "description" : "Delete prisoner alias record by Prison Number and alias uuid. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
+        "operationId" : "deletePrisonerAlias",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "cprAliasId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content",
+            "content" : { }
+          }
+        },
+        "security" : [ {
+          "api-role" : [ ]
+        } ]
+      }
+    },
+    "/syscon-sync/person/{prisonNumber}/alias/{cprAliasId}/identifiers" : {
+      "put" : {
+        "tags" : [ "Syscon Sync" ],
+        "description" : "Replace the prison identifiers for the given prison number and alias. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
+        "operationId" : "replaceIdentifiers",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "cprAliasId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PrisonIdentifiersRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SysconIdentifiersResponseBody"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/syscon-sync/person/{prisonNumber}/address/{cprAddressId}" : {
@@ -829,6 +978,46 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/SysconContactMapping"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "api-role" : [ ]
+        } ]
+      }
+    },
+    "/syscon-sync/person/{prisonNumber}/alias" : {
+      "post" : {
+        "tags" : [ "Syscon Sync" ],
+        "description" : "Create prisoner alias record, including its identifiers, by Prison Number. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
+        "operationId" : "createPrisonerAlias",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PrisonAlias"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SysconAliasWithIdentifiersMapping"
                 }
               }
             }
@@ -1915,6 +2104,234 @@
         },
         "required" : [ "createDateTime", "createUserId", "type" ]
       },
+      "NomisIdentifierId" : {
+        "type" : "object",
+        "properties" : {
+          "nomisOffenderId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The nomis offender id for this identifier",
+            "example" : 10000
+          },
+          "nomisSequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The sequence index for the identifier on the offender",
+            "example" : 1
+          }
+        },
+        "required" : [ "nomisOffenderId", "nomisSequence" ]
+      },
+      "PrisonAlias" : {
+        "type" : "object",
+        "properties" : {
+          "nomisOffenderId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The nomis offender id for this alias",
+            "example" : 10000
+          },
+          "cprAliasId" : {
+            "type" : [ "string", "null" ],
+            "description" : "The cpr alias id",
+            "example" : "4f2b1d8a-9f3c-4a1f-8b2d-112233445566"
+          },
+          "titleCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "The alias title code",
+            "enum" : [ "MR", "MRS", "MISS", "MS", "MX", "REV", "FR", "IMAM", "RABBI", "BR", "SR", "DME", "DR", "LDY", "LRD", "SIR", "UN" ],
+            "example" : "MR"
+          },
+          "firstName" : {
+            "type" : [ "string", "null" ],
+            "description" : "The alias first name",
+            "example" : "Jon"
+          },
+          "middleNames" : {
+            "type" : [ "string", "null" ],
+            "description" : "The alias middle names",
+            "example" : "James"
+          },
+          "lastName" : {
+            "type" : [ "string", "null" ],
+            "description" : "The alias last name",
+            "example" : "Smythe"
+          },
+          "dateOfBirth" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "The alias date of birth",
+            "example" : "1980-01-01"
+          },
+          "sexCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "The alias sex code",
+            "enum" : [ "M", "F", "N", "NS" ],
+            "example" : "M"
+          },
+          "isPrimary" : {
+            "type" : "boolean",
+            "description" : "Indicates if this is a primary alias",
+            "example" : true
+          },
+          "birthPlace" : {
+            "type" : [ "string", "null" ],
+            "description" : "Birth place of this offender record"
+          },
+          "birthCountry" : {
+            "type" : [ "string", "null" ],
+            "description" : "Birth country of this offender record",
+            "enum" : [ "ABW", "AFG", "AGO", "AIA", "AKR", "ALA", "ALB", "AND", "ANT", "ARE", "ARG", "ARM", "ASM", "ATA", "ATF", "ATG", "AUS", "AUT", "AZE", "BDI", "BEL", "BEN", "BES", "BFA", "BGD", "BGR", "BHR", "BHS", "BIH", "BLM", "BLR", "BLZ", "BMU", "BOL", "BRA", "BRB", "BRN", "BTN", "BVT", "BWA", "CAF", "CAN", "CCK", "CHE", "CHL", "CHN", "CI", "CIV", "CMR", "COD", "COG", "COK", "COL", "COM", "CPV", "CRI", "CUB", "CUW", "CXR", "CYM", "CYP", "CZE", "DEU", "DJI", "DKL", "DMA", "DNK", "DOM", "DZA", "ECU", "EGY", "ENG", "ERI", "ESH", "ESP", "EST", "ETH", "FIN", "FJI", "FLK", "FRA", "FRO", "FSM", "FXX", "GAB", "GBR", "GEO", "GGY", "GHA", "GIB", "GIN", "GLP", "GMB", "GNB", "GNQ", "GRC", "GRD", "GRL", "GTM", "GUF", "GUM", "GUY", "HKG", "HMD", "HND", "HRV", "HTI", "HUN", "IDN", "IMN", "IND", "IOT", "IRL", "IRN", "IRQ", "ISL", "ISR", "ITA", "JAM", "JEY", "JOR", "JPN", "KAZ", "KEN", "KGZ", "KHM", "KIR", "KNA", "KOR", "KOS", "KWT", "LAO", "LBN", "LBR", "LBY", "LCA", "LIE", "LKA", "LSO", "LTU", "LUX", "LVA", "MAC", "MAF", "MAR", "MCO", "MDA", "MDG", "MDV", "MEX", "MHL", "MKD", "MLI", "MLT", "MMR", "MNE", "MNG", "MNP", "MOZ", "MRT", "MSR", "MTQ", "MUS", "MWI", "MYS", "MYT", "NAM", "NCL", "NER", "NFK", "NGA", "NI", "NIC", "NIU", "NLD", "NOR", "NPL", "NRU", "NZL", "OMN", "PAK", "PAN", "PCN", "PER", "PHL", "PLW", "PNG", "POL", "PRI", "PRK", "PRT", "PRY", "PSE", "PYF", "QAT", "REU", "ROU", "RUS", "RWA", "SAU", "SCG", "SCOT", "SDN", "SEN", "SGP", "SGS", "SHN", "SJM", "SLB", "SLE", "SLV", "SMR", "SOM", "SPM", "SRB", "SSD", "STP", "SU", "SUR", "SVK", "SVN", "SWE", "SWZ", "SXM", "SYC", "SYR", "TCA", "TCD", "TGO", "THA", "TJK", "TKL", "TKM", "TLS", "TON", "TTO", "TUN", "TUR", "TUV", "TWN", "TZA", "UGA", "UKR", "UMI", "URY", "USA", "UZB", "VAT", "VCT", "VEN", "VGB", "VIR", "VNM", "VUT", "WALES", "WLF", "WSM", "XRK", "XX", "XZ", "YEM", "YU", "ZAF", "ZMB", "ZWE" ]
+          },
+          "ethnicity" : {
+            "type" : [ "string", "null" ],
+            "description" : "Ethnicity of this offender record",
+            "enum" : [ "A1", "A2", "A3", "A4", "A9", "B1", "B2", "B9", "ETH03", "M1", "M2", "M3", "M9", "MERGE", "NS", "O1", "O2", "O9", "UN", "W1", "W2", "W3", "W4", "W5", "W8", "W9", "Z1" ]
+          },
+          "identifiers" : {
+            "type" : "array",
+            "description" : "List of identifiers associated with this alias",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonIdentifier"
+            }
+          },
+          "suffix" : {
+            "type" : [ "string", "null" ],
+            "description" : "Suffix",
+            "enum" : [ "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "Junior", "Senior" ]
+          },
+          "nameType" : {
+            "type" : [ "string", "null" ],
+            "description" : "Name type",
+            "enum" : [ "CN", "ALIAS", "MAID", "NICK" ]
+          },
+          "createDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The alias create date and time",
+            "example" : "2000-01-01T12:00:00"
+          },
+          "createUserId" : {
+            "type" : "string",
+            "description" : "The alias create user id",
+            "example" : "12345"
+          },
+          "modifyDateTime" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "The alias modify date and time",
+            "example" : "2000-01-01T12:00:00"
+          },
+          "modifyUserId" : {
+            "type" : [ "string", "null" ],
+            "description" : "The alias modify user id",
+            "example" : "12345"
+          }
+        },
+        "required" : [ "createDateTime", "createUserId", "identifiers", "isPrimary", "nomisOffenderId" ]
+      },
+      "PrisonIdentifier" : {
+        "type" : "object",
+        "properties" : {
+          "nomisIdentifierId" : {
+            "$ref" : "#/components/schemas/NomisIdentifierId",
+            "description" : "The nomis identifier id"
+          },
+          "cprIdentifierId" : {
+            "type" : [ "string", "null" ],
+            "description" : "The cpr identifier id",
+            "example" : "4f2c1d8a-9e3c-4a1f-8b2d-112233445566"
+          },
+          "type" : {
+            "type" : "string",
+            "description" : "The identifier type",
+            "enum" : [ "PNC", "CRO", "NATIONAL_INSURANCE_NUMBER", "DRIVER_LICENSE_NUMBER", "ARREST_SUMMONS_NUMBER", "AAMR", "ACC", "APNC", "AMRL", "ASN", "URN", "DRL", "DNOMS", "XIMMN", "XNOMS", "IMMN", "DOFF", "LCRN", "LBCN", "LIFN", "MFCRN", "MTCRN", "MSVN", "NHS", "NOMS", "OTHR", "PCRN", "PARN", "PST", "AI02", "PRNOMS", "SPNC", "NPNC", "VISO", "YCRN", "UNKNOWN" ],
+            "example" : "PNC"
+          },
+          "value" : {
+            "type" : "string",
+            "description" : "The identifier value",
+            "example" : "2000/1234567A"
+          },
+          "comment" : {
+            "type" : [ "string", "null" ],
+            "description" : "The identifier comment",
+            "example" : "Some comment"
+          },
+          "issuedDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "The issued date"
+          },
+          "verified" : {
+            "type" : "boolean",
+            "description" : "Verified"
+          },
+          "createDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The identifier create date and time",
+            "example" : "2000-01-01T12:00:00"
+          },
+          "createUserId" : {
+            "type" : "string",
+            "description" : "The identifier create user id",
+            "example" : "12345"
+          },
+          "modifyDateTime" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "The identifier modify date and time",
+            "example" : "2000-01-01T12:00:00"
+          },
+          "modifyUserId" : {
+            "type" : [ "string", "null" ],
+            "description" : "The identifier modify user id",
+            "example" : "12345"
+          }
+        },
+        "required" : [ "createDateTime", "createUserId", "nomisIdentifierId", "type", "value", "verified" ]
+      },
+      "PrisonIdentifiersRequest" : {
+        "type" : "object",
+        "properties" : {
+          "identifiers" : {
+            "type" : "array",
+            "description" : "The full set of identifiers for the nomis offender id. Any existing identifiers not in this list will be removed",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonIdentifier"
+            }
+          }
+        },
+        "required" : [ "identifiers" ]
+      },
+      "SysconIdentifierMapping" : {
+        "type" : "object",
+        "properties" : {
+          "nomisIdentifierId" : {
+            "$ref" : "#/components/schemas/NomisIdentifierId"
+          },
+          "cprIdentifierId" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "cprIdentifierId", "nomisIdentifierId" ]
+      },
+      "SysconIdentifiersResponseBody" : {
+        "type" : "object",
+        "properties" : {
+          "prisonNumber" : {
+            "type" : "string"
+          },
+          "identifiersMappings" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SysconIdentifierMapping"
+            }
+          }
+        },
+        "required" : [ "identifiersMappings", "prisonNumber" ]
+      },
       "PrisonAddress" : {
         "type" : "object",
         "properties" : {
@@ -2786,131 +3203,24 @@
         },
         "required" : [ "prisonNumber", "religionMappings" ]
       },
-      "NomisIdentifierId" : {
+      "SysconAliasWithIdentifiersMapping" : {
         "type" : "object",
         "properties" : {
           "nomisOffenderId" : {
             "type" : "integer",
-            "format" : "int64",
-            "description" : "The nomis offender id for this identifier",
-            "example" : 10000
-          },
-          "nomisSequence" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "The sequence index for the identifier on the offender",
-            "example" : 1
-          }
-        },
-        "required" : [ "nomisOffenderId", "nomisSequence" ]
-      },
-      "PrisonAlias" : {
-        "type" : "object",
-        "properties" : {
-          "nomisOffenderId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The nomis offender id for this alias",
-            "example" : 10000
+            "format" : "int64"
           },
           "cprAliasId" : {
-            "type" : [ "string", "null" ],
-            "description" : "The cpr alias id",
-            "example" : "4f2b1d8a-9f3c-4a1f-8b2d-112233445566"
+            "type" : "string"
           },
-          "titleCode" : {
-            "type" : [ "string", "null" ],
-            "description" : "The alias title code",
-            "enum" : [ "MR", "MRS", "MISS", "MS", "MX", "REV", "FR", "IMAM", "RABBI", "BR", "SR", "DME", "DR", "LDY", "LRD", "SIR", "UN" ],
-            "example" : "MR"
-          },
-          "firstName" : {
-            "type" : [ "string", "null" ],
-            "description" : "The alias first name",
-            "example" : "Jon"
-          },
-          "middleNames" : {
-            "type" : [ "string", "null" ],
-            "description" : "The alias middle names",
-            "example" : "James"
-          },
-          "lastName" : {
-            "type" : [ "string", "null" ],
-            "description" : "The alias last name",
-            "example" : "Smythe"
-          },
-          "dateOfBirth" : {
-            "type" : [ "string", "null" ],
-            "format" : "date",
-            "description" : "The alias date of birth",
-            "example" : "1980-01-01"
-          },
-          "sexCode" : {
-            "type" : [ "string", "null" ],
-            "description" : "The alias sex code",
-            "enum" : [ "M", "F", "N", "NS" ],
-            "example" : "M"
-          },
-          "isPrimary" : {
-            "type" : "boolean",
-            "description" : "Indicates if this is a primary alias",
-            "example" : true
-          },
-          "birthPlace" : {
-            "type" : [ "string", "null" ],
-            "description" : "Birth place of this offender record"
-          },
-          "birthCountry" : {
-            "type" : [ "string", "null" ],
-            "description" : "Birth country of this offender record",
-            "enum" : [ "ABW", "AFG", "AGO", "AIA", "AKR", "ALA", "ALB", "AND", "ANT", "ARE", "ARG", "ARM", "ASM", "ATA", "ATF", "ATG", "AUS", "AUT", "AZE", "BDI", "BEL", "BEN", "BES", "BFA", "BGD", "BGR", "BHR", "BHS", "BIH", "BLM", "BLR", "BLZ", "BMU", "BOL", "BRA", "BRB", "BRN", "BTN", "BVT", "BWA", "CAF", "CAN", "CCK", "CHE", "CHL", "CHN", "CI", "CIV", "CMR", "COD", "COG", "COK", "COL", "COM", "CPV", "CRI", "CUB", "CUW", "CXR", "CYM", "CYP", "CZE", "DEU", "DJI", "DKL", "DMA", "DNK", "DOM", "DZA", "ECU", "EGY", "ENG", "ERI", "ESH", "ESP", "EST", "ETH", "FIN", "FJI", "FLK", "FRA", "FRO", "FSM", "FXX", "GAB", "GBR", "GEO", "GGY", "GHA", "GIB", "GIN", "GLP", "GMB", "GNB", "GNQ", "GRC", "GRD", "GRL", "GTM", "GUF", "GUM", "GUY", "HKG", "HMD", "HND", "HRV", "HTI", "HUN", "IDN", "IMN", "IND", "IOT", "IRL", "IRN", "IRQ", "ISL", "ISR", "ITA", "JAM", "JEY", "JOR", "JPN", "KAZ", "KEN", "KGZ", "KHM", "KIR", "KNA", "KOR", "KOS", "KWT", "LAO", "LBN", "LBR", "LBY", "LCA", "LIE", "LKA", "LSO", "LTU", "LUX", "LVA", "MAC", "MAF", "MAR", "MCO", "MDA", "MDG", "MDV", "MEX", "MHL", "MKD", "MLI", "MLT", "MMR", "MNE", "MNG", "MNP", "MOZ", "MRT", "MSR", "MTQ", "MUS", "MWI", "MYS", "MYT", "NAM", "NCL", "NER", "NFK", "NGA", "NI", "NIC", "NIU", "NLD", "NOR", "NPL", "NRU", "NZL", "OMN", "PAK", "PAN", "PCN", "PER", "PHL", "PLW", "PNG", "POL", "PRI", "PRK", "PRT", "PRY", "PSE", "PYF", "QAT", "REU", "ROU", "RUS", "RWA", "SAU", "SCG", "SCOT", "SDN", "SEN", "SGP", "SGS", "SHN", "SJM", "SLB", "SLE", "SLV", "SMR", "SOM", "SPM", "SRB", "SSD", "STP", "SU", "SUR", "SVK", "SVN", "SWE", "SWZ", "SXM", "SYC", "SYR", "TCA", "TCD", "TGO", "THA", "TJK", "TKL", "TKM", "TLS", "TON", "TTO", "TUN", "TUR", "TUV", "TWN", "TZA", "UGA", "UKR", "UMI", "URY", "USA", "UZB", "VAT", "VCT", "VEN", "VGB", "VIR", "VNM", "VUT", "WALES", "WLF", "WSM", "XRK", "XX", "XZ", "YEM", "YU", "ZAF", "ZMB", "ZWE" ]
-          },
-          "ethnicity" : {
-            "type" : [ "string", "null" ],
-            "description" : "Ethnicity of this offender record",
-            "enum" : [ "A1", "A2", "A3", "A4", "A9", "B1", "B2", "B9", "ETH03", "M1", "M2", "M3", "M9", "MERGE", "NS", "O1", "O2", "O9", "UN", "W1", "W2", "W3", "W4", "W5", "W8", "W9", "Z1" ]
-          },
-          "identifiers" : {
+          "identifierMappings" : {
             "type" : "array",
-            "description" : "List of identifiers associated with this alias",
             "items" : {
-              "$ref" : "#/components/schemas/PrisonIdentifier"
+              "$ref" : "#/components/schemas/SysconIdentifierMapping"
             }
-          },
-          "suffix" : {
-            "type" : [ "string", "null" ],
-            "description" : "Suffix",
-            "enum" : [ "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "Junior", "Senior" ]
-          },
-          "nameType" : {
-            "type" : [ "string", "null" ],
-            "description" : "Name type",
-            "enum" : [ "CN", "ALIAS", "MAID", "NICK" ]
-          },
-          "createDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The alias create date and time",
-            "example" : "2000-01-01T12:00:00"
-          },
-          "createUserId" : {
-            "type" : "string",
-            "description" : "The alias create user id",
-            "example" : "12345"
-          },
-          "modifyDateTime" : {
-            "type" : [ "string", "null" ],
-            "format" : "date-time",
-            "description" : "The alias modify date and time",
-            "example" : "2000-01-01T12:00:00"
-          },
-          "modifyUserId" : {
-            "type" : [ "string", "null" ],
-            "description" : "The alias modify user id",
-            "example" : "12345"
           }
         },
-        "required" : [ "createDateTime", "createUserId", "identifiers", "isPrimary", "nomisOffenderId" ]
+        "required" : [ "cprAliasId", "identifierMappings", "nomisOffenderId" ]
       },
       "PrisonAliasesAndIdentifiersRequest" : {
         "type" : "object",
@@ -2924,68 +3234,6 @@
           }
         },
         "required" : [ "aliases" ]
-      },
-      "PrisonIdentifier" : {
-        "type" : "object",
-        "properties" : {
-          "nomisIdentifierId" : {
-            "$ref" : "#/components/schemas/NomisIdentifierId",
-            "description" : "The nomis identifier id"
-          },
-          "cprIdentifierId" : {
-            "type" : [ "string", "null" ],
-            "description" : "The cpr identifier id",
-            "example" : "4f2c1d8a-9e3c-4a1f-8b2d-112233445566"
-          },
-          "type" : {
-            "type" : "string",
-            "description" : "The identifier type",
-            "enum" : [ "PNC", "CRO", "NATIONAL_INSURANCE_NUMBER", "DRIVER_LICENSE_NUMBER", "ARREST_SUMMONS_NUMBER", "AAMR", "ACC", "APNC", "AMRL", "ASN", "URN", "DRL", "DNOMS", "XIMMN", "XNOMS", "IMMN", "DOFF", "LCRN", "LBCN", "LIFN", "MFCRN", "MTCRN", "MSVN", "NHS", "NOMS", "OTHR", "PCRN", "PARN", "PST", "AI02", "PRNOMS", "SPNC", "NPNC", "VISO", "YCRN", "UNKNOWN" ],
-            "example" : "PNC"
-          },
-          "value" : {
-            "type" : "string",
-            "description" : "The identifier value",
-            "example" : "2000/1234567A"
-          },
-          "comment" : {
-            "type" : [ "string", "null" ],
-            "description" : "The identifier comment",
-            "example" : "Some comment"
-          },
-          "issuedDate" : {
-            "type" : [ "string", "null" ],
-            "format" : "date",
-            "description" : "The issued date"
-          },
-          "verified" : {
-            "type" : "boolean",
-            "description" : "Verified"
-          },
-          "createDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The identifier create date and time",
-            "example" : "2000-01-01T12:00:00"
-          },
-          "createUserId" : {
-            "type" : "string",
-            "description" : "The identifier create user id",
-            "example" : "12345"
-          },
-          "modifyDateTime" : {
-            "type" : [ "string", "null" ],
-            "format" : "date-time",
-            "description" : "The identifier modify date and time",
-            "example" : "2000-01-01T12:00:00"
-          },
-          "modifyUserId" : {
-            "type" : [ "string", "null" ],
-            "description" : "The identifier modify user id",
-            "example" : "12345"
-          }
-        },
-        "required" : [ "createDateTime", "createUserId", "nomisIdentifierId", "type", "value", "verified" ]
       },
       "SysconAliasMapping" : {
         "type" : "object",
@@ -3020,18 +3268,6 @@
           }
         },
         "required" : [ "aliasesMappings", "identifiersMappings", "prisonNumber" ]
-      },
-      "SysconIdentifierMapping" : {
-        "type" : "object",
-        "properties" : {
-          "nomisIdentifierId" : {
-            "$ref" : "#/components/schemas/NomisIdentifierId"
-          },
-          "cprIdentifierId" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "cprIdentifierId", "nomisIdentifierId" ]
       },
       "ExactMatchSearchRequest" : {
         "type" : "object",
