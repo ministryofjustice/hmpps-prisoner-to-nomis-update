@@ -63,6 +63,7 @@ jobs:
           branch: api-docs-${{ matrix.project }}
           base: main
           token: ${{ steps.generate-token.outputs.token }}
+          sign-commits: 'true'
 
       - name: Delete Pull Request
         if: steps.check-api.outputs.differences == 'false'
