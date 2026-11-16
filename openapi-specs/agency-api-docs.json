@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-11-11.700.4099211"
+    "version" : "2026-11-13.736.52f73e9"
   },
   "servers" : [ {
     "url" : "https://prison-register-dev.hmpps.service.justice.gov.uk",
@@ -7336,6 +7336,49 @@
         }
       }
     },
+    "/reference-data/prison-operators" : {
+      "get" : {
+        "tags" : [ "reference-data-controller" ],
+        "summary" : "Get all prison operators",
+        "description" : "Returns all prison operators as a flat list of code and description",
+        "operationId" : "getPrisonOperators",
+        "responses" : {
+          "200" : {
+            "description" : "Successful Operation",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/PrisonOperator"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the HMPPS_REGISTERS_API__MAINTAIN__RW role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/reference-data/payroll-regions" : {
       "get" : {
         "tags" : [ "reference-data-controller" ],
@@ -8731,6 +8774,19 @@
         },
         "required" : [ "country", "postcode", "town" ]
       },
+      "PrisonOperator" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "id", "name" ]
+      },
       "UpdatePrisonDto" : {
         "type" : "object",
         "description" : "Prison Update Record",
@@ -8748,6 +8804,11 @@
             "example" : "Carchar Brynbuga",
             "maxLength" : 80,
             "minLength" : 3
+          },
+          "prisonDescription" : {
+            "type" : [ "string", "null" ],
+            "description" : "Description of the prison",
+            "example" : "HMP BRIXTON"
           },
           "active" : {
             "type" : "boolean",
@@ -8788,6 +8849,14 @@
               "enum" : [ "A", "B", "C", "D", "OPEN", "CLOSED" ]
             },
             "uniqueItems" : true
+          },
+          "operator" : {
+            "description" : "Operator of the prison. When not provided, the operator will not be updated",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PrisonOperator"
+            }, {
+              "type" : "null"
+            } ]
           }
         },
         "required" : [ "active", "categories", "contracted", "female", "lthse", "male", "prisonName", "prisonTypes" ]
@@ -8878,6 +8947,11 @@
             "description" : "Name of the prison in Welsh",
             "example" : "Carchar Brynbuga"
           },
+          "prisonDescription" : {
+            "type" : [ "string", "null" ],
+            "description" : "Description of the prison",
+            "example" : "HMP BRIXTON"
+          },
           "active" : {
             "type" : "boolean",
             "description" : "Whether the prison is still active"
@@ -8927,6 +9001,14 @@
             "items" : {
               "$ref" : "#/components/schemas/PrisonOperatorDto"
             }
+          },
+          "currentOperator" : {
+            "description" : "The current operator for this prison",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PrisonOperator"
+            }, {
+              "type" : "null"
+            } ]
           }
         },
         "required" : [ "active", "addresses", "categories", "contracted", "female", "lthse", "male", "operators", "prisonId", "prisonName", "types" ]
@@ -10924,6 +11006,11 @@
             "description" : "Name of the prison in Welsh",
             "example" : "Carchar Brynbuga"
           },
+          "prisonDescription" : {
+            "type" : [ "string", "null" ],
+            "description" : "Description of the prison",
+            "example" : "HMP BRIXTON"
+          },
           "active" : {
             "type" : "boolean",
             "description" : "Whether the prison is still active"
@@ -10969,10 +11056,19 @@
           },
           "operators" : {
             "type" : "array",
+            "deprecated" : true,
             "description" : "List of operators for this prison",
             "items" : {
               "$ref" : "#/components/schemas/PrisonOperatorDto"
             }
+          },
+          "currentOperator" : {
+            "description" : "The current operator for this prison",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PrisonOperator"
+            }, {
+              "type" : "null"
+            } ]
           },
           "departments" : {
             "type" : "array",
