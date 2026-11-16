@@ -5079,6 +5079,38 @@ class AgencyRegisterToNomisIntTest(
   }
 
   @Nested
+  @DisplayName("register.other-agency.inserted")
+  inner class OtherAgencyInserted {
+    val agencyId = "SHEFAGY"
+
+    @Nested
+    inner class HappyPath {
+      @BeforeEach
+      fun setUp() {
+        dpsApi.stubGetAgency(agencyId = agencyId, response = otherLegacyAgencyDto())
+        nomisApi.stubCreateAgency(response = agencyResponse().copy(agencyId = agencyId))
+        publishAgencyEvent("register.other-agency.inserted", agencyId)
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will create agency in NOMIS`() {
+        val request: CreateAgencyRequest = NomisApiExtension.nomisApi.getRequestBody(postRequestedFor(urlEqualTo("/agency")), jsonMapper)
+        assertThat(request.agencyId).isEqualTo(agencyId)
+      }
+
+      @Test
+      fun `will send telemetry event showing success`() {
+        verify(telemetryClient).trackEvent(
+          eq("agency-created-success"),
+          check { assertThat(it["agencyId"]).isEqualTo(agencyId) },
+          isNull(),
+        )
+      }
+    }
+  }
+
+  @Nested
   @DisplayName("register.agency.amended")
   inner class AgencyAmended {
     val agencyId = "SHEFAGY"

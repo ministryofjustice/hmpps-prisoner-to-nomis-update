@@ -514,17 +514,29 @@ hmpps.sqs:
           "register.probationoffice.address.amended",
           "register.probationoffice.address.deleted",
           "register.agency.inserted",
+          "register.other-agency.inserted",
           "register.agency.amended",
+          "register.other-agency.amended",
           "register.agency.deleted",
+          "register.other-agency.deleted",
           "register.agency.email.inserted",
+          "register.other-agency.email.inserted",
           "register.agency.email.amended",
+          "register.other-agency.email.amended",
           "register.agency.email.deleted",
+          "register.other-agency.email.deleted",
           "register.agency.phone.inserted",
+          "register.other-agency.phone.inserted",
           "register.agency.phone.amended",
+          "register.other-agency.phone.amended",
           "register.agency.phone.deleted",
+          "register.other-agency.phone.deleted",
           "register.agency.address.inserted",
+          "register.other-agency.address.inserted",
           "register.agency.address.amended",
-          "register.agency.address.deleted"
+          "register.other-agency.address.amended",
+          "register.agency.address.deleted",
+          "register.other-agency.address.deleted"
         ]}
       dlqMaxReceiveCount: 2
       visibilityTimeout: 120
