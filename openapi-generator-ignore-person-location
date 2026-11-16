@@ -22,6 +22,7 @@
 !**/Location.kt
 !**/Prison.kt
 !**/MovementReason.kt
+!**/ReconciliationPrisonerStatus.kt
 !**/ReconciliationResponse.kt
 !**/ReconciliationSeries.kt
 !**/ReferenceId.kt

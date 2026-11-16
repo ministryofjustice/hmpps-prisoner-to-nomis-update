@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceNomisAp
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AggregatedAccountDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerAggregatedAccountsDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ScheduledPaymentSummary
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import java.math.BigDecimal
 
@@ -41,6 +42,7 @@ class PrisonerBalanceNomisApiServiceTest {
         ),
       ),
       advances = listOf(),
+      scheduledPayments = ScheduledPaymentSummary(2, 340),
     )
 
     @Test

@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-11-04.1269.373ba6d"
+    "version" : "2026-11-13.1280.c0b82f7"
   },
   "servers" : [ {
     "url" : "https://prisoner-finance-sync-api-dev.hmpps.service.justice.gov.uk/",
@@ -2487,13 +2487,13 @@
             "example" : "AdvanceStatus.ACTIVE"
           },
           "legacyTransactionId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The legacy transaction ID from NOMIS that paid the advance to the prisoner",
             "example" : 123456
           }
         },
-        "required" : [ "amountIssued", "amountOutstanding", "balanceCalculationTime", "createdBy", "createdOn", "legacyInformationNumber", "legacyPaymentProfileId", "legacyTransactionId", "prisonID", "prisonNumber", "repaymentAmount", "repaymentStartDate", "status" ]
+        "required" : [ "amountIssued", "amountOutstanding", "balanceCalculationTime", "createdBy", "createdOn", "legacyInformationNumber", "legacyPaymentProfileId", "prisonID", "prisonNumber", "repaymentAmount", "repaymentStartDate", "status" ]
       },
       "AccountReconciliationResponse" : {
         "type" : "object",
@@ -2666,6 +2666,13 @@
             "type" : "string",
             "format" : "date-time"
           },
+          "requestId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "transactionType" : {
+            "type" : [ "string", "null" ]
+          },
           "caseloadId" : {
             "type" : [ "string", "null" ]
           },
@@ -2673,16 +2680,9 @@
             "type" : [ "string", "null" ],
             "format" : "date-time"
           },
-          "requestId" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
           "legacyTransactionId" : {
             "type" : [ "integer", "null" ],
             "format" : "int64"
-          },
-          "transactionType" : {
-            "type" : [ "string", "null" ]
           },
           "synchronizedTransactionId" : {
             "type" : "string",
