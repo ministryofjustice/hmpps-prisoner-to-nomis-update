@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-11-13.2395.5f5e5c1"
+    "version" : "2026-11-16.2401.b61086e"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -28033,6 +28033,68 @@
         }
       }
     },
+    "/core-person/{prisonNumber}/working-name" : {
+      "get" : {
+        "tags" : [ "core-person-resource" ],
+        "summary" : "Get the working name offender id for a prisoner by prison number",
+        "description" : "Retrieves the offender id of the current alias (working name), i.e. the offender record linked to the latest booking, or the root offender if there are no bookings. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getWorkingName",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "description" : "Prison number aka noms id / offender id display",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prison number aka noms id / offender id display",
+            "example" : "A1234BC"
+          },
+          "example" : "A1234BC"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Working name returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/WorkingName"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Offender does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/core-person/{prisonNumber}/religions" : {
       "get" : {
         "tags" : [ "core-person-resource" ],
@@ -41240,7 +41302,7 @@
           "offenderDeductionId" : {
             "type" : [ "integer", "null" ],
             "format" : "int64",
-            "description" : "The offender deduction id if this is an deduction transaction",
+            "description" : "The offender deduction id if this is a deduction transaction",
             "example" : 12345678
           },
           "createdAt" : {
@@ -47895,8 +47957,8 @@
           },
           "dayOfWeek" : {
             "type" : "string",
-            "description" : "Day of the week the scheduled payment is paid",
-            "enum" : [ "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN" ],
+            "description" : "Day of the week the scheduled payment is paid, This can also be MON-FRI.",
+            "enum" : [ "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN", "MON_FRI" ],
             "example" : "MON"
           },
           "startDate" : {
@@ -48275,13 +48337,6 @@
       "PrisonerHoldProjection" : {
         "type" : "object",
         "properties" : {
-          "clientUniqueRef" : {
-            "type" : [ "string", "null" ]
-          },
-          "holdNumber" : {
-            "type" : [ "integer", "null" ],
-            "format" : "int64"
-          },
           "txnEntrySeq" : {
             "type" : "integer",
             "format" : "int32"
@@ -48301,6 +48356,13 @@
           },
           "txnId" : {
             "type" : "integer",
+            "format" : "int64"
+          },
+          "clientUniqueRef" : {
+            "type" : [ "string", "null" ]
+          },
+          "holdNumber" : {
+            "type" : [ "integer", "null" ],
             "format" : "int64"
           }
         },
@@ -49410,6 +49472,19 @@
           }
         },
         "required" : [ "createdByUsername", "createdDateTime", "lastUpdatedByUsername", "lastUpdatedDateTime", "number", "phoneId", "type" ]
+      },
+      "WorkingName" : {
+        "type" : "object",
+        "description" : "The working name (current alias) for a prisoner",
+        "properties" : {
+          "offenderId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The offender id of the offender record linked to the latest booking",
+            "example" : 1234567
+          }
+        },
+        "required" : [ "offenderId" ]
       },
       "CorePersonAddressContact" : {
         "type" : "object",
