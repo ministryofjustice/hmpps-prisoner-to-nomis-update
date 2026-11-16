@@ -87,14 +87,14 @@ class CsraService(
           telemetry += "bookingId" to nomisBookingId.toString()
           telemetry += "sequence" to sequence.toString()
 
-          csraNomisApiService.updateCsra(nomisId, sequence, dpsData.toNomisUpdateRequest(nomisHighGeneralSpecific))
+          csraNomisApiService.updateCsra(nomisBookingId, sequence, dpsData.toNomisUpdateRequest(nomisHighGeneralSpecific))
         }
       } else {
         // DPS cleared the current CSRA due to a readmission.
         // In this case, Nomis would have the existing bookings existing CSRA.
         // However, this update only occurs for DPS enabled prisons, and for these, the Nomis display of current CSRA is disabled.
         // So if it is wrong in Nomis just for the period up till the prisoner gets their initial CSRA, that is ok.
-        // Dont need to do anything but reconciliation will have to be aware and ignore this prisoner.
+        // Don't need to do anything but reconciliation will have to be aware and ignore this prisoner.
         telemetry += "readmission-cleared" to "true"
         telemetryClient.trackEvent("csra-update-ignored", telemetry, null)
       }

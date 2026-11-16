@@ -326,19 +326,6 @@ class CsraToNomisIntTest : SqsIntegrationTestBase() {
     inner class WhenPrisonerReadmitted {
       @BeforeEach
       fun setup() {
-//        csraMappingApiMockServer.stubGetByDpsId(
-//          CSRA_DPS_ID,
-//          CsraMappingDto(
-//            dpsCsraId = CSRA_DPS_ID,
-//            nomisBookingId = CSRA_BOOKING_ID,
-//            nomisSequence = CSRA_SEQUENCE,
-//            offenderNo = CSRA_OFFENDER_NO,
-//            mappingType = CsraMappingDto.MappingType.DPS_CREATED,
-//          ),
-//        )
-//        csraApi.stubGetCsraReview(UUID.fromString(CSRA_DPS_ID), dpsCsra(UUID.fromString(CSRA_DPS_ID)))
-//        csraNomisApiMockServer.stubUpdateCsra(CSRA_BOOKING_ID, CSRA_SEQUENCE)
-
         publishCsraDomainEvent("cell.sharing.risk.assessment.amended", dpsId = null)
         waitForAnyProcessingToComplete()
       }
@@ -351,36 +338,14 @@ class CsraToNomisIntTest : SqsIntegrationTestBase() {
       }
 
       @Test
-      fun `will send telemetry event`() {
+      fun `will send telemetry ignored event`() {
         verify(telemetryClient).trackEvent(
-          eq("csra-update-readmission"),
+          eq("csra-update-ignored"),
           check {
             assertThat(it).containsEntry("dpsCsraId", "null")
             assertThat(it).containsEntry("offenderNo", CSRA_OFFENDER_NO)
             assertThat(it).containsEntry("source", "DPS")
-          },
-          isNull(),
-        )
-      }
-    }
-
-    @Nested
-    @DisplayName("when DPS event has no CSRA id")
-    inner class WhenIdIsNull {
-      @BeforeEach
-      fun setup() {
-        publishCsraDomainEvent("cell.sharing.risk.assessment.amended", dpsId = null)
-        waitForAnyProcessingToComplete()
-      }
-
-      @Test
-      fun `will send telemetry event showing the update`() {
-        verify(telemetryClient).trackEvent(
-          eq("csra-update-success"),
-          check {
             assertThat(it).containsEntry("readmission-cleared", "true")
-            assertThat(it).containsEntry("offenderNo", CSRA_OFFENDER_NO)
-            assertThat(it).containsEntry("source", "DPS")
           },
           isNull(),
         )
