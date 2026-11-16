@@ -78,7 +78,7 @@ class CsraReconciliationService(
     val nomisCsra = csraNomisApiService.getCurrentCsraForPrisonerOrNull(offenderNo)
     val dpsCsra = csraDpsApiService.getCsraCurrent(offenderNo)
 
-    if (dpsCsra?.reason == CsraRatingSetReason.NO_RATING_ON_READMISSION) {
+    if (dpsCsra?.reason == CsraDetailedRating.Reason.NO_RATING_ON_READMISSION) {
       return null
     }
     val nomisField = nomisCsra?.let { csra ->
@@ -105,15 +105,6 @@ class CsraReconciliationService(
     val differenceList = compareObjects(dpsField, nomisField)
 
     if (differenceList.isNotEmpty()) {
-
-//      if (differenceList.first().property == "current-csra" && differenceList.first().nomis == 1) {
-//        val dpsDetails = csraDpsApiService.getCsraReview(dpsCsra?.reviewId!!)
-//        if (dpsDetails.reason == xx ) {
-//          // ???
-//        }
-//      }
-//
-
       log.info("difference found for offenderNo=$offenderNo: $differenceList")
       telemetryClient.trackEvent(
         "$TELEMETRY_CSRA_PREFIX-mismatch",
