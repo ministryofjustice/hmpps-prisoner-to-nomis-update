@@ -5020,7 +5020,7 @@ class AgencyRegisterToNomisIntTest(
 
   @Nested
   @DisplayName("register.other-agency.inserted")
-  inner class AgencyInserted {
+  inner class OtherAgencyInserted {
     val agencyId = "SHEFAGY"
 
     @Nested
@@ -5079,40 +5079,8 @@ class AgencyRegisterToNomisIntTest(
   }
 
   @Nested
-  @DisplayName("register.other-agency.inserted")
-  inner class OtherAgencyInserted {
-    val agencyId = "SHEFAGY"
-
-    @Nested
-    inner class HappyPath {
-      @BeforeEach
-      fun setUp() {
-        dpsApi.stubGetAgency(agencyId = agencyId, response = otherLegacyAgencyDto())
-        nomisApi.stubCreateAgency(response = agencyResponse().copy(agencyId = agencyId))
-        publishAgencyEvent("register.other-agency.inserted", agencyId)
-        waitForAnyProcessingToComplete()
-      }
-
-      @Test
-      fun `will create agency in NOMIS`() {
-        val request: CreateAgencyRequest = NomisApiExtension.nomisApi.getRequestBody(postRequestedFor(urlEqualTo("/agency")), jsonMapper)
-        assertThat(request.agencyId).isEqualTo(agencyId)
-      }
-
-      @Test
-      fun `will send telemetry event showing success`() {
-        verify(telemetryClient).trackEvent(
-          eq("agency-created-success"),
-          check { assertThat(it["agencyId"]).isEqualTo(agencyId) },
-          isNull(),
-        )
-      }
-    }
-  }
-
-  @Nested
   @DisplayName("register.other-agency.amended")
-  inner class AgencyAmended {
+  inner class OtherAgencyAmended {
     val agencyId = "SHEFAGY"
 
     @Nested
@@ -5171,7 +5139,7 @@ class AgencyRegisterToNomisIntTest(
 
   @Nested
   @DisplayName("register.other-agency.deleted")
-  inner class AgencyDeleted {
+  inner class OtherAgencyDeleted {
     val agencyId = "SHEFAGY"
 
     @Nested
@@ -5222,7 +5190,7 @@ class AgencyRegisterToNomisIntTest(
 
   @Nested
   @DisplayName("register.other-agency.email.*")
-  inner class AgencyEmail {
+  inner class OtherAgencyEmail {
     val dpsEmailId = 12345L
     val nomisEmailId = 8765L
     val agencyId = "SHEFAGY"
@@ -5359,7 +5327,7 @@ class AgencyRegisterToNomisIntTest(
 
   @Nested
   @DisplayName("register.other-agency.phone.*")
-  inner class AgencyPhone {
+  inner class OtherAgencyPhone {
     val dpsPhoneId = 12345L
     val nomisPhoneId = 8765L
     val agencyId = "SHEFAGY"
@@ -5506,7 +5474,7 @@ class AgencyRegisterToNomisIntTest(
 
   @Nested
   @DisplayName("register.other-agency.address.*")
-  inner class AgencyAddress {
+  inner class OtherAgencyAddress {
     val dpsAddressId = 12345L
     val nomisAddressId = 8765L
     val agencyId = "SHEFAGY"
