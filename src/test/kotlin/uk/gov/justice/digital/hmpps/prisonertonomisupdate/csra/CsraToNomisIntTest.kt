@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.csra
 
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
+import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
@@ -311,7 +312,40 @@ class CsraToNomisIntTest : SqsIntegrationTestBase() {
           check {
             assertThat(it).containsEntry("dpsCsraId", CSRA_DPS_ID)
             assertThat(it).containsEntry("offenderNo", CSRA_OFFENDER_NO)
+            assertThat(it).containsEntry("bookingId", CSRA_BOOKING_ID.toString())
+            assertThat(it).containsEntry("sequence", CSRA_SEQUENCE.toString())
             assertThat(it).containsEntry("source", "DPS")
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    @DisplayName("when a prisoner is readmitted")
+    inner class WhenPrisonerReadmitted {
+      @BeforeEach
+      fun setup() {
+        publishCsraDomainEvent("cell.sharing.risk.assessment.amended", dpsId = null)
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `no apis will be called`() {
+        csraNomisApiMockServer.verify(0, putRequestedFor(anyUrl()))
+        csraMappingApiMockServer.verify(0, postRequestedFor(anyUrl()))
+        csraApi.verify(0, getRequestedFor(anyUrl()))
+      }
+
+      @Test
+      fun `will send telemetry ignored event`() {
+        verify(telemetryClient).trackEvent(
+          eq("csra-update-ignored"),
+          check {
+            assertThat(it).containsEntry("dpsCsraId", "null")
+            assertThat(it).containsEntry("offenderNo", CSRA_OFFENDER_NO)
+            assertThat(it).containsEntry("source", "DPS")
+            assertThat(it).containsEntry("readmission-cleared", "true")
           },
           isNull(),
         )
@@ -321,7 +355,7 @@ class CsraToNomisIntTest : SqsIntegrationTestBase() {
 
   private fun publishCsraDomainEvent(
     eventType: String,
-    dpsId: String = CSRA_DPS_ID,
+    dpsId: String? = CSRA_DPS_ID,
     offenderNo: String = CSRA_OFFENDER_NO,
     source: InformationSource = InformationSource.DPS,
   ) {
@@ -331,7 +365,7 @@ class CsraToNomisIntTest : SqsIntegrationTestBase() {
       description = "A CSRA review was changed in DPS",
       occurredAt = "2026-07-01T00:00:00Z",
       additionalInformation = CsraDomainAdditionalInformation(
-        id = UUID.fromString(dpsId),
+        id = dpsId?.let { UUID.fromString(it) },
         nomsNumber = offenderNo,
         source = source,
       ),
