@@ -5019,7 +5019,7 @@ class AgencyRegisterToNomisIntTest(
   }
 
   @Nested
-  @DisplayName("register.agency.inserted")
+  @DisplayName("register.other-agency.inserted")
   inner class AgencyInserted {
     val agencyId = "SHEFAGY"
 
@@ -5028,7 +5028,7 @@ class AgencyRegisterToNomisIntTest(
     inner class WhenNomisCreated {
       @BeforeEach
       fun setUp() {
-        publishAgencyEvent("register.agency.inserted", agencyId, source = "NOMIS")
+        publishAgencyEvent("register.other-agency.inserted", agencyId, source = "NOMIS")
         waitForAnyProcessingToComplete()
       }
 
@@ -5051,7 +5051,7 @@ class AgencyRegisterToNomisIntTest(
         fun setUp() {
           dpsApi.stubGetAgency(agencyId = agencyId, response = otherLegacyAgencyDto())
           nomisApi.stubCreateAgency(response = agencyResponse().copy(agencyId = agencyId))
-          publishAgencyEvent("register.agency.inserted", agencyId)
+          publishAgencyEvent("register.other-agency.inserted", agencyId)
           waitForAnyProcessingToComplete()
         }
 
@@ -5111,7 +5111,7 @@ class AgencyRegisterToNomisIntTest(
   }
 
   @Nested
-  @DisplayName("register.agency.amended")
+  @DisplayName("register.other-agency.amended")
   inner class AgencyAmended {
     val agencyId = "SHEFAGY"
 
@@ -5120,7 +5120,7 @@ class AgencyRegisterToNomisIntTest(
     inner class WhenNomisAmended {
       @BeforeEach
       fun setUp() {
-        publishAgencyEvent("register.agency.amended", agencyId, source = "NOMIS")
+        publishAgencyEvent("register.other-agency.amended", agencyId, source = "NOMIS")
         waitForAnyProcessingToComplete()
       }
 
@@ -5143,7 +5143,7 @@ class AgencyRegisterToNomisIntTest(
         fun setUp() {
           dpsApi.stubGetAgency(agencyId = agencyId, response = otherLegacyAgencyDto())
           nomisApi.stubUpdateAgency(agencyId = agencyId, response = agencyResponse().copy(agencyId = agencyId))
-          publishAgencyEvent("register.agency.amended", agencyId)
+          publishAgencyEvent("register.other-agency.amended", agencyId)
           waitForAnyProcessingToComplete()
         }
 
@@ -5170,7 +5170,7 @@ class AgencyRegisterToNomisIntTest(
   }
 
   @Nested
-  @DisplayName("register.agency.deleted")
+  @DisplayName("register.other-agency.deleted")
   inner class AgencyDeleted {
     val agencyId = "SHEFAGY"
 
@@ -5179,7 +5179,7 @@ class AgencyRegisterToNomisIntTest(
     inner class WhenNomisDeleted {
       @BeforeEach
       fun setUp() {
-        publishAgencyEvent("register.agency.deleted", agencyId, source = "NOMIS")
+        publishAgencyEvent("register.other-agency.deleted", agencyId, source = "NOMIS")
         waitForAnyProcessingToComplete()
       }
 
@@ -5200,7 +5200,7 @@ class AgencyRegisterToNomisIntTest(
       @BeforeEach
       fun setUp() {
         nomisApi.stubDeleteAgency(agencyId = agencyId)
-        publishAgencyEvent("register.agency.deleted", agencyId)
+        publishAgencyEvent("register.other-agency.deleted", agencyId)
         waitForAnyProcessingToComplete()
       }
 
@@ -5221,7 +5221,7 @@ class AgencyRegisterToNomisIntTest(
   }
 
   @Nested
-  @DisplayName("register.agency.email.*")
+  @DisplayName("register.other-agency.email.*")
   inner class AgencyEmail {
     val dpsEmailId = 12345L
     val nomisEmailId = 8765L
@@ -5234,7 +5234,7 @@ class AgencyRegisterToNomisIntTest(
       inner class WhenNomisCreated {
         @BeforeEach
         fun setUp() {
-          publishAgencyEmailEvent("register.agency.email.inserted", agencyId, dpsEmailId, source = "NOMIS")
+          publishAgencyEmailEvent("register.other-agency.email.inserted", agencyId, dpsEmailId, source = "NOMIS")
           waitForAnyProcessingToComplete()
         }
 
@@ -5260,7 +5260,7 @@ class AgencyRegisterToNomisIntTest(
             otherLegacyAgencyDto().copy(emailAddresses = listOf(legacyAgencyEmailDto().copy(id = dpsEmailId, address = "test@justice.gov.uk"))),
           )
           nomisApi.stubCreateAgencyEmail(agencyId = agencyId, response = createAgencyEmailResponse().copy(id = nomisEmailId))
-          publishAgencyEmailEvent("register.agency.email.inserted", agencyId, dpsEmailId)
+          publishAgencyEmailEvent("register.other-agency.email.inserted", agencyId, dpsEmailId)
           waitForAnyProcessingToComplete()
         }
 
@@ -5294,7 +5294,7 @@ class AgencyRegisterToNomisIntTest(
       inner class WhenNomisAmended {
         @BeforeEach
         fun setUp() {
-          publishAgencyEmailEvent("register.agency.email.amended", agencyId, dpsEmailId, source = "NOMIS")
+          publishAgencyEmailEvent("register.other-agency.email.amended", agencyId, dpsEmailId, source = "NOMIS")
           waitForAnyProcessingToComplete()
         }
 
@@ -5328,7 +5328,7 @@ class AgencyRegisterToNomisIntTest(
 
         @Test
         fun `amended will refresh all NOMIS email addresses`() {
-          publishAgencyEmailEvent("register.agency.email.amended", agencyId, dpsEmailId)
+          publishAgencyEmailEvent("register.other-agency.email.amended", agencyId, dpsEmailId)
           waitForAnyProcessingToComplete()
 
           val request: UpdateAgencyEmailAddressesRequest = NomisApiExtension.nomisApi.getRequestBody(putRequestedFor(urlEqualTo("/agency/$agencyId/emails")), jsonMapper)
@@ -5342,7 +5342,7 @@ class AgencyRegisterToNomisIntTest(
 
         @Test
         fun `deleted will refresh all NOMIS email addresses`() {
-          publishAgencyEmailEvent("register.agency.email.deleted", agencyId, dpsEmailId)
+          publishAgencyEmailEvent("register.other-agency.email.deleted", agencyId, dpsEmailId)
           waitForAnyProcessingToComplete()
 
           val request: UpdateAgencyEmailAddressesRequest = NomisApiExtension.nomisApi.getRequestBody(putRequestedFor(urlEqualTo("/agency/$agencyId/emails")), jsonMapper)
@@ -5358,7 +5358,7 @@ class AgencyRegisterToNomisIntTest(
   }
 
   @Nested
-  @DisplayName("register.agency.phone.*")
+  @DisplayName("register.other-agency.phone.*")
   inner class AgencyPhone {
     val dpsPhoneId = 12345L
     val nomisPhoneId = 8765L
@@ -5371,7 +5371,7 @@ class AgencyRegisterToNomisIntTest(
       inner class WhenNomisCreated {
         @BeforeEach
         fun setUp() {
-          publishAgencyPhoneEvent("register.agency.phone.inserted", agencyId, dpsPhoneId, source = "NOMIS")
+          publishAgencyPhoneEvent("register.other-agency.phone.inserted", agencyId, dpsPhoneId, source = "NOMIS")
           waitForAnyProcessingToComplete()
         }
 
@@ -5405,7 +5405,7 @@ class AgencyRegisterToNomisIntTest(
             ),
           )
           nomisApi.stubCreateAgencyPhone(agencyId = agencyId, response = createAgencyPhoneResponse().copy(id = nomisPhoneId))
-          publishAgencyPhoneEvent("register.agency.phone.inserted", agencyId, dpsPhoneId)
+          publishAgencyPhoneEvent("register.other-agency.phone.inserted", agencyId, dpsPhoneId)
           waitForAnyProcessingToComplete()
         }
 
@@ -5440,7 +5440,7 @@ class AgencyRegisterToNomisIntTest(
       inner class WhenNomisAmended {
         @BeforeEach
         fun setUp() {
-          publishAgencyPhoneEvent("register.agency.phone.amended", agencyId, dpsPhoneId, source = "NOMIS")
+          publishAgencyPhoneEvent("register.other-agency.phone.amended", agencyId, dpsPhoneId, source = "NOMIS")
           waitForAnyProcessingToComplete()
         }
 
@@ -5475,7 +5475,7 @@ class AgencyRegisterToNomisIntTest(
 
         @Test
         fun `amended will refresh all NOMIS phone numbers`() {
-          publishAgencyPhoneEvent("register.agency.phone.amended", agencyId, dpsPhoneId)
+          publishAgencyPhoneEvent("register.other-agency.phone.amended", agencyId, dpsPhoneId)
           waitForAnyProcessingToComplete()
 
           val request: UpdateAgencyPhoneNumbersRequest = NomisApiExtension.nomisApi.getRequestBody(putRequestedFor(urlEqualTo("/agency/$agencyId/phones")), jsonMapper)
@@ -5489,7 +5489,7 @@ class AgencyRegisterToNomisIntTest(
 
         @Test
         fun `deleted will refresh all NOMIS phone numbers`() {
-          publishAgencyPhoneEvent("register.agency.phone.deleted", agencyId, dpsPhoneId)
+          publishAgencyPhoneEvent("register.other-agency.phone.deleted", agencyId, dpsPhoneId)
           waitForAnyProcessingToComplete()
 
           val request: UpdateAgencyPhoneNumbersRequest = NomisApiExtension.nomisApi.getRequestBody(putRequestedFor(urlEqualTo("/agency/$agencyId/phones")), jsonMapper)
@@ -5505,7 +5505,7 @@ class AgencyRegisterToNomisIntTest(
   }
 
   @Nested
-  @DisplayName("register.agency.address.*")
+  @DisplayName("register.other-agency.address.*")
   inner class AgencyAddress {
     val dpsAddressId = 12345L
     val nomisAddressId = 8765L
@@ -5527,7 +5527,7 @@ class AgencyRegisterToNomisIntTest(
       inner class WhenNomisCreated {
         @BeforeEach
         fun setUp() {
-          publishAgencyAddressEvent("register.agency.address.inserted", agencyId, dpsAddressId, source = "NOMIS")
+          publishAgencyAddressEvent("register.other-agency.address.inserted", agencyId, dpsAddressId, source = "NOMIS")
           waitForAnyProcessingToComplete()
         }
 
@@ -5559,7 +5559,7 @@ class AgencyRegisterToNomisIntTest(
               ),
             ),
           )
-          publishAgencyAddressEvent("register.agency.address.inserted", agencyId, dpsAddressId)
+          publishAgencyAddressEvent("register.other-agency.address.inserted", agencyId, dpsAddressId)
           waitForAnyProcessingToComplete()
         }
 
@@ -5594,7 +5594,7 @@ class AgencyRegisterToNomisIntTest(
       inner class WhenNomisAmended {
         @BeforeEach
         fun setUp() {
-          publishAgencyAddressEvent("register.agency.address.amended", agencyId, dpsAddressId, source = "NOMIS")
+          publishAgencyAddressEvent("register.other-agency.address.amended", agencyId, dpsAddressId, source = "NOMIS")
           waitForAnyProcessingToComplete()
         }
 
@@ -5631,7 +5631,7 @@ class AgencyRegisterToNomisIntTest(
 
         @Test
         fun `amended will refresh all NOMIS addresses`() {
-          publishAgencyAddressEvent("register.agency.address.amended", agencyId, dpsAddressId)
+          publishAgencyAddressEvent("register.other-agency.address.amended", agencyId, dpsAddressId)
           waitForAnyProcessingToComplete()
 
           val request: UpdateAgencyAddressesRequest = NomisApiExtension.nomisApi.getRequestBody(putRequestedFor(urlEqualTo("/agency/$agencyId/addresses")), jsonMapper)
@@ -5645,7 +5645,7 @@ class AgencyRegisterToNomisIntTest(
 
         @Test
         fun `deleted will refresh all NOMIS addresses`() {
-          publishAgencyAddressEvent("register.agency.address.deleted", agencyId, dpsAddressId)
+          publishAgencyAddressEvent("register.other-agency.address.deleted", agencyId, dpsAddressId)
           waitForAnyProcessingToComplete()
 
           val request: UpdateAgencyAddressesRequest = NomisApiExtension.nomisApi.getRequestBody(putRequestedFor(urlEqualTo("/agency/$agencyId/addresses")), jsonMapper)
