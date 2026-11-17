@@ -5,7 +5,7 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.util.context.Context
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.api.LegacySyncResourceApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.api.NOMISSynchronisationAPIApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.model.LegacyAgencyDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
@@ -19,7 +19,7 @@ class AgencyRegistersDpsApiService(
     Context.of("api", "AgencyRegistersDpsApiService"),
   )
 
-  private val api = LegacySyncResourceApi(webClient)
+  private val api = NOMISSynchronisationAPIApi(webClient)
 
   suspend fun getAgency(agencyId: String): LegacyAgencyDto? = api.prepare(api.getAgencyRequestConfig(agencyId)).retrieve().awaitBodyOrNullForNotFound(retrySpec)
   suspend fun getAgencyForReconciliation(agencyId: String): LegacyAgencyDto? = api.prepare(api.getAgencyDetailsRequestConfig(agencyId)).retrieve().awaitBodyOrNullForNotFound(retrySpec)

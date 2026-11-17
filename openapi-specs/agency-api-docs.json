@@ -1,22 +1,57 @@
 {
   "openapi" : "3.1.0",
   "info" : {
-    "title" : "Prison Register service",
-    "description" : "A service that provides HMPPS Prison Information",
+    "title" : "HMPPS Agency Register service",
+    "description" : "<p>A service that provides HMPPS Prison and other agency Information</p>\n<p>Main registry information is:</p>\n<ul>\n  <li>Prisons</li>\n  <li>Probation Offices</li>\n  <li>Hospitals</li>\n  <li>Courts</li>\n  <li>Approved Premises</li>\n  <li>Police Custody Suites</li>\n  <li>Other Agencies e.g. Airports, PECS</li>\n</ul>\n",
     "contact" : {
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-11-13.736.52f73e9"
+    "version" : "2026-11-16.742.ade6372",
+    "summary" : "HMPPS Prison, Court and other agency information"
   },
   "servers" : [ {
     "url" : "https://prison-register-dev.hmpps.service.justice.gov.uk",
     "description" : "Generated server url"
   } ],
+  "tags" : [ {
+    "name" : "HMPPS Agency Register API",
+    "description" : "\n  <h2>API for HMPPS Clients</h2>\n  <p>Requires role <b>HMPPS_REGISTERS_API__R</b></p> \n  <p>Provides read-only access to HMPPS agency data, including prisons, probation offices, police custody suites, courts, hospitals and other agencies</p>"
+  }, {
+    "name" : "HMPPS Prison Register API",
+    "description" : "\n  <h2>API for HMPPS and Public Clients</h2>\n  <p>No role required</p> \n  <p>Provides read-only access to HMPPS Prison data</p>"
+  }, {
+    "name" : "Approved Premises Maintenance API",
+    "description" : "\n  <h2>API for updating Approved Premises data</h2>\n  <p>Requires HMPPS_REGISTERS_API__MAINTAIN__RW</p> \n  <p>Provides ability to view or update any Approved Premises data</p>"
+  }, {
+    "name" : "Court Maintenance API",
+    "description" : "\n  <h2>API for updating Court data</h2>\n  <p>Requires HMPPS_REGISTERS_API__MAINTAIN__RW</p> \n  <p>Provides ability to view or update any Court data</p>"
+  }, {
+    "name" : "NOMIS Synchronisation API",
+    "description" : "\n  <h2>API for synchronising data from and to NOMIS</h2>\n  <p>Requires ROLE_HMPPS_REGISTERS_API__SYNCHRONISATION__RW</p> \n  <p>Used only for the Dps to NOMIS synchronisation service</p>"
+  }, {
+    "name" : "Police Custody Suite Maintenance API",
+    "description" : "\n  <h2>API for updating Police Custody Suite data</h2>\n  <p>Requires HMPPS_REGISTERS_API__MAINTAIN__RW</p> \n  <p>Provides ability to view or update any Police Custody Suite data</p>"
+  }, {
+    "name" : "Probation Office Maintenance API",
+    "description" : "\n  <h2>API for updating Probation Office data</h2>\n  <p>Requires HMPPS_REGISTERS_API__MAINTAIN__RW</p> \n  <p>Provides ability to view or update any Probation Office data</p>"
+  }, {
+    "name" : "Other Agency Maintenance API",
+    "description" : "\n  <h2>API for updating Other Agency data</h2>\n  <p>Requires HMPPS_REGISTERS_API__MAINTAIN__RW</p> \n  <p>Provides ability to view or update any Other Agency data, for instance PECS, Airports</p>"
+  }, {
+    "name" : "Agency Reference Data API",
+    "description" : "\n  <h2>API for retrieving Agency Reference Data</h2>\n  <p>Requires HMPPS_REGISTERS_API__MAINTAIN__RW</p> \n  <p>Provides ability to view Agency Reference Data. The majority of which originates from NOMIS</p>"
+  }, {
+    "name" : "Hospital Maintenance API",
+    "description" : "\n  <h2>API for updating Hospital data</h2>\n  <p>Requires HMPPS_REGISTERS_API__MAINTAIN__RW</p> \n  <p>Provides ability to view or update any Hospital data</p>"
+  }, {
+    "name" : "Prison Maintenance API",
+    "description" : "\n  <h2>API for updating HMPPS Prison data</h2>\n  <p>Requires ROLE_MAINTAIN_REF_DATA or ROLE_MAINTAIN_PRISON_DATA or HMPPS_REGISTERS_API__MAINTAIN__RW with write scope</p> \n  <p>Provides ability to update HMPPS Prison data</p>"
+  } ],
   "paths" : {
     "/secure/prisons/id/{prisonId}/department/contact-details" : {
       "get" : {
-        "tags" : [ "prison-contact-details-resource" ],
+        "tags" : [ "Prison Maintenance API" ],
         "summary" : "Get a prison department's contact details",
         "operationId" : "getContactDetails",
         "parameters" : [ {
@@ -79,7 +114,7 @@
         }
       },
       "put" : {
-        "tags" : [ "prison-contact-details-resource" ],
+        "tags" : [ "Prison Maintenance API" ],
         "summary" : "Change a prison department's contact details",
         "operationId" : "updateContactDetails",
         "parameters" : [ {
@@ -157,7 +192,7 @@
         } ]
       },
       "post" : {
-        "tags" : [ "prison-contact-details-resource" ],
+        "tags" : [ "Prison Maintenance API" ],
         "summary" : "Create a prison department's contact details",
         "operationId" : "createContactDetails",
         "parameters" : [ {
@@ -223,7 +258,7 @@
         } ]
       },
       "delete" : {
-        "tags" : [ "prison-contact-details-resource" ],
+        "tags" : [ "Prison Maintenance API" ],
         "summary" : "Remove a prison department's contact details",
         "operationId" : "deletePhoneNumber",
         "parameters" : [ {
@@ -295,7 +330,7 @@
     },
     "/probation-offices/id/{probationOfficeId}" : {
       "get" : {
-        "tags" : [ "probation-office-resource" ],
+        "tags" : [ "Probation Office Maintenance API", "HMPPS Agency Register API" ],
         "summary" : "Get specified probation office",
         "description" : "Information on a specific probation office",
         "operationId" : "getProbationOfficeFromId",
@@ -327,7 +362,7 @@
         }
       },
       "put" : {
-        "tags" : [ "probation-office-resource" ],
+        "tags" : [ "Probation Office Maintenance API" ],
         "summary" : "Update specified probation office details",
         "description" : "Updates probation office information, excluding its addresses, email addresses and phone numbers. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "updateProbationOffice",
@@ -409,7 +444,7 @@
         }
       },
       "delete" : {
-        "tags" : [ "probation-office-resource" ],
+        "tags" : [ "Probation Office Maintenance API" ],
         "summary" : "Delete specified probation office",
         "description" : "Deletes a probation office, along with any addresses, email addresses and phone numbers associated with it. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "deleteProbationOffice",
@@ -466,7 +501,7 @@
     },
     "/probation-offices/id/{probationOfficeId}/phone-number/{phoneNumberId}" : {
       "put" : {
-        "tags" : [ "probation-office-resource" ],
+        "tags" : [ "Probation Office Maintenance API" ],
         "summary" : "Update specified probation office phone number",
         "description" : "Updates a single phone number for a probation office. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "updateProbationOfficePhoneNumber",
@@ -560,7 +595,7 @@
         }
       },
       "delete" : {
-        "tags" : [ "probation-office-resource" ],
+        "tags" : [ "Probation Office Maintenance API" ],
         "summary" : "Delete specified probation office phone number",
         "description" : "Deletes a single phone number for a probation office. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "deleteProbationOfficePhoneNumber",
@@ -629,7 +664,7 @@
     },
     "/probation-offices/id/{probationOfficeId}/email-address/{emailAddressId}" : {
       "put" : {
-        "tags" : [ "probation-office-resource" ],
+        "tags" : [ "Probation Office Maintenance API" ],
         "summary" : "Update specified probation office email address",
         "description" : "Updates a single email address for a probation office. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "updateProbationOfficeEmailAddress",
@@ -723,7 +758,7 @@
         }
       },
       "delete" : {
-        "tags" : [ "probation-office-resource" ],
+        "tags" : [ "Probation Office Maintenance API" ],
         "summary" : "Delete specified probation office email address",
         "description" : "Deletes a single email address for a probation office. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "deleteProbationOfficeEmailAddress",
@@ -792,7 +827,7 @@
     },
     "/probation-offices/id/{probationOfficeId}/address/{addressId}" : {
       "put" : {
-        "tags" : [ "probation-office-resource" ],
+        "tags" : [ "Probation Office Maintenance API" ],
         "summary" : "Update specified probation office address",
         "description" : "Updates a single address for a probation office. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "updateProbationOfficeAddress",
@@ -886,7 +921,7 @@
         }
       },
       "delete" : {
-        "tags" : [ "probation-office-resource" ],
+        "tags" : [ "Probation Office Maintenance API" ],
         "summary" : "Delete specified probation office address",
         "description" : "Deletes a single address for a probation office. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "deleteProbationOfficeAddress",
@@ -955,7 +990,7 @@
     },
     "/prison-maintenance/id/{prisonId}" : {
       "put" : {
-        "tags" : [ "prison-maintenance-resource" ],
+        "tags" : [ "Prison Maintenance API" ],
         "summary" : "Update specified prison details",
         "description" : "Updates prison information, role required is MAINTAIN_REF_DATA or MAINTAIN_PRISON_DATA",
         "operationId" : "updatePrison",
@@ -1044,7 +1079,7 @@
     },
     "/prison-maintenance/id/{prisonId}/welsh-address/{addressId}" : {
       "put" : {
-        "tags" : [ "prison-address-maintenance-resource" ],
+        "tags" : [ "Prison Maintenance API" ],
         "operationId" : "updateWelshAddress",
         "parameters" : [ {
           "name" : "prisonId",
@@ -1098,7 +1133,7 @@
     },
     "/prison-maintenance/id/{prisonId}/area" : {
       "put" : {
-        "tags" : [ "prison-maintenance-resource" ],
+        "tags" : [ "Prison Maintenance API" ],
         "summary" : "Updates specified prison area details",
         "description" : "Updates prison area information, role required is MAINTAIN_REF_DATA or MAINTAIN_PRISON_DATA",
         "operationId" : "updatePrisonArea",
@@ -1187,7 +1222,7 @@
     },
     "/prison-maintenance/id/{prisonId}/address/{addressId}" : {
       "put" : {
-        "tags" : [ "prison-address-maintenance-resource" ],
+        "tags" : [ "Prison Maintenance API" ],
         "summary" : "Update specified address details",
         "description" : "Updates address information, role required is MAINTAIN_REF_DATA or MAINTAIN_PRISON_DATA",
         "operationId" : "updateAddress",
@@ -1286,7 +1321,7 @@
         } ]
       },
       "delete" : {
-        "tags" : [ "prison-address-maintenance-resource" ],
+        "tags" : [ "Prison Maintenance API" ],
         "summary" : "Delete specified address for specified Prison",
         "description" : "Deletes address information for a Prison, role required is MAINTAIN_REF_DATA or MAINTAIN_PRISON_DATA",
         "operationId" : "deleteAddress",
@@ -1360,7 +1395,7 @@
     },
     "/police-custody-suites/id/{policeCustodySuiteId}" : {
       "get" : {
-        "tags" : [ "police-custody-suite-resource" ],
+        "tags" : [ "Police Custody Suite Maintenance API", "HMPPS Agency Register API" ],
         "summary" : "Get specified police custody suite",
         "description" : "Information on a specific police custody suite",
         "operationId" : "getPoliceCustodySuiteFromId",
@@ -1392,7 +1427,7 @@
         }
       },
       "put" : {
-        "tags" : [ "police-custody-suite-resource" ],
+        "tags" : [ "Police Custody Suite Maintenance API" ],
         "summary" : "Update specified police custody suite details",
         "description" : "Updates police custody suite information, excluding its addresses, email addresses and phone numbers. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "updatePoliceCustodySuite",
@@ -1474,7 +1509,7 @@
         }
       },
       "delete" : {
-        "tags" : [ "police-custody-suite-resource" ],
+        "tags" : [ "Police Custody Suite Maintenance API" ],
         "summary" : "Delete specified police custody suite",
         "description" : "Deletes a police custody suite, along with any addresses, email addresses and phone numbers associated with it. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "deletePoliceCustodySuite",
@@ -1531,7 +1566,7 @@
     },
     "/police-custody-suites/id/{policeCustodySuiteId}/phone-number/{phoneNumberId}" : {
       "put" : {
-        "tags" : [ "police-custody-suite-resource" ],
+        "tags" : [ "Police Custody Suite Maintenance API" ],
         "summary" : "Update specified police custody suite phone number",
         "description" : "Updates a single phone number for a police custody suite. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "updatePoliceCustodySuitePhoneNumber",
@@ -1625,7 +1660,7 @@
         }
       },
       "delete" : {
-        "tags" : [ "police-custody-suite-resource" ],
+        "tags" : [ "Police Custody Suite Maintenance API" ],
         "summary" : "Delete specified police custody suite phone number",
         "description" : "Deletes a single phone number for a police custody suite. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "deletePoliceCustodySuitePhoneNumber",
@@ -1694,7 +1729,7 @@
     },
     "/police-custody-suites/id/{policeCustodySuiteId}/email-address/{emailAddressId}" : {
       "put" : {
-        "tags" : [ "police-custody-suite-resource" ],
+        "tags" : [ "Police Custody Suite Maintenance API" ],
         "summary" : "Update specified police custody suite email address",
         "description" : "Updates a single email address for a police custody suite. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "updatePoliceCustodySuiteEmailAddress",
@@ -1788,7 +1823,7 @@
         }
       },
       "delete" : {
-        "tags" : [ "police-custody-suite-resource" ],
+        "tags" : [ "Police Custody Suite Maintenance API" ],
         "summary" : "Delete specified police custody suite email address",
         "description" : "Deletes a single email address for a police custody suite. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "deletePoliceCustodySuiteEmailAddress",
@@ -1857,7 +1892,7 @@
     },
     "/police-custody-suites/id/{policeCustodySuiteId}/address/{addressId}" : {
       "put" : {
-        "tags" : [ "police-custody-suite-resource" ],
+        "tags" : [ "Police Custody Suite Maintenance API" ],
         "summary" : "Update specified police custody suite address",
         "description" : "Updates a single address for a police custody suite. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "updatePoliceCustodySuiteAddress",
@@ -1951,7 +1986,7 @@
         }
       },
       "delete" : {
-        "tags" : [ "police-custody-suite-resource" ],
+        "tags" : [ "Police Custody Suite Maintenance API" ],
         "summary" : "Delete specified police custody suite address",
         "description" : "Deletes a single address for a police custody suite. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "deletePoliceCustodySuiteAddress",
@@ -2020,7 +2055,7 @@
     },
     "/other-agencies/id/{agencyId}" : {
       "get" : {
-        "tags" : [ "other-agency-resource" ],
+        "tags" : [ "Other Agency Maintenance API", "HMPPS Agency Register API" ],
         "summary" : "Get specified agency",
         "description" : "Information on a specific agency",
         "operationId" : "getOtherAgencyFromId",
@@ -2052,7 +2087,7 @@
         }
       },
       "put" : {
-        "tags" : [ "other-agency-resource" ],
+        "tags" : [ "Other Agency Maintenance API" ],
         "summary" : "Update specified agency details",
         "description" : "Updates agency information, excluding its addresses, email addresses and phone numbers. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "updateOtherAgency",
@@ -2134,7 +2169,7 @@
         }
       },
       "delete" : {
-        "tags" : [ "other-agency-resource" ],
+        "tags" : [ "Other Agency Maintenance API" ],
         "summary" : "Delete specified agency",
         "description" : "Deletes a agency, along with any addresses, email addresses and phone numbers associated with it. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "deleteOtherAgency",
@@ -2191,7 +2226,7 @@
     },
     "/other-agencies/id/{agencyId}/phone-number/{phoneNumberId}" : {
       "put" : {
-        "tags" : [ "other-agency-resource" ],
+        "tags" : [ "Other Agency Maintenance API" ],
         "summary" : "Update specified agency phone number",
         "description" : "Updates a single phone number for a agency. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "updateOtherAgencyPhoneNumber",
@@ -2285,7 +2320,7 @@
         }
       },
       "delete" : {
-        "tags" : [ "other-agency-resource" ],
+        "tags" : [ "Other Agency Maintenance API" ],
         "summary" : "Delete specified agency phone number",
         "description" : "Deletes a single phone number for a agency. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "deleteOtherAgencyPhoneNumber",
@@ -2354,7 +2389,7 @@
     },
     "/other-agencies/id/{agencyId}/email-address/{emailAddressId}" : {
       "put" : {
-        "tags" : [ "other-agency-resource" ],
+        "tags" : [ "Other Agency Maintenance API" ],
         "summary" : "Update specified agency email address",
         "description" : "Updates a single email address for a agency. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "updateOtherAgencyEmailAddress",
@@ -2448,7 +2483,7 @@
         }
       },
       "delete" : {
-        "tags" : [ "other-agency-resource" ],
+        "tags" : [ "Other Agency Maintenance API" ],
         "summary" : "Delete specified agency email address",
         "description" : "Deletes a single email address for a agency. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "deleteOtherAgencyEmailAddress",
@@ -2517,7 +2552,7 @@
     },
     "/other-agencies/id/{agencyId}/address/{addressId}" : {
       "put" : {
-        "tags" : [ "other-agency-resource" ],
+        "tags" : [ "Other Agency Maintenance API" ],
         "summary" : "Update specified agency address",
         "description" : "Updates a single address for a agency. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "updateOtherAgencyAddress",
@@ -2611,7 +2646,7 @@
         }
       },
       "delete" : {
-        "tags" : [ "other-agency-resource" ],
+        "tags" : [ "Other Agency Maintenance API" ],
         "summary" : "Delete specified agency address",
         "description" : "Deletes a single address for a agency. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "deleteOtherAgencyAddress",
@@ -2680,7 +2715,7 @@
     },
     "/legacy/sync/prison/id/{agencyId}/phone-number" : {
       "put" : {
-        "tags" : [ "legacy-sync-resource" ],
+        "tags" : [ "NOMIS Synchronisation API" ],
         "summary" : "Updates prison phone number by creating or updating a department record",
         "description" : "Used for synchronising data from NOMIS. Role required is ROLE_HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "updatePrisonPhoneNumber",
@@ -2734,7 +2769,7 @@
     },
     "/hospitals/id/{hospitalId}" : {
       "get" : {
-        "tags" : [ "hospital-resource" ],
+        "tags" : [ "Hospital Maintenance API", "HMPPS Agency Register API" ],
         "summary" : "Get specified hospital",
         "description" : "Information on a specific hospital",
         "operationId" : "getHospitalFromId",
@@ -2766,7 +2801,7 @@
         }
       },
       "put" : {
-        "tags" : [ "hospital-resource" ],
+        "tags" : [ "Hospital Maintenance API" ],
         "summary" : "Update specified hospital details",
         "description" : "Updates hospital information, excluding its addresses and phone numbers. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "updateHospital",
@@ -2848,7 +2883,7 @@
         }
       },
       "delete" : {
-        "tags" : [ "hospital-resource" ],
+        "tags" : [ "Hospital Maintenance API" ],
         "summary" : "Delete specified hospital",
         "description" : "Deletes a hospital, along with any addresses and phone numbers associated with it. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "deleteHospital",
@@ -2905,7 +2940,7 @@
     },
     "/hospitals/id/{hospitalId}/phone-number/{phoneNumberId}" : {
       "put" : {
-        "tags" : [ "hospital-resource" ],
+        "tags" : [ "Hospital Maintenance API" ],
         "summary" : "Update specified hospital phone number",
         "description" : "Updates a single phone number for a hospital. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "updateHospitalPhoneNumber",
@@ -2999,7 +3034,7 @@
         }
       },
       "delete" : {
-        "tags" : [ "hospital-resource" ],
+        "tags" : [ "Hospital Maintenance API" ],
         "summary" : "Delete specified hospital phone number",
         "description" : "Deletes a single phone number for a hospital. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "deleteHospitalPhoneNumber",
@@ -3068,7 +3103,7 @@
     },
     "/hospitals/id/{hospitalId}/address/{addressId}" : {
       "put" : {
-        "tags" : [ "hospital-resource" ],
+        "tags" : [ "Hospital Maintenance API" ],
         "summary" : "Update specified hospital address",
         "description" : "Updates a single address for a hospital. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "updateHospitalAddress",
@@ -3162,7 +3197,7 @@
         }
       },
       "delete" : {
-        "tags" : [ "hospital-resource" ],
+        "tags" : [ "Hospital Maintenance API" ],
         "summary" : "Delete specified hospital address",
         "description" : "Deletes a single address for a hospital. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "deleteHospitalAddress",
@@ -3231,7 +3266,7 @@
     },
     "/courts/id/{courtId}" : {
       "get" : {
-        "tags" : [ "court-resource" ],
+        "tags" : [ "Court Maintenance API", "HMPPS Agency Register API" ],
         "summary" : "Get specified court",
         "description" : "Information on a specific court",
         "operationId" : "getCourtFromId",
@@ -3263,7 +3298,7 @@
         }
       },
       "put" : {
-        "tags" : [ "court-resource" ],
+        "tags" : [ "Court Maintenance API" ],
         "summary" : "Update specified court details",
         "description" : "Updates court information, excluding its addresses. Requires role HMPPS_REGISTERS_API__MAINTAIN__RW",
         "operationId" : "updateCourt",
@@ -3345,7 +3380,7 @@
         }
       },
       "delete" : {
-        "tags" : [ "court-resource" ],
+        "tags" : [ "Court Maintenance API" ],
         "summary" : "Delete specified court",
         "description" : "Deletes a court, along with any addresses, email addresses and phone numbers associated with it. Requires role HMPPS_REGISTERS_API__MAINTAIN__RW",
         "operationId" : "deleteCourt",
@@ -3402,7 +3437,7 @@
     },
     "/courts/id/{courtId}/phone-number/{phoneNumberId}" : {
       "put" : {
-        "tags" : [ "court-resource" ],
+        "tags" : [ "Court Maintenance API" ],
         "summary" : "Update specified court phone number",
         "description" : "Updates a single phone number for a court. Requires role HMPPS_REGISTERS_API__MAINTAIN__RW",
         "operationId" : "updateCourtPhoneNumber",
@@ -3496,7 +3531,7 @@
         }
       },
       "delete" : {
-        "tags" : [ "court-resource" ],
+        "tags" : [ "Court Maintenance API" ],
         "summary" : "Delete specified court phone number",
         "description" : "Deletes a single phone number for a court. Requires role HMPPS_REGISTERS_API__MAINTAIN__RW",
         "operationId" : "deleteCourtPhoneNumber",
@@ -3565,7 +3600,7 @@
     },
     "/courts/id/{courtId}/email-address/{emailAddressId}" : {
       "put" : {
-        "tags" : [ "court-resource" ],
+        "tags" : [ "Court Maintenance API" ],
         "summary" : "Update specified court email address",
         "description" : "Updates a single email address for a court. Requires role HMPPS_REGISTERS_API__MAINTAIN__RW",
         "operationId" : "updateCourtEmailAddress",
@@ -3659,7 +3694,7 @@
         }
       },
       "delete" : {
-        "tags" : [ "court-resource" ],
+        "tags" : [ "Court Maintenance API" ],
         "summary" : "Delete specified court email address",
         "description" : "Deletes a single email address for a court. Requires role HMPPS_REGISTERS_API__MAINTAIN__RW",
         "operationId" : "deleteCourtEmailAddress",
@@ -3728,7 +3763,7 @@
     },
     "/courts/id/{courtId}/address/{addressId}" : {
       "put" : {
-        "tags" : [ "court-resource" ],
+        "tags" : [ "Court Maintenance API" ],
         "summary" : "Update specified court address",
         "description" : "Updates a single address for a court. Requires role HMPPS_REGISTERS_API__MAINTAIN__RW",
         "operationId" : "updateCourtAddress",
@@ -3822,7 +3857,7 @@
         }
       },
       "delete" : {
-        "tags" : [ "court-resource" ],
+        "tags" : [ "Court Maintenance API" ],
         "summary" : "Delete specified court address",
         "description" : "Deletes a single address for a court. Requires role HMPPS_REGISTERS_API__MAINTAIN__RW",
         "operationId" : "deleteCourtAddress",
@@ -3891,7 +3926,7 @@
     },
     "/approved-premises/id/{approvedPremisesId}" : {
       "get" : {
-        "tags" : [ "approved-premises-resource" ],
+        "tags" : [ "Approved Premises Maintenance API", "HMPPS Agency Register API" ],
         "summary" : "Get specified approved premises",
         "description" : "Information on a specific approved premises",
         "operationId" : "getApprovedPremisesFromId",
@@ -3923,7 +3958,7 @@
         }
       },
       "put" : {
-        "tags" : [ "approved-premises-resource" ],
+        "tags" : [ "Approved Premises Maintenance API" ],
         "summary" : "Update specified approved premises details",
         "description" : "Updates approved premises information, excluding its addresses, email addresses and phone numbers. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "updateApprovedPremises",
@@ -4005,7 +4040,7 @@
         }
       },
       "delete" : {
-        "tags" : [ "approved-premises-resource" ],
+        "tags" : [ "Approved Premises Maintenance API" ],
         "summary" : "Delete specified approved premises",
         "description" : "Deletes a approved premises, along with any addresses, email addresses and phone numbers associated with it. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "deleteApprovedPremises",
@@ -4062,7 +4097,7 @@
     },
     "/approved-premises/id/{approvedPremisesId}/phone-number/{phoneNumberId}" : {
       "put" : {
-        "tags" : [ "approved-premises-resource" ],
+        "tags" : [ "Approved Premises Maintenance API" ],
         "summary" : "Update specified approved premises phone number",
         "description" : "Updates a single phone number for a approved premises. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "updateApprovedPremisesPhoneNumber",
@@ -4156,7 +4191,7 @@
         }
       },
       "delete" : {
-        "tags" : [ "approved-premises-resource" ],
+        "tags" : [ "Approved Premises Maintenance API" ],
         "summary" : "Delete specified approved premises phone number",
         "description" : "Deletes a single phone number for a approved premises. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "deleteApprovedPremisesPhoneNumber",
@@ -4225,7 +4260,7 @@
     },
     "/approved-premises/id/{approvedPremisesId}/email-address/{emailAddressId}" : {
       "put" : {
-        "tags" : [ "approved-premises-resource" ],
+        "tags" : [ "Approved Premises Maintenance API" ],
         "summary" : "Update specified approved premises email address",
         "description" : "Updates a single email address for a approved premises. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "updateApprovedPremisesEmailAddress",
@@ -4319,7 +4354,7 @@
         }
       },
       "delete" : {
-        "tags" : [ "approved-premises-resource" ],
+        "tags" : [ "Approved Premises Maintenance API" ],
         "summary" : "Delete specified approved premises email address",
         "description" : "Deletes a single email address for a approved premises. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "deleteApprovedPremisesEmailAddress",
@@ -4388,7 +4423,7 @@
     },
     "/approved-premises/id/{approvedPremisesId}/address/{addressId}" : {
       "put" : {
-        "tags" : [ "approved-premises-resource" ],
+        "tags" : [ "Approved Premises Maintenance API" ],
         "summary" : "Update specified approved premises address",
         "description" : "Updates a single address for a approved premises. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "updateApprovedPremisesAddress",
@@ -4482,7 +4517,7 @@
         }
       },
       "delete" : {
-        "tags" : [ "approved-premises-resource" ],
+        "tags" : [ "Approved Premises Maintenance API" ],
         "summary" : "Delete specified approved premises address",
         "description" : "Deletes a single address for a approved premises. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "deleteApprovedPremisesAddress",
@@ -4551,7 +4586,7 @@
     },
     "/probation-offices" : {
       "get" : {
-        "tags" : [ "probation-office-resource" ],
+        "tags" : [ "Probation Office Maintenance API", "HMPPS Agency Register API" ],
         "summary" : "Get all probation offices",
         "description" : "Information on all probation offices",
         "operationId" : "getProbationOffices",
@@ -4591,7 +4626,7 @@
         }
       },
       "post" : {
-        "tags" : [ "probation-office-resource" ],
+        "tags" : [ "Probation Office Maintenance API" ],
         "summary" : "Create a new probation office",
         "description" : "Creates a probation office, along with any addresses, email addresses and phone numbers supplied. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "createProbationOffice",
@@ -4651,7 +4686,7 @@
     },
     "/probation-offices/id/{probationOfficeId}/phone-number" : {
       "post" : {
-        "tags" : [ "probation-office-resource" ],
+        "tags" : [ "Probation Office Maintenance API" ],
         "summary" : "Create a probation office phone number",
         "description" : "Creates a new phone number for a probation office. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "createProbationOfficePhoneNumber",
@@ -4745,7 +4780,7 @@
     },
     "/probation-offices/id/{probationOfficeId}/email-address" : {
       "post" : {
-        "tags" : [ "probation-office-resource" ],
+        "tags" : [ "Probation Office Maintenance API" ],
         "summary" : "Create a probation office email address",
         "description" : "Creates a new email address for a probation office. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "createProbationOfficeEmailAddress",
@@ -4839,7 +4874,7 @@
     },
     "/probation-offices/id/{probationOfficeId}/address" : {
       "post" : {
-        "tags" : [ "probation-office-resource" ],
+        "tags" : [ "Probation Office Maintenance API" ],
         "summary" : "Create a probation office address",
         "description" : "Creates a new address for a probation office. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "createProbationOfficeAddress",
@@ -4923,7 +4958,7 @@
     },
     "/prisons/prisonsByIds" : {
       "post" : {
-        "tags" : [ "prison-resource" ],
+        "tags" : [ "HMPPS Prison Register API" ],
         "summary" : "Get prisons by IDs",
         "description" : "Get prisons based on their IDs",
         "operationId" : "getPrisonsByIds",
@@ -4956,7 +4991,7 @@
     },
     "/prison-maintenance" : {
       "post" : {
-        "tags" : [ "prison-maintenance-resource" ],
+        "tags" : [ "Prison Maintenance API" ],
         "summary" : "Adds a new prison",
         "description" : "Adds new prison information, role required is MAINTAIN_REF_DATA or MAINTAIN_PRISON_DATA",
         "operationId" : "insertPrison",
@@ -5021,7 +5056,7 @@
     },
     "/prison-maintenance/id/{prisonId}/address" : {
       "post" : {
-        "tags" : [ "prison-address-maintenance-resource" ],
+        "tags" : [ "Prison Maintenance API" ],
         "summary" : "Add Address to existing Prison",
         "description" : "Adds an additional Address to an existing Prison, role required is MAINTAIN_REF_DATA or MAINTAIN_PRISON_DATA",
         "operationId" : "addAddress",
@@ -5110,7 +5145,7 @@
     },
     "/police-custody-suites" : {
       "get" : {
-        "tags" : [ "police-custody-suite-resource" ],
+        "tags" : [ "Police Custody Suite Maintenance API", "HMPPS Agency Register API" ],
         "summary" : "Get all police custody suites",
         "description" : "Information on all police custody suites",
         "operationId" : "getPoliceCustodySuites",
@@ -5150,7 +5185,7 @@
         }
       },
       "post" : {
-        "tags" : [ "police-custody-suite-resource" ],
+        "tags" : [ "Police Custody Suite Maintenance API" ],
         "summary" : "Create a new police custody suite",
         "description" : "Creates a police custody suite, along with any addresses, email addresses and phone numbers supplied. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "createPoliceCustodySuite",
@@ -5210,7 +5245,7 @@
     },
     "/police-custody-suites/id/{policeCustodySuiteId}/phone-number" : {
       "post" : {
-        "tags" : [ "police-custody-suite-resource" ],
+        "tags" : [ "Police Custody Suite Maintenance API" ],
         "summary" : "Create a police custody suite phone number",
         "description" : "Creates a new phone number for a police custody suite. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "createPoliceCustodySuitePhoneNumber",
@@ -5304,7 +5339,7 @@
     },
     "/police-custody-suites/id/{policeCustodySuiteId}/email-address" : {
       "post" : {
-        "tags" : [ "police-custody-suite-resource" ],
+        "tags" : [ "Police Custody Suite Maintenance API" ],
         "summary" : "Create a police custody suite email address",
         "description" : "Creates a new email address for a police custody suite. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "createPoliceCustodySuiteEmailAddress",
@@ -5398,7 +5433,7 @@
     },
     "/police-custody-suites/id/{policeCustodySuiteId}/address" : {
       "post" : {
-        "tags" : [ "police-custody-suite-resource" ],
+        "tags" : [ "Police Custody Suite Maintenance API" ],
         "summary" : "Create a police custody suite address",
         "description" : "Creates a new address for a police custody suite. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "createPoliceCustodySuiteAddress",
@@ -5482,7 +5517,7 @@
     },
     "/other-agencies" : {
       "get" : {
-        "tags" : [ "other-agency-resource" ],
+        "tags" : [ "Other Agency Maintenance API", "HMPPS Agency Register API" ],
         "summary" : "Get all agencies",
         "description" : "Information on all agencies",
         "operationId" : "getOtherAgencies",
@@ -5535,7 +5570,7 @@
         }
       },
       "post" : {
-        "tags" : [ "other-agency-resource" ],
+        "tags" : [ "Other Agency Maintenance API" ],
         "summary" : "Create a new agency",
         "description" : "Creates a agency, along with any addresses, email addresses and phone numbers supplied. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "createOtherAgency",
@@ -5595,7 +5630,7 @@
     },
     "/other-agencies/id/{agencyId}/phone-number" : {
       "post" : {
-        "tags" : [ "other-agency-resource" ],
+        "tags" : [ "Other Agency Maintenance API" ],
         "summary" : "Create a agency phone number",
         "description" : "Creates a new phone number for a agency. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "createOtherAgencyPhoneNumber",
@@ -5689,7 +5724,7 @@
     },
     "/other-agencies/id/{agencyId}/email-address" : {
       "post" : {
-        "tags" : [ "other-agency-resource" ],
+        "tags" : [ "Other Agency Maintenance API" ],
         "summary" : "Create a agency email address",
         "description" : "Creates a new email address for a agency. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "createOtherAgencyEmailAddress",
@@ -5783,7 +5818,7 @@
     },
     "/other-agencies/id/{agencyId}/address" : {
       "post" : {
-        "tags" : [ "other-agency-resource" ],
+        "tags" : [ "Other Agency Maintenance API" ],
         "summary" : "Create a agency address",
         "description" : "Creates a new address for a agency. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "createOtherAgencyAddress",
@@ -5867,7 +5902,7 @@
     },
     "/legacy/sync/prison/id/{agencyId}" : {
       "post" : {
-        "tags" : [ "legacy-sync-resource" ],
+        "tags" : [ "NOMIS Synchronisation API" ],
         "summary" : "Creates or updates a prison",
         "description" : "Used for synchronising data from NOMIS. This creates a prison, or updates it if it already exists, and publishes the corresponding prison-type domain event with source NOMIS. Role required is ROLE_HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "createOrUpdatePrison",
@@ -5941,7 +5976,7 @@
     },
     "/legacy/sync/agency/id/{agencyId}" : {
       "post" : {
-        "tags" : [ "legacy-sync-resource" ],
+        "tags" : [ "NOMIS Synchronisation API" ],
         "summary" : "Creates or updates an agency of any type",
         "description" : "Used for synchronising data from NOMIS. This creates an agency, or updates it if it already exists, and publishes the corresponding agency-type domain event with source NOMIS. Role required is ROLE_HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "createOrUpdateAgency",
@@ -6015,7 +6050,7 @@
     },
     "/legacy/migrate/agency/id/{agencyId}" : {
       "post" : {
-        "tags" : [ "legacy-sync-resource" ],
+        "tags" : [ "NOMIS Synchronisation API" ],
         "summary" : "Migrates an agency of any type",
         "description" : "Used for migrating data from NOMIS. This creates an agency, or updates it if it already exists. Role required is ROLE_HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "migrateAgency",
@@ -6089,7 +6124,7 @@
     },
     "/hospitals" : {
       "get" : {
-        "tags" : [ "hospital-resource" ],
+        "tags" : [ "Hospital Maintenance API", "HMPPS Agency Register API" ],
         "summary" : "Get all hospitals",
         "description" : "Information on all hospitals",
         "operationId" : "getHospitals",
@@ -6138,7 +6173,7 @@
         }
       },
       "post" : {
-        "tags" : [ "hospital-resource" ],
+        "tags" : [ "Hospital Maintenance API" ],
         "summary" : "Create a new hospital",
         "description" : "Creates a hospital, along with any addresses and phone numbers supplied. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "createHospital",
@@ -6198,7 +6233,7 @@
     },
     "/hospitals/id/{hospitalId}/phone-number" : {
       "post" : {
-        "tags" : [ "hospital-resource" ],
+        "tags" : [ "Hospital Maintenance API" ],
         "summary" : "Create a hospital phone number",
         "description" : "Creates a new phone number for a hospital. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "createHospitalPhoneNumber",
@@ -6292,7 +6327,7 @@
     },
     "/hospitals/id/{hospitalId}/address" : {
       "post" : {
-        "tags" : [ "hospital-resource" ],
+        "tags" : [ "Hospital Maintenance API" ],
         "summary" : "Create a hospital address",
         "description" : "Creates a new address for a hospital. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "createHospitalAddress",
@@ -6376,7 +6411,7 @@
     },
     "/courts" : {
       "get" : {
-        "tags" : [ "court-resource" ],
+        "tags" : [ "Court Maintenance API", "HMPPS Agency Register API" ],
         "summary" : "Get all courts",
         "description" : "Information on all courts",
         "operationId" : "getCourts",
@@ -6429,7 +6464,7 @@
         }
       },
       "post" : {
-        "tags" : [ "court-resource" ],
+        "tags" : [ "Court Maintenance API" ],
         "summary" : "Create a new court",
         "description" : "Creates a court, along with any addresses, email addresses and phone numbers supplied. Requires role HMPPS_REGISTERS_API__MAINTAIN__RW",
         "operationId" : "createCourt",
@@ -6489,7 +6524,7 @@
     },
     "/courts/id/{courtId}/phone-number" : {
       "post" : {
-        "tags" : [ "court-resource" ],
+        "tags" : [ "Court Maintenance API" ],
         "summary" : "Create a court phone number",
         "description" : "Creates a new phone number for a court. Requires role HMPPS_REGISTERS_API__MAINTAIN__RW",
         "operationId" : "createCourtPhoneNumber",
@@ -6583,7 +6618,7 @@
     },
     "/courts/id/{courtId}/email-address" : {
       "post" : {
-        "tags" : [ "court-resource" ],
+        "tags" : [ "Court Maintenance API" ],
         "summary" : "Create a court email address",
         "description" : "Creates a new email address for a court. Requires role HMPPS_REGISTERS_API__MAINTAIN__RW",
         "operationId" : "createCourtEmailAddress",
@@ -6677,7 +6712,7 @@
     },
     "/courts/id/{courtId}/address" : {
       "post" : {
-        "tags" : [ "court-resource" ],
+        "tags" : [ "Court Maintenance API" ],
         "summary" : "Create a court address",
         "description" : "Creates a new address for a court. Requires role HMPPS_REGISTERS_API__MAINTAIN__RW",
         "operationId" : "createCourtAddress",
@@ -6761,7 +6796,7 @@
     },
     "/approved-premises" : {
       "get" : {
-        "tags" : [ "approved-premises-resource" ],
+        "tags" : [ "Approved Premises Maintenance API", "HMPPS Agency Register API" ],
         "summary" : "Get all approved premises",
         "description" : "Information on all approved premises",
         "operationId" : "getApprovedPremises",
@@ -6801,7 +6836,7 @@
         }
       },
       "post" : {
-        "tags" : [ "approved-premises-resource" ],
+        "tags" : [ "Approved Premises Maintenance API" ],
         "summary" : "Create a new approved premises",
         "description" : "Creates a approved premises, along with any addresses, email addresses and phone numbers supplied. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "createApprovedPremises",
@@ -6861,7 +6896,7 @@
     },
     "/approved-premises/id/{approvedPremisesId}/phone-number" : {
       "post" : {
-        "tags" : [ "approved-premises-resource" ],
+        "tags" : [ "Approved Premises Maintenance API" ],
         "summary" : "Create a approved premises phone number",
         "description" : "Creates a new phone number for a approved premises. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "createApprovedPremisesPhoneNumber",
@@ -6955,7 +6990,7 @@
     },
     "/approved-premises/id/{approvedPremisesId}/email-address" : {
       "post" : {
-        "tags" : [ "approved-premises-resource" ],
+        "tags" : [ "Approved Premises Maintenance API" ],
         "summary" : "Create a approved premises email address",
         "description" : "Creates a new email address for a approved premises. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "createApprovedPremisesEmailAddress",
@@ -7049,7 +7084,7 @@
     },
     "/approved-premises/id/{approvedPremisesId}/address" : {
       "post" : {
-        "tags" : [ "approved-premises-resource" ],
+        "tags" : [ "Approved Premises Maintenance API" ],
         "summary" : "Create a approved premises address",
         "description" : "Creates a new address for a approved premises. Requires role HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "createApprovedPremisesAddress",
@@ -7133,7 +7168,7 @@
     },
     "/reference-data/suggestions/towns" : {
       "get" : {
-        "tags" : [ "reference-data-controller" ],
+        "tags" : [ "Agency Reference Data API" ],
         "summary" : "Get all town suggestions",
         "description" : "Returns all town suggestions as a flat list of code and description",
         "operationId" : "getTownSuggestions",
@@ -7176,7 +7211,7 @@
     },
     "/reference-data/suggestions/counties" : {
       "get" : {
-        "tags" : [ "reference-data-controller" ],
+        "tags" : [ "Agency Reference Data API" ],
         "summary" : "Get all county suggestions",
         "description" : "Returns all county suggestions as a flat list of code and description",
         "operationId" : "getCountySuggestions",
@@ -7219,7 +7254,7 @@
     },
     "/reference-data/subareas" : {
       "get" : {
-        "tags" : [ "reference-data-controller" ],
+        "tags" : [ "Agency Reference Data API" ],
         "summary" : "Get subareas by area",
         "description" : "Returns subareas with the given parent area code as a flat list of code and description",
         "operationId" : "getSubareasByArea",
@@ -7282,7 +7317,7 @@
     },
     "/reference-data/regions" : {
       "get" : {
-        "tags" : [ "reference-data-controller" ],
+        "tags" : [ "Agency Reference Data API" ],
         "summary" : "Get all regions",
         "description" : "Returns all regions as a flat list of code and description",
         "operationId" : "getRegions",
@@ -7338,7 +7373,7 @@
     },
     "/reference-data/prison-operators" : {
       "get" : {
-        "tags" : [ "reference-data-controller" ],
+        "tags" : [ "Agency Reference Data API" ],
         "summary" : "Get all prison operators",
         "description" : "Returns all prison operators as a flat list of code and description",
         "operationId" : "getPrisonOperators",
@@ -7381,7 +7416,7 @@
     },
     "/reference-data/payroll-regions" : {
       "get" : {
-        "tags" : [ "reference-data-controller" ],
+        "tags" : [ "Agency Reference Data API" ],
         "summary" : "Get all payroll regions",
         "description" : "Returns all payroll regions as a flat list of code and description",
         "operationId" : "getPayrollRegions",
@@ -7437,7 +7472,7 @@
     },
     "/reference-data/local-authorities" : {
       "get" : {
-        "tags" : [ "reference-data-controller" ],
+        "tags" : [ "Agency Reference Data API" ],
         "summary" : "Get all local authorities",
         "description" : "Returns all local authorities as a flat list of code and description",
         "operationId" : "getLocalAuthorities",
@@ -7493,7 +7528,7 @@
     },
     "/reference-data/areas" : {
       "get" : {
-        "tags" : [ "reference-data-controller" ],
+        "tags" : [ "Agency Reference Data API" ],
         "summary" : "Get areas",
         "description" : "Returns areas as a flat list of code and description, optionally filtered by parent region code",
         "operationId" : "getAreas",
@@ -7556,7 +7591,7 @@
     },
     "/prisons" : {
       "get" : {
-        "tags" : [ "prison-resource" ],
+        "tags" : [ "HMPPS Prison Register API" ],
         "summary" : "Get all prisons",
         "description" : "All prisons",
         "operationId" : "getPrisons",
@@ -7579,7 +7614,7 @@
     },
     "/prisons/search" : {
       "get" : {
-        "tags" : [ "prison-resource" ],
+        "tags" : [ "HMPPS Prison Register API" ],
         "summary" : "Get prisons from active and text search",
         "description" : "All prisons",
         "operationId" : "getPrisonsBySearchFilter",
@@ -7656,7 +7691,7 @@
     },
     "/prisons/names" : {
       "get" : {
-        "tags" : [ "prison-resource" ],
+        "tags" : [ "HMPPS Prison Register API" ],
         "summary" : "Get prison name(s)",
         "description" : "prison id and full name",
         "operationId" : "getPrisonNames",
@@ -7698,7 +7733,7 @@
     },
     "/prisons/id/{prisonId}" : {
       "get" : {
-        "tags" : [ "prison-resource" ],
+        "tags" : [ "HMPPS Prison Register API" ],
         "summary" : "Get specified prison",
         "description" : "Information on a specific prison",
         "operationId" : "getPrisonFromId",
@@ -7732,7 +7767,7 @@
     },
     "/prisons/id/{prisonId}/address/{addressId}" : {
       "get" : {
-        "tags" : [ "prison-resource" ],
+        "tags" : [ "HMPPS Prison Register API" ],
         "summary" : "Get specified prison",
         "description" : "Information on a specific prison address",
         "operationId" : "getAddressFromId",
@@ -7778,7 +7813,7 @@
     },
     "/prison-maintenance/id/{prisonId}/details" : {
       "get" : {
-        "tags" : [ "prison-maintenance-resource" ],
+        "tags" : [ "Prison Maintenance API" ],
         "summary" : "Get details of specified prison",
         "description" : "Information on a specific prison",
         "operationId" : "getPrisonDetailsById",
@@ -7812,7 +7847,7 @@
     },
     "/legacy/{agencyId}" : {
       "get" : {
-        "tags" : [ "legacy-sync-resource" ],
+        "tags" : [ "NOMIS Synchronisation API" ],
         "summary" : "Returns details of an agency of any type",
         "description" : "Returns the details of any agency (prison, court, hospital, probation office, approved premises, police custody suite, or generic agency) as a LegacyAgencyDto. Role required is ROLE_HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "getAgency",
@@ -7876,7 +7911,7 @@
     },
     "/legacy/reconciliation/{agencyId}" : {
       "get" : {
-        "tags" : [ "legacy-sync-resource" ],
+        "tags" : [ "NOMIS Synchronisation API" ],
         "summary" : "Returns details of an agency of any type for reconciliation",
         "description" : "Returns the details of any agency (prison, court, hospital, probation office, approved premises, police custody suite, or generic agency) as a LegacyAgencyDto. Role required is ROLE_HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "getAgencyDetails",
@@ -7940,7 +7975,7 @@
     },
     "/legacy/reconciliation/prison/ids/all" : {
       "get" : {
-        "tags" : [ "legacy-sync-resource" ],
+        "tags" : [ "NOMIS Synchronisation API" ],
         "summary" : "Returns IDs of all prisons for reconciliation",
         "description" : "Returns the IDs of all prisons. Role required is ROLE_HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "getAllPrisonIds",
@@ -7980,7 +8015,7 @@
     },
     "/legacy/reconciliation/ids/all" : {
       "get" : {
-        "tags" : [ "legacy-sync-resource" ],
+        "tags" : [ "NOMIS Synchronisation API" ],
         "summary" : "Returns IDs of all non-prison agencies for reconciliation",
         "description" : "Returns the IDs of all courts, hospitals, probation offices, approved premises, police custody suites, and generic agencies. Role required is ROLE_HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "getAllAgencyIds",
@@ -8020,7 +8055,7 @@
     },
     "/legacy/agency/{agencyId}/is-used" : {
       "get" : {
-        "tags" : [ "legacy-sync-resource" ],
+        "tags" : [ "NOMIS Synchronisation API" ],
         "summary" : "Checks whether an agency id is already in use by any agency type",
         "description" : "Checks prisons, courts, hospitals, probation offices, approved premises, police custody suites and generic agencies for the given id. Role required is ROLE_HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "isAgencyIdUsed",
@@ -8077,7 +8112,7 @@
     },
     "/courts/summary" : {
       "get" : {
-        "tags" : [ "court-resource" ],
+        "tags" : [ "Court Maintenance API", "HMPPS Agency Register API" ],
         "summary" : "Get summary of all courts",
         "description" : "Court IDs, names, active status and court types ordered by court ID ascending",
         "operationId" : "getCourtSummaries",
@@ -8132,9 +8167,9 @@
     },
     "/api/agencies" : {
       "get" : {
-        "tags" : [ "public-api-resource" ],
+        "tags" : [ "HMPPS Agency Register API" ],
         "summary" : "Get all agencies",
-        "description" : "Summary information on all agencies, including prisons, probation offices, police custody suites, courts, hospitals and other agencies ordered by agency ID ascending",
+        "description" : "Requires HMPPS_REGISTERS_API__R role. Summary information on all agencies, including prisons, probation offices, police custody suites, courts, hospitals and other agencies ordered by agency ID ascending",
         "operationId" : "getAgencies",
         "parameters" : [ {
           "name" : "activeOnly",
@@ -8162,13 +8197,33 @@
                 }
               }
             }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the HMPPS_REGISTERS_API__R role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
     },
     "/api/agencies/{agencyId}" : {
       "get" : {
-        "tags" : [ "public-api-resource" ],
+        "tags" : [ "HMPPS Agency Register API" ],
         "summary" : "Get details of an agency",
         "description" : "Details of a single agency of any type (court, hospital, police custody suite, probation office, approved premises, prison or other agency)",
         "operationId" : "getPublicAgency",
@@ -8206,13 +8261,33 @@
                 }
               }
             }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the HMPPS_REGISTERS_API__R role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
     },
     "/api/agencies/type/{type}" : {
       "get" : {
-        "tags" : [ "public-api-resource" ],
+        "tags" : [ "HMPPS Agency Register API" ],
         "summary" : "Get all agencies of a type",
         "description" : "Details of all agencies of the specified type (for example: court, hospital, secure hospital, police custody suite, probation office, approved premises, prison)",
         "operationId" : "getAgenciesByType",
@@ -8254,13 +8329,33 @@
                 }
               }
             }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the HMPPS_REGISTERS_API__R role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
     },
     "/api/agencies/legacy-type/{type}" : {
       "get" : {
-        "tags" : [ "public-api-resource" ],
+        "tags" : [ "HMPPS Agency Register API" ],
         "summary" : "Get all agencies using the NOMIS type",
         "description" : "Details of all agencies of the specified legacy (NOMIS) agency type code, e.g. INST, CRT, HOSPITAL, HSHOSP, COMM, CRC, POLICE, POLSTN, APPR, AIRPORT, HOST, IMDC, OUT, PECS, PSY, SCH, STC, YOT, FNP",
         "operationId" : "getAgenciesByLegacyType",
@@ -8311,13 +8406,33 @@
                 }
               }
             }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the HMPPS_REGISTERS_API__R role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
     },
     "/legacy/admin/sync/agency/all" : {
       "delete" : {
-        "tags" : [ "legacy-sync-resource" ],
+        "tags" : [ "NOMIS Synchronisation API" ],
         "summary" : "Deletes all non-prison agency data",
         "description" : "Deletes all synchronized agency data except prisons. Role required is ROLE_HMPPS_REGISTERS_API__SYNCHRONISATION__RW",
         "operationId" : "deleteAllAgencies",
