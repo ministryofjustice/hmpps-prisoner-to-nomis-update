@@ -327,7 +327,8 @@ class PersonLocationReconciliationService(
       }
 
       // from location
-      if (nomisMovement.from?.expectedDpsDescription() != dpsMovement.from.description) {
+      val acceptableOutsideFrom = nomisMovement.directionCode == IN && nomisMovement.from == null && dpsMovement.from.description == "Outside"
+      if (!acceptableOutsideFrom && nomisMovement.from?.expectedDpsDescription() != dpsMovement.from.description) {
         mismatches.add(mismatch(MOVEMENT_FROM_LOCATION, nomisMovement.from?.description, dpsMovement.from.description))
       }
 

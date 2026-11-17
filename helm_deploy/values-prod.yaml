@@ -177,12 +177,10 @@ generic-service:
       schedule: "50 1 * * 6"
     - name: person-location-act-recon
       type: PERSON_LOCATION_ACTIVE_RECON
-      schedule: "30 3 * * *"
-      suspend: true
+      schedule: "0 23 * * 1-5"
     - name: person-location-all-recon
       type: PERSON_LOCATION_ALL_RECON
-      schedule: "30 3 * * *"
-      suspend: true
+      schedule: "0 23 * * 6"
     - name: prisoner-balance-active-recon
       type: PRISONER_BALANCE_ACTIVE_RECON
       schedule: "30 3 * * TUE,WED,THU,FRI"
