@@ -314,6 +314,7 @@ models.forEachIndexed { i, model ->
     skipValidateSpec.set(true)
     inputSpec.set(model.input)
     outputDir.set(buildDirectory.dir("generated/${model.output}").get().asFile.path)
+    cleanupOutput.set(true)
     modelPackage.set("$packagePrefix.${model.packageName}.model")
     apiPackage.set("$packagePrefix.${model.packageName}.api")
     configOptions.set(configValues)
