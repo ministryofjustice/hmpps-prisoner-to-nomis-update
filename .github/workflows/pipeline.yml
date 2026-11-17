@@ -68,6 +68,7 @@ jobs:
       localstack-tag: "4"
       artifact-name: ${{ matrix.tests }}
       java-version: "25"
+      test-report-continue-on-error: true
     needs:
       - gradle-build
       - setup-test-matrix
