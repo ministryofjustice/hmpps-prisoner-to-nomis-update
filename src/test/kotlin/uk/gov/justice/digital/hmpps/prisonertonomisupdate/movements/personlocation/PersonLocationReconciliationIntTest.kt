@@ -741,6 +741,58 @@ class PersonLocationReconciliationIntTest(
     }
 
     @Test
+    fun `inbound null NOMIS from location should match DPS Outside`() = runTest {
+      nomisApi.stubGetOffenderPersonLocations(
+        offenderNo = "A0001TZ",
+        response = offenderPersonLocationsResponse(movements = listOf(validTransferIn.copy(from = null), validCourtOut)),
+      )
+      stubDpsFromDescription(movementIndex = 0, description = "Outside")
+      reconciliationService.generateReport(ALL_PRISONERS)
+      awaitReportFinished()
+
+      verify(telemetryClient, never()).trackEvent(
+        eq("person-location-reconciliation-mismatch"),
+        any(),
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `inbound null NOMIS from location should not match other DPS descriptions`() = runTest {
+      nomisApi.stubGetOffenderPersonLocations(
+        offenderNo = "A0001TZ",
+        response = offenderPersonLocationsResponse(movements = listOf(validTransferIn.copy(from = null), validCourtOut)),
+      )
+      stubDpsFromDescription(movementIndex = 0, description = "Elsewhere")
+      reconciliationService.generateReport(ALL_PRISONERS)
+      awaitReportFinished()
+
+      verifyTelemetry("12345_1", movementInId, MOVEMENT_FROM_LOCATION)
+    }
+
+    @Test
+    fun `outbound null NOMIS from location should not match DPS Outside`() = runTest {
+      nomisApi.stubGetOffenderPersonLocations(
+        offenderNo = "A0001TZ",
+        response = offenderPersonLocationsResponse(movements = listOf(validTransferIn, validCourtOut.copy(from = null))),
+      )
+      stubDpsFromDescription(movementIndex = 1, description = "Outside")
+      reconciliationService.generateReport(ALL_PRISONERS)
+      awaitReportFinished()
+
+      verifyTelemetry("12345_2", movementOutId, MOVEMENT_FROM_LOCATION)
+    }
+
+    private fun stubDpsFromDescription(movementIndex: Int, description: String) {
+      val movements = dpsResponse.series[0].movements.toMutableList()
+      movements[movementIndex] = movements[movementIndex].copy(from = Court(description = description, locationType = "Court", code = "OUTSIDE"))
+      dpsApi.stubReconciliation(
+        personIdentifier = "A0001TZ",
+        response = dpsResponse.copy(series = listOf(dpsResponse.series[0].copy(movements = movements))),
+      )
+    }
+
+    @Test
     fun `comment different`() = runTest {
       nomisApi.stubGetOffenderPersonLocations(
         offenderNo = "A0001TZ",
