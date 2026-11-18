@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-11-16.742.ade6372",
+    "version" : "2026-11-17.748.78c3704",
     "summary" : "HMPPS Prison, Court and other agency information"
   },
   "servers" : [ {
@@ -7589,6 +7589,48 @@
         }
       }
     },
+    "/probation-offices/summary" : {
+      "get" : {
+        "tags" : [ "Probation Office Maintenance API", "HMPPS Agency Register API" ],
+        "summary" : "Get summary of all probation offices",
+        "description" : "Probation office IDs, names and active status ordered by probation office ID ascending",
+        "operationId" : "getProbationOfficeSummaries",
+        "parameters" : [ {
+          "name" : "active",
+          "in" : "query",
+          "description" : "Active",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          },
+          "example" : true
+        }, {
+          "name" : "textSearch",
+          "in" : "query",
+          "description" : "Text search",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "Sheffield"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Successful Operation",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ProbationOfficeSummaryDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/prisons" : {
       "get" : {
         "tags" : [ "HMPPS Prison Register API" ],
@@ -7838,6 +7880,103 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/FullPrisonDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/police-custody-suites/summary" : {
+      "get" : {
+        "tags" : [ "Police Custody Suite Maintenance API", "HMPPS Agency Register API" ],
+        "summary" : "Get summary of all police custody suites",
+        "description" : "Police custody suite IDs, names and active status ordered by police custody suite ID ascending",
+        "operationId" : "getPoliceCustodySuiteSummaries",
+        "parameters" : [ {
+          "name" : "active",
+          "in" : "query",
+          "description" : "Active",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          },
+          "example" : true
+        }, {
+          "name" : "textSearch",
+          "in" : "query",
+          "description" : "Text search",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "Sheffield"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Successful Operation",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/PoliceCustodySuiteSummaryDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/other-agencies/summary" : {
+      "get" : {
+        "tags" : [ "Other Agency Maintenance API", "HMPPS Agency Register API" ],
+        "summary" : "Get summary of all other agencies",
+        "description" : "Other agency IDs, names, active status and agency types ordered by agency ID ascending",
+        "operationId" : "getOtherAgencySummaries",
+        "parameters" : [ {
+          "name" : "active",
+          "in" : "query",
+          "description" : "Active",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          },
+          "example" : true
+        }, {
+          "name" : "textSearch",
+          "in" : "query",
+          "description" : "Text search",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "Sheffield"
+        }, {
+          "name" : "otherAgencyTypeCodes",
+          "in" : "query",
+          "description" : "Agency type codes to filter by",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "AIRPORT", "PROBATION_CRC", "FOREIGN_NATIONAL_PRISON", "VOLUNTARY_HOSTEL", "IMMIGRATION_DETENTION_CENTRE", "OUTSIDE", "PECS", "PSYCHIATRIC_CARE", "CHILDREN_SECURE_HOME", "SECURE_TRAINING_CENTRE", "YOT" ]
+            }
+          },
+          "example" : "AIRPORT, PECS"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Successful Operation",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/OtherAgencySummaryDto"
+                  }
                 }
               }
             }
@@ -8110,6 +8249,57 @@
         }
       }
     },
+    "/hospitals/summary" : {
+      "get" : {
+        "tags" : [ "Hospital Maintenance API", "HMPPS Agency Register API" ],
+        "summary" : "Get summary of all hospitals",
+        "description" : "Hospital IDs, names, active status and high security flag ordered by hospital ID ascending",
+        "operationId" : "getHospitalSummaries",
+        "parameters" : [ {
+          "name" : "active",
+          "in" : "query",
+          "description" : "Active",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          },
+          "example" : true
+        }, {
+          "name" : "textSearch",
+          "in" : "query",
+          "description" : "Text search",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "Sheffield"
+        }, {
+          "name" : "highSecurity",
+          "in" : "query",
+          "description" : "High security",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          },
+          "example" : true
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Successful Operation",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/HospitalSummaryDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/courts/summary" : {
       "get" : {
         "tags" : [ "Court Maintenance API", "HMPPS Agency Register API" ],
@@ -8157,6 +8347,48 @@
                   "type" : "array",
                   "items" : {
                     "$ref" : "#/components/schemas/CourtSummaryDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/approved-premises/summary" : {
+      "get" : {
+        "tags" : [ "Approved Premises Maintenance API", "HMPPS Agency Register API" ],
+        "summary" : "Get summary of all approved premises",
+        "description" : "Approved premises IDs, names and active status ordered by approved premises ID ascending",
+        "operationId" : "getApprovedPremisesSummaries",
+        "parameters" : [ {
+          "name" : "active",
+          "in" : "query",
+          "description" : "Active",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          },
+          "example" : true
+        }, {
+          "name" : "textSearch",
+          "in" : "query",
+          "description" : "Text search",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "Sheffield"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Successful Operation",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ApprovedPremisesSummaryDto"
                   }
                 }
               }
@@ -11080,6 +11312,27 @@
         },
         "required" : [ "active", "addresses", "approvedPremisesId", "approvedPremisesName", "emailAddresses", "phoneNumbers" ]
       },
+      "ProbationOfficeSummaryDto" : {
+        "type" : "object",
+        "description" : "Probation Office summary information",
+        "properties" : {
+          "probationOfficeId" : {
+            "type" : "string",
+            "description" : "Probation Office ID",
+            "example" : "SHEFPB"
+          },
+          "probationOfficeName" : {
+            "type" : "string",
+            "description" : "Name",
+            "example" : "Sheffield Probation Office"
+          },
+          "active" : {
+            "type" : "boolean",
+            "description" : "Whether still active"
+          }
+        },
+        "required" : [ "active", "probationOfficeId", "probationOfficeName" ]
+      },
       "PrisonNameDto" : {
         "type" : "object",
         "description" : "Full name of prison with id",
@@ -11246,6 +11499,53 @@
         },
         "required" : [ "active", "addresses", "categories", "contracted", "departments", "female", "lthse", "male", "operators", "prisonId", "prisonName", "types" ]
       },
+      "PoliceCustodySuiteSummaryDto" : {
+        "type" : "object",
+        "description" : "Police Custody Suite summary information",
+        "properties" : {
+          "policeCustodySuiteId" : {
+            "type" : "string",
+            "description" : "Police Custody Suite ID",
+            "example" : "SHFPCS"
+          },
+          "policeCustodySuiteName" : {
+            "type" : "string",
+            "description" : "Name",
+            "example" : "Sheffield Police Custody Suite"
+          },
+          "active" : {
+            "type" : "boolean",
+            "description" : "Whether still active"
+          }
+        },
+        "required" : [ "active", "policeCustodySuiteId", "policeCustodySuiteName" ]
+      },
+      "OtherAgencySummaryDto" : {
+        "type" : "object",
+        "description" : "Other Agency summary information",
+        "properties" : {
+          "agencyId" : {
+            "type" : "string",
+            "description" : "Agency ID",
+            "example" : "SHEFCC"
+          },
+          "agencyName" : {
+            "type" : "string",
+            "description" : "Name",
+            "example" : "Sheffield Agency"
+          },
+          "active" : {
+            "type" : "boolean",
+            "description" : "Whether still active"
+          },
+          "agencyType" : {
+            "type" : "string",
+            "description" : "Agency type",
+            "example" : "PROBATION_CRC"
+          }
+        },
+        "required" : [ "active", "agencyId", "agencyName", "agencyType" ]
+      },
       "AgencyId" : {
         "type" : "object",
         "properties" : {
@@ -11289,6 +11589,31 @@
         },
         "required" : [ "agencyId", "legacyType", "name" ]
       },
+      "HospitalSummaryDto" : {
+        "type" : "object",
+        "description" : "Hospital summary information",
+        "properties" : {
+          "hospitalId" : {
+            "type" : "string",
+            "description" : "Hospital ID",
+            "example" : "NWCLYC"
+          },
+          "hospitalName" : {
+            "type" : "string",
+            "description" : "Name",
+            "example" : "N Staffs Youth Hospital - Newcastle"
+          },
+          "active" : {
+            "type" : "boolean",
+            "description" : "Whether still active"
+          },
+          "highSecurity" : {
+            "type" : "boolean",
+            "description" : "Whether high security"
+          }
+        },
+        "required" : [ "active", "highSecurity", "hospitalId", "hospitalName" ]
+      },
       "CourtSummaryDto" : {
         "type" : "object",
         "description" : "Court summary information",
@@ -11317,6 +11642,27 @@
           }
         },
         "required" : [ "active", "courtId", "courtName" ]
+      },
+      "ApprovedPremisesSummaryDto" : {
+        "type" : "object",
+        "description" : "Approved Premises summary information",
+        "properties" : {
+          "approvedPremisesId" : {
+            "type" : "string",
+            "description" : "Approved Premises ID",
+            "example" : "SHEFAP"
+          },
+          "approvedPremisesName" : {
+            "type" : "string",
+            "description" : "Name",
+            "example" : "Sheffield Approved Premises"
+          },
+          "active" : {
+            "type" : "boolean",
+            "description" : "Whether still active"
+          }
+        },
+        "required" : [ "active", "approvedPremisesId", "approvedPremisesName" ]
       },
       "AgencySummaryDto" : {
         "type" : "object",

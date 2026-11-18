@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-11-16.2401.b61086e"
+    "version" : "2026-11-17.2405.f38fe4f"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -48171,7 +48171,7 @@
             "example" : "ACTIVE"
           },
           "advanceCreateTransactionId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The transaction id for the advance creation",
             "example" : 123456789
@@ -48183,7 +48183,7 @@
             "example" : "2025-07-14T12:13:14"
           }
         },
-        "required" : [ "advanceAmount", "advanceCreateTransactionId", "caseloadId", "createDatetime", "createdBy", "id", "informationNumber", "lastTransactionTimestamp", "outstandingBalance", "prisonNumber", "repaymentAmount", "startDate", "status" ]
+        "required" : [ "advanceAmount", "caseloadId", "createDatetime", "createdBy", "id", "informationNumber", "lastTransactionTimestamp", "outstandingBalance", "prisonNumber", "repaymentAmount", "startDate", "status" ]
       },
       "PrisonerAggregatedAccountsDto" : {
         "type" : "object",
@@ -48337,9 +48337,20 @@
       "PrisonerHoldProjection" : {
         "type" : "object",
         "properties" : {
+          "clientUniqueRef" : {
+            "type" : [ "string", "null" ]
+          },
+          "holdNumber" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int64"
+          },
           "txnEntrySeq" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "txnId" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "txnEntryDate" : {
             "type" : "string",
@@ -48353,17 +48364,6 @@
           },
           "txnEntryAmount" : {
             "type" : "number"
-          },
-          "txnId" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "clientUniqueRef" : {
-            "type" : [ "string", "null" ]
-          },
-          "holdNumber" : {
-            "type" : [ "integer", "null" ],
-            "format" : "int64"
           }
         },
         "required" : [ "txnEntryAmount", "txnEntryDate", "txnEntrySeq", "txnId" ]
