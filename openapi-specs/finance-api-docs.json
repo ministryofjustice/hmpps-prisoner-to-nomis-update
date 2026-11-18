@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-11-13.1280.c0b82f7"
+    "version" : "2026-11-17.1285.d2c7fce"
   },
   "servers" : [ {
     "url" : "https://prisoner-finance-sync-api-dev.hmpps.service.justice.gov.uk/",
@@ -199,8 +199,8 @@
               }
             }
           },
-          "501" : {
-            "description" : "This endpoint is not yet implemented.",
+          "502" : {
+            "description" : "A dependency error occurred.",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -1669,26 +1669,36 @@
       "SyncUpdateSubscriptionRequest" : {
         "type" : "object",
         "properties" : {
-          "endDate" : {
-            "type" : "string",
+          "startDate" : {
+            "type" : [ "string", "null" ],
             "format" : "date",
-            "description" : "The subscription end date",
-            "example" : "2026-07-01"
+            "description" : "The updated subscription start date - Must be before the end date of the subscription",
+            "example" : "2026-06-14"
+          },
+          "endDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "The updated subscription end date - Must be after the start date of the subscription",
+            "example" : "2026-07-14"
           }
-        },
-        "required" : [ "endDate" ]
+        }
       },
       "SyncUpdateSubscriptionResponse" : {
         "type" : "object",
         "properties" : {
+          "startDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "The updated subscription start date",
+            "example" : "2026-06-14"
+          },
           "endDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The updated subscription end date",
-            "example" : "2026-07-01"
+            "example" : "2026-07-14"
           }
-        },
-        "required" : [ "endDate" ]
+        }
       },
       "GeneralLedgerEntry" : {
         "type" : "object",
@@ -2666,13 +2676,12 @@
             "type" : "string",
             "format" : "date-time"
           },
-          "legacyTransactionId" : {
-            "type" : [ "integer", "null" ],
-            "format" : "int64"
-          },
           "requestId" : {
             "type" : "string",
             "format" : "uuid"
+          },
+          "transactionType" : {
+            "type" : [ "string", "null" ]
           },
           "caseloadId" : {
             "type" : [ "string", "null" ]
@@ -2681,8 +2690,9 @@
             "type" : [ "string", "null" ],
             "format" : "date-time"
           },
-          "transactionType" : {
-            "type" : [ "string", "null" ]
+          "legacyTransactionId" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int64"
           },
           "synchronizedTransactionId" : {
             "type" : "string",
