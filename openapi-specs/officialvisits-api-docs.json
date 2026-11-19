@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-11-10.1370.24c540e"
+    "version" : "2026-11-18.1382.0e4ac72"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -539,6 +539,43 @@
         }
       }
     },
+    "/queue-admin/retry-dlq-messages/{dlqName}" : {
+      "put" : {
+        "tags" : [ "hmpps-queue-resource" ],
+        "description" : "\n\nRequires one of the following roles:\n* OFFICIAL_VISITS_ADMIN",
+        "operationId" : "retryDlqMessages",
+        "parameters" : [ {
+          "name" : "dlqName",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/RetryDlqMessagesBody"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RetryDlqMessagesResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/queue-admin/retry-all-dlqs" : {
       "put" : {
         "tags" : [ "hmpps-queue-resource" ],
@@ -580,6 +617,43 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/PurgeQueueResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/queue-admin/delete-dlq-messages/{dlqName}" : {
+      "put" : {
+        "tags" : [ "hmpps-queue-resource" ],
+        "description" : "\n\nRequires one of the following roles:\n* OFFICIAL_VISITS_ADMIN",
+        "operationId" : "deleteDlqMessages",
+        "parameters" : [ {
+          "name" : "dlqName",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/DeleteDlqMessagesBody"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DeleteDlqMessagesResult"
                 }
               }
             }
@@ -3134,6 +3208,49 @@
         }
       }
     },
+    "/queue-admin/search-dlq-messages/{dlqName}" : {
+      "get" : {
+        "tags" : [ "hmpps-queue-resource" ],
+        "description" : "\n\nRequires one of the following roles:\n* OFFICIAL_VISITS_ADMIN",
+        "operationId" : "searchDlqMessages",
+        "parameters" : [ {
+          "name" : "dlqName",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "filter",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "maxMessages",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 100
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SearchDlqResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/queue-admin/get-dlq-messages/{dlqName}" : {
       "get" : {
         "tags" : [ "hmpps-queue-resource" ],
@@ -4864,6 +4981,44 @@
         },
         "required" : [ "messagesFoundCount" ]
       },
+      "RetryDlqMessagesBody" : {
+        "type" : "object",
+        "properties" : {
+          "messageIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        },
+        "required" : [ "messageIds" ]
+      },
+      "RetryDlqMessagesResult" : {
+        "type" : "object",
+        "properties" : {
+          "messagesFoundCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "messagesRetriedCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "retriedMessageIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "notFoundMessageIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        },
+        "required" : [ "messagesFoundCount", "messagesRetriedCount", "notFoundMessageIds", "retriedMessageIds" ]
+      },
       "PurgeQueueResult" : {
         "type" : "object",
         "properties" : {
@@ -4873,6 +5028,50 @@
           }
         },
         "required" : [ "messagesFoundCount" ]
+      },
+      "DeleteDlqMessagesBody" : {
+        "type" : "object",
+        "properties" : {
+          "messageIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        },
+        "required" : [ "messageIds" ]
+      },
+      "DeleteDlqMessagesResult" : {
+        "type" : "object",
+        "properties" : {
+          "messagesFoundCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "messagesDeletedCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "deletedMessageIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "notFoundMessageIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "failedMessageIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        },
+        "required" : [ "deletedMessageIds", "failedMessageIds", "messagesDeletedCount", "messagesFoundCount", "notFoundMessageIds" ]
       },
       "OfficialVisitUpdateVisitorsRequest" : {
         "type" : "object",
@@ -7604,9 +7803,33 @@
           },
           "messageId" : {
             "type" : "string"
+          },
+          "approximateReceiveCount" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int32"
           }
         },
         "required" : [ "body", "messageId" ]
+      },
+      "SearchDlqResult" : {
+        "type" : "object",
+        "properties" : {
+          "messagesFoundCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "messagesReturnedCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "messages" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/DlqMessage"
+            }
+          }
+        },
+        "required" : [ "messages", "messagesFoundCount", "messagesReturnedCount" ]
       },
       "GetDlqResult" : {
         "type" : "object",
