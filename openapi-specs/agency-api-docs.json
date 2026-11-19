@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-11-17.748.78c3704",
+    "version" : "2026-11-18.753.e327f0f",
     "summary" : "HMPPS Prison, Court and other agency information"
   },
   "servers" : [ {
@@ -7853,12 +7853,46 @@
         }
       }
     },
-    "/prison-maintenance/id/{prisonId}/details" : {
+    "/prisons/id/{prisonId}/details" : {
       "get" : {
-        "tags" : [ "Prison Maintenance API" ],
+        "tags" : [ "Prison Maintenance API", "HMPPS Agency Register API" ],
         "summary" : "Get details of specified prison",
         "description" : "Information on a specific prison",
         "operationId" : "getPrisonDetailsById",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "description" : "Prison ID",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prison ID",
+            "example" : "MDI",
+            "maxLength" : 6,
+            "minLength" : 3
+          },
+          "example" : "MDI"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Successful Operation",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FullPrisonDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prison-maintenance/id/{prisonId}/details" : {
+      "get" : {
+        "tags" : [ "Prison Maintenance API", "HMPPS Agency Register API" ],
+        "summary" : "Get details of specified prison",
+        "description" : "Information on a specific prison",
+        "operationId" : "getPrisonDetailsById_1",
         "parameters" : [ {
           "name" : "prisonId",
           "in" : "path",
