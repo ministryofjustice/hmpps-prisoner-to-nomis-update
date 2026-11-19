@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-11-17.1285.d2c7fce"
+    "version" : "2026-11-18.1292.4f0a5aa"
   },
   "servers" : [ {
     "url" : "https://prisoner-finance-sync-api-dev.hmpps.service.justice.gov.uk/",
@@ -1574,11 +1574,11 @@
             "description" : "The amount paid weekly",
             "example" : 0.5
           },
-          "dayOfPayment" : {
+          "paymentSchedule" : {
             "type" : "string",
-            "description" : "The day the payment is made weekly",
-            "enum" : [ "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY" ],
-            "example" : "MONDAY"
+            "description" : "The day or days the payment is made weekly",
+            "enum" : [ "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY", "MONDAY_TO_FRIDAY" ],
+            "example" : "MONDAY_TO_FRIDAY / TUESDAY"
           },
           "startDate" : {
             "type" : "string",
@@ -1630,7 +1630,7 @@
             "example" : 2101
           }
         },
-        "required" : [ "amount", "createdAt", "createdBy", "dayOfPayment", "legacyPaymentProfileId", "prisonId", "prisonNumber", "startDate", "subAccountCode", "subscriptionType" ]
+        "required" : [ "amount", "createdAt", "createdBy", "legacyPaymentProfileId", "paymentSchedule", "prisonId", "prisonNumber", "startDate", "subAccountCode", "subscriptionType" ]
       },
       "SyncCreateSubscriptionResponse" : {
         "type" : "object",
@@ -2676,12 +2676,9 @@
             "type" : "string",
             "format" : "date-time"
           },
-          "requestId" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "transactionType" : {
-            "type" : [ "string", "null" ]
+          "legacyTransactionId" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int64"
           },
           "caseloadId" : {
             "type" : [ "string", "null" ]
@@ -2690,9 +2687,12 @@
             "type" : [ "string", "null" ],
             "format" : "date-time"
           },
-          "legacyTransactionId" : {
-            "type" : [ "integer", "null" ],
-            "format" : "int64"
+          "requestId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "transactionType" : {
+            "type" : [ "string", "null" ]
           },
           "synchronizedTransactionId" : {
             "type" : "string",
