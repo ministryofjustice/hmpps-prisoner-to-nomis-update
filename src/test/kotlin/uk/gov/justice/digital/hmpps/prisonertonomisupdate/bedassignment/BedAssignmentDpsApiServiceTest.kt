@@ -13,10 +13,12 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.bedassignment.BedAssignmentDpsApiExtension.Companion.bedAssignmentApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.bedassignment.model.BedAssignment
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.bedassignment.model.NomisBedAssignment
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import java.time.LocalDateTime
+import java.util.UUID
 
 @SpringAPIServiceTest
 @Import(BedAssignmentDpsApiService::class, BedAssignmentConfiguration::class, RetryApiService::class)
@@ -112,6 +114,35 @@ class BedAssignmentDpsApiServiceTest {
       bedAssignmentApi.stubGetCellMovementReasonError(12345, 1, 404)
 
       assertThat(apiService.getCellMovementReasonOrNull(12345, 1)).isNull()
+    }
+  }
+
+  @Nested
+  inner class GetBedAssignments {
+    @Test
+    fun `will call the get endpoint with an OAuth2 token and return the assignments`() = runTest {
+      val assignment = BedAssignment(
+        id = UUID.fromString("0199e3c0-0000-7000-8000-00000000000a"),
+        prisonerNumber = "A1234AA",
+        locationKey = "MDI-A-1-001",
+        startAt = LocalDateTime.parse("2026-01-02T10:00:00"),
+        source = BedAssignment.Source.NOMIS,
+        recordedBy = "ME",
+      )
+      bedAssignmentApi.stubGetBedAssignments("A1234AA", listOf(assignment))
+
+      assertThat(apiService.getBedAssignments("A1234AA")).containsExactly(assignment)
+      bedAssignmentApi.verify(
+        getRequestedFor(urlPathEqualTo("/nomis-sync/bed-assignments/A1234AA"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will return an empty list when there are no assignments`() = runTest {
+      bedAssignmentApi.stubGetBedAssignments("A1234AA")
+
+      assertThat(apiService.getBedAssignments("A1234AA")).isEmpty()
     }
   }
 }

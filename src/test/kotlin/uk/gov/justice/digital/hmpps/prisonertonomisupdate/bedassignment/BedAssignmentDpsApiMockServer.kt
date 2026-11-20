@@ -15,6 +15,7 @@ import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.bedassignment.BedAssignmentDpsApiExtension.Companion.jsonMapper
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.bedassignment.model.BedAssignment
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.bedassignment.model.BedAssignmentNomisMapping
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.bedassignment.model.BedAssignmentSyncResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.bedassignment.model.CellMovementReason
@@ -86,6 +87,13 @@ class BedAssignmentDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     stubFor(
       get(urlPathEqualTo("/cell-movements/$bookingId/bed-assignment/$bedAssignmentSequence"))
         .willReturn(status(status)),
+    )
+  }
+
+  fun stubGetBedAssignments(prisonerNumber: String, response: List<BedAssignment> = emptyList()) {
+    stubFor(
+      get(urlPathEqualTo("/nomis-sync/bed-assignments/$prisonerNumber"))
+        .willReturn(okJson(jsonMapper.writeValueAsString(response))),
     )
   }
 }

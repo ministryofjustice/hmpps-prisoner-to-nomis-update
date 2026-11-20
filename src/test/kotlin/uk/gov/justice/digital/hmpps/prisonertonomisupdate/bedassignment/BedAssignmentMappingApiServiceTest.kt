@@ -51,7 +51,7 @@ class BedAssignmentMappingApiServiceTest {
   }
 
   @Nested
-  inner class GetMappingByNomisIdOrNull {
+  inner class GetMappingByNomisId {
     @Test
     fun `will pass oath2 token to service`() = runTest {
       mockServer.stubGetByNomisId(12345, 1)
@@ -84,7 +84,7 @@ class BedAssignmentMappingApiServiceTest {
   }
 
   @Nested
-  inner class GetMappingByDpsIdOrNull {
+  inner class GetMappingByDpsId {
     private val dpsId = "de91dfa7-821f-4552-a427-bf2f32eafeb0"
 
     @Test
