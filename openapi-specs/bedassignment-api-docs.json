@@ -1,0 +1,1335 @@
+{
+  "openapi" : "3.1.0",
+  "info" : {
+    "title" : "HMPPS Change Someones Cell Api",
+    "contact" : {
+      "name" : "HMPPS Digital Studio",
+      "email" : "feedback@digital.justice.gov.uk"
+    },
+    "version" : "2026-11-19.117.780a15e"
+  },
+  "servers" : [ {
+    "url" : "https://change-someones-cell-api-dev.hmpps.service.justice.gov.uk",
+    "description" : "Development"
+  }, {
+    "url" : "https://change-someones-cell-api-preprod.hmpps.service.justice.gov.uk",
+    "description" : "Pre-Production"
+  }, {
+    "url" : "https://change-someones-cell-api.hmpps.service.justice.gov.uk",
+    "description" : "Production"
+  }, {
+    "url" : "http://localhost:8080",
+    "description" : "Local"
+  } ],
+  "tags" : [ {
+    "name" : "NOMIS migration and sync",
+    "description" : "Bed assignment history migrated and synchronised from NOMIS"
+  }, {
+    "name" : "Cell movements",
+    "description" : "Records prisoners being moved between cells"
+  } ],
+  "paths" : {
+    "/queue-admin/retry-dlq/{dlqName}" : {
+      "put" : {
+        "tags" : [ "hmpps-queue-resource" ],
+        "operationId" : "retryDlq",
+        "parameters" : [ {
+          "name" : "dlqName",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RetryDlqResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/queue-admin/retry-all-dlqs" : {
+      "put" : {
+        "tags" : [ "hmpps-queue-resource" ],
+        "operationId" : "retryAllDlqs",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/RetryDlqResult"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/queue-admin/purge-queue/{queueName}" : {
+      "put" : {
+        "tags" : [ "hmpps-queue-resource" ],
+        "operationId" : "purgeQueue",
+        "parameters" : [ {
+          "name" : "queueName",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PurgeQueueResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/nomis-sync/bed-assignments/sync/{prisonerNumber}" : {
+      "put" : {
+        "tags" : [ "NOMIS migration and sync" ],
+        "summary" : "Synchronise a prisoner's bed assignment history from NOMIS",
+        "description" : "Receives every bed assignment NOMIS now holds for the prisoner and makes DPS match it: new rows are created, known rows updated in place, and rows NOMIS no longer holds against the prisoner deleted. Send the whole history, not only what changed. Returns what changed so the NOMIS mappings can follow. Requires role ROLE_CELL_MOVEMENTS__SYNC__RW",
+        "operationId" : "sync",
+        "parameters" : [ {
+          "name" : "prisonerNumber",
+          "in" : "path",
+          "description" : "The prisoner number",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "pattern" : "^[A-Z][0-9]{4}[A-Z]{2}$"
+          },
+          "example" : "A1234AA"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "array",
+                "items" : {
+                  "$ref" : "#/components/schemas/NomisBedAssignment"
+                }
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Bed assignment history synchronised",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BedAssignmentSyncResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid request, including the same NOMIS row sent twice",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing a required role.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/nomis-sync/bed-assignments/migrate/{prisonerNumber}" : {
+      "post" : {
+        "tags" : [ "NOMIS migration and sync" ],
+        "summary" : "Migrate a prisoner's bed assignment history from NOMIS",
+        "description" : "Receives every bed assignment NOMIS holds for the prisoner, across all bookings, and returns the DPS id of each with its NOMIS key. Safe to repeat: a prisoner migrated again keeps the same ids. Requires role ROLE_CELL_MOVEMENTS__SYNC__RW",
+        "operationId" : "migrate",
+        "parameters" : [ {
+          "name" : "prisonerNumber",
+          "in" : "path",
+          "description" : "The prisoner number",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "pattern" : "^[A-Z][0-9]{4}[A-Z]{2}$"
+          },
+          "example" : "A1234AA"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "array",
+                "items" : {
+                  "$ref" : "#/components/schemas/NomisBedAssignment"
+                }
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Bed assignment history migrated",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/BedAssignmentNomisMapping"
+                  }
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid request, including the same NOMIS row sent twice",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing a required role.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cell-movements" : {
+      "post" : {
+        "tags" : [ "Cell movements" ],
+        "summary" : "Move a prisoner to a different cell",
+        "description" : "Performs the move in NOMIS, records a MOVED_CELL case note explaining it, and stores our own record of the movement. The prisoner's current booking and cell are resolved from prisoner-search, so no booking id is needed from the caller. If the case note cannot be created the move still succeeds and the movement is returned with status CASE_NOTE_FAILED - the explanation is stored, so the case note can be recreated later. Requires role ROLE_CELL_MOVEMENTS__RW",
+        "operationId" : "moveToCell",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CellMovementRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "The prisoner was moved",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CellMovement"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid request - including a reasonCode this service does not offer for a new move, which is rejected here rather than by NOMIS - or the cell cannot be used because it is full, inactive, not a cell or reception, or in a different prison",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the ROLE_CELL_MOVEMENTS__RW role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "No such prisoner, or they are not currently in a prison and cannot be moved",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "This prisoner was moved to this same cell moments ago - a probable double submission",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "423" : {
+            "description" : "The prisoner's record is locked, usually because someone has them open in P-NOMIS",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cell-movements/cell-swap" : {
+      "post" : {
+        "tags" : [ "Cell movements" ],
+        "summary" : "Move a prisoner out of their cell to free it",
+        "description" : "Performs a cell swap in NOMIS, moving the prisoner to the prison's C-SWAP location so their cell can be used by someone else, and records the movement. The destination is the prisoner's own prison's cell swap location, so no location is supplied. Unlike a cell move this creates **no case note**: the journey does not ask the user why, so there is no explanation to record. Requires role ROLE_CELL_MOVEMENTS__RW",
+        "operationId" : "moveToCellSwap",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CellSwapRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "The prisoner was moved out of their cell",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CellMovement"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid request, or this prison has no cell swap location configured",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the ROLE_CELL_MOVEMENTS__RW role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "No such prisoner, or they are not currently in a prison and cannot be moved",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "This prisoner was moved out of their cell moments ago - a probable double submission",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "423" : {
+            "description" : "The prisoner's record is locked, usually because someone has them open in P-NOMIS. Documented for completeness, but NOMIS does not currently return it on the cell swap path.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/queue-admin/get-dlq-messages/{dlqName}" : {
+      "get" : {
+        "tags" : [ "hmpps-queue-resource" ],
+        "operationId" : "getDlqMessages",
+        "parameters" : [ {
+          "name" : "dlqName",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "maxMessages",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 100
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/GetDlqResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/nomis-sync/bed-assignments/{prisonerNumber}" : {
+      "get" : {
+        "tags" : [ "NOMIS migration and sync" ],
+        "summary" : "Get a prisoner's bed assignments",
+        "description" : "Every bed assignment held for the prisoner, oldest first. Requires role ROLE_CELL_MOVEMENTS__SYNC__RW",
+        "operationId" : "findAll",
+        "parameters" : [ {
+          "name" : "prisonerNumber",
+          "in" : "path",
+          "description" : "The prisoner number",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "pattern" : "^[A-Z][0-9]{4}[A-Z]{2}$"
+          },
+          "example" : "A1234AA"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "The prisoner's bed assignments, empty if there are none",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/BedAssignment"
+                  }
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid prisoner number",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing a required role.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cell-movements/{bookingId}/bed-assignment/{bedAssignmentSequence}" : {
+      "get" : {
+        "tags" : [ "Cell movements" ],
+        "summary" : "Get why a prisoner was moved into a cell",
+        "description" : "Returns the reason and the explanation recorded against a NOMIS bed assignment - the \"what happened\" text on a prisoner's location history. Replaces the two hops this needed before: whereabouts-api for a case note id, then offender-case-notes for its text. For a movement this service recorded the explanation is held here, so it is answered in one call with nothing downstream. Movements migrated from whereabouts were resolved by the completed backfill - explanation, reason code and timestamp from the case note whereabouts recorded - and are served from this service alone as well. Every movement whereabouts ever held has been migrated - the sweep reconciled against its own count - so a bed assignment found here is answered from this service alone and one that is not is a genuine 404. Fields that cannot be resolved are null - check `source` rather than inferring from which fields are null. Keyed by booking id because that is how NOMIS keys a bed assignment and how the migrated data was keyed - it is not a booking id this service would otherwise accept, and this is the one endpoint that accepts one. It is transitional: once consumers render history from this service's own records, this lookup retires with it. Requires role ROLE_CELL_MOVEMENTS__RO",
+        "operationId" : "getCellMovementReason",
+        "parameters" : [ {
+          "name" : "bookingId",
+          "in" : "path",
+          "description" : "The NOMIS booking id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "example" : 1200866
+        }, {
+          "name" : "bedAssignmentSequence",
+          "in" : "path",
+          "description" : "The NOMIS bed assignment sequence within that booking",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "example" : 3
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "The movement recorded against this bed assignment",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CellMovementReason"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the ROLE_CELL_MOVEMENTS__RO role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "No cell movement is recorded against this bed assignment. Expected rather than exceptional - most bed assignments in NOMIS were never made through DPS - and is what whereabouts returned in the same case.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cell-movements/reasons" : {
+      "get" : {
+        "tags" : [ "Cell movements" ],
+        "summary" : "List the reasons a prisoner can be moved between cells",
+        "description" : "Returns every reason this service recognises, in display order - the order of the array is the contract, so a client renders it as it arrives rather than sorting it. Retired reasons are included with active=false: they cannot be chosen for a new move, but historic movements carry them and a screen showing history needs their descriptions. A client offering a choice should filter on active; a client resolving a code should not. The active codes are exactly those accepted as reasonCode on POST /cell-movements. Requires role ROLE_CELL_MOVEMENTS__RO or ROLE_CELL_MOVEMENTS__RW",
+        "operationId" : "getCellMoveReasons",
+        "responses" : {
+          "200" : {
+            "description" : "The cell move reasons",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/CellMoveReasonType"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires ROLE_CELL_MOVEMENTS__RO or ROLE_CELL_MOVEMENTS__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cell-movements/prisoner/{prisonerNumber}/cell-sharing" : {
+      "get" : {
+        "tags" : [ "Cell movements" ],
+        "summary" : "Get who a prisoner shared a cell with during a period",
+        "description" : "Returns each cell stay during the period in which the prisoner shared with at least one other prisoner, most recent first, with every cellmate's prisoner number and name. Stays where they were alone are left out, as are reception, court, temporary absence and cell swap. Covers all of the prisoner's bookings, so a period before a release and readmission works. Built for the CSRA, to show who a prisoner rated high risk - specific (provisional) shared with while that rating stood. Only time inside the period counts: a cellmate who left before `from` or arrived after `to` is not listed, and someone who moved in at the same minute the prisoner moved out did not share. The response carries no NOMIS booking ids or bed assignment sequences. It does include the NOMIS location id, only so the caller can link to the prisoner profile location history page; that field will be removed once the page accepts a DPS location id. Requires role ROLE_CELL_MOVEMENTS__RO",
+        "operationId" : "getCellSharing",
+        "parameters" : [ {
+          "name" : "prisonerNumber",
+          "in" : "path",
+          "description" : "The prisoner number",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "pattern" : "^[A-Z][0-9]{4}[A-Z]{2}$"
+          },
+          "example" : "A1234AA"
+        }, {
+          "name" : "from",
+          "in" : "query",
+          "description" : "Start of the period, e.g. when a provisional rating was confirmed",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "example" : "2026-07-06T21:07:00"
+        }, {
+          "name" : "to",
+          "in" : "query",
+          "description" : "End of the period. Leave out to cover up to now.",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "example" : "2026-07-09T10:15:00"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "The cells the prisoner shared during the period - an empty list if none",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CellSharingHistory"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid request - a badly formed prisoner number or date, a missing `from`, or `from` after `to`",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the ROLE_CELL_MOVEMENTS__RO role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "No such prisoner",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "RetryDlqResult" : {
+        "type" : "object",
+        "properties" : {
+          "messagesFoundCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "messagesFoundCount" ]
+      },
+      "PurgeQueueResult" : {
+        "type" : "object",
+        "properties" : {
+          "messagesFoundCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "messagesFoundCount" ]
+      },
+      "ErrorResponse" : {
+        "type" : "object",
+        "properties" : {
+          "status" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "errorCode" : {
+            "type" : [ "string", "null" ]
+          },
+          "userMessage" : {
+            "type" : [ "string", "null" ]
+          },
+          "developerMessage" : {
+            "type" : [ "string", "null" ]
+          },
+          "moreInfo" : {
+            "type" : [ "string", "null" ]
+          }
+        },
+        "required" : [ "status" ]
+      },
+      "NomisBedAssignment" : {
+        "type" : "object",
+        "description" : "A bed assignment as held in NOMIS, with its location mapped to locations-inside-prison where possible",
+        "properties" : {
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS booking id: the first part of the NOMIS key",
+            "example" : 2345678
+          },
+          "sequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Sequence within the booking: the second part of the NOMIS key",
+            "example" : 3
+          },
+          "livingUnitId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS internal location id of the living unit, sent even when NOMIS no longer holds the location",
+            "example" : -3009
+          },
+          "livingUnitDescription" : {
+            "type" : [ "string", "null" ],
+            "description" : "NOMIS description of the living unit, null when NOMIS no longer holds the location",
+            "example" : "MDI-A-1-001"
+          },
+          "locationId" : {
+            "type" : [ "string", "null" ],
+            "format" : "uuid",
+            "description" : "The locations-inside-prison id of the living unit. Leave out when the living unit has no equivalent there; the assignment is still kept, identified by its NOMIS description",
+            "example" : "0199e3c0-0000-7000-8000-000000000001"
+          },
+          "assignmentDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "When the assignment began",
+            "example" : "2023-05-01T09:15:00"
+          },
+          "assignmentEndDateTime" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "When the assignment ended, null for a current assignment",
+            "example" : "2023-06-10T14:30:00"
+          },
+          "assignmentReasonCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "The reason code (domain CHG_HOUS_RSN)",
+            "example" : "ADM",
+            "maxLength" : 12,
+            "minLength" : 0
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "The NOMIS user who created the row",
+            "example" : "NQP56Y",
+            "maxLength" : 64,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "assignmentDateTime", "bookingId", "createdBy", "livingUnitId", "sequence" ]
+      },
+      "BedAssignmentNomisMapping" : {
+        "type" : "object",
+        "description" : "A bed assignment's DPS id with the NOMIS key it came from, for the NOMIS mapping service",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS bed assignment id",
+            "example" : "0199e3c0-0000-7000-8000-00000000000a"
+          },
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS booking id",
+            "example" : 2345678
+          },
+          "sequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Sequence within the booking",
+            "example" : 3
+          }
+        },
+        "required" : [ "bookingId", "id", "sequence" ]
+      },
+      "BedAssignmentSyncResponse" : {
+        "type" : "object",
+        "description" : "What a sync changed, so the caller can bring the NOMIS mappings into line",
+        "properties" : {
+          "created" : {
+            "type" : "array",
+            "description" : "Assignments new to DPS",
+            "items" : {
+              "$ref" : "#/components/schemas/BedAssignmentNomisMapping"
+            }
+          },
+          "updated" : {
+            "type" : "array",
+            "description" : "Assignments already in DPS, updated in place. Their ids are unchanged",
+            "items" : {
+              "$ref" : "#/components/schemas/BedAssignmentNomisMapping"
+            }
+          },
+          "deleted" : {
+            "type" : "array",
+            "description" : "Assignments removed because NOMIS no longer holds them against this prisoner",
+            "items" : {
+              "$ref" : "#/components/schemas/BedAssignmentNomisMapping"
+            }
+          }
+        },
+        "required" : [ "created", "deleted", "updated" ]
+      },
+      "CellMovement" : {
+        "type" : "object",
+        "description" : "A recorded cell movement",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "Our id for this movement"
+          },
+          "movementType" : {
+            "type" : "string",
+            "description" : "Whether this was a move into a cell or a swap out of one",
+            "enum" : [ "CELL_MOVE", "CELL_SWAP" ]
+          },
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The prisoner number",
+            "example" : "A1234BC"
+          },
+          "fromLocationKey" : {
+            "type" : [ "string", "null" ],
+            "description" : "The cell they were in before the move, as best known",
+            "example" : "MDI-1-1-001"
+          },
+          "fromLocationId" : {
+            "type" : [ "string", "null" ],
+            "format" : "uuid",
+            "description" : "The locations-inside-prison UUID for fromLocationKey - the location's fixed identity, stable when keys are renamed. Null if it could not be resolved at the time of the move."
+          },
+          "toLocationKey" : {
+            "type" : "string",
+            "description" : "The cell they were moved into",
+            "example" : "MDI-1-1-015"
+          },
+          "toLocationId" : {
+            "type" : [ "string", "null" ],
+            "format" : "uuid",
+            "description" : "The locations-inside-prison UUID for toLocationKey - the location's fixed identity, stable when keys are renamed. Null if it could not be resolved at the time of the move."
+          },
+          "reasonCode" : {
+            "type" : "string",
+            "description" : "The reason code for the move",
+            "example" : "ADM"
+          },
+          "occurredAt" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "When the move was recorded"
+          },
+          "recordedBy" : {
+            "type" : "string",
+            "description" : "Who made the move"
+          },
+          "caseNoteUuid" : {
+            "type" : [ "string", "null" ],
+            "format" : "uuid",
+            "description" : "The case note recording the explanation. Null if the case note could not be created, in which case status is CASE_NOTE_FAILED and the move itself still succeeded."
+          },
+          "status" : {
+            "type" : "string",
+            "description" : "How far the movement got",
+            "enum" : [ "PENDING", "COMPLETED", "CASE_NOTE_FAILED" ]
+          }
+        },
+        "required" : [ "id", "movementType", "occurredAt", "prisonerNumber", "reasonCode", "recordedBy", "status", "toLocationKey" ]
+      },
+      "CellMovementRequest" : {
+        "type" : "object",
+        "description" : "A request to move a prisoner to a different cell",
+        "properties" : {
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The prisoner number",
+            "example" : "A1234BC",
+            "minLength" : 1,
+            "pattern" : "^[A-Z][0-9]{4}[A-Z]{2}$"
+          },
+          "toLocationKey" : {
+            "type" : "string",
+            "description" : "The key of the cell to move into",
+            "example" : "MDI-1-1-015",
+            "maxLength" : 64,
+            "minLength" : 0
+          },
+          "reasonCode" : {
+            "type" : "string",
+            "description" : "The reason for the move. Must be a code GET /cell-movements/reasons returns with active=true - retired reasons are served for display but cannot be used for a new move",
+            "example" : "GM",
+            "maxLength" : 12,
+            "minLength" : 0
+          },
+          "commentText" : {
+            "type" : "string",
+            "description" : "What happened, in the mover's own words. Recorded here and used as the case note text.",
+            "example" : "Moved following an altercation on the wing",
+            "minLength" : 1
+          }
+        },
+        "required" : [ "commentText", "prisonerNumber", "reasonCode", "toLocationKey" ]
+      },
+      "CellSwapRequest" : {
+        "type" : "object",
+        "description" : "A request to move a prisoner out of their cell to the prison's cell swap location, freeing the cell. Takes nothing but the prisoner: the destination is the prison's own C-SWAP location, and this journey records no reason or explanation.",
+        "properties" : {
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The prisoner number",
+            "example" : "A1234BC",
+            "minLength" : 1,
+            "pattern" : "^[A-Z][0-9]{4}[A-Z]{2}$"
+          }
+        },
+        "required" : [ "prisonerNumber" ]
+      },
+      "DlqMessage" : {
+        "type" : "object",
+        "properties" : {
+          "body" : {
+            "type" : "object",
+            "additionalProperties" : { }
+          },
+          "messageId" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "body", "messageId" ]
+      },
+      "GetDlqResult" : {
+        "type" : "object",
+        "properties" : {
+          "messagesFoundCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "messagesReturnedCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "messages" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/DlqMessage"
+            }
+          }
+        },
+        "required" : [ "messages", "messagesFoundCount", "messagesReturnedCount" ]
+      },
+      "BedAssignment" : {
+        "type" : "object",
+        "description" : "A bed assignment: a period a prisoner was assigned to a cell. An open one (no endAt) is current",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS bed assignment id",
+            "example" : "0199e3c0-0000-7000-8000-00000000000a"
+          },
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The prisoner number",
+            "example" : "A1234BC"
+          },
+          "locationId" : {
+            "type" : [ "string", "null" ],
+            "format" : "uuid",
+            "description" : "The locations-inside-prison id"
+          },
+          "locationKey" : {
+            "type" : "string",
+            "description" : "The location key, or the NOMIS description",
+            "example" : "MDI-A-1-001"
+          },
+          "startAt" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "When the assignment began",
+            "example" : "2023-05-01T09:15:00"
+          },
+          "startReason" : {
+            "type" : [ "string", "null" ],
+            "description" : "The reason code (domain CHG_HOUS_RSN) the assignment began",
+            "example" : "ADM"
+          },
+          "endAt" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "When the assignment ended, null for a current assignment",
+            "example" : "2023-06-10T14:30:00"
+          },
+          "endReason" : {
+            "type" : [ "string", "null" ],
+            "description" : "The reason code (domain CHG_HOUS_RSN) the assignment ended",
+            "example" : "GM"
+          },
+          "source" : {
+            "type" : "string",
+            "description" : "Whether the assignment came from NOMIS or was made by DPS",
+            "enum" : [ "NOMIS", "DPS" ]
+          },
+          "recordedBy" : {
+            "type" : "string",
+            "description" : "The user who recorded the assignment",
+            "example" : "NQP56Y"
+          },
+          "cellMovementId" : {
+            "type" : [ "string", "null" ],
+            "format" : "uuid",
+            "description" : "The cell movement that opened this assignment, when this service made it"
+          }
+        },
+        "required" : [ "id", "locationKey", "prisonerNumber", "recordedBy", "source", "startAt" ]
+      },
+      "CellMovementReason" : {
+        "type" : "object",
+        "description" : "The reason a prisoner was moved into a cell, and the explanation given at the time",
+        "properties" : {
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS booking the movement was recorded against",
+            "example" : 1200866
+          },
+          "bedAssignmentSequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The NOMIS bed assignment this movement created",
+            "example" : 3
+          },
+          "source" : {
+            "type" : "string",
+            "description" : "Which record this came from, and therefore how complete it is",
+            "enum" : [ "CELL_MOVEMENTS", "MIGRATED_FROM_WHEREABOUTS" ]
+          },
+          "toLocationKey" : {
+            "type" : [ "string", "null" ],
+            "description" : "The locations-inside-prison UUIDs and keys for the movement's locations. Present only for movements this service recorded - whereabouts never held locations at all.",
+            "example" : "MDI-1-1-015"
+          },
+          "toLocationId" : {
+            "type" : [ "string", "null" ],
+            "format" : "uuid"
+          },
+          "fromLocationKey" : {
+            "type" : [ "string", "null" ]
+          },
+          "fromLocationId" : {
+            "type" : [ "string", "null" ],
+            "format" : "uuid"
+          },
+          "prisonerNumber" : {
+            "type" : [ "string", "null" ],
+            "description" : "The prisoner moved. Always present for a movement this service recorded. For a migrated one it is resolved from the booking, and is null if that booking is no longer the prisoner's current one.",
+            "example" : "A1234BC"
+          },
+          "reasonCode" : {
+            "type" : [ "string", "null" ],
+            "description" : "The reason for the move, a code from the CHG_HOUS_RSN reference domain. For a migrated movement this is recovered from the case note's subType, so it is null when the case note could not be read.",
+            "example" : "ADM"
+          },
+          "commentText" : {
+            "type" : [ "string", "null" ],
+            "description" : "What happened, in the mover's own words - the \"what happened\" text. Null for a cell swap, which never asks for an explanation, and for a migrated movement whose case note could not be read.",
+            "example" : "Moved following an altercation on the wing"
+          },
+          "caseNoteUuid" : {
+            "type" : [ "string", "null" ],
+            "format" : "uuid",
+            "description" : "The case note recording the explanation, where there is one"
+          },
+          "caseNoteLegacyId" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int64",
+            "description" : "The deprecated numeric case note id. Present for a migrated movement, which is the only form whereabouts stored, so a caller can still fall back to reading the case note directly.",
+            "example" : 1234567
+          },
+          "occurredAt" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "When the move was recorded. Not held for a migrated movement."
+          },
+          "recordedBy" : {
+            "type" : [ "string", "null" ],
+            "description" : "Who made the move. Not held for a migrated movement.",
+            "example" : "AUTH_ADM"
+          },
+          "movementType" : {
+            "type" : [ "string", "null" ],
+            "description" : "Which journey this was. Null for a migrated movement: whereabouts recorded no cell swaps, but nothing in the data proves a given row was not one.",
+            "enum" : [ "CELL_MOVE", "CELL_SWAP" ]
+          }
+        },
+        "required" : [ "bedAssignmentSequence", "bookingId", "source" ]
+      },
+      "CellMoveReasonType" : {
+        "type" : "object",
+        "description" : "A reason a prisoner can be moved between cells",
+        "properties" : {
+          "code" : {
+            "type" : "string",
+            "description" : "The code recorded against the movement",
+            "example" : "GM"
+          },
+          "description" : {
+            "type" : "string",
+            "description" : "The description to show",
+            "example" : "General moves"
+          },
+          "active" : {
+            "type" : "boolean",
+            "description" : "Whether this reason can be chosen for a new move. Retired reasons are still returned, because historic movements carry them and need a description",
+            "example" : true
+          }
+        },
+        "required" : [ "active", "code", "description" ]
+      },
+      "CellShare" : {
+        "type" : "object",
+        "description" : "A stay in a cell during which the prisoner shared with at least one other prisoner",
+        "properties" : {
+          "prisonId" : {
+            "type" : "string",
+            "description" : "The prison the cell is in",
+            "example" : "LEI"
+          },
+          "locationKey" : {
+            "type" : "string",
+            "description" : "The location key of the cell",
+            "example" : "LEI-A-1-015"
+          },
+          "pathHierarchy" : {
+            "type" : "string",
+            "description" : "The cell without the prison prefix, for display",
+            "example" : "A-1-015"
+          },
+          "dpsLocationId" : {
+            "type" : [ "string", "null" ],
+            "format" : "uuid",
+            "description" : "The DPS location id of the cell. Null if locations-inside-prison could not be reached or does not know the key - locationKey is always present.",
+            "example" : "2475f250-434a-4257-afe7-b911f1773a4d"
+          },
+          "nomisLocationId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS location id of the cell. Only for linking to the prisoner profile location history page, which still takes it - use dpsLocationId for anything else. Will be removed once that page accepts a DPS location id.",
+            "example" : 2326301
+          },
+          "movedIn" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "When the prisoner moved into the cell. The whole stay, not cut to the period.",
+            "example" : "2026-07-06T21:10:00"
+          },
+          "movedOut" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "When the prisoner moved out of the cell. The whole stay, not cut to the period. Null if they are still there.",
+            "example" : "2026-07-08T14:00:00"
+          },
+          "sharedWith" : {
+            "type" : "array",
+            "description" : "Everyone who shared the cell with the prisoner during the period, earliest first",
+            "items" : {
+              "$ref" : "#/components/schemas/Cellmate"
+            }
+          }
+        },
+        "required" : [ "locationKey", "movedIn", "nomisLocationId", "pathHierarchy", "prisonId", "sharedWith" ]
+      },
+      "CellSharingHistory" : {
+        "type" : "object",
+        "description" : "The cells a prisoner shared with someone else during a period, and who with",
+        "properties" : {
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The prisoner number",
+            "example" : "A1234AA"
+          },
+          "from" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Start of the period",
+            "example" : "2026-07-06T21:07:00"
+          },
+          "to" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "End of the period - now, if no end was given",
+            "example" : "2026-07-09T10:15:00"
+          },
+          "cells" : {
+            "type" : "array",
+            "description" : "One entry per cell stay in the period where the prisoner shared, most recent first. A prisoner who leaves a cell and later returns to it has two entries. Empty when they did not share.",
+            "items" : {
+              "$ref" : "#/components/schemas/CellShare"
+            }
+          }
+        },
+        "required" : [ "cells", "from", "prisonerNumber", "to" ]
+      },
+      "Cellmate" : {
+        "type" : "object",
+        "description" : "A prisoner who shared a cell with the prisoner during the period",
+        "properties" : {
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The cellmate's prisoner number",
+            "example" : "A1245XY"
+          },
+          "firstName" : {
+            "type" : [ "string", "null" ],
+            "description" : "The cellmate's first name. Null if prisoner-search has no record of them.",
+            "example" : "James"
+          },
+          "lastName" : {
+            "type" : [ "string", "null" ],
+            "description" : "The cellmate's last name. Null if prisoner-search has no record of them.",
+            "example" : "Clive"
+          },
+          "sharedFrom" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "When they started sharing, within the period. If they shared more than once during the same stay, the first time.",
+            "example" : "2026-07-06T21:10:00"
+          },
+          "sharedTo" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "When they stopped sharing, within the period. If they shared more than once during the same stay, the last time. Null if they are still sharing and no end to the period was given.",
+            "example" : "2026-07-08T14:00:00"
+          }
+        },
+        "required" : [ "prisonerNumber", "sharedFrom" ]
+      }
+    }
+  }
+}

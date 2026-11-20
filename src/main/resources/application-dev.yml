@@ -10,6 +10,7 @@ api.base.url:
   adjudications: http://localhost:8080
   alerts: http://localhost:8080
   appointments: http://localhost:8080
+  bedassignment: http://localhost:8080
   core.person: http://localhost:8080
   court.sentencing: http://localhost:8080
   csip: http://localhost:8080
