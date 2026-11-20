@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-11-16.6268.d12a06d"
+    "version" : "2026-11-19.6329.8450e04"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -774,6 +774,187 @@
         } ]
       }
     },
+    "/person/prison/{prisonNumber}/aliases/{cprAliasId}" : {
+      "get" : {
+        "tags" : [ "Prison" ],
+        "description" : "Retrieve a single alias for the prisoner by Prison Number and alias id. Role required is **ROLE_CORE_PERSON_RECORD_API__RO**. ",
+        "operationId" : "getAliasByPrisonNumber",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "A1234AA"
+        }, {
+          "name" : "cprAliasId",
+          "in" : "path",
+          "description" : "The CPR alias id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonAliasResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "api-role" : [ ]
+        } ]
+      },
+      "put" : {
+        "tags" : [ "Prison" ],
+        "description" : "Update an existing alias for the prisoner by Prison Number and alias id. Role required is **ROLE_CORE_PERSON_RECORD_API__PRISON_RW**. ",
+        "operationId" : "updateAliasByPrisonNumber",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "A1234AA"
+        }, {
+          "name" : "cprAliasId",
+          "in" : "path",
+          "description" : "The CPR alias id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PrisonAliasUpdateRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonAliasResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "api-role" : [ ]
+        } ]
+      }
+    },
+    "/person/prison/{prisonNumber}/aliases/{cprAliasId}/identifiers/{cprIdentifierId}" : {
+      "get" : {
+        "tags" : [ "Prison" ],
+        "description" : "Retrieve a single identifier for the prisoner's alias by Prison Number, alias id and identifier id. Role required is **ROLE_CORE_PERSON_RECORD_API__RO**. ",
+        "operationId" : "getAliasIdentifierByPrisonNumber",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "A1234AA"
+        }, {
+          "name" : "cprAliasId",
+          "in" : "path",
+          "description" : "The CPR alias id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "cprIdentifierId",
+          "in" : "path",
+          "description" : "The CPR identifier id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonIdentifierResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "api-role" : [ ]
+        } ]
+      },
+      "put" : {
+        "tags" : [ "Prison" ],
+        "description" : "Update an existing identifier for the prisoner's alias by Prison Number, alias id and identifier id. Role required is **ROLE_CORE_PERSON_RECORD_API__PRISON_RW**. ",
+        "operationId" : "updateAliasIdentifierByPrisonNumber",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "A1234AA"
+        }, {
+          "name" : "cprAliasId",
+          "in" : "path",
+          "description" : "The CPR alias id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "cprIdentifierId",
+          "in" : "path",
+          "description" : "The CPR identifier id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PrisonIdentifierUpdateRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "api-role" : [ ]
+        } ]
+      }
+    },
     "/person/prison/{prisonNumber}/addresses/{addressId}/contacts/{contactId}" : {
       "put" : {
         "tags" : [ "Prison" ],
@@ -948,6 +1129,37 @@
         } ]
       }
     },
+    "/syscon-sync/person/{prisonNumber}/primary-name/{cprAliasId}" : {
+      "post" : {
+        "tags" : [ "Syscon Sync" ],
+        "description" : "Sets the given alias as the PRIMARY (working) name for the prisoner, marking all other aliases as ALIAS. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
+        "operationId" : "processPrisonPrimaryName",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "cprAliasId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content",
+            "content" : { }
+          }
+        },
+        "security" : [ {
+          "api-role" : [ ]
+        } ]
+      }
+    },
     "/syscon-sync/person/{prisonNumber}/contact" : {
       "post" : {
         "tags" : [ "Syscon Sync" ],
@@ -1017,7 +1229,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/SysconAliasWithIdentifiersMapping"
+                  "$ref" : "#/components/schemas/SysconAliasMapping"
                 }
               }
             }
@@ -1321,6 +1533,84 @@
         } ]
       }
     },
+    "/person/prison/{prisonNumber}/identifiers" : {
+      "get" : {
+        "tags" : [ "Prison" ],
+        "description" : "Retrieve all identifiers for the prisoner by Prison Number, optionally including alias identifiers. Role required is **ROLE_CORE_PERSON_RECORD_API__RO**. ",
+        "operationId" : "getIdentifiersByPrisonNumber",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "A1234AA"
+        }, {
+          "name" : "includeAliases",
+          "in" : "query",
+          "description" : "Whether to include identifiers on aliases",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/PrisonIdentifierResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "api-role" : [ ]
+        } ]
+      },
+      "post" : {
+        "tags" : [ "Prison" ],
+        "description" : "Add identifiers for the prisoner on the primary name by Prison Number. Role required is **ROLE_CORE_PERSON_RECORD_API__PRISON_RW**. ",
+        "operationId" : "createIdentifiersByPrisonNumber",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "A1234AA"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "array",
+                "items" : {
+                  "$ref" : "#/components/schemas/PrisonIdentifierCreateRequest"
+                }
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "api-role" : [ ]
+        } ]
+      }
+    },
     "/person/prison/{prisonNumber}/contacts" : {
       "get" : {
         "tags" : [ "Prison" ],
@@ -1410,6 +1700,79 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/CanonicalContact"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "api-role" : [ ]
+        } ]
+      }
+    },
+    "/person/prison/{prisonNumber}/aliases" : {
+      "get" : {
+        "tags" : [ "Prison" ],
+        "description" : "Retrieve all aliases (including the primary name) for the prisoner by Prison Number. Role required is **ROLE_CORE_PERSON_RECORD_API__RO**. ",
+        "operationId" : "getAliasesByPrisonNumber",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "A1234AA"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/PrisonAliasResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "api-role" : [ ]
+        } ]
+      },
+      "post" : {
+        "tags" : [ "Prison" ],
+        "description" : "Create a new alias for the prisoner by Prison Number. Role required is **ROLE_CORE_PERSON_RECORD_API__PRISON_RW**. ",
+        "operationId" : "createAliasByPrisonNumber",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "A1234AA"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PrisonAliasCreateRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonAliasResponse"
                 }
               }
             }
@@ -2946,6 +3309,210 @@
           }
         }
       },
+      "PrisonAliasUpdateRequest" : {
+        "type" : "object",
+        "description" : "Update a prisoner alias",
+        "properties" : {
+          "firstName" : {
+            "type" : "string",
+            "description" : "Prisoner's first name",
+            "example" : "John",
+            "minLength" : 1,
+            "pattern" : "^[A-Z|a-z ,.'-]+$"
+          },
+          "middleNames" : {
+            "type" : [ "string", "null" ],
+            "description" : "Prisoner's middle names",
+            "example" : "Middleone Middletwo",
+            "pattern" : "^[A-Z|a-z ,.'-]+$"
+          },
+          "lastName" : {
+            "type" : "string",
+            "description" : "Prisoner's last name",
+            "example" : "Smith",
+            "minLength" : 1,
+            "pattern" : "^[A-Z|a-z ,.'-]+$"
+          },
+          "dateOfBirth" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The prisoner's date of birth. Must be specified in YYYY-MM-DD format. Range allowed is 16-110 years",
+            "example" : "1970-01-01"
+          },
+          "sex" : {
+            "type" : "string",
+            "description" : "The prisoner's sex",
+            "enum" : [ "M", "F", "N", "NS" ],
+            "example" : "F"
+          },
+          "title" : {
+            "type" : [ "string", "null" ],
+            "description" : "The prisoner's title",
+            "enum" : [ "MR", "MRS", "MISS", "MS", "MX", "REV", "FR", "IMAM", "RABBI", "BR", "SR", "DME", "DR", "LDY", "LRD", "SIR", "UN" ],
+            "example" : "MR"
+          },
+          "ethnicity" : {
+            "type" : [ "string", "null" ],
+            "description" : "The prisoner's ethnicity",
+            "enum" : [ "A1", "A2", "A3", "A4", "A9", "B1", "B2", "B9", "ETH03", "M1", "M2", "M3", "M9", "MERGE", "NS", "O1", "O2", "O9", "UN", "W1", "W2", "W3", "W4", "W5", "W8", "W9", "Z1" ],
+            "example" : "W1"
+          },
+          "nameType" : {
+            "type" : [ "string", "null" ],
+            "description" : "The name type",
+            "enum" : [ "CN", "ALIAS", "MAID", "NICK" ],
+            "example" : "CN"
+          },
+          "userId" : {
+            "type" : "string",
+            "description" : "The user who made the change"
+          }
+        },
+        "required" : [ "dateOfBirth", "firstName", "lastName", "sex", "userId" ]
+      },
+      "CanonicalEthnicity" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : [ "string", "null" ],
+            "description" : "Person ethnicity code",
+            "enum" : [ "A1", "A2", "A3", "A4", "A9", "B1", "B2", "B9", "ETH03", "M1", "M2", "M3", "M9", "MERGE", "NS", "O1", "O2", "O9", "UN", "W1", "W2", "W3", "W4", "W5", "W8", "W9", "Z1" ],
+            "example" : "B9"
+          },
+          "description" : {
+            "type" : [ "string", "null" ],
+            "description" : "Person ethnicity description",
+            "example" : "Black/Black British : Any other backgr'nd"
+          }
+        }
+      },
+      "CanonicalSex" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : [ "string", "null" ],
+            "description" : "Person sex code",
+            "enum" : [ "M", "F", "N", "NS" ],
+            "example" : "M"
+          },
+          "description" : {
+            "type" : [ "string", "null" ],
+            "description" : "Person sex description",
+            "example" : "Male"
+          }
+        }
+      },
+      "CanonicalTitle" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : [ "string", "null" ],
+            "description" : "Person title code",
+            "enum" : [ "MR", "MRS", "MISS", "MS", "MX", "REV", "FR", "IMAM", "RABBI", "BR", "SR", "DME", "DR", "LDY", "LRD", "SIR", "UN" ],
+            "example" : "Mr"
+          },
+          "description" : {
+            "type" : [ "string", "null" ],
+            "description" : "Person title description",
+            "example" : "Mr"
+          }
+        }
+      },
+      "PrisonAliasResponse" : {
+        "type" : "object",
+        "description" : "A prisoner alias",
+        "properties" : {
+          "prisonNumber" : {
+            "type" : "string",
+            "description" : "The prison number for this alias",
+            "example" : "A1234AA"
+          },
+          "cprAliasId" : {
+            "type" : "string",
+            "description" : "The alias id",
+            "example" : "4f2b1d8a-9f3c-4a1f-8b2d-112233445566"
+          },
+          "isPrimary" : {
+            "type" : "boolean",
+            "description" : "Boolean flag to indicate if the alias is the primary name",
+            "example" : true
+          },
+          "firstName" : {
+            "type" : "string",
+            "description" : "First name",
+            "example" : "John"
+          },
+          "middleNames" : {
+            "type" : [ "string", "null" ],
+            "description" : "Middle names",
+            "example" : "Middleone Middletwo"
+          },
+          "lastName" : {
+            "type" : "string",
+            "description" : "Last name",
+            "example" : "Smith"
+          },
+          "dateOfBirth" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Date of birth",
+            "example" : "1980-02-28"
+          },
+          "nameType" : {
+            "type" : [ "string", "null" ],
+            "description" : "Name type",
+            "enum" : [ "CN", "ALIAS", "MAID", "NICK" ],
+            "example" : "CN"
+          },
+          "title" : {
+            "description" : "Title",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CanonicalTitle"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "sex" : {
+            "description" : "Sex",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CanonicalSex"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "ethnicity" : {
+            "description" : "Ethnicity",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CanonicalEthnicity"
+            }, {
+              "type" : "null"
+            } ]
+          }
+        },
+        "required" : [ "cprAliasId", "dateOfBirth", "firstName", "isPrimary", "lastName", "prisonNumber" ]
+      },
+      "PrisonIdentifierUpdateRequest" : {
+        "type" : "object",
+        "description" : "Update a prisoner identifier",
+        "properties" : {
+          "identifier" : {
+            "type" : "string",
+            "description" : "The value of the identifier",
+            "example" : "1231/XX/121",
+            "minLength" : 1
+          },
+          "comment" : {
+            "type" : [ "string", "null" ],
+            "description" : "Identifier comment",
+            "example" : "Important info"
+          },
+          "userId" : {
+            "type" : "string",
+            "description" : "The user who made the change"
+          }
+        },
+        "required" : [ "identifier", "userId" ]
+      },
       "PrisonReligionHistory" : {
         "type" : "object",
         "properties" : {
@@ -3203,7 +3770,7 @@
         },
         "required" : [ "prisonNumber", "religionMappings" ]
       },
-      "SysconAliasWithIdentifiersMapping" : {
+      "SysconAliasMapping" : {
         "type" : "object",
         "properties" : {
           "nomisOffenderId" : {
@@ -3235,19 +3802,6 @@
         },
         "required" : [ "aliases" ]
       },
-      "SysconAliasMapping" : {
-        "type" : "object",
-        "properties" : {
-          "nomisOffenderId" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "cprAliasId" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "cprAliasId", "nomisOffenderId" ]
-      },
       "SysconAliasesAndIdentifiersResponseBody" : {
         "type" : "object",
         "properties" : {
@@ -3259,15 +3813,9 @@
             "items" : {
               "$ref" : "#/components/schemas/SysconAliasMapping"
             }
-          },
-          "identifiersMappings" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/SysconIdentifierMapping"
-            }
           }
         },
-        "required" : [ "aliasesMappings", "identifiersMappings", "prisonNumber" ]
+        "required" : [ "aliasesMappings", "prisonNumber" ]
       },
       "ExactMatchSearchRequest" : {
         "type" : "object",
@@ -3478,6 +4026,100 @@
           }
         },
         "required" : [ "cprAddressId", "crn" ]
+      },
+      "PrisonIdentifierCreateRequest" : {
+        "type" : "object",
+        "description" : "Create a prisoner identifier",
+        "properties" : {
+          "identifierType" : {
+            "type" : "string",
+            "description" : "Type of identifier",
+            "enum" : [ "PNC", "CRO", "NATIONAL_INSURANCE_NUMBER", "DRIVER_LICENSE_NUMBER", "ARREST_SUMMONS_NUMBER", "AAMR", "ACC", "APNC", "AMRL", "ASN", "URN", "DRL", "DNOMS", "XIMMN", "XNOMS", "IMMN", "DOFF", "LCRN", "LBCN", "LIFN", "MFCRN", "MTCRN", "MSVN", "NHS", "NOMS", "OTHR", "PCRN", "PARN", "PST", "AI02", "PRNOMS", "SPNC", "NPNC", "VISO", "YCRN", "UNKNOWN" ],
+            "example" : "PNC"
+          },
+          "identifier" : {
+            "type" : "string",
+            "description" : "The value of the identifier",
+            "example" : "1231/XX/121",
+            "minLength" : 1
+          },
+          "comment" : {
+            "type" : [ "string", "null" ],
+            "description" : "Identifier comment",
+            "example" : "Important info"
+          },
+          "userId" : {
+            "type" : "string",
+            "description" : "The user who made the change"
+          }
+        },
+        "required" : [ "identifier", "identifierType", "userId" ]
+      },
+      "PrisonAliasCreateRequest" : {
+        "type" : "object",
+        "description" : "Create a prisoner pseudonym",
+        "properties" : {
+          "firstName" : {
+            "type" : "string",
+            "description" : "Prisoner's first name",
+            "example" : "John",
+            "minLength" : 1,
+            "pattern" : "^[A-Z|a-z ,.'-]+$"
+          },
+          "middleNames" : {
+            "type" : [ "string", "null" ],
+            "description" : "Prisoner's middle names",
+            "example" : "Middleone Middletwo",
+            "pattern" : "^[A-Z|a-z ,.'-]+$"
+          },
+          "lastName" : {
+            "type" : "string",
+            "description" : "Prisoner's last name",
+            "example" : "Smith",
+            "minLength" : 1,
+            "pattern" : "^[A-Z|a-z ,.'-]+$"
+          },
+          "dateOfBirth" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The prisoner's date of birth. Must be specified in YYYY-MM-DD format. Range allowed is 16-110 years",
+            "example" : "1970-01-01"
+          },
+          "sex" : {
+            "type" : "string",
+            "description" : "The prisoner's sex",
+            "enum" : [ "M", "F", "N", "NS" ],
+            "example" : "F"
+          },
+          "title" : {
+            "type" : [ "string", "null" ],
+            "description" : "The prisoner's title",
+            "enum" : [ "MR", "MRS", "MISS", "MS", "MX", "REV", "FR", "IMAM", "RABBI", "BR", "SR", "DME", "DR", "LDY", "LRD", "SIR", "UN" ],
+            "example" : "MR"
+          },
+          "ethnicity" : {
+            "type" : [ "string", "null" ],
+            "description" : "The prisoner's ethnicity",
+            "enum" : [ "A1", "A2", "A3", "A4", "A9", "B1", "B2", "B9", "ETH03", "M1", "M2", "M3", "M9", "MERGE", "NS", "O1", "O2", "O9", "UN", "W1", "W2", "W3", "W4", "W5", "W8", "W9", "Z1" ],
+            "example" : "W1"
+          },
+          "nameType" : {
+            "type" : [ "string", "null" ],
+            "description" : "The name type",
+            "enum" : [ "CN", "ALIAS", "MAID", "NICK" ],
+            "example" : "CN"
+          },
+          "isPrimary" : {
+            "type" : "boolean",
+            "description" : "Boolean flag to indicate if the alias is the primary name",
+            "example" : true
+          },
+          "userId" : {
+            "type" : "string",
+            "description" : "The user who made the change"
+          }
+        },
+        "required" : [ "dateOfBirth", "firstName", "isPrimary", "lastName", "sex", "userId" ]
       },
       "PrisonCreateAddressRequest" : {
         "type" : "object",
@@ -3902,22 +4544,6 @@
         },
         "required" : [ "sex", "title" ]
       },
-      "CanonicalEthnicity" : {
-        "type" : "object",
-        "properties" : {
-          "code" : {
-            "type" : [ "string", "null" ],
-            "description" : "Person ethnicity code",
-            "enum" : [ "A1", "A2", "A3", "A4", "A9", "B1", "B2", "B9", "ETH03", "M1", "M2", "M3", "M9", "MERGE", "NS", "O1", "O2", "O9", "UN", "W1", "W2", "W3", "W4", "W5", "W8", "W9", "Z1" ],
-            "example" : "B9"
-          },
-          "description" : {
-            "type" : [ "string", "null" ],
-            "description" : "Person ethnicity description",
-            "example" : "Black/Black British : Any other backgr'nd"
-          }
-        }
-      },
       "CanonicalIdentifiers" : {
         "type" : "object",
         "properties" : {
@@ -4127,22 +4753,6 @@
           }
         }
       },
-      "CanonicalSex" : {
-        "type" : "object",
-        "properties" : {
-          "code" : {
-            "type" : [ "string", "null" ],
-            "description" : "Person sex code",
-            "enum" : [ "M", "F", "N", "NS" ],
-            "example" : "M"
-          },
-          "description" : {
-            "type" : [ "string", "null" ],
-            "description" : "Person sex description",
-            "example" : "Male"
-          }
-        }
-      },
       "CanonicalSexualOrientation" : {
         "type" : "object",
         "properties" : {
@@ -4156,22 +4766,6 @@
             "type" : [ "string", "null" ],
             "description" : "Person sexual orientation description",
             "example" : "Heterosexual"
-          }
-        }
-      },
-      "CanonicalTitle" : {
-        "type" : "object",
-        "properties" : {
-          "code" : {
-            "type" : [ "string", "null" ],
-            "description" : "Person title code",
-            "enum" : [ "MR", "MRS", "MISS", "MS", "MX", "REV", "FR", "IMAM", "RABBI", "BR", "SR", "DME", "DR", "LDY", "LRD", "SIR", "UN" ],
-            "example" : "Mr"
-          },
-          "description" : {
-            "type" : [ "string", "null" ],
-            "description" : "Person title description",
-            "example" : "Mr"
           }
         }
       },
@@ -4201,6 +4795,65 @@
           }
         },
         "required" : [ "code", "description" ]
+      },
+      "PrisonIdentifierResponse" : {
+        "type" : "object",
+        "description" : "A prisoner identifier",
+        "properties" : {
+          "cprAliasId" : {
+            "type" : "string",
+            "description" : "The alias id",
+            "example" : "4f2b1d8a-9f3c-4a1f-8b2d-112233445566"
+          },
+          "cprIdentifierId" : {
+            "type" : "string",
+            "description" : "The identifier id",
+            "example" : "3e2b1d8a-9f3c-4a1f-8b2d-112233445566"
+          },
+          "type" : {
+            "type" : "string",
+            "description" : "Type of identifier",
+            "enum" : [ "PNC", "CRO", "NATIONAL_INSURANCE_NUMBER", "DRIVER_LICENSE_NUMBER", "ARREST_SUMMONS_NUMBER", "AAMR", "ACC", "APNC", "AMRL", "ASN", "URN", "DRL", "DNOMS", "XIMMN", "XNOMS", "IMMN", "DOFF", "LCRN", "LBCN", "LIFN", "MFCRN", "MTCRN", "MSVN", "NHS", "NOMS", "OTHR", "PCRN", "PARN", "PST", "AI02", "PRNOMS", "SPNC", "NPNC", "VISO", "YCRN", "UNKNOWN" ],
+            "example" : "PNC"
+          },
+          "value" : {
+            "type" : "string",
+            "description" : "The value of the identifier",
+            "example" : "1231/XX/121"
+          },
+          "prisonNumber" : {
+            "type" : "string",
+            "description" : "The prison number of the prisoner",
+            "example" : "A1234AB"
+          },
+          "comment" : {
+            "type" : [ "string", "null" ],
+            "description" : "Comment",
+            "example" : "Important Auth"
+          },
+          "modifyDateTime" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "Date identifier was modified",
+            "example" : "2024-01-01T12:00:00"
+          },
+          "modifyUserId" : {
+            "type" : [ "string", "null" ],
+            "description" : "Username of staff member that modified identifier"
+          },
+          "createDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Date identifier was created",
+            "example" : "2023-01-01T12:00:00"
+          },
+          "createUserId" : {
+            "type" : "string",
+            "description" : "Username of staff member that added identifier",
+            "example" : "jdoe"
+          }
+        },
+        "required" : [ "cprAliasId", "cprIdentifierId", "createDateTime", "createUserId", "prisonNumber", "type", "value" ]
       },
       "DpsPrisonRecord" : {
         "type" : "object",
