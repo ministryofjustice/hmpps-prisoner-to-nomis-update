@@ -11,9 +11,9 @@ import kotlin.io.path.pathString
 import kotlin.io.path.Path as KotlinPath
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.15"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.1.1"
   kotlin("plugin.spring") version "2.4.21"
-  id("org.openapi.generator") version "7.26.0"
+  id("org.openapi.generator") version "7.27.0"
 }
 
 configurations {
@@ -37,7 +37,7 @@ dependencies {
   }
   implementation("org.springframework.boot:spring-boot-jackson2")
 
-  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:7.6.0-beta-2")
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:7.6.0")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk9")
@@ -50,10 +50,10 @@ dependencies {
 
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:3.1.0")
   testImplementation("org.springframework.boot:spring-boot-starter-webflux-test")
-  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.48") {
+  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.49") {
     exclude(group = "io.swagger.core.v3")
   }
-  testImplementation("io.swagger.core.v3:swagger-core-jakarta:2.2.55")
+  testImplementation("io.swagger.core.v3:swagger-core-jakarta:2.2.56")
 
   testImplementation("org.wiremock:wiremock-standalone:3.13.2")
   testImplementation("org.testcontainers:localstack:1.21.4")
