@@ -47,6 +47,11 @@ spring:
             client-id: ${appointments.client.id}
             client-secret: ${appointments.client.secret}
             authorization-grant-type: client_credentials
+          bedassignment-api:
+            provider: hmpps-auth
+            client-id: ${bedassignment.client.id}
+            client-secret: ${bedassignment.client.secret}
+            authorization-grant-type: client_credentials
           casenotes-api:
             provider: hmpps-auth
             client-id: ${casenotes.client.id}

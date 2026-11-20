@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.AdjudicationsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.AlertsDpsApiExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.bedassignment.BedAssignmentDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.CaseNotesDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonCprApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingApiExtension
@@ -64,6 +65,7 @@ class HealthCheckTest : IntegrationTestBase() {
       .jsonPath("components.personalRelationshipsApi.status").isEqualTo("UP")
       .jsonPath("components.propertyApi.status").isEqualTo("UP")
       .jsonPath("components.csraApi.status").isEqualTo("UP")
+      .jsonPath("components.bedAssignmentApi.status").isEqualTo("UP")
       .jsonPath("components.organisationsApi.status").isEqualTo("UP")
       .jsonPath("components.visitBalanceApi.status").isEqualTo("UP")
       .jsonPath("components.corePersonApi.status").isEqualTo("UP")
@@ -132,6 +134,7 @@ class HealthCheckTest : IntegrationTestBase() {
     CourtSentencingApiExtension.courtSentencingApi.stubHealthPing(status)
     CSIPDpsApiExtension.csipDpsApi.stubHealthPing(status)
     CsraDpsApiExtension.csraApi.stubHealthPing(status)
+    BedAssignmentDpsApiExtension.bedAssignmentApi.stubHealthPing(status)
     FinanceDpsApiExtension.dpsFinanceServer.stubHealthPing(status)
     IncentivesApiExtension.incentivesApi.stubHealthPing(status)
     IncidentsDpsApiExtension.incidentsDpsApi.stubHealthPing(status)

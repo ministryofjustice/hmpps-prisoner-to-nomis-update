@@ -16,6 +16,7 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.AdjudicationsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.AlertsDpsApiExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.bedassignment.BedAssignmentDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.CaseNotesDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonCprApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingApiExtension
@@ -53,6 +54,7 @@ import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
   AdjudicationsApiExtension::class,
   AlertsDpsApiExtension::class,
   AppointmentsApiExtension::class,
+  BedAssignmentDpsApiExtension::class,
   CaseNotesDpsApiExtension::class,
   ContactPersonDpsApiExtension::class,
   CorePersonCprApiExtension::class,
