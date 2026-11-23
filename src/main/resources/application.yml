@@ -49,8 +49,8 @@ spring:
             authorization-grant-type: client_credentials
           bedassignment-api:
             provider: hmpps-auth
-            client-id: ${bedassignment.client.id}
-            client-secret: ${bedassignment.client.secret}
+            client-id: ${cell.move.client.id}
+            client-secret: ${cell.move.client.secret}
             authorization-grant-type: client_credentials
           casenotes-api:
             provider: hmpps-auth
@@ -229,8 +229,6 @@ reports:
   appointments:
     reconciliation:
       page-size: 50
-      # this is the lookahead limit as there is a restriction of 1 month in the activities repo
-      lookahead-days: 26
   sentencing:
     reconciliation:
       page-size: 20
