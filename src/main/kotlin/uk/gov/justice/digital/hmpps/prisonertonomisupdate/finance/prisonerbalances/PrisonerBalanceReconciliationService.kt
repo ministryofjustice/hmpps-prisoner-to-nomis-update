@@ -38,11 +38,13 @@ class PrisonerBalanceReconciliationService(
     private const val TELEMETRY_PRISONER_PREFIX = "prisoner-balance-reports-reconciliation"
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
     private val retryRootOffenders = ConcurrentHashMap.newKeySet<Long>()
-    private val excludedHoldPrisonNumbers: List<String> = PrisonerBalanceReconciliationService::class.java
+    private val excludedHoldPrisonNumbers: Set<String> = PrisonerBalanceReconciliationService::class.java
       .getResource("/excludedHoldReconciliationPrisonNumbers.txt")
       .readText()
       .split(",")
-      .filter { it.isNotEmpty() }
+      .map(String::trim)
+      .filter(String::isNotEmpty)
+      .toSet()
   }
 
   suspend fun manualCheckPrisonerBalance(rootOffenderId: Long, suppressEvents: Boolean): MismatchPrisonerBalance? = checkPrisonerBalance(
