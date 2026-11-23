@@ -65,6 +65,10 @@ class PersonLocationReconciliationService(
   @param:Value($$"${reports.person-location.reconciliation.page-size}") private val pageSize: Int = 100,
   @param:Value($$"${reports.person-location.reconciliation.thread-count}") private val threadCount: Int = 15,
 ) {
+  private companion object {
+    const val GHOST_PRISON = "ZZGHI"
+  }
+
   private val names = ReconciliationNames("person-location-reconciliation", "Person location")
 
   suspend fun generateReport(selection: PrisonerSelection) = PrisonerReconciliationReport(telemetryClient, nomisPrisonerApi, names, selection, pageSize, threadCount) { checkPrisonersMatch(it) }.run()
@@ -72,11 +76,16 @@ class PersonLocationReconciliationService(
   suspend fun checkPrisonersMatch(offenderNo: String, suppressTelemetry: Boolean = false): List<MismatchedPrisonerLocations> = withContext(Dispatchers.Unconfined) {
     val nomisLocations = async { nomisApi.getOffenderPersonLocationsOrNull(offenderNo) }
     val dpsLocations = async { dpsApi.getReconciliation(offenderNo) }
-    val mappings = nomisLocations.await()
-      ?.let { async { mappingApi.getMappings(it.bookings.map { it.booking.bookingId }) } }
+    val nomis = nomisLocations.await()
       ?: throw IllegalStateException("Cannot perform reconciliation for a prisoner that doesn't exist in NOMIS - has the prisoner been merged or deleted recently?")
 
-    checkPrisonersMatch(offenderNo, nomisLocations.await()!!, dpsLocations.await(), mappings.await(), suppressTelemetry)
+    if (nomis.bookings.any { it.booking.latestBooking && it.booking.prison == GHOST_PRISON }) {
+      dpsLocations.cancel()
+      return@withContext emptyList()
+    }
+
+    val mappings = mappingApi.getMappings(nomis.bookings.map { it.booking.bookingId })
+    checkPrisonersMatch(offenderNo, nomis, dpsLocations.await(), mappings, suppressTelemetry)
   }
 
   private fun checkPrisonersMatch(
@@ -328,7 +337,7 @@ class PersonLocationReconciliationService(
 
       // from location
       val acceptableOutsideFrom = nomisMovement.directionCode == IN && nomisMovement.from == null && dpsMovement.from.description == "Outside"
-      if (!acceptableOutsideFrom && nomisMovement.from?.expectedDpsDescription() != dpsMovement.from.description) {
+      if (!acceptableOutsideFrom && !nomisMovement.hasMutableTapAddressFrom() && nomisMovement.from?.expectedDpsDescription() != dpsMovement.from.description) {
         mismatches.add(mismatch(MOVEMENT_FROM_LOCATION, nomisMovement.from?.description, dpsMovement.from.description))
       }
 
@@ -337,8 +346,8 @@ class PersonLocationReconciliationService(
         mismatches.add(mismatch(MOVEMENT_REASON, nomisMovement.movementReason.code, dpsMovement.reason.code))
       }
 
-      // movement time
-      if (nomisMovement.movementTime != dpsMovement.occurredAt) {
+      // movement time - NOMIS overnight job TAG_DATETIME_CORRECTION_UTILITY can zero the seconds
+      if (nomisMovement.movementTime.withSecond(0) != dpsMovement.occurredAt.withSecond(0)) {
         mismatches.add(mismatch(MOVEMENT_TIME, "${nomisMovement.movementTime}", "${dpsMovement.occurredAt}"))
       }
 
@@ -348,7 +357,7 @@ class PersonLocationReconciliationService(
       }
 
       // to location
-      if (nomisMovement.to?.expectedDpsDescription() != dpsMovement.to?.description) {
+      if (!nomisMovement.hasMutableTapAddressTo() && nomisMovement.to?.expectedDpsDescription() != dpsMovement.to?.description) {
         mismatches.add(mismatch(MOVEMENT_TO_LOCATION, nomisMovement.to?.description, dpsMovement.to?.description))
       }
     }
@@ -421,7 +430,7 @@ class PersonLocationReconciliationService(
       )
     } ?: listOf(
       // a prisoner with no NOMIS bookings, e.g. after a merge not yet processed by DPS
-      StatusCheck(STATUS_ACTIVE, null, "OUT", dpsStatus.expectedLegacyActive),
+      StatusCheck(STATUS_ACTIVE, null, "INACTIVE", dpsStatus.expectedLegacyActive),
       StatusCheck(STATUS_IN_OUT, null, "OUT", dpsStatus.expectedLegacyInOut),
       StatusCheck(STATUS_PRISON_CODE, null, null, dpsStatus.prisonCode),
     )
@@ -433,6 +442,10 @@ class PersonLocationReconciliationService(
 
   // The sync sends DPS "UNKNOWN" rather than the NOMIS descriptions of the unknown location codes
   private fun MovementLocation.expectedDpsDescription() = if (code in listOf("UNKNWN", "UNKNCT")) "UNKNOWN" else description
+
+  // NOMIS allows the address of a historical TAP to be changed, but DPS treats it as immutable so it can't be reconciled
+  private fun PersonLocationMovement.hasMutableTapAddressFrom() = movementType == TAP && directionCode == IN && from?.type == MovementLocation.Type.OTHER
+  private fun PersonLocationMovement.hasMutableTapAddressTo() = movementType == TAP && directionCode == OUT && to?.type == MovementLocation.Type.OTHER
 
   private fun OffenderPersonLocationsResponse.movementIds() = bookings.flatMap { bk -> bk.movements.map { mv -> NomisMovementId(bk.booking.bookingId, mv.sequence) } }
   private fun OffenderPersonLocationsResponse.findMovement(nomisId: NomisMovementId) = bookings.flatMap { it.movements }.first { it.bookingId == nomisId.bookingId && it.sequence == nomisId.sequence }
