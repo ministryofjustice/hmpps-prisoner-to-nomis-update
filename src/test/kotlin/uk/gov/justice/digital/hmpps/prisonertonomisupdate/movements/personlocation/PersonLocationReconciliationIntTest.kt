@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.mockito.kotlin.any
+import org.mockito.kotlin.atLeastOnce
 import org.mockito.kotlin.check
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
@@ -614,6 +615,40 @@ class PersonLocationReconciliationIntTest(
     }
 
     @Test
+    fun `movement time with seconds zeroed in NOMIS should not be reported`() = runTest {
+      nomisApi.stubGetOffenderPersonLocations(
+        offenderNo = "A0001TZ",
+        response = offenderPersonLocationsResponse(
+          movements = listOf(
+            validTransferIn.copy(movementTime = LocalDateTime.parse("2024-01-01T10:00:00")),
+            validCourtOut.copy(movementTime = LocalDateTime.parse("2024-01-11T10:00:00")),
+          ),
+        ),
+      )
+      dpsApi.stubReconciliation(
+        personIdentifier = "A0001TZ",
+        response = dpsResponse.copy(
+          series = listOf(
+            dpsResponse.series[0].copy(
+              movements = listOf(
+                dpsResponse.series[0].movements[0].copy(occurredAt = LocalDateTime.parse("2024-01-01T10:00:42")),
+                dpsResponse.series[0].movements[1].copy(occurredAt = LocalDateTime.parse("2024-01-11T10:00:17")),
+              ),
+            ),
+          ),
+        ),
+      )
+      reconciliationService.generateReport(ALL_PRISONERS)
+      awaitReportFinished()
+
+      verify(telemetryClient, never()).trackEvent(
+        eq("person-location-reconciliation-mismatch"),
+        any(),
+        isNull(),
+      )
+    }
+
+    @Test
     fun `movement reason different`() = runTest {
       nomisApi.stubGetOffenderPersonLocations(
         offenderNo = "A0001TZ",
@@ -781,6 +816,65 @@ class PersonLocationReconciliationIntTest(
       awaitReportFinished()
 
       verifyTelemetry("12345_2", movementOutId, MOVEMENT_FROM_LOCATION)
+    }
+
+    @Test
+    fun `should not reconcile NOMIS TAP address of type OTHER`() = runTest {
+      val otherAddress = MovementLocation(type = MovementLocation.Type.OTHER, description = "Changed address")
+      nomisApi.stubGetOffenderPersonLocations(
+        offenderNo = "A0001TZ",
+        response = offenderPersonLocationsResponse(
+          movements = listOf(
+            validTransferIn.copy(movementType = TAP, from = otherAddress),
+            validCourtOut.copy(movementType = TAP, to = otherAddress),
+          ),
+        ),
+      )
+      reconciliationService.generateReport(ALL_PRISONERS)
+      awaitReportFinished()
+
+      verify(telemetryClient, never()).trackEvent(
+        eq("person-location-reconciliation-mismatch"),
+        check { assertThat(it["type"]).isIn(MOVEMENT_FROM_LOCATION.name, MOVEMENT_TO_LOCATION.name) },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `should still reconcile other TAP locations`() = runTest {
+      val otherAddress = MovementLocation(type = MovementLocation.Type.OTHER, description = "Changed address")
+      val prison = MovementLocation(type = MovementLocation.Type.PRISON, code = "WRONG", description = "Wrong")
+      nomisApi.stubGetOffenderPersonLocations(
+        offenderNo = "A0001TZ",
+        response = offenderPersonLocationsResponse(
+          movements = listOf(
+            validTransferIn.copy(movementType = TAP, to = otherAddress),
+            validCourtOut.copy(movementType = TAP, from = otherAddress, to = prison),
+          ),
+        ),
+      )
+      reconciliationService.generateReport(ALL_PRISONERS)
+      awaitReportFinished()
+
+      verifyTelemetry("12345_1", movementInId, MOVEMENT_TO_LOCATION)
+      verifyTelemetry("12345_2", movementOutId, MOVEMENT_FROM_LOCATION)
+      verifyTelemetry("12345_2", movementOutId, MOVEMENT_TO_LOCATION)
+    }
+
+    @Test
+    fun `should still reconcile OTHER address on non-TAP movements`() = runTest {
+      val otherAddress = MovementLocation(type = MovementLocation.Type.OTHER, description = "Changed address")
+      nomisApi.stubGetOffenderPersonLocations(
+        offenderNo = "A0001TZ",
+        response = offenderPersonLocationsResponse(
+          movements = listOf(validTransferIn.copy(from = otherAddress), validCourtOut.copy(to = otherAddress)),
+        ),
+      )
+      reconciliationService.generateReport(ALL_PRISONERS)
+      awaitReportFinished()
+
+      verifyTelemetry("12345_1", movementInId, MOVEMENT_FROM_LOCATION)
+      verifyTelemetry("12345_2", movementOutId, MOVEMENT_TO_LOCATION)
     }
 
     private fun stubDpsFromDescription(movementIndex: Int, description: String) {
@@ -1247,6 +1341,45 @@ class PersonLocationReconciliationIntTest(
           dpsValue = dpsValue,
         ),
       )
+    }
+  }
+
+  @Nested
+  inner class GhostPrison {
+    private val validBookingLocations = offenderPersonLocationsResponse().bookings[0]
+    private val validBooking = validBookingLocations.booking
+
+    private fun runReport(nomisBookings: List<BookingPersonLocations>) = runTest {
+      reset(telemetryClient)
+      prisonerApi.stubGetAllPrisoners(offenderId = 0, pageSize = 100, prisoners = listOf(generateOffenderNo(sequence = 1)))
+      nomisApi.stubGetOffenderPersonLocations(
+        offenderNo = "A0001TZ",
+        response = offenderPersonLocationsResponse(bookings = nomisBookings),
+      )
+      dpsApi.stubReconciliation(personIdentifier = "A0001TZ", response = reconciliationResponse(series = emptyList(), status = noBookingsStatus))
+      mappingApi.stubGetPersonLocationMappings(response = emptyList())
+      reconciliationService.generateReport(ALL_PRISONERS)
+      awaitReportFinished()
+    }
+
+    @Test
+    fun `should ignore prisoner whose latest booking is in the ghost prison`() {
+      runReport(listOf(validBookingLocations.copy(booking = validBooking.copy(prison = "ZZGHI"))))
+
+      verify(telemetryClient, never()).trackEvent(eq("person-location-reconciliation-mismatch"), any(), isNull())
+    }
+
+    @Test
+    fun `should reconcile prisoner who has left the ghost prison`() {
+      val oldGhostBooking = validBooking.copy(bookingId = 1, activeBooking = false, latestBooking = false, prison = "ZZGHI")
+      runReport(
+        listOf(
+          BookingPersonLocations(booking = oldGhostBooking, movements = emptyList()),
+          validBookingLocations,
+        ),
+      )
+
+      verify(telemetryClient, atLeastOnce()).trackEvent(eq("person-location-reconciliation-mismatch"), any(), isNull())
     }
   }
 

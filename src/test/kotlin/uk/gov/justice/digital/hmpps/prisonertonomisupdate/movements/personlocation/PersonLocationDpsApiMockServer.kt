@@ -75,7 +75,7 @@ class PersonLocationDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       temporarilyAbsent = false,
       transferring = false,
       expectedLegacyInOut = "OUT",
-      expectedLegacyActive = "OUT",
+      expectedLegacyActive = "INACTIVE",
       prisonCode = null,
     )
 
