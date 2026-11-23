@@ -514,7 +514,7 @@ class PrisonerBalanceReconciliationServiceTest {
             Difference(
               property = "prisoner-balances.accounts[1001].holdBalance",
               dps = BigDecimal("0.5"),
-              nomis = BigDecimal("0.3")
+              nomis = BigDecimal("0.3"),
             ),
           ),
         )
