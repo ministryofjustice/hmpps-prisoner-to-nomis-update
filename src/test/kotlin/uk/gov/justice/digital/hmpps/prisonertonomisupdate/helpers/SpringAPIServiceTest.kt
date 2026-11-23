@@ -13,6 +13,7 @@ import org.springframework.test.context.BootstrapWith
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.AdjudicationsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.AlertsDpsApiExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.bedassignment.BedAssignmentDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.CaseNotesDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.WebClientConfiguration
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonCprApiExtension
@@ -64,6 +65,7 @@ import kotlin.annotation.AnnotationTarget.CLASS
   AdjudicationsApiExtension::class,
   AlertsDpsApiExtension::class,
   AppointmentsApiExtension::class,
+  BedAssignmentDpsApiExtension::class,
   CaseNotesDpsApiExtension::class,
   ContactPersonDpsApiExtension::class,
   CorePersonCprApiExtension::class,

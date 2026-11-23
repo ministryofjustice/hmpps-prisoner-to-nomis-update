@@ -153,6 +153,12 @@ val models = listOf(
     models = "Alert,AlertCode,AlertCodeSummary,AlertType",
   ),
   ModelConfiguration(
+    name = "bedassignment",
+    packageName = "bedassignment",
+    testPackageName = "bedassignment",
+    url = "https://change-someones-cell-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
+  ),
+  ModelConfiguration(
     name = "casenotes",
     packageName = "casenotes",
     url = "https://dev.offender-case-notes.service.justice.gov.uk/v3/api-docs",
@@ -161,7 +167,7 @@ val models = listOf(
   ModelConfiguration(
     name = "csra",
     packageName = "csra",
-    // testPackageName = "csra",
+    testPackageName = "csra",
     url = "https://cell-sharing-risk-assessment-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
   ),
   ModelConfiguration(
