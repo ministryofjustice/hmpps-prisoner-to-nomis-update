@@ -489,6 +489,37 @@ class PrisonerBalanceReconciliationServiceTest {
         ),
       )
     }
+
+    @Nested
+    inner class ExcludedHoldPrisonNumbers {
+      @Test
+      fun `will ignore hold mismatch for excluded prison numbers`() = runTest {
+        stubBalanceReconciliation(
+          nomisPrisonerAccounts().copy(prisonNumber = "A6609ET"),
+          dpsAccount(holdBalance = BigDecimal("0.5")),
+        )
+
+        assertThat(service.checkPrisonerBalance(rootOffenderId = OFFENDER_ID, isRetry = true)?.differences).isNull()
+      }
+
+      @Test
+      fun `will report hold mismatch for non excluded prison numbers`() = runTest {
+        stubBalanceReconciliation(
+          nomisPrisonerAccounts().copy(prisonNumber = OFFENDER_NO),
+          dpsAccount(holdBalance = BigDecimal("0.5")),
+        )
+
+        assertThat(service.checkPrisonerBalance(rootOffenderId = OFFENDER_ID, isRetry = true)?.differences).isEqualTo(
+          listOf(
+            Difference(
+              property = "prisoner-balances.accounts[1001].holdBalance",
+              dps = BigDecimal("0.5"),
+              nomis = BigDecimal("0.3"),
+            ),
+          ),
+        )
+      }
+    }
   }
 
   @Nested

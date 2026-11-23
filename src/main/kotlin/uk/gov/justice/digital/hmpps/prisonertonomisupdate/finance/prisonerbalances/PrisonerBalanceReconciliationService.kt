@@ -23,6 +23,7 @@ import kotlin.collections.isNotEmpty
 
 private const val RETRY_LIMIT = 200
 
+@Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
 @Service
 class PrisonerBalanceReconciliationService(
   private val telemetryClient: TelemetryClient,
@@ -37,6 +38,13 @@ class PrisonerBalanceReconciliationService(
     private const val TELEMETRY_PRISONER_PREFIX = "prisoner-balance-reports-reconciliation"
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
     private val retryRootOffenders = ConcurrentHashMap.newKeySet<Long>()
+    private val excludedHoldPrisonNumbers: Set<String> = PrisonerBalanceReconciliationService::class.java
+      .getResource("/excludedHoldReconciliationPrisonNumbers.txt")
+      .readText()
+      .split(",")
+      .map(String::trim)
+      .filter(String::isNotEmpty)
+      .toSet()
   }
 
   suspend fun manualCheckPrisonerBalance(rootOffenderId: Long, suppressEvents: Boolean): MismatchPrisonerBalance? = checkPrisonerBalance(
@@ -205,7 +213,7 @@ class PrisonerBalanceReconciliationService(
       differences.add(Difference("$parentProperty.prisonNumber", nomis.prisonNumber, dps.prisonNumber))
     }
 
-    differences.addAll(compareAccounts(nomis.accounts, dps.accounts, "$parentProperty.accounts"))
+    differences.addAll(compareAccounts(nomis.prisonNumber, nomis.accounts, dps.accounts, "$parentProperty.accounts"))
     differences.addAll(compareAdvanceSummary(nomis.advanceSummary, dps.advanceSummary, "$parentProperty.advanceSummary"))
     differences.addAll(compareScheduledPayments(nomis.scheduledPayments, dps.scheduledPayments, "$parentProperty.scheduledPayments"))
 
@@ -234,8 +242,9 @@ class PrisonerBalanceReconciliationService(
     return differences
   }
 
-  private fun compareAccounts(nomisAccounts: List<AccountFields>, dpsAccounts: List<AccountFields>, parentProperty: String): List<Difference> {
+  private fun compareAccounts(prisonNumber: String, nomisAccounts: List<AccountFields>, dpsAccounts: List<AccountFields>, parentProperty: String): List<Difference> {
     val differences = mutableListOf<Difference>()
+    val excludedHoldForPrisoner = excludedHoldPrisonNumbers.contains(prisonNumber)
 
     val nomisAccountsByCode = nomisAccounts.associateBy { it.accountCode }
     val dpsAccountsByCode = dpsAccounts.associateBy { it.accountCode }
@@ -255,7 +264,7 @@ class PrisonerBalanceReconciliationService(
           differences.addIfMismatch("$parentProperty[$accountCode].balance", nomisBalance, dpsBalance)
         }
 
-        if (reconcileHolds() && dpsHoldBalance.compareTo(nomisHoldBalance) != 0) {
+        if (reconcileHolds() && !excludedHoldForPrisoner && dpsHoldBalance.compareTo(nomisHoldBalance) != 0) {
           differences.add(
             Difference(
               "$parentProperty[$accountCode].holdBalance",
