@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-11-19.6329.8450e04"
+    "version" : "2026-11-20.6373.bb4168d"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -611,6 +611,42 @@
         }
       }
     },
+    "/queue-admin/retry-dlq-messages/{dlqName}" : {
+      "put" : {
+        "tags" : [ "hmpps-queue-resource" ],
+        "operationId" : "retryDlqMessages",
+        "parameters" : [ {
+          "name" : "dlqName",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/RetryDlqMessagesBody"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RetryDlqMessagesResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/queue-admin/retry-all-dlqs" : {
       "put" : {
         "tags" : [ "hmpps-queue-resource" ],
@@ -651,6 +687,42 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/PurgeQueueResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/queue-admin/delete-dlq-messages/{dlqName}" : {
+      "put" : {
+        "tags" : [ "hmpps-queue-resource" ],
+        "operationId" : "deleteDlqMessages",
+        "parameters" : [ {
+          "name" : "dlqName",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/DeleteDlqMessagesBody"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DeleteDlqMessagesResult"
                 }
               }
             }
@@ -1132,7 +1204,7 @@
     "/syscon-sync/person/{prisonNumber}/primary-name/{cprAliasId}" : {
       "post" : {
         "tags" : [ "Syscon Sync" ],
-        "description" : "Sets the given alias as the PRIMARY (working) name for the prisoner, marking all other aliases as ALIAS. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
+        "description" : "Sets the given alias as the PRIMARY (working) name for the prisoner, marking all other aliases as ALIAS. Does nothing if the alias is already the PRIMARY name. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
         "operationId" : "processPrisonPrimaryName",
         "parameters" : [ {
           "name" : "prisonNumber",
@@ -1151,8 +1223,7 @@
         } ],
         "responses" : {
           "204" : {
-            "description" : "No Content",
-            "content" : { }
+            "description" : "No Content"
           }
         },
         "security" : [ {
@@ -1203,7 +1274,7 @@
     "/syscon-sync/person/{prisonNumber}/alias" : {
       "post" : {
         "tags" : [ "Syscon Sync" ],
-        "description" : "Create prisoner alias record, including its identifiers, by Prison Number. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
+        "description" : "Create prisoner alias record, by Prison Number. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
         "operationId" : "createPrisonerAlias",
         "parameters" : [ {
           "name" : "prisonNumber",
@@ -1377,7 +1448,7 @@
     "/syscon-sync/aliases-identifiers/{prisonNumber}" : {
       "post" : {
         "tags" : [ "Syscon Sync" ],
-        "description" : "Save the prison aliases and identifers for the given prison number. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
+        "description" : "Save the prison aliases and identifiers for the given prison number. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
         "operationId" : "saveAliasesAndIdentifiers",
         "parameters" : [ {
           "name" : "prisonNumber",
@@ -1408,7 +1479,10 @@
               }
             }
           }
-        }
+        },
+        "security" : [ {
+          "api-role" : [ ]
+        } ]
       }
     },
     "/syscon-sync/addresses-contacts/{prisonNumber}" : {
@@ -1909,6 +1983,48 @@
         "security" : [ {
           "api-role" : [ ]
         } ]
+      }
+    },
+    "/queue-admin/search-dlq-messages/{dlqName}" : {
+      "get" : {
+        "tags" : [ "hmpps-queue-resource" ],
+        "operationId" : "searchDlqMessages",
+        "parameters" : [ {
+          "name" : "dlqName",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "filter",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "maxMessages",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 100
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SearchDlqResult"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/queue-admin/get-dlq-messages/{dlqName}" : {
@@ -2621,11 +2737,6 @@
             "description" : "The identifier comment",
             "example" : "Some comment"
           },
-          "issuedDate" : {
-            "type" : [ "string", "null" ],
-            "format" : "date",
-            "description" : "The issued date"
-          },
           "verified" : {
             "type" : "boolean",
             "description" : "Verified"
@@ -2890,6 +3001,44 @@
         },
         "required" : [ "messagesFoundCount" ]
       },
+      "RetryDlqMessagesBody" : {
+        "type" : "object",
+        "properties" : {
+          "messageIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        },
+        "required" : [ "messageIds" ]
+      },
+      "RetryDlqMessagesResult" : {
+        "type" : "object",
+        "properties" : {
+          "messagesFoundCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "messagesRetriedCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "retriedMessageIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "notFoundMessageIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        },
+        "required" : [ "messagesFoundCount", "messagesRetriedCount", "notFoundMessageIds", "retriedMessageIds" ]
+      },
       "PurgeQueueResult" : {
         "type" : "object",
         "properties" : {
@@ -2899,6 +3048,50 @@
           }
         },
         "required" : [ "messagesFoundCount" ]
+      },
+      "DeleteDlqMessagesBody" : {
+        "type" : "object",
+        "properties" : {
+          "messageIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        },
+        "required" : [ "messageIds" ]
+      },
+      "DeleteDlqMessagesResult" : {
+        "type" : "object",
+        "properties" : {
+          "messagesFoundCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "messagesDeletedCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "deletedMessageIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "notFoundMessageIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "failedMessageIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        },
+        "required" : [ "deletedMessageIds", "failedMessageIds", "messagesDeletedCount", "messagesFoundCount", "notFoundMessageIds" ]
       },
       "ContactDetails" : {
         "type" : "object",
@@ -3774,11 +3967,11 @@
         "type" : "object",
         "properties" : {
           "nomisOffenderId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64"
           },
           "cprAliasId" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "identifierMappings" : {
             "type" : "array",
@@ -3787,7 +3980,7 @@
             }
           }
         },
-        "required" : [ "cprAliasId", "identifierMappings", "nomisOffenderId" ]
+        "required" : [ "identifierMappings" ]
       },
       "PrisonAliasesAndIdentifiersRequest" : {
         "type" : "object",
@@ -4491,9 +4684,33 @@
           },
           "messageId" : {
             "type" : "string"
+          },
+          "approximateReceiveCount" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int32"
           }
         },
         "required" : [ "body", "messageId" ]
+      },
+      "SearchDlqResult" : {
+        "type" : "object",
+        "properties" : {
+          "messagesFoundCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "messagesReturnedCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "messages" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/DlqMessage"
+            }
+          }
+        },
+        "required" : [ "messages", "messagesFoundCount", "messagesReturnedCount" ]
       },
       "GetDlqResult" : {
         "type" : "object",
