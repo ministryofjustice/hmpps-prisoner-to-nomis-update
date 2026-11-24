@@ -4,6 +4,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
 import com.github.tomakehurst.wiremock.client.WireMock.equalToJson
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.anyMap
 import org.mockito.ArgumentMatchers.eq
+import org.mockito.kotlin.atLeastOnce
 import org.mockito.kotlin.check
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.never
@@ -22,6 +24,7 @@ import org.springframework.http.HttpStatus
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.countAllMessagesOnDLQQueue
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PropertyContainerMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.property.PropertyDpsApiExtension.Companion.jsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.property.PropertyDpsApiExtension.Companion.propertyDpsApi
@@ -336,6 +339,7 @@ class PropertyToNomisIntTest : SqsIntegrationTestBase() {
         fun `will correctly update the Property in NOMIS`() {
           propertyNomisApiMockServer.verify(
             putRequestedFor(anyUrl())
+              .withRequestBodyJsonPath("$.prisonId", "MDI")
               .withRequestBodyJsonPath("$.sealMark", "SEAL1234")
               .withRequestBodyJsonPath("$.containerCode", "VALU")
               .withRequestBodyJsonPath("$.internalLocationId", NOMIS_LOCATION_ID)
@@ -362,6 +366,97 @@ class PropertyToNomisIntTest : SqsIntegrationTestBase() {
       }
 
       @Nested
+      inner class PrisonChanged {
+        @BeforeEach
+        fun setup() {
+          propertyDpsApi.stubGetProperty(
+            DPS_ID,
+            dpsProperty(UUID.fromString(DPS_ID), UUID.fromString(DPS_LOCATION_ID))
+              .copy(prisonId = "LEI", currentStatus = PropertyContainerDto.CurrentStatus.STORED, removalDate = null),
+          )
+          publishPropertyDomainEvent("prison-property.container.updated", changedFields = listOf("receivingPrisonId"))
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will update the receiving prison and location in the same PUT`() {
+          propertyNomisApiMockServer.verify(
+            1,
+            putRequestedFor(urlEqualTo("/property-containers/$NOMIS_ID"))
+              .withRequestBody(
+                equalToJson(
+                  """{
+                      "prisonId": "LEI",
+                      "internalLocationId": $NOMIS_LOCATION_ID,
+                      "containerCode": "VALU",
+                      "active": true,
+                      "sealMark": "SEAL1234",
+                      "proposedDisposalDate": "2026-03-04",
+                      "expiryDate": null
+                    }""",
+                ),
+              ),
+          )
+        }
+
+        @Test
+        fun `will send telemetry showing the update`() {
+          verify(telemetryClient).trackEvent(
+            eq("property-update-success"),
+            check {
+              assertThat(it).containsEntry("dpsPropertyContainerId", DPS_ID)
+              assertThat(it).containsEntry("nomisPropertyContainerId", "$NOMIS_ID")
+              assertThat(it).containsEntry("changedFields", "[receivingPrisonId]")
+            },
+            isNull(),
+          )
+        }
+      }
+
+      @Nested
+      inner class WhenNomisRejectsLocation {
+        @BeforeEach
+        fun setup() {
+          propertyDpsApi.stubGetProperty(
+            DPS_ID,
+            dpsProperty(UUID.fromString(DPS_ID), UUID.fromString(DPS_LOCATION_ID))
+              .copy(prisonId = "LEI", currentStatus = PropertyContainerDto.CurrentStatus.STORED, removalDate = null),
+          )
+          // awsSqsPropertyDlqClient!!.purgeQueue(PurgeQueueRequest.builder().queueUrl(propertyDlqUrl).build()).get()
+          propertyNomisApiMockServer.stubPutProperty(NOMIS_ID, HttpStatus.BAD_REQUEST.value())
+
+          publishPropertyDomainEvent("prison-property.container.updated", changedFields = listOf("receivingPrisonId"))
+          await untilAsserted {
+            assertThat(propertyQueue.countAllMessagesOnDLQQueue()).isEqualTo(1)
+          }
+        }
+
+        @Test
+        fun `will send the receiving prison and rejected location together`() {
+          propertyNomisApiMockServer.verify(
+            putRequestedFor(urlEqualTo("/property-containers/$NOMIS_ID"))
+              .withRequestBodyJsonPath("$.prisonId", "LEI")
+              .withRequestBodyJsonPath("$.internalLocationId", NOMIS_LOCATION_ID),
+          )
+        }
+
+        @Test
+        fun `will report the failure without reporting success`() {
+          verify(telemetryClient, atLeastOnce()).trackEvent(
+            eq("property-update-error"),
+            check {
+              assertThat(it).containsEntry("dpsPropertyContainerId", DPS_ID)
+              assertThat(it).containsEntry("nomisPropertyContainerId", "$NOMIS_ID")
+              assertThat(it).containsEntry("changedFields", "[receivingPrisonId]")
+              assertThat(it["error"]).contains("400 Bad Request")
+            },
+            isNull(),
+          )
+          verify(telemetryClient, never()).trackEvent(eq("property-update-success"), anyMap(), isNull())
+        }
+      }
+
+      @Nested
       inner class HappyPathPropertyRemoved {
         @BeforeEach
         fun setup() {
@@ -378,6 +473,7 @@ class PropertyToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBody(
                 equalToJson(
                   """{
+                     "prisonId": "MDI",
                      "internalLocationId": null,
                      "prisonId" : null,
                      "containerCode": "VALU",

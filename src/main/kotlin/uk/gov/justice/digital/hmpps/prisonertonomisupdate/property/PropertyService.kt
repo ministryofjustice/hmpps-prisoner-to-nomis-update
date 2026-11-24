@@ -81,6 +81,7 @@ class PropertyService(
   }
 
   suspend fun PropertyContainerDto.toNomisUpdateRequest() = PropertyContainerUpdateRequest(
+    prisonId = prisonId,
     sealMark = currentSealNumber,
     containerCode = toNomisContainerCode(),
     internalLocationId = toNomisLocation(),
@@ -127,6 +128,7 @@ class PropertyService(
 }
 
 private val supportedFields = setOf(
+  "receivingPrisonId",
   "sealNumber",
   "location",
   "containerType",

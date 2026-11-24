@@ -230,6 +230,9 @@ abstract class SqsIntegrationTestBase : IntegrationTestBase() {
     agencyRegistersQueue.sqsDlqClient?.purgeQueue(agencyRegistersQueue.dlqUrl)?.get()
 
     fromNomisCourtSentencingQueue.purgeQueue().get()
+
+    awsSqsPropertyClient.purgeQueue(propertyQueueUrl).get()
+    awsSqsPropertyDlqClient?.purgeQueue(propertyDlqUrl)?.get()
   }
 
   internal fun waitForAnyProcessingToComplete(times: Int = 1) {
