@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.ADJUDI
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.ALERT_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.ALLOCATION_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.APPOINTMENT_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.APPOINTMENT_RECON_EXT
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.ATTENDANCE_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.CASE_NOTES_ACTIVE_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.CASE_NOTES_FULL_RECON
@@ -42,6 +43,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PURGE_
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.SENTENCING_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.SUSPENDED_ALLOCATION_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.VISIT_BALANCE_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.bedassignment.BedAssignmentReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.CaseNotesReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingReconciliationService
@@ -82,6 +84,7 @@ class BatchManagerTest {
   private val agencyRegistersReconciliationService = mock<AgencyRegistersReconciliationService>()
   private val alertsReconService = mock<AlertsReconciliationService>()
   private val appointmentsReconService = mock<AppointmentsReconciliationService>()
+  private val bedAssignmentReconciliationService = mock<BedAssignmentReconciliationService>()
   private val caseNotesReconciliationService = mock<CaseNotesReconciliationService>()
   private val contactPersonProfileDetailsReconService = mock<ContactPersonProfileDetailsReconciliationService>()
   private val contactPersonReconService = mock<ContactPersonReconciliationService>()
@@ -122,6 +125,22 @@ class BatchManagerTest {
   }
 
   @Test
+  fun `should call the active bed assignment reconciliation service`() = runTest {
+    batchManager(BatchType.BED_ASSIGNMENT_ACTIVE_RECON).onApplicationEvent(event)
+
+    verify(bedAssignmentReconciliationService).generateReconciliationReportBatch(true)
+    verify(context).close()
+  }
+
+  @Test
+  fun `should call the full bed assignment reconciliation service`() = runTest {
+    batchManager(BatchType.BED_ASSIGNMENT_FULL_RECON).onApplicationEvent(event)
+
+    verify(bedAssignmentReconciliationService).generateReconciliationReportBatch(false)
+    verify(context).close()
+  }
+
+  @Test
   fun `should call the adjudications reconciliation service`() = runTest {
     val batchManager = batchManager(ADJUDICATION_RECON)
 
@@ -158,6 +177,16 @@ class BatchManagerTest {
     batchManager.onApplicationEvent(event)
 
     verify(appointmentsReconService).generateReconciliationReportBatch()
+    verify(context).close()
+  }
+
+  @Test
+  fun `should call the appointments reconciliation extended service`() = runTest {
+    val batchManager = batchManager(APPOINTMENT_RECON_EXT)
+
+    batchManager.onApplicationEvent(event)
+
+    verify(appointmentsReconService).generateReconciliationReportBatch(full = true)
     verify(context).close()
   }
 
@@ -590,6 +619,7 @@ class BatchManagerTest {
     courtSentencingReconciliationService = courtSentencingReconciliationService,
     csipReconciliationService = csipReconciliationService,
     csraReconciliationService = csraReconciliationService,
+    bedAssignmentReconciliationService = bedAssignmentReconciliationService,
     hmppsQueueService = hmppsQueueService,
     incentivesReconciliationService = incentivesReconciliationService,
     incidentsReconciliationService = incidentsReconciliationService,
