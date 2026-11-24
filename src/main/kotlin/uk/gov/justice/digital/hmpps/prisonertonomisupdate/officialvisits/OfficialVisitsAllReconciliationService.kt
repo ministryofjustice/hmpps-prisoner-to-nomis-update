@@ -218,7 +218,7 @@ class OfficialVisitsAllReconciliationService(
     )
   }
 
-  private fun checkVisitsMatch(nomisVisitId: Long, dpsVisit: OfficialVisitSummary, nomisVisit: OfficialVisitSummary): MismatchVisit? = takeIf { dpsVisit != nomisVisit }?.let {
+  private fun checkVisitsMatch(nomisVisitId: Long, dpsVisit: OfficialVisitSummary, nomisVisit: OfficialVisitSummary): MismatchVisit? = takeUnless { isExcluded(nomisVisitId) }?.takeIf { dpsVisit != nomisVisit }?.let {
     MismatchVisit(
       nomisVisitId = nomisVisitId,
       reason = "different-visit-details",
@@ -226,6 +226,11 @@ class OfficialVisitsAllReconciliationService(
       dpsVisit = dpsVisit,
     )
   }
+
+  private fun isExcluded(nomisVisitId: Long): Boolean = nomisVisitId in listOf(
+    // VDE marked as cancelled in DPS - should be completed
+    19455505L,
+  )
 }
 
 data class MismatchVisit(
