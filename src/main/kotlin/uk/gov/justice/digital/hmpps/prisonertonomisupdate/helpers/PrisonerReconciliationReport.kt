@@ -64,22 +64,22 @@ class PrisonerReconciliationReport<M : Any>(
   suspend fun run() {
     telemetryClient.trackEvent("${names.telemetryPrefix}-requested", mapOf("TYPE" to selection.name))
 
-    runCatching { reconcile() }
-      .onSuccess {
-        log.info("${names.description} ${selection.label} reconciliation report completed with ${it.mismatches.size} mismatches")
+    runCatching { reconcile().let { result -> result to mismatchSummary(result.mismatches) } }
+      .onSuccess { (result, summary) ->
+        log.info("${names.description} ${selection.label} reconciliation report completed with ${result.mismatches.size} mismatches")
         telemetryClient.trackEvent(
           "${names.telemetryPrefix}-report",
           mapOf(
             "TYPE" to selection.name,
-            "prisoners-count" to it.itemsChecked.toString(),
-            "pages-count" to it.pagesChecked.toString(),
-            "mismatch-count" to it.mismatches.size.toString(),
+            "prisoners-count" to result.itemsChecked.toString(),
+            "pages-count" to result.pagesChecked.toString(),
+            "mismatch-count" to result.mismatches.size.toString(),
             "success" to "true",
-          ) + mismatchSummary(it.mismatches),
+          ) + summary,
         )
       }
       .onFailure {
-        telemetryClient.trackEvent("${names.telemetryPrefix}-report", mapOf("TYPE" to selection.name, "success" to "false"))
+        telemetryClient.trackEvent("${names.telemetryPrefix}-report", mapOf("TYPE" to selection.name, "success" to "false", "error" to (it.message ?: "unknown")))
         log.error("${names.description} ${selection.label} reconciliation report failed", it)
       }
   }

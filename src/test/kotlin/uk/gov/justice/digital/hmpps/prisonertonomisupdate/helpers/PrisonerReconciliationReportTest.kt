@@ -175,6 +175,32 @@ class PrisonerReconciliationReportTest {
   }
 
   @Nested
+  inner class ReportFailure {
+    @Test
+    fun `a failed report is reported as unsuccessful with the error`() = runTest {
+      stubAllPrisoners("A0001TZ")
+      mismatchesFor = { listOf("one") }
+
+      PrisonerReconciliationReport(
+        telemetryClient,
+        nomisApi,
+        names,
+        ALL_PRISONERS,
+        pageSize = 10,
+        threadCount = 2,
+        mismatchSummary = { throw RuntimeException("cannot summarise") },
+        check = { mismatchesFor(it) },
+      ).run()
+
+      verify(telemetryClient).trackEvent(
+        eq("test-reconciliation-report"),
+        eq(mapOf("TYPE" to "ALL_PRISONERS", "success" to "false", "error" to "cannot summarise")),
+        isNull(),
+      )
+    }
+  }
+
+  @Nested
   inner class PageError {
     @Test
     fun `all prisoners page failure is reported against the offenderId cursor`() = runTest {

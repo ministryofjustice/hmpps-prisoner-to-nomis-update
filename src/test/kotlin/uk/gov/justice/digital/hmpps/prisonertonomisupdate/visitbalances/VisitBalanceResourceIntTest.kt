@@ -103,7 +103,7 @@ class VisitBalanceResourceIntTest(
 
       verify(telemetryClient).trackEvent(
         eq("visitbalance-reports-reconciliation-requested"),
-        check { assertThat(it).isEmpty() },
+        check { assertThat(it).containsEntry("TYPE", "ACTIVE_PRISONERS") },
         isNull(),
       )
 
@@ -145,6 +145,8 @@ class VisitBalanceResourceIntTest(
         eq("visitbalance-reports-reconciliation-report"),
         check {
           assertThat(it).containsEntry("mismatch-count", "3")
+          assertThat(it).containsEntry("A0001TZ", "dpsBalance=PrisonerBalance(visitBalance=12, privilegedVisitBalance=9), nomisBalance=PrisonerBalance(visitBalance=7, privilegedVisitBalance=3)")
+          assertThat(it).containsKeys("A0002TZ", "A0034TZ")
         },
         isNull(),
       )
@@ -159,21 +161,18 @@ class VisitBalanceResourceIntTest(
 
       assertThat(mismatchedRecords).containsOnly("A0001TZ", "A0002TZ", "A0034TZ")
       with(telemetryCaptor.allValues.find { it["prisonNumber"] == "A0001TZ" }) {
-        assertThat(this).containsEntry("bookingId", "1")
         assertThat(this).containsEntry("nomisVisitBalance", "7")
         assertThat(this).containsEntry("dpsVisitBalance", "12")
         assertThat(this).containsEntry("nomisPrivilegedVisitBalance", "3")
         assertThat(this).containsEntry("dpsPrivilegedVisitBalance", "9")
       }
       with(telemetryCaptor.allValues.find { it["prisonNumber"] == "A0002TZ" }) {
-        assertThat(this).containsEntry("bookingId", "2")
         assertThat(this).containsEntry("nomisVisitBalance", "4")
         assertThat(this).containsEntry("dpsVisitBalance", "9")
         assertThat(this).containsEntry("nomisPrivilegedVisitBalance", "3")
         assertThat(this).containsEntry("dpsPrivilegedVisitBalance", "7")
       }
       with(telemetryCaptor.allValues.find { it["prisonNumber"] == "A0034TZ" }) {
-        assertThat(this).containsEntry("bookingId", "34")
         assertThat(this).containsEntry("nomisVisitBalance", "2")
         assertThat(this).containsEntry("nomisPrivilegedVisitBalance", "3")
         assertThat(this).containsEntry("dpsVisitBalance", "17")
