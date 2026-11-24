@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-11-19.1296.3053528"
+    "version" : "2026-11-23.1308.1b5cad3"
   },
   "servers" : [ {
     "url" : "https://prisoner-finance-sync-api-dev.hmpps.service.justice.gov.uk/",
@@ -707,6 +707,108 @@
           },
           "502" : {
             "description" : "The Advance Service is not available or throwing an error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearer-jwt" : [ "ROLE_PRISONER_FINANCE_SYNC__RW" ]
+        } ]
+      }
+    },
+    "/sync/advances/{advanceId}/update" : {
+      "post" : {
+        "tags" : [ "Advances" ],
+        "summary" : "Update advance",
+        "description" : "Update an advance comment",
+        "operationId" : "updateAdvance",
+        "parameters" : [ {
+          "name" : "advanceId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AdvanceUpdateRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Advance record updated.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AdvanceRecordResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad request - invalid input data.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - requires a valid OAuth2 token",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden - requires an appropriate role",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not found - advance was not found.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error - An unexpected error occurred.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502" : {
+            "description" : "A dependency error occurred.",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -2269,6 +2371,81 @@
         },
         "required" : [ "advanceId", "advanceStatus", "writtenOffAmount" ]
       },
+      "AdvanceUpdateRequest" : {
+        "type" : "object",
+        "properties" : {
+          "updatedBy" : {
+            "type" : "string"
+          },
+          "comment" : {
+            "type" : [ "string", "null" ]
+          }
+        },
+        "required" : [ "updatedBy" ]
+      },
+      "AdvanceRecordResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "legacyPaymentProfileId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "legacyInformationNumber" : {
+            "type" : "string"
+          },
+          "prisonNumber" : {
+            "type" : "string"
+          },
+          "prisonID" : {
+            "type" : "string"
+          },
+          "amount" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "createdOn" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "repaymentStartDate" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "repaymentAmount" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "createdBy" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "ACTIVE", "REPAID", "WRITTEN_OFF" ]
+          },
+          "reference" : {
+            "type" : [ "string", "null" ]
+          },
+          "comment" : {
+            "type" : [ "string", "null" ]
+          },
+          "updatedAt" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time"
+          },
+          "generalLedgerUUID" : {
+            "type" : [ "string", "null" ],
+            "format" : "uuid"
+          },
+          "updatedBy" : {
+            "type" : [ "string", "null" ]
+          }
+        },
+        "required" : [ "amount", "createdBy", "createdOn", "id", "legacyInformationNumber", "legacyPaymentProfileId", "prisonID", "prisonNumber", "repaymentAmount", "repaymentStartDate", "status" ]
+      },
       "SyncCreateAdvanceRepayRequest" : {
         "type" : "object",
         "properties" : {
@@ -2676,6 +2853,13 @@
             "type" : "string",
             "format" : "date-time"
           },
+          "requestId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "transactionType" : {
+            "type" : [ "string", "null" ]
+          },
           "caseloadId" : {
             "type" : [ "string", "null" ]
           },
@@ -2686,13 +2870,6 @@
           "legacyTransactionId" : {
             "type" : [ "integer", "null" ],
             "format" : "int64"
-          },
-          "requestId" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "transactionType" : {
-            "type" : [ "string", "null" ]
           },
           "synchronizedTransactionId" : {
             "type" : "string",
