@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-11-20.2413.f40acce"
+    "version" : "2026-11-23.2417.18f2044"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -732,7 +732,7 @@
       "put" : {
         "tags" : [ "property-resource" ],
         "summary" : "Updates a prisoner property container record",
-        "description" : "Replaces the container's mutable details (type, seal, location, proposed disposal date).\n      Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "description" : "Replaces the container's mutable details (type, seal, location, proposed disposal date).\n      The prison is unchanged when omitted; the box location must belong to the resulting prison.\n      Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
         "operationId" : "update",
         "parameters" : [ {
           "name" : "propertyContainerId",
@@ -761,7 +761,7 @@
             }
           },
           "400" : {
-            "description" : "Invalid location",
+            "description" : "Invalid prison or location, or location does not belong to the prison",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -31345,6 +31345,11 @@
             "format" : "int64",
             "description" : "The property box location id for the container",
             "example" : 1234567
+          },
+          "prisonId" : {
+            "type" : [ "string", "null" ],
+            "description" : "The prison ID for the container; unchanged when omitted",
+            "example" : "MDI"
           },
           "sealMark" : {
             "type" : [ "string", "null" ],
