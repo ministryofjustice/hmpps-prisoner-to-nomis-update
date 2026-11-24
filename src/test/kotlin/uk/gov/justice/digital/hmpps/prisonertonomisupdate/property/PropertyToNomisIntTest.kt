@@ -379,6 +379,7 @@ class PropertyToNomisIntTest : SqsIntegrationTestBase() {
                 equalToJson(
                   """{
                      "internalLocationId": null,
+                     "prisonId" : null,
                      "containerCode": "VALU",
                      "active":false,
                      "sealMark":"SEAL1234",
