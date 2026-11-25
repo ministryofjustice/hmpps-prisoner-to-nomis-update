@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-11-23.2417.18f2044"
+    "version" : "2026-11-24.2429.0940866"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -18487,6 +18487,69 @@
         }
       }
     },
+    "/sentence-calculations/{offenderSentenceCalculationId}" : {
+      "get" : {
+        "tags" : [ "calculate-release-dates-resource" ],
+        "summary" : "Gets a single offender sentence calculation by id",
+        "description" : "Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getOffenderSentenceCalculation",
+        "parameters" : [ {
+          "name" : "offenderSentenceCalculationId",
+          "in" : "path",
+          "description" : "The offender sentence calculation id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The offender sentence calculation id",
+            "example" : 1234567
+          },
+          "example" : 1234567
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Offender sentence calculation",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OffenderSentenceCalculationResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Offender sentence calculation not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/search/prisoners/{prisonerNumber}/bookings" : {
       "get" : {
         "tags" : [ "prisoner-search-resource" ],
@@ -20126,6 +20189,71 @@
           },
           "404" : {
             "description" : "Offender booking not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prisoners/{offenderNo}/sentence-calculations" : {
+      "get" : {
+        "tags" : [ "calculate-release-dates-resource" ],
+        "summary" : "Gets all offender sentence calculations for a prisoner across all of their bookings",
+        "description" : "Results are ordered by calculation id, oldest first. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getOffenderSentenceCalculations",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "The NOMIS id of the offender",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "The NOMIS id of the offender",
+            "example" : "A1234AA"
+          },
+          "example" : "A1234AA"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Offender sentence calculations, empty if the prisoner has none",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/OffenderSentenceCalculationResponse"
+                  }
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Offender not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW role",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -41873,6 +42001,269 @@
         },
         "required" : [ "prisonId" ]
       },
+      "OffenderSentenceCalculationResponse" : {
+        "type" : "object",
+        "description" : "An offender sentence calculation (release dates calculation) for a booking",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The offender sentence calculation id"
+          },
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The booking id the calculation belongs to"
+          },
+          "offenderNo" : {
+            "type" : "string",
+            "description" : "The NOMIS id of the offender",
+            "example" : "A1234AA"
+          },
+          "calculationDate" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "When the calculation was done"
+          },
+          "staffId" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int64",
+            "description" : "The staff id of the user that did the calculation"
+          },
+          "calculationReasonCode" : {
+            "type" : "string",
+            "description" : "The reason for the calculation",
+            "example" : "NEW"
+          },
+          "commentText" : {
+            "type" : [ "string", "null" ],
+            "description" : "Free text comment"
+          },
+          "effectiveSentenceEndDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Effective sentence end date"
+          },
+          "effectiveSentenceLength" : {
+            "type" : [ "string", "null" ],
+            "description" : "Effective sentence length in the format YY/MM/DD",
+            "example" : "02/06/00"
+          },
+          "judiciallyImposedSentenceLength" : {
+            "type" : [ "string", "null" ],
+            "description" : "Judicially imposed sentence length in the format YY/MM/DD",
+            "example" : "02/06/00"
+          },
+          "workflowHistoryId" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int64",
+            "description" : "Workflow history id"
+          },
+          "hdcedCalculatedDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Home Detention Curfew Eligibility Date - calculated"
+          },
+          "hdcedOverridedDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Home Detention Curfew Eligibility Date - overridden"
+          },
+          "hdcadCalculatedDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Home Detention Curfew Approved Date - calculated"
+          },
+          "hdcadOverridedDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Home Detention Curfew Approved Date - overridden"
+          },
+          "etdCalculatedDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Earliest Tariff Date - calculated"
+          },
+          "etdOverridedDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Earliest Tariff Date - overridden"
+          },
+          "mtdCalculatedDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Mid Tariff Date - calculated"
+          },
+          "mtdOverridedDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Mid Tariff Date - overridden"
+          },
+          "ltdCalculatedDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Latest Tariff Date - calculated"
+          },
+          "ltdOverridedDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Latest Tariff Date - overridden"
+          },
+          "ardCalculatedDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Automatic Release Date - calculated"
+          },
+          "ardOverridedDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Automatic Release Date - overridden"
+          },
+          "crdCalculatedDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Conditional Release Date - calculated"
+          },
+          "crdOverridedDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Conditional Release Date - overridden"
+          },
+          "pedCalculatedDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Parole Eligibility Date - calculated"
+          },
+          "pedOverridedDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Parole Eligibility Date - overridden"
+          },
+          "apdCalculatedDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Approved Parole Date - calculated"
+          },
+          "apdOverridedDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Approved Parole Date - overridden"
+          },
+          "npdCalculatedDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Non Parole Date - calculated"
+          },
+          "npdOverridedDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Non Parole Date - overridden"
+          },
+          "ledCalculatedDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Licence Expiry Date - calculated"
+          },
+          "ledOverridedDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Licence Expiry Date - overridden"
+          },
+          "sedCalculatedDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Sentence Expiry Date - calculated"
+          },
+          "sedOverridedDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Sentence Expiry Date - overridden"
+          },
+          "prrdCalculatedDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Post Recall Release Date - calculated"
+          },
+          "prrdOverridedDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Post Recall Release Date - overridden"
+          },
+          "tariffCalculatedDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Tariff Date - calculated"
+          },
+          "tariffOverridedDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Tariff Date - overridden"
+          },
+          "dprrdCalculatedDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "DTO Post Recall Release Date - calculated"
+          },
+          "dprrdOverridedDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "DTO Post Recall Release Date - overridden"
+          },
+          "ersedOverridedDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Early Removal Scheme Eligibility Date - overridden"
+          },
+          "tersedOverridedDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Tariff Expiry Removal Scheme Date - overridden"
+          },
+          "rotlOverridedDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Release on Temporary Licence Date - overridden"
+          },
+          "tusedCalculatedDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Top Up Supervision Expiry Date - calculated"
+          },
+          "tusedOverridedDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "Top Up Supervision Expiry Date - overridden"
+          },
+          "recordDatetime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Date the record was recorded"
+          },
+          "recordUserId" : {
+            "type" : [ "string", "null" ],
+            "description" : "User that recorded the record"
+          },
+          "createDatetime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "When the record was created"
+          },
+          "createUsername" : {
+            "type" : "string",
+            "description" : "User that created the record"
+          },
+          "modifyDatetime" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "When the record was last modified"
+          },
+          "modifyUserId" : {
+            "type" : [ "string", "null" ],
+            "description" : "User that last modified the record"
+          }
+        },
+        "required" : [ "bookingId", "calculationDate", "calculationReasonCode", "createDatetime", "createUsername", "id", "offenderNo", "recordDatetime" ]
+      },
       "SentenceAdjustmentResponse" : {
         "type" : "object",
         "description" : "Sentence adjustment",
@@ -48158,17 +48549,6 @@
             "description" : "How much has been written off so far, in pence",
             "example" : 1020
           },
-          "createdBy" : {
-            "type" : "string",
-            "description" : "The user who created the advance",
-            "example" : "FRED_SMITH"
-          },
-          "createDatetime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The date time when the advance was created",
-            "example" : "2024-06-01T12:00:00"
-          },
           "status" : {
             "type" : "string",
             "description" : "The status of the advance",
@@ -48186,6 +48566,22 @@
             "format" : "date-time",
             "description" : "The date time of the last transaction for the advance",
             "example" : "2025-07-14T12:13:14"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "The user who created the advance",
+            "example" : "FRED_SMITH"
+          },
+          "createDatetime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date time when the advance was created",
+            "example" : "2024-06-01T12:00:00"
+          },
+          "lastModifiedBy" : {
+            "type" : [ "string", "null" ],
+            "description" : "The user who last modified the advance",
+            "example" : "FRED_SMITH"
           }
         },
         "required" : [ "advanceAmount", "caseloadId", "createDatetime", "createdBy", "id", "informationNumber", "lastTransactionTimestamp", "outstandingBalance", "prisonNumber", "repaymentAmount", "startDate", "status" ]
