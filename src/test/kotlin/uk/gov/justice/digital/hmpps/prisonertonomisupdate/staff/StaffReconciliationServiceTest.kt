@@ -69,15 +69,6 @@ class StaffReconciliationServiceTest {
           stubStaffReconciliation(nomisStaffDetails(), dpsStaffDetails())
           assertThat(service.checkStaffMatch(1234)).isNull()
         }
-
-        @Test
-        fun `will not report a mismatch when status values are both set to an inactive value`() = runTest {
-          stubStaffReconciliation(
-            nomisStaffDetails().copy(status = "SICK"),
-            dpsStaffDetails().copy(status = PrisonUserReconciliationResponse.Status.INACTIVE),
-          )
-          assertThat(service.checkStaffMatch(1234)).isNull()
-        }
       }
 
       @Nested
@@ -102,7 +93,7 @@ class StaffReconciliationServiceTest {
         fun `will report a mismatch when statuses don't match`() = runTest {
           stubStaffReconciliation(nomisStaffDetails().copy(status = "SICK"), dpsStaffDetails())
           assertThat(service.checkStaffMatch(1234)?.differences).containsExactly(
-            entry("status", "nomis=INACT, dps=ACTIVE"),
+            entry("status", "nomis=SICK, dps=ACTIVE"),
           )
         }
 

@@ -35,7 +35,7 @@ fun StaffDetails.toStaff() = StaffSummary(
   staffId = id,
   firstName = firstName,
   lastName = lastName,
-  status = if (status == "ACTIVE") "ACTIVE" else "INACT",
+  status = status,
   accounts = accounts.map { it.toStaffAccountSummary() }.sortedBy { it.username },
   emails = emailAddresses.map { it.email },
 )
@@ -58,7 +58,7 @@ fun PrisonUserReconciliationResponse.toStaff() = StaffSummary(
   staffId = staffId,
   firstName = firstName,
   lastName = lastName,
-  status = status.mapDps(),
+  status = status.value,
   accounts = accounts.map { it.toStaffAccountSummary() }.sortedBy { it.username },
   emails = emails.map { it.email },
 )
@@ -75,10 +75,6 @@ fun PrisonUserAccount.toStaffAccountSummary() = StaffAccountSummary(
   activeMemberCaseloads = memberCaseloads.filter { it.active }.map { it.caseloadId },
   inactiveMemberCaseloads = memberCaseloads.filter { !it.active }.map { it.caseloadId },
 )
-fun PrisonUserReconciliationResponse.Status.mapDps(): String = when (this) {
-  PrisonUserReconciliationResponse.Status.ACTIVE -> "ACTIVE"
-  PrisonUserReconciliationResponse.Status.INACTIVE -> "INACT"
-}
 fun PrisonUserAccount.AccountStatus.mapDps(): String = when (this) {
   PrisonUserAccount.AccountStatus.OPEN -> return "OPEN"
   PrisonUserAccount.AccountStatus.EXPIRED -> "EXPIRED"
