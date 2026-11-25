@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-11-20.6373.bb4168d"
+    "version" : "2026-11-24.6428.321f5c7"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -271,8 +271,7 @@
         },
         "responses" : {
           "204" : {
-            "description" : "No Content",
-            "content" : { }
+            "description" : "No Content"
           }
         },
         "security" : [ {
@@ -3832,6 +3831,19 @@
         },
         "required" : [ "addresses", "contacts" ]
       },
+      "PrisonAliasesAndIdentifiersRequest" : {
+        "type" : "object",
+        "properties" : {
+          "aliases" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonAlias"
+            },
+            "minItems" : 1
+          }
+        },
+        "required" : [ "aliases" ]
+      },
       "PrisonMerge" : {
         "type" : "object",
         "properties" : {
@@ -3843,9 +3855,13 @@
           "toPrisonAddressesAndContactsRequest" : {
             "$ref" : "#/components/schemas/PrisonAddressesAndContactsRequest",
             "description" : "The merged addresses and contacts to overwrite on the person being merged to"
+          },
+          "toPrisonAliasesAndIdentifiersRequest" : {
+            "$ref" : "#/components/schemas/PrisonAliasesAndIdentifiersRequest",
+            "description" : "The merged aliases and identifiers to overwrite on the person being merged to"
           }
         },
-        "required" : [ "fromPrisonNumber", "toPrisonAddressesAndContactsRequest" ]
+        "required" : [ "fromPrisonNumber", "toPrisonAddressesAndContactsRequest", "toPrisonAliasesAndIdentifiersRequest" ]
       },
       "SysconAddressMapping" : {
         "type" : "object",
@@ -3981,19 +3997,6 @@
           }
         },
         "required" : [ "identifierMappings" ]
-      },
-      "PrisonAliasesAndIdentifiersRequest" : {
-        "type" : "object",
-        "properties" : {
-          "aliases" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/PrisonAlias"
-            },
-            "minItems" : 1
-          }
-        },
-        "required" : [ "aliases" ]
       },
       "SysconAliasesAndIdentifiersResponseBody" : {
         "type" : "object",
