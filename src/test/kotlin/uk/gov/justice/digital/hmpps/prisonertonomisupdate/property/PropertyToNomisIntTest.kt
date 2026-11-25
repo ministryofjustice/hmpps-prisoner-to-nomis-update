@@ -475,7 +475,6 @@ class PropertyToNomisIntTest : SqsIntegrationTestBase() {
                   """{
                      "prisonId": "MDI",
                      "internalLocationId": null,
-                     "prisonId" : null,
                      "containerCode": "VALU",
                      "active":false,
                      "sealMark":"SEAL1234",
