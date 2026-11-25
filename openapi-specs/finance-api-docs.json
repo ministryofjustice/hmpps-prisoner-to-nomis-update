@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-11-23.1308.1b5cad3"
+    "version" : "2026-11-24.1316.7e7612c"
   },
   "servers" : [ {
     "url" : "https://prisoner-finance-sync-api-dev.hmpps.service.justice.gov.uk/",
@@ -1782,8 +1782,19 @@
             "format" : "date",
             "description" : "The updated subscription end date - Must be after the start date of the subscription",
             "example" : "2026-07-14"
+          },
+          "comment" : {
+            "type" : [ "string", "null" ],
+            "description" : "The comment to set for the subscription",
+            "example" : "This is a comment"
+          },
+          "updatedBy" : {
+            "type" : "string",
+            "description" : "The user name that updated the record.",
+            "example" : "A739XYY"
           }
-        }
+        },
+        "required" : [ "updatedBy" ]
       },
       "SyncUpdateSubscriptionResponse" : {
         "type" : "object",
