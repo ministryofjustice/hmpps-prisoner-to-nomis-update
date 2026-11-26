@@ -9,6 +9,7 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.mockito.kotlin.any
 import org.mockito.kotlin.atLeastOnce
@@ -54,9 +55,13 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Bo
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingPersonLocations
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.MovementLocation
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonLocationBooking
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonLocationBooking.BookingStatus.CLOSED
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonLocationMovement
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonLocationMovement.DirectionCode
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonLocationMovement.DirectionCode.IN
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonLocationMovement.DirectionCode.OUT
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonLocationMovement.MovementType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonLocationMovement.MovementType.REL
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonLocationMovement.MovementType.TAP
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
@@ -1171,18 +1176,25 @@ class PersonLocationReconciliationIntTest(
   @Nested
   inner class PrisonerStatus {
     private val dpsResponse = reconciliationResponse()
-    private val validDpsStatus = dpsResponse.status
-    private val validBookingLocations = offenderPersonLocationsResponse().bookings[0]
+
+    // the default NOMIS booking's last movement is CRT OUT, so the status must be OUT to be consistent
+    private val validDpsStatus = dpsResponse.status.copy(expectedLegacyInOut = "OUT")
+    private val validBookingLocations = offenderPersonLocationsResponse().bookings[0].let { it.copy(booking = it.booking.copy(inOutStatus = "OUT")) }
     private val validBooking = validBookingLocations.booking
 
-    fun verifyTelemetry(type: MismatchedPrisonerLocationStatus.Type, nomisBookingId: Long? = 12345) = verify(telemetryClient).trackEvent(
+    fun verifyTelemetry(
+      type: MismatchedPrisonerLocationStatus.Type,
+      nomisBookingId: Long? = 12345,
+      suspectedCorruption: String? = null,
+    ) = verify(telemetryClient).trackEvent(
       eq("person-location-reconciliation-mismatch"),
       eq(
-        mapOf(
-          "offenderNo" to "A0001TZ",
-          "type" to type.name,
-          "nomisBookingId" to "$nomisBookingId",
-        ),
+        buildMap {
+          put("offenderNo", "A0001TZ")
+          put("type", type.name)
+          put("nomisBookingId", "$nomisBookingId")
+          suspectedCorruption?.let { put("suspectedCorruption", it) }
+        },
       ),
       isNull(),
     )
@@ -1244,10 +1256,10 @@ class PersonLocationReconciliationIntTest(
 
     @Test
     fun `in out different`() {
-      stubAndRunReport(dpsStatus = validDpsStatus.copy(expectedLegacyInOut = "OUT"))
+      stubAndRunReport(dpsStatus = validDpsStatus.copy(expectedLegacyInOut = "IN"))
 
       verifyTelemetry(STATUS_IN_OUT)
-      verifyReconciliationEndpointStatus(STATUS_IN_OUT, nomisValue = "IN", dpsValue = "OUT")
+      verifyReconciliationEndpointStatus(STATUS_IN_OUT, nomisValue = "OUT", dpsValue = "IN")
     }
 
     @Test
@@ -1276,7 +1288,8 @@ class PersonLocationReconciliationIntTest(
         nomisBookings = listOf(validBookingLocations.copy(booking = validBooking.copy(prison = nomisPrison))),
       )
 
-      verifyTelemetry(STATUS_PRISON_CODE)
+      // the last movement CRT OUT is from BXI, so it conflicts with the NOMIS prison
+      verifyTelemetry(STATUS_PRISON_CODE, suspectedCorruption = "STATUS_CONFLICTS_WITH_LAST_MOVEMENT")
     }
 
     @Test
@@ -1288,7 +1301,7 @@ class PersonLocationReconciliationIntTest(
 
     @Test
     fun `should report DPS status when NOMIS has no bookings`() {
-      stubAndRunReport(nomisBookings = emptyList(), dpsSeries = emptyList())
+      stubAndRunReport(nomisBookings = emptyList(), dpsStatus = validDpsStatus.copy(expectedLegacyInOut = "IN"), dpsSeries = emptyList())
 
       verifyTelemetry(STATUS_ACTIVE, nomisBookingId = null)
       verifyTelemetry(STATUS_IN_OUT, nomisBookingId = null)
@@ -1326,11 +1339,115 @@ class PersonLocationReconciliationIntTest(
       verifyTelemetry(STATUS_PRISON_CODE, nomisBookingId = 2)
     }
 
+    @Nested
+    inner class SuspectedCorruptNomisData {
+      private val admissionIn = validBookingLocations.movements[0]
+      private val courtOut = validBookingLocations.movements[1]
+
+      private fun lastMovement(type: MovementType, direction: DirectionCode, sequence: Int) = when (direction) {
+        IN -> admissionIn
+        OUT -> courtOut
+      }.copy(movementType = type, sequence = sequence, movementTime = courtOut.movementTime.plusDays(1))
+
+      private fun movementsEndingWith(type: MovementType, direction: DirectionCode) = when (direction) {
+        IN -> listOf(admissionIn, courtOut, lastMovement(type, direction, sequence = 3))
+        OUT -> listOf(admissionIn, lastMovement(type, direction, sequence = 2))
+      }
+
+      private fun stubAndRunReport(
+        movements: List<PersonLocationMovement>,
+        booking: PersonLocationBooking = validBooking,
+        dpsStatus: ReconciliationPrisonerStatus = validDpsStatus.copy(expectedLegacyActive = if (booking.activeBooking) "INACTIVE" else "ACTIVE"),
+      ) = stubAndRunReport(nomisBookings = listOf(BookingPersonLocations(booking = booking, movements = movements)), dpsStatus = dpsStatus)
+
+      @ParameterizedTest
+      @CsvSource(
+        "ADM, IN, true, IN, BXI",
+        "TAP, IN, true, IN, BXI",
+        "CRT, IN, true, IN, BXI",
+        "TRN, IN, true, IN, BXI",
+        "TAP, OUT, true, OUT, BXI",
+        "CRT, OUT, true, OUT, BXI",
+        "TRN, OUT, true, TRN, TRN",
+        "REL, OUT, false, OUT, OUT",
+      )
+      fun `should not report suspected corruption if status is consistent with the last movement`(type: MovementType, direction: DirectionCode, active: Boolean, inOutStatus: String, prison: String) {
+        stubAndRunReport(
+          movements = movementsEndingWith(type, direction),
+          booking = validBooking.copy(activeBooking = active, inOutStatus = inOutStatus, prison = prison),
+        )
+
+        verifyTelemetry(STATUS_ACTIVE)
+      }
+
+      @ParameterizedTest
+      @CsvSource(
+        "CRT, OUT, true, IN, BXI",
+        "TAP, OUT, true, OUT, MDI",
+        "TRN, OUT, true, OUT, BXI",
+        "REL, OUT, true, OUT, OUT",
+        "ADM, IN, true, OUT, BXI",
+        "ADM, IN, false, IN, BXI",
+      )
+      fun `should report suspected corruption if status conflicts with the last movement`(type: MovementType, direction: DirectionCode, active: Boolean, inOutStatus: String, prison: String) {
+        stubAndRunReport(
+          movements = movementsEndingWith(type, direction),
+          booking = validBooking.copy(activeBooking = active, inOutStatus = inOutStatus, prison = prison),
+        )
+
+        verifyTelemetry(STATUS_ACTIVE, suspectedCorruption = "STATUS_CONFLICTS_WITH_LAST_MOVEMENT")
+      }
+
+      @Test
+      fun `should return suspected corruption from the reconciliation endpoint`() {
+        stubAndRunReport(movements = validBookingLocations.movements, booking = validBooking.copy(inOutStatus = "IN"))
+
+        verifyReconciliationEndpointStatus(
+          STATUS_ACTIVE,
+          nomisValue = "ACTIVE",
+          dpsValue = "INACTIVE",
+          suspectedCorruption = "STATUS_CONFLICTS_WITH_LAST_MOVEMENT",
+        )
+      }
+
+      @Test
+      fun `should report suspected corruption if movements are out of order`() {
+        stubAndRunReport(movements = listOf(admissionIn, courtOut.copy(movementTime = admissionIn.movementTime.minusDays(1))))
+
+        verifyTelemetry(STATUS_ACTIVE, suspectedCorruption = "MOVEMENTS_OUT_OF_ORDER")
+      }
+
+      @Test
+      fun `should not report suspected corruption if movements have the same time`() {
+        stubAndRunReport(movements = listOf(admissionIn, courtOut.copy(movementTime = admissionIn.movementTime)))
+
+        verifyTelemetry(STATUS_ACTIVE)
+      }
+
+      @Test
+      fun `should report suspected corruption if a movement is missing`() {
+        stubAndRunReport(movements = listOf(admissionIn, courtOut.copy(sequence = 2, movementType = TAP), courtOut.copy(sequence = 3, movementTime = courtOut.movementTime.plusDays(1))))
+
+        verifyTelemetry(STATUS_ACTIVE, suspectedCorruption = "MISSING_MOVEMENT")
+      }
+
+      @Test
+      fun `should report all reasons for suspected corruption`() {
+        stubAndRunReport(
+          movements = listOf(admissionIn.copy(movementTime = courtOut.movementTime.plusDays(1)), courtOut, courtOut.copy(sequence = 3, movementTime = courtOut.movementTime.plusDays(2))),
+          booking = validBooking.copy(inOutStatus = "IN"),
+        )
+
+        verifyTelemetry(STATUS_ACTIVE, suspectedCorruption = "STATUS_CONFLICTS_WITH_LAST_MOVEMENT,MOVEMENTS_OUT_OF_ORDER,MISSING_MOVEMENT")
+      }
+    }
+
     private fun verifyReconciliationEndpointStatus(
       type: MismatchedPrisonerLocationStatus.Type,
       nomisValue: String?,
       dpsValue: String?,
       nomisBookingId: Long? = 12345,
+      suspectedCorruption: String? = null,
     ) {
       verifyReconciliationEndpoint(
         MismatchedPrisonerLocationStatus(
@@ -1339,6 +1456,7 @@ class PersonLocationReconciliationIntTest(
           nomisBookingId = nomisBookingId,
           nomisValue = nomisValue,
           dpsValue = dpsValue,
+          suspectedCorruption = suspectedCorruption,
         ),
       )
     }

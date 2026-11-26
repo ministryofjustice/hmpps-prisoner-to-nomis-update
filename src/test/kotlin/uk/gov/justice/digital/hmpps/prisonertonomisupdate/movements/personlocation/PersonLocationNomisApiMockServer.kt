@@ -109,7 +109,7 @@ class PersonLocationNomisApiMockServer(private val jsonMapper: JsonMapper) {
       movementTime = movementTime,
       movementReason = CodeDescription(code = "CRT", description = "Court Appearance"),
       audit = NomisAudit(createDatetime = movementTime, createUsername = "SOME_USER"),
-      from = MovementLocation(type = MovementLocation.Type.PRISON, description = "Brixton", code = "NXI"),
+      from = MovementLocation(type = MovementLocation.Type.PRISON, description = "Brixton", code = "BXI"),
       to = MovementLocation(type = MovementLocation.Type.COURT, description = "Leeds Crown Court", code = "LEEDCC"),
       scheduleId = 54321L,
       commentText = "movement CRT notes",

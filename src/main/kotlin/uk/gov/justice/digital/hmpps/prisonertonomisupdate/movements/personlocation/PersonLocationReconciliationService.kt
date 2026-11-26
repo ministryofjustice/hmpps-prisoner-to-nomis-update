@@ -29,12 +29,17 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocati
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationMovements.Type.MOVEMENT_TIME
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationMovements.Type.MOVEMENT_TO_LOCATION
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationMovements.Type.MOVEMENT_TYPE
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationStatus.SuspectedCorruption.MISSING_MOVEMENT
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationStatus.SuspectedCorruption.MOVEMENTS_OUT_OF_ORDER
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationStatus.SuspectedCorruption.STATUS_CONFLICTS_WITH_LAST_MOVEMENT
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationStatus.Type.STATUS_ACTIVE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationStatus.Type.STATUS_IN_OUT
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationStatus.Type.STATUS_PRISON_CODE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonLocationBookingMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingPersonLocations
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.MovementLocation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderPersonLocationsResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonLocationBooking
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonLocationMovement
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonLocationMovement.DirectionCode.IN
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonLocationMovement.DirectionCode.OUT
@@ -148,11 +153,12 @@ class PersonLocationReconciliationService(
       mismatchedStatus.forEach {
         telemetryClient.trackEvent(
           "${names.telemetryPrefix}-mismatch",
-          mapOf(
-            "offenderNo" to offenderNo,
-            "type" to it.type,
-            "nomisBookingId" to "${it.nomisBookingId}",
-          ),
+          buildMap {
+            put("offenderNo", offenderNo)
+            put("type", it.type)
+            put("nomisBookingId", "${it.nomisBookingId}")
+            it.suspectedCorruption?.let { reasons -> put("suspectedCorruption", reasons) }
+          },
         )
       }
     }
@@ -415,7 +421,8 @@ class PersonLocationReconciliationService(
     nomisLocations: OffenderPersonLocationsResponse,
     dpsLocations: ReconciliationResponse,
   ): List<MismatchedPrisonerLocationStatus> {
-    val nomisBooking = nomisLocations.bookings.map { it.booking }.let { bookings -> bookings.firstOrNull { it.activeBooking } ?: bookings.firstOrNull { it.latestBooking } }
+    val nomisBookingLocations = nomisLocations.bookings.let { bookings -> bookings.firstOrNull { it.booking.activeBooking } ?: bookings.firstOrNull { it.booking.latestBooking } }
+    val nomisBooking = nomisBookingLocations?.booking
     val dpsStatus = dpsLocations.status
 
     class StatusCheck(val type: MismatchedPrisonerLocationStatus.Type, val nomisValue: String?, val expectedDpsValue: String?, val dpsValue: String?)
@@ -435,9 +442,32 @@ class PersonLocationReconciliationService(
       StatusCheck(STATUS_PRISON_CODE, null, null, dpsStatus.prisonCode),
     )
 
+    val suspectedCorruption by lazy { nomisBookingLocations?.suspectedCorruption() }
     return checks
       .filter { it.expectedDpsValue != it.dpsValue }
-      .map { MismatchedPrisonerLocationStatus(offenderNo, it.type, nomisBooking?.bookingId, it.nomisValue, it.dpsValue) }
+      .map { MismatchedPrisonerLocationStatus(offenderNo, it.type, nomisBooking?.bookingId, it.nomisValue, it.dpsValue, suspectedCorruption) }
+  }
+
+  // Status mismatches are often caused by corrupt NOMIS data where the booking status disagrees with its movements
+  private fun BookingPersonLocations.suspectedCorruption(): String? {
+    val movementsBySequence = movements.sortedBy { it.sequence }
+    return listOfNotNull(
+      STATUS_CONFLICTS_WITH_LAST_MOVEMENT.takeIf { movementsBySequence.lastOrNull()?.let { booking.conflictsWithLastMovement(it) } == true },
+      MOVEMENTS_OUT_OF_ORDER.takeIf { movementsBySequence != movements.sortedWith(compareBy({ it.movementTime }, { it.sequence })) },
+      MISSING_MOVEMENT.takeIf { movementsBySequence.zipWithNext().any { (previous, next) -> previous.directionCode == next.directionCode } },
+    )
+      .takeIf { it.isNotEmpty() }
+      ?.joinToString(",")
+  }
+
+  private fun PersonLocationBooking.conflictsWithLastMovement(lastMovement: PersonLocationMovement): Boolean {
+    val (expectedActive, expectedInOut, expectedPrison) = when {
+      lastMovement.directionCode == IN -> Triple(true, "IN", lastMovement.to?.code)
+      lastMovement.movementType == REL -> Triple(false, "OUT", "OUT")
+      lastMovement.movementType == TRN -> Triple(true, "TRN", "TRN")
+      else -> Triple(true, "OUT", lastMovement.from?.code)
+    }
+    return activeBooking != expectedActive || inOutStatus != expectedInOut || prison != expectedPrison
   }
 
   // The sync sends DPS "UNKNOWN" rather than the NOMIS descriptions of the unknown location codes
@@ -535,12 +565,19 @@ class MismatchedPrisonerLocationStatus(
   val nomisBookingId: Long?,
   val nomisValue: String?,
   val dpsValue: String?,
+  val suspectedCorruption: String? = null,
 ) : MismatchedPrisonerLocations(offenderNo, type.name) {
-  override fun toString() = "MismatchedPrisonerLocationStatus(offenderNo=$offenderNo, type=$type, nomisBookingId=$nomisBookingId, nomisValue=$nomisValue, dpsValue=$dpsValue)"
+  override fun toString() = "MismatchedPrisonerLocationStatus(offenderNo=$offenderNo, type=$type, nomisBookingId=$nomisBookingId, nomisValue=$nomisValue, dpsValue=$dpsValue, suspectedCorruption=$suspectedCorruption)"
 
   enum class Type {
     STATUS_ACTIVE,
     STATUS_IN_OUT,
     STATUS_PRISON_CODE,
+  }
+
+  enum class SuspectedCorruption {
+    STATUS_CONFLICTS_WITH_LAST_MOVEMENT,
+    MOVEMENTS_OUT_OF_ORDER,
+    MISSING_MOVEMENT,
   }
 }
