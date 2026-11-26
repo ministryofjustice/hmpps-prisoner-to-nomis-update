@@ -24,6 +24,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.ALLOCA
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.APPOINTMENT_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.APPOINTMENT_RECON_EXT
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.ATTENDANCE_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.BED_ASSIGNMENT_ACTIVE_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.BED_ASSIGNMENT_FULL_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.CASE_NOTES_ACTIVE_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.CASE_NOTES_FULL_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.CONTACT_PERSON_PROFILE_DETAILS_RECON
@@ -126,7 +128,7 @@ class BatchManagerTest {
 
   @Test
   fun `should call the active bed assignment reconciliation service`() = runTest {
-    batchManager(BatchType.BED_ASSIGNMENT_ACTIVE_RECON).onApplicationEvent(event)
+    batchManager(BED_ASSIGNMENT_ACTIVE_RECON).onApplicationEvent(event)
 
     verify(bedAssignmentReconciliationService).generateReconciliationReportBatch(true)
     verify(context).close()
@@ -134,7 +136,7 @@ class BatchManagerTest {
 
   @Test
   fun `should call the full bed assignment reconciliation service`() = runTest {
-    batchManager(BatchType.BED_ASSIGNMENT_FULL_RECON).onApplicationEvent(event)
+    batchManager(BED_ASSIGNMENT_FULL_RECON).onApplicationEvent(event)
 
     verify(bedAssignmentReconciliationService).generateReconciliationReportBatch(false)
     verify(context).close()

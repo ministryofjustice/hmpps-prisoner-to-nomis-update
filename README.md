@@ -42,18 +42,6 @@ The first 2 of the 3 steps is required but instead of step 3
 
 Then run any of the `bash` scripts at the root of this project to send events to the local topic
 
-## Bed assignment reconciliation
-
-Run a batch with `BATCH_ENABLED=true` and `BATCH_TYPE=BED_ASSIGNMENT_ACTIVE_RECON` (active prisoners only)
-or `BATCH_TYPE=BED_ASSIGNMENT_FULL_RECON` (all prisoners). Both compare bed assignment history across all bookings.
-Assignment mappings pair NOMIS and DPS records; reconciliation checks the living-unit description/location key
-and start/end timestamps, and reports missing records and field differences in telemetry.
-
-`GET /bed-assignments/reconciliation/{offenderNo}` reconciles one prisoner and returns differences, or an empty
-body when none are found. It requires `ROLE_PRISONER_TO_NOMIS__UPDATE__RW`.
-Page size and concurrency are configured with `reports.bedassignment.reconciliation.page-size` (default 1000)
-and `reports.bedassignment.reconciliation.thread-count` (default 10).
-
 ## Mock services
 
 There are circumstances where you want to run this service end to end but without the publishing service being available, for example the publishing service
@@ -731,6 +719,19 @@ Watch out for size difference reconciliation errors due to :
 - Dupes caused by a timeout
 
 The reconciliation process can detect and automatically delete duplicates in some circumstances, though it will still report these.
+
+### Bed assignment
+#### Reconciliation
+
+Run a batch with `BATCH_ENABLED=true` and `BATCH_TYPE=BED_ASSIGNMENT_ACTIVE_RECON` (prisoners IN prison only)
+or `BATCH_TYPE=BED_ASSIGNMENT_FULL_RECON` (all prisoners). Both compare bed assignment history across all bookings.
+Assignment mappings pair NOMIS and DPS records; reconciliation checks the living-unit description/location key
+and start/end timestamps, and reports missing records and field differences in telemetry.
+
+`GET /bed-assignments/reconciliation/{offenderNo}` reconciles one prisoner and returns differences, or an empty
+body when none are found. It requires `ROLE_PRISONER_TO_NOMIS__UPDATE__RW`.
+Page size and concurrency are configured with `reports.bedassignment.reconciliation.page-size` (default 1000)
+and `reports.bedassignment.reconciliation.thread-count` (default 10).
 
 ### Appointments
 
