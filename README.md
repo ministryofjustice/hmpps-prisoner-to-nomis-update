@@ -509,7 +509,7 @@ After investigating the error you should now know if it's recoverable or not.
 
 After investigating an error you find the last request was a successful call to the Activities API and that an exception was thrown with a message something like `JSON decoding error: Cannot deserialize value of type uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model` then it would appear that a breaking change has been made to the Activities API.
 
-To fix this see [Updating the Open API specs](#updating-the-open-api-specs).
+To fix this see [Generating API client models](#generating-api-client-models).
 
 #### Duplicate allocations and attendances
 
