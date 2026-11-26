@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-11-24.6428.321f5c7"
+    "version" : "2026-11-25.6463.b205ba6"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -2723,7 +2723,7 @@
           "type" : {
             "type" : "string",
             "description" : "The identifier type",
-            "enum" : [ "PNC", "CRO", "NATIONAL_INSURANCE_NUMBER", "DRIVER_LICENSE_NUMBER", "ARREST_SUMMONS_NUMBER", "AAMR", "ACC", "APNC", "AMRL", "ASN", "URN", "DRL", "DNOMS", "XIMMN", "XNOMS", "IMMN", "DOFF", "LCRN", "LBCN", "LIFN", "MFCRN", "MTCRN", "MSVN", "NHS", "NOMS", "OTHR", "PCRN", "PARN", "PST", "AI02", "PRNOMS", "SPNC", "NPNC", "VISO", "YCRN", "UNKNOWN" ],
+            "enum" : [ "AAMR", "ACC", "APNC", "AMRL", "ARREST_SUMMONS_NUMBER", "CID", "URN", "CRO", "TBRI", "DRIVER_LICENSE_NUMBER", "DNOMS", "XIMMN", "XNOMS", "HOREF", "IMMN", "DOFF", "LCRN", "LBCN", "LIFN", "MFCRN", "MERGE_HMPS", "MERGED", "MTCRN", "MSVN", "NATIONAL_INSURANCE_NUMBER", "NHS", "OTHR", "PCRN", "PARK", "PARN", "PST", "PNC", "PORT_REF", "AI02", "PRNOMS", "HMPS", "NPD", "SPNC", "SHARED_ALIAS", "STAFF", "SYSIDENT", "ULN", "NPNC", "VISO", "YJAF", "YCRN", "ASN", "DRL", "NOMS", "DL", "NINO", "PASS", "UNKNOWN" ],
             "example" : "PNC"
           },
           "value" : {
@@ -3926,59 +3926,6 @@
         },
         "required" : [ "addressesMappings", "contactMappings", "prisonNumber" ]
       },
-      "SysconContactMapping" : {
-        "type" : "object",
-        "properties" : {
-          "nomisContactId" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "nomisContactType" : {
-            "type" : "string",
-            "enum" : [ "HOME", "BUS", "FAX", "ALTB", "ALTH", "MOBILE", "VISIT", "EMAIL" ]
-          },
-          "cprContactId" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "cprContactId", "nomisContactId", "nomisContactType" ]
-      },
-      "SysconPersonMergeResponseBody" : {
-        "type" : "object",
-        "properties" : {
-          "toPrisonNumber" : {
-            "type" : "string"
-          },
-          "sysconAddressesAndContactsResponseBody" : {
-            "$ref" : "#/components/schemas/SysconAddressesAndContactsResponseBody"
-          }
-        },
-        "required" : [ "sysconAddressesAndContactsResponseBody", "toPrisonNumber" ]
-      },
-      "PrisonReligionMapping" : {
-        "type" : "object",
-        "properties" : {
-          "nomisReligionId" : {
-            "type" : "string"
-          },
-          "cprReligionId" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "cprReligionId", "nomisReligionId" ]
-      },
-      "PrisonReligionSaveResponse" : {
-        "type" : "object",
-        "properties" : {
-          "prisonNumber" : {
-            "type" : "string"
-          },
-          "religionMappings" : {
-            "$ref" : "#/components/schemas/PrisonReligionMapping"
-          }
-        },
-        "required" : [ "prisonNumber", "religionMappings" ]
-      },
       "SysconAliasMapping" : {
         "type" : "object",
         "properties" : {
@@ -4012,6 +3959,66 @@
           }
         },
         "required" : [ "aliasesMappings", "prisonNumber" ]
+      },
+      "SysconContactMapping" : {
+        "type" : "object",
+        "properties" : {
+          "nomisContactId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "nomisContactType" : {
+            "type" : "string",
+            "enum" : [ "HOME", "BUS", "FAX", "ALTB", "ALTH", "MOBILE", "VISIT", "EMAIL" ]
+          },
+          "cprContactId" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "cprContactId", "nomisContactId", "nomisContactType" ]
+      },
+      "SysconPersonMergeResponseBody" : {
+        "type" : "object",
+        "properties" : {
+          "toPrisonNumber" : {
+            "type" : "string"
+          },
+          "sysconAddressesAndContactsResponseBody" : {
+            "$ref" : "#/components/schemas/SysconAddressesAndContactsResponseBody"
+          },
+          "sysconAliasesAndIdentifiersResponseBody" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/SysconAliasesAndIdentifiersResponseBody"
+            }, {
+              "type" : "null"
+            } ]
+          }
+        },
+        "required" : [ "sysconAddressesAndContactsResponseBody", "toPrisonNumber" ]
+      },
+      "PrisonReligionMapping" : {
+        "type" : "object",
+        "properties" : {
+          "nomisReligionId" : {
+            "type" : "string"
+          },
+          "cprReligionId" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "cprReligionId", "nomisReligionId" ]
+      },
+      "PrisonReligionSaveResponse" : {
+        "type" : "object",
+        "properties" : {
+          "prisonNumber" : {
+            "type" : "string"
+          },
+          "religionMappings" : {
+            "$ref" : "#/components/schemas/PrisonReligionMapping"
+          }
+        },
+        "required" : [ "prisonNumber", "religionMappings" ]
       },
       "ExactMatchSearchRequest" : {
         "type" : "object",
@@ -4230,7 +4237,7 @@
           "identifierType" : {
             "type" : "string",
             "description" : "Type of identifier",
-            "enum" : [ "PNC", "CRO", "NATIONAL_INSURANCE_NUMBER", "DRIVER_LICENSE_NUMBER", "ARREST_SUMMONS_NUMBER", "AAMR", "ACC", "APNC", "AMRL", "ASN", "URN", "DRL", "DNOMS", "XIMMN", "XNOMS", "IMMN", "DOFF", "LCRN", "LBCN", "LIFN", "MFCRN", "MTCRN", "MSVN", "NHS", "NOMS", "OTHR", "PCRN", "PARN", "PST", "AI02", "PRNOMS", "SPNC", "NPNC", "VISO", "YCRN", "UNKNOWN" ],
+            "enum" : [ "AAMR", "ACC", "APNC", "AMRL", "ARREST_SUMMONS_NUMBER", "CID", "URN", "CRO", "TBRI", "DRIVER_LICENSE_NUMBER", "DNOMS", "XIMMN", "XNOMS", "HOREF", "IMMN", "DOFF", "LCRN", "LBCN", "LIFN", "MFCRN", "MERGE_HMPS", "MERGED", "MTCRN", "MSVN", "NATIONAL_INSURANCE_NUMBER", "NHS", "OTHR", "PCRN", "PARK", "PARN", "PST", "PNC", "PORT_REF", "AI02", "PRNOMS", "HMPS", "NPD", "SPNC", "SHARED_ALIAS", "STAFF", "SYSIDENT", "ULN", "NPNC", "VISO", "YJAF", "YCRN", "ASN", "DRL", "NOMS", "DL", "NINO", "PASS", "UNKNOWN" ],
             "example" : "PNC"
           },
           "identifier" : {
@@ -5033,7 +5040,7 @@
           "type" : {
             "type" : "string",
             "description" : "Type of identifier",
-            "enum" : [ "PNC", "CRO", "NATIONAL_INSURANCE_NUMBER", "DRIVER_LICENSE_NUMBER", "ARREST_SUMMONS_NUMBER", "AAMR", "ACC", "APNC", "AMRL", "ASN", "URN", "DRL", "DNOMS", "XIMMN", "XNOMS", "IMMN", "DOFF", "LCRN", "LBCN", "LIFN", "MFCRN", "MTCRN", "MSVN", "NHS", "NOMS", "OTHR", "PCRN", "PARN", "PST", "AI02", "PRNOMS", "SPNC", "NPNC", "VISO", "YCRN", "UNKNOWN" ],
+            "enum" : [ "AAMR", "ACC", "APNC", "AMRL", "ARREST_SUMMONS_NUMBER", "CID", "URN", "CRO", "TBRI", "DRIVER_LICENSE_NUMBER", "DNOMS", "XIMMN", "XNOMS", "HOREF", "IMMN", "DOFF", "LCRN", "LBCN", "LIFN", "MFCRN", "MERGE_HMPS", "MERGED", "MTCRN", "MSVN", "NATIONAL_INSURANCE_NUMBER", "NHS", "OTHR", "PCRN", "PARK", "PARN", "PST", "PNC", "PORT_REF", "AI02", "PRNOMS", "HMPS", "NPD", "SPNC", "SHARED_ALIAS", "STAFF", "SYSIDENT", "ULN", "NPNC", "VISO", "YJAF", "YCRN", "ASN", "DRL", "NOMS", "DL", "NINO", "PASS", "UNKNOWN" ],
             "example" : "PNC"
           },
           "value" : {
