@@ -351,7 +351,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetCourtChargeByAppearance(courtChargeId: String, courtAppearanceId: String, caseID: String, offenderNo: String = "A6160DZ") {
+  fun stubGetCourtChargeByAppearance(courtChargeId: String, courtAppearanceId: String, caseID: String, offenderNo: String = "A6160DZ", value: BigDecimal? = COURT_CHARGE_1_VALUE) {
     val courtCase = LegacyCharge(
       lifetimeUuid = UUID.fromString(courtChargeId),
       courtCaseUuid = caseID,
@@ -360,7 +360,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
       offenceEndDate = LocalDate.parse(COURT_CHARGE_1_OFFENCE_END_DATE),
       prisonerId = offenderNo,
       nomisOutcomeCode = COURT_CHARGE_1_RESULT_CODE,
-      value = COURT_CHARGE_1_VALUE,
+      value = value,
     )
     stubFor(
       get(WireMock.urlPathMatching("/legacy/court-appearance/$courtAppearanceId/charge/$courtChargeId")).willReturn(

@@ -503,7 +503,7 @@ class CourtSentencingService(
           log.info("Charge id $chargeId with court appearance id $courtAppearanceId has an outcome code of ${charge.nomisOutcomeCode} and offence code of ${charge.offenceCode}")
           telemetryMap["nomisOutcomeCode"] = charge.nomisOutcomeCode ?: "null"
           telemetryMap["nomisOffenceCode"] = charge.offenceCode
-          charge.value?.let { telemetryMap["propertyValue"] = it.toString() }
+          telemetryMap["propertyValue"] = charge.value?.toString() ?: "null"
 
           nomisApiService.createCourtCharge(
             offenderNo,
@@ -557,7 +557,7 @@ class CourtSentencingService(
             val nomisCourtCharge = dpsCharge.toNomisCourtCharge(isOnFutureCourtAppearance = futureCourtAppearance, isBreach = updateEvent.additionalInformation.isBreach == true)
             telemetryMap["nomisOutcomeCode"] = nomisCourtCharge.resultCode1 ?: "null"
             telemetryMap["nomisOffenceCode"] = nomisCourtCharge.offenceCode
-            nomisCourtCharge.propertyValue?.let { telemetryMap["propertyValue"] = it.toString() }
+            telemetryMap["propertyValue"] = nomisCourtCharge.propertyValue?.toString() ?: "null"
             nomisApiService.updateCourtCharge(
               offenderNo = offenderNo,
               nomisCourtCaseId = courtCaseMapping.nomisCourtCaseId,
