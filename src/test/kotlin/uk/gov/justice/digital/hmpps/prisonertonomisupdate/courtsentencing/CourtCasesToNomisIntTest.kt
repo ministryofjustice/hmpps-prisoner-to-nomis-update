@@ -1780,6 +1780,47 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     }
 
     @Nested
+    inner class WhenCourtChargeHasBeenCreatedInDPSWithNoPropertyValue {
+      @BeforeEach
+      fun setUp() {
+        courtSentencingApi.stubGetCourtChargeByAppearance(
+          DPS_COURT_CHARGE_ID,
+          courtAppearanceId = DPS_COURT_APPEARANCE_ID,
+          offenderNo = OFFENDER_NO,
+          caseID = COURT_CASE_ID_FOR_CREATION,
+          value = null,
+        )
+        courtSentencingNomisApi.stubCourtChargeCreate(
+          OFFENDER_NO,
+          NOMIS_COURT_CASE_ID_FOR_CREATION,
+          nomisCourtChargeCreateResponse(),
+        )
+        courtSentencingMappingApi.stubGetCourtCaseMappingGivenDpsId(
+          id = COURT_CASE_ID_FOR_CREATION,
+          nomisCourtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
+        )
+        courtSentencingMappingApi.stubGetCourtChargeMappingGivenDpsIdWithError(DPS_COURT_CHARGE_ID, 404)
+        courtSentencingMappingApi.stubUpdateAndCreateMappings()
+
+        publishCreateCourtChargeDomainEvent(courtAppearanceId = DPS_COURT_APPEARANCE_ID)
+      }
+
+      @Test
+      fun `will create success telemetry with a null propertyValue`() {
+        waitForAnyProcessingToComplete()
+
+        verify(telemetryClient).trackEvent(
+          eq("charge-create-success"),
+          check {
+            assertThat(it["dpsChargeId"]).isEqualTo(DPS_COURT_CHARGE_ID)
+            assertThat(it["propertyValue"]).isEqualTo("null")
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
     inner class WhenCourtChargeHasBeenCreatedInDPSCaseCloned {
       val clonedCourtCaseResponse = nomisCourtChargeCreateResponse().copy(
         clonedCourtCases = BookingCourtCaseCloneResponse(
