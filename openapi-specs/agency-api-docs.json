@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-11-18.753.e327f0f",
+    "version" : "2026-11-25.764.66ce52c",
     "summary" : "HMPPS Prison, Court and other agency information"
   },
   "servers" : [ {
@@ -10647,6 +10647,14 @@
               "enum" : [ "A", "B", "C", "D", "OPEN", "CLOSED" ]
             },
             "uniqueItems" : true
+          },
+          "operator" : {
+            "description" : "Operator of the prison: PSP for a public sector prison, or the provider of a contracted prison",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PrisonOperator"
+            }, {
+              "type" : "null"
+            } ]
           }
         },
         "required" : [ "active", "addresses", "categories", "contracted", "female", "lthse", "male", "prisonId", "prisonName", "prisonTypes" ]
