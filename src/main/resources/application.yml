@@ -301,6 +301,10 @@ reports:
     reconciliation:
       page-size: 100
       thread-count: 15
+  calculate-release-dates:
+    reconciliation:
+      page-size: 100
+      thread-count: 15
 hmpps.sqs:
   defaultErrorVisibilityTimeout: 1, 10, 60, 600
   queueAdminRole: ROLE_SYSCON__QUEUE_ADMIN

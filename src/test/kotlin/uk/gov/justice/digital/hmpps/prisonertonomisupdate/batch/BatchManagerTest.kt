@@ -46,6 +46,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.SENTEN
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.SUSPENDED_ALLOCATION_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.VISIT_BALANCE_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.bedassignment.BedAssignmentReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.calculatereleasedates.CalculateReleaseDatesReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.CaseNotesReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingReconciliationService
@@ -105,6 +106,7 @@ class BatchManagerTest {
   private val officialVisitsActiveScheduledReconciliationService = mock<OfficialVisitsActiveScheduledReconciliationService>()
   private val organisationsReconciliationService = mock<OrganisationsReconciliationService>()
   private val personLocationReconciliationService = mock<PersonLocationReconciliationService>()
+  private val calculateReleaseDatesReconciliationService = mock<CalculateReleaseDatesReconciliationService>()
   private val prisonerTransactionsReconciliationService = mock<PrisonerTransactionReconciliationService>()
   private val prisonerBalanceReconciliationService = mock<PrisonerBalanceReconciliationService>()
   private val prisonerRestrictionsReconciliationService = mock<PrisonerRestrictionsReconciliationService>()
@@ -605,6 +607,26 @@ class BatchManagerTest {
     verify(context).close()
   }
 
+  @Test
+  fun `should call the calculate release dates all prisoner reconciliation service`() = runTest {
+    val batchManager = batchManager(BatchType.CRDS_ALL_RECON)
+
+    batchManager.onApplicationEvent(event)
+
+    verify(calculateReleaseDatesReconciliationService).generateReport(ALL_PRISONERS)
+    verify(context).close()
+  }
+
+  @Test
+  fun `should call the calculate release dates active prisoner reconciliation service`() = runTest {
+    val batchManager = batchManager(BatchType.CRDS_ACTIVE_RECON)
+
+    batchManager.onApplicationEvent(event)
+
+    verify(calculateReleaseDatesReconciliationService).generateReport(ACTIVE_PRISONERS)
+    verify(context).close()
+  }
+
   private fun batchManager(batchType: BatchType) = BatchManager(
     batchType = batchType,
     activitiesDlqName = activityDlqName,
@@ -632,6 +654,7 @@ class BatchManagerTest {
     officialVisitsActiveScheduledReconciliationService = officialVisitsActiveScheduledReconciliationService,
     organisationReconciliationService = organisationsReconciliationService,
     personLocationReconciliationService = personLocationReconciliationService,
+    calculateReleaseDatesReconciliationService = calculateReleaseDatesReconciliationService,
     prisonerTransactionsReconciliationService = prisonerTransactionsReconciliationService,
     prisonerBalanceReconciliationService = prisonerBalanceReconciliationService,
     prisonerRestrictionsReconciliationService = prisonerRestrictionsReconciliationService,

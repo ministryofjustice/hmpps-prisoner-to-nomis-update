@@ -33,6 +33,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.COURT_
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.COURT_CASE_PRISONER_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.COURT_SCHEDULER_ACTIVE_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.COURT_SCHEDULER_ALL_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.CRDS_ACTIVE_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.CRDS_ALL_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.CSIP_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.CSRA_ACTIVE_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.CSRA_FULL_RECON
@@ -66,6 +68,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.TRANSF
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.VISIT_BALANCE_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.VISIT_SLOTS_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.bedassignment.BedAssignmentReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.calculatereleasedates.CalculateReleaseDatesReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.CaseNotesReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingReconciliationService
@@ -112,6 +115,8 @@ enum class BatchType {
   BED_ASSIGNMENT_FULL_RECON,
   CASE_NOTES_ACTIVE_RECON,
   CASE_NOTES_FULL_RECON,
+  CRDS_ACTIVE_RECON,
+  CRDS_ALL_RECON,
   CSRA_ACTIVE_RECON,
   CSRA_FULL_RECON,
   CONTACT_PERSON_PROFILE_DETAILS_RECON,
@@ -164,6 +169,7 @@ class BatchManager(
   private val appointmentsReconciliationService: AppointmentsReconciliationService,
   private val bedAssignmentReconciliationService: BedAssignmentReconciliationService,
   private val caseNotesReconciliationService: CaseNotesReconciliationService,
+  private val calculateReleaseDatesReconciliationService: CalculateReleaseDatesReconciliationService,
   private val csraReconciliationService: CsraReconciliationService,
   private val contactPersonProfileDetailsReconService: ContactPersonProfileDetailsReconciliationService,
   private val contactPersonReconciliationService: ContactPersonReconciliationService,
@@ -213,6 +219,8 @@ class BatchManager(
       BED_ASSIGNMENT_FULL_RECON -> bedAssignmentReconciliationService.generateReconciliationReport(ALL_PRISONERS)
       CASE_NOTES_ACTIVE_RECON -> caseNotesReconciliationService.generateReconciliationReport(activeOnly = true)
       CASE_NOTES_FULL_RECON -> caseNotesReconciliationService.generateReconciliationReport(activeOnly = false)
+      CRDS_ACTIVE_RECON -> calculateReleaseDatesReconciliationService.generateReport(ACTIVE_PRISONERS)
+      CRDS_ALL_RECON -> calculateReleaseDatesReconciliationService.generateReport(ALL_PRISONERS)
       CSRA_ACTIVE_RECON -> csraReconciliationService.generateReconciliationReportBatch(activeOnly = true)
       CSRA_FULL_RECON -> csraReconciliationService.generateReconciliationReportBatch(activeOnly = false)
       CONTACT_PERSON_PROFILE_DETAILS_RECON -> contactPersonProfileDetailsReconService.reconciliationReport()
