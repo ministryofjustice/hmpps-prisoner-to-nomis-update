@@ -86,6 +86,23 @@ class CorePersonReconciliationServiceTest {
   }
 
   @Nested
+  inner class ReligionCommentsDifference {
+    @Test
+    fun `will treat an empty CPR comment as null`() {
+      val nomis = listOf(createReligion().copy(comments = null))
+      val cpr = listOf(createReligion().copy(comments = ""))
+      comparePrisonerReligions(nomis, cpr, true, "comments", null, "")
+    }
+
+    @Test
+    fun `will report a CPR comment that differs from a null NOMIS comment`() {
+      val nomis = listOf(createReligion().copy(comments = null))
+      val cpr = listOf(createReligion().copy(comments = "Some comments"))
+      comparePrisonerReligions(nomis, cpr, false, "comments", null, "Some comments")
+    }
+  }
+
+  @Nested
   inner class ContactsDifference {
     @Test
     fun `will not report matching contacts`() {

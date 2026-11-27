@@ -179,7 +179,7 @@ class CorePersonReconciliationService(
         val cpr = cprField[i]
         when {
           n.religion != cpr.religion -> "$i-code:nomis=${n.religion}, cpr=${cpr.religion}"
-          n.comments != cpr.comments -> "$i-comments:nomis=${n.comments}, cpr=${cpr.comments}"
+          n.comments != cpr.comments?.ifEmpty { null } -> "$i-comments:nomis=${n.comments}, cpr=${cpr.comments}"
           !Objects.equals(n.startDate, cpr.startDate) -> "$i-startDate:nomis=${n.startDate}, cpr=${cpr.startDate}"
           !Objects.equals(n.endDate, cpr.endDate) -> "$i-endDate:nomis=${n.endDate}, cpr=${cpr.endDate}"
           n.current != cpr.current -> "$i-current:nomis=${n.current}, cpr=${cpr.current}"
