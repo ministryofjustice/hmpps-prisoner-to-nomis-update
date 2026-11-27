@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocati
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationMovements.Type.MOVEMENT_TIME
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationMovements.Type.MOVEMENT_TO_LOCATION
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationMovements.Type.MOVEMENT_TYPE
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationStatus.SuspectedCorruption.LATEST_MOVEMENT_ON_OTHER_BOOKING
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationStatus.SuspectedCorruption.MISSING_MOVEMENT
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationStatus.SuspectedCorruption.MOVEMENTS_OUT_OF_ORDER
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.personlocation.MismatchedPrisonerLocationStatus.SuspectedCorruption.STATUS_CONFLICTS_WITH_LAST_MOVEMENT
@@ -442,19 +443,21 @@ class PersonLocationReconciliationService(
       StatusCheck(STATUS_PRISON_CODE, null, null, dpsStatus.prisonCode),
     )
 
-    val suspectedCorruption by lazy { nomisBookingLocations?.suspectedCorruption() }
+    val suspectedCorruption by lazy { nomisBookingLocations?.suspectedCorruption(otherBookings = nomisLocations.bookings - nomisBookingLocations) }
     return checks
       .filter { it.expectedDpsValue != it.dpsValue }
       .map { MismatchedPrisonerLocationStatus(offenderNo, it.type, nomisBooking?.bookingId, it.nomisValue, it.dpsValue, suspectedCorruption) }
   }
 
   // Status mismatches are often caused by corrupt NOMIS data where the booking status disagrees with its movements
-  private fun BookingPersonLocations.suspectedCorruption(): String? {
+  private fun BookingPersonLocations.suspectedCorruption(otherBookings: List<BookingPersonLocations>): String? {
     val movementsBySequence = movements.sortedBy { it.sequence }
+    val latestMovementTime = movements.maxOfOrNull { it.movementTime }
     return listOfNotNull(
       STATUS_CONFLICTS_WITH_LAST_MOVEMENT.takeIf { movementsBySequence.lastOrNull()?.let { booking.conflictsWithLastMovement(it) } == true },
       MOVEMENTS_OUT_OF_ORDER.takeIf { movementsBySequence != movements.sortedWith(compareBy({ it.movementTime }, { it.sequence })) },
       MISSING_MOVEMENT.takeIf { movementsBySequence.zipWithNext().any { (previous, next) -> previous.directionCode == next.directionCode } },
+      LATEST_MOVEMENT_ON_OTHER_BOOKING.takeIf { otherBookings.flatMap { it.movements }.any { latestMovementTime == null || it.movementTime > latestMovementTime } },
     )
       .takeIf { it.isNotEmpty() }
       ?.joinToString(",")
@@ -579,5 +582,6 @@ class MismatchedPrisonerLocationStatus(
     STATUS_CONFLICTS_WITH_LAST_MOVEMENT,
     MOVEMENTS_OUT_OF_ORDER,
     MISSING_MOVEMENT,
+    LATEST_MOVEMENT_ON_OTHER_BOOKING,
   }
 }

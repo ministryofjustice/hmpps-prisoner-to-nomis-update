@@ -64,6 +64,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Pe
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonLocationMovement.MovementType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonLocationMovement.MovementType.REL
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonLocationMovement.MovementType.TAP
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonLocationMovement.MovementType.TRN
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personlocation.model.Court
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personlocation.model.Prison
@@ -1439,6 +1440,50 @@ class PersonLocationReconciliationIntTest(
         )
 
         verifyTelemetry(STATUS_ACTIVE, suspectedCorruption = "STATUS_CONFLICTS_WITH_LAST_MOVEMENT,MOVEMENTS_OUT_OF_ORDER,MISSING_MOVEMENT")
+      }
+
+      @Nested
+      inner class OtherBookings {
+        private val oldBooking = validBooking.copy(bookingId = 1, activeBooking = false, latestBooking = false, prison = "TRN", inOutStatus = "TRN")
+        private val oldAdmissionIn = admissionIn.copy(bookingId = 1, movementTime = admissionIn.movementTime.minusYears(1))
+
+        private fun stubAndRunReport(oldBookingMovements: List<PersonLocationMovement>, latestBookingMovements: List<PersonLocationMovement> = validBookingLocations.movements) = stubAndRunReport(
+          nomisBookings = listOf(
+            BookingPersonLocations(booking = oldBooking, movements = oldBookingMovements),
+            BookingPersonLocations(booking = validBooking, movements = latestBookingMovements),
+          ),
+          dpsStatus = validDpsStatus.copy(expectedLegacyActive = "INACTIVE"),
+        )
+
+        private fun oldTransferOut(movementTime: LocalDateTime) = courtOut.copy(bookingId = 1, movementType = TRN, movementTime = movementTime)
+
+        @Test
+        fun `should report suspected corruption if the latest movement is on another booking`() {
+          stubAndRunReport(oldBookingMovements = listOf(oldAdmissionIn, oldTransferOut(movementTime = courtOut.movementTime.plusDays(1))))
+
+          verifyTelemetry(STATUS_ACTIVE, suspectedCorruption = "LATEST_MOVEMENT_ON_OTHER_BOOKING")
+        }
+
+        @Test
+        fun `should report suspected corruption if the booking has no movements but another booking does`() {
+          stubAndRunReport(oldBookingMovements = listOf(oldAdmissionIn), latestBookingMovements = emptyList())
+
+          verifyTelemetry(STATUS_ACTIVE, suspectedCorruption = "LATEST_MOVEMENT_ON_OTHER_BOOKING")
+        }
+
+        @Test
+        fun `should not report suspected corruption if other bookings have earlier movements`() {
+          stubAndRunReport(oldBookingMovements = listOf(oldAdmissionIn, oldTransferOut(movementTime = oldAdmissionIn.movementTime.plusDays(1))))
+
+          verifyTelemetry(STATUS_ACTIVE)
+        }
+
+        @Test
+        fun `should not report suspected corruption if another booking has a movement at the same time as the latest movement`() {
+          stubAndRunReport(oldBookingMovements = listOf(oldAdmissionIn, oldTransferOut(movementTime = courtOut.movementTime)))
+
+          verifyTelemetry(STATUS_ACTIVE)
+        }
       }
     }
 
