@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-11-19.731.5411967"
+    "version" : "2026-11-26.747.7228b72"
   },
   "servers" : [ {
     "url" : "/",
@@ -240,7 +240,7 @@
             }
           },
           "400" : {
-            "description" : "Invalid request — a yes answer with no details, risk categories that do not match the rating, or a next review date that is not in the future",
+            "description" : "Invalid request — a yes answer with no details, risk categories that do not match the rating, a next review date that is not in the future, an evidence source given more than once, or a review reason different from the one the interim rating was given under",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -296,7 +296,7 @@
       "put" : {
         "tags" : [ "CSR Review" ],
         "summary" : "Submits the final stage of a CSR review",
-        "description" : "Records the final answers and rating, completing the review and setting the prisoner's final CSRA result. For a high-risk rating the reviewer's chosen next review date is stored; for any other rating the next review date is cleared. Requires role ROLE_CSRA_REVIEW__RW",
+        "description" : "Records the final answers and rating, completing the review and setting the prisoner's final CSRA result. The review must be complete for its reason: every question that reason asks answered, no other question answered, at least one evidence source, and mdtReviewed true where the reason asks it. For a high-risk rating the reviewer's chosen next review date is stored; for any other rating the next review date is cleared. Requires role ROLE_CSRA_REVIEW__RW",
         "operationId" : "submitFinal",
         "parameters" : [ {
           "name" : "prisonerNumber",
@@ -339,7 +339,7 @@
             }
           },
           "400" : {
-            "description" : "Invalid request — a yes answer with no details, risk categories that do not match the rating, or a next review date that is not in the future",
+            "description" : "Invalid request — a yes answer with no details, risk categories that do not match the rating, a next review date that is not in the future, an evidence source given more than once, a review reason different from the one the interim rating was given under, a review not complete for its reason (ReviewAnswersIncomplete), or a rating other than HIGH_GENERAL when the reason makes a Yes answer a mandatory high-risk trigger (MandatoryHighRiskGeneral)",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -391,12 +391,111 @@
         }
       }
     },
+    "/csra-review/prisoner/{prisonerNumber}/review/{reviewId}/answers" : {
+      "put" : {
+        "tags" : [ "CSR Review" ],
+        "summary" : "Saves a CSR review's answers part way through, without confirming a rating",
+        "description" : "Saves the answers given so far on the review's final stage, so the review can be left and picked up later. The answers replace whatever was saved before, so an answer that is left out is cleared. Send the stage's version from the last read; a save based on an out-of-date version is rejected. Does not change the prisoner's current CSRA rating, does not publish a domain event and does not mark the stage as confirmed. Requires role ROLE_CSRA_REVIEW__RW",
+        "operationId" : "saveAnswers",
+        "parameters" : [ {
+          "name" : "prisonerNumber",
+          "in" : "path",
+          "description" : "The prisoner number",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "A1234BC"
+        }, {
+          "name" : "reviewId",
+          "in" : "path",
+          "description" : "The review id returned when the review was started",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CsraReviewAnswersRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "The answers were saved",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CsraReviewDto"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid request — no prison or review reason supplied, an evidence source given more than once, the review already has a final rating, or the reason differs from the one the interim rating was given under",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role (requires ROLE_CSRA_REVIEW__RW), or CSRA is not switched on in DPS for the prison on the request — errorCode PrisonNotActive. ROLE_PRISONER_CSRA__ROLLOUT_OVERRIDE bypasses the rollout check",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "No such review for this prisoner",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "CsraReviewNotWritable: the review has been closed or archived and can no longer be edited. StaleAnswersVersion: the version sent is not the stage's current version. ConcurrentUpdate: another request changed it at the same time - re-read it and try again",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/csra-review/prisoner/{prisonerNumber}/assessment/{assessmentId}/stage/{stage}/answers" : {
       "put" : {
         "tags" : [ "CSRA Assessment" ],
         "summary" : "Partially saves answers for one stage without confirming a rating",
         "description" : "Saves the current answer state for a stage without requiring a rating or assessment comment. Replaces the whole answer set for the stage so that a previously given answer can be cleared. Does not affect the prisoner's current CSRA rating, does not publish a domain event, and does not mark the stage as confirmed. Requires role ROLE_CSRA_REVIEW__RW",
-        "operationId" : "saveAnswers",
+        "operationId" : "saveAnswers_1",
         "parameters" : [ {
           "name" : "prisonerNumber",
           "in" : "path",
@@ -1021,7 +1120,7 @@
       "post" : {
         "tags" : [ "CSR Review" ],
         "summary" : "Starts a new CSR review",
-        "description" : "Creates a draft review for the prisoner and records who started it and where. Returns the new review's id, which identifies it for the interim and final stages, along with the prisoner's current rating — the rating being reviewed, which starting a review leaves untouched. The prison is required: it is what puts the draft on that prison's reviews-in-progress worklist. Returns 409 if any CSRA, assessment or review, is already in progress for the prisoner. Requires role ROLE_CSRA_REVIEW__RW",
+        "description" : "Creates a draft review for the prisoner and records who started it and where. Returns the new review's id, which identifies it for the interim and final stages, along with the prisoner's current rating — the rating being reviewed, which starting a review leaves untouched. The prison is required: it is what puts the draft on that prison's reviews-in-progress worklist. Answers sent with the start are saved on the review's final stage in the same transaction, so the first page that saves a review can start it in one call. Returns 409 if any CSRA, assessment or review, is already in progress for the prisoner. Requires role ROLE_CSRA_REVIEW__RW",
         "operationId" : "startReview",
         "parameters" : [ {
           "name" : "prisonerNumber",
@@ -1055,7 +1154,7 @@
             }
           },
           "400" : {
-            "description" : "Invalid request — no prison supplied",
+            "description" : "Invalid request — no prison supplied, answers with no review reason, or an evidence source given more than once",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -1086,6 +1185,105 @@
           },
           "409" : {
             "description" : "A CSRA is already in progress for this prisoner",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/csra-review/prisoner/{prisonerNumber}/review/{reviewId}/cancel" : {
+      "post" : {
+        "tags" : [ "CSR Review" ],
+        "summary" : "Cancels a CSR review that has no rating yet",
+        "description" : "Archives an in-progress review before any interim or final rating has been confirmed. Answers are retained but no longer returned. Leaves the prisoner's current rating unchanged and allows a new review to be started. Repeating a successful cancellation returns the current rating without another audit. Requires role ROLE_CSRA_REVIEW__RW",
+        "operationId" : "cancelReview",
+        "parameters" : [ {
+          "name" : "prisonerNumber",
+          "in" : "path",
+          "description" : "The prisoner number",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "A1234BC"
+        }, {
+          "name" : "reviewId",
+          "in" : "path",
+          "description" : "The review id returned when the review was started",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CsraReviewCancelRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "The review is cancelled; returns the current rating",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CsraDetailedRating"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid request - no prison supplied",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing ROLE_CSRA_REVIEW__RW or prison not active (PrisonNotActive). ROLE_PRISONER_CSRA__ROLLOUT_OVERRIDE bypasses the rollout check",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "No such review for this prisoner",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "CsraReviewNotCancellable: an interim or final rating has been confirmed. CsraReviewNotWritable: a prisoner movement has already closed or archived it. ConcurrentUpdate: another request changed it at the same time, which includes a second cancellation sent at the same moment (a double click) - re-read it and try again",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -1424,6 +1622,75 @@
           },
           "404" : {
             "description" : "Data not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/csra-review/prisoner/{prisonerNumber}/review/{reviewId}" : {
+      "get" : {
+        "tags" : [ "CSR Review" ],
+        "summary" : "Returns a CSR review with everything saved on it",
+        "description" : "Returns the review's status and ratings and, for each stage saved so far, its answers, confirm-page fields and version — enough to resume an in-progress review on any page, show check answers, or show a completed review. Requires role ROLE_CSRA_REVIEW__R or ROLE_CSRA_REVIEW__RW",
+        "operationId" : "getReview",
+        "parameters" : [ {
+          "name" : "prisonerNumber",
+          "in" : "path",
+          "description" : "The prisoner number",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "A1234BC"
+        }, {
+          "name" : "reviewId",
+          "in" : "path",
+          "description" : "The review id returned when the review was started",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "The review",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CsraReviewDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role (requires ROLE_CSRA_REVIEW__R or ROLE_CSRA_REVIEW__RW)",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "No such review for this prisoner, or the review has been archived or cancelled",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -2642,6 +2909,11 @@
               "$ref" : "#/components/schemas/CsraAssessmentStageAnswersDto"
             }
           },
+          "ratingDescription" : {
+            "type" : "string",
+            "description" : "The rating in full, to show as given, for example on the prisoner profile Overview card. Includes the provisional or interim stage. \"No rating\" when there is no rating.",
+            "example" : "High risk – general (interim)"
+          },
           "ratingShortDescription" : {
             "type" : "string",
             "description" : "The rating in short, to show as given, for example in the prisoner profile header. Never includes the stage. \"No rating\" when there is no rating.",
@@ -2652,11 +2924,6 @@
             "format" : "date",
             "description" : "The review due date to show beside the rating, or null where none should be shown (Standard, No rating and provisional ratings). Unlike nextReviewDate, show it whenever it is present.",
             "example" : "2027-05-06"
-          },
-          "ratingDescription" : {
-            "type" : "string",
-            "description" : "The rating in full, to show as given, for example on the prisoner profile Overview card. Includes the provisional or interim stage. \"No rating\" when there is no rating.",
-            "example" : "High risk – general (interim)"
           }
         },
         "required" : [ "inheritedAfterTransfer", "prisonerNumber", "provisional", "ratingDescription", "ratingShortDescription", "riskTo", "stages", "status", "vulnerabilities" ]
@@ -2971,6 +3238,10 @@
             "example" : "Sue Carter",
             "minLength" : 1
           },
+          "mdtReviewed" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Whether a multidisciplinary team has reviewed the prisoner's cell sharing risk. Asked by the NEW_OR_ADDITIONAL_INFORMATION and RECENT_CHANGE_IN_BEHAVIOUR_OR_THINKING reviews only, and must be true when their final rating is confirmed."
+          },
           "evidenceSources" : {
             "type" : "array",
             "description" : "The evidence sources considered. OTHER must carry details naming the source.",
@@ -3066,6 +3337,54 @@
             "type" : [ "string", "null" ],
             "description" : "Details of the other indicators"
           },
+          "secureHospitalInpatient" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Whether the prisoner was previously an in-patient at a special hospital or secure unit"
+          },
+          "secureHospitalInpatientDetail" : {
+            "type" : [ "string", "null" ],
+            "description" : "Details of the special hospital or secure unit stay"
+          },
+          "personalityDisorder" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Whether the prisoner has been diagnosed with a personality disorder"
+          },
+          "personalityDisorderDetail" : {
+            "type" : [ "string", "null" ],
+            "description" : "Details of the personality disorder diagnosis"
+          },
+          "wantsToHarmOrKill" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Evidence that the prisoner wants to seriously harm or kill someone"
+          },
+          "wantsToHarmOrKillDetail" : {
+            "type" : [ "string", "null" ],
+            "description" : "Details of the evidence that the prisoner wants to seriously harm or kill someone"
+          },
+          "strangeOrUnusualBehaviour" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Whether any strange or unusual behaviour has been observed"
+          },
+          "strangeOrUnusualBehaviourDetail" : {
+            "type" : [ "string", "null" ],
+            "description" : "Details of the strange or unusual behaviour"
+          },
+          "clinicalParanoidBehaviour" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Clinical evidence of paranoid behaviour, confirmed by a healthcare assessment"
+          },
+          "clinicalParanoidBehaviourDetail" : {
+            "type" : [ "string", "null" ],
+            "description" : "Details of the clinical evidence of paranoid behaviour"
+          },
+          "frequentCellChangeRequests" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Whether the prisoner or their cellmate has frequently requested to change cell"
+          },
+          "frequentCellChangeRequestsDetail" : {
+            "type" : [ "string", "null" ],
+            "description" : "Details of the requests to change cell"
+          },
           "riskTo" : {
             "type" : "array",
             "description" : "Who the prisoner is a risk to. Required for a HIGH_SPECIFIC rating and rejected for any other; use the NONE category for 'no identified risk to any of these groups'.",
@@ -3088,6 +3407,316 @@
           }
         },
         "required" : [ "evidenceSources", "mdtChairName", "prisonId", "rating", "reviewComment", "reviewReason", "riskTo", "vulnerabilities" ]
+      },
+      "CsraReviewAnswers" : {
+        "type" : "object",
+        "description" : "The answers given so far in a CSR review, before a rating is confirmed",
+        "properties" : {
+          "reviewReason" : {
+            "type" : "string",
+            "description" : "Why the review is being held. Decides which questions the review asks.",
+            "enum" : [ "SCHEDULED_LONG_TERM_HIGH_RISK_REVIEW", "SHORT_TERM_HIGH_RISK_REVIEW", "NEW_OR_ADDITIONAL_INFORMATION", "RECENT_CHANGE_IN_BEHAVIOUR_OR_THINKING" ],
+            "example" : "SHORT_TERM_HIGH_RISK_REVIEW"
+          },
+          "mdtReviewed" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Whether a multidisciplinary team has reviewed the prisoner's cell sharing risk. Asked by the NEW_OR_ADDITIONAL_INFORMATION and RECENT_CHANGE_IN_BEHAVIOUR_OR_THINKING reviews only, and must be true when their final rating is confirmed."
+          },
+          "evidenceSources" : {
+            "type" : "array",
+            "description" : "The evidence sources ticked so far. OTHER carries details naming the source.",
+            "items" : {
+              "$ref" : "#/components/schemas/CsraReviewEvidenceSourceSelection"
+            }
+          },
+          "offenceMurderManslaughter" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Evidence of murder or manslaughter"
+          },
+          "offenceMurderManslaughterDetail" : {
+            "type" : [ "string", "null" ],
+            "description" : "Details of the murder or manslaughter evidence"
+          },
+          "offenceAssistingSuicide" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Evidence of assisting suicide"
+          },
+          "offenceAssistingSuicideDetail" : {
+            "type" : [ "string", "null" ],
+            "description" : "Details of the assisting suicide evidence"
+          },
+          "offenceSexualAssault" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Evidence of sexual assault"
+          },
+          "offenceSexualAssaultDetail" : {
+            "type" : [ "string", "null" ],
+            "description" : "Details of the sexual assault evidence"
+          },
+          "offenceRepeatedViolence" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Evidence of repeated violence"
+          },
+          "offenceRepeatedViolenceDetail" : {
+            "type" : [ "string", "null" ],
+            "description" : "Details of the repeated violence evidence"
+          },
+          "offencePrejudiceMotivated" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Evidence of prejudice-motivated offending"
+          },
+          "offencePrejudiceMotivatedDetail" : {
+            "type" : [ "string", "null" ],
+            "description" : "Details of the prejudice-motivated offending evidence"
+          },
+          "offenceArson" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Evidence of arson"
+          },
+          "offenceArsonDetail" : {
+            "type" : [ "string", "null" ],
+            "description" : "Details of the arson evidence"
+          },
+          "offenceKidnapHostage" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Evidence of kidnap or hostage-taking"
+          },
+          "offenceKidnapHostageDetail" : {
+            "type" : [ "string", "null" ],
+            "description" : "Details of the kidnap or hostage-taking evidence"
+          },
+          "likelyToHarmCellmate" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Whether the prisoner has said anything to indicate they are an increased risk when sharing a cell"
+          },
+          "likelyToHarmCellmateDetail" : {
+            "type" : [ "string", "null" ],
+            "description" : "Details of what the prisoner said"
+          },
+          "significantlyVulnerable" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Whether the prisoner is significantly vulnerable to assault by others"
+          },
+          "significantlyVulnerableDetail" : {
+            "type" : [ "string", "null" ],
+            "description" : "Details of the vulnerability"
+          },
+          "healthcareIncreasedRisk" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Whether a healthcare assessment indicates the prisoner is an increased risk"
+          },
+          "healthcareIncreasedRiskDetail" : {
+            "type" : [ "string", "null" ],
+            "description" : "Details of the healthcare assessment"
+          },
+          "otherHighRiskIndicators" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Whether there are any other indicators the prisoner is high risk"
+          },
+          "otherHighRiskIndicatorsDetail" : {
+            "type" : [ "string", "null" ],
+            "description" : "Details of the other indicators"
+          },
+          "secureHospitalInpatient" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Whether the prisoner was previously an in-patient at a special hospital or secure unit"
+          },
+          "secureHospitalInpatientDetail" : {
+            "type" : [ "string", "null" ],
+            "description" : "Details of the special hospital or secure unit stay"
+          },
+          "personalityDisorder" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Whether the prisoner has been diagnosed with a personality disorder"
+          },
+          "personalityDisorderDetail" : {
+            "type" : [ "string", "null" ],
+            "description" : "Details of the personality disorder diagnosis"
+          },
+          "wantsToHarmOrKill" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Evidence that the prisoner wants to seriously harm or kill someone"
+          },
+          "wantsToHarmOrKillDetail" : {
+            "type" : [ "string", "null" ],
+            "description" : "Details of the evidence that the prisoner wants to seriously harm or kill someone"
+          },
+          "strangeOrUnusualBehaviour" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Whether any strange or unusual behaviour has been observed"
+          },
+          "strangeOrUnusualBehaviourDetail" : {
+            "type" : [ "string", "null" ],
+            "description" : "Details of the strange or unusual behaviour"
+          },
+          "clinicalParanoidBehaviour" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Clinical evidence of paranoid behaviour, confirmed by a healthcare assessment"
+          },
+          "clinicalParanoidBehaviourDetail" : {
+            "type" : [ "string", "null" ],
+            "description" : "Details of the clinical evidence of paranoid behaviour"
+          },
+          "frequentCellChangeRequests" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Whether the prisoner or their cellmate has frequently requested to change cell"
+          },
+          "frequentCellChangeRequestsDetail" : {
+            "type" : [ "string", "null" ],
+            "description" : "Details of the requests to change cell"
+          }
+        },
+        "required" : [ "evidenceSources", "reviewReason" ]
+      },
+      "CsraReviewDto" : {
+        "type" : "object",
+        "description" : "A CSR review with the answers saved on each stage",
+        "properties" : {
+          "reviewId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The review id"
+          },
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The prisoner number"
+          },
+          "prisonId" : {
+            "type" : [ "string", "null" ],
+            "description" : "The prison the review is currently associated with"
+          },
+          "status" : {
+            "type" : "string",
+            "description" : "The review lifecycle status",
+            "enum" : [ "IN_PROGRESS", "COMPLETE", "CLOSED", "ARCHIVED" ]
+          },
+          "startedBy" : {
+            "type" : "string",
+            "description" : "Username of the reviewer who started the review"
+          },
+          "startedAt" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "When the review was started"
+          },
+          "reviewReason" : {
+            "type" : [ "string", "null" ],
+            "description" : "Why the review is being held, from the final stage if one has been saved, otherwise the interim stage. Null until the first answers are saved.",
+            "enum" : [ "SCHEDULED_LONG_TERM_HIGH_RISK_REVIEW", "SHORT_TERM_HIGH_RISK_REVIEW", "NEW_OR_ADDITIONAL_INFORMATION", "RECENT_CHANGE_IN_BEHAVIOUR_OR_THINKING" ]
+          },
+          "interimResult" : {
+            "type" : [ "string", "null" ],
+            "description" : "The interim rating, if one has been confirmed",
+            "enum" : [ "HIGH", "HIGH_GENERAL", "HIGH_SPECIFIC", "STANDARD" ]
+          },
+          "finalResult" : {
+            "type" : [ "string", "null" ],
+            "description" : "The final rating, if the review has been completed",
+            "enum" : [ "HIGH", "HIGH_GENERAL", "HIGH_SPECIFIC", "STANDARD" ]
+          },
+          "nextReviewDate" : {
+            "type" : [ "string", "null" ],
+            "format" : "date",
+            "description" : "When this review says the prisoner's CSRA should next be reviewed, if it has set a date"
+          },
+          "stages" : {
+            "type" : "array",
+            "description" : "One entry per stage that has been saved. Empty for a review started without answers.",
+            "items" : {
+              "$ref" : "#/components/schemas/CsraReviewStageDto"
+            }
+          }
+        },
+        "required" : [ "prisonerNumber", "reviewId", "stages", "startedAt", "startedBy", "status" ]
+      },
+      "CsraReviewStageDto" : {
+        "type" : "object",
+        "description" : "What has been saved on one stage of a CSR review",
+        "properties" : {
+          "stage" : {
+            "type" : "string",
+            "description" : "Which stage this is: INTERIM or FINAL",
+            "enum" : [ "PROVISIONAL", "INTERIM", "FINAL" ]
+          },
+          "prisonId" : {
+            "type" : [ "string", "null" ],
+            "description" : "The prison this stage was captured at"
+          },
+          "answers" : {
+            "$ref" : "#/components/schemas/CsraReviewAnswers",
+            "description" : "The answers saved on this stage. They can be sent back unchanged in the next save, or spread into the confirm request."
+          },
+          "reviewComment" : {
+            "type" : [ "string", "null" ],
+            "description" : "The review comment, once the stage has been confirmed"
+          },
+          "mdtChairName" : {
+            "type" : [ "string", "null" ],
+            "description" : "The name of who chaired the multidisciplinary meeting, once the stage has been confirmed"
+          },
+          "riskTo" : {
+            "type" : "array",
+            "description" : "Who the prisoner is a risk to, for a confirmed HIGH_SPECIFIC rating",
+            "items" : {
+              "$ref" : "#/components/schemas/CsraRiskToDetail"
+            }
+          },
+          "vulnerabilities" : {
+            "type" : "array",
+            "description" : "The vulnerable or at-risk groups the prisoner belongs to, for a confirmed HIGH_SPECIFIC rating",
+            "items" : {
+              "$ref" : "#/components/schemas/CsraVulnerabilityDetail"
+            }
+          },
+          "lastSavedBy" : {
+            "type" : [ "string", "null" ],
+            "description" : "Username of the reviewer who last saved this stage part way, if it has been"
+          },
+          "lastSavedAt" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "When this stage was last saved part way, if it has been"
+          },
+          "completedBy" : {
+            "type" : [ "string", "null" ],
+            "description" : "Username of the reviewer who confirmed this stage's rating, once confirmed"
+          },
+          "completedAt" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "When this stage's rating was confirmed, once confirmed"
+          },
+          "version" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The version of this stage's answers. Send it with the next save.",
+            "example" : 1
+          }
+        },
+        "required" : [ "answers", "riskTo", "stage", "version", "vulnerabilities" ]
+      },
+      "CsraReviewAnswersRequest" : {
+        "type" : "object",
+        "description" : "A part-way save of a CSR review's answers",
+        "properties" : {
+          "prisonId" : {
+            "type" : "string",
+            "description" : "The prison the review is being made at",
+            "example" : "LEI",
+            "minLength" : 1
+          },
+          "version" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The version of the saved answers this save is based on, from the last read of the review. A review with no answers saved yet is at version 1. A save based on an out-of-date version is rejected.",
+            "example" : 1
+          },
+          "answers" : {
+            "$ref" : "#/components/schemas/CsraReviewAnswers",
+            "description" : "Every answer given so far"
+          }
+        },
+        "required" : [ "answers", "prisonId", "version" ]
       },
       "CsraAssessmentDto" : {
         "type" : "object",
@@ -3975,6 +4604,27 @@
           "prisonId" : {
             "type" : "string",
             "description" : "The prison the review is being started at",
+            "example" : "LEI",
+            "minLength" : 1
+          },
+          "answers" : {
+            "description" : "The first answers to save, on the review's final stage. Omit to start a review with nothing saved, as the interim rating route does.",
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CsraReviewAnswers"
+            }, {
+              "type" : "null"
+            } ]
+          }
+        },
+        "required" : [ "prisonId" ]
+      },
+      "CsraReviewCancelRequest" : {
+        "type" : "object",
+        "description" : "What is needed to cancel a CSR review that has no rating yet",
+        "properties" : {
+          "prisonId" : {
+            "type" : "string",
+            "description" : "The prison requesting cancellation, used for the rollout check",
             "example" : "LEI",
             "minLength" : 1
           }
