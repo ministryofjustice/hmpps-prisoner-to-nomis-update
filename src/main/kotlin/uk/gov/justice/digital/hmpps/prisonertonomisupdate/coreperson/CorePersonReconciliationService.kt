@@ -445,9 +445,10 @@ private fun CoreOffender.toPrisonerAlias() = PrisonerAlias(
   createdDateTime = createdDateTime,
 )
 
+// CPR stores valid PNC and CRO identifiers in canonical form, so convert the NOMIS values to match
 private fun Identifier.toPrisonerIdentifier() = PrisonerIdentifier(
   type = type.code.toCprIdentifierTypeCode(),
-  value = identifier,
+  value = CprIdentifierFormatter.format(type.code, identifier),
   comment = issuedAuthority,
   verified = verified,
 )

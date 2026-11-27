@@ -690,6 +690,38 @@ class CorePersonReconciliationIntTest(
     }
 
     @Test
+    fun `should not report differences when NOMIS PNC and CRO are in non-canonical form`() = runTest {
+      corePersonNomisApi.stubGetCorePersonForReconciliation(
+        prisonNumber = "A1234BC",
+        response = corePerson(prisonNumber = "A1234BC").copy(
+          offenders = listOf(
+            nomisCoreOffender(
+              identifiers = listOf(
+                nomisIdentifier(sequence = 1, type = "PNC", identifier = "00/1234567v"),
+                nomisIdentifier(sequence = 2, type = "CRO", identifier = "123/99D"),
+              ),
+            ),
+          ),
+        ),
+      )
+      cprApi.stubGetCorePerson(
+        prisonNumber = "A1234BC",
+        response = corePersonDto().copy(
+          prisonAliases = listOf(
+            cprPrisonAlias(
+              identifiers = listOf(
+                cprPrisonIdentifier(type = DpsPrisonIdentifier.Type.PNC, value = "2000/1234567V"),
+                cprPrisonIdentifier(type = DpsPrisonIdentifier.Type.CRO, value = "000123/99D"),
+              ),
+            ),
+          ),
+        ),
+      )
+
+      assertThat(service.checkCorePersonMatch("A1234BC")).isNull()
+    }
+
+    @Test
     fun `should report identifier differences`() = runTest {
       corePersonNomisApi.stubGetCorePersonForReconciliation(
         prisonNumber = "A1234BC",
