@@ -37,6 +37,7 @@ api.base.url:
   agencyregisters: http://localhost:8109
   person-location: http://localhost:8111
   bedassignment: http://localhost:8112
+  calculate.release.dates: http://localhost:8113
 
 hmpps.sqs:
   defaultErrorVisibilityTimeout: 0

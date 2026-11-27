@@ -27,6 +27,7 @@ api.base.url:
   visit.balance: http://localhost:8080
   visits: http://localhost:8080
   agencyregisters: http://localhost:8080
+  calculate.release.dates: http://localhost:8080
 
 springdoc:
   api-docs:

@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.Adjudica
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.AlertsDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.bedassignment.BedAssignmentDpsApiExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.calculatereleasedates.CalculateReleaseDatesApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.CaseNotesDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.WebClientConfiguration
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonCprApiExtension
@@ -88,6 +89,7 @@ import kotlin.annotation.AnnotationTarget.CLASS
   VisitBalanceDpsApiExtension::class,
   VisitsApiExtension::class,
   AgencyRegistersDpsApiExtension::class,
+  CalculateReleaseDatesApiExtension::class,
 )
 @ActiveProfiles("test")
 @SpringBootTest(classes = [JacksonAutoConfiguration::class, CodecsAutoConfiguration::class, WebClientConfiguration::class, WebClientAutoConfiguration::class, ReactiveOAuth2ClientAutoConfiguration::class, HmppsReactiveWebClientConfiguration::class])

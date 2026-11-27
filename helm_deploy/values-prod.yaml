@@ -17,6 +17,7 @@ generic-service:
     API_BASE_URL_ALERTS: https://alerts-api.hmpps.service.justice.gov.uk
     API_BASE_URL_APPOINTMENTS: https://activities-api.prison.service.justice.gov.uk
     API_BASE_URL_BEDASSIGNMENT: https://change-someones-cell-api.hmpps.service.justice.gov.uk
+    API_BASE_URL_CALCULATE_RELEASE_DATES: https://calculate-release-dates-api.hmpps.service.justice.gov.uk
     API_BASE_URL_CASENOTES: https://offender-case-notes.service.justice.gov.uk
     API_BASE_URL_CORE_PERSON: https://hmpps-person-record.hmpps.service.justice.gov.uk
     API_BASE_URL_COURT_SENTENCING: https://remand-and-sentencing-api.hmpps.service.justice.gov.uk

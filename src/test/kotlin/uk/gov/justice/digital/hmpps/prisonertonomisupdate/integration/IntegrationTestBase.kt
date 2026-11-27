@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.Adjudica
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.AlertsDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.bedassignment.BedAssignmentDpsApiExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.calculatereleasedates.CalculateReleaseDatesApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.CaseNotesDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonCprApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingApiExtension
@@ -78,6 +79,7 @@ import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
   VisitsApiExtension::class,
   VisitBalanceDpsApiExtension::class,
   AgencyRegistersDpsApiExtension::class,
+  CalculateReleaseDatesApiExtension::class,
 )
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @ActiveProfiles("test")

@@ -5,6 +5,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.Adjudica
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.agency.AgencyRegistersDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.AlertsDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.bedassignment.BedAssignmentDpsApiExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.calculatereleasedates.CalculateReleaseDatesApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.CaseNotesDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonCprApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingApiExtension
@@ -76,6 +77,7 @@ class HealthCheckTest : IntegrationTestBase() {
       .jsonPath("components.agencyApi.status").isEqualTo("UP")
       .jsonPath("components.transferSchedulerApi.status").isEqualTo("UP")
       .jsonPath("components.personLocationApi.status").isEqualTo("UP")
+      .jsonPath("components.calculateReleaseDatesApi.status").isEqualTo("UP")
   }
 
   @Test
@@ -152,5 +154,6 @@ class HealthCheckTest : IntegrationTestBase() {
     VisitsApiExtension.visitsApi.stubHealthPing(status)
     VisitBalanceDpsApiExtension.visitBalanceDpsApi.stubHealthPing(status)
     AgencyRegistersDpsApiExtension.agencyRegistersApi.stubHealthPing(status)
+    CalculateReleaseDatesApiExtension.calculateReleaseDatesApi.stubHealthPing(status)
   }
 }
