@@ -64,7 +64,12 @@ class PrisonerReconciliationReport<M : Any>(
   suspend fun run() {
     telemetryClient.trackEvent("${names.telemetryPrefix}-requested", mapOf("TYPE" to selection.name))
 
-    runCatching { reconcile().let { result -> result to mismatchSummary(result.mismatches) } }
+    runCatching {
+      reconcile().let { result ->
+        check(!result.stoppedEarly) { "Stopped after too many page errors" }
+        result to mismatchSummary(result.mismatches)
+      }
+    }
       .onSuccess { (result, summary) ->
         log.info("${names.description} ${selection.label} reconciliation report completed with ${result.mismatches.size} mismatches")
         telemetryClient.trackEvent(
