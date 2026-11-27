@@ -239,5 +239,18 @@ class PrisonerReconciliationReportTest {
         isNull(),
       )
     }
+
+    @Test
+    fun `a report that stops after too many page errors is reported as unsuccessful`() = runTest {
+      whenever(nomisApi.getAllPrisoners(any(), any())).thenThrow(RuntimeException("NOMIS down"))
+
+      report(ALL_PRISONERS).run()
+
+      verify(telemetryClient).trackEvent(
+        eq("test-reconciliation-report"),
+        eq(mapOf("TYPE" to "ALL_PRISONERS", "success" to "false", "error" to "Stopped after too many page errors")),
+        isNull(),
+      )
+    }
   }
 }

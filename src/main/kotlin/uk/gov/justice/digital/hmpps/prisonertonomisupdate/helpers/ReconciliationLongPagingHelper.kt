@@ -9,6 +9,7 @@ import kotlinx.coroutines.channels.toList
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
@@ -17,6 +18,7 @@ import java.util.concurrent.atomic.AtomicInteger
  * @param mismatches list of mismatches found during the reconciliation
  * @param itemsChecked the number of items checked during the reconciliation
  * @param pagesChecked the number of pages checked during the reconciliation
+ * @param stoppedEarly true if the reconciliation gave up retrieving pages after too many page errors, so not all items were checked
  *
  * @param M the type of the mismatch
  *
@@ -26,6 +28,7 @@ data class ReconciliationResult<M>(
   val mismatches: List<M>,
   val itemsChecked: Int,
   val pagesChecked: Int,
+  val stoppedEarly: Boolean = false,
 )
 
 /**
@@ -49,9 +52,10 @@ suspend fun <T, M> generateReconciliationReport(
 ): ReconciliationResult<M> = coroutineScope {
   val itemsCount = AtomicInteger(0)
   val pagesCount = AtomicInteger(0)
+  val stoppedEarly = AtomicBoolean(false)
 
   val mismatchesChannel = Channel<M>(capacity = UNLIMITED)
-  val channel = produceIds(pagesCount = pagesCount, pageSize = pageSize) { last ->
+  val channel = produceIds(pagesCount = pagesCount, stoppedEarly = stoppedEarly, pageSize = pageSize) { last ->
     nextPage(last)
   }
 
@@ -73,6 +77,7 @@ suspend fun <T, M> generateReconciliationReport(
     mismatches = mismatchesChannel.toList(),
     itemsChecked = itemsCount.get(),
     pagesChecked = pagesCount.get(),
+    stoppedEarly = stoppedEarly.get(),
   )
 }
 
@@ -87,7 +92,7 @@ private fun <T> ReconciliationPageResult<T>.notLastPage(pageSize: Int): Boolean 
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
-private fun <T> CoroutineScope.produceIds(pagesCount: AtomicInteger, pageSize: Int, nextPage: suspend (Long) -> ReconciliationPageResult<T>) = produce(capacity = pageSize * 2) {
+private fun <T> CoroutineScope.produceIds(pagesCount: AtomicInteger, stoppedEarly: AtomicBoolean, pageSize: Int, nextPage: suspend (Long) -> ReconciliationPageResult<T>) = produce(capacity = pageSize * 2) {
   var lastId: Long = 0
   var pageErrorCount = 0L
 
@@ -112,6 +117,8 @@ private fun <T> CoroutineScope.produceIds(pagesCount: AtomicInteger, pageSize: I
       }
     }
   } while (result.notLastPage(pageSize) && notManyPageErrors(pageErrorCount))
+
+  stoppedEarly.set(!notManyPageErrors(pageErrorCount))
 
   // no more prisoner ids so signal a close of the channel
   channel.close()
