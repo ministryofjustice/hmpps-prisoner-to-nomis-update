@@ -24,6 +24,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.Canon
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalSex
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalSexualOrientation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalTitle
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.DpsPrisonAlias
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.DpsPrisonIdentifier
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.DpsPrisonRecord
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonContact
@@ -256,6 +258,36 @@ fun corePersonDto(nationality: String? = null, religion: String? = null, address
     emptyList()
   },
   contacts = emptyList(),
+  prisonAliases = emptyList(),
+)
+
+fun cprPrisonAlias(identifiers: List<DpsPrisonIdentifier> = emptyList()) = DpsPrisonAlias(
+  cprAliasId = "4f2b1d8a-9f3c-4a1f-8b2d-112233445566",
+  isPrimary = true,
+  titleCode = DpsPrisonAlias.TitleCode.MR,
+  firstName = "JOHN",
+  middleNames = "FRED JAMES",
+  lastName = "SMITH",
+  dateOfBirth = LocalDate.parse("1980-01-01"),
+  sexCode = DpsPrisonAlias.SexCode.M,
+  birthPlace = "LEEDS",
+  birthCountry = DpsPrisonAlias.BirthCountry.GBR,
+  ethnicity = DpsPrisonAlias.Ethnicity.W1,
+  suffix = DpsPrisonAlias.Suffix.Junior,
+  nameType = DpsPrisonAlias.NameType.CN,
+  identifiers = identifiers,
+  createDateTime = LocalDateTime.parse("2025-02-03T10:20:30"),
+  createUserId = "ME",
+)
+
+fun cprPrisonIdentifier(type: DpsPrisonIdentifier.Type = DpsPrisonIdentifier.Type.PNC, value: String = "2000/1234567A") = DpsPrisonIdentifier(
+  cprIdentifierId = "4f2c1d8a-9e3c-4a1f-8b2d-112233445566",
+  type = type,
+  value = value,
+  comment = "Police",
+  verified = true,
+  createDateTime = LocalDateTime.parse("2025-02-03T10:20:30"),
+  createUserId = "ME",
 )
 
 fun corePersonReligionHistory(religion: String = "JEHV") = PrisonReligion(

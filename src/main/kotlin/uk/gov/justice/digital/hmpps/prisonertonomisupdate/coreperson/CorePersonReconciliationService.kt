@@ -14,12 +14,16 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.telemetryOf
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEventOrSuppress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalAddress
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.DpsPrisonAlias
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.DpsPrisonIdentifier
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.DpsPrisonRecord
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationErrorPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationSuccessPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.generateReconciliationReport
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CoreOffender
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CorePerson
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Identifier
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
@@ -146,6 +150,8 @@ class CorePersonReconciliationService(
     appendReligionsDifference(nomisCorePerson.religions, cprCorePerson.religions, differences)
     appendAddressesDifference(nomisCorePerson.addresses, cprCorePerson.addresses, differences)
     appendDifference(nomisCorePerson.contacts, cprCorePerson.contacts, differences, "contacts")
+    appendAliasesDifference(nomisCorePerson.aliases, cprCorePerson.aliases, differences)
+    appendIdentifiersDifference(nomisCorePerson.identifiers, cprCorePerson.identifiers, differences)
 
     return differences.takeIf { it.isNotEmpty() }
       ?.let { MismatchCorePerson(prisonNumber = prisonerId.offenderNo, differences = it) }?.also { mismatch ->
@@ -231,6 +237,66 @@ class CorePersonReconciliationService(
     }
   }
 
+  private fun appendAliasesDifference(
+    nomisAliases: List<PrisonerAlias>,
+    cprAliases: List<PrisonerAlias>,
+    differences: MutableMap<String, String>,
+  ) {
+    val fieldName = "aliases"
+    if (shouldNotReconcile(fieldName)) return
+    if (nomisAliases.size != cprAliases.size) {
+      differences[fieldName] = "nomis=${nomisAliases.size}, cpr=${cprAliases.size}"
+    } else {
+      nomisAliases.mapIndexedNotNull { i, n ->
+        val cpr = cprAliases[i]
+        when {
+          n.isPrimary != cpr.isPrimary -> "$i-isPrimary:nomis=${n.isPrimary}, cpr=${cpr.isPrimary}"
+          n.title != cpr.title -> "$i-title:nomis=${n.title}, cpr=${cpr.title}"
+          n.firstName != cpr.firstName -> "$i-firstName:nomis=${n.firstName}, cpr=${cpr.firstName}"
+          n.middleNames != cpr.middleNames -> "$i-middleNames:nomis=${n.middleNames}, cpr=${cpr.middleNames}"
+          n.lastName != cpr.lastName -> "$i-lastName:nomis=${n.lastName}, cpr=${cpr.lastName}"
+          !Objects.equals(n.dateOfBirth, cpr.dateOfBirth) -> "$i-dateOfBirth:nomis=${n.dateOfBirth}, cpr=${cpr.dateOfBirth}"
+          n.sex != cpr.sex -> "$i-sex:nomis=${n.sex}, cpr=${cpr.sex}"
+          n.birthPlace != cpr.birthPlace -> "$i-birthPlace:nomis=${n.birthPlace}, cpr=${cpr.birthPlace}"
+          n.birthCountry != cpr.birthCountry -> "$i-birthCountry:nomis=${n.birthCountry}, cpr=${cpr.birthCountry}"
+          n.ethnicity != cpr.ethnicity -> "$i-ethnicity:nomis=${n.ethnicity}, cpr=${cpr.ethnicity}"
+          n.suffix != cpr.suffix -> "$i-suffix:nomis=${n.suffix}, cpr=${cpr.suffix}"
+          n.nameType != cpr.nameType -> "$i-nameType:nomis=${n.nameType}, cpr=${cpr.nameType}"
+          else -> null
+        }
+      }
+        .takeIf { it.isNotEmpty() }
+        ?.joinToString(separator = ",")
+        ?.apply { differences[fieldName] = this }
+    }
+  }
+
+  private fun appendIdentifiersDifference(
+    nomisIdentifiers: List<PrisonerIdentifier>,
+    cprIdentifiers: List<PrisonerIdentifier>,
+    differences: MutableMap<String, String>,
+  ) {
+    val fieldName = "identifiers"
+    if (shouldNotReconcile(fieldName)) return
+    if (nomisIdentifiers.size != cprIdentifiers.size) {
+      differences[fieldName] = "nomis=${nomisIdentifiers.size}, cpr=${cprIdentifiers.size}"
+    } else {
+      nomisIdentifiers.mapIndexedNotNull { i, n ->
+        val cpr = cprIdentifiers[i]
+        when {
+          n.type != cpr.type -> "$i-type:nomis=${n.type}, cpr=${cpr.type}"
+          n.value != cpr.value -> "$i-value:nomis=${n.value}, cpr=${cpr.value}"
+          n.comment != cpr.comment -> "$i-comment:nomis=${n.comment}, cpr=${cpr.comment}"
+          n.verified != cpr.verified -> "$i-verified:nomis=${n.verified}, cpr=${cpr.verified}"
+          else -> null
+        }
+      }
+        .takeIf { it.isNotEmpty() }
+        ?.joinToString(separator = ",")
+        ?.apply { differences[fieldName] = this }
+    }
+  }
+
   private fun <T> appendDifference(
     nomisField: T,
     cprField: T,
@@ -267,6 +333,19 @@ private val contactComparator = compareBy<PrisonerContact, String?>(nullsFirst()
   .thenBy(nullsFirst()) { it.value }
   .thenBy(nullsFirst()) { it.extension }
 
+// NOMIS and CPR return aliases in arbitrary order, so sort both sides into the same deterministic order with the primary alias first
+private val aliasComparator = compareByDescending<PrisonerAlias> { it.isPrimary }
+  .thenBy(nullsFirst()) { it.lastName }
+  .thenBy(nullsFirst()) { it.firstName }
+  .thenBy(nullsFirst()) { it.middleNames }
+  .thenBy(nullsFirst()) { it.dateOfBirth }
+  .thenBy(nullsFirst()) { it.createdDateTime }
+
+private val identifierComparator = compareBy<PrisonerIdentifier, String?>(nullsFirst()) { it.type }
+  .thenBy(nullsFirst()) { it.value }
+  .thenBy(nullsFirst()) { it.comment }
+  .thenBy { it.verified }
+
 fun DpsPrisonRecord.toPerson() = PrisonerPerson(
   religion = religion.code?.name,
   religions = religionHistory.map {
@@ -282,6 +361,32 @@ fun DpsPrisonRecord.toPerson() = PrisonerPerson(
   }.sortedWith(religionComparator),
   addresses = addresses.map { it.toPrisonerAddress() }.sortedWith(addressComparator),
   contacts = contacts.map { PrisonerContact(type = it.type.code, value = it.value, extension = it.extension) }.sortedWith(contactComparator),
+  aliases = prisonAliases.map { it.toPrisonerAlias() }.sortedWith(aliasComparator),
+  identifiers = prisonAliases.flatMap { it.identifiers }.map { it.toPrisonerIdentifier() }.sortedWith(identifierComparator),
+)
+
+private fun DpsPrisonAlias.toPrisonerAlias() = PrisonerAlias(
+  isPrimary = isPrimary,
+  title = titleCode?.value,
+  firstName = firstName,
+  middleNames = middleNames?.ifBlank { null },
+  lastName = lastName,
+  dateOfBirth = dateOfBirth,
+  sex = sexCode?.value,
+  birthPlace = birthPlace,
+  birthCountry = birthCountry?.value,
+  ethnicity = ethnicity?.value,
+  suffix = suffix?.value,
+  nameType = nameType?.value,
+  createdDateTime = createDateTime,
+)
+
+private fun DpsPrisonIdentifier.toPrisonerIdentifier() = PrisonerIdentifier(
+  type = type.value,
+  value = value,
+  comment = comment,
+  // NOMIS always has a verified flag, so treat missing in CPR as not verified
+  verified = verified ?: false,
 )
 
 private fun CanonicalAddress.toPrisonerAddress() = PrisonerAddress(
@@ -320,6 +425,31 @@ fun CorePerson.toPerson() = PrisonerPerson(
     phoneNumbers.orEmpty().map { PrisonerContact(type = it.type.code.toCprContactType(), value = it.number, extension = it.extension) } +
       emailAddresses.orEmpty().map { PrisonerContact(type = "EMAIL", value = it.email, extension = null) }
     ).sortedWith(contactComparator),
+  aliases = offenders.orEmpty().map { it.toPrisonerAlias() }.sortedWith(aliasComparator),
+  identifiers = offenders.orEmpty().flatMap { it.identifiers }.map { it.toPrisonerIdentifier() }.sortedWith(identifierComparator),
+)
+
+private fun CoreOffender.toPrisonerAlias() = PrisonerAlias(
+  isPrimary = workingName,
+  title = title?.code?.toCprTitleCode(),
+  firstName = firstName,
+  middleNames = listOfNotNull(middleName1, middleName2).filter { it.isNotBlank() }.joinToString(" ").ifBlank { null },
+  lastName = lastName,
+  dateOfBirth = dateOfBirth,
+  sex = sex?.code?.toCprSexCode(),
+  birthPlace = birthPlace,
+  birthCountry = birthCountry?.code?.toCprCountryCode(),
+  ethnicity = ethnicity?.code?.toCprEthnicityCode(),
+  suffix = suffix?.code?.toCprSuffixCode(),
+  nameType = nameType?.code?.toCprNameTypeCode(),
+  createdDateTime = createdDateTime,
+)
+
+private fun Identifier.toPrisonerIdentifier() = PrisonerIdentifier(
+  type = type.code.toCprIdentifierTypeCode(),
+  value = identifier,
+  comment = issuedAuthority,
+  verified = verified,
 )
 
 private fun OffenderAddress.toPrisonerAddress() = PrisonerAddress(
@@ -350,6 +480,32 @@ private fun String.toCprCountryCode(): String = when (this) {
   else -> this
 }
 
+// The following NOMIS to CPR code translations match those used when migrating aliases and identifiers to CPR
+private fun String.toCprTitleCode(): String = when (this) {
+  "DAME" -> "DME"
+  "LADY" -> "LDY"
+  "LORD" -> "LRD"
+  else -> this
+}
+
+private fun String.toCprSexCode(): String = if (this == "NK") "N" else this
+
+private fun String.toCprEthnicityCode(): String = if (this == "W10") "W5" else this
+
+private fun String.toCprSuffixCode(): String = when (this) {
+  "JR" -> "Junior"
+  "SR" -> "Senior"
+  else -> this
+}
+
+private fun String.toCprNameTypeCode(): String = if (this == "A") "ALIAS" else this
+
+private fun String.toCprIdentifierTypeCode(): String = when (this) {
+  "PORT REF" -> "PORT_REF"
+  "SHARED ALIAS" -> "SHARED_ALIAS"
+  else -> this
+}
+
 data class MismatchCorePerson(
   val prisonNumber: String,
   val differences: Map<String, String>,
@@ -360,6 +516,31 @@ data class PrisonerPerson(
   val religions: List<PrisonerReligion> = emptyList(),
   val addresses: List<PrisonerAddress> = emptyList(),
   val contacts: List<PrisonerContact> = emptyList(),
+  val aliases: List<PrisonerAlias> = emptyList(),
+  val identifiers: List<PrisonerIdentifier> = emptyList(),
+)
+
+data class PrisonerAlias(
+  val isPrimary: Boolean,
+  val title: String?,
+  val firstName: String?,
+  val middleNames: String?,
+  val lastName: String?,
+  val dateOfBirth: LocalDate?,
+  val sex: String?,
+  val birthPlace: String?,
+  val birthCountry: String?,
+  val ethnicity: String?,
+  val suffix: String?,
+  val nameType: String?,
+  val createdDateTime: LocalDateTime?,
+)
+
+data class PrisonerIdentifier(
+  val type: String?,
+  val value: String?,
+  val comment: String?,
+  val verified: Boolean,
 )
 
 data class PrisonerReligion(
