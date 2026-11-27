@@ -167,6 +167,11 @@ spring:
             client-id: ${agencyregisters.client.id}
             client-secret: ${agencyregisters.client.secret}
             authorization-grant-type: client_credentials
+          calculate-release-dates-api:
+            provider: hmpps-auth
+            client-id: ${calculate.release.dates.client.id}
+            client-secret: ${calculate.release.dates.client.secret}
+            authorization-grant-type: client_credentials
         provider:
           hmpps-auth:
             token-uri: ${api.base.url.hmpps-auth}/oauth/token
