@@ -509,7 +509,7 @@ After investigating the error you should now know if it's recoverable or not.
 
 After investigating an error you find the last request was a successful call to the Activities API and that an exception was thrown with a message something like `JSON decoding error: Cannot deserialize value of type uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model` then it would appear that a breaking change has been made to the Activities API.
 
-To fix this see [Updating the Open API specs](#updating-the-open-api-specs).
+To fix this see [Generating API client models](#generating-api-client-models).
 
 #### Duplicate allocations and attendances
 
@@ -719,6 +719,19 @@ Watch out for size difference reconciliation errors due to :
 - Dupes caused by a timeout
 
 The reconciliation process can detect and automatically delete duplicates in some circumstances, though it will still report these.
+
+### Bed assignment
+#### Reconciliation
+
+Run a batch with `BATCH_ENABLED=true` and `BATCH_TYPE=BED_ASSIGNMENT_ACTIVE_RECON` (prisoners IN prison only)
+or `BATCH_TYPE=BED_ASSIGNMENT_FULL_RECON` (all prisoners). Both compare bed assignment history across all bookings.
+Assignment mappings pair NOMIS and DPS records; reconciliation checks the living-unit description/location key
+and start/end timestamps, and reports missing records and field differences in telemetry.
+
+`GET /bed-assignments/reconciliation/{offenderNo}` reconciles one prisoner and returns differences, or an empty
+body when none are found. It requires `ROLE_PRISONER_TO_NOMIS__UPDATE__RW`.
+Page size and concurrency are configured with `reports.bedassignment.reconciliation.page-size` (default 1000)
+and `reports.bedassignment.reconciliation.thread-count` (default 10).
 
 ### Appointments
 

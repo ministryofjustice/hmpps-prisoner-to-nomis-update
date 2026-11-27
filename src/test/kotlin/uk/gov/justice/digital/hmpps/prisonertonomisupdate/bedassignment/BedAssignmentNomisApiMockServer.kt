@@ -51,6 +51,7 @@ fun nomisBedAssignment(
   bookingId = bookingId,
   sequence = sequence,
   livingUnitId = 4321,
+  livingUnitDescription = "MDI-A-1-001",
   assignmentDateTime = LocalDateTime.parse("2026-01-02T10:00:00"),
   prisonId = "MDI",
   audit = NomisAudit(createDatetime = LocalDateTime.parse("2026-01-02T10:00:00"), createUsername = "ME"),
