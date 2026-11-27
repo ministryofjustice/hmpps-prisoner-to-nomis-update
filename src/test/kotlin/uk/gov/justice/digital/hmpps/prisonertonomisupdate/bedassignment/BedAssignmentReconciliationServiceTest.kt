@@ -188,8 +188,8 @@ class BedAssignmentReconciliationServiceTest {
   inner class BatchReport {
     @BeforeEach
     fun setUp() {
-      nomisApi.stubGetAllPrisoners(prisoners = listOf(offenderNo), offenderId = 0, pageSize = 1000)
-      nomisApi.stubGetAllPrisoners(prisoners = emptyList(), offenderId = 1, pageSize = 1000)
+      nomisApi.stubGetAllPrisoners(prisoners = listOf(offenderNo), offenderId = 0, pageSize = 100)
+      nomisApi.stubGetAllPrisoners(prisoners = emptyList(), offenderId = 1, pageSize = 100)
       nomisApi.stubGetAllLatestBookings(
         bookingId = 0,
         response = BookingIdsWithLast(lastBookingId = 1, prisonerIds = listOf(PrisonerIds(bookingId = 1, offenderNo = offenderNo))),

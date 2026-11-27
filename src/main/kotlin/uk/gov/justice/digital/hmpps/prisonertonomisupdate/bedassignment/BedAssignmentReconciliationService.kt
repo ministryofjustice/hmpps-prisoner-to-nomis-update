@@ -18,8 +18,8 @@ class BedAssignmentReconciliationService(
   private val bedAssignmentDpsApiService: BedAssignmentDpsApiService,
   private val bedAssignmentMappingApiService: BedAssignmentMappingApiService,
   private val nomisApiService: NomisApiService,
-  @Value($$"${reports.bedassignment.reconciliation.page-size:1000}") private val pageSize: Int = 1000,
-  @Value($$"${reports.bedassignment.reconciliation.thread-count:10}") private val threadCount: Int = 10,
+  @Value($$"${reports.bedassignment.reconciliation.page-size}") private val pageSize: Int,
+  @Value($$"${reports.bedassignment.reconciliation.thread-count}") private val threadCount: Int,
 ) {
   private companion object {
     private const val TELEMETRY_PREFIX = "bed-assignment-reports-reconciliation"
