@@ -14,7 +14,7 @@ import java.util.*
 
 @Service
 class CourtSchedulerDpsApiService(
-  @Qualifier("courtSchedulerApiWebClient") private val webClient: WebClient,
+  @Qualifier("courtSchedulerApiWebClient") webClient: WebClient,
   retryApiService: RetryApiService,
 ) {
   private val backoffSpec = retryApiService.getBackoffSpec().withRetryContext(
@@ -27,5 +27,5 @@ class CourtSchedulerDpsApiService(
     .retrieve()
     .awaitBodyWithRetry(backoffSpec)
 
-  suspend fun getCourtAppearance(id: UUID): CourtEvent = syncApi.getCourtAppearance1(id).awaitBodyOrLogAndRethrowBadRequest(backoffSpec)
+  suspend fun getCourtAppearance(id: UUID): CourtEvent = syncApi.findCourtAppearance(id).awaitBodyOrLogAndRethrowBadRequest(backoffSpec)
 }
