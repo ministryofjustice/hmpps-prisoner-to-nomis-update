@@ -5,13 +5,11 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationErrorPageResult
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationPageResult
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationSuccessPageResult
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.generateRangesReconciliationReport
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.PrisonerReconciliationReport
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.PrisonerSelection
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationNames
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import java.time.LocalDateTime
-import kotlin.collections.mutableListOf
 
 @Service
 class BedAssignmentReconciliationService(
@@ -28,38 +26,15 @@ class BedAssignmentReconciliationService(
     private val log = LoggerFactory.getLogger(this::class.java)
   }
 
+  private val names = ReconciliationNames(TELEMETRY_PREFIX, "Bed assignment")
+
   suspend fun manualCheckBedAssignments(offenderNo: String): MismatchBedAssignments? = checkBedAssignments(offenderNo)
 
-  suspend fun generateReconciliationReportBatch(activeOnly: Boolean) {
-    telemetryClient.trackEvent("$TELEMETRY_PREFIX-requested", mapOf("activeOnly" to activeOnly.toString()))
-    runCatching {
-      generateRangesReconciliationReport(
-        threadCount = threadCount,
-        checkMatch = ::checkBedAssignments,
-        idRanges = { nomisApiService.getAllPrisonersIdRanges(pageSize.toLong(), activeOnly) },
-        idsInRange = { getOffenderNosInRange(it.fromId, it.toId, activeOnly) },
-      )
-    }.onSuccess {
-      telemetryClient.trackEvent(
-        "$TELEMETRY_PREFIX-report",
-        mapOf(
-          "activeOnly" to activeOnly.toString(),
-          "prisoners-count" to it.itemsChecked.toString(),
-          "page-count" to it.pagesChecked.toString(),
-          "mismatch-count" to it.mismatches.size.toString(),
-          "success" to "true",
-        ),
-      )
-    }.onFailure {
-      telemetryClient.trackEvent(
-        "$TELEMETRY_PREFIX-report",
-        mapOf("success" to "false", "error" to (it.message ?: it.javaClass.name)),
-      )
-      log.error("Bed assignment reconciliation report failed", it)
-    }
-  }
+  suspend fun generateReconciliationReport(selection: PrisonerSelection) = PrisonerReconciliationReport(telemetryClient, nomisApiService, names, selection, pageSize, threadCount) {
+    checkBedAssignments(it)?.differences ?: emptyList()
+  }.run()
 
-  internal suspend fun checkBedAssignments(offenderNo: String): MismatchBedAssignments? = runCatching {
+  internal suspend fun checkBedAssignments(offenderNo: String): MismatchBedAssignments? {
     val nomisAssignments = bedAssignmentNomisApiService.getBedAssignmentsForPrisoner(offenderNo).bedAssignments
     val dpsAssignments = bedAssignmentDpsApiService.getBedAssignments(offenderNo)
     val nomisFields = nomisAssignments.map {
@@ -97,47 +72,15 @@ class BedAssignmentReconciliationService(
     }
 
     if (differences.isEmpty()) {
-      null
-    } else {
-      log.info("Bed assignment differences for offenderNo=$offenderNo: $differences")
-      telemetryClient.trackEvent(
-        "$TELEMETRY_PREFIX-mismatch",
-        mapOf("prisoner" to offenderNo) + differences.associate { it.property to it.toString() },
-      )
-      MismatchBedAssignments(nomis = nomisFields, dps = dpsFields, differences = differences)
+      return null
     }
-  }.onFailure {
-    log.error("Unable to match bed assignments for offenderNo=$offenderNo", it)
+    log.info("Bed assignment differences for offenderNo=$offenderNo: $differences")
     telemetryClient.trackEvent(
-      "$TELEMETRY_PREFIX-mismatch-error",
-      mapOf("prisoner" to offenderNo, "error" to (it.message ?: it.javaClass.name)),
+      "$TELEMETRY_PREFIX-mismatch",
+      mapOf("prisoner" to offenderNo) + differences.associate { it.property to it.toString() },
     )
-  }.getOrNull()
-
-  internal suspend fun getOffenderNosInRange(fromRootOffenderId: Long, toRootOffenderId: Long, activeOnly: Boolean): ReconciliationPageResult<String> = runCatching {
-    nomisApiService.getAllPrisonersInRange(
-      fromRootOffenderId = fromRootOffenderId,
-      toRootOffenderId = toRootOffenderId,
-      activeOnly = activeOnly,
-    )
-  }.fold(
-    onSuccess = { prisoners ->
-      ReconciliationSuccessPageResult(ids = prisoners.map { it.prisonNumber }, last = 0)
-        .also { log.info("Page requested from fromRootOffenderId: $fromRootOffenderId, toRootOffenderId: $toRootOffenderId, with ${it.ids.size} prisoners") }
-    },
-    onFailure = {
-      telemetryClient.trackEvent(
-        "$TELEMETRY_PREFIX-mismatch-page-error",
-        mapOf(
-          "fromRootOffenderId" to fromRootOffenderId.toString(),
-          "toRootOffenderId" to toRootOffenderId.toString(),
-          "error" to (it.message ?: it.javaClass.name),
-        ),
-      )
-      log.error("Unable to match entire page of prisoners from fromRootOffenderId: $fromRootOffenderId, toRootOffenderId: $toRootOffenderId", it)
-      ReconciliationErrorPageResult(it)
-    },
-  )
+    return MismatchBedAssignments(nomis = nomisFields, dps = dpsFields, differences = differences)
+  }
 }
 
 data class MismatchBedAssignments(
