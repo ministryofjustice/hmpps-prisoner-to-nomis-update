@@ -11,7 +11,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiServi
 
 @Service
 class CalculateReleaseDatesApiService(
-  @Qualifier("calculateReleaseDatesApiWebClient") private val webClient: WebClient,
+  @Qualifier("calculateReleaseDatesApiWebClient") webClient: WebClient,
   retryApiService: RetryApiService,
 ) {
   private val retrySpec = retryApiService.getBackoffSpec().withRetryContext(

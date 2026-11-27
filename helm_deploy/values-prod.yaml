@@ -179,11 +179,11 @@ generic-service:
       schedule: "50 1 * * 6"
     - name: crds-active-recon
       type: CRDS_ACTIVE_RECON
-      schedule: "30 3 * * *"
+      schedule: "0 22 * * *"
       suspend: true
     - name: crds-all-recon
       type: CRDS_ALL_RECON
-      schedule: "30 3 * * *"
+      schedule: "30 22 * * *"
       suspend: true
     - name: person-location-act-recon
       type: PERSON_LOCATION_ACTIVE_RECON

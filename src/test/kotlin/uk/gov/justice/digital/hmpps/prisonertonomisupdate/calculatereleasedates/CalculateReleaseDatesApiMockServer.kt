@@ -27,11 +27,10 @@ class CalculateReleaseDatesApiExtension :
     fun legacySentenceCalculationDto(
       nomisCalculationId: Long = 12345,
       prisonerId: String = "A1234BC",
-      bookingId: Long = 54321,
     ) = LegacySentenceCalculationDto(
       nomisCalculationId = nomisCalculationId,
       prisonerId = prisonerId,
-      bookingId = bookingId,
+      bookingId = 54321,
       calculationDate = LocalDateTime.parse("2026-01-02T10:15:30"),
       calculationReasonCode = "NEW",
       nomisCreatedAt = LocalDateTime.parse("2026-01-02T10:15:30"),

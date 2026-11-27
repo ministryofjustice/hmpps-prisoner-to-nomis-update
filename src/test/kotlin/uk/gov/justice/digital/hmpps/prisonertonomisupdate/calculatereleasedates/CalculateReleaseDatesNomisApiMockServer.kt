@@ -14,10 +14,9 @@ import java.time.LocalDateTime
 fun nomisSentenceCalculationResponse(
   id: Long = 12345,
   offenderNo: String = "A1234BC",
-  bookingId: Long = 54321,
 ) = OffenderSentenceCalculationResponse(
   id = id,
-  bookingId = bookingId,
+  bookingId = 54321,
   offenderNo = offenderNo,
   calculationDate = LocalDateTime.parse("2026-01-02T10:15:30"),
   calculationReasonCode = "NEW",
