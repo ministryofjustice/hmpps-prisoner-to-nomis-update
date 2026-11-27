@@ -33,6 +33,8 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.BAD_GATEWAY
 import org.springframework.http.HttpStatus.NOT_FOUND
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalAddressUsage
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.DpsPrisonAlias
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.DpsPrisonIdentifier
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonReligion
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonReligion.ReligionCode
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
@@ -534,6 +536,198 @@ class CorePersonReconciliationIntTest(
   }
 
   @Nested
+  inner class AliasDifferences {
+    @Test
+    fun `should not report differences when aliases match`() = runTest {
+      corePersonNomisApi.stubGetCorePersonForReconciliation(
+        prisonNumber = "A1234BC",
+        response = corePerson(prisonNumber = "A1234BC").copy(offenders = listOf(nomisCoreOffender())),
+      )
+      cprApi.stubGetCorePerson(
+        prisonNumber = "A1234BC",
+        response = corePersonDto().copy(prisonAliases = listOf(cprPrisonAlias())),
+      )
+
+      assertThat(service.checkCorePersonMatch("A1234BC")).isNull()
+      verify(telemetryClient, never()).trackEvent(anyString(), anyMap(), isNull())
+    }
+
+    @Test
+    fun `should not report differences when NOMIS codes are translated to CPR codes`() = runTest {
+      corePersonNomisApi.stubGetCorePersonForReconciliation(
+        prisonNumber = "A1234BC",
+        response = corePerson(prisonNumber = "A1234BC").copy(
+          offenders = listOf(
+            nomisCoreOffender().copy(
+              title = CodeDescription(code = "DAME", description = "Dame"),
+              sex = CodeDescription(code = "NK", description = "Not Known"),
+              birthCountry = CodeDescription(code = "IOM", description = "Isle of Man"),
+              ethnicity = CodeDescription(code = "W10", description = "White: Other"),
+              suffix = CodeDescription(code = "SR", description = "Senior"),
+              nameType = CodeDescription(code = "A", description = "Alias"),
+              middleName2 = null,
+            ),
+          ),
+        ),
+      )
+      cprApi.stubGetCorePerson(
+        prisonNumber = "A1234BC",
+        response = corePersonDto().copy(
+          prisonAliases = listOf(
+            cprPrisonAlias().copy(
+              titleCode = DpsPrisonAlias.TitleCode.DME,
+              sexCode = DpsPrisonAlias.SexCode.N,
+              birthCountry = DpsPrisonAlias.BirthCountry.IMN,
+              ethnicity = DpsPrisonAlias.Ethnicity.W5,
+              suffix = DpsPrisonAlias.Suffix.Senior,
+              nameType = DpsPrisonAlias.NameType.ALIAS,
+              middleNames = "FRED",
+            ),
+          ),
+        ),
+      )
+
+      assertThat(service.checkCorePersonMatch("A1234BC")).isNull()
+    }
+
+    @Test
+    fun `should not report differences when aliases are in a different order`() = runTest {
+      corePersonNomisApi.stubGetCorePersonForReconciliation(
+        prisonNumber = "A1234BC",
+        response = corePerson(prisonNumber = "A1234BC").copy(
+          offenders = listOf(
+            nomisCoreOffender(offenderId = 1).copy(workingName = false, lastName = "JONES"),
+            nomisCoreOffender(offenderId = 2),
+            nomisCoreOffender(offenderId = 3).copy(workingName = false, lastName = "BROWN"),
+          ),
+        ),
+      )
+      cprApi.stubGetCorePerson(
+        prisonNumber = "A1234BC",
+        response = corePersonDto().copy(
+          prisonAliases = listOf(
+            cprPrisonAlias().copy(isPrimary = false, lastName = "BROWN"),
+            cprPrisonAlias().copy(isPrimary = false, lastName = "JONES"),
+            cprPrisonAlias(),
+          ),
+        ),
+      )
+
+      assertThat(service.checkCorePersonMatch("A1234BC")).isNull()
+    }
+
+    @Test
+    fun `should report alias differences`() = runTest {
+      corePersonNomisApi.stubGetCorePersonForReconciliation(
+        prisonNumber = "A1234BC",
+        response = corePerson(prisonNumber = "A1234BC").copy(offenders = listOf(nomisCoreOffender())),
+      )
+      cprApi.stubGetCorePerson(
+        prisonNumber = "A1234BC",
+        response = corePersonDto().copy(prisonAliases = listOf(cprPrisonAlias().copy(dateOfBirth = LocalDate.parse("1981-01-01")))),
+      )
+
+      assertThat(service.checkCorePersonMatch("A1234BC")?.differences).containsExactly(
+        entry("aliases", "0-dateOfBirth:nomis=1980-01-01, cpr=1981-01-01"),
+      )
+      verify(telemetryClient).trackEvent(
+        eq("$TELEMETRY_PREFIX-mismatch"),
+        check { assertThat(it).containsEntry("differences5", "aliases") },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `should report a different number of aliases`() = runTest {
+      corePersonNomisApi.stubGetCorePersonForReconciliation(
+        prisonNumber = "A1234BC",
+        response = corePerson(prisonNumber = "A1234BC").copy(
+          offenders = listOf(nomisCoreOffender(offenderId = 1), nomisCoreOffender(offenderId = 2).copy(workingName = false)),
+        ),
+      )
+      cprApi.stubGetCorePerson(
+        prisonNumber = "A1234BC",
+        response = corePersonDto().copy(prisonAliases = listOf(cprPrisonAlias())),
+      )
+
+      assertThat(service.checkCorePersonMatch("A1234BC")?.differences).containsExactly(
+        entry("aliases", "nomis=2, cpr=1"),
+      )
+    }
+  }
+
+  @Nested
+  inner class IdentifierDifferences {
+    @Test
+    fun `should not report differences when identifiers match across aliases in a different order`() = runTest {
+      corePersonNomisApi.stubGetCorePersonForReconciliation(
+        prisonNumber = "A1234BC",
+        response = corePerson(prisonNumber = "A1234BC").copy(
+          offenders = listOf(
+            nomisCoreOffender(
+              offenderId = 1,
+              identifiers = listOf(nomisIdentifier(offenderId = 1, type = "PORT REF", identifier = "PR123")),
+            ).copy(workingName = false, lastName = "JONES"),
+            nomisCoreOffender(
+              offenderId = 2,
+              identifiers = listOf(nomisIdentifier(offenderId = 2, sequence = 1), nomisIdentifier(offenderId = 2, sequence = 2, type = "CRO", identifier = "123456/99A")),
+            ),
+          ),
+        ),
+      )
+      cprApi.stubGetCorePerson(
+        prisonNumber = "A1234BC",
+        response = corePersonDto().copy(
+          prisonAliases = listOf(
+            cprPrisonAlias(identifiers = listOf(cprPrisonIdentifier(type = DpsPrisonIdentifier.Type.CRO, value = "123456/99A"), cprPrisonIdentifier())),
+            cprPrisonAlias(identifiers = listOf(cprPrisonIdentifier(type = DpsPrisonIdentifier.Type.PORT_REF, value = "PR123"))).copy(isPrimary = false, lastName = "JONES"),
+          ),
+        ),
+      )
+
+      assertThat(service.checkCorePersonMatch("A1234BC")).isNull()
+      verify(telemetryClient, never()).trackEvent(anyString(), anyMap(), isNull())
+    }
+
+    @Test
+    fun `should report identifier differences`() = runTest {
+      corePersonNomisApi.stubGetCorePersonForReconciliation(
+        prisonNumber = "A1234BC",
+        response = corePerson(prisonNumber = "A1234BC").copy(offenders = listOf(nomisCoreOffender(identifiers = listOf(nomisIdentifier())))),
+      )
+      cprApi.stubGetCorePerson(
+        prisonNumber = "A1234BC",
+        response = corePersonDto().copy(prisonAliases = listOf(cprPrisonAlias(identifiers = listOf(cprPrisonIdentifier().copy(comment = "Court"))))),
+      )
+
+      assertThat(service.checkCorePersonMatch("A1234BC")?.differences).containsExactly(
+        entry("identifiers", "0-comment:nomis=Police, cpr=Court"),
+      )
+      verify(telemetryClient).trackEvent(
+        eq("$TELEMETRY_PREFIX-mismatch"),
+        check { assertThat(it).containsEntry("differences5", "identifiers") },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `should report identifiers missing from CPR`() = runTest {
+      corePersonNomisApi.stubGetCorePersonForReconciliation(
+        prisonNumber = "A1234BC",
+        response = corePerson(prisonNumber = "A1234BC").copy(offenders = listOf(nomisCoreOffender(identifiers = listOf(nomisIdentifier())))),
+      )
+      cprApi.stubGetCorePerson(
+        prisonNumber = "A1234BC",
+        response = corePersonDto().copy(prisonAliases = listOf(cprPrisonAlias())),
+      )
+
+      assertThat(service.checkCorePersonMatch("A1234BC")?.differences).containsExactly(
+        entry("identifiers", "nomis=1, cpr=0"),
+      )
+    }
+  }
+
+  @Nested
   inner class FullReconciliation {
     @BeforeEach
     fun setUp() {
@@ -592,7 +786,7 @@ class CorePersonReconciliationIntTest(
 
       verify(telemetryClient).trackEvent(
         eq("coreperson-reports-reconciliation-requested"),
-        check { assertThat(it).containsExactlyEntriesOf(mapOf("activeOnly" to "false", "fields" to "religion, religions, addresses, contacts")) },
+        check { assertThat(it).containsExactlyEntriesOf(mapOf("activeOnly" to "false", "fields" to "religion, religions, addresses, contacts, aliases, identifiers")) },
         isNull(),
       )
 
@@ -605,7 +799,7 @@ class CorePersonReconciliationIntTest(
 
       verify(telemetryClient).trackEvent(
         eq("coreperson-reports-reconciliation-requested"),
-        check { assertThat(it).containsExactlyEntriesOf(mapOf("activeOnly" to "true", "fields" to "religion, religions, addresses, contacts")) },
+        check { assertThat(it).containsExactlyEntriesOf(mapOf("activeOnly" to "true", "fields" to "religion, religions, addresses, contacts, aliases, identifiers")) },
         isNull(),
       )
 

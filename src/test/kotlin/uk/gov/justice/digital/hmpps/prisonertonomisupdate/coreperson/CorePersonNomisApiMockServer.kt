@@ -11,10 +11,12 @@ import org.springframework.stereotype.Component
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CoreOffender
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CorePerson
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateOffenderAddressResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateOffenderEmailResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateOffenderPhoneResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Identifier
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.NomisAudit
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderAddressUsage
@@ -251,6 +253,41 @@ fun corePersonAddressPhone(number: String = "0114 555 5555", type: String = "HOM
   number = number,
   type = CodeDescription(code = type, description = "$type Description"),
   extension = extension,
+  createdDateTime = LocalDateTime.parse("2025-02-03T10:20:30"),
+  createdByUsername = "ME",
+  lastUpdatedDateTime = null,
+  lastUpdatedByUsername = null,
+)
+
+fun nomisCoreOffender(offenderId: Long = 10000L, identifiers: List<Identifier> = emptyList()) = CoreOffender(
+  offenderId = offenderId,
+  workingName = true,
+  title = CodeDescription(code = "MR", description = "Mr"),
+  firstName = "JOHN",
+  middleName1 = "FRED",
+  middleName2 = "JAMES",
+  lastName = "SMITH",
+  dateOfBirth = LocalDate.parse("1980-01-01"),
+  sex = CodeDescription(code = "M", description = "Male"),
+  birthPlace = "LEEDS",
+  birthCountry = CodeDescription(code = "GBR", description = "United Kingdom"),
+  ethnicity = CodeDescription(code = "W1", description = "White: Eng./Welsh/Scot./N.Irish/British"),
+  suffix = CodeDescription(code = "JR", description = "Junior"),
+  nameType = CodeDescription(code = "CN", description = "Current Name"),
+  identifiers = identifiers,
+  createdDateTime = LocalDateTime.parse("2025-02-03T10:20:30"),
+  createdByUsername = "ME",
+  lastUpdatedDateTime = null,
+  lastUpdatedByUsername = null,
+)
+
+fun nomisIdentifier(offenderId: Long = 10000L, sequence: Long = 1, type: String = "PNC", identifier: String = "2000/1234567A") = Identifier(
+  offenderId = offenderId,
+  sequence = sequence,
+  type = CodeDescription(code = type, description = "$type Description"),
+  identifier = identifier,
+  issuedAuthority = "Police",
+  verified = true,
   createdDateTime = LocalDateTime.parse("2025-02-03T10:20:30"),
   createdByUsername = "ME",
   lastUpdatedDateTime = null,
