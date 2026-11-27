@@ -276,6 +276,10 @@ reports:
     reconciliation:
       page-size: 100
       thread-count: 15
+  bedassignment:
+    reconciliation:
+      page-size: 100
+      thread-count: 15
   temporary-absences:
     reconciliation:
       page-size: 100

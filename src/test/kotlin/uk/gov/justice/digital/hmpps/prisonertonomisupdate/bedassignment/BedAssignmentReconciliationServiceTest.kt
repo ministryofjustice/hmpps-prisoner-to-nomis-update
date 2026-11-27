@@ -1,8 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.bedassignment
 
-import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.get
-import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.serverError
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import com.microsoft.applicationinsights.TelemetryClient
@@ -11,8 +9,9 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.ValueSource
+import org.junit.jupiter.params.provider.EnumSource
 import org.mockito.kotlin.check
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
@@ -22,12 +21,16 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.bean.override.mockito.MockitoBean
+import org.springframework.web.reactive.function.client.WebClientResponseException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.bedassignment.BedAssignmentDpsApiExtension.Companion.bedAssignmentApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.bedassignment.model.BedAssignment
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationErrorPageResult
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.PrisonerSelection
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.PrisonerSelection.ALL_PRISONERS
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BedAssignmentHistoryResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerBedAssignmentHistoryResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
@@ -173,16 +176,11 @@ class BedAssignmentReconciliationServiceTest {
     }
 
     @Test
-    fun `reports errors retrieving assignments`() = runTest {
+    fun `errors retrieving assignments are thrown`() = runTest {
       stubAssignments()
       bedAssignmentApi.stubFor(get(urlPathEqualTo("/nomis-sync/bed-assignments/$offenderNo")).willReturn(serverError()))
 
-      assertThat(service.checkBedAssignments(offenderNo)).isNull()
-      verify(telemetryClient).trackEvent(
-        eq("bed-assignment-reports-reconciliation-mismatch-error"),
-        check { assertThat(it).containsEntry("prisoner", offenderNo).containsKey("error") },
-        isNull(),
-      )
+      assertThrows<WebClientResponseException.InternalServerError> { service.checkBedAssignments(offenderNo) }
     }
   }
 
@@ -190,33 +188,32 @@ class BedAssignmentReconciliationServiceTest {
   inner class BatchReport {
     @BeforeEach
     fun setUp() {
-      nomisApi.stubGetAllPrisonersIdRanges(pageSize = 1, totalElements = 1)
-      nomisApi.stubGetAllPrisonersInRange(fromRootOffenderId = 0, toRootOffenderId = 1, firstOffenderNo = offenderNo)
+      nomisApi.stubGetAllPrisoners(prisoners = listOf(offenderNo), offenderId = 0, pageSize = 100)
+      nomisApi.stubGetAllPrisoners(prisoners = emptyList(), offenderId = 1, pageSize = 100)
+      nomisApi.stubGetAllLatestBookings(
+        bookingId = 0,
+        response = BookingIdsWithLast(lastBookingId = 1, prisonerIds = listOf(PrisonerIds(bookingId = 1, offenderNo = offenderNo))),
+      )
+      nomisApi.stubGetAllLatestBookings(bookingId = 1)
       stubAssignments()
     }
 
     @ParameterizedTest
-    @ValueSource(booleans = [true, false])
-    fun `passes activeOnly to both range APIs and reports totals`(activeOnly: Boolean) = runTest {
-      service.generateReconciliationReportBatch(activeOnly)
+    @EnumSource(PrisonerSelection::class)
+    fun `reports totals for the selection`(selection: PrisonerSelection) = runTest {
+      service.generateReconciliationReport(selection)
 
-      nomisApi.verify(
-        getRequestedFor(urlPathEqualTo("/prisoners/id-ranges"))
-          .withQueryParam("active", equalTo(activeOnly.toString()))
-          .withQueryParam("size", equalTo("1000")),
-      )
-      nomisApi.verify(
-        getRequestedFor(urlPathEqualTo("/prisoners/ids-in-range"))
-          .withQueryParam("active", equalTo(activeOnly.toString())),
-      )
       verify(telemetryClient).trackEvent(
         eq("bed-assignment-reports-reconciliation-requested"),
-        eq(mapOf("activeOnly" to activeOnly.toString())),
+        eq(mapOf("TYPE" to selection.name)),
         isNull(),
       )
       verify(telemetryClient).trackEvent(
         eq("bed-assignment-reports-reconciliation-report"),
-        eq(mapOf("activeOnly" to activeOnly.toString(), "prisoners-count" to "1", "page-count" to "1", "mismatch-count" to "0", "success" to "true")),
+        check {
+          assertThat(it).containsEntry("TYPE", selection.name).containsEntry("prisoners-count", "1")
+            .containsEntry("mismatch-count", "0").containsEntry("success", "true")
+        },
         isNull(),
       )
     }
@@ -225,36 +222,24 @@ class BedAssignmentReconciliationServiceTest {
     fun `counts mismatched prisoners`() = runTest {
       stubAssignments(dpsAssignments = emptyList())
 
-      service.generateReconciliationReportBatch(false)
+      service.generateReconciliationReport(ALL_PRISONERS)
 
       verify(telemetryClient).trackEvent(
         eq("bed-assignment-reports-reconciliation-report"),
-        check { assertThat(it).containsEntry("mismatch-count", "1") },
+        check { assertThat(it).containsEntry("mismatch-count", "1").containsEntry("offenderNos", offenderNo) },
         isNull(),
       )
     }
 
     @Test
-    fun `reports failure to retrieve ranges`() = runTest {
-      nomisApi.stubFor(get(urlPathEqualTo("/prisoners/id-ranges")).willReturn(serverError()))
+    fun `reports errors checking a prisoner`() = runTest {
+      bedAssignmentApi.stubFor(get(urlPathEqualTo("/nomis-sync/bed-assignments/$offenderNo")).willReturn(serverError()))
 
-      service.generateReconciliationReportBatch(false)
+      service.generateReconciliationReport(ALL_PRISONERS)
 
       verify(telemetryClient).trackEvent(
-        eq("bed-assignment-reports-reconciliation-report"),
-        check { assertThat(it).containsEntry("success", "false").containsKey("error") },
-        isNull(),
-      )
-    }
-
-    @Test
-    fun `reports failure to retrieve a page`() = runTest {
-      nomisApi.stubFor(get(urlPathEqualTo("/prisoners/ids-in-range")).willReturn(serverError()))
-
-      assertThat(service.getOffenderNosInRange(0, 1, true)).isInstanceOf(ReconciliationErrorPageResult::class.java)
-      verify(telemetryClient).trackEvent(
-        eq("bed-assignment-reports-reconciliation-mismatch-page-error"),
-        check { assertThat(it).containsEntry("fromRootOffenderId", "0").containsEntry("toRootOffenderId", "1").containsKey("error") },
+        eq("bed-assignment-reports-reconciliation-mismatch-error"),
+        check { assertThat(it).containsEntry("offenderNo", offenderNo).containsKey("reason") },
         isNull(),
       )
     }

@@ -130,7 +130,7 @@ class BatchManagerTest {
   fun `should call the active bed assignment reconciliation service`() = runTest {
     batchManager(BED_ASSIGNMENT_ACTIVE_RECON).onApplicationEvent(event)
 
-    verify(bedAssignmentReconciliationService).generateReconciliationReportBatch(true)
+    verify(bedAssignmentReconciliationService).generateReconciliationReport(ACTIVE_PRISONERS)
     verify(context).close()
   }
 
@@ -138,7 +138,7 @@ class BatchManagerTest {
   fun `should call the full bed assignment reconciliation service`() = runTest {
     batchManager(BED_ASSIGNMENT_FULL_RECON).onApplicationEvent(event)
 
-    verify(bedAssignmentReconciliationService).generateReconciliationReportBatch(false)
+    verify(bedAssignmentReconciliationService).generateReconciliationReport(ALL_PRISONERS)
     verify(context).close()
   }
 

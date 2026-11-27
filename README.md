@@ -730,8 +730,8 @@ and start/end timestamps, and reports missing records and field differences in t
 
 `GET /bed-assignments/reconciliation/{offenderNo}` reconciles one prisoner and returns differences, or an empty
 body when none are found. It requires `ROLE_PRISONER_TO_NOMIS__UPDATE__RW`.
-Page size and concurrency are configured with `reports.bedassignment.reconciliation.page-size` (default 1000)
-and `reports.bedassignment.reconciliation.thread-count` (default 10).
+Page size and concurrency are configured with `reports.bedassignment.reconciliation.page-size` (default 100)
+and `reports.bedassignment.reconciliation.thread-count` (default 15).
 
 ### Appointments
 
